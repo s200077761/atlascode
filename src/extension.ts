@@ -10,7 +10,8 @@ export function activate(context: vscode.ExtensionContext) {
     Logger.configure(context);
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    Logger.log('Congratulations, your extension "atlascode" is now active!');
+    Logger.debug('AtlasCode extension has been activated');
+
 
 }
 
