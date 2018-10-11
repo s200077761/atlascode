@@ -37,7 +37,7 @@
     "contributes": {
         "configuration": {
             "type": "object",
-            "title": "GitLens",
+            "title": "AtlasCode",
             "properties": {
                 "atlascode.outputLevel": {
                     "type": "string",
@@ -45,18 +45,14 @@
                     "enum": [
                         "silent",
                         "errors",
-                        "verbose",
+                        "info",
                         "debug"
                     ],
                     "description": "Specifies how much (if any) output will be sent to the AtlasCode output channel",
                     "scope": "window"
                 }
             }
-        },
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
