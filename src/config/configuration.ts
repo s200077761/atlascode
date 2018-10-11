@@ -35,10 +35,10 @@ export class Configuration {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         // only fire if it's a config for our extension
-        Logger.log("got config change")
+        Logger.debug("got config change")
         if (!e.affectsConfiguration(extensionId, null!)) return;
 
-        Logger.log("config change is for atlascode!")
+        Logger.debug("config change is for atlascode!")
         this._onDidChange.fire(e);
     }
 
