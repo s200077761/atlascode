@@ -11,7 +11,7 @@ import {
     workspace
 } from 'vscode';
 import { extensionId } from '../constants';
-import {Logger} from '../logger';
+import { Logger } from '../logger';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -77,7 +77,7 @@ export class Configuration {
     }
 
     // update does what it sounds like
-    update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
         return workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
