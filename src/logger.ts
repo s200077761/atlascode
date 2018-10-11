@@ -19,8 +19,9 @@ export class Logger {
         const initializing = configuration.initializing(e);
 
         const section = 'outputLevel';
-
-        if (initializing || configuration.changed(e, section)) {
+        if (initializing && Logger.isDebugging) {
+            this.level = OutputLevel.Debug
+        } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
             if (this.level === OutputLevel.Silent) {
                 if (this.output !== undefined) {
@@ -64,7 +65,7 @@ export class Logger {
         if (Logger.isDebugging) {
             console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
         }
-        
+
         if (this.output !== undefined) {
             this.output.appendLine(
                 ([classOrMethod, ...params, ex]).join(' ')
