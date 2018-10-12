@@ -20,7 +20,7 @@ export class Logger {
 
         const section = 'outputLevel';
         if (initializing && Logger.isDebugging) {
-            this.level = OutputLevel.Debug
+            this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
             if (this.level === OutputLevel.Silent) {
@@ -36,7 +36,7 @@ export class Logger {
     }
 
     static info(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) return;
+        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) { return; }
 
         if (this.output !== undefined) {
             this.output.appendLine(
@@ -46,7 +46,7 @@ export class Logger {
     }
 
     static debug(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Debug) return;
+        if (this.level !== OutputLevel.Debug) { return; }
 
         if (Logger.isDebugging) {
             console.log(this.timestamp, ConsolePrefix, message, ...params);
@@ -60,7 +60,7 @@ export class Logger {
     }
 
     static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        if (this.level === OutputLevel.Silent) return;
+        if (this.level === OutputLevel.Silent) { return; }
 
         if (Logger.isDebugging) {
             console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
@@ -90,7 +90,7 @@ export class Logger {
 
                 this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
             }
-            catch {}
+            catch { }
         }
 
         return this._isDebugging;
