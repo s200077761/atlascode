@@ -8,10 +8,10 @@ export async function getPullRequestTitles(repository: Repository): Promise<stri
     let bb = new Bitbucket();
     let remotes = getBitbucketRemotes(repository);
 
-    let allPRs = [];
+    let allPRs: any[] = [];
     for (let i = 0; i < remotes.length; i++) {
         let remote = remotes[i];
-        let parsed = GitUrlParse(remote.fetchUrl || remote.pushUrl);
+        let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
         const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
         allPRs = allPRs.concat(data.values);
     }
@@ -21,7 +21,8 @@ export async function getPullRequestTitles(repository: Repository): Promise<stri
 
 function getBitbucketRemotes(repository: Repository): Remote[] {
     return repository.state.remotes.filter(remote => {
-        let parsed = GitUrlParse(remote.fetchUrl || remote.pushUrl);
-        return parsed.source === bitbucketHost;
+        const remoteUrl = remote.fetchUrl || remote.pushUrl;
+        let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
+        return parsed && parsed.source === bitbucketHost;
     });
 }
