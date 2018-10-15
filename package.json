@@ -35,6 +35,18 @@
     ],
     "main": "./out/extension",
     "contributes": {
+        "commands": [
+            {
+                "command": "atlascode.bb.authenticate",
+                "title": "Authenticate With Bitbucket",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.jira.authenticate",
+                "title": "Authenticate With Jira",
+                "category": "AtlasCode"
+            }
+        ],
         "configuration": {
             "type": "object",
             "title": "AtlasCode",
@@ -60,6 +72,18 @@
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "dependencies": {
+        "@types/passport": "^0.4.6",
+        "@types/passport-oauth2": "^1.4.6",
+        "@types/keytar": "^4.0.1",
+        "passport": "^0.4.0",
+        "passport-oauth2": "^1.4.0",
+        "passport-atlassian-oauth2": "^1.0.0",
+        "passport-bitbucket-oauth2": "^0.1.2",
+        "passport-oauth2-refresh": "^1.1.0",
+        "express": "^4.16.3",
+        "keytar": "^4.3.0"
     },
     "devDependencies": {
         "typescript": "^2.6.1",

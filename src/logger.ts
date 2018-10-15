@@ -20,23 +20,23 @@ export class Logger {
 
         const section = 'outputLevel';
         if (initializing && Logger.isDebugging) {
-            this.level = OutputLevel.Debug
+            this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
-            if (this.level === OutputLevel.Silent) {
-                if (this.output !== undefined) {
-                    this.output.dispose();
-                    this.output = undefined;
-                }
-            } else {
-                this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
-            }
         }
 
+        if (this.level === OutputLevel.Silent) {
+            if (this.output !== undefined) {
+                this.output.dispose();
+                this.output = undefined;
+            }
+        } else {
+            this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
+        }
     }
 
     static info(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) return;
+        if (this.level !== OutputLevel.Info && this.level !== OutputLevel.Debug) { return; }
 
         if (this.output !== undefined) {
             this.output.appendLine(
@@ -46,7 +46,7 @@ export class Logger {
     }
 
     static debug(message?: any, ...params: any[]): void {
-        if (this.level !== OutputLevel.Debug) return;
+        if (this.level !== OutputLevel.Debug) { return; }
 
         if (Logger.isDebugging) {
             console.log(this.timestamp, ConsolePrefix, message, ...params);
