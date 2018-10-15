@@ -10,13 +10,13 @@
         "sourceMap": true,
         "rootDir": "src",
         /* Strict Type-Checking Option */
-        //"strict": true,   /* TODO: @Pramod figure out how to turn this back on */
+        "strict": true, /* enable all strict type-checking options */
         /* Additional Checks */
         "noUnusedLocals": true,
         "typeRoots": [
-			"./node_modules/@types",
-			"./src/typings/"
-		]
+            "node_modules/@types",
+            "src/typings/"
+        ]
     },
     "exclude": [
         "node_modules",
