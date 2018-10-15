@@ -9,8 +9,6 @@ export interface AuthInfo {
 export interface UserInfo {
     id: string;
     displayName: string;
-    username: string;
-    profileUrl: string;
     provider: string;
 }
 

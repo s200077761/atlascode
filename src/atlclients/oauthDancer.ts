@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as BitbucketStrategy from 'passport-bitbucket-oauth2';
-import * as JiraStrategy from 'passport-atlassian-oauth2';
+const AtlassianStrategy = require('passport-atlassian-oauth2');
 import * as refresh from 'passport-oauth2-refresh';
 import { Logger } from '../logger';
 import * as express from 'express';
@@ -18,15 +18,15 @@ export class OAuthDancer {
         callbackURL: "http://127.0.0.1:9090/bbcloud"
       },this.verify.bind(this));
 
-      private _jiraCloudStrategy = new JiraStrategy.Strategy({
+      private _jiraCloudStrategy = new AtlassianStrategy({
         // note: the passport-atlassian lib doesn't fill default options if you pass any other options
-        authorizationURL: 'https://accounts.atlassian.com/authorize',
-        tokenURL: 'https://accounts.atlassian.com/oauth/token',
+        //authorizationURL: 'https://accounts.atlassian.com/authorize',
+        //tokenURL: 'https://accounts.atlassian.com/oauth/token',
         clientID: 'PNchU3mOSFLJt1qp3HUDOEUL231OX6lu',
         clientSecret: '9DObTr9hl8OEZ9sMlQ4TlFbWm6ijKeHDA9PXf4jM5LoLhyIu5oQR7Xppo_Yq2pye',
         callbackURL: 'http://127.0.0.1:9090/jiracloud',
         scope: 'read:jira-user read:jira-work write:jira-work offline_access',
-      }, this.verify);
+      }, this.verify.bind(this));
 
     public constructor() {
         passport.serializeUser(function(user, done) {
@@ -38,18 +38,19 @@ export class OAuthDancer {
         });
 
          passport.use('bitbucket', this._bbCloudStrategy);
-         passport.use('jira', this._jiraCloudStrategy);
+         passport.use('atlassian', this._jiraCloudStrategy);
          refresh.use(this._bbCloudStrategy);
          refresh.use(this._jiraCloudStrategy);
     }
 
-    private verify(accessToken: string, refreshToken: string, profile: any, done: BitbucketStrategy.VerifyCallback):void {
+    private verify(accessToken: string, refreshToken: string, profile: any, done: any):void {
         let resources:authinfo.AccessibleResource[] = [];
 
         if (profile.accessibleResources) {
-            for (var i = 0; i < profile.accessibleResources; i++) {
-                resources.push(JSON.parse(profile.accessibleResources[i]));
-            }
+            Logger.debug("got resources");
+            profile.accessibleResources.forEach( (resource) => {
+                resources.push(resource);
+            });
         }
 
         let provider = profile.provider === 'atlassian' ? 'jira' : profile.provider;
@@ -60,23 +61,24 @@ export class OAuthDancer {
             user: {
                 id: profile.id,
                 displayName: profile.displayName,
-                username: profile.username,
-                profileUrl: profile.profileUrl,
                 provider: provider
             },
             accessibleResources: resources
         };
 
+        Logger.debug("profile:\n" + JSON.stringify(profile, null, 2));
         Logger.debug("authInfo:\n" + JSON.stringify(this._authInfo, null, 2));
 
-        done(null, profile.username);
+        return done(null, profile.id);
     }
 
     public async doDance(provider:string): Promise<authinfo.AuthInfo> {
         Logger.debug("doing dance...");
+
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
             let _app = express();
             _app.use(passport.initialize());
+            _app.use(passport.session());
 
             _app.get('/auth/bitbucket',
                 passport.authenticate('bitbucket'),
@@ -86,7 +88,7 @@ export class OAuthDancer {
             });
 
             _app.get('/auth/jira',
-                passport.authenticate('jira'),
+                passport.authenticate('atlassian'),
                 function(req, res){
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
@@ -102,8 +104,18 @@ export class OAuthDancer {
                 resolve(this._authInfo);
             });
 
-            _app.get('/jiracloud', passport.authenticate('jira', { failureRedirect: '/error' }), (req, res) => {
+            _app.get('/jiracloud', passport.authenticate('atlassian', { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
+                res.send('We\'re done here.');
+                if (this._srv) {
+                    this._srv.close();
+                    this._srv = undefined;
+                }
+                resolve(this._authInfo);
+            });
+
+            _app.get('/error', (req, res) => {
+                Logger.debug("got jira error");
                 res.send('We\'re done here.');
                 if (this._srv) {
                     this._srv.close();
