@@ -83,9 +83,6 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
-        "@types/passport": "^0.4.6",
-        "@types/passport-oauth2": "^1.4.6",
-        "@types/keytar": "^4.0.1",
         "passport": "^0.4.0",
         "passport-oauth2": "^1.4.0",
         "passport-atlassian-oauth2": "^1.0.0",
@@ -99,6 +96,9 @@
     "devDependencies": {
         "@types/mocha": "^5.2.2",
         "@types/node": "^8.10.25",
+        "@types/passport": "^0.4.6",
+        "@types/passport-oauth2": "^1.4.6",
+        "@types/keytar": "^4.0.1",
         "mocha": "^5.2.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
