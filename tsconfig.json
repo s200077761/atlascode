@@ -10,16 +10,13 @@
         "sourceMap": true,
         "rootDir": "src",
         /* Strict Type-Checking Option */
-        // "strict": true, /* enable all strict type-checking options */
+        //"strict": true,   /* TODO: @Pramod figure out how to turn this back on */
         /* Additional Checks */
-        "noUnusedLocals": true, /* Report errors on unused locals. */
-        // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-        // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-        // "noUnusedParameters": true,  /* Report errors on unused parameters. */
+        "noUnusedLocals": true,
         "typeRoots": [
-            "node_modules/@types",
-            "src/typings/"
-        ]
+			"./node_modules/@types",
+			"./src/typings/"
+		]
     },
     "exclude": [
         "node_modules",

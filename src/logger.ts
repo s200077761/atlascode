@@ -23,16 +23,16 @@ export class Logger {
             this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
-            if (this.level === OutputLevel.Silent) {
-                if (this.output !== undefined) {
-                    this.output.dispose();
-                    this.output = undefined;
-                }
-            } else {
-                this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
-            }
         }
 
+        if (this.level === OutputLevel.Silent) {
+            if (this.output !== undefined) {
+                this.output.dispose();
+                this.output = undefined;
+            }
+        } else {
+            this.output = this.output || window.createOutputChannel(extensionOutputChannelName);
+        }
     }
 
     static info(message?: any, ...params: any[]): void {
