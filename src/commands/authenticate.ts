@@ -6,7 +6,7 @@ export function authenticateBitbucket() {
     let dancer = new OAuthDancer();
     dancer.doDance('bitbucket').then(authInfo => {
         Logger.debug("GOT AUTH INFO");
-        Logger.debug("got user" + authInfo.user.username);
+        Logger.debug("got user" + authInfo.user.displayName);
     });
 }
 
@@ -15,6 +15,6 @@ export function authenticateJira() {
     let dancer = new OAuthDancer();
     dancer.doDance('jira').then(authInfo => {
         Logger.debug("GOT AUTH INFO");
-        Logger.debug("got user: " + authInfo.user.username);
+        Logger.debug("got user: " + authInfo.user.displayName);
     });
 }

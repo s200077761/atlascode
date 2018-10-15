@@ -38,7 +38,7 @@ export class OAuthDancer {
         });
 
          passport.use('bitbucket', this._bbCloudStrategy);
-         passport.use('atlassian', this._jiraCloudStrategy);
+         passport.use('jira', this._jiraCloudStrategy);
          refresh.use(this._bbCloudStrategy);
          refresh.use(this._jiraCloudStrategy);
     }
@@ -88,7 +88,7 @@ export class OAuthDancer {
             });
 
             _app.get('/auth/jira',
-                passport.authenticate('atlassian'),
+                passport.authenticate('jira'),
                 function(req, res){
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
@@ -104,7 +104,7 @@ export class OAuthDancer {
                 resolve(this._authInfo);
             });
 
-            _app.get('/jiracloud', passport.authenticate('atlassian', { failureRedirect: '/error' }), (req, res) => {
+            _app.get('/jiracloud', passport.authenticate('jira', { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
                 res.send('We\'re done here.');
                 if (this._srv) {
