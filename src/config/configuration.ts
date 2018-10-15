@@ -35,10 +35,10 @@ export class Configuration {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         // only fire if it's a config for our extension
-        Logger.debug("got config change")
-        if (!e.affectsConfiguration(extensionId, null!)) return;
+        Logger.debug("got config change");
+        if (!e.affectsConfiguration(extensionId, null!)) { return; }
 
-        Logger.debug("config change is for atlascode!")
+        Logger.debug("config change is for atlascode!");
         this._onDidChange.fire(e);
     }
 
@@ -52,11 +52,11 @@ export class Configuration {
     get<T>(section?: string, resource?: Uri | null, defaultValue?: T) {
         return defaultValue === undefined
             ? workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section)!
+                .getConfiguration(section === undefined ? undefined : extensionId, resource!)
+                .get<T>(section === undefined ? extensionId : section)!
             : workspace
-                  .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-                  .get<T>(section === undefined ? extensionId : section, defaultValue)!;
+                .getConfiguration(section === undefined ? undefined : extensionId, resource!)
+                .get<T>(section === undefined ? extensionId : section, defaultValue)!;
     }
 
     // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
@@ -87,13 +87,13 @@ export class Configuration {
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
         const inspect = await configuration.inspect(section, resource)!;
         if (inspect.workspaceFolderValue !== undefined) {
-            if (value === inspect.workspaceFolderValue) return;
+            if (value === inspect.workspaceFolderValue) { return; }
 
             return await configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
-            if (value === inspect.workspaceValue) return;
+            if (value === inspect.workspaceValue) { return; }
 
             return await configuration.update(section, value, ConfigurationTarget.Workspace);
         }

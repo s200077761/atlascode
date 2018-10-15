@@ -60,7 +60,7 @@ export class Logger {
     }
 
     static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
-        if (this.level === OutputLevel.Silent) return;
+        if (this.level === OutputLevel.Silent) { return; }
 
         if (Logger.isDebugging) {
             console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
@@ -90,7 +90,7 @@ export class Logger {
 
                 this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
             }
-            catch {}
+            catch { }
         }
 
         return this._isDebugging;
