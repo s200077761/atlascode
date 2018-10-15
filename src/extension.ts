@@ -11,7 +11,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     Configuration.configure(context);
     Logger.configure(context);
-    Logger.debug('AtlasCode extension has been activated');
 
     const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
     if (gitExtension) {
@@ -21,6 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
     } else {
         Logger.error(new Error('vscode.git extension not found'));
     }
+
+    Logger.debug('AtlasCode extension has been activated');
+
 }
 
 // this method is called when your extension is deactivated
