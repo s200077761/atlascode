@@ -15,16 +15,13 @@ export class OAuthDancer {
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "DQhnLnWwACPXJXW2qX",
         clientSecret: "uwACseDkGP4hc7JvWHAatZZruHzYpLMH",
-        callbackURL: "http://127.0.0.1:9090/bbcloud"
+        callbackURL: "http://127.0.0.1:9090/" + authinfo.AuthProvider.BitbucketCloud
       },this.verify.bind(this));
 
       private _jiraCloudStrategy = new AtlassianStrategy({
-        // note: the passport-atlassian lib doesn't fill default options if you pass any other options
-        //authorizationURL: 'https://accounts.atlassian.com/authorize',
-        //tokenURL: 'https://accounts.atlassian.com/oauth/token',
         clientID: 'PNchU3mOSFLJt1qp3HUDOEUL231OX6lu',
         clientSecret: '9DObTr9hl8OEZ9sMlQ4TlFbWm6ijKeHDA9PXf4jM5LoLhyIu5oQR7Xppo_Yq2pye',
-        callbackURL: 'http://127.0.0.1:9090/jiracloud',
+        callbackURL: 'http://127.0.0.1:9090/' + authinfo.AuthProvider.JiraCloud,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access',
       }, this.verify.bind(this));
 
@@ -37,8 +34,8 @@ export class OAuthDancer {
             done(null, obj);
         });
 
-         passport.use('bitbucket', this._bbCloudStrategy);
-         passport.use('jira', this._jiraCloudStrategy);
+         passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+         passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
          refresh.use(this._bbCloudStrategy);
          refresh.use(this._jiraCloudStrategy);
     }
@@ -48,12 +45,12 @@ export class OAuthDancer {
 
         if (profile.accessibleResources) {
             Logger.debug("got resources");
-            profile.accessibleResources.forEach( (resource) => {
+            profile.accessibleResources.forEach( (resource:authinfo.AccessibleResource) => {
                 resources.push(resource);
             });
         }
 
-        let provider = profile.provider === 'atlassian' ? 'jira' : profile.provider;
+        let provider = profile.provider === 'atlassian' ? authinfo.AuthProvider.JiraCloud : authinfo.AuthProvider.BitbucketCloud;
 
         this._authInfo = {
             access: accessToken,
@@ -80,21 +77,21 @@ export class OAuthDancer {
             _app.use(passport.initialize());
             _app.use(passport.session());
 
-            _app.get('/auth/bitbucket',
-                passport.authenticate('bitbucket'),
+            _app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
+                passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
                 function(req, res){
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-            _app.get('/auth/jira',
-                passport.authenticate('jira'),
+            _app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
+                passport.authenticate(authinfo.AuthProvider.JiraCloud),
                 function(req, res){
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-            _app.get('/bbcloud', passport.authenticate('bitbucket', { failureRedirect: '/error' }), (req, res) => {
+            _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
                 res.send('We\'re done here.');
                 if (this._srv) {
@@ -104,7 +101,7 @@ export class OAuthDancer {
                 resolve(this._authInfo);
             });
 
-            _app.get('/jiracloud', passport.authenticate('jira', { failureRedirect: '/error' }), (req, res) => {
+            _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
                 res.send('We\'re done here.');
                 if (this._srv) {

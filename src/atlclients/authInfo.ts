@@ -1,4 +1,8 @@
 'use strict';
+export enum AuthProvider {
+    BitbucketCloud = 'bbcloud',
+    JiraCloud = 'jiracloud'
+}
 export interface AuthInfo {
 	access:string;
     refresh:string;
