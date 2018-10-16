@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getPullRequest, getPullRequestChangedFiles } from '../../bitbucket/pullRequests';
 import { BaseNode } from './baseNode';
 import { PullRequestDecorated } from '../../bitbucket/model';
+import { Resources } from '../../resources';
 
 export class PullRequestTitlesNode extends BaseNode {
     constructor(private pr: PullRequestDecorated) {
@@ -36,7 +37,16 @@ class PullRequestFilesNode extends BaseNode {
 
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(this.fileChange.filename, vscode.TreeItemCollapsibleState.None);
-        item.iconPath = false;
+        switch (this.fileChange.status) {
+            case 'added':
+                item.iconPath = Resources.icons.get('add');
+                break;
+            case 'removed':
+                item.iconPath = Resources.icons.get('delete');
+            default:
+                item.iconPath = Resources.icons.get('edit');
+                break;
+        }
 
         return item;
     }
