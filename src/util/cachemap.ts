@@ -22,7 +22,7 @@ export class CacheMap {
 
     public getItem<T>(key: string): T | undefined {
         let item = this._data.get(key);
-        if (item && item.meta && item.meta.ttl && this.isItemExpired(item)) {
+        if (item && this.isItemExpired(item)) {
             this._data.delete(key);
             return undefined;
         }

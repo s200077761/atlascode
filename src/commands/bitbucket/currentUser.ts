@@ -7,7 +7,7 @@ export async function currentUserBitbucket() {
 
     if (bbreq) {
         bbreq.user.get('').then(user => {
-            Logger.debug("currentUser is: " + user.data.display_name);
+            Logger.debug(`currentUser is: ${user.data.display_name}`);
         });
     }
 }
