@@ -54,8 +54,21 @@
                 "command": "atlascode.bb.fetchPullRequests",
                 "title": "Fetch Bitbucket pull requests",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.refreshPullRequests",
+                "title": "Refresh Bitbucket pull requests",
+                "category": "AtlasCode"
             }
         ],
+        "views": {
+            "scm": [
+                {
+                    "id": "atlascode.views.bb.pullrequestsTreeView",
+                    "name": "Bitbucket pull requests"
+                }
+            ]
+        },
         "configuration": {
             "type": "object",
             "title": "AtlasCode",
@@ -83,15 +96,16 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
+        "bitbucket": "^1.3.1",
+        "express": "^4.16.3",
+        "git-url-parse": "^10.0.1",
+        "keytar": "^4.3.0",
+        "parse-diff": "^0.5.1",
         "passport": "^0.4.0",
-        "passport-oauth2": "^1.4.0",
         "passport-atlassian-oauth2": "^1.0.0",
         "passport-bitbucket-oauth2": "^0.1.2",
-        "passport-oauth2-refresh": "^1.1.0",
-        "express": "^4.16.3",
-        "keytar": "^4.3.0",
-        "bitbucket": "^1.3.1",
-        "git-url-parse": "^10.0.1"
+        "passport-oauth2": "^1.4.0",
+        "passport-oauth2-refresh": "^1.1.0"
     },
     "devDependencies": {
         "@types/git-url-parse": "^9.0.0",
