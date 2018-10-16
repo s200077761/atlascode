@@ -36,8 +36,8 @@ export class OAuthDancer {
 
          passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
          passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-         refresh.use(this._bbCloudStrategy);
-         refresh.use(this._jiraCloudStrategy);
+         refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+         refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
     }
 
     private verify(accessToken: string, refreshToken: string, profile: any, done: any):void {
@@ -133,6 +133,9 @@ export class OAuthDancer {
     public async refresh(authInfo:authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
             refresh.requestNewAccessToken(authInfo.user.provider,authInfo.refresh,(err:Error,accessToken:string,refreshToken:string) => {
+                if (err) {
+                    Logger.debug("refresh error: " + err);
+                }
                 let newAuth:authinfo.AuthInfo = authInfo;
                 newAuth.access = accessToken;
 
