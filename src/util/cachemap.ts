@@ -4,7 +4,7 @@ interface ICacheItem {
     meta: {
         createdAt: number;
         ttl: number;
-    }
+    };
 }
 
 export enum Interval {
