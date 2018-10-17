@@ -46,6 +46,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.bb.me",
+                "title": "Get Current Bitbucket User",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
                 "category": "AtlasCode"
