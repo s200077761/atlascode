@@ -42,15 +42,11 @@ class ClientManager {
 
             if (!info) {
                 // TODO: VSCODE-28 login with confirmation
-                info = await this._dancer.doDance(provider).then((info:authinfo.AuthInfo) => {
-                    AuthStore.saveAuthInfo(provider,info);
-                    return info;
-                });
+                info = await this._dancer.doDance(provider);
+                await AuthStore.saveAuthInfo(provider,info);
             } else {
-                info = await this._dancer.refresh(info).then((info:authinfo.AuthInfo) => {
-                    AuthStore.saveAuthInfo(provider,info);
-                    return info;
-                });
+                info = await this._dancer.refresh(info);
+                await AuthStore.saveAuthInfo(provider,info);
             }
 
             Logger.debug("info is: " + JSON.stringify(info,null,2));
