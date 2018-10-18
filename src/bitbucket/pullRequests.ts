@@ -1,13 +1,16 @@
-import * as Bitbucket from 'bitbucket';
 import * as GitUrlParse from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
 import { PullRequestDecorated } from './model';
+import { Atl } from "../atlclients/clientManager";
 
 const bitbucketHost = "bitbucket.org";
+const apiConnectivityError = new Error('cannot connect to bitbucket api');
 
 export async function getPullRequestTitles(repository: Repository): Promise<string[]> {
-    let bb = new Bitbucket();
+    let bb = await Atl.bbrequest();
+    if (!bb) { return Promise.reject(apiConnectivityError); }
+
     let remotes = getBitbucketRemotes(repository);
 
     let allPRs: PullRequestDecorated[] = [];
@@ -22,7 +25,9 @@ export async function getPullRequestTitles(repository: Repository): Promise<stri
 }
 
 export async function getPullRequests(repository: Repository): Promise<PullRequestDecorated[]> {
-    let bb = new Bitbucket();
+    let bb = await Atl.bbrequest();
+    if (!bb) { return Promise.reject(apiConnectivityError); }
+
     let remotes = getBitbucketRemotes(repository);
 
     let allPRs: PullRequestDecorated[] = [];
@@ -37,7 +42,9 @@ export async function getPullRequests(repository: Repository): Promise<PullReque
 }
 
 export async function getPullRequest(pr: PullRequestDecorated): Promise<PullRequestDecorated> {
-    let bb = new Bitbucket();
+    let bb = await Atl.bbrequest();
+    if (!bb) { return Promise.reject(apiConnectivityError); }
+
     let parsed = GitUrlParse(pr.remote.fetchUrl! || pr.remote.pushUrl!);
     let { data } = await bb.repositories.getPullRequest({
         pull_request_id: pr.data.id!,
@@ -49,7 +56,8 @@ export async function getPullRequest(pr: PullRequestDecorated): Promise<PullRequ
 }
 
 export async function getPullRequestChangedFiles(pr: PullRequestDecorated): Promise<any[]> {
-    let bb = new Bitbucket();
+    let bb = await Atl.bbrequest();
+    if (!bb) { return Promise.reject(apiConnectivityError); }
 
     let result: any[] = [];
     const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
