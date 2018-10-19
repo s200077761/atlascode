@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { getPullRequest, getPullRequestChangedFiles } from '../../bitbucket/pullRequests';
+import { PullRequest } from '../../bitbucket/pullRequests';
 import { BaseNode } from './baseNode';
 import { PullRequestDecorated } from '../../bitbucket/model';
 import { Resources } from '../../resources';
+import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 
 export class PullRequestTitlesNode extends BaseNode {
     constructor(private pr: PullRequestDecorated) {
@@ -21,9 +22,11 @@ export class PullRequestTitlesNode extends BaseNode {
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!element) {
             if (!this.pr) { return []; }
-            this.pr = await getPullRequest(this.pr);
-            let fileChanges: any[] = await getPullRequestChangedFiles(this.pr);
-            return fileChanges.map(fileChange => new PullRequestFilesNode(fileChange));
+            // When a repo's pullrequests are fetched, the response may not have all fields populated.
+            // Fetch the specific pullrequest by id to fill in the missing details.
+            this.pr = await PullRequest.getPullRequest(this.pr);
+            let fileChanges: any[] = await PullRequest.getPullRequestChangedFiles(this.pr);
+            return fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, fileChange));
         } else {
             return element.getChildren();
         }
@@ -31,22 +34,37 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private fileChange: any) {
+    constructor(private pr: PullRequestDecorated, private fileChange: any) {
         super();
     }
 
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(this.fileChange.filename, vscode.TreeItemCollapsibleState.None);
+
+        let lhsQueryParam = { query: JSON.stringify({ remote: this.pr.remote.name, branch: this.pr.data.destination!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.destination!.commit!.hash! }) };
+        let rhsQueryParam = { query: JSON.stringify({ remote: this.pr.remote.name, branch: this.pr.data.source!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.source!.commit!.hash! }) };
         switch (this.fileChange.status) {
             case 'added':
                 item.iconPath = Resources.icons.get('add');
+                lhsQueryParam = { query: JSON.stringify({}) };
                 break;
             case 'removed':
                 item.iconPath = Resources.icons.get('delete');
+                rhsQueryParam = { query: JSON.stringify({}) };
             default:
                 item.iconPath = Resources.icons.get('edit');
                 break;
         }
+
+        item.command = {
+            command: 'vscode.diff',
+            title: 'Diff file',
+            arguments: [
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(lhsQueryParam),
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(rhsQueryParam),
+                this.fileChange.filename
+            ]
+        };
 
         return item;
     }

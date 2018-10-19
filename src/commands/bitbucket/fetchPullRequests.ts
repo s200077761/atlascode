@@ -1,8 +1,9 @@
 import { Logger } from "../../logger";
-import { getPullRequestTitles } from "../../bitbucket/pullRequests";
+import { PullRequest } from "../../bitbucket/pullRequests";
 import { BitbucketContext } from "../../bitbucket/context";
 
 
-export function fetchPullRequestsCommand(this: BitbucketContext) {
-    getPullRequestTitles(this.repository).then(r => Logger.debug(r));
+export async function fetchPullRequestsCommand(this: BitbucketContext) {
+    let prTitles = await PullRequest.getPullRequestTitles(this.repository);
+    Logger.debug(prTitles);
 }
