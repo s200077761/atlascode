@@ -1,5 +1,6 @@
 import * as BitbucketKit from 'bitbucket';
-import { JiraKit } from './jirakit/jirakit';
+import * as JiraKit from 'jira';
+//import { JiraKit } from './jirakit/jirakit';
 import * as authinfo from './authInfo';
 import { AuthStore } from './authStore';
 import { OAuthDancer } from './oauthDancer';
@@ -26,7 +27,12 @@ class ClientManager {
         Logger.debug("getting jira client");
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
-            let jraclient = new JiraKit();
+            let cloudId:string = "";
+            if(info.accessibleResources) {
+                cloudId = info.accessibleResources[0].id;
+            }
+            //https://api.atlassian.com/ex/jira/${this.authenticator.jira.cloudId}/rest/
+            let jraclient = new JiraKit({baseUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest/`});
             jraclient.authenticate({type: 'token', token: info.access});
 
             return jraclient;

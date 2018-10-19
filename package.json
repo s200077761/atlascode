@@ -51,6 +51,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.me",
+                "title": "Get Current Jira User",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
                 "category": "AtlasCode"
