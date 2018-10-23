@@ -42,6 +42,15 @@ export class CacheMap {
         });
     }
 
+    public updateItem(key: string, content: any) {
+        let item = this._data.get(key);
+
+        if (item) {
+            item.content = content;
+            this._data.set(key,item);
+        }
+    }
+
     public deleteItem(key: string): boolean {
         return this._data.delete(key);
     }
