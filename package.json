@@ -94,6 +94,12 @@
                     ],
                     "description": "Specifies how much (if any) output will be sent to the AtlasCode output channel",
                     "scope": "window"
+                },
+                "atlascode.enableCharles": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables proxying requests through the Charles Web Debugger when debugging",
+                    "scope": "window"
                 }
             }
         }
@@ -115,6 +121,7 @@
         "passport-atlassian-oauth2": "^1.0.0",
         "passport-bitbucket-oauth2": "^0.1.2",
         "passport-oauth2": "^1.4.0",
+        "tunnel": "^0.0.6",
         "passport-oauth2-refresh": "^1.1.0"
     },
     "devDependencies": {

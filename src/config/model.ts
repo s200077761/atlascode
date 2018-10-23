@@ -9,4 +9,5 @@ export enum OutputLevel {
 
 export interface IConfig {
     outputLevel: OutputLevel;
+    enableCharles:boolean;
 }
