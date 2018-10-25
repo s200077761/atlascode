@@ -1,22 +1,30 @@
 import * as vscode from 'vscode';
 import { JiraIssue } from '../../jira/jiraIssue';
 import { issuesForJQL } from '../../commands/jira/issuesForJQL';
+import { Logger } from '../../logger';
 
 export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
 	private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
 	readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
-    private issues: JiraIssue[] = [];
-    private jql: string;
+    private issues: JiraIssue[] | undefined;
+    private jql: string | undefined;
 
-    constructor(jql:string) {
-        this.jql = jql;
+    refresh() {
+        Logger.debug("Refreshing treeView");
+        this.issues = undefined;
+        this._onDidChangeTreeData.fire();
     }
 
-    getChildren(offset?: JiraIssue): Promise<JiraIssue[]> {
-        if (offset) {
+    setJql(jql: string) {
+        this.jql = jql;
+        this.refresh();
+    }
+
+    getChildren(parent?: JiraIssue): Promise<JiraIssue[]> {
+        if (parent || !this.jql) {
             return Promise.resolve([]);
-        } else if (this.issues.length > 0) {
+        } else if (this.issues) {
             return Promise.resolve(this.issues);               
         } else {
             return this.fetchIssues();
@@ -31,6 +39,9 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
     }
     
     private async fetchIssues(): Promise<JiraIssue[]> {
+        if (!this.jql) {
+            return Promise.resolve([]);
+        }
         return issuesForJQL(this.jql)
         .then(newIssues => {
             this.issues = newIssues;

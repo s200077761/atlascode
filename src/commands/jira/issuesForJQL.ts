@@ -13,12 +13,14 @@ export async function issuesForJQL(jql: string): Promise<JiraIssue[]> {
         jql: jql,
         fields: fields
       })
-      .then((res: JIRA.Response<JIRA.Schema.Any>) => {
+      .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
         const issues = res.data.issues;
-        return issues
-          .map((issue: any) => {
+        if (issues) {
+          return issues.map((issue: any) => {
             return JiraIssue.readIssue(issue);
           });
+        }
+        return [];
       });
   }
 
