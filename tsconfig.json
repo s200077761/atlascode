@@ -1,25 +1,36 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "baseUrl": ".",
+        "outDir": "out/dist",
+        "module": "esnext",
         "target": "es6",
-        "outDir": "out",
         "lib": [
             "es6",
             "dom"
         ],
         "sourceMap": true,
+        "allowJs": true,
+        "jsx": "react",
+        "moduleResolution": "node",
         "rootDir": "src",
-        /* Strict Type-Checking Option */
-        "strict": true, /* enable all strict type-checking options */
-        /* Additional Checks */
-        "noUnusedLocals": true,
-        "typeRoots": [
-            "node_modules/@types",
-            "src/typings/"
-        ]
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "noUnusedLocals": true
     },
     "exclude": [
+        "out",
         "node_modules",
+        "build",
+        "scripts",
+        "acceptance-tests",
+        "webpack",
+        "jest",
+        "src/setupTests.ts",
         ".vscode-test"
     ]
 }
