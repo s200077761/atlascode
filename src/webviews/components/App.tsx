@@ -14,7 +14,9 @@ function handleMessage(event: any) {
     switch (message.command) {
         case 'update-pr':
             vscode.setState({
-                pr: JSON.parse(message.pr)
+                commits: message.commits,
+                comments: message.comments,
+                pr: message.pr
             });
             componentUpdater(vscode.getState());
             break;
@@ -30,6 +32,8 @@ export interface PostMessageToVSCode {
 
 export interface State {
     pr?: Bitbucket.Schema.Pullrequest;
+    commits: Bitbucket.Schema.Commit[];
+    comments: Bitbucket.Schema.Comment[];
     postMessageToVSCode: (params: PostMessageToVSCode) => void;
 }
 
@@ -38,6 +42,8 @@ class App extends React.Component<{}, State>  {
         super(props);
 
         this.state = {
+            commits: [],
+            comments: [],
             postMessageToVSCode: this.postMessageToVSCode.bind(this)
         };
     }

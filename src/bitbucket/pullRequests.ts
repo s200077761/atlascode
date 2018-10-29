@@ -97,6 +97,38 @@ export namespace PullRequest {
         return result;
     }
 
+    export async function getPullRequestCommits(pr: PullRequestDecorated): Promise<Bitbucket.Schema.Commit[]> {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        let { data } = await bb.pullrequests.listCommits({
+            pull_request_id: String(pr.data.id!),
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: 100
+        });
+
+        return data.values || [];
+    }
+
+    export async function getPullRequestComments(pr: PullRequestDecorated): Promise<Bitbucket.Schema.Comment[]> {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        let { data } = await bb.pullrequests.listComments({
+            pull_request_id: pr.data.id!,
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: 100
+        });
+
+        return data.values || [];
+    }
+
     function getBitbucketRemotes(repository: Repository): Remote[] {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
