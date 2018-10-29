@@ -1,4 +1,4 @@
-import * as GitUrlParse from 'git-url-parse';
+import * as gup from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
 import { PullRequestDecorated } from './model';
@@ -7,21 +7,17 @@ import { Atl } from "../atlclients/clientManager";
 const bitbucketHost = "bitbucket.org";
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 
+// had to do this as the library introduced a bug with latest update
+function GitUrlParse(url: string): gup.GitUrl {
+    let parsed = gup(url);
+    parsed.owner = parsed.owner.replace(':', '');
+    parsed.name = parsed.name.replace(':', '');
+    return parsed;
+}
+
 export namespace PullRequest {
     export async function getPullRequestTitles(repository: Repository): Promise<string[]> {
-        let bb = await Atl.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
-        let remotes = getBitbucketRemotes(repository);
-
-        let allPRs: PullRequestDecorated[] = [];
-        for (let i = 0; i < remotes.length; i++) {
-            let remote = remotes[i];
-            let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-            const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
-            allPRs = allPRs.concat(data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; }));
-        }
-
+        const allPRs = await getPullRequests(repository);
         return allPRs.map(pr => pr.data.title!);
     }
 

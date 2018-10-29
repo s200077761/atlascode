@@ -4,6 +4,7 @@ import { BaseNode } from './baseNode';
 import { PullRequestDecorated } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
+import { Commands } from '../../commands';
 
 export class PullRequestTitlesNode extends BaseNode {
     constructor(private pr: PullRequestDecorated) {
@@ -26,7 +27,7 @@ export class PullRequestTitlesNode extends BaseNode {
             // Fetch the specific pullrequest by id to fill in the missing details.
             this.pr = await PullRequest.getPullRequest(this.pr);
             let fileChanges: any[] = await PullRequest.getPullRequestChangedFiles(this.pr);
-            return fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, fileChange));
+            return [new DescriptionNode(this.pr), ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, fileChange))];
         } else {
             return element.getChildren();
         }
@@ -64,6 +65,29 @@ class PullRequestFilesNode extends BaseNode {
                 vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(rhsQueryParam),
                 this.fileChange.filename
             ]
+        };
+
+        return item;
+    }
+
+    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+        return [];
+    }
+}
+
+class DescriptionNode extends BaseNode {
+    constructor(private pr: PullRequestDecorated) {
+        super();
+    }
+
+    getTreeItem(): vscode.TreeItem {
+        let item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
+        item.iconPath = Resources.icons.get('detail');
+
+        item.command = {
+            command: Commands.BitbucketShowPullRequestDetails,
+            title: 'Open pull request details',
+            arguments: [this.pr]
         };
 
         return item;
