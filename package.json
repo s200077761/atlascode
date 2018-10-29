@@ -76,11 +76,30 @@
                 "category": "AtlasCode"
             }
         ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jira-viewer",
+                    "title": "Jira",
+                    "icon": "resources/atlassian-icon.svg"
+                }
+            ]
+        },
         "views": {
             "scm": [
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests"
+                }
+            ],
+            "jira-viewer": [
+                {
+                    "id": "assignedIssues",
+                    "name": "Your Issues"
+                },
+                {
+                    "id": "openIssues",
+                    "name": "Open Issues"
                 }
             ]
         },

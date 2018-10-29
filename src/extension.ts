@@ -8,6 +8,7 @@ import { Configuration } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Atl } from './atlclients/clientManager';
+import { JiraOutlineProvider } from './views/jira/jiraOutlineProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -25,6 +26,9 @@ export function activate(context: vscode.ExtensionContext) {
     } else {
         Logger.error(new Error('vscode.git extension not found'));
     }
+
+    vscode.window.registerTreeDataProvider('assignedIssues', new JiraOutlineProvider('assignee=currentUser() and statusCategory in ("In Progress")'));
+    vscode.window.registerTreeDataProvider('openIssues', new JiraOutlineProvider('assignee in (EMPTY) order by lastViewed DESC'));
 
     Logger.debug('AtlasCode extension has been activated');
 
