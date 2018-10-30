@@ -8,7 +8,7 @@ const Hash = (props: any) =>
     <Button appearance="subtle-link" href={props.href} >
         <span style={style}>{props.hash}</span>
     </Button>;
-const Message = (props: any) => <span>{props.message}</span>;
+const Message = (props: any) => <p>{props.message}</p>;
 
 export default class Commits extends React.Component<State, {}> {
     constructor(props: any) {

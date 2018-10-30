@@ -30,7 +30,7 @@ export default class PullRequestPage extends React.Component<State, {}> {
                     </GridColumn>
                     <GridColumn medium={4}>
                         <Reviewers {...this.props} />
-                        <Button onClick={this.alertHandler}>Checkout</Button>
+                        <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
                     </GridColumn>
                     <GridColumn>
                         <hr />

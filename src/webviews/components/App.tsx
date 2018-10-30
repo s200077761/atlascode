@@ -41,7 +41,7 @@ class App extends React.Component<{}, State>  {
     constructor(props: any) {
         super(props);
 
-        this.state = {
+        this.state = vscode.getState() || {
             commits: [],
             comments: [],
             postMessageToVSCode: this.postMessageToVSCode.bind(this)
@@ -66,7 +66,7 @@ class App extends React.Component<{}, State>  {
         return (
             <div>
                 <PullRequestPage {...this.state} />
-            </div >
+            </div>
         );
     }
 }
