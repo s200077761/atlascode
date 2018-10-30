@@ -56,6 +56,21 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.selectProject",
+                "title": "Select Working Jira Project",
+                "icon": "resources/atlassian-icon.svg",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.jira.refreshExplorer",
+                "title": "Refresh",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
                 "category": "AtlasCode"
@@ -108,6 +123,15 @@
                 {
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "view == atlascode.views.bb.pullrequestsTreeView"
+                },
+                {
+                    "command": "atlascode.jira.selectProject",
+                    "when": "view =~ /(assignedIssues|openIssues)/"
+                },
+                {
+                    "command": "atlascode.jira.refreshExplorer",
+                    "when": "view =~ /(assignedIssues|openIssues)/",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": []
@@ -133,6 +157,12 @@
                     "default": false,
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
                     "scope": "window"
+                },
+                "atlascode.jira.workingProject": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Jira project for workspace",
+                    "scope": "resource"
                 }
             }
         }
@@ -153,6 +183,8 @@
         "@atlaskit/page": "^8.0.8",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
         "@atlaskit/table-tree": "^4.1.11",
+        "ajv": "^6.5.4",
+        "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.3.1",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
@@ -163,12 +195,12 @@
         "passport-atlassian-oauth2": "^1.0.0",
         "passport-bitbucket-oauth2": "^0.1.2",
         "passport-oauth2": "^1.4.0",
-        "tunnel": "^0.0.6",
         "passport-oauth2-refresh": "^1.1.0",
         "react": "^16.3.2",
         "react-dom": "^16.3.2",
         "react-scripts-ts": "2.16.0",
-        "styled-components": "^4.0.2"
+        "styled-components": "^4.0.2",
+        "tunnel": "^0.0.6"
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
