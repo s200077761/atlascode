@@ -1,3 +1,7 @@
 .App {
   text-align: center;
 }
+
+.vscode-dark p {
+  color: #B8C7E0;
+}

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PullRequestDecorated } from '../bitbucket/model';
+import { PullRequest } from '../bitbucket/pullRequests';
 
 export class PullRequestReactPanel {
 	/**
@@ -55,11 +56,20 @@ export class PullRequestReactPanel {
     }
 
     public async updatePullRequest(pr: PullRequestDecorated) {
-        // Send a message to the webview webview.
-        // You can send any JSON serializable data.
-        await this._panel.webview.postMessage({
-            command: 'update-pr',
-            pr: JSON.stringify(pr.data)
+        let promises = Promise.all([
+            PullRequest.getPullRequestCommits(pr),
+            PullRequest.getPullRequestComments(pr)
+        ]);
+        promises.then(result => {
+            let [commits, comments] = result;
+            // Send a message to the webview webview.
+            // You can send any JSON serializable data.
+            this._panel.webview.postMessage({
+                command: 'update-pr',
+                commits: commits,
+                comments: comments,
+                pr: pr.data
+            });
         });
     }
 
