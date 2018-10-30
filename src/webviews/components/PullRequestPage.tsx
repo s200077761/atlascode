@@ -3,6 +3,8 @@ import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import { State } from './App';
 import Reviewers from './Reviewers';
+import Commits from './Commits';
+import Comments from './Comments';
 
 export default class PullRequestPage extends React.Component<State, {}> {
     constructor(props: any) {
@@ -28,14 +30,19 @@ export default class PullRequestPage extends React.Component<State, {}> {
                     </GridColumn>
                     <GridColumn medium={4}>
                         <Reviewers {...this.props} />
-                        <Button onClick={this.alertHandler}>Checkout</Button>
+                        <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
                     </GridColumn>
                     <GridColumn>
+                        <hr />
+                        <h3>Commits</h3>
+                        <Commits {...this.props} />
                         <hr />
                         <h3>Summary</h3>
                         <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }}>
                         </p>
                         <hr />
+                        <h3>Comments</h3>
+                        <Comments {...this.props} />
                     </GridColumn>
                 </Grid>
             </Page>
