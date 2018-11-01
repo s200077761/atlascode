@@ -1,7 +1,7 @@
 import * as React from 'react';
-import Button from '@atlaskit/button';
+import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import { State } from './App';
+import { State } from '../App';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -9,18 +9,23 @@ import Comments from './Comments';
 export default class PullRequestPage extends React.Component<State, {}> {
     constructor(props: any) {
         super(props);
-        this.alertHandler = this.alertHandler.bind(this);
     }
 
-    alertHandler(e: any) {
+    alertHandler = (e: any) => {
         this.props.postMessageToVSCode({
             action: 'alert'
         });
     }
 
+    onApprove = () => {
+        this.props.postMessageToVSCode({
+            action: 'approve'
+        });
+    }
+
     render() {
-        const pr = this.props.pr;
-        if (!pr) { return <div>No data!</div>; }
+        const pr = this.props.pr!;
+        if (!pr) { return <div></div>; }
         return (
             <Page>
                 <Grid>
@@ -30,7 +35,10 @@ export default class PullRequestPage extends React.Component<State, {}> {
                     </GridColumn>
                     <GridColumn medium={4}>
                         <Reviewers {...this.props} />
-                        <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
+                        <ButtonGroup>
+                            <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
+                            <Button onClick={this.onApprove} appearance="primary">Approve</Button>
+                        </ButtonGroup>
                     </GridColumn>
                     <GridColumn>
                         <hr />

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "publisher": "atlassianlabs",
     "license": "SEE LICENSE IN LICENSE",
-    "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
+    "homepage": "https://bitbucket.org/atlassianlabs/atlascode",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
@@ -83,6 +83,10 @@
             {
                 "command": "atlascode.bb.refreshPullRequests",
                 "title": "Refresh Bitbucket pull requests",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
                 "category": "AtlasCode"
             },
             {
@@ -122,7 +126,8 @@
             "view/title": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
-                    "when": "view == atlascode.views.bb.pullrequestsTreeView"
+                    "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
@@ -185,7 +190,7 @@
         "@atlaskit/table-tree": "^4.1.11",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
-        "bitbucket": "^1.3.1",
+        "bitbucket": "^1.5.0",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
         "jira": "file:../node-jira",
@@ -199,7 +204,7 @@
         "react": "^16.3.2",
         "react-dom": "^16.3.2",
         "react-scripts-ts": "2.16.0",
-        "styled-components": "^4.0.2",
+        "styled-components": "^3.2.6",
         "tunnel": "^0.0.6"
     },
     "devDependencies": {

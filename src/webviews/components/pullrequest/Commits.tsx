@@ -1,14 +1,14 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
-import { State } from './App';
+import { State } from '../App';
 
 const style = { fontFamily: "monospace" };
 const Hash = (props: any) =>
     <Button appearance="subtle-link" href={props.href} >
         <span style={style}>{props.hash}</span>
     </Button>;
-const Message = (props: any) => <p>{props.message}</p>;
+const Message = (props: any) => <p style={{ display: "inline" }}>{props.message}</p>;
 
 export default class Commits extends React.Component<State, {}> {
     constructor(props: any) {

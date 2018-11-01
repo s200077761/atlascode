@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAuthor, CommentTime } from '@atlaskit/comment';
-import { State } from './App';
+import { State } from '../App';
 import * as Bitbucket from 'bitbucket';
 
 

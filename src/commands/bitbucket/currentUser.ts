@@ -1,13 +1,8 @@
 import { Logger } from "../../logger";
-import { Atl } from "../../atlclients/clientManager";
+import { getCurrentUser } from "../../bitbucket/user";
 
-
-export async function currentUserBitbucket() {
-    let bbreq = await Atl.bbrequest();
-
-    if (bbreq) {
-        bbreq.user.get('').then(user => {
-            Logger.debug(`currentUser is: ${user.data.display_name}`);
-        });
-    }
+export async function currentUserBitbucket(): Promise<Bitbucket.Schema.User> {
+    const user = await getCurrentUser();
+    Logger.debug(`currentUser is: ${user.display_name}`);
+    return user;
 }

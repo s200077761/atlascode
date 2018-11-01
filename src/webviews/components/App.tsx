@@ -1,7 +1,6 @@
 import * as React from 'react';
 import './App.css';
-import PullRequestPage from './PullRequestPage';
-import * as Bitbucket from 'bitbucket';
+import PullRequestPage from './pullrequest/PullRequestPage';
 
 declare var acquireVsCodeApi: any;
 const vscode = acquireVsCodeApi();
@@ -14,6 +13,7 @@ function handleMessage(event: any) {
     switch (message.command) {
         case 'update-pr':
             vscode.setState({
+                currentUser: message.currentUser,
                 commits: message.commits,
                 comments: message.comments,
                 pr: message.pr
@@ -26,11 +26,12 @@ function handleMessage(event: any) {
 }
 
 export interface PostMessageToVSCode {
-    action: "alert";
+    action: "alert" | "checkout" | "approve";
     args?: any;
 }
 
 export interface State {
+    currentUser?: Bitbucket.Schema.User;
     pr?: Bitbucket.Schema.Pullrequest;
     commits: Bitbucket.Schema.Commit[];
     comments: Bitbucket.Schema.Comment[];
@@ -52,10 +53,13 @@ class App extends React.Component<{}, State>  {
         componentUpdater = (data) => { this.setState({ ...this.state, ...data }); };
     }
 
-    postMessageToVSCode(m: PostMessageToVSCode) {
+    postMessageToVSCode = (m: PostMessageToVSCode) => {
         switch (m.action) {
             case 'alert':
                 vscode.postMessage({ command: 'alert', text: '🐛 on line ' });
+                break;
+            case 'approve':
+                vscode.postMessage({ command: 'approve', args: { currentUsername: this.state.currentUser!.username!, prId: this.state.pr!.id! } });
                 break;
             default:
                 break;

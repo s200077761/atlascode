@@ -1,5 +1,5 @@
 import * as React from "react";
-import { State } from "./App";
+import { State } from "../App";
 import AvatarGroup from '@atlaskit/avatar-group';
 
 export default class Reviewers extends React.Component<State, {}> {
