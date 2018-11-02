@@ -6,9 +6,10 @@ import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 
-export default class PullRequestPage extends React.Component<State, {}> {
+export default class PullRequestPage extends React.Component<State, { isApproveButtonLoading: boolean }> {
     constructor(props: any) {
         super(props);
+        this.state = { isApproveButtonLoading: false };
     }
 
     alertHandler = (e: any) => {
@@ -18,6 +19,7 @@ export default class PullRequestPage extends React.Component<State, {}> {
     }
 
     onApprove = () => {
+        this.setState({ isApproveButtonLoading: true });
         this.props.postMessageToVSCode({
             action: 'approve'
         });
@@ -26,6 +28,10 @@ export default class PullRequestPage extends React.Component<State, {}> {
     render() {
         const pr = this.props.pr!;
         if (!pr) { return <div></div>; }
+
+        let currentUserApproved = pr.participants!
+            .filter((participant) => participant.user!.account_id === this.props.currentUser!.account_id)
+            .reduce((acc, curr) => !!acc || !!curr.approved, false);
         return (
             <Page>
                 <Grid>
@@ -37,8 +43,9 @@ export default class PullRequestPage extends React.Component<State, {}> {
                         <Reviewers {...this.props} />
                         <ButtonGroup>
                             <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
-                            <Button onClick={this.onApprove} appearance="primary">Approve</Button>
+                            {!currentUserApproved && <Button isLoading={this.state.isApproveButtonLoading} onClick={this.onApprove} appearance="primary">Approve</Button>}
                         </ButtonGroup>
+                        {currentUserApproved && <p>✔ You have approved this PR</p>}
                     </GridColumn>
                     <GridColumn>
                         <hr />

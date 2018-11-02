@@ -59,7 +59,7 @@ class App extends React.Component<{}, State>  {
                 vscode.postMessage({ command: 'alert', text: '🐛 on line ' });
                 break;
             case 'approve':
-                vscode.postMessage({ command: 'approve', args: { currentUsername: this.state.currentUser!.username!, prId: this.state.pr!.id! } });
+                vscode.postMessage({ command: 'approve' });
                 break;
             default:
                 break;

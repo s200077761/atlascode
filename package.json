@@ -208,7 +208,6 @@
         "tunnel": "^0.0.6"
     },
     "devDependencies": {
-        "@types/atlaskit__button": "^6.4.1",
         "@types/git-url-parse": "^9.0.0",
         "@types/keytar": "^4.0.1",
         "@types/mocha": "^5.2.2",

@@ -136,4 +136,17 @@ export namespace PullRequest {
             return parsed && parsed.source === bitbucketHost;
         });
     }
+
+    export async function approve(pr: PullRequestDecorated) {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        return await bb.pullrequests.createApproval({
+            pull_request_id: String(pr.data.id!),
+            repo_slug: parsed.name,
+            username: parsed.owner
+        });
+    }
 }

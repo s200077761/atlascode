@@ -2,7 +2,29 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PullRequestDecorated } from '../bitbucket/model';
 import { PullRequest } from '../bitbucket/pullRequests';
-import { generateWebviewHtml } from 'src/resources';
+import { generateWebviewHtml } from '../resources';
+import { getCurrentUser } from '../bitbucket/user';
+import { Remote, Repository } from '../typings/git';
+import { Logger } from '../logger';
+
+class PRState {
+    constructor(
+        readonly repository?: Repository,
+        readonly remote?: Remote,
+        readonly currentUser?: Bitbucket.Schema.User,
+        public pr?: Bitbucket.Schema.Pullrequest,
+        public commits?: Bitbucket.Schema.Commit[],
+        public comments?: Bitbucket.Schema.Comment[]) {
+    }
+    isValid = () => {
+        return !!this.repository
+            && !!this.remote
+            && !!this.pr
+            && !!this.currentUser
+            && !!this.commits
+            && !!this.comments;
+    }
+}
 
 export class PullRequestReactPanel {
 	/**
@@ -15,6 +37,7 @@ export class PullRequestReactPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
     private _disposables: vscode.Disposable[] = [];
+    private _state: PRState = new PRState();
 
     public static createOrShow(extensionPath: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -52,26 +75,54 @@ export class PullRequestReactPanel {
                 case 'alert':
                     vscode.window.showErrorMessage(message.text);
                     return;
+                case 'approve':
+                    this.approve().catch((e: any) => {
+                        Logger.error(new Error(`error approving pull request: ${e}`));
+                        vscode.window.showErrorMessage('Pull reqeust could not be approved');
+                    });
             }
         }, null, this._disposables);
     }
 
     public async updatePullRequest(pr: PullRequestDecorated) {
+        if (this._state.isValid()) {
+            this._panel.webview.postMessage({
+                command: 'update-pr',
+                currentUser: this._state.currentUser,
+                pr: this._state.pr,
+                commits: this._state.commits,
+                comments: this._state.comments
+            });
+        }
         let promises = Promise.all([
+            getCurrentUser(),
             PullRequest.getPullRequestCommits(pr),
             PullRequest.getPullRequestComments(pr)
         ]);
         promises.then(result => {
-            let [commits, comments] = result;
+            let [currentUser, commits, comments] = result;
+            this._state = new PRState(pr.repository, pr.remote, currentUser, pr.data, commits, comments);
             // Send a message to the webview webview.
             // You can send any JSON serializable data.
             this._panel.webview.postMessage({
                 command: 'update-pr',
-                commits: commits,
-                comments: comments,
-                pr: pr.data
+                currentUser: this._state.currentUser,
+                pr: this._state.pr,
+                commits: this._state.commits,
+                comments: this._state.comments
             });
         });
+    }
+
+    private async approve() {
+        await PullRequest.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.pr! });
+        await this.forceUpdatePullRequest();
+    }
+
+    private async forceUpdatePullRequest() {
+        const result = await PullRequest.getPullRequest({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.pr! });
+        this._state.pr = result.data;
+        await this.updatePullRequest(result);
     }
 
     public dispose() {

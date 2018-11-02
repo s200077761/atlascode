@@ -13,7 +13,7 @@ export default class Reviewers extends React.Component<State, {}> {
             .filter(p => p.role === 'REVIEWER')
             .map(p => {
                 return {
-                    name: p.user!.username!,
+                    name: p.user!.display_name!,
                     src: p.user!.links!.avatar!.href!,
                     status: p.approved ? 'approved' : undefined
                 };
