@@ -11,7 +11,7 @@ import { PullRequestReactPanel } from './webviews/pullRequestWebView';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
-import { ConfigReactPanel } from './webviews/configWebview';
+import { Container } from './container';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
@@ -39,7 +39,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
-        vscode.commands.registerCommand(Commands.ShowConfigPage, () => ConfigReactPanel.createOrShow(vscodeContext.extensionPath))
+        vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview)
     );
 }
 

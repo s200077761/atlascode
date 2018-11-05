@@ -24,5 +24,5 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
 
     
     
-    Resources.html.set('configHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'configView.html'))).toString()));
+    Resources.html.set('reactHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()));
 }
