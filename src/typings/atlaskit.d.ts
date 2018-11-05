@@ -3,3 +3,4 @@ declare module '@atlaskit/table-tree';
 declare module '@atlaskit/avatar';
 declare module '@atlaskit/avatar-group';
 declare module '@atlaskit/comment';
+declare module '@atlaskit/button';

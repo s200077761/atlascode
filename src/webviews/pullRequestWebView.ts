@@ -2,6 +2,29 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PullRequestDecorated } from '../bitbucket/model';
 import { PullRequest } from '../bitbucket/pullRequests';
+import { generateWebviewHtml } from '../resources';
+import { getCurrentUser } from '../bitbucket/user';
+import { Remote, Repository } from '../typings/git';
+import { Logger } from '../logger';
+
+class PRState {
+    constructor(
+        readonly repository?: Repository,
+        readonly remote?: Remote,
+        readonly currentUser?: Bitbucket.Schema.User,
+        public pr?: Bitbucket.Schema.Pullrequest,
+        public commits?: Bitbucket.Schema.Commit[],
+        public comments?: Bitbucket.Schema.Comment[]) {
+    }
+    isValid = () => {
+        return !!this.repository
+            && !!this.remote
+            && !!this.pr
+            && !!this.currentUser
+            && !!this.commits
+            && !!this.comments;
+    }
+}
 
 export class PullRequestReactPanel {
 	/**
@@ -14,6 +37,7 @@ export class PullRequestReactPanel {
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
     private _disposables: vscode.Disposable[] = [];
+    private _state: PRState = new PRState();
 
     public static createOrShow(extensionPath: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -38,7 +62,7 @@ export class PullRequestReactPanel {
         });
 
         // Set the webview's initial html content 
-        this._panel.webview.html = this._getHtmlForWebview();
+        this._panel.webview.html = generateWebviewHtml(this._extensionPath);
 
         // Listen for when the panel is disposed
         // This happens when the user closes the panel or when the panel is closed programatically
@@ -51,26 +75,54 @@ export class PullRequestReactPanel {
                 case 'alert':
                     vscode.window.showErrorMessage(message.text);
                     return;
+                case 'approve':
+                    this.approve().catch((e: any) => {
+                        Logger.error(new Error(`error approving pull request: ${e}`));
+                        vscode.window.showErrorMessage('Pull reqeust could not be approved');
+                    });
             }
         }, null, this._disposables);
     }
 
     public async updatePullRequest(pr: PullRequestDecorated) {
+        if (this._state.isValid()) {
+            this._panel.webview.postMessage({
+                command: 'update-pr',
+                currentUser: this._state.currentUser,
+                pr: this._state.pr,
+                commits: this._state.commits,
+                comments: this._state.comments
+            });
+        }
         let promises = Promise.all([
+            getCurrentUser(),
             PullRequest.getPullRequestCommits(pr),
             PullRequest.getPullRequestComments(pr)
         ]);
         promises.then(result => {
-            let [commits, comments] = result;
+            let [currentUser, commits, comments] = result;
+            this._state = new PRState(pr.repository, pr.remote, currentUser, pr.data, commits, comments);
             // Send a message to the webview webview.
             // You can send any JSON serializable data.
             this._panel.webview.postMessage({
                 command: 'update-pr',
-                commits: commits,
-                comments: comments,
-                pr: pr.data
+                currentUser: this._state.currentUser,
+                pr: this._state.pr,
+                commits: this._state.commits,
+                comments: this._state.comments
             });
         });
+    }
+
+    private async approve() {
+        await PullRequest.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.pr! });
+        await this.forceUpdatePullRequest();
+    }
+
+    private async forceUpdatePullRequest() {
+        const result = await PullRequest.getPullRequest({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.pr! });
+        this._state.pr = result.data;
+        await this.updatePullRequest(result);
     }
 
     public dispose() {
@@ -86,47 +138,4 @@ export class PullRequestReactPanel {
             }
         }
     }
-
-    private _getHtmlForWebview() {
-        const manifest = require(path.join(this._extensionPath, 'build', 'asset-manifest.json'));
-        const mainScript = manifest['main.js'];
-        const mainStyle = manifest['main.css'];
-
-        const scriptPathOnDisk = vscode.Uri.file(path.join(this._extensionPath, 'build', mainScript));
-        const scriptUri = scriptPathOnDisk.with({ scheme: 'vscode-resource' });
-        const stylePathOnDisk = vscode.Uri.file(path.join(this._extensionPath, 'build', mainStyle));
-        const styleUri = stylePathOnDisk.with({ scheme: 'vscode-resource' });
-
-        // Use a nonce to whitelist which scripts can be run
-        const nonce = getNonce();
-
-        return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="utf-8">
-				<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-				<meta name="theme-color" content="#000000">
-				<title>React App</title>
-				<link rel="stylesheet" type="text/css" href="${styleUri}">
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src vscode-resource: https:; script-src 'nonce-${nonce}';style-src vscode-resource: 'unsafe-inline' http: https: data:;">
-				<base href="${vscode.Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' })}/">
-			</head>
-
-			<body>
-				<noscript>You need to enable JavaScript to run this app.</noscript>
-				<div id="root"></div>
-				
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
-			</html>`;
-    }
-}
-
-function getNonce() {
-    let text = "";
-    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }
