@@ -81,6 +81,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.showIssueByKey",
+                "title": "Show Jira Issue",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.fetchPullRequests",
                 "title": "Fetch Bitbucket pull requests",
                 "category": "AtlasCode"
@@ -104,7 +109,7 @@
             "activitybar": [
                 {
                     "id": "jira-viewer",
-                    "title": "Jira",
+                    "title": "Atlascode",
                     "icon": "resources/atlassian-icon.svg"
                 }
             ]
