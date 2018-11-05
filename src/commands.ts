@@ -11,6 +11,8 @@ import { PullRequestReactPanel } from './webviews/pullRequestWebView';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
+import { showIssue } from './commands/jira/showIssue';
+import { JiraIssue } from './jira/jiraIssue';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
@@ -21,7 +23,8 @@ export enum Commands {
     currentUserJira = 'atlascode.jira.me',
     AuthenticateJira = 'atlascode.jira.authenticate',
     SelectProject = 'atlascode.jira.selectProject',
-    RefreshExplorer = 'atlascode.jira.refreshExplorer'
+    RefreshExplorer = 'atlascode.jira.refreshExplorer',
+    ShowIssue = 'atlascode.jira.showIssue'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext, bbContext: BitbucketContext) {
@@ -45,6 +48,7 @@ export function registerJiraCommands(vscodeContext: vscode.ExtensionContext, jir
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
-        vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree))
+        vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree)),
+        vscode.commands.registerCommand(Commands.ShowIssue, (issue: JiraIssue) => showIssue(vscodeContext.extensionPath, issue))
     );
 }

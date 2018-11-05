@@ -76,6 +76,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.showIssue",
+                "title": "Show Jira Issue",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.fetchPullRequests",
                 "title": "Fetch Bitbucket pull requests",
                 "category": "AtlasCode"
