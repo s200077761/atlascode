@@ -11,7 +11,7 @@
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
     },
     "icon": "images/atlascode-icon.png",
-    "preview": false,
+    "preview": true,
     "galleryBanner": {
         "color": "#8647ae",
         "theme": "dark"
@@ -88,6 +88,11 @@
             {
                 "command": "atlascode.bb.showPullReqeustDetails",
                 "title": "Show Bitbucket pull request details",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.showConfigPage",
+                "title": "Open Settings",
                 "category": "AtlasCode"
             }
         ],
@@ -200,7 +205,8 @@
         "react-dom": "^16.3.2",
         "react-scripts-ts": "2.16.0",
         "styled-components": "^4.0.2",
-        "tunnel": "^0.0.6"
+        "tunnel": "^0.0.6",
+        "handlebars": "^4.0.12"
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
@@ -212,6 +218,7 @@
         "@types/passport-oauth2": "^1.4.6",
         "@types/react": "^16.3.2",
         "@types/react-dom": "^16.0.5",
+        "@types/handlebars": "^4.0.39",
         "mocha": "^5.2.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",

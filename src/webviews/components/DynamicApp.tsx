@@ -1,7 +1,8 @@
 import * as React from 'react';
 import './App.css';
-import PullRequestPage from './PullRequestPage';
+//import PullRequestPage from './PullRequestPage';
 import * as Bitbucket from 'bitbucket';
+//import ConfigView from './ConfigView';
 
 declare var acquireVsCodeApi: any;
 const vscode = acquireVsCodeApi();
@@ -38,7 +39,7 @@ export interface State {
     postMessageToVSCode: (params: PostMessageToVSCode) => void;
 }
 
-class App extends React.Component<{view:string|null}, State>  {
+class DynamicApp extends React.Component<{view:string|null}, any>  {
     constructor(props: any) {
         super(props);
 
@@ -64,13 +65,22 @@ class App extends React.Component<{view:string|null}, State>  {
     }
 
     public render() {
-        this.postMessageToVSCode({action:'alert',msg:JSON.stringify(this.props,null,2)});
-        return (
-            <div>
-                <PullRequestPage {...this.state} />
-            </div>
-        );
+        console.log(this.props.view);
+        switch(this.props.view) {
+            case 'configView': {
+                import(/* webpackChunkName: "configView" */ './ConfigView').then(ConfigView => this.setState({ ConfigView: ConfigView.default }));
+                // const { ConfigView: ConfigView } = this.state;
+
+                return(<div>Dynamic</div>);
+            }
+            default: {
+                return (
+                    <div>Default Case</div>
+                );
+            }
+        }
     }
 }
 
-export default App;
+export default DynamicApp;
+

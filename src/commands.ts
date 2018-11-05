@@ -11,6 +11,7 @@ import { PullRequestReactPanel } from './webviews/pullRequestWebView';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
+import { ConfigReactPanel } from './webviews/configWebview';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
@@ -21,7 +22,8 @@ export enum Commands {
     currentUserJira = 'atlascode.jira.me',
     AuthenticateJira = 'atlascode.jira.authenticate',
     SelectProject = 'atlascode.jira.selectProject',
-    RefreshExplorer = 'atlascode.jira.refreshExplorer'
+    RefreshExplorer = 'atlascode.jira.refreshExplorer',
+    ShowConfigPage = 'atlascode.showConfigPage'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext, bbContext: BitbucketContext) {
@@ -37,6 +39,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
+        vscode.commands.registerCommand(Commands.ShowConfigPage, () => ConfigReactPanel.createOrShow(vscodeContext.extensionPath))
     );
 }
 

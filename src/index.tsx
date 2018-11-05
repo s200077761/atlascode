@@ -1,8 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import App from './webviews/components/App';
+import DynamicApp from './webviews/components/DynamicApp';
+
+const view = document.getElementById('reactView') as HTMLElement
 
 ReactDOM.render(
-    <App />,
+    <DynamicApp view={view.getAttribute('content')}/>,
     document.getElementById('root') as HTMLElement
 );
