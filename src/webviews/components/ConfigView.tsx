@@ -1,15 +1,18 @@
 import * as React from 'react';
-//import { State } from './App';
+import { WebviewComponent } from './WebviewComponent';
+import { Action } from '../../ipc/action';
+import { IConfig } from '../../config/model';
 
-declare var acquireVsCodeApi: any;
-const vscode = acquireVsCodeApi();
-
-export default class ConfigView extends React.Component<{}, {}> {
+export default class ConfigView extends WebviewComponent<Action, IConfig, {},{}> {
     constructor(props: any) {
         super(props);
     }
 
     public render() {
         return <div>Config View!</div>;
+    }
+
+    public onMessageReceived(e: IConfig) {
+
     }
 }

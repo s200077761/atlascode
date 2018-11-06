@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAuthor, CommentTime } from '@atlaskit/comment';
-import { State } from './App';
+import { PRAction } from '../../../ipc/prAction';
 import * as Bitbucket from 'bitbucket';
 
 
@@ -36,13 +36,13 @@ const NestedComment = ({ data, children }: Node): any => (
     </Comment>
 );
 
-export default class Comments extends React.Component<State, {}> {
+export default class Comments extends React.Component<PRAction, {}> {
     constructor(props: any) {
         super(props);
     }
 
     render() {
-        const nestedGlobalComments = toNestedList(this.props.comments);
+        const nestedGlobalComments = toNestedList(this.props.comments!);
         let result: any[] = [];
         nestedGlobalComments.forEach((commentNode) => {
             if (!commentNode.data.parent) {

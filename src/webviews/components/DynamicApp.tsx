@@ -8,6 +8,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadablePullRequestView = Loadable({
+    loader: () => import(/* webpackChunkName: "pullRequestView" */ './pullrequest/PullRequestPage'),
+    loading: Loading,
+  });
+
 function Loading(props:Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! { props.error }</div>;
@@ -28,6 +33,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return(
                     <div>
                         <LoadableConfigView />
+                    </div>
+                );
+            }
+            case 'pullRequestView': {
+                return(
+                    <div>
+                        <LoadablePullRequestView />
                     </div>
                 );
             }

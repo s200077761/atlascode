@@ -28,7 +28,13 @@ class ClientManager {
         Logger.debug("getting bb client");
         
         return this.getClient<BitbucketKit>(authinfo.AuthProvider.BitbucketCloud,(info)=>{
-            let bbclient = new BitbucketKit();
+
+            let extraOptions = {};
+            if (this._agent) {
+                extraOptions = {agent: this._agent};
+            }
+
+            let bbclient = new BitbucketKit({options:extraOptions});
             bbclient.authenticate({type: 'token', token: info.access});
 
             return bbclient;

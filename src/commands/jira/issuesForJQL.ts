@@ -1,8 +1,6 @@
 import { Atl } from "../../atlclients/clientManager";
 import { JiraIssue } from "../../jira/jiraIssue";
 
-const fields = ["summary", "description", "comment", "issuetype"];
-
 export async function issuesForJQL(jql: string): Promise<JiraIssue[]> {
   let client = await Atl.jirarequest();
 
@@ -11,7 +9,7 @@ export async function issuesForJQL(jql: string): Promise<JiraIssue[]> {
       .searchForIssuesUsingJqlGet({
         expand: "",
         jql: jql,
-        fields: fields
+        fields: JiraIssue.fields
       })
       .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
         const issues = res.data.issues;

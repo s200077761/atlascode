@@ -1,22 +1,22 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
-import { State } from './App';
+import { PRAction } from '../../../ipc/prAction';
 
 const style = { fontFamily: "monospace" };
 const Hash = (props: any) =>
     <Button appearance="subtle-link" href={props.href} >
         <span style={style}>{props.hash}</span>
     </Button>;
-const Message = (props: any) => <p>{props.message}</p>;
+const Message = (props: any) => <p style={{ display: "inline" }}>{props.message}</p>;
 
-export default class Commits extends React.Component<State, {}> {
+export default class Commits extends React.Component<PRAction, {}> {
     constructor(props: any) {
         super(props);
     }
 
     render() {
-        const commitsData = this.props.commits.map((commit) => {
+        const commitsData = this.props.commits!.map((commit) => {
             return {
                 hash: commit.hash!,
                 message: commit.message,

@@ -29,7 +29,7 @@ export namespace PullRequest {
 
         let remotes = getBitbucketRemotes(repository);
 
-        Logger.debug(`got remotes: ${remotes}`)
+        Logger.debug('got remotes:', remotes);
         let allPRs: PullRequestDecorated[] = [];
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
@@ -52,7 +52,6 @@ export namespace PullRequest {
             repo_slug: parsed.name,
             username: parsed.owner
         });
-
         return { repository: pr.repository, remote: pr.remote, data: data };
     }
 
@@ -138,6 +137,19 @@ export namespace PullRequest {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
             let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
             return parsed && parsed.source === bitbucketHost;
+        });
+    }
+
+    export async function approve(pr: PullRequestDecorated) {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        return await bb.pullrequests.createApproval({
+            pull_request_id: String(pr.data.id!),
+            repo_slug: parsed.name,
+            username: parsed.owner
         });
     }
 }

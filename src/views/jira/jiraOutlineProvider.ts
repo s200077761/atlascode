@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { JiraIssue } from '../../jira/jiraIssue';
 import { issuesForJQL } from '../../commands/jira/issuesForJQL';
 import { Logger } from '../../logger';
+import { Commands } from '../../commands';
 
 export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
 	private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
@@ -33,7 +34,7 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
 
     getTreeItem(issue: JiraIssue): vscode.TreeItem {
         let treeItem = new vscode.TreeItem(`${issue.summary}`, vscode.TreeItemCollapsibleState.None);
-        treeItem.command = { command: 'jiraOutline.showIssue', title: "Show Issue", arguments: [issue], };
+        treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [issue], };
         treeItem.iconPath = vscode.Uri.parse(issue.issueIcon);
         return treeItem;
     }
