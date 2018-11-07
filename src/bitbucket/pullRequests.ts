@@ -1,12 +1,13 @@
 import * as gup from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest } from './model';
+import { PullRequest, PaginatedPullRequests } from './model';
 import { Atl } from "../atlclients/clientManager";
 import { Logger } from '../logger';
 
 const bitbucketHost = "bitbucket.org";
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
+const dummyRemote = { name: '', isReadOnly: true };
 
 // had to do this as the library introduced a bug with latest update
 function GitUrlParse(url: string): gup.GitUrl {
@@ -17,12 +18,8 @@ function GitUrlParse(url: string): gup.GitUrl {
 }
 
 export namespace PullRequestApi {
-    export async function getTitles(repository: Repository): Promise<string[]> {
-        const allPRs = await getList(repository);
-        return allPRs.map(pr => pr.data.title!);
-    }
 
-    export async function getList(repository: Repository): Promise<PullRequest[]> {
+    export async function getList(repository: Repository): Promise<PaginatedPullRequests> {
         Logger.debug('getting PRs...');
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
@@ -30,16 +27,31 @@ export namespace PullRequestApi {
         let remotes = getBitbucketRemotes(repository);
 
         Logger.debug('got remotes:', remotes);
-        let allPRs: PullRequest[] = [];
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
             const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
-            allPRs = allPRs.concat(data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; }));
+            const prs: PullRequest[] = data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
+            const next = data.next;
+            // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
+            if (prs.length > 0) {
+                Logger.debug(`got ${prs.length} PRs for remote: ${remote}`);
+                return { repository: repository, remote: remote, data: prs, next: next };
+            }
         }
 
-        Logger.debug(`got PRs: ${allPRs}`);
-        return allPRs;
+        Logger.debug('no PRs found');
+        return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+    }
+
+    export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const { data } = await bb.getNextPage({ next: next });
+        //@ts-ignore
+        const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
+        return { repository: repository, remote: remote, data: prs, next: data.next };
     }
 
     export async function get(pr: PullRequest): Promise<PullRequest> {
