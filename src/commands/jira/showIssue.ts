@@ -1,23 +1,18 @@
 import { IssuePanel } from "../../views/jira/issuePanel";
-import { Atl } from "../../atlclients/clientManager";
 import { JiraIssue } from "../../jira/jiraIssue";
 import { Logger } from "../../logger";
+import { fetchIssue } from "../../jira/fetchIssue";
 
 export async function showIssue(extensionPath: string, issue: JiraIssue) {
-  let client = await Atl.jirarequest();
+  IssuePanel.createOrShow(extensionPath, issue);
+}
 
-  if (client) {
-    await client.issue
-      .getIssue({
-        issueIdOrKey: issue.key,
-        expand: "",
-        fields: JiraIssue.fields
-      })
-      .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        IssuePanel.createOrShow(extensionPath, JiraIssue.readIssue(res.data));
-      })
-      .catch((reason: any) => {
-        Logger.error(reason);
-      });
-  }
+export async function showIssueByKey(extensionPath: string, issueKey: string) {
+  fetchIssue(issueKey)
+  .then((issue: JiraIssue) => {
+    IssuePanel.createOrShow(extensionPath, issue);
+  })
+  .catch((reason: any) => {
+    Logger.error(reason);
+  });
 }
