@@ -1,9 +1,9 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
-import Comment, { CommentAuthor, CommentTime } from '@atlaskit/comment';
+import Comment, { CommentAuthor, CommentTime, CommentAction } from '@atlaskit/comment';
 import { PRData } from '../../../ipc/prMessaging';
 import * as Bitbucket from 'bitbucket';
-
+import CommentForm from './CommentForm';
 
 interface Node {
     data: Bitbucket.Schema.Comment;
@@ -25,28 +25,62 @@ function toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
     return globalCommentsMap;
 }
 
-const NestedComment = ({ data, children }: Node): any => (
-    <Comment
-        avatar={<Avatar src={data.user!.links!.avatar!.href} label="Atlaskit avatar" size="medium" />}
-        author={<CommentAuthor>{data.user!.display_name}</CommentAuthor>}
-        time={<CommentTime>{new Date(data.created_on!).toDateString()}</CommentTime>}
-        content={<p dangerouslySetInnerHTML={{ __html: data.content!.html! }} />}
-    >
-        {children && children.map(child => <NestedComment {...child} />)}
-    </Comment>
-);
+class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, onSave: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+    constructor(props: any) {
+        super(props);
+        this.state = { showCommentForm: false };
+    }
 
-export default class Comments extends React.Component<PRData, {}> {
+    handleReplyClick = () => {
+        this.setState({ showCommentForm: true });
+    }
+
+    handleSave = (content: string, parentCommentId?: number) => {
+        this.props.onSave(content, parentCommentId);
+        this.setState({ showCommentForm: false });
+    }
+
+    handleCancel = () => {
+        this.setState({ showCommentForm: false });
+    }
+
+    render(): any {
+        const { node, currentUser } = this.props;
+
+        return <Comment
+            avatar={<Avatar src={node.data.user!.links!.avatar!.href} size="medium" />}
+            author={<CommentAuthor>{node.data.user!.display_name}</CommentAuthor>}
+            time={<CommentTime>{new Date(node.data.created_on!).toDateString()}</CommentTime>}
+            content={
+                <React.Fragment>
+                    <p dangerouslySetInnerHTML={{ __html: node.data.content!.html! }} />
+                    <CommentForm
+                        currentUser={currentUser}
+                        visible={this.state.showCommentForm}
+                        onSave={(content: string) => this.handleSave(content, node.data.id!)}
+                        onCancel={this.handleCancel} />
+                </React.Fragment>
+            }
+            actions={[
+                !this.state.showCommentForm && <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>
+            ]}
+        >
+            {node.children && node.children.map(child => <NestedComment node={child} currentUser={currentUser} onSave={this.props.onSave} />)}
+        </Comment>;
+    }
+}
+
+export default class Comments extends React.Component<{ prData: PRData, onComment: (content: string, parentCommentId?: number) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
 
     render() {
-        const nestedGlobalComments = toNestedList(this.props.comments!);
+        const nestedGlobalComments = toNestedList(this.props.prData.comments!);
         let result: any[] = [];
         nestedGlobalComments.forEach((commentNode) => {
             if (!commentNode.data.parent) {
-                result.push(<NestedComment {...commentNode} />);
+                result.push(<NestedComment node={commentNode} currentUser={this.props.prData.currentUser!} onSave={this.props.onComment} />);
             }
         });
         return result;

@@ -7,12 +7,15 @@ import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData } from '../../../ipc/prMessaging';
 import { Action, Alert } from '../../../ipc/messaging';
+import { PostComment } from '../../../ipc/prActions';
+import CommentForm from './CommentForm';
 
-type Emit = Action | Alert;
-export default class PullRequestPage extends WebviewComponent<Emit, PRData, {},{ pr:PRData, isApproveButtonLoading: boolean }> {
+type Emit = Action | Alert | PostComment;
+
+export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, { pr: PRData, isApproveButtonLoading: boolean }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: {type:''}, isApproveButtonLoading: false };
+        this.state = { pr: { type: '' }, isApproveButtonLoading: false };
     }
 
     componentUpdater = (data: PRData) => { };
@@ -31,17 +34,24 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {},{
         });
     }
 
+    postCommentHandler = (content: string, parentCommentId?: number) => {
+        this.postMessage({
+            action: 'comment',
+            content: content,
+            parentCommentId: parentCommentId
+        });
+    }
+
     public onMessageReceived(e: PRData) {
         console.log("got message from vscode", e);
-        this.state = { ...this.state, ...{pr:e,isApproveButtonLoading: false} };
+        this.state = { ...this.state, ...{ pr: e, isApproveButtonLoading: false } };
         this.componentUpdater(e);
     }
 
     componentWillMount() {
-
-        this.componentUpdater = (data) => { 
-            const newState = { ...this.state, ...{pr:data} };
-            this.setState(newState); 
+        this.componentUpdater = (data) => {
+            const newState = { ...this.state, ...{ pr: data } };
+            this.setState(newState);
         };
     }
 
@@ -77,7 +87,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {},{
                         </p>
                         <hr />
                         <h3>Comments</h3>
-                        <Comments {...this.state.pr} />
+                        <Comments prData={this.state.pr} onComment={this.postCommentHandler} />
+                        <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.postCommentHandler} />
                     </GridColumn>
                 </Grid>
             </Page>

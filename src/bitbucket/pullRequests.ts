@@ -38,7 +38,7 @@ export namespace PullRequest {
             allPRs = allPRs.concat(data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; }));
         }
 
-        Logger.debug(`got PRs: ${allPRs}`)
+        Logger.debug(`got PRs: ${allPRs}`);
         return allPRs;
     }
 
@@ -150,6 +150,25 @@ export namespace PullRequest {
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner
+        });
+    }
+
+    export async function postComment(pr: PullRequestDecorated, text: string, parentCommentId?: number) {
+        let bb = await Atl.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        return await bb.pullrequests.createComment({
+            pull_request_id: pr.data.id!,
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            _body: {
+                parent: parentCommentId ? { id: parentCommentId } : undefined,
+                content: {
+                    raw: text
+                }
+            } as any
         });
     }
 }
