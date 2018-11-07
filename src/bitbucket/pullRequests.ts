@@ -3,6 +3,7 @@ import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
 import { PullRequestDecorated } from './model';
 import { Atl } from "../atlclients/clientManager";
+import { Logger } from '../logger';
 
 const bitbucketHost = "bitbucket.org";
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
@@ -22,11 +23,13 @@ export namespace PullRequest {
     }
 
     export async function getPullRequests(repository: Repository): Promise<PullRequestDecorated[]> {
+        Logger.debug('getting PRs...');
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         let remotes = getBitbucketRemotes(repository);
 
+        Logger.debug('got remotes:', remotes);
         let allPRs: PullRequestDecorated[] = [];
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
@@ -35,6 +38,7 @@ export namespace PullRequest {
             allPRs = allPRs.concat(data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; }));
         }
 
+        Logger.debug(`got PRs: ${allPRs}`)
         return allPRs;
     }
 
@@ -48,7 +52,6 @@ export namespace PullRequest {
             repo_slug: parsed.name,
             username: parsed.owner
         });
-
         return { repository: pr.repository, remote: pr.remote, data: data };
     }
 

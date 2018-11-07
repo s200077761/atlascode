@@ -10,6 +10,7 @@ export async function authenticateBitbucket() {
         if (authInfo) {
             info = authInfo;
         } else {
+
             Logger.debug("starting oauth...");
             let dancer = new OAuthDancer();
             dancer.doDance(authinfo.AuthProvider.BitbucketCloud).then(authInfo => {

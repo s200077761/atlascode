@@ -25,10 +25,15 @@ class ClientManager {
     }
 
     public async bbrequest():Promise<BitbucketKit | undefined> {
-        Logger.debug("getting bb client");
         
         return this.getClient<BitbucketKit>(authinfo.AuthProvider.BitbucketCloud,(info)=>{
-            let bbclient = new BitbucketKit();
+
+            let extraOptions = {};
+            if (this._agent) {
+                extraOptions = {agent: this._agent};
+            }
+
+            let bbclient = new BitbucketKit({options:extraOptions});
             bbclient.authenticate({type: 'token', token: info.access});
 
             return bbclient;
@@ -36,7 +41,6 @@ class ClientManager {
     }
 
     public async jirarequest():Promise<JiraKit | undefined> {
-        Logger.debug("getting jira client");
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";

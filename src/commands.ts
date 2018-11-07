@@ -7,18 +7,18 @@ import { authenticateJira } from './commands/authenticate';
 import { BitbucketContext } from './bitbucket/context';
 import { PullRequestNodeDataProvider } from './views/pullRequestNodeDataProvider';
 import { BaseNode } from './views/nodes/baseNode';
-import { PullRequestReactPanel } from './webviews/pullRequestWebView';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showIssue, showIssueByKey } from './commands/jira/showIssue';
 import { JiraIssue } from './jira/jiraIssue';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
+import { Container } from './container';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
-    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullReqeustDetails',
+    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
@@ -26,7 +26,8 @@ export enum Commands {
     SelectProject = 'atlascode.jira.selectProject',
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
-    ShowIssueByKey = 'atlascode.jira.showIssueByKey'
+    ShowIssueByKey = 'atlascode.jira.showIssueByKey',
+    ShowConfigPage = 'atlascode.showConfigPage'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext, bbContext: BitbucketContext) {
@@ -37,11 +38,11 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
         vscode.commands.registerCommand(Commands.BitbucketFetchPullRequests, fetchPullRequestsCommand, bbContext),
         vscode.commands.registerCommand(Commands.BitbucketRefreshPullRequests, prNodeDataProvider.refresh, prNodeDataProvider),
         vscode.commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
-            PullRequestReactPanel.createOrShow(vscodeContext.extensionPath);
-            await PullRequestReactPanel.currentPanel!.updatePullRequest(pr);
+            await Container.pullRequestViewManager.createOrShow(pr);
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
+        vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview)
     );
 }
 

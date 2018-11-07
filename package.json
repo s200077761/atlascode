@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "publisher": "atlassianlabs",
     "license": "SEE LICENSE IN LICENSE",
-    "homepage": "https://bitbucket.org/atlassianlabs/atlascode",
+    "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
@@ -100,8 +100,13 @@
                 "category": "AtlasCode"
             },
             {
-                "command": "atlascode.bb.showPullReqeustDetails",
+                "command": "atlascode.bb.showPullRequestDetails",
                 "title": "Show Bitbucket pull request details",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.showConfigPage",
+                "title": "Open Settings",
                 "category": "AtlasCode"
             }
         ],
@@ -215,9 +220,13 @@
         "react-dom": "^16.3.2",
         "react-scripts-ts": "2.16.0",
         "styled-components": "^3.2.6",
-        "tunnel": "^0.0.6"
+        "tunnel": "^0.0.6",
+        "handlebars": "^4.0.12",
+        "react-loadable": "^5.5.0",
+        "flatted":"^2.0.0"
     },
     "devDependencies": {
+        "@types/atlaskit__button": "^6.4.1",
         "@types/git-url-parse": "^9.0.0",
         "@types/keytar": "^4.0.1",
         "@types/mocha": "^5.2.2",
@@ -226,6 +235,8 @@
         "@types/passport-oauth2": "^1.4.6",
         "@types/react": "^16.3.2",
         "@types/react-dom": "^16.0.5",
+        "@types/handlebars": "^4.0.39",
+        "@types/react-loadable": "^5.4.1",
         "mocha": "^5.2.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",

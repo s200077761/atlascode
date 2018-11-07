@@ -1,36 +1,56 @@
 import * as React from 'react';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import { State } from '../App';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
+import { WebviewComponent } from '../WebviewComponent';
+import { PRData } from '../../../ipc/prMessaging';
+import { Action, Alert } from '../../../ipc/messaging';
 
-export default class PullRequestPage extends React.Component<State, { isApproveButtonLoading: boolean }> {
+type Emit = Action | Alert;
+export default class PullRequestPage extends WebviewComponent<Emit, PRData, {},{ pr:PRData, isApproveButtonLoading: boolean }> {
     constructor(props: any) {
         super(props);
-        this.state = { isApproveButtonLoading: false };
+        this.state = { pr: {type:''}, isApproveButtonLoading: false };
     }
 
+    componentUpdater = (data: PRData) => { };
+
     alertHandler = (e: any) => {
-        this.props.postMessageToVSCode({
-            action: 'alert'
+        this.postMessage({
+            action: 'alertError',
+            message: 'checkout clicked'
         });
     }
 
     onApprove = () => {
-        this.setState({ isApproveButtonLoading: true });
-        this.props.postMessageToVSCode({
+        this.setState({ ...this.state, ...{ isApproveButtonLoading: true } });
+        this.postMessage({
             action: 'approve'
         });
     }
 
+    public onMessageReceived(e: PRData) {
+        console.log("got message from vscode", e);
+        this.state = { ...this.state, ...{pr:e,isApproveButtonLoading: false} };
+        this.componentUpdater(e);
+    }
+
+    componentWillMount() {
+
+        this.componentUpdater = (data) => { 
+            const newState = { ...this.state, ...{pr:data} };
+            this.setState(newState); 
+        };
+    }
+
     render() {
-        const pr = this.props.pr!;
+        const pr = this.state.pr.pr!;
         if (!pr) { return <div></div>; }
 
         let currentUserApproved = pr.participants!
-            .filter((participant) => participant.user!.account_id === this.props.currentUser!.account_id)
+            .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
         return (
             <Page>
@@ -40,7 +60,7 @@ export default class PullRequestPage extends React.Component<State, { isApproveB
                         <Button spacing="compact">{pr.source!.branch!.name}</Button> → <Button spacing="compact">{pr.destination!.branch!.name}</Button>
                     </GridColumn>
                     <GridColumn medium={4}>
-                        <Reviewers {...this.props} />
+                        <Reviewers {...this.state.pr} />
                         <ButtonGroup>
                             <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
                             {!currentUserApproved && <Button isLoading={this.state.isApproveButtonLoading} onClick={this.onApprove} appearance="primary">Approve</Button>}
@@ -50,14 +70,14 @@ export default class PullRequestPage extends React.Component<State, { isApproveB
                     <GridColumn>
                         <hr />
                         <h3>Commits</h3>
-                        <Commits {...this.props} />
+                        <Commits {...this.state.pr} />
                         <hr />
                         <h3>Summary</h3>
                         <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }}>
                         </p>
                         <hr />
                         <h3>Comments</h3>
-                        <Comments {...this.props} />
+                        <Comments {...this.state.pr} />
                     </GridColumn>
                 </Grid>
             </Page>

@@ -33,7 +33,7 @@ export class IssuePanel {
 
     let comments = "<h4>Comments<h4>";
     issue.comments.forEach(comment => {
-      comments += "<h5>" + comment.author.displayName + "</h5>";
+      comments += "<h5>" + comment.author!.displayName + "</h5>";
       comments += "" + comment.comment + "<p>";
     });
 

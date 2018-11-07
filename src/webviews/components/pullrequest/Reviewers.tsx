@@ -1,8 +1,8 @@
 import * as React from "react";
-import { State } from "../App";
+import { PRData } from '../../../ipc/prMessaging';
 import AvatarGroup from '@atlaskit/avatar-group';
 
-export default class Reviewers extends React.Component<State, {}> {
+export default class Reviewers extends React.Component<PRData, {}> {
     constructor(props: any) {
         super(props);
     }

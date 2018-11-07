@@ -4,18 +4,23 @@ import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
 import { registerCommands, registerJiraCommands } from './commands';
 import { registerResources } from './resources';
-import { Configuration } from './config/configuration';
+import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Atl } from './atlclients/clientManager';
 import { JiraOutlineProvider } from './views/jira/jiraOutlineProvider';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { JiraContext } from './jira/context';
+import { Container } from './container';
 
 export function activate(context: vscode.ExtensionContext) {
 
     Configuration.configure(context);
     Logger.configure(context);
+
+    const cfg = configuration.get<IConfig>();
+
+    Container.initialize(context,cfg);
     registerResources(context);
     Atl.configure(context);
 
