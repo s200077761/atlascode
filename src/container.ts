@@ -1,7 +1,7 @@
 import { ExtensionContext } from 'vscode';
 import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
-import { PullRequestWebview } from './webviews/pullRequestWebview';
+import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig) {
@@ -9,15 +9,12 @@ export class Container {
         this._config = config;
 
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._pullRequestWebview = new PullRequestWebview(context.extensionPath)));
+        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
     }
 
     private static _config: IConfig | undefined;
     static get config() {
-        if (this._config === undefined) {
-            this._config = configuration.get<IConfig>();
-        }
-        return this._config;
+        return  this._config || configuration.get<IConfig>();
     }
 
     private static _context: ExtensionContext;
@@ -30,8 +27,8 @@ export class Container {
         return this._configWebview;
     }
 
-    private static _pullRequestWebview: PullRequestWebview;
-    static get pullRequestWebview() {
-        return this._pullRequestWebview;
+    private static _pullRequestViewManager: PullRequestViewManager;
+    static get pullRequestViewManager() {
+        return this._pullRequestViewManager;
     }
 }

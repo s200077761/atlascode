@@ -1,22 +1,22 @@
 import { window } from 'vscode';
-import { AbstractReactWebview } from './abstractWebview';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequestDecorated } from '../bitbucket/model';
 import { PullRequest } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
-import { PRAction } from '../ipc/prAction';
-import { Action } from '../ipc/action';
+import { PRData } from '../ipc/prMessaging';
+import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 
 interface PRState {
-    prAction:PRAction;
+    prData:PRData;
     remote?: Remote;
     repository?: Repository;
 }
 
-const emptyState: PRState = {prAction:{action:''}};
+const emptyState: PRState = {prData:{type:''}};
 
-export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
+export class PullRequestWebview extends AbstractReactWebview<PRData,Action> implements InitializingWebview<PullRequestDecorated> {
     private _state: PRState = emptyState;
 
     constructor(extensionPath: string) {
@@ -24,10 +24,14 @@ export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
     }
 
     public get title(): string {
-        return "AtlasCode Pull Request";
+        return "Pull Request";
     }
     public get id(): string {
         return "pullRequestView";
+    }
+
+    initialize(data: PullRequestDecorated) {
+        this.updatePullRequest(data);
     }
 
     public invalidate() {
@@ -37,13 +41,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
     private validatePRState(s:PRState): boolean {
         return !!s.repository
             && !!s.remote
-            && !!s.prAction.pr
-            && !!s.prAction.currentUser
-            && !!s.prAction.commits
-            && !!s.prAction.comments;
+            && !!s.prData.pr
+            && !!s.prData.currentUser
+            && !!s.prData.commits
+            && !!s.prData.comments;
     }
 
-    protected onMessageReceived(e: PRAction | Action): boolean {
+    protected onMessageReceived(e: Action): boolean {
         let handled = super.onMessageReceived(e);
 
         if(!handled) {
@@ -66,9 +70,11 @@ export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
     }
 
     public async updatePullRequest(pr: PullRequestDecorated) {
+        if(this._panel){ this._panel.title = `Pull Request #${pr.data.id}`; }
+        
         if (this.validatePRState(this._state)) {
-            this._state.prAction.action = 'update-pr';
-             this.postMessage(this._state.prAction);
+            this._state.prData.type = 'update';
+             this.postMessage(this._state.prData);
             return;
         }
         let promises = Promise.all([
@@ -82,15 +88,15 @@ export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
             this._state = {
                 repository: pr.repository,
                 remote: pr.remote,
-                prAction: {
-                action: 'update-pr'
+                prData: {
+                type: 'update'
                 ,currentUser: currentUser
                 ,pr: pr.data
                 ,commits: commits
                 ,comments: comments
                 }
             };
-            this.postMessage(this._state.prAction);
+            this.postMessage(this._state.prData);
         },
         reason => {
             Logger.debug("promise rejected!",reason);
@@ -98,13 +104,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRAction,Action> {
     }
 
     private async approve() {
-        await PullRequest.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prAction.pr! });
+        await PullRequest.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
         await this.forceUpdatePullRequest();
     }
 
     private async forceUpdatePullRequest() {
-        const result = await PullRequest.getPullRequest({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prAction.pr! });
-        this._state.prAction.pr = result.data;
+        const result = await PullRequest.getPullRequest({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
+        this._state.prData.pr = result.data;
         await this.updatePullRequest(result).catch(reason => {
             Logger.debug("update rejected", reason);
         });

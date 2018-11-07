@@ -2,6 +2,11 @@ import * as React from 'react';
 import './App.css';
 import * as Loadable from 'react-loadable';
 
+// These Loadables dynamically load chunks as needed so we don't need ALL js on every page.
+// The special comment tells webpack what to name the chunks. This should match the id() returned
+// by the associated vscode webview.
+//
+// Note: ALL loadables can reuse the same Loading function.
 
 const LoadableConfigView = Loadable({
     loader: () => import(/* webpackChunkName: "configView" */ './ConfigView'),
@@ -21,6 +26,9 @@ function Loading(props:Loadable.LoadingComponentProps) {
     }
 }
 
+// DynamicApp is the entry point for ALL webviews.
+// Each React component should be dynamically loaded above and then called within this component's render method.
+// As we create new webviews, they need to be added here.
 class DynamicApp extends React.Component<{view:string|null}>  {
     constructor(props: any) {
         super(props);
@@ -28,6 +36,7 @@ class DynamicApp extends React.Component<{view:string|null}>  {
     }
 
     public render() {
+        // props.view must match the webChunkName above AND the id() returned by the vscode webview component.
         switch(this.props.view) {
             case 'configView': {
                 return(

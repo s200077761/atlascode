@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { IConfig } from '../config/model';
-import { Action } from '../ipc/action';
+import { Action } from '../ipc/messaging';
 
 export class ConfigWebview extends AbstractReactWebview<IConfig,Action> {
 	

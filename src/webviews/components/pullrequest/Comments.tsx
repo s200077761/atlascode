@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAuthor, CommentTime } from '@atlaskit/comment';
-import { PRAction } from '../../../ipc/prAction';
+import { PRData } from '../../../ipc/prMessaging';
 import * as Bitbucket from 'bitbucket';
 
 
@@ -36,7 +36,7 @@ const NestedComment = ({ data, children }: Node): any => (
     </Comment>
 );
 
-export default class Comments extends React.Component<PRAction, {}> {
+export default class Comments extends React.Component<PRData, {}> {
     constructor(props: any) {
         super(props);
     }

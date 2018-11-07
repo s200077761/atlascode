@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "publisher": "atlassianlabs",
     "license": "SEE LICENSE IN LICENSE",
-    
+    "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
@@ -95,7 +95,7 @@
                 "category": "AtlasCode"
             },
             {
-                "command": "atlascode.bb.showPullReqeustDetails",
+                "command": "atlascode.bb.showPullRequestDetails",
                 "title": "Show Bitbucket pull request details",
                 "category": "AtlasCode"
             },

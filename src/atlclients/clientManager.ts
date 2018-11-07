@@ -25,7 +25,6 @@ class ClientManager {
     }
 
     public async bbrequest():Promise<BitbucketKit | undefined> {
-        Logger.debug("getting bb client");
         
         return this.getClient<BitbucketKit>(authinfo.AuthProvider.BitbucketCloud,(info)=>{
 
@@ -42,7 +41,6 @@ class ClientManager {
     }
 
     public async jirarequest():Promise<JiraKit | undefined> {
-        Logger.debug("getting jira client");
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";

@@ -17,7 +17,7 @@ import { Container } from './container';
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
-    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullReqeustDetails',
+    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
@@ -36,8 +36,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
         vscode.commands.registerCommand(Commands.BitbucketFetchPullRequests, fetchPullRequestsCommand, bbContext),
         vscode.commands.registerCommand(Commands.BitbucketRefreshPullRequests, prNodeDataProvider.refresh, prNodeDataProvider),
         vscode.commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
-            await Container.pullRequestWebview.createOrShow();
-            await Container.pullRequestWebview.updatePullRequest(pr);
+            await Container.pullRequestViewManager.createOrShow(pr);
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),

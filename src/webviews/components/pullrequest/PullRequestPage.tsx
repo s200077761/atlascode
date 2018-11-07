@@ -5,17 +5,17 @@ import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRAction } from '../../../ipc/prAction';
-import { Action, Alert } from '../../../ipc/action';
+import { PRData } from '../../../ipc/prMessaging';
+import { Action, Alert } from '../../../ipc/messaging';
 
 type Emit = Action | Alert;
-export default class PullRequestPage extends WebviewComponent<Emit, PRAction, {},{ pr:PRAction, isApproveButtonLoading: boolean }> {
+export default class PullRequestPage extends WebviewComponent<Emit, PRData, {},{ pr:PRData, isApproveButtonLoading: boolean }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: {action:''}, isApproveButtonLoading: false };
+        this.state = { pr: {type:''}, isApproveButtonLoading: false };
     }
 
-    componentUpdater = (data: PRAction) => { };
+    componentUpdater = (data: PRData) => { };
 
     alertHandler = (e: any) => {
         this.postMessage({
@@ -31,7 +31,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRAction, {}
         });
     }
 
-    public onMessageReceived(e: PRAction) {
+    public onMessageReceived(e: PRData) {
         console.log("got message from vscode", e);
         this.state = { ...this.state, ...{pr:e,isApproveButtonLoading: false} };
         this.componentUpdater(e);

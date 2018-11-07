@@ -5,24 +5,53 @@ import {
     ViewColumn,
     WebviewPanel,
     WebviewPanelOnDidChangeViewStateEvent,
+    EventEmitter,
+    Event,
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable } from '../ipc/action';
+import { Action, isAlertable } from '../ipc/messaging';
 import { Logger } from '../logger';
 
-export abstract class AbstractReactWebview<S,R extends Action> implements Disposable {
+// ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
+export interface ReactWebview extends Disposable {
+    hide(): void;
+    createOrShow(): Promise<void>;
+    onDidPanelDispose(): Event<void>;
+ }
 
+ // InitializingWebview is an interface that exposes an initialize method that may be called to initialize the veiw object with data.
+ // Type T is the type of the data that's passed to the initialize method.
+ // This interface is called in AbstractMultiViewManager
+ export interface InitializingWebview<T> {
+    initialize(data:T): void;
+ }
+
+ // isInitializable tests to see if a webview is an InitializingWebview and casts it if it is.
+ export function isInitializable(object: any): object is InitializingWebview<any> {
+    return (<InitializingWebview<any>>object).initialize !== undefined;
+}
+
+// AbstractReactWebview is the base class for atlascode react webviews.
+// This handles the panel creation/disposing, comms between vscode and react, etc.
+// Generic Types:
+// S = the type of ipc.Message to send to react
+// R = the type of ipc.Action to receive from react
+export abstract class AbstractReactWebview<S,R extends Action> implements ReactWebview {
     private _disposablePanel: Disposable | undefined;
-    private _panel: WebviewPanel | undefined;
+    protected _panel: WebviewPanel | undefined;
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
+    private _onDidPanelDispose = new EventEmitter<void>();
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
 
     }
 
+    onDidPanelDispose(): Event<void> {
+        return this._onDidPanelDispose.event;
+    }
     abstract get title(): string;
     abstract get id(): string;
     abstract invalidate(): void;
@@ -100,6 +129,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements Dispos
         Logger.debug("webview panel disposed");
         if (this._disposablePanel){ this._disposablePanel.dispose();}
         this._panel = undefined;
+        this._onDidPanelDispose.fire();
     }
 
     public dispose() {
