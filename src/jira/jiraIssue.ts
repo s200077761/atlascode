@@ -3,7 +3,7 @@ export class JiraIssue {
     static readonly fields = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status"];
 
     constructor(readonly key: string, readonly description: string, readonly summary: string, 
-        readonly status: JiraStatus, readonly reporter: JiraUser, readonly assignee: JiraUser | undefined, 
+        readonly status: JiraStatus, readonly reporter: JiraUser | undefined, readonly assignee: JiraUser | undefined, 
         readonly jiraURL: string, readonly issueIcon: string, readonly comments: JiraComment[], 
         readonly labels: string[], readonly attachments: JIRA.Schema.AttachmentBean[]) {}
 
@@ -13,10 +13,10 @@ export class JiraIssue {
         const summary = issueJson.fields.summary;
         const status = new JiraStatus(issueJson.fields.status.name, issueJson.fields.status.statusCategory.colorName);
         const issuetypeIcon = issueJson.fields.issuetype.iconUrl;
-        const reporter = JiraUser.readUser(issueJson.fields.reporter);
+        const reporter = issueJson.fields.reporter ? JiraUser.readUser(issueJson.fields.reporter) : undefined;
         const assignee = issueJson.fields.assignee ? JiraUser.readUser(issueJson.fields.assignee) : undefined;
         const comments = issueJson.fields.comment.comments.map((commentJson: any) => {
-          let author = JiraUser.readUser(commentJson.author);
+          let author = commentJson.author ? JiraUser.readUser(commentJson.author) : undefined;
           let body = commentJson.body;
           return new JiraComment(author, body);
         });
@@ -39,7 +39,7 @@ export class JiraIssue {
 }
 
 export class JiraComment {
-    constructor(readonly author: JiraUser, readonly comment: string) {
+    constructor(readonly author: JiraUser | undefined, readonly comment: string) {
     }
 }
 

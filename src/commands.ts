@@ -10,8 +10,9 @@ import { BaseNode } from './views/nodes/baseNode';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
-import { showIssue } from './commands/jira/showIssue';
+import { showIssue, showIssueByKey } from './commands/jira/showIssue';
 import { JiraIssue } from './jira/jiraIssue';
+import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
 
 export enum Commands {
@@ -25,6 +26,7 @@ export enum Commands {
     SelectProject = 'atlascode.jira.selectProject',
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
+    ShowIssueByKey = 'atlascode.jira.showIssueByKey',
     ShowConfigPage = 'atlascode.showConfigPage'
 }
 
@@ -50,6 +52,8 @@ export function registerJiraCommands(vscodeContext: vscode.ExtensionContext, jir
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree)),
-        vscode.commands.registerCommand(Commands.ShowIssue, (issue: JiraIssue) => showIssue(vscodeContext.extensionPath, issue))
+        vscode.commands.registerCommand(Commands.ShowIssue, (issue: JiraIssue) => showIssue(vscodeContext.extensionPath, issue)),
+        vscode.commands.registerCommand(Commands.ShowIssueByKey, (issueKey: string) => showIssueByKey(vscodeContext.extensionPath, issueKey)),
+        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider())
     );
 }
