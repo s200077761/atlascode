@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { PullRequest } from '../../bitbucket/pullRequests';
+import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { BaseNode } from './baseNode';
-import { PullRequestDecorated } from '../../bitbucket/model';
+import { PullRequest } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 
 export class PullRequestTitlesNode extends BaseNode {
-    constructor(private pr: PullRequestDecorated) {
+    constructor(private pr: PullRequest) {
         super();
     }
 
@@ -25,8 +25,8 @@ export class PullRequestTitlesNode extends BaseNode {
             if (!this.pr) { return []; }
             // When a repo's pullrequests are fetched, the response may not have all fields populated.
             // Fetch the specific pullrequest by id to fill in the missing details.
-            this.pr = await PullRequest.getPullRequest(this.pr);
-            let fileChanges: any[] = await PullRequest.getPullRequestChangedFiles(this.pr);
+            this.pr = await PullRequestApi.get(this.pr);
+            let fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
             return [new DescriptionNode(this.pr), ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, fileChange))];
         } else {
             return element.getChildren();
@@ -35,7 +35,7 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private pr: PullRequestDecorated, private fileChange: any) {
+    constructor(private pr: PullRequest, private fileChange: any) {
         super();
     }
 
@@ -76,7 +76,7 @@ class PullRequestFilesNode extends BaseNode {
 }
 
 class DescriptionNode extends BaseNode {
-    constructor(private pr: PullRequestDecorated) {
+    constructor(private pr: PullRequest) {
         super();
     }
 

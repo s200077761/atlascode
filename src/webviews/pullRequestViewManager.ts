@@ -1,12 +1,12 @@
 
-import {  PullRequestWebview } from './pullRequestWebview';
+import { PullRequestWebview } from './pullRequestWebview';
 import { AbstractMultiViewManager } from './multiViewManager';
-import { PullRequestDecorated } from '../bitbucket/model';
+import { PullRequest } from '../bitbucket/model';
 
 // PullRequestViewManager manages views for PR details.
-export class PullRequestViewManager extends AbstractMultiViewManager<PullRequestDecorated> {
+export class PullRequestViewManager extends AbstractMultiViewManager<PullRequest> {
 
-    dataKey(data: PullRequestDecorated): string {
+    dataKey(data: PullRequest): string {
         return data.data.links!.self!.href!;
     }
 

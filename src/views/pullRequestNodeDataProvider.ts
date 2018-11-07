@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/context';
-import { PullRequest } from '../bitbucket/pullRequests';
+import { PullRequestApi } from '../bitbucket/pullRequests';
 import { PullRequestTitlesNode } from './nodes/pullRequestNode';
 import { GitContentProvider } from './gitContentProvider';
 
@@ -26,7 +26,7 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
 
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!element) {
-            let prs = await PullRequest.getPullRequests(this.ctx.repository);
+            let prs = await PullRequestApi.getList(this.ctx.repository);
             return prs.map(pr => new PullRequestTitlesNode(pr));
         } else {
             return element.getChildren();

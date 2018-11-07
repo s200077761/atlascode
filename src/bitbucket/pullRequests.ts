@@ -1,7 +1,7 @@
 import * as gup from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
-import { PullRequestDecorated } from './model';
+import { PullRequest } from './model';
 import { Atl } from "../atlclients/clientManager";
 import { Logger } from '../logger';
 
@@ -16,13 +16,13 @@ function GitUrlParse(url: string): gup.GitUrl {
     return parsed;
 }
 
-export namespace PullRequest {
-    export async function getPullRequestTitles(repository: Repository): Promise<string[]> {
-        const allPRs = await getPullRequests(repository);
+export namespace PullRequestApi {
+    export async function getTitles(repository: Repository): Promise<string[]> {
+        const allPRs = await getList(repository);
         return allPRs.map(pr => pr.data.title!);
     }
 
-    export async function getPullRequests(repository: Repository): Promise<PullRequestDecorated[]> {
+    export async function getList(repository: Repository): Promise<PullRequest[]> {
         Logger.debug('getting PRs...');
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
@@ -30,7 +30,7 @@ export namespace PullRequest {
         let remotes = getBitbucketRemotes(repository);
 
         Logger.debug('got remotes:', remotes);
-        let allPRs: PullRequestDecorated[] = [];
+        let allPRs: PullRequest[] = [];
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
@@ -42,7 +42,7 @@ export namespace PullRequest {
         return allPRs;
     }
 
-    export async function getPullRequest(pr: PullRequestDecorated): Promise<PullRequestDecorated> {
+    export async function get(pr: PullRequest): Promise<PullRequest> {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -55,7 +55,7 @@ export namespace PullRequest {
         return { repository: pr.repository, remote: pr.remote, data: data };
     }
 
-    export async function getPullRequestChangedFiles(pr: PullRequestDecorated): Promise<any[]> {
+    export async function getChangedFiles(pr: PullRequest): Promise<any[]> {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -100,7 +100,7 @@ export namespace PullRequest {
         return result;
     }
 
-    export async function getPullRequestCommits(pr: PullRequestDecorated): Promise<Bitbucket.Schema.Commit[]> {
+    export async function getCommits(pr: PullRequest): Promise<Bitbucket.Schema.Commit[]> {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -116,7 +116,7 @@ export namespace PullRequest {
         return data.values || [];
     }
 
-    export async function getPullRequestComments(pr: PullRequestDecorated): Promise<Bitbucket.Schema.Comment[]> {
+    export async function getComments(pr: PullRequest): Promise<Bitbucket.Schema.Comment[]> {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -140,7 +140,7 @@ export namespace PullRequest {
         });
     }
 
-    export async function approve(pr: PullRequestDecorated) {
+    export async function approve(pr: PullRequest) {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -153,7 +153,7 @@ export namespace PullRequest {
         });
     }
 
-    export async function postComment(pr: PullRequestDecorated, text: string, parentCommentId?: number) {
+    export async function postComment(pr: PullRequest, text: string, parentCommentId?: number) {
         let bb = await Atl.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 

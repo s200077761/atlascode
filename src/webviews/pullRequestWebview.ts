@@ -1,7 +1,7 @@
 import { window } from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequestDecorated } from '../bitbucket/model';
-import { PullRequest } from '../bitbucket/pullRequests';
+import { PullRequest } from '../bitbucket/model';
+import { PullRequestApi } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
 import { PRData } from '../ipc/prMessaging';
 import { Action } from '../ipc/messaging';
@@ -17,7 +17,7 @@ interface PRState {
 
 const emptyState: PRState = { prData: { type: '' } };
 
-export class PullRequestWebview extends AbstractReactWebview<PRData, Action> implements InitializingWebview<PullRequestDecorated> {
+export class PullRequestWebview extends AbstractReactWebview<PRData, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
 
     constructor(extensionPath: string) {
@@ -31,7 +31,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
         return "pullRequestView";
     }
 
-    initialize(data: PullRequestDecorated) {
+    initialize(data: PullRequest) {
         this.updatePullRequest(data);
     }
 
@@ -79,7 +79,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
         return handled;
     }
 
-    public async updatePullRequest(pr: PullRequestDecorated) {
+    public async updatePullRequest(pr: PullRequest) {
         if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
 
         if (this.validatePRState(this._state)) {
@@ -89,8 +89,8 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
         }
         let promises = Promise.all([
             getCurrentUser(),
-            PullRequest.getPullRequestCommits(pr),
-            PullRequest.getPullRequestComments(pr)
+            PullRequestApi.getCommits(pr),
+            PullRequestApi.getComments(pr)
         ]);
 
         promises.then(
@@ -115,17 +115,17 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
     }
 
     private async approve() {
-        await PullRequest.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
+        await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
         await this.forceUpdatePullRequest();
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequest.postComment({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! }, text, parentId);
+        await PullRequestApi.postComment({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! }, text, parentId);
         await this.forceUpdateComments();
     }
 
     private async forceUpdatePullRequest() {
-        const result = await PullRequest.getPullRequest({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
+        const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
         this._state.prData.pr = result.data;
         await this.updatePullRequest(result).catch(reason => {
             Logger.debug("update rejected", reason);
@@ -134,7 +134,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
 
     private async forceUpdateComments() {
         const pr = { repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! };
-        this._state.prData.comments = await PullRequest.getPullRequestComments(pr);
+        this._state.prData.comments = await PullRequestApi.getComments(pr);
         await this.updatePullRequest(pr);
     }
 }
