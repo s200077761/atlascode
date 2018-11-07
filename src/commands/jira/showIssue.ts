@@ -9,10 +9,10 @@ export async function showIssue(extensionPath: string, issue: JiraIssue) {
 
 export async function showIssueByKey(extensionPath: string, issueKey: string) {
   fetchIssue(issueKey)
-  .then((issue: JiraIssue) => {
-    IssuePanel.createOrShow(extensionPath, issue);
-  })
-  .catch((reason: any) => {
-    Logger.error(reason);
-  });
+    .then((issue: JiraIssue) => {
+      IssuePanel.createOrShow(extensionPath, issue);
+    })
+    .catch((reason: any) => {
+      Logger.error(reason);
+    });
 }

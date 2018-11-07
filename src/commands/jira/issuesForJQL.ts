@@ -7,7 +7,7 @@ export async function issuesForJQL(jql: string): Promise<JiraIssue[]> {
   if (client) {
     return client.search
       .searchForIssuesUsingJqlGet({
-        expand: "",
+        expand: JiraIssue.expand,
         jql: jql,
         fields: JiraIssue.fields
       })

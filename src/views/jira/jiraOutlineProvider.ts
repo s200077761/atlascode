@@ -36,6 +36,7 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
         let treeItem = new vscode.TreeItem(`${issue.summary}`, vscode.TreeItemCollapsibleState.None);
         treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [issue], };
         treeItem.iconPath = vscode.Uri.parse(issue.issueIcon);
+        treeItem.contextValue = issue.key;
         return treeItem;
     }
     

@@ -1,17 +1,18 @@
 export class JiraIssue {
 
     static readonly fields = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status"];
+    static readonly expand = "transitions";
 
     constructor(readonly key: string, readonly description: string, readonly summary: string, 
-        readonly status: JiraStatus, readonly reporter: JiraUser | undefined, readonly assignee: JiraUser | undefined, 
+        readonly status: JIRA.Schema.StatusJsonBean | undefined, readonly reporter: JiraUser | undefined, readonly assignee: JiraUser | undefined, 
         readonly jiraURL: string, readonly issueIcon: string, readonly comments: JiraComment[], 
-        readonly labels: string[], readonly attachments: JIRA.Schema.AttachmentBean[]) {}
+        readonly labels: string[], readonly attachments: JIRA.Schema.AttachmentBean[], readonly transitions: JIRA.Schema.TransitionBean[] | undefined) {}
 
     static readIssue(issueJson: any): JiraIssue {
         const key = issueJson.key;
         const description = issueJson.fields.description;
         const summary = issueJson.fields.summary;
-        const status = new JiraStatus(issueJson.fields.status.name, issueJson.fields.status.statusCategory.colorName);
+        const status = issueJson.fields.status;
         const issuetypeIcon = issueJson.fields.issuetype.iconUrl;
         const reporter = issueJson.fields.reporter ? JiraUser.readUser(issueJson.fields.reporter) : undefined;
         const assignee = issueJson.fields.assignee ? JiraUser.readUser(issueJson.fields.assignee) : undefined;
@@ -22,6 +23,7 @@ export class JiraIssue {
         });
         const labels = issueJson.fields.labels;
         const attachments = issueJson.fields.attachment;
+        const transitions = issueJson.transitions;
         return new JiraIssue(
           key,  
           description,
@@ -33,7 +35,8 @@ export class JiraIssue {
           issuetypeIcon,
           comments,
           labels,
-          attachments
+          attachments,
+          transitions
         );
       }
 }
@@ -52,10 +55,5 @@ export class JiraUser {
         return new JiraUser(userObject.displayName,
             userObject.accountId,
             userObject.avatarUrls['48x48']);
-    }
-}
-
-export class JiraStatus {
-    constructor(readonly name:string, readonly colorName: string) {
     }
 }

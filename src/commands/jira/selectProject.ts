@@ -3,6 +3,7 @@ import { Atl } from "../../atlclients/clientManager";
 import { configuration } from "../../config/configuration";
 import { Project, JiraWorkingProjectConfigurationKey } from "../../jira/project";
 import { Logger } from "../../logger";
+import { Commands } from "../../commands";
 
 export async function showProjectSelectionDialog() {
   getProjects().then(projects => {
@@ -21,7 +22,7 @@ export async function showProjectSelectionDialog() {
 
 function saveWorkingProject(project: Project) {
   configuration.update(JiraWorkingProjectConfigurationKey, project.id, vscode.ConfigurationTarget.Workspace)
-  .then(() => vscode.commands.executeCommand('atlascode.jira.refreshExplorer') )
+  .then(() => vscode.commands.executeCommand(Commands.RefreshExplorer))
   .catch(reason => {
       Logger.debug(`Failed to save working project: ${reason}`);
   });

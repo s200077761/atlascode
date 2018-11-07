@@ -14,11 +14,12 @@ import { showIssue, showIssueByKey } from './commands/jira/showIssue';
 import { JiraIssue } from './jira/jiraIssue';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
+import { transitionIssue } from './commands/jira/transitionIssue';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
-    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
+    BitbucketShowPullRequestDetails = 'atlascode.bb.showPullReqeustDetails',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
@@ -27,7 +28,8 @@ export enum Commands {
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowIssueByKey = 'atlascode.jira.showIssueByKey',
-    ShowConfigPage = 'atlascode.showConfigPage'
+    ShowConfigPage = 'atlascode.showConfigPage',
+    TransitionIssue = 'atlascode.jira.transitionIssue'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext, bbContext: BitbucketContext) {
@@ -42,7 +44,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
-        vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview)
     );
 }
 
@@ -54,6 +55,7 @@ export function registerJiraCommands(vscodeContext: vscode.ExtensionContext, jir
         vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree)),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: JiraIssue) => showIssue(vscodeContext.extensionPath, issue)),
         vscode.commands.registerCommand(Commands.ShowIssueByKey, (issueKey: string) => showIssueByKey(vscodeContext.extensionPath, issueKey)),
-        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider())
+        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider()),
+        vscode.commands.registerCommand(Commands.TransitionIssue, (issue: JiraIssue) => transitionIssue(issue))
     );
 }

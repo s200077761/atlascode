@@ -86,6 +86,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.transitionIssue",
+                "title": "Transition Issue",
+                "category": "AtlasCode"  
+            },
+            {
                 "command": "atlascode.bb.fetchPullRequests",
                 "title": "Fetch Bitbucket pull requests",
                 "category": "AtlasCode"
@@ -154,7 +159,12 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": []
+            "view/item/context": [
+                {
+                    "command": "atlascode.jira.transitionIssue",
+                    "when": "view =~ /(assignedIssues|openIssues)/"
+                }
+            ]
         },
         "configuration": {
             "type": "object",
