@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { fetchPullRequestsCommand } from './commands/bitbucket/fetchPullRequests';
 import { authenticateBitbucket } from './commands/authenticate';
 import { currentUserBitbucket } from './commands//bitbucket/currentUser';
 import { currentUserJira } from './commands//jira/currentUser';
@@ -14,11 +13,14 @@ import { showIssue, showIssueByKey } from './commands/jira/showIssue';
 import { JiraIssue } from './jira/jiraIssue';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
+import { PullRequestApi } from './bitbucket/pullRequests';
+import { PaginatedPullRequests } from './bitbucket/model';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
+    BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
@@ -35,10 +37,13 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, bbConte
     vscodeContext.subscriptions.push(vscode.window.registerTreeDataProvider<BaseNode>('atlascode.views.bb.pullrequestsTreeView', prNodeDataProvider));
 
     vscodeContext.subscriptions.push(
-        vscode.commands.registerCommand(Commands.BitbucketFetchPullRequests, fetchPullRequestsCommand, bbContext),
         vscode.commands.registerCommand(Commands.BitbucketRefreshPullRequests, prNodeDataProvider.refresh, prNodeDataProvider),
         vscode.commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
             await Container.pullRequestViewManager.createOrShow(pr);
+        }),
+        vscode.commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
+            const result = await PullRequestApi.nextPage(prs);
+            prNodeDataProvider.addItems(result);
         }),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
