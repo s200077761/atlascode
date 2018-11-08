@@ -18,6 +18,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadableIssuewView = Loadable({
+    loader: () => import(/* webpackChunkName: "jiraIssueView" */ './issue/JiraIssuePage'),
+    loading: Loading,
+  });
+
 function Loading(props:Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! { props.error }</div>;
@@ -49,6 +54,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return(
                     <div>
                         <LoadablePullRequestView />
+                    </div>
+                );
+            }
+            case 'jiraIssueView': {
+                return(
+                    <div>
+                        <LoadableIssuewView />
                     </div>
                 );
             }

@@ -1,9 +1,9 @@
 import { Atl } from "../atlclients/clientManager";
-import { JiraIssue } from "./jiraIssue";
+import { JiraIssue } from "../jira/jiraIssue";
 
 const apiConnectivityError = new Error('cannot connect to Jira API');
 
-export async function fetchIssue(issue: string): Promise<JiraIssue> {
+export async function fetchIssue(issue: string): Promise<JiraIssue.Issue> {
   let client = await Atl.jirarequest();
 
   if (client) {
@@ -11,10 +11,10 @@ export async function fetchIssue(issue: string): Promise<JiraIssue> {
       .getIssue({
         issueIdOrKey: issue,
         expand: "",
-        fields: JiraIssue.fields
+        fields: JiraIssue.issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        return JiraIssue.readIssue(res.data);
+        return JiraIssue.fromJsonObject(res.data);
       });
   }
   return Promise.reject(apiConnectivityError);
