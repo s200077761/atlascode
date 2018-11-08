@@ -11,6 +11,7 @@ var tunnel = require("tunnel");
 import * as fs from 'fs';
 import { configuration } from '../config/configuration';
 import { Resources } from '../resources';
+import { JiraWorkingSiteConfigurationKey } from '../constants';
 
 // TODO: VSCODE-29 if user bails in oauth or an error happens, we need to return undefined
 class ClientManager {
@@ -44,7 +45,12 @@ class ClientManager {
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";
-            if(info.accessibleResources) {
+
+            const workingSite = configuration.get<string>(JiraWorkingSiteConfigurationKey, null);
+
+            if(workingSite) {
+                cloudId = workingSite;
+            } else if(info.accessibleResources) {
                 cloudId = info.accessibleResources[0].id;
             }
 

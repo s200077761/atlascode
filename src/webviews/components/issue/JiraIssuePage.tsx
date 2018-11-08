@@ -24,10 +24,11 @@ const emptyIssueData:IssueData =  {
     assignee: JiraIssue.emptyUser,
     comments: [],
     labels: [],
-    attachments: []
-}
+    attachments: [],
+    transitions: []
+};
 
-export default class PullRequestPage extends WebviewComponent<Emit, IssueData, {},IssueData> {
+export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},IssueData> {
     constructor(props: any) {
         super(props);
         this.state = emptyIssueData;
@@ -58,6 +59,26 @@ export default class PullRequestPage extends WebviewComponent<Emit, IssueData, {
         width: 105px;
         `;
         if (!issue) { return <div></div>; }
+        let statusItems:any[] = [];
+
+        issue.transitions.forEach(transition => {
+            if(issue.status.id !== transition.to.id){
+                statusItems.push(
+                    <DropdownItem
+                        id={transition.name}
+                        onClick={this.onStatusClick(transition)}
+                        elemAfter={
+                        <JiraItem>
+                            <Arrow label="" size="small" />
+                            <Lozenge appearance="success">{transition.to.name}</Lozenge>
+                        </JiraItem>
+                        }>
+                        {transition.name}
+                    </DropdownItem>
+                );
+            }
+        });
+
         return (
             <Page>
                 <Grid>
@@ -74,36 +95,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, IssueData, {
                         <h2>Status</h2>
                         <DropdownMenu
                             triggerType="button"
-                            trigger="To do"
-                            triggerButtonProps={{
-                                appearence:'warning'
-                                ,onClick:this.onStatusClick
-                            }}
+                            trigger={issue.status.name}
+                            triggerButtonProps={{appearance:'primary'}}
                         >
                             <DropdownItemGroup>
-                            <DropdownItem
-                                elemAfter={
-                                <JiraItem>
-                                    <Arrow label="" size="small" />
-                                    <Lozenge appearance="inprogress">in progress</Lozenge>
-                                </JiraItem>
-                                }
-                            >
-                                Status project
-                            </DropdownItem>
-                            <DropdownItem
-                                id='Done'
-                                onClick={this.onStatusClick('Done')}
-                                elemAfter={
-                                <JiraItem>
-                                    <Arrow label="" size="small" />
-                                    <Lozenge appearance="success">Done</Lozenge>
-                                </JiraItem>
-                                }
-                            >
-                                Move to done
-                            </DropdownItem>
-                            <DropdownItem>View workflow</DropdownItem>
+                               {statusItems}
                             </DropdownItemGroup>
                         </DropdownMenu>
                     </GridColumn>

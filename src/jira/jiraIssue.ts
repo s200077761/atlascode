@@ -49,6 +49,28 @@ export namespace JiraIssue {
         self: ''
     };
 
+    export const emptyTransition:Transition = {
+        hasScreen: false,
+        id: '',
+        isConditional: false,
+        isGlobal: false,
+        isInitial: false,
+        name: '',
+        to: emptyStatus,
+    };
+
+    export const emptyAttachment:Attachment = {
+        author: emptyUser,
+        content: '',
+        created: '',
+        filename: '',
+        id: -1,
+        mimeType: '',
+        self: '',
+        size: -1,
+        thumbnail: '',
+    };
+
     export const emptyIssue:Issue = {
         key: '',
         id: '',
@@ -61,39 +83,71 @@ export namespace JiraIssue {
         assignee: emptyUser,
         comments: [],
         labels: [],
-        attachments: []
+        attachments: [],
+        transitions: []
     };
 
     export type issueOrKey = Issue | string;
 
     export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status"];
+    export const expand = "transitions";
 
     export function isIssue(a:any): a is Issue {
-        return a && (<Issue>a).key !== undefined && a.summary !== undefined;
+        return a && (<Issue>a).key !== undefined && (<Issue>a).summary !== undefined;
     }
 
     export function isComment(a:any): a is Comment {
-        return a && (<Comment>a).author !== undefined && a.body !== undefined;
+        return a && (<Comment>a).author !== undefined && (<Comment>a).body !== undefined;
     }
 
     export function isUser(a:any): a is User {
-        return a && (<User>a).displayName !== undefined && a.avatarUrls !== undefined;
+        return a && (<User>a).displayName !== undefined && (<User>a).avatarUrls !== undefined;
     }
 
     export function isStatus(a:any): a is Status {
-        return a && (<Status>a).iconUrl !== undefined && a.statusCategory !== undefined;
+        return a && (<Status>a).iconUrl !== undefined && (<Status>a).statusCategory !== undefined;
     }
 
     export function isIssueType(a:any): a is IssueType {
-        return a && (<IssueType>a).iconUrl !== undefined && a.description !== undefined;
+        return a && (<IssueType>a).iconUrl !== undefined && (<IssueType>a).description !== undefined;
+    }
+
+    export function isTransition(a:any): a is Transition {
+        return a && (<Transition>a).to !== undefined && (<Transition>a).hasScreen !== undefined;
+    }
+
+    export function isAttachment(a:any): a is Attachment {
+        return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
     }
 
     export function fromJsonObject(issueJson: any): Issue {
-        const comments:Comment[] = issueJson.fields.comment.comments.map((commentJson: any) => {
-            if(isComment(commentJson)) { return commentJson; }
+        let comments:Comment[] = [];
+        if(issueJson.fields.comment && issueJson.fields.comment.comments) {
+            comments = issueJson.fields.comment.comments.map((commentJson: any) => {
+                if(isComment(commentJson)) { return commentJson; }
+    
+                return emptyComment;
+            });
+        }
+        
+        let transitions:Transition[] = [];
+        if(issueJson.transitions) {
+            transitions = issueJson.transitions.map((transitionJson: any) => {
+                if(isTransition(transitionJson)) { return transitionJson; }
 
-            return emptyComment;
-        });
+                return emptyTransition;
+            });
+        }
+
+        let attachments:Attachment[] = [];
+        if(issueJson.fields.attachments) {
+            attachments = issueJson.fields.attachments.map((attachmentJson: any) => {
+                if(isAttachment(attachmentJson)) { return attachmentJson; }
+    
+                return emptyAttachment;
+            });
+        }
+
         return {
             key: issueJson.key,
             id: issueJson.id,
@@ -105,8 +159,9 @@ export namespace JiraIssue {
             reporter: isUser(issueJson.fields.reporter) ? issueJson.fields.reporter : emptyUser,
             assignee: isUser(issueJson.fields.assignee) ? issueJson.fields.assignee : emptyUser,
             comments: comments,
-            labels: [],
-            attachments: []
+            labels: issueJson.fields.labels,
+            attachments: attachments,
+            transitions:transitions
         };
     }
 
@@ -124,6 +179,7 @@ export namespace JiraIssue {
         comments: Comment[];
         labels: string[];
         attachments: Attachment[];
+        transitions: Transition[];
     }
 
     export interface Status {
@@ -152,17 +208,16 @@ export namespace JiraIssue {
         subtask: boolean;
     }
 
-    // TODO:
     export interface Attachment {
-        author?: User;
-        content?: string;
-        created?: string;
-        filename?: string;
-        id?: number;
-        mimeType?: string;
-        self?: string;
-        size?: number;
-        thumbnail?: string;
+        author: User;
+        content: string;
+        created: string;
+        filename: string;
+        id: number;
+        mimeType: string;
+        self: string;
+        size: number;
+        thumbnail: string;
     }
 
     export interface Comment {
@@ -190,5 +245,15 @@ export namespace JiraIssue {
         '24x24':string;
         '16x16':string;
         '32x32':string;
+    }
+
+    export interface Transition {
+      hasScreen: boolean;
+      id: string;
+      isConditional: boolean;
+      isGlobal: boolean;
+      isInitial: boolean;
+      name: string;
+      to: Status;
     }
 }

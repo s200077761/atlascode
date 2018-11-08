@@ -10,7 +10,7 @@ export async function fetchIssue(issue: string): Promise<JiraIssue.Issue> {
     return client.issue
       .getIssue({
         issueIdOrKey: issue,
-        expand: "",
+        expand: JiraIssue.expand,
         fields: JiraIssue.issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {

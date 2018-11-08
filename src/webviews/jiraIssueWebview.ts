@@ -55,6 +55,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
     }
 
     public async updateIssue(issue: JiraIssue.Issue) {
+        Logger.debug("transitions",issue.transitions);
         this._state = issue;
         if(this._panel){ this._panel.title = `Jira Issue ${issue.key}`; }
 
