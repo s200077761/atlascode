@@ -5,6 +5,7 @@ import { PullRequestApi } from '../bitbucket/pullRequests';
 import { PullRequestTitlesNode, NextPageNode } from './nodes/pullRequestNode';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
+import { EmptyStateNode } from './nodes/emptyStateNode';
 
 export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<BaseNode>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<BaseNode | undefined> = new vscode.EventEmitter<BaseNode | undefined>();
@@ -44,6 +45,9 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
         }
         if (!this._children) {
             let prs = await PullRequestApi.getList(this.ctx.repository);
+            if (prs.data.length === 0) {
+                return [new EmptyStateNode('No pull requests found for this repository')];
+            }
             this._children = prs.data.map(pr => new PullRequestTitlesNode(pr));
             if (prs.next) { this._children!.push(new NextPageNode(prs)); }
         }
