@@ -26,7 +26,7 @@ export namespace PullRequestApi {
 
         let remotes = getBitbucketRemotes(repository);
 
-        Logger.debug('got remotes:', remotes);
+        Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
@@ -35,7 +35,7 @@ export namespace PullRequestApi {
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
-                Logger.debug(`got ${prs.length} PRs for remote: ${remote}`);
+                Logger.debug(`got ${prs.length} PRs for remote: ${remote.name}`);
                 return { repository: repository, remote: remote, data: prs, next: next };
             }
         }

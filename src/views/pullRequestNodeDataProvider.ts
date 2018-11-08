@@ -1,22 +1,34 @@
 import * as vscode from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/context';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { PullRequestTitlesNode, NextPageNode } from './nodes/pullRequestNode';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
-import { EmptyStateNode } from './nodes/emptyStateNode';
+import { RepositoriesNode } from './nodes/repositoriesNode';
 
 export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<BaseNode>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<BaseNode | undefined> = new vscode.EventEmitter<BaseNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
-    private _children: BaseNode[] | undefined = undefined;
+    private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
 
     static SCHEME = 'atlascode.bbpr';
     private _disposables: vscode.Disposable[] = [];
 
     constructor(private ctx: BitbucketContext) {
-        this._disposables.push(vscode.workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx.repository)));
+        this._disposables.push(vscode.workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)));
+        ctx.onDidChangeBitbucketContext(() => {
+            this.updateChildren();
+            this.refresh();
+        });
+    }
+
+    private updateChildren(): void {
+        if (!this._childrenMap) {
+            this._childrenMap = new Map();
+        }
+        this._childrenMap.clear();
+        this.ctx.getAllRepositores().forEach(repo => {
+            this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo));
+        });
     }
 
     refresh(): void {
@@ -24,14 +36,11 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
     }
 
     addItems(prs: PaginatedPullRequests): void {
-        if (!this._children) {
-            this._children = [];
+        if (!this._childrenMap || !this._childrenMap.get(prs.repository.rootUri.toString())) {
+            return;
         }
-        if (this._children.length > 0 && this._children[this._children.length - 1] instanceof NextPageNode) {
-            this._children.pop();
-        }
-        this._children!.push(...prs.data.map(pr => new PullRequestTitlesNode(pr)));
-        if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+
+        this._childrenMap.get(prs.repository.rootUri.toString())!.addItems(prs);
         this.refresh();
     }
 
@@ -43,15 +52,10 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
         if (element) {
             return element.getChildren();
         }
-        if (!this._children) {
-            let prs = await PullRequestApi.getList(this.ctx.repository);
-            if (prs.data.length === 0) {
-                return [new EmptyStateNode('No pull requests found for this repository')];
-            }
-            this._children = prs.data.map(pr => new PullRequestTitlesNode(pr));
-            if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+        if (!this._childrenMap) {
+            this.updateChildren();
         }
-        return this._children!;
+        return Array.from(this._childrenMap!.values());
     }
 
     dispose() {

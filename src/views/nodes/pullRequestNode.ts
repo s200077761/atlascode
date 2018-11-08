@@ -45,8 +45,8 @@ class PullRequestFilesNode extends BaseNode {
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(this.fileChange.filename, vscode.TreeItemCollapsibleState.None);
 
-        let lhsQueryParam = { query: JSON.stringify({ remote: this.pr.remote.name, branch: this.pr.data.destination!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.destination!.commit!.hash! }) };
-        let rhsQueryParam = { query: JSON.stringify({ remote: this.pr.remote.name, branch: this.pr.data.source!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.source!.commit!.hash! }) };
+        let lhsQueryParam = { query: JSON.stringify({ repoUri: this.pr.repository.rootUri.toString(), remote: this.pr.remote.name, branch: this.pr.data.destination!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.destination!.commit!.hash! }) };
+        let rhsQueryParam = { query: JSON.stringify({ repoUri: this.pr.repository.rootUri.toString(), remote: this.pr.remote.name, branch: this.pr.data.source!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.source!.commit!.hash! }) };
         switch (this.fileChange.status) {
             case 'added':
                 item.iconPath = Resources.icons.get('add');
