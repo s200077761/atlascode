@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
-import { registerCommands, registerJiraCommands } from './commands';
+import { registerCommands } from './commands';
 import { registerResources } from './resources';
 import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
@@ -24,23 +24,23 @@ export function activate(context: vscode.ExtensionContext) {
     registerResources(context);
     Atl.configure(context);
 
-    const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
-    if (gitExtension) {
-        const gitApi = gitExtension.exports.getAPI(1);
-        const bbContext = new BitbucketContext(gitApi);
-        context.subscriptions.push(bbContext);
-        registerCommands(context, bbContext);
-    } else {
-        Logger.error(new Error('vscode.git extension not found'));
-    }
-
     const assignedTree = new JiraOutlineProvider();
     const openTree = new JiraOutlineProvider();
     refreshExplorer(assignedTree, openTree);
     vscode.window.registerTreeDataProvider('assignedIssues', assignedTree);
     vscode.window.registerTreeDataProvider('openIssues', openTree);
-    const jiraContext:JiraContext = {assignedTree:assignedTree, openTree:openTree};
-    registerJiraCommands(context, jiraContext);
+    const jiraContext: JiraContext = { assignedTree: assignedTree, openTree: openTree };
+
+    registerCommands(context, jiraContext);
+
+    const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
+    if (gitExtension) {
+        const gitApi = gitExtension.exports.getAPI(1);
+        const bbContext = new BitbucketContext(context, gitApi);
+        context.subscriptions.push(bbContext);
+    } else {
+        Logger.error(new Error('vscode.git extension not found'));
+    }
 
     Logger.debug('AtlasCode extension has been activated');
 }
