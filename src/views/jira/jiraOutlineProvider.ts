@@ -4,11 +4,11 @@ import { issuesForJQL } from '../../commands/jira/issuesForJQL';
 import { Logger } from '../../logger';
 import { Commands } from '../../commands';
 
-export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
+export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue.Issue> {
 	private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
 	readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
-    private issues: JiraIssue[] | undefined;
+    private issues: JiraIssue.Issue[] | undefined;
     private jql: string | undefined;
 
     refresh() {
@@ -22,7 +22,7 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
         this.refresh();
     }
 
-    getChildren(parent?: JiraIssue): Promise<JiraIssue[]> {
+    getChildren(parent?: JiraIssue.Issue): Promise<JiraIssue.Issue[]> {
         if (parent || !this.jql) {
             return Promise.resolve([]);
         } else if (this.issues) {
@@ -32,14 +32,15 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<JiraIssue> {
         }
     }
 
-    getTreeItem(issue: JiraIssue): vscode.TreeItem {
+    getTreeItem(issue: JiraIssue.Issue): vscode.TreeItem {
         let treeItem = new vscode.TreeItem(`${issue.summary}`, vscode.TreeItemCollapsibleState.None);
         treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [issue], };
-        treeItem.iconPath = vscode.Uri.parse(issue.issueIcon);
+        treeItem.iconPath = vscode.Uri.parse(issue.issueType.iconUrl);
+
         return treeItem;
     }
     
-    private async fetchIssues(): Promise<JiraIssue[]> {
+    private async fetchIssues(): Promise<JiraIssue.Issue[]> {
         if (!this.jql) {
             return Promise.resolve([]);
         }

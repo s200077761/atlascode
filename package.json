@@ -62,6 +62,12 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.selectSite",
+                "title": "Select Working Jira Site",
+                "icon": "resources/atlassian-icon.svg",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh",
                 "icon": {
@@ -183,6 +189,12 @@
                     "default": "",
                     "description": "Jira project for workspace",
                     "scope": "resource"
+                },
+                "atlascode.jira.workingSite": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Jira site for workspace",
+                    "scope": "resource"
                 }
             }
         }
@@ -204,11 +216,14 @@
         "@atlaskit/page": "^8.0.8",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
         "@atlaskit/table-tree": "^4.1.11",
+        "@atlaskit/breadcrumbs": "^6.0.10",
+        "@atlaskit/dropdown-menu": "^6.1.20",
+        "@atlaskit/lozenge": "^6.2.2",
+        "@atlaskit/icon": "^14.2.1",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.5.0",
         "express": "^4.16.3",
-        "flatted": "^2.0.0",
         "git-url-parse": "^10.1.0",
         "handlebars": "^4.0.12",
         "jira": "file:../node-jira",

@@ -2,6 +2,7 @@ import { ExtensionContext } from 'vscode';
 import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
+import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig) {
@@ -10,6 +11,7 @@ export class Container {
 
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
+        context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
     }
 
     private static _config: IConfig | undefined;
@@ -30,5 +32,10 @@ export class Container {
     private static _pullRequestViewManager: PullRequestViewManager;
     static get pullRequestViewManager() {
         return this._pullRequestViewManager;
+    }
+
+    private static _jiraIssueViewManager: JiraIssueViewManager;
+    static get jiraIssueViewManager() {
+        return this._jiraIssueViewManager;
     }
 }
