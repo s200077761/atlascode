@@ -18,6 +18,7 @@ export interface ReactWebview extends Disposable {
     hide(): void;
     createOrShow(): Promise<void>;
     onDidPanelDispose(): Event<void>;
+    invalidate(): void;
  }
 
  // InitializingWebview is an interface that exposes an initialize method that may be called to initialize the veiw object with data.

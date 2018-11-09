@@ -6,7 +6,11 @@ import { Logger } from "../../logger";
 import { JiraWorkingSiteConfigurationKey } from "../../constants";
 
 export async function showSiteSelectionDialog() {
-    AuthStore.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo) => {
+    AuthStore.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo|undefined) => {
+        if(!info) {
+          // TODO: show login propmpt.
+          return;
+        }
         vscode.window
         .showQuickPick(info.accessibleResources!.map(site => site.name), {
           placeHolder: "Select a site"
@@ -21,7 +25,7 @@ export async function showSiteSelectionDialog() {
 }
 
 function saveWorkingSite(site: authinfo.AccessibleResource) {
-  configuration.update(JiraWorkingSiteConfigurationKey, site.id, vscode.ConfigurationTarget.Workspace)
+  configuration.update(JiraWorkingSiteConfigurationKey, site, vscode.ConfigurationTarget.Workspace)
   .then(() => vscode.commands.executeCommand('atlascode.jira.refreshExplorer') )
   .catch(reason => {
       Logger.debug(`Failed to save working site: ${reason}`);

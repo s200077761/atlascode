@@ -8,9 +8,10 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import { WebviewComponent } from '../WebviewComponent';
 import { IssueData } from '../../../ipc/issueMessaging';
 import { Action, Alert } from '../../../ipc/messaging';
-import { JiraIssue } from '../../../jira/jiraIssue';
+import { emptyStatus, emptyIssueType, emptyUser } from '../../../jira/jiraModel';
+import { TransitionIssueAction } from '../../../ipc/issueActions';
 
-type Emit = Action | Alert;
+type Emit = TransitionIssueAction | Action | Alert;
 const emptyIssueData:IssueData =  {
     type:'',
     key: '',
@@ -18,45 +19,53 @@ const emptyIssueData:IssueData =  {
     self: '',
     description: '',
     summary: '',
-    status: JiraIssue.emptyStatus,
-    issueType: JiraIssue.emptyIssueType,
-    reporter: JiraIssue.emptyUser,
-    assignee: JiraIssue.emptyUser,
+    status: emptyStatus,
+    issueType: emptyIssueType,
+    reporter: emptyUser,
+    assignee: emptyUser,
     comments: [],
     labels: [],
     attachments: [],
     transitions: []
 };
 
-export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},IssueData> {
+type MyState = { data: IssueData, isStatusButtonLoading: boolean };
+
+const statusColors:Map<string,string> = new Map<string,string>([["new","default"],["indeterminate","inprogress"],["done","success"]]);
+export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},MyState> {
+    
     constructor(props: any) {
         super(props);
-        this.state = emptyIssueData;
+        this.state = {data: emptyIssueData, isStatusButtonLoading: false };
     }
 
     componentUpdater = (data: IssueData) => { };
 
     public onMessageReceived(e: IssueData) {
         console.log("got message from vscode", e);
-        this.state = e;
+        this.state = { ...this.state, ...{ data: e, isStatusButtonLoading: false } };
         this.componentUpdater(e);
     }
 
     componentWillMount() {
         this.componentUpdater = (data) => { 
-            this.setState(data); 
+            const newState = { ...this.state, ...{ data: data } };
+            this.setState(newState);
         };
     }
 
-    onStatusClick(item:any) {
-        console.log("got item",item);
+    onHandleStatusChange = (item:any) => {
+        this.setState({ ...this.state, ...{ isStatusButtonLoading: true } });
+        // yes, this is hacky. Thanks AtlasKit.
+        const transition = JSON.parse(item.target.parentNode.parentNode.dataset.transition);
+        this.postMessage({action:"transitionIssue", transition:transition, issue: this.state.data});
     }
+
     render() {
-        const issue = this.state;
+        const issue = this.state.data;
         const JiraItem = styled.div`
         align-items: center;
         display: flex;
-        width: 105px;
         `;
         if (!issue) { return <div></div>; }
         let statusItems:any[] = [];
@@ -66,11 +75,13 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
                 statusItems.push(
                     <DropdownItem
                         id={transition.name}
-                        onClick={this.onStatusClick(transition)}
+                        meeps="meep!"
+                        data-transition={JSON.stringify(transition,null,0)}
+                        onClick={this.onHandleStatusChange}
                         elemAfter={
                         <JiraItem>
                             <Arrow label="" size="small" />
-                            <Lozenge appearance="success">{transition.to.name}</Lozenge>
+                            <Lozenge appearance={statusColors.get(transition.to.statusCategory.key)}>{transition.to.name}</Lozenge>
                         </JiraItem>
                         }>
                         {transition.name}
@@ -96,7 +107,7 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
                         <DropdownMenu
                             triggerType="button"
                             trigger={issue.status.name}
-                            triggerButtonProps={{appearance:'primary'}}
+                            triggerButtonProps={{appearance:'primary', isLoading:this.state.isStatusButtonLoading}}
                         >
                             <DropdownItemGroup>
                                {statusItems}

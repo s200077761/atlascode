@@ -1,6 +1,6 @@
 import { ConfigurationChangeEvent, ExtensionContext } from 'vscode';
 import * as BitbucketKit from 'bitbucket';
-import * as JiraKit from 'jira';
+import * as JiraKit from '@atlassian/jira';
 //import { JiraKit } from './jirakit/jirakit';
 import * as authinfo from './authInfo';
 import { AuthStore } from './authStore';
@@ -9,7 +9,7 @@ import { CacheMap, Interval } from '../util/cachemap';
 import { Logger } from '../logger';
 var tunnel = require("tunnel");
 import * as fs from 'fs';
-import { configuration } from '../config/configuration';
+import { configuration, WorkingSite } from '../config/configuration';
 import { Resources } from '../resources';
 import { JiraWorkingSiteConfigurationKey } from '../constants';
 
@@ -46,12 +46,16 @@ class ClientManager {
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";
 
-            const workingSite = configuration.get<string>(JiraWorkingSiteConfigurationKey, null);
-
-            if(workingSite) {
-                cloudId = workingSite;
-            } else if(info.accessibleResources) {
-                cloudId = info.accessibleResources[0].id;
+            const workingSite = configuration.get<WorkingSite>(JiraWorkingSiteConfigurationKey, null);
+            if(info.accessibleResources) {
+                if(workingSite) {
+                    const foundSite = info.accessibleResources.find(site => site.id === workingSite.id);
+                    if(foundSite) {
+                        cloudId = foundSite.id;
+                    }
+                } else {
+                    cloudId = info.accessibleResources[0].id;
+                }
             }
 
             let extraOptions = {};
