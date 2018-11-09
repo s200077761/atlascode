@@ -160,7 +160,21 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": []
+            "view/item/context": [],
+            "commandPalette": [
+                {
+                    "command": "atlascode.bb.fetchPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.showPullRequestDetails",
+                    "when": "false"
+                }
+            ]
         },
         "configuration": {
             "type": "object",
