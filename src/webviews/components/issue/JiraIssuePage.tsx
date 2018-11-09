@@ -55,10 +55,12 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
     }
 
     onHandleStatusChange = (item:any) => {
-        this.setState({ ...this.state, ...{ isStatusButtonLoading: true } });
-        // yes, this is hacky. Thanks AtlasKit.
-        const transition = JSON.parse(item.target.parentNode.parentNode.dataset.transition);
-        this.postMessage({action:"transitionIssue", transition:transition, issue: this.state.data});
+        const transition = this.state.data.transitions.find(trans => trans.id === item.target.parentNode.parentNode.dataset.transitionId);
+
+        if(transition) {
+            this.setState({ ...this.state, ...{ isStatusButtonLoading: true } });
+            this.postMessage({action:"transitionIssue", transition:transition, issue: this.state.data});
+        }
     }
 
     render() {
@@ -76,7 +78,7 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
                     <DropdownItem
                         id={transition.name}
                         meeps="meep!"
-                        data-transition={JSON.stringify(transition,null,0)}
+                        data-transition-id={transition.id}
                         onClick={this.onHandleStatusChange}
                         elemAfter={
                         <JiraItem>
