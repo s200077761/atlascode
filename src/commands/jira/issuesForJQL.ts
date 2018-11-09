@@ -1,21 +1,22 @@
 import { Atl } from "../../atlclients/clientManager";
-import { JiraIssue } from "../../jira/jiraIssue";
+import { Issue, issueExpand, issueFields, issueFromJsonObject } from "../..//jira/jiraModel";
 
-export async function issuesForJQL(jql: string): Promise<JiraIssue.Issue[]> {
+
+export async function issuesForJQL(jql: string): Promise<Issue[]> {
   let client = await Atl.jirarequest();
 
   if (client) {
     return client.search
       .searchForIssuesUsingJqlGet({
-        expand: JiraIssue.expand,
+        expand: issueExpand,
         jql: jql,
-        fields: JiraIssue.issueFields
+        fields: issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
         const issues = res.data.issues;
         if (issues) {
           return issues.map((issue: any) => {
-            return JiraIssue.fromJsonObject(issue);
+            return issueFromJsonObject(issue);
           });
         }
         return [];

@@ -1,6 +1,6 @@
 import { configuration } from "../../config/configuration";
 import { JiraOutlineProvider } from "../../views/jira/jiraOutlineProvider";
-import { JiraWorkingProjectConfigurationKey } from "../../jira/project";
+import { JiraWorkingProjectConfigurationKey } from "../../constants";
 
 export async function refreshExplorer(
   assignedOutline: JiraOutlineProvider,

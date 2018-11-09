@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     refreshExplorer(assignedTree, openTree);
     vscode.window.registerTreeDataProvider('assignedIssues', assignedTree);
     vscode.window.registerTreeDataProvider('openIssues', openTree);
-    const jiraContext = new JiraContext(assignedTree, openTree);
+    const jiraContext:JiraContext = {assignedTree:assignedTree, openTree:openTree};
     registerJiraCommands(context, jiraContext);
 
     Logger.debug('AtlasCode extension has been activated');

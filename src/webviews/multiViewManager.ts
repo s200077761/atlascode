@@ -51,6 +51,14 @@ export abstract class AbstractMultiViewManager<T> implements Disposable {
 
     }
 
+    public async refreshAll(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this._viewMap.forEach(view => {
+                view.invalidate();
+            });
+        });
+    }
+
     dispose() {
         this._viewMap.forEach((view: ReactWebview, key: string) => {
             view.dispose();

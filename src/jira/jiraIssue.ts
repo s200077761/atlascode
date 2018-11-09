@@ -1,18 +1,4 @@
-
-
-export namespace JiraIssue {
-    export const emptyAvatars:Avatars = {'48x48':'','24x24':'','16x16':'','32x32':''};
-    export const emptyUser:User = {
-        accountId: '',
-        active: true,
-        avatarUrls: emptyAvatars,
-        displayName: '',
-        emailAddress: '',
-        key: '',
-        name: '',
-        self: '',
-        timeZone: ''
-    };
+import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
 
     export const emptyStatusCategory:StatusCategory = {
         colorName: '',
@@ -29,16 +15,6 @@ export namespace JiraIssue {
         name: '',
         self: '',
         statusCategory: emptyStatusCategory
-    };
-
-    export const emptyIssueType:IssueType = {
-        avatarId: -1,
-        description: '',
-        iconUrl: '',
-        id: '',
-        name: '',
-        self: '',
-        subtask: false
     };
 
     export const emptyComment:Comment = {
@@ -90,7 +66,7 @@ export namespace JiraIssue {
     export type issueOrKey = Issue | string;
 
     export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status"];
-    export const expand = "transitions";
+    export const issueExpand = "transitions";
 
     export function isIssue(a:any): a is Issue {
         return a && (<Issue>a).key !== undefined && (<Issue>a).summary !== undefined;
@@ -120,7 +96,7 @@ export namespace JiraIssue {
         return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
     }
 
-    export function fromJsonObject(issueJson: any): Issue {
+    export function issueFromJsonObject(issueJson: any): Issue {
         let comments:Comment[] = [];
         if(issueJson.fields.comment && issueJson.fields.comment.comments) {
             comments = issueJson.fields.comment.comments.map((commentJson: any) => {
@@ -198,16 +174,6 @@ export namespace JiraIssue {
         self: string;
     }
 
-    export interface IssueType {
-        avatarId: number;
-        description: string;
-        iconUrl: string;
-        id: string;
-        name: string;
-        self: string;
-        subtask: boolean;
-    }
-
     export interface Attachment {
         author: User;
         content: string;
@@ -228,25 +194,6 @@ export namespace JiraIssue {
         self: string;
     }
 
-    export interface User {
-        accountId: string;
-        active: boolean;
-        avatarUrls: Avatars;
-        displayName: string;
-        emailAddress: string;
-        key: string;
-        name: string;
-        self: string;
-        timeZone: string;
-    }
-
-    export interface Avatars {
-        '48x48':string;
-        '24x24':string;
-        '16x16':string;
-        '32x32':string;
-    }
-
     export interface Transition {
       hasScreen: boolean;
       id: string;
@@ -256,4 +203,3 @@ export namespace JiraIssue {
       name: string;
       to: Status;
     }
-}

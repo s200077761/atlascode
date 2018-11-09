@@ -14,6 +14,7 @@ import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
 import { PullRequestApi } from './bitbucket/pullRequests';
 import { PaginatedPullRequests } from './bitbucket/model';
+import { transitionIssue } from './commands/jira/transitionIssue';
 
 export enum Commands {
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
@@ -29,7 +30,8 @@ export enum Commands {
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowIssueByKey = 'atlascode.jira.showIssueByKey',
-    ShowConfigPage = 'atlascode.showConfigPage'
+    ShowConfigPage = 'atlascode.showConfigPage',
+    TransitionIssue = 'atlascode.jira.transitionIssue'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext, bbContext: BitbucketContext) {
@@ -61,6 +63,7 @@ export function registerJiraCommands(vscodeContext: vscode.ExtensionContext, jir
         vscode.commands.registerCommand(Commands.ShowIssue, async (issue) => {
             await Container.jiraIssueViewManager.createOrShow(issue);
         }),
-        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider())
+        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider()),
+        vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue))
     );
 }
