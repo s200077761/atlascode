@@ -26,8 +26,10 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
             this._childrenMap = new Map();
         }
         this._childrenMap.clear();
-        this.ctx.getAllRepositores().forEach(repo => {
-            this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo));
+        const repos = this.ctx.getAllRepositores();
+        const expand = repos.length === 1;
+        repos.forEach(repo => {
+            this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo, expand));
         });
     }
 

@@ -9,7 +9,7 @@ import { PaginatedPullRequests } from '../../bitbucket/model';
 export class RepositoriesNode extends BaseNode {
     private _children: BaseNode[] | undefined = undefined;
 
-    constructor(private repository: Repository) {
+    constructor(private repository: Repository, private expand?: boolean) {
         super();
     }
 
@@ -26,7 +26,7 @@ export class RepositoriesNode extends BaseNode {
 
     getTreeItem(): vscode.TreeItem {
         const directory = this.repository.rootUri.path.split('/').pop();
-        const item = new vscode.TreeItem(`${directory}`, vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = this.repository.rootUri.path;
         item.contextValue = 'pullrequest';
 
