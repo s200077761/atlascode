@@ -94,11 +94,6 @@
             {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue",
-                "category": "AtlasCode"  
-            },
-            {
-                "command": "atlascode.bb.fetchPullRequests",
-                "title": "Fetch Bitbucket pull requests",
                 "category": "AtlasCode"
             },
             {
@@ -108,11 +103,6 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
-            },
-            {
-                "command": "atlascode.bb.showPullRequestDetails",
-                "title": "Show Bitbucket pull request details",
                 "category": "AtlasCode"
             },
             {
@@ -134,7 +124,8 @@
             "scm": [
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
-                    "name": "Bitbucket pull requests"
+                    "name": "Bitbucket pull requests",
+                    "when": "atlascode.ctxKey.bb.explorerLocation == SourceControl"
                 }
             ],
             "jira-viewer": [
@@ -145,6 +136,11 @@
                 {
                     "id": "openIssues",
                     "name": "Open Issues"
+                },
+                {
+                    "id": "atlascode.views.bb.pullrequestsTreeView",
+                    "name": "Bitbucket pull requests",
+                    "when": "atlascode.ctxKey.bb.explorerLocation == Atlascode"
                 }
             ]
         },
@@ -173,15 +169,7 @@
             ],
             "commandPalette": [
                 {
-                    "command": "atlascode.bb.fetchPullRequests",
-                    "when": "false"
-                },
-                {
                     "command": "atlascode.bb.refreshPullRequests",
-                    "when": "false"
-                },
-                {
-                    "command": "atlascode.bb.showPullRequestDetails",
                     "when": "false"
                 }
             ]
@@ -218,12 +206,12 @@
                     "type": "object",
                     "properties": {
                         "name": {
-                            "type":"string",
-                            "default":""
+                            "type": "string",
+                            "default": ""
                         },
                         "id": {
-                            "type":"string",
-                            "default":""
+                            "type": "string",
+                            "default": ""
                         },
                         "scopes": {
                             "type": "array",
@@ -233,12 +221,22 @@
                             "uniqueItems": true
                         },
                         "avatarUrl": {
-                            "type":"string",
-                            "default":""
+                            "type": "string",
+                            "default": ""
                         }
                     },
                     "description": "Jira site for workspace",
                     "scope": "resource"
+                },
+                "atlascode.bitbucket.explorerLocation": {
+                    "type": "string",
+                    "default": "SourceControl",
+                    "enum": [
+                        "SourceControl",
+                        "Atlascode"
+                    ],
+                    "description": "Explorer location for Bitbucket pull requests",
+                    "scope": "window"
                 }
             }
         }
