@@ -97,6 +97,15 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.bb.refreshPullRequests",
+                "title": "Refresh Bitbucket pull requests",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
                 "category": "AtlasCode"
@@ -116,7 +125,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.bb.explorerLocation == SourceControl"
+                    "when": "atlascode.ctxKey.bb.explorerLocation == SourceControl"
                 }
             ],
             "jira-viewer": [
@@ -131,7 +140,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.bb.explorerLocation == Atlascode"
+                    "when": "atlascode.ctxKey.bb.explorerLocation == Atlascode"
                 }
             ]
         },

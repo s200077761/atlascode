@@ -15,7 +15,7 @@ const explorerLocation = {
     sourceControl: 'SourceControl',
     atlascode: 'Atlascode'
 };
-const vscodeContextSettingKey = 'atlascode.bb.explorerLocation';
+const vscodeContextSettingKey = 'atlascode.ctxKey.bb.explorerLocation';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -32,11 +32,7 @@ export class BitbucketContext implements vscode.Disposable {
         this._gitApi.onDidOpenRepository(() => this.refreshRepos());
         this._gitApi.onDidCloseRepository(() => this.refreshRepos());
 
-        let location = configuration.get<string>(BitbucketContainerConfigurationKey, undefined, explorerLocation.sourceControl);
-        if (location !== explorerLocation.sourceControl || location !== explorerLocation.atlascode) {
-            location = explorerLocation.sourceControl;
-        }
-        vscode.commands.executeCommand('setContext', vscodeContextSettingKey, location);
+        this.setLocationContext();
 
         let prNodeDataProvider: PullRequestNodeDataProvider = new PullRequestNodeDataProvider(this);
         vscodeContext.subscriptions.push(
@@ -53,27 +49,28 @@ export class BitbucketContext implements vscode.Disposable {
             })
         );
 
-        vscodeContext.subscriptions.push(configuration.onDidChange((e) => {
-            if (!configuration.changed(e, BitbucketContainerConfigurationKey)) { return; }
-            const c = configuration.get<string>(BitbucketContainerConfigurationKey);
-            switch (c) {
-                case explorerLocation.sourceControl:
-                    vscode.commands.executeCommand('setContext', vscodeContextSettingKey, explorerLocation.sourceControl);
-                    break;
-                case explorerLocation.atlascode:
-                    vscode.commands.executeCommand('setContext', vscodeContextSettingKey, explorerLocation.atlascode);
-                    break;
-                default:
-                    break;
-            }
-            this._onDidChangeBitbucketContext.fire();
-        }));
+        vscodeContext.subscriptions.push(configuration.onDidChange(this.configChangeHandler));
     }
 
     private refreshRepos() {
         this._repoMap.clear();
         this._gitApi.repositories.forEach(repo => this._repoMap.set(repo.rootUri.toString(), repo));
         this._onDidChangeBitbucketContext.fire();
+    }
+
+    private configChangeHandler = (e: vscode.ConfigurationChangeEvent) => {
+        if (!configuration.changed(e, BitbucketContainerConfigurationKey)) { return; }
+
+        this.setLocationContext();
+        this._onDidChangeBitbucketContext.fire();
+    }
+
+    private setLocationContext() {
+        let location = configuration.get<string>(BitbucketContainerConfigurationKey);
+        if (location !== explorerLocation.sourceControl && location !== explorerLocation.atlascode) {
+            location = explorerLocation.sourceControl;
+        }
+        vscode.commands.executeCommand('setContext', vscodeContextSettingKey, location);
     }
 
     public getAllRepositores(): Repository[] {
