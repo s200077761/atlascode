@@ -9,7 +9,7 @@ import * as Loadable from 'react-loadable';
 // Note: ALL loadables can reuse the same Loading function.
 
 const LoadableConfigView = Loadable({
-    loader: () => import(/* webpackChunkName: "configView" */ './ConfigView'),
+    loader: () => import(/* webpackChunkName: "configView" */ './config/ConfigPage'),
     loading: Loading,
   });
 

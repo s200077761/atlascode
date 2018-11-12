@@ -76,8 +76,8 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
             if(issue.status.id !== transition.to.id){
                 statusItems.push(
                     <DropdownItem
+                        className='ak-dropdown-item'
                         id={transition.name}
-                        meeps="meep!"
                         data-transition-id={transition.id}
                         onClick={this.onHandleStatusChange}
                         elemAfter={
@@ -109,7 +109,7 @@ export default class JiraIssuePage extends WebviewComponent<Emit, IssueData, {},
                         <DropdownMenu
                             triggerType="button"
                             trigger={issue.status.name}
-                            triggerButtonProps={{appearance:'primary', isLoading:this.state.isStatusButtonLoading}}
+                            triggerButtonProps={{className:'ak-button', isLoading:this.state.isStatusButtonLoading}}
                         >
                             <DropdownItemGroup>
                                {statusItems}

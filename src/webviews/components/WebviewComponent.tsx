@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Action } from '../../ipc/messaging';
+import { darken, lighten, opacity } from './colors';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;
@@ -26,6 +27,36 @@ export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Com
 
         const onMessageEvent = this.onMessageEvent.bind(this);
         window.addEventListener('message', onMessageEvent);
+        this.initializeColors();
+    }
+
+    protected initializeColors() {
+        const onColorThemeChanged = () => {
+            const body = document.body;
+            const computedStyle = getComputedStyle(body);
+
+            const bodyStyle = body.style;
+            let color = computedStyle.getPropertyValue('--vscode-editor-foreground').trim();
+            bodyStyle.setProperty('--vscode-editor-foreground--75', opacity(color, 75));
+            bodyStyle.setProperty('--vscode-editor-foreground--50', opacity(color, 50));
+
+            color = computedStyle.getPropertyValue('--vscode-editor-background').trim();
+            bodyStyle.setProperty('--vscode-editor-background--lighten-05', lighten(color, 5));
+            bodyStyle.setProperty('--vscode-editor-background--darken-05', darken(color, 5));
+
+            color = computedStyle.getPropertyValue('--vscode-button-foreground').trim();
+            bodyStyle.setProperty('--vscode-button-foreground--75', opacity(color, 75));
+            bodyStyle.setProperty('--vscode-button-foreground--50', opacity(color, 50));
+
+            color = computedStyle.getPropertyValue('--vscode-button-background').trim();
+            bodyStyle.setProperty('--vscode-button-background--lighten-05', lighten(color, 5));
+            bodyStyle.setProperty('--vscode-button-background--darken-05', darken(color, 5));
+        };
+
+        const observer = new MutationObserver(onColorThemeChanged);
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+        onColorThemeChanged();
     }
 
     private onMessageEvent(e:MessageEvent) {

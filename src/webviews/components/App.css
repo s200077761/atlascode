@@ -2,6 +2,38 @@
   text-align: center;
 }
 
-.vscode-dark p {
-  color: #B8C7E0;
+p {
+  color: var(--vscode-editor-foreground);
 }
+
+.ak-button {
+  background: var(--vscode-button-background) !important;
+}
+
+.ak-button span{
+  color: var(--vscode-button-foreground) !important;
+}
+
+.ak-button:hover {
+  background: var(--vscode-button-hoverBackground) !important;
+}
+.ak-button:active {
+  background: var(--vscode-button-background--darken-05) !important;
+  color: var(--vscode-button-foreground) !important;
+}
+
+[class^="Droplist__Content"] {
+  background: var(--vscode-sideBar-background) !important;
+}
+.ak-dropdown-item {
+  background: var(--vscode-sideBar-background) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+.ak-dropdown-item:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+
+/* list.focusBackground */
