@@ -24,8 +24,8 @@ export function activate(context: vscode.ExtensionContext) {
     registerResources(context);
     Atl.configure(context);
 
-    const assignedTree = new JiraOutlineProvider();
-    const openTree = new JiraOutlineProvider();
+    const assignedTree = new JiraOutlineProvider("You have no assigned issues");
+    const openTree = new JiraOutlineProvider("There are no open issues");
     refreshExplorer(assignedTree, openTree);
     vscode.window.registerTreeDataProvider('assignedIssues', assignedTree);
     vscode.window.registerTreeDataProvider('openIssues', openTree);
