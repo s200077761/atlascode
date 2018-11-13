@@ -6,6 +6,14 @@ p {
   color: var(--vscode-editor-foreground);
 }
 
+a {
+  color: var(--vscode-textLink-foreground) !important;
+}
+
+a:hover {
+  color: var(--vscode-textLink-activeForeground) !important;
+}
+
 .ak-button {
   background: var(--vscode-button-background) !important;
 }
@@ -25,6 +33,7 @@ p {
 [class^="Droplist__Content"] {
   background: var(--vscode-sideBar-background) !important;
 }
+
 .ak-dropdown-item {
   background: var(--vscode-sideBar-background) !important;
   color: var(--vscode-list-focusForeground) !important;
@@ -35,5 +44,18 @@ p {
   color: var(--vscode-list-focusForeground) !important;
 }
 
+[class^="FieldTextArea"] [class^="Content-"] {
+  background: var(--vscode-input-background) !important;
+  border-width: 2px;
+  border-color: var(--vscode-focusBorder) !important;
+}
 
-/* list.focusBackground */
+[class^="TextArea-"] {
+  background: var(--vscode-input-background) !important;
+  color: var(--vscode-input-foreground) !important;
+}
+
+[class^="TextArea-"]::placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
+}
+

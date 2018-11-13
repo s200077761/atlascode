@@ -40,13 +40,14 @@ export default class CommentForm extends React.Component<{
                     />
                     <div style={{ width: 600, marginLeft: 8 }}>
                         <FieldTextAreaStateless
+                            className='ak-textarea'
                             placeholder="Add a comment"
                             isLabelHidden enableResize shouldFitContainer minimumRows={3}
                             onChange={this.handleChange}
                             value={this.state.commentInput}
                         />
                         <ButtonGroup>
-                            <Button appearance="primary" onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
+                            <Button className='ak-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
                             <Button appearance="default" onClick={this.handleCancel}>Cancel</Button>
                         </ButtonGroup>
                     </div>
