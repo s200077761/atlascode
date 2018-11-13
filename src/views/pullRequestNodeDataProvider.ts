@@ -61,6 +61,6 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
     }
 
     dispose() {
-        this._disposables.forEach(disposable => { disposable.dispose(); });
+        this._disposables.forEach(disposable => disposable && disposable.dispose());
     }
 }
