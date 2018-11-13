@@ -4,6 +4,7 @@ import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdow
 import Tag from '@atlaskit/tag';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
+import { Spacer } from './PullRequestPage';
 
 export default class BranchInfo extends React.Component<{ prData: PRData, postMessage: (e: Checkout) => void }, { loading: boolean }> {
     constructor(props: any) {
@@ -11,7 +12,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
         this.state = { loading: false };
     }
 
-    componentDidUpdate(prevProps: any) {
+    componentDidUpdate(prevProps: { prData: PRData }) {
         if (prevProps.prData.currentBranch !== this.props.prData.currentBranch) {
             this.setState({ loading: false });
         }
@@ -30,17 +31,19 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
         return (
             <React.Fragment>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <DropdownMenu trigger={pr.source!.branch!.name} triggerType="button" triggerButtonProps={{ spacing: 'compact', isLoading: this.state.loading }}>
+                    <DropdownMenu trigger={pr.source!.branch!.name} triggerType="button" triggerButtonProps={{ className: 'ak-button', spacing: 'compact', isLoading: this.state.loading }}>
                         <DropdownItemGroup>
-                            <DropdownItem onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout branch</DropdownItem>
-                            <DropdownItem href={`${pr.source!.repository!.links!.html!.href}/src/${pr.source!.branch!.name}`}>Open branch on bitbucket.com</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout branch</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' href={`${pr.source!.repository!.links!.html!.href}/src/${pr.source!.branch!.name}`}>Open branch on bitbucket.com</DropdownItem>
                         </DropdownItemGroup>
                     </DropdownMenu>
-                    <Arrow label="" size="small" />
-                    <DropdownMenu trigger={pr.destination!.branch!.name} triggerType="button" triggerButtonProps={{ spacing: 'compact', isLoading: this.state.loading }}>
+                    <Spacer>
+                        <Arrow label="" size="small" />
+                    </Spacer>
+                    <DropdownMenu trigger={pr.destination!.branch!.name} triggerType="button" triggerButtonProps={{ className: 'ak-button', spacing: 'compact', isLoading: this.state.loading }}>
                         <DropdownItemGroup>
-                            <DropdownItem onClick={() => this.handleCheckout(pr.destination!.branch!.name!)}>Checkout branch</DropdownItem>
-                            <DropdownItem href={`${pr.destination!.repository!.links!.html!.href}/src/${pr.destination!.branch!.name}`}>Open branch on bitbucket.com</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.destination!.branch!.name!)}>Checkout branch</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' href={`${pr.destination!.repository!.links!.html!.href}/src/${pr.destination!.branch!.name}`}>Open branch on bitbucket.com</DropdownItem>
                         </DropdownItemGroup>
                     </DropdownMenu>
                 </div>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Tag from '@atlaskit/tag';
 import Reviewers from './Reviewers';
@@ -10,6 +10,11 @@ import { PRData } from '../../../ipc/prMessaging';
 import { Approve, Checkout, PostComment } from '../../../ipc/prActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
+import styled from 'styled-components';
+
+export const Spacer = styled.div`
+margin: 10px;
+`;
 
 type Emit = Approve | Checkout | PostComment;
 
@@ -54,10 +59,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
                     </GridColumn>
                     <GridColumn medium={4}>
                         <Reviewers {...this.state.pr} />
-                        {!currentUserApproved
-                            ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
-                            : <p> <Tag text="✔ You approved this PR" color="green" /></p>
-                        }
+                        <Spacer>
+                            {!currentUserApproved
+                                ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
+                                : <p> <Tag text="✔ You approved this PR" color="green" /></p>
+                            }
+                        </Spacer>
                     </GridColumn>
                     <GridColumn>
                         <hr />
