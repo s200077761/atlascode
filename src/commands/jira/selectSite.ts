@@ -3,7 +3,7 @@ import * as authinfo from '../../atlclients/authInfo';
 import { AuthStore } from '../../atlclients/authStore';
 import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
-import { JiraWorkingSiteConfigurationKey } from "../../constants";
+import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
 
 export async function showSiteSelectionDialog() {
     AuthStore.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo|undefined) => {
@@ -24,9 +24,16 @@ export async function showSiteSelectionDialog() {
     });
 }
 
-function saveWorkingSite(site: authinfo.AccessibleResource) {
-  configuration.update(JiraWorkingSiteConfigurationKey, site, vscode.ConfigurationTarget.Workspace)
-  .then(() => vscode.commands.executeCommand('atlascode.jira.refreshExplorer') )
+async function saveWorkingSite(site: authinfo.AccessibleResource) {
+  Logger.debug('saving site',site);
+  await configuration.updateEffective(JiraWorkingSiteConfigurationKey, site)
+  .then(async () => {
+    Logger.debug('clearing current project');
+    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+  })
+  .then(() => {
+    vscode.commands.executeCommand('atlascode.jira.refreshExplorer');
+  })
   .catch(reason => {
       Logger.debug(`Failed to save working site: ${reason}`);
   });

@@ -37,7 +37,7 @@ export class Configuration {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         // only fire if it's a config for our extension
-        Logger.debug("got config change");
+        Logger.debug("config manager got config change");
         if (!e.affectsConfiguration(extensionId, null!)) { return; }
 
         Logger.debug("config change is for atlascode!");
@@ -80,7 +80,7 @@ export class Configuration {
 
     // update does what it sounds like
     async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
-        return workspace
+        return await workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
     }

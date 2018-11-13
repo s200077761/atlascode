@@ -21,8 +21,8 @@ export async function showProjectSelectionDialog() {
   });
 }
 
-function saveWorkingProject(project: Project) {
-  configuration.update(JiraWorkingProjectConfigurationKey, project.id, vscode.ConfigurationTarget.Workspace)
+async function saveWorkingProject(project: Project) {
+  await configuration.update(JiraWorkingProjectConfigurationKey, project.id, vscode.ConfigurationTarget.Workspace)
   .then(() => vscode.commands.executeCommand(Commands.RefreshExplorer))
   .catch(reason => {
       Logger.debug(`Failed to save working project: ${reason}`);

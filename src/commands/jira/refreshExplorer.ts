@@ -7,7 +7,6 @@ export async function refreshExplorer(
   openOutline: JiraOutlineProvider
 ) {
   const project = configuration.get(JiraWorkingProjectConfigurationKey, null);
-
   if (project) {
     assignedOutline.setJql(`assignee=currentUser() and project=${project} and statusCategory in ("In Progress")`);
     openOutline.setJql(`assignee in (EMPTY) and project=${project} order by lastViewed DESC`);

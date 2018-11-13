@@ -72,8 +72,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
                     <GridColumn medium={4}>
                         <Reviewers {...this.state.pr} />
                         <ButtonGroup>
-                            <Button onClick={this.alertHandler} appearance="primary">Checkout</Button>
-                            {!currentUserApproved && <Button isLoading={this.state.isApproveButtonLoading} onClick={this.onApprove} appearance="primary">Approve</Button>}
+                            <Button onClick={this.alertHandler} className='ak-button'>Checkout</Button>
+                            {!currentUserApproved && <Button isLoading={this.state.isApproveButtonLoading} onClick={this.onApprove} className='ak-button'>Approve</Button>}
                         </ButtonGroup>
                         {currentUserApproved && <p>✔ You have approved this PR</p>}
                     </GridColumn>
