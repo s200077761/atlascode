@@ -19,14 +19,15 @@ export default class Reviewers extends React.Component<PRData, {}> {
                 };
             });
         return (
-            <p>
+            <React.Fragment>
+                <h3>Reviewers</h3>
                 <AvatarGroup
                     appearance="grid"
                     data={participants}
                     maxCount={14}
                     size="medium"
                 />
-            </p>
+            </React.Fragment>
         );
     }
 }

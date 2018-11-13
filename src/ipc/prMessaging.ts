@@ -6,4 +6,5 @@ export interface PRData extends Message {
     pr?: Bitbucket.Schema.Pullrequest;
     commits?: Bitbucket.Schema.Commit[];
     comments?: Bitbucket.Schema.Comment[];
+    currentBranch: string;
 }

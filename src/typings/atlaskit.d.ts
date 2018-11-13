@@ -9,3 +9,4 @@ declare module '@atlaskit/dropdown-menu';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/icon';
 declare module '@atlaskit/field-text-area';
+declare module '@atlaskit/tag';

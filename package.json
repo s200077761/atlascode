@@ -259,6 +259,7 @@
         "@atlaskit/page": "^8.0.8",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
         "@atlaskit/table-tree": "^4.1.11",
+        "@atlaskit/tag": "^6.1.0",
         "@atlassian/jira": "^0.0.2",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
