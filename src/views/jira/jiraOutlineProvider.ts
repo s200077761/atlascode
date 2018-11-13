@@ -1,54 +1,62 @@
 import * as vscode from 'vscode';
 import { issuesForJQL } from '../../commands/jira/issuesForJQL';
 import { Logger } from '../../logger';
-import { Commands } from '../../commands';
 import { Issue } from '../../jira/jiraModel';
+import { BaseNode } from '../nodes/baseNode';
+import { IssueNode } from '../nodes/issueNode';
+import { EmptyStateNode } from '../nodes/emptyStateNode';
 
-export class JiraOutlineProvider implements vscode.TreeDataProvider<Issue> {
+export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
 	private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
 	readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
-    private issues: Issue[] | undefined;
-    private jql: string | undefined;
+    private _issues: Issue[] | undefined;
+    private _jql: string | undefined;
+
+    constructor(private _emptyState = "No issues") {}
 
     refresh() {
         Logger.debug("Refreshing treeView");
-        this.issues = undefined;
+        this._issues = undefined;
         this._onDidChangeTreeData.fire();
     }
 
     setJql(jql: string) {
-        this.jql = jql;
+        this._jql = jql;
         this.refresh();
     }
 
-    getChildren(parent?: Issue): Promise<Issue[]> {
-        if (parent || !this.jql) {
-            return Promise.resolve([]);
-        } else if (this.issues) {
-            return Promise.resolve(this.issues);               
+    getChildren(parent?: BaseNode): Promise<BaseNode[]> {
+        if (parent || !this._jql) {
+            return Promise.resolve([new EmptyStateNode(this._emptyState)]);
+        } else if (this._issues) {
+            return Promise.resolve(this.nodesForIssues());
         } else {
             return this.fetchIssues();
         }
     }
 
-    getTreeItem(issue: Issue): vscode.TreeItem {
-        let treeItem = new vscode.TreeItem(`${issue.summary}`, vscode.TreeItemCollapsibleState.None);
-        treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [issue], };
-        treeItem.iconPath = vscode.Uri.parse(issue.issueType.iconUrl);
-        treeItem.contextValue = issue.key;
-        return treeItem;
+    getTreeItem(node: BaseNode): vscode.TreeItem {
+        return node.getTreeItem();
     }
     
-    private async fetchIssues(): Promise<Issue[]> {
-        if (!this.jql) {
+    private async fetchIssues(): Promise<BaseNode[]> {
+        if (!this._jql) {
             return Promise.resolve([]);
         }
-        return issuesForJQL(this.jql)
+        return issuesForJQL(this._jql)
         .then(newIssues => {
-            this.issues = newIssues;
+            this._issues = newIssues;
             this._onDidChangeTreeData.fire();
-            return newIssues;
+            return this.nodesForIssues();
         });
+    }
+
+    private nodesForIssues(): BaseNode[] {
+        if (this._issues && this._issues.length > 0) {
+            return this._issues.map((issue) => new IssueNode(issue));
+        } else {
+            return [new EmptyStateNode(this._emptyState)];
+        }
     }
 }
