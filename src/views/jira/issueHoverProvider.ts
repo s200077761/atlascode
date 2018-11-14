@@ -25,7 +25,7 @@ export class IssueHoverProvider implements HoverProvider {
       let encodedURI = encodeURIComponent(JSON.stringify([issue.key]));
       text.push(
         new vscode.MarkdownString(
-          `[View](command:${Commands.ShowIssueByKey}?${encodedURI})`
+          `[View](command:${Commands.ShowIssue}?${encodedURI})`
         )
       );
       text[2].isTrusted = true;

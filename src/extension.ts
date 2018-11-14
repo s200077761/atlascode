@@ -1,8 +1,9 @@
-'use strict';
+"use strict";
 
 import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
 import { registerCommands } from './commands';
+import {registerJiraTreeViews } from './treeViews';
 import { registerResources } from './resources';
 import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
@@ -14,7 +15,6 @@ import { JiraContext } from './jira/context';
 import { Container } from './container';
 
 export function activate(context: vscode.ExtensionContext) {
-
     Configuration.configure(context);
     Logger.configure(context);
 
@@ -26,6 +26,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     const assignedTree = new JiraOutlineProvider("You have no assigned issues");
     const openTree = new JiraOutlineProvider("There are no open issues");
+    registerJiraTreeViews(context, [
+      { id: "assignedIssues", provider: assignedTree },
+      { id: "openIssues", provider: openTree }
+    ]);
+
     refreshExplorer(assignedTree, openTree);
     vscode.window.registerTreeDataProvider('assignedIssues', assignedTree);
     vscode.window.registerTreeDataProvider('openIssues', openTree);
