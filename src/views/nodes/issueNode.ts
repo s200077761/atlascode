@@ -5,16 +5,19 @@ import { Issue } from "../../jira/jiraIssue";
 import { Commands } from "../../commands";
 
 export class IssueNode extends BaseNode {
-    constructor(private _issue: Issue) {
+    public issue:Issue;
+
+    constructor(_issue:Issue) {
         super();
+        this.issue = _issue;
     }
 
     getTreeItem(): vscode.TreeItem {
-        let treeItem = new vscode.TreeItem(`${this._issue.summary}`, vscode.TreeItemCollapsibleState.None);
-        treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [this._issue], };
-        treeItem.iconPath = vscode.Uri.parse(this._issue.issueType.iconUrl);
-        treeItem.contextValue = this._issue.key;
-        treeItem.tooltip = `${this._issue.key} - ${this._issue.summary}`;
+        let treeItem = new vscode.TreeItem(`${this.issue.summary}`, vscode.TreeItemCollapsibleState.None);
+        treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [this.issue], };
+        treeItem.iconPath = vscode.Uri.parse(this.issue.issueType.iconUrl);
+        treeItem.contextValue = this.issue.key;
+        treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}`;
         return treeItem;
     }
 
