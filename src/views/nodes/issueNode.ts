@@ -14,6 +14,7 @@ export class IssueNode extends BaseNode {
         treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [this._issue], };
         treeItem.iconPath = vscode.Uri.parse(this._issue.issueType.iconUrl);
         treeItem.contextValue = this._issue.key;
+        treeItem.tooltip = `${this._issue.key} - ${this._issue.summary}`;
         return treeItem;
     }
 
