@@ -3,7 +3,7 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest } from '../bitbucket/model';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
-import { PRData } from '../ipc/prMessaging';
+import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
@@ -17,7 +17,7 @@ interface PRState {
 
 const emptyState: PRState = { prData: { type: '', currentBranch: '' } };
 
-export class PullRequestWebview extends AbstractReactWebview<PRData, Action> implements InitializingWebview<PullRequest> {
+export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutResult, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
 
     constructor(extensionPath: string) {
@@ -89,7 +89,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
         return handled;
     }
 
-    public async updatePullRequest(pr: PullRequest) {
+    private async updatePullRequest(pr: PullRequest) {
         if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
 
         if (this.validatePRState(this._state)) {
@@ -132,13 +132,20 @@ export class PullRequestWebview extends AbstractReactWebview<PRData, Action> imp
     }
 
     private checkout(branch: string) {
-        const { repository, remote, prData } = this._state;
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
+            .then(() => this.postMessage({
+                type: 'checkout',
+                currentBranch: this._state.repository!.state.HEAD!.name!
+            }))
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
                 window.showErrorMessage('Pull request branch could not be checked out');
-            })
-            .then(() => this.updatePullRequest({ repository: repository!, remote: remote!, data: prData.pr! }));
+                this.postMessage({
+                    type: 'checkout',
+                    error: e.stderr || e,
+                    currentBranch: this._state.repository!.state.HEAD!.name!
+                });
+            });
     }
 
     private async postComment(text: string, parentId?: number) {
