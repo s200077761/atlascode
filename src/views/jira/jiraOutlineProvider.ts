@@ -7,13 +7,14 @@ import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 
 export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
-	private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
-	readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
+    readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
     private _issues: Issue[] | undefined;
     private _jql: string | undefined;
+    private _timer: any | undefined;
 
-    constructor(private _emptyState = "No issues") {}
+    constructor(private _emptyState = "No issues", private _refreshInterval = 60 * 1000) {}
 
     refresh() {
         Logger.debug("Refreshing treeView");
@@ -24,6 +25,14 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
     setJql(jql: string) {
         this._jql = jql;
         this.refresh();
+    }
+
+    onDidChangeVisibility(event: vscode.TreeViewVisibilityChangeEvent) {
+        if (event.visible) {
+            this.startTimer();
+        } else {
+            this.stopTimer();
+        }
     }
 
     getChildren(parent?: BaseNode): Promise<BaseNode[]> {
@@ -57,6 +66,21 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
             return this._issues.map((issue) => new IssueNode(issue));
         } else {
             return [new EmptyStateNode(this._emptyState)];
+        }
+    }
+
+    private startTimer() {
+        if (!this._timer) {
+            this._timer = setInterval(() => {
+                this.refresh();
+            }, this._refreshInterval);
+        }
+    }
+
+    private stopTimer() {
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = undefined;
         }
     }
 }
