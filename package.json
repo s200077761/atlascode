@@ -84,11 +84,6 @@
                 "category": "AtlasCode"
             },
             {
-                "command": "atlascode.jira.showIssueByKey",
-                "title": "Show Jira Issue",
-                "category": "AtlasCode"
-            },
-            {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue",
                 "category": "AtlasCode"

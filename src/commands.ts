@@ -23,7 +23,6 @@ export enum Commands {
     SelectSite = 'atlascode.jira.selectSite',
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
-    ShowIssueByKey = 'atlascode.jira.showIssueByKey',
     ShowConfigPage = 'atlascode.showConfigPage',
     TransitionIssue = 'atlascode.jira.transitionIssue'
 }
