@@ -8,3 +8,16 @@ export interface PRData extends Message {
     comments?: Bitbucket.Schema.Comment[];
     currentBranch: string;
 }
+
+export function isPRData(a: Message): a is PRData {
+    return (<PRData>a).type === 'update';
+}
+
+export interface CheckoutResult extends Message {
+    error?: string;
+    currentBranch: string;
+}
+
+export function isCheckoutError(a: Message): a is CheckoutResult {
+    return (<CheckoutResult>a).type === 'checkout';
+}

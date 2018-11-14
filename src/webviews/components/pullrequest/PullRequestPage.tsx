@@ -1,12 +1,13 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
+import PageHeader from '@atlaskit/page-header';
 import Tag from '@atlaskit/tag';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRData } from '../../../ipc/prMessaging';
+import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
 import { Approve, Checkout, PostComment } from '../../../ipc/prActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -16,9 +17,15 @@ export const Spacer = styled.div`
 margin: 10px;
 `;
 
-type Emit = Approve | Checkout | PostComment;
+export const InlineFlex = styled.div`
+display: inline-flex;
+align-items: center;
+`;
 
-export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, { pr: PRData, isApproveButtonLoading: boolean }> {
+type Emit = Approve | Checkout | PostComment;
+type Receive = PRData | CheckoutResult;
+
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
         this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false };
@@ -39,8 +46,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
         });
     }
 
-    onMessageReceived(e: PRData): void {
-        this.setState({ pr: e, isApproveButtonLoading: false });
+    onMessageReceived(e: Receive): void {
+        if (isPRData(e)) {
+            this.setState({ pr: e, isApproveButtonLoading: false });
+        }
+        else if (isCheckoutError(e)) {
+            this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch } });
+        }
     }
 
     render() {
@@ -50,23 +62,29 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
         let currentUserApproved = pr.participants!
             .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
+
+        const actionsContent = (
+            <InlineFlex>
+                <Reviewers {...this.state.pr} />
+                <Spacer>
+                    {!currentUserApproved
+                        ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
+                        : <p> <Tag text="✔ You approved this PR" color="green" /></p>
+                    }
+                </Spacer>
+            </InlineFlex>
+        );
+
         return (
             <Page>
                 <Grid>
-                    <GridColumn medium={8}>
-                        <h2><a href={pr.links!.html!.href}>#{pr.id}</a>  {pr.title}</h2>
-                        <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
-                    </GridColumn>
-                    <GridColumn medium={4}>
-                        <Reviewers {...this.state.pr} />
-                        <Spacer>
-                            {!currentUserApproved
-                                ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
-                                : <p> <Tag text="✔ You approved this PR" color="green" /></p>
-                            }
-                        </Spacer>
-                    </GridColumn>
                     <GridColumn>
+                        <PageHeader
+                            actions={actionsContent}
+                            bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
+                        >
+                            <p><a href={pr.links!.html!.href}>#{pr.id}</a>  {pr.title}</p>
+                        </PageHeader>
                         <hr />
                         <h3>Commits</h3>
                         <Commits {...this.state.pr} />
