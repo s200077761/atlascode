@@ -271,7 +271,6 @@
         "react": "^16.3.2",
         "react-dom": "^16.3.2",
         "react-loadable": "^5.5.0",
-        "react-scripts-ts": "2.16.0",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6"
     },
@@ -290,6 +289,7 @@
         "mocha": "^5.2.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
+        "react-scripts-ts": "2.16.0",
         "vscode": "^1.1.21"
     }
 }
