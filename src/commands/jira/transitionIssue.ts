@@ -5,7 +5,7 @@ import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
 import { Atl } from "../../atlclients/clientManager";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
-import { IssueNode } from "src/views/nodes/issueNode";
+import { IssueNode } from "../../views/nodes/issueNode";
 
 export async function transitionIssue(param: Issue | IssueNode, transition?:Transition) {
   let issue:Issue = emptyIssue;

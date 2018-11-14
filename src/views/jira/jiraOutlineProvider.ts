@@ -2,11 +2,10 @@ import * as vscode from 'vscode';
 import { issuesForJQL } from '../../commands/jira/issuesForJQL';
 import { Logger } from '../../logger';
 import { Issue } from '../../jira/jiraModel';
-import { BaseNode } from '../nodes/baseNode';
 import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 
-export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
+export class JiraOutlineProvider implements vscode.TreeDataProvider<IssueNode> {
     private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
     readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
@@ -35,7 +34,7 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
         }
     }
 
-    getChildren(parent?: BaseNode): Promise<IssueNode[]> {
+    getChildren(parent?: IssueNode): Promise<IssueNode[]> {
         if (parent || !this._jql) {
             return Promise.resolve([new EmptyStateNode(this._emptyState)]);
         } else if (this._issues) {
@@ -45,11 +44,11 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
         }
     }
 
-    getTreeItem(node: BaseNode): vscode.TreeItem {
+    getTreeItem(node: IssueNode): vscode.TreeItem {
         return node.getTreeItem();
     }
     
-    private async fetchIssues(): Promise<BaseNode[]> {
+    private async fetchIssues(): Promise<IssueNode[]> {
         if (!this._jql) {
             return Promise.resolve([]);
         }
@@ -61,7 +60,7 @@ export class JiraOutlineProvider implements vscode.TreeDataProvider<BaseNode> {
         });
     }
 
-    private nodesForIssues(): BaseNode[] {
+    private nodesForIssues(): IssueNode[] {
         if (this._issues && this._issues.length > 0) {
             return this._issues.map((issue) => new IssueNode(issue));
         } else {
