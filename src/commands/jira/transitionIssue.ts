@@ -1,15 +1,23 @@
 import * as vscode from "vscode";
 
 import { Logger } from "../../logger";
-import { Issue, Transition } from "../../jira/jiraModel";
+import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
 import { Atl } from "../../atlclients/clientManager";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
+import { IssueNode } from "src/views/nodes/issueNode";
 
-export async function transitionIssue(issue: Issue, transition?:Transition) {
+export async function transitionIssue(param: Issue | IssueNode, transition?:Transition) {
+  let issue:Issue = emptyIssue;
 
+  if(isIssue(param)) {
+    issue = param;
+  } else {
+    issue = param.issue;
+  }
   if (!issue.transitions) {
-    vscode.window.showInformationMessage('There are no valid states into which this issue can be transitioned.');
+    Logger.debug(`right click issue`, issue);
+    vscode.window.showInformationMessage(`${issue.key} - There are no valid states into which this issue can be transitioned.`);
     return;
   }
 
