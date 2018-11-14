@@ -1,4 +1,5 @@
 declare module '@atlaskit/page';
+declare module '@atlaskit/page-header';
 declare module '@atlaskit/table-tree';
 declare module '@atlaskit/avatar';
 declare module '@atlaskit/avatar-group';
@@ -9,3 +10,6 @@ declare module '@atlaskit/dropdown-menu';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/icon';
 declare module '@atlaskit/field-text-area';
+declare module '@atlaskit/tag';
+declare module '@atlaskit/tooltip';
+declare module '@atlaskit/theme';

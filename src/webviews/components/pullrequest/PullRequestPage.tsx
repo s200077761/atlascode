@@ -1,40 +1,44 @@
 import * as React from 'react';
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
+import PageHeader from '@atlaskit/page-header';
+import Tag from '@atlaskit/tag';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRData } from '../../../ipc/prMessaging';
-import { Action, Alert } from '../../../ipc/messaging';
-import { PostComment } from '../../../ipc/prActions';
+import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
+import { Approve, Checkout, PostComment } from '../../../ipc/prActions';
 import CommentForm from './CommentForm';
+import BranchInfo from './BranchInfo';
+import styled from 'styled-components';
 
-type Emit = Action | Alert | PostComment;
+export const Spacer = styled.div`
+margin: 10px;
+`;
 
-export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, { pr: PRData, isApproveButtonLoading: boolean }> {
+export const InlineFlex = styled.div`
+display: inline-flex;
+align-items: center;
+`;
+
+type Emit = Approve | Checkout | PostComment;
+type Receive = PRData | CheckoutResult;
+
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '' }, isApproveButtonLoading: false };
+        this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false };
     }
 
-    componentUpdater = (data: PRData) => { };
-
-    alertHandler = (e: any) => {
-        this.postMessage({
-            action: 'alertError',
-            message: 'checkout clicked'
-        });
-    }
-
-    onApprove = () => {
-        this.setState({ ...this.state, ...{ isApproveButtonLoading: true } });
+    handleApprove = () => {
+        this.setState({ isApproveButtonLoading: true });
         this.postMessage({
             action: 'approve'
         });
     }
 
-    postCommentHandler = (content: string, parentCommentId?: number) => {
+    handlePostComment = (content: string, parentCommentId?: number) => {
         this.postMessage({
             action: 'comment',
             content: content,
@@ -42,17 +46,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
         });
     }
 
-    public onMessageReceived(e: PRData) {
-        console.log("got message from vscode", e);
-        this.state = { ...this.state, ...{ pr: e, isApproveButtonLoading: false } };
-        this.componentUpdater(e);
-    }
-
-    componentWillMount() {
-        this.componentUpdater = (data) => {
-            const newState = { ...this.state, ...{ pr: data } };
-            this.setState(newState);
-        };
+    onMessageReceived(e: Receive): void {
+        if (isPRData(e)) {
+            this.setState({ pr: e, isApproveButtonLoading: false });
+        }
+        else if (isCheckoutError(e)) {
+            this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch } });
+        }
     }
 
     render() {
@@ -62,22 +62,29 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
         let currentUserApproved = pr.participants!
             .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
+
+        const actionsContent = (
+            <InlineFlex>
+                <Reviewers {...this.state.pr} />
+                <Spacer>
+                    {!currentUserApproved
+                        ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
+                        : <p> <Tag text="✔ You approved this PR" color="green" /></p>
+                    }
+                </Spacer>
+            </InlineFlex>
+        );
+
         return (
             <Page>
                 <Grid>
-                    <GridColumn medium={8}>
-                        <h2><a href={pr.links!.html!.href}>#{pr.id}</a>  {pr.title}</h2>
-                        <Button spacing="compact">{pr.source!.branch!.name}</Button> → <Button spacing="compact">{pr.destination!.branch!.name}</Button>
-                    </GridColumn>
-                    <GridColumn medium={4}>
-                        <Reviewers {...this.state.pr} />
-                        <ButtonGroup>
-                            <Button onClick={this.alertHandler} className='ak-button'>Checkout</Button>
-                            {!currentUserApproved && <Button isLoading={this.state.isApproveButtonLoading} onClick={this.onApprove} className='ak-button'>Approve</Button>}
-                        </ButtonGroup>
-                        {currentUserApproved && <p>✔ You have approved this PR</p>}
-                    </GridColumn>
                     <GridColumn>
+                        <PageHeader
+                            actions={actionsContent}
+                            bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
+                        >
+                            <p><a href={pr.links!.html!.href}>#{pr.id}</a>  {pr.title}</p>
+                        </PageHeader>
                         <hr />
                         <h3>Commits</h3>
                         <Commits {...this.state.pr} />
@@ -87,11 +94,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, PRData, {}, 
                         </p>
                         <hr />
                         <h3>Comments</h3>
-                        <Comments prData={this.state.pr} onComment={this.postCommentHandler} />
-                        <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.postCommentHandler} />
+                        <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                        <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
                     </GridColumn>
                 </Grid>
-            </Page>
+            </Page >
         );
     }
 }
