@@ -48,6 +48,13 @@ import { WorkingSite } from "../config/model";
         thumbnail: '',
     };
 
+    export const emptyWorkingSite: WorkingSite = {
+        name: '',
+        id: '',
+        scopes: [],
+        avatarUrl: ''
+    };
+
     export const emptyIssue:Issue = {
         key: '',
         id: '',
@@ -62,7 +69,7 @@ import { WorkingSite } from "../config/model";
         labels: [],
         attachments: [],
         transitions: [],
-        cloudId: ''
+        workingSite: emptyWorkingSite
     };
 
     export type issueOrKey = Issue | string;
@@ -140,7 +147,7 @@ import { WorkingSite } from "../config/model";
             labels: issueJson.fields.labels,
             attachments: attachments,
             transitions: transitions,
-            cloudId: workingSite.id
+            workingSite: workingSite
         };
     }
 
@@ -159,7 +166,7 @@ import { WorkingSite } from "../config/model";
         labels: string[];
         attachments: Attachment[];
         transitions: Transition[];
-        cloudId: string;
+        workingSite: WorkingSite;
     }
 
     export interface Status {

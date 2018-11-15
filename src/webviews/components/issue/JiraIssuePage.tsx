@@ -8,7 +8,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import { WebviewComponent } from '../WebviewComponent';
 import { IssueData } from '../../../ipc/issueMessaging';
 import { Action, Alert } from '../../../ipc/messaging';
-import { emptyStatus, emptyIssueType, emptyUser } from '../../../jira/jiraModel';
+import { emptyStatus, emptyIssueType, emptyUser, emptyWorkingSite } from '../../../jira/jiraModel';
 import { TransitionIssueAction } from '../../../ipc/issueActions';
 
 type Emit = TransitionIssueAction | Action | Alert;
@@ -27,7 +27,7 @@ const emptyIssueData:IssueData =  {
     labels: [],
     attachments: [],
     transitions: [],
-    cloudId: ''
+    workingSite: emptyWorkingSite
 };
 
 type MyState = { data: IssueData, isStatusButtonLoading: boolean };

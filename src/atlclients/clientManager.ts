@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import { configuration, WorkingSite } from '../config/configuration';
 import { Resources } from '../resources';
 import { JiraWorkingSiteConfigurationKey } from '../constants';
+import { emptyWorkingSite } from '../jira/jiraIssue';
 
 // TODO: VSCODE-29 if user bails in oauth or an error happens, we need to return undefined
 class ClientManager {
@@ -45,15 +46,17 @@ class ClientManager {
         return configuration.get<WorkingSite>(JiraWorkingSiteConfigurationKey, null);
     }
 
-    public async jirarequest():Promise<JiraKit | undefined> {
+    public async jirarequest(workingSite?: WorkingSite):Promise<JiraKit | undefined> {
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";
 
-            const workingSite = this.getWorkingSite();
+            if (!workingSite || workingSite === emptyWorkingSite) {
+                workingSite = this.getWorkingSite();
+            } 
             if(info.accessibleResources) {
                 if(workingSite) {
-                    const foundSite = info.accessibleResources.find(site => site.id === workingSite.id);
+                    const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
                     if(foundSite) {
                         cloudId = foundSite.id;
                     }
