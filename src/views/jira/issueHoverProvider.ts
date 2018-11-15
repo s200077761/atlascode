@@ -7,7 +7,6 @@ import { Commands } from "../../commands";
 const IssueKeyRegEx = /[A-Z]+-\d+/g;
 
 export class IssueHoverProvider implements HoverProvider {
-
   provideHover(doc: vscode.TextDocument, position: vscode.Position) {
     let range = doc.getWordRangeAtPosition(position, new RegExp(IssueKeyRegEx));
     if (range === undefined || range.isEmpty) {
@@ -19,16 +18,25 @@ export class IssueHoverProvider implements HoverProvider {
 
   private getIssueDetails(key: string): Promise<vscode.Hover> {
     return fetchIssue(key).then(issue => {
+      let summaryText = issue.summary ? issue.summary : "";
+      let statusText = issue.status.name;
+      let descriptionText = issue.description ? issue.description : "*No description*";
+      let header = 
+      `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
+       | -                                                      | -                      |
+       | ![](${issue.priority.iconUrl.replace(".svg", ".png")}) | ${issue.priority.name} |
+       |                                                        | ${statusText}          |`;
+
       let text = [];
-      text.push(new vscode.MarkdownString(`**${key}: ${issue.summary}**`));
-      text.push(new vscode.MarkdownString(`${issue.description}`));
+      text.push(new vscode.MarkdownString(header));
+      text.push(new vscode.MarkdownString(descriptionText));
       let encodedURI = encodeURIComponent(JSON.stringify([issue.key]));
       text.push(
         new vscode.MarkdownString(
           `[View](command:${Commands.ShowIssue}?${encodedURI})`
         )
       );
-      text[2].isTrusted = true;
+      text[text.length - 1].isTrusted = true;
       return new vscode.Hover(text);
     });
   }
