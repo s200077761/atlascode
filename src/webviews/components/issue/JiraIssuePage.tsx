@@ -26,7 +26,8 @@ const emptyIssueData:IssueData =  {
     comments: [],
     labels: [],
     attachments: [],
-    transitions: []
+    transitions: [],
+    cloudId: ''
 };
 
 type MyState = { data: IssueData, isStatusButtonLoading: boolean };

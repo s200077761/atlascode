@@ -1,4 +1,5 @@
 import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
+import { WorkingSite } from "../config/model";
 
     export const emptyStatusCategory:StatusCategory = {
         colorName: '',
@@ -60,7 +61,8 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         comments: [],
         labels: [],
         attachments: [],
-        transitions: []
+        transitions: [],
+        cloudId: ''
     };
 
     export type issueOrKey = Issue | string;
@@ -96,7 +98,7 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
     }
 
-    export function issueFromJsonObject(issueJson: any): Issue {
+    export function issueFromJsonObject(issueJson: any, workingSite: WorkingSite): Issue {
         let comments:Comment[] = [];
         if(issueJson.fields.comment && issueJson.fields.comment.comments) {
             comments = issueJson.fields.comment.comments.map((commentJson: any) => {
@@ -137,7 +139,8 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
             comments: comments,
             labels: issueJson.fields.labels,
             attachments: attachments,
-            transitions:transitions
+            transitions: transitions,
+            cloudId: workingSite.id
         };
     }
 
@@ -156,6 +159,7 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         labels: string[];
         attachments: Attachment[];
         transitions: Transition[];
+        cloudId: string;
     }
 
     export interface Status {

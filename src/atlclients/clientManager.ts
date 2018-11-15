@@ -41,12 +41,16 @@ class ClientManager {
         });
     }
 
+    public getWorkingSite(): WorkingSite {
+        return configuration.get<WorkingSite>(JiraWorkingSiteConfigurationKey, null);
+    }
+
     public async jirarequest():Promise<JiraKit | undefined> {
         
         return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud,(info)=>{
             let cloudId:string = "";
 
-            const workingSite = configuration.get<WorkingSite>(JiraWorkingSiteConfigurationKey, null);
+            const workingSite = this.getWorkingSite();
             if(info.accessibleResources) {
                 if(workingSite) {
                     const foundSite = info.accessibleResources.find(site => site.id === workingSite.id);
