@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Atl } from "../../atlclients/clientManager";
+import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { JiraWorkingProjectConfigurationKey } from "../../constants";
 import { Project, isProject, projectFromJsonObject } from "../../jira/jiraModel";
@@ -30,7 +30,7 @@ async function saveWorkingProject(project: Project) {
 }
 
 async function getProjects(): Promise<Project[]> {
-  let client = await Atl.jirarequest();
+  let client = await Container.clientManager.jirarequest();
 
   if (client) {
     return client.project

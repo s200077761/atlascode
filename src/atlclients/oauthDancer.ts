@@ -139,7 +139,12 @@ export class OAuthDancer {
                 let newAuth:authinfo.AuthInfo = authInfo;
                 newAuth.access = accessToken;
 
-                resolve(newAuth);
+                if (newAuth.access && newAuth.access !== '') {
+                    resolve(newAuth);
+                } else {
+                    // the refresh token may have been revoked, in which case BB returns valid token info with the access token removed instead of an error.
+                    reject("invalid refresh token");
+                }
             });
         });
     }
