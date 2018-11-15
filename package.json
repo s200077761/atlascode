@@ -44,7 +44,7 @@
             },
             {
                 "command": "atlascode.bb.clearAuth",
-                "title": "Remove Bitbucket Authentication",
+                "title": "Logout From Bitbucket",
                 "category": "AtlasCode"
             },
             {
@@ -85,7 +85,7 @@
             },
             {
                 "command": "atlascode.jira.clearAuth",
-                "title": "Remove Jira Authentication",
+                "title": "Logout from Jira",
                 "category": "AtlasCode"
             },
             {
