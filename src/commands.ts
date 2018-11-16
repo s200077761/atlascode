@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { currentUserJira } from './commands//jira/currentUser';
-import { authenticateJira } from './commands/authenticate';
+import { authenticateJira, clearJiraAuth } from './commands/authenticate';
 import { JiraContext } from './jira/context';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
@@ -16,9 +16,11 @@ export enum Commands {
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
+    ClearBitbucketAuth = 'atlascode.bb.clearAuth',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
     AuthenticateJira = 'atlascode.jira.authenticate',
+    ClearJiraAuth = 'atlascode.jira.clearAuth',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
     RefreshExplorer = 'atlascode.jira.refreshExplorer',
@@ -32,6 +34,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, jiraCon
         vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
+        vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree)),

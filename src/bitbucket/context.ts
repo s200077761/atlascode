@@ -7,7 +7,7 @@ import { Container } from '../container';
 import { PaginatedPullRequests } from './model';
 import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
-import { authenticateBitbucket } from '../commands/authenticate';
+import { authenticateBitbucket, clearBitbucketAuth } from '../commands/authenticate';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { BitbucketContainerConfigurationKey } from '../constants';
 
@@ -38,6 +38,7 @@ export class BitbucketContext implements vscode.Disposable {
         vscodeContext.subscriptions.push(
             vscode.window.registerTreeDataProvider<BaseNode>('atlascode.views.bb.pullrequestsTreeView', prNodeDataProvider),
             vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
+            vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
             vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
             vscode.commands.registerCommand(Commands.BitbucketRefreshPullRequests, prNodeDataProvider.refresh, prNodeDataProvider),
             vscode.commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {

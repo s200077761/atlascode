@@ -1,10 +1,15 @@
 import * as authinfo from './authInfo';
 import { keychain } from '../util/keychain';
+import { Disposable } from 'vscode';
 
 const keychainServiceName = "atlascode-authinfo";
 
-class AuthManager {
+export class AuthManager implements Disposable {
     private _memStore:Map<string,authinfo.AuthInfo> = new Map<string,authinfo.AuthInfo>();
+
+    dispose() {
+        this._memStore.clear();
+    }
 
     public async getAuthInfo(provider:string):Promise<authinfo.AuthInfo | undefined> {
         if (this._memStore.has(provider)) {
@@ -43,5 +48,3 @@ class AuthManager {
         return false;
     }
 }
-
-export const AuthStore = new AuthManager();

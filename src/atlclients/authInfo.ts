@@ -22,3 +22,16 @@ export interface AccessibleResource {
     scopes: Array<string>;
     avatarUrl: string;
 }
+
+export const emptyUserInfo:UserInfo = {
+    id: 'empty',
+    displayName: 'empty',
+    provider: 'empty',
+};
+
+export const emptyAuthInfo:AuthInfo = {
+    access:'empty',
+    refresh:'empty',
+    user: emptyUserInfo,
+    accessibleResources:[]
+};

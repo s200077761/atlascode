@@ -53,7 +53,7 @@ function isValidTransition(issue: Issue, transition: Transition): boolean {
 }
 
 async function performTranstion(issue: Issue,transition: Transition) {
-  let client = await Atl.jirarequest();
+  let client = await Container.clientManager.jirarequest();
 
   if (client) {
     client.issue.doTransition({

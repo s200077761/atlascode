@@ -1,10 +1,10 @@
-import { Atl } from "../atlclients/clientManager";
+import { Container } from "../container";
 import { Issue, issueExpand, issueFields, issueFromJsonObject } from "../jira/jiraModel";
 
 const apiConnectivityError = new Error('cannot connect to Jira API');
 
 export async function fetchIssue(issue: string): Promise<Issue> {
-  let client = await Atl.jirarequest();
+  let client = await Container.clientManager.jirarequest();
 
   if (client) {
     return client.issue
@@ -14,7 +14,7 @@ export async function fetchIssue(issue: string): Promise<Issue> {
         fields: issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        return issueFromJsonObject(res.data);
+        return issueFromJsonObject(res.data, Atl.getWorkingSite());
       });
   }
   return Promise.reject(apiConnectivityError);

@@ -1,11 +1,13 @@
-import { Atl } from "../../atlclients/clientManager";
+import { Container } from "../../container";
 import { Issue, issueExpand, issueFields, issueFromJsonObject } from "../..//jira/jiraModel";
+import { Logger } from "../../logger";
 
 
 export async function issuesForJQL(jql: string): Promise<Issue[]> {
-  let client = await Atl.jirarequest();
+  let client = await Container.clientManager.jirarequest();
 
   if (client) {
+    Logger.debug("issuesForJQL: got client");
     return client.search
       .searchForIssuesUsingJqlGet({
         expand: issueExpand,
@@ -16,11 +18,13 @@ export async function issuesForJQL(jql: string): Promise<Issue[]> {
         const issues = res.data.issues;
         if (issues) {
           return issues.map((issue: any) => {
-            return issueFromJsonObject(issue);
+            return issueFromJsonObject(issue, Atl.getWorkingSite());
           });
         }
         return [];
       });
+  } else {
+    Logger.debug("issuesForJQL: client undefined");
   }
 
   return Promise.reject();
