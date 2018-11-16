@@ -8,7 +8,6 @@ import { registerResources } from './resources';
 import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
-import { Atl } from './atlclients/clientManager';
 import { JiraOutlineProvider } from './views/jira/jiraOutlineProvider';
 import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { JiraContext } from './jira/context';
@@ -22,7 +21,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     Container.initialize(context, cfg);
     registerResources(context);
-    Atl.configure(context);
 
     const assignedTree = new JiraOutlineProvider("You have no assigned issues");
     const openTree = new JiraOutlineProvider("There are no open issues");

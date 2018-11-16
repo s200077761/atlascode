@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import * as authinfo from '../../atlclients/authInfo';
-import { AuthStore } from '../../atlclients/authStore';
+import { Container } from '../../container';
 import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
 import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
 
 export async function showSiteSelectionDialog() {
-    AuthStore.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo|undefined) => {
+  Container.authManager.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo|undefined) => {
         if(!info) {
           // TODO: show login propmpt.
           return;
