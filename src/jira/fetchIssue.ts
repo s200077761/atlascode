@@ -14,7 +14,7 @@ export async function fetchIssue(issue: string): Promise<Issue> {
         fields: issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        return issueFromJsonObject(res.data);
+        return issueFromJsonObject(res.data, Atl.getWorkingSite());
       });
   }
   return Promise.reject(apiConnectivityError);

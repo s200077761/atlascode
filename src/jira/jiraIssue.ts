@@ -1,4 +1,5 @@
 import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
+import { WorkingSite } from "../config/model";
 
     export const emptyStatusCategory:StatusCategory = {
         colorName: '',
@@ -47,6 +48,13 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         thumbnail: '',
     };
 
+    export const emptyWorkingSite: WorkingSite = {
+        name: '',
+        id: '',
+        scopes: [],
+        avatarUrl: ''
+    };
+
     export const emptyIssue:Issue = {
         key: '',
         id: '',
@@ -60,7 +68,8 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         comments: [],
         labels: [],
         attachments: [],
-        transitions: []
+        transitions: [],
+        workingSite: emptyWorkingSite
     };
 
     export type issueOrKey = Issue | string;
@@ -96,7 +105,7 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
     }
 
-    export function issueFromJsonObject(issueJson: any): Issue {
+    export function issueFromJsonObject(issueJson: any, workingSite: WorkingSite): Issue {
         let comments:Comment[] = [];
         if(issueJson.fields.comment && issueJson.fields.comment.comments) {
             comments = issueJson.fields.comment.comments.map((commentJson: any) => {
@@ -137,7 +146,8 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
             comments: comments,
             labels: issueJson.fields.labels,
             attachments: attachments,
-            transitions:transitions
+            transitions: transitions,
+            workingSite: workingSite
         };
     }
 
@@ -156,6 +166,7 @@ import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
         labels: string[];
         attachments: Attachment[];
         transitions: Transition[];
+        workingSite: WorkingSite;
     }
 
     export interface Status {
