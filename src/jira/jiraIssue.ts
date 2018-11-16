@@ -18,6 +18,12 @@ import { WorkingSite } from "../config/model";
         statusCategory: emptyStatusCategory
     };
 
+    export const emptyPriority:Priority = {
+        id: '',
+        name: '',
+        iconUrl: ''
+    };
+
     export const emptyComment:Comment = {
         author: emptyUser,
         body: '',
@@ -62,6 +68,7 @@ import { WorkingSite } from "../config/model";
         description: '',
         summary: '',
         status: emptyStatus,
+        priority: emptyPriority,
         issueType: emptyIssueType,
         reporter: emptyUser,
         assignee: emptyUser,
@@ -74,7 +81,7 @@ import { WorkingSite } from "../config/model";
 
     export type issueOrKey = Issue | string;
 
-    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status"];
+    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority"];
     export const issueExpand = "transitions";
 
     export function isIssue(a:any): a is Issue {
@@ -91,6 +98,10 @@ import { WorkingSite } from "../config/model";
 
     export function isStatus(a:any): a is Status {
         return a && (<Status>a).iconUrl !== undefined && (<Status>a).statusCategory !== undefined;
+    }
+
+    export function isPriority(a: any): a is Priority {
+        return a && (<Priority>a).name !== undefined && (<Priority>a).iconUrl !== undefined;
     }
 
     export function isIssueType(a:any): a is IssueType {
@@ -140,6 +151,7 @@ import { WorkingSite } from "../config/model";
             description: issueJson.fields.description,
             summary: issueJson.fields.summary,
             status: isStatus(issueJson.fields.status) ? issueJson.fields.status : emptyStatus,
+            priority: isPriority(issueJson.fields.priority) ? issueJson.fields.priority : emptyPriority,
             issueType: isIssueType(issueJson.fields.issuetype) ? issueJson.fields.issuetype : emptyIssueType,
             reporter: isUser(issueJson.fields.reporter) ? issueJson.fields.reporter : emptyUser,
             assignee: isUser(issueJson.fields.assignee) ? issueJson.fields.assignee : emptyUser,
@@ -159,6 +171,7 @@ import { WorkingSite } from "../config/model";
         description: string;
         summary: string;
         status: Status;
+        priority: Priority;
         issueType: IssueType;
         reporter: User;
         assignee: User;
@@ -183,6 +196,12 @@ import { WorkingSite } from "../config/model";
         key: string;
         name: string;
         self: string;
+    }
+
+    export interface Priority {
+        id: string;
+        name: string;
+        iconUrl: string;
     }
 
     export interface Attachment {
