@@ -13,3 +13,4 @@ declare module '@atlaskit/field-text-area';
 declare module '@atlaskit/tag';
 declare module '@atlaskit/tooltip';
 declare module '@atlaskit/theme';
+declare module '@atlaskit/size-detector';
