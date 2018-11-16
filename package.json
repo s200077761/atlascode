@@ -43,6 +43,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.bb.clearAuth",
+                "title": "Logout From Bitbucket",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.me",
                 "title": "Get Current Bitbucket User",
                 "category": "AtlasCode"
@@ -76,6 +81,11 @@
             {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.jira.clearAuth",
+                "title": "Logout from Jira",
                 "category": "AtlasCode"
             },
             {

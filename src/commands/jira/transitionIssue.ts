@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 
 import { Logger } from "../../logger";
 import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
-import { Atl } from "../../atlclients/clientManager";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { IssueNode } from "../../views/nodes/issueNode";
@@ -53,7 +52,7 @@ function isValidTransition(issue: Issue, transition: Transition): boolean {
 }
 
 async function performTranstion(issue: Issue,transition: Transition) {
-  let client = await Atl.jirarequest();
+  let client = await Container.clientManager.jirarequest();
 
   if (client) {
     client.issue.doTransition({

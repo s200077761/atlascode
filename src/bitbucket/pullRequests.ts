@@ -2,7 +2,7 @@ import * as gup from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests } from './model';
-import { Atl } from "../atlclients/clientManager";
+import { Container } from "../container";
 import { Logger } from '../logger';
 
 const bitbucketHost = "bitbucket.org";
@@ -21,7 +21,7 @@ export namespace PullRequestApi {
 
     export async function getList(repository: Repository): Promise<PaginatedPullRequests> {
         Logger.debug('getting PRs...');
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         let remotes = getBitbucketRemotes(repository);
@@ -45,7 +45,7 @@ export namespace PullRequestApi {
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         const { data } = await bb.getNextPage({ next: next });
@@ -55,7 +55,7 @@ export namespace PullRequestApi {
     }
 
     export async function get(pr: PullRequest): Promise<PullRequest> {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         let parsed = GitUrlParse(pr.remote.fetchUrl! || pr.remote.pushUrl!);
@@ -68,7 +68,7 @@ export namespace PullRequestApi {
     }
 
     export async function getChangedFiles(pr: PullRequest): Promise<any[]> {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         let result: any[] = [];
@@ -113,7 +113,7 @@ export namespace PullRequestApi {
     }
 
     export async function getCommits(pr: PullRequest): Promise<Bitbucket.Schema.Commit[]> {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
@@ -129,7 +129,7 @@ export namespace PullRequestApi {
     }
 
     export async function getComments(pr: PullRequest): Promise<Bitbucket.Schema.Comment[]> {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
@@ -153,7 +153,7 @@ export namespace PullRequestApi {
     }
 
     export async function approve(pr: PullRequest) {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
@@ -166,7 +166,7 @@ export namespace PullRequestApi {
     }
 
     export async function postComment(pr: PullRequest, text: string, parentCommentId?: number) {
-        let bb = await Atl.bbrequest();
+        let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
