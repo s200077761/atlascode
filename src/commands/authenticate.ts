@@ -9,7 +9,7 @@ export async function authenticateBitbucket() {
 }
 
 export async function authenticateJira() {
-    await clearJiraAuth;
+    await clearJiraAuth();
     authenticate(authinfo.AuthProvider.JiraCloud);
 }
 
