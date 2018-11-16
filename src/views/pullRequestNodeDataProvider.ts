@@ -4,6 +4,7 @@ import { BitbucketContext } from '../bitbucket/context';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
 import { RepositoriesNode } from './nodes/repositoriesNode';
+import { getPRDocumentCommentProvider } from './pullRequestCommentProvider';
 
 export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<BaseNode>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<BaseNode | undefined> = new vscode.EventEmitter<BaseNode | undefined>();
@@ -15,6 +16,7 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
 
     constructor(private ctx: BitbucketContext) {
         this._disposables.push(vscode.workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)));
+        this._disposables.push(vscode.workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()));
         ctx.onDidChangeBitbucketContext(() => {
             this.updateChildren();
             this.refresh();

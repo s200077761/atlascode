@@ -11,7 +11,8 @@
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
     },
     "icon": "images/atlascode-icon.png",
-    "preview": false,
+    "preview": true,
+    "enableProposedApi": true,
     "galleryBanner": {
         "color": "#8647ae",
         "theme": "dark"
@@ -23,7 +24,7 @@
         "multi-root ready"
     ],
     "engines": {
-        "vscode": "^1.28.0"
+        "vscode": "^1.29.0"
     },
     "categories": [
         "Other"

@@ -2,6 +2,7 @@ import * as React from 'react';
 import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
+import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Tag from '@atlaskit/tag';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
@@ -74,6 +75,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 </Spacer>
             </InlineFlex>
         );
+        const breadcrumbs = (
+            <BreadcrumbsStateless onExpand={() => { }}>
+                <BreadcrumbsItem text={this.state.pr.pr!.destination!.repository!.name} key={this.state.pr.pr!.destination!.repository!.name} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />
+                <BreadcrumbsItem text="Pull requests" key="Pull requests" />
+                <BreadcrumbsItem text={pr.id} key={pr.id} href={pr.links!.html!.href} />
+            </BreadcrumbsStateless>
+        );
 
         return (
             <Page>
@@ -81,9 +89,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     <GridColumn>
                         <PageHeader
                             actions={actionsContent}
+                            breadcrumbs={breadcrumbs}
                             bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
                         >
-                            <p><a href={pr.links!.html!.href}>#{pr.id}</a>  {pr.title}</p>
+                            <p>{pr.title}</p>
                         </PageHeader>
                         <hr />
                         <h3>Commits</h3>
