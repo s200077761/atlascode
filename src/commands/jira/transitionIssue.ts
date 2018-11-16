@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 
 import { Logger } from "../../logger";
 import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
-import { Atl } from "../../atlclients/clientManager";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { IssueNode } from "../../views/nodes/issueNode";
