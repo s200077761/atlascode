@@ -16,6 +16,21 @@ export interface WorkingSite {
 export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles:boolean;
-    workingProject:string;
+    jira: JiraConfig;
+    bitbucket: BitbucketConfig;
+    
+}
+
+export interface JiraConfig {
+    workingProject:string | undefined;
     workingSite: WorkingSite;
+}
+
+export interface BitbucketConfig {
+    explorerLocation: BitbucketExplorerLocation;
+}
+
+export enum BitbucketExplorerLocation {
+    SourceControl = "SourceControl",
+    Atlascode = "Atlascode"
 }

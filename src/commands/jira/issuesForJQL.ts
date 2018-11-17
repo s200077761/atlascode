@@ -18,7 +18,7 @@ export async function issuesForJQL(jql: string): Promise<Issue[]> {
         const issues = res.data.issues;
         if (issues) {
           return issues.map((issue: any) => {
-            return issueFromJsonObject(issue, Atl.getWorkingSite());
+            return issueFromJsonObject(issue, Container.config.jira.workingSite);
           });
         }
         return [];

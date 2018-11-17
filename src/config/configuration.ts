@@ -12,6 +12,7 @@ import {
 } from 'vscode';
 import { extensionId } from '../constants';
 import { Logger } from '../logger';
+import { Container } from '../container';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -37,8 +38,10 @@ export class Configuration {
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         // only fire if it's a config for our extension
-        Logger.debug("config manager got config change");
+        Logger.debug("config manager got config change",e);
         if (!e.affectsConfiguration(extensionId, null!)) { return; }
+
+        Container.resetConfig();
 
         Logger.debug("config change is for atlascode!");
         this._onDidChange.fire(e);
@@ -85,7 +88,6 @@ export class Configuration {
             .update(section, value, target);
     }
 
-    // TODO: firgure out if we actually need this
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
         const inspect = await configuration.inspect(section, resource)!;
         if (inspect.workspaceFolderValue !== undefined) {

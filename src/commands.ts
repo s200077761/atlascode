@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import { currentUserJira } from './commands//jira/currentUser';
 import { authenticateJira, clearJiraAuth } from './commands/authenticate';
-import { JiraContext } from './jira/context';
-import { refreshExplorer } from './commands/jira/refreshExplorer';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
@@ -23,13 +21,13 @@ export enum Commands {
     ClearJiraAuth = 'atlascode.jira.clearAuth',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
-    RefreshExplorer = 'atlascode.jira.refreshExplorer',
+    RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     TransitionIssue = 'atlascode.jira.transitionIssue'
 }
 
-export function registerCommands(vscodeContext: vscode.ExtensionContext, jiraContext: JiraContext) {
+export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
         vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
@@ -37,7 +35,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext, jiraCon
         vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
-        vscode.commands.registerCommand(Commands.RefreshExplorer, () => refreshExplorer(jiraContext.assignedTree, jiraContext.openTree)),
         vscode.commands.registerCommand(Commands.ShowIssue, async (issue) => {
             await Container.jiraIssueViewManager.createOrShow(issue);
         }),

@@ -4,7 +4,6 @@ import { configuration } from "../../config/configuration";
 import { JiraWorkingProjectConfigurationKey } from "../../constants";
 import { Project, isProject, projectFromJsonObject } from "../../jira/jiraModel";
 import { Logger } from "../../logger";
-import { Commands } from "../../commands";
 
 export async function showProjectSelectionDialog() {
   getProjects().then(projects => {
@@ -12,20 +11,20 @@ export async function showProjectSelectionDialog() {
       .showQuickPick(projects.map(project => project.name), {
         placeHolder: "Select a project"
       })
-      .then(result => {
+      .then(async (result) => {
         const selected = projects.find(proj => proj.name === result);
         if (selected) {
-          saveWorkingProject(selected);
+          await saveWorkingProject(selected);
         }
       });
   });
 }
 
 async function saveWorkingProject(project: Project) {
-  await configuration.update(JiraWorkingProjectConfigurationKey, project.id, vscode.ConfigurationTarget.Workspace)
-  .then(() => vscode.commands.executeCommand(Commands.RefreshExplorer))
+  Logger.debug("saving project to config", project.id);
+  await configuration.updateEffective(JiraWorkingProjectConfigurationKey, project.id)
   .catch(reason => {
-      Logger.debug(`Failed to save working project: ${reason}`);
+    Logger.debug("rejected config update", reason);
   });
 }
 
