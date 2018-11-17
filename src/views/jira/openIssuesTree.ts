@@ -14,6 +14,7 @@ export class OpenIssuesTree extends AbstractIssueTree {
     }
 
     public async onConfigurationChanged(e: ConfigurationChangeEvent) {
+        super.onConfigurationChanged(e);
         const initializing = configuration.initializing(e);
         Logger.debug("OpenIssuesTree got config change",e);
         
@@ -24,7 +25,6 @@ export class OpenIssuesTree extends AbstractIssueTree {
             this.setJql(jql);
         }
 
-        super.onConfigurationChanged(e);
     }
 
     private jqlForProject(project?:string): string {

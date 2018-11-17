@@ -1,10 +1,12 @@
-import { Disposable, commands } from "vscode";
+import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { OpenIssuesTree } from "./openIssuesTree";
 import { AssignedIssuesTree } from "./assignedIssuesTree";
 import { Commands } from "../../commands";
 import { IssueTree } from "./abstractIssueTree";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
+import { configuration } from "../../config/configuration";
+import { setCommandContext, CommandContext } from "../../constants";
 
 export class JiraExplorer extends Disposable {
 
@@ -13,13 +15,33 @@ export class JiraExplorer extends Disposable {
 
     constructor() {
         super(() => this.dispose());
-        this._trees.push(new OpenIssuesTree());
-        this._trees.push(new AssignedIssuesTree());
 
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this));
-            
+            Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
+        );
         commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
+            
+        Container.context.subscriptions.push(
+            configuration.onDidChange(this.onConfigurationChanged, this)
+        );
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
+        
+    }
+
+    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
+        const initializing = configuration.initializing(e);
+        if (
+            initializing ||
+            configuration.changed(e, 'jira.explorer.enabled')
+        ) {
+            if(!Container.config.jira.explorer.enabled) {
+                this.dispose();
+            } else {
+                this._trees.push(new OpenIssuesTree());
+                this._trees.push(new AssignedIssuesTree());
+            }
+            setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
+        }
     }
 
     dispose() {

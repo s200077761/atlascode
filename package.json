@@ -116,7 +116,7 @@
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "jira-viewer",
+                    "id": "atlascode-drawer",
                     "title": "Atlascode",
                     "icon": "resources/atlassian-icon.svg"
                 }
@@ -130,14 +130,16 @@
                     "when": "atlascode.ctxKey.bb.explorerLocation == SourceControl"
                 }
             ],
-            "jira-viewer": [
+            "atlascode-drawer": [
                 {
                     "id": "assignedIssues",
-                    "name": "Your Issues"
+                    "name": "Your Issues",
+                    "when": "atlascode:jiraExplorerEnabled"
                 },
                 {
                     "id": "openIssues",
-                    "name": "Open Issues"
+                    "name": "Open Issues",
+                    "when": "atlascode:jiraExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
@@ -196,6 +198,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Jira Issue Explorer",
                     "scope": "window"
                 },
                 "atlascode.jira.workingProject": {

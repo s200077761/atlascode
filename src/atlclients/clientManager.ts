@@ -194,7 +194,7 @@ import {
           SIGNIN_COMMAND
         );
       } else {
-        usersChoice = SIGNIN_COMMAND
+        usersChoice = SIGNIN_COMMAND;
       }
   
       if (usersChoice === SIGNIN_COMMAND) {

@@ -4,17 +4,15 @@ import { Logger } from '../../logger';
 import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
-import { Container } from '../../container';
 import { configuration } from '../../config/configuration';
 
-//import { Commands } from '../../commands';
 export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
     refresh():void;
     setJql(jql: string | undefined):void;
 }
 
 export abstract class AbstractIssueTree extends Disposable implements IssueTree {
-    private _disposable: Disposable | undefined;
+    private _disposables: Disposable[] = [];
 
     private _onDidChangeTreeData = new EventEmitter<IssueNode>();
     public get onDidChangeTreeData(): Event<IssueNode> {
@@ -38,67 +36,36 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
             this._emptyState = emptyState;
         }
 
-        Container.context.subscriptions.push(
+        this._disposables.push(Disposable.from(
             configuration.onDidChange(this.onConfigurationChanged, this)
-        );
+        ));
+
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     dispose() {
-        if(this._disposable) { this._disposable.dispose(); }
+        Logger.debug("disposing", this._id);
+        this._disposables.forEach(d => {
+            d.dispose();
+        });
+        
+        this._disposables = [];
     }
 
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (
-            !initializing
-            // && !configuration.changed(e, configuration.name('gitExplorer').value) &&
-            // !configuration.changed(e, configuration.name('explorers').value) &&
-            // !configuration.changed(e, configuration.name('defaultGravatarsStyle').value) &&
-            // !configuration.changed(e, configuration.name('advanced')('fileHistoryFollowsRenames').value)
-        ) {
-            return;
-        }
-
-        // if (
-        //     initializing 
-        //     // || configuration.changed(e, configuration.name('gitExplorer')('enabled').value) ||
-        //     // configuration.changed(e, configuration.name('gitExplorer')('location').value)
-        // ) {
-        //     setCommandContext(CommandContext.GitExplorer, this.config.enabled ? this.config.location : false);
-        // }
-
-        // if (initializing || configuration.changed(e, configuration.name('gitExplorer')('autoRefresh').value)) {
-        //     void this.setAutoRefresh(Container.config.gitExplorer.autoRefresh);
-        // }
-
-        // if (!initializing && configuration.changed(e, configuration.name('gitExplorer')('undockHistory').value)) {
-        //     if (Container.config.historyExplorer.enabled) {
-        //         this.undockHistory(!initializing);
-        //     }
-        //     // else {
-        //     //     this.dockHistory(!initializing);
-        //     // }
-        // }
-
         if (initializing) {
-            if (this._disposable) {
-                this._disposable.dispose();
-                this._onDidChangeTreeData = new EventEmitter<IssueNode>();
-            }
+            this._onDidChangeTreeData = new EventEmitter<IssueNode>();
 
             this._tree = window.createTreeView(this._id, {
                 treeDataProvider: this
             });
 
             this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-            this._disposable = this._tree;
+            this._disposables.push(this._tree);
 
-            return;
         }
-
-        this.refresh();
     }
 
     refresh() {

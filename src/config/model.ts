@@ -24,6 +24,11 @@ export interface IConfig {
 export interface JiraConfig {
     workingProject:string | undefined;
     workingSite: WorkingSite;
+    explorer:JiraExplorer;
+}
+
+export interface JiraExplorer {
+    enabled:boolean;
 }
 
 export interface BitbucketConfig {

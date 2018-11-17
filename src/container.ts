@@ -1,4 +1,4 @@
-import { ExtensionContext } from 'vscode';
+import { ExtensionContext, Disposable } from 'vscode';
 import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
@@ -20,19 +20,17 @@ export class Container {
         context.subscriptions.push((this._authManager = new AuthManager()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
 
-        // // if (config.gitExplorer.enabled) {
-        // //     context.subscriptions.push((this._gitExplorer = new GitExplorer()));
-        // // }
-        // // else {
-        //     let disposable: Disposable;
-        //     disposable = configuration.onDidChange(e => {
-        //         if (configuration.changed(e, configuration.name('gitExplorer')('enabled').value)) {
-        //             disposable.dispose();
-        //             context.subscriptions.push((this._gitExplorer = new GitExplorer()));
-        //         }
-        //    // });
-        // //}
-        context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
+        if (config.jira.explorer.enabled) {
+            context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
+        } else {
+            let disposable: Disposable;
+            disposable = configuration.onDidChange(e => {
+                if (configuration.changed(e, 'jira.explorer.enabled')) {
+                    disposable.dispose();
+                    context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
+                }
+           });
+        }
     }
 
     private static _config: IConfig | undefined;
