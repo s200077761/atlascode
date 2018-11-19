@@ -31,7 +31,7 @@ export namespace PullRequestApi {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
             const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
-            const prs: PullRequest[] = data.values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
+            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
@@ -165,21 +165,29 @@ export namespace PullRequestApi {
         });
     }
 
-    export async function postComment(pr: PullRequest, text: string, parentCommentId?: number) {
+    export async function postComment(
+        remote: Remote,
+        prId: number, text: string,
+        parentCommentId?: number,
+        inline?: { from?: number, to?: number, path: string }
+    ): Promise<Bitbucket.Schema.Comment> {
+
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        //@ts-ignore
         return await bb.pullrequests.createComment({
-            pull_request_id: pr.data.id!,
+            pull_request_id: prId,
             repo_slug: parsed.name,
             username: parsed.owner,
             _body: {
                 parent: parentCommentId ? { id: parentCommentId } : undefined,
                 content: {
                     raw: text
-                }
+                },
+                inline: inline
             } as any
         });
     }
