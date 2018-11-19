@@ -109,7 +109,7 @@ class PullRequestFilesNode extends BaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem(`${this.fileChange.comments ? '* ' : ''}${this.fileChange.filename}`, vscode.TreeItemCollapsibleState.None);
+        let item = new vscode.TreeItem(`${this.fileChange.comments ? '💬 ' : ''}${this.fileChange.filename}`, vscode.TreeItemCollapsibleState.None);
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
