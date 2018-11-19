@@ -21,6 +21,9 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
             this.updateChildren();
             this.refresh();
         });
+        getPRDocumentCommentProvider().onDidChangeCommentThreads(() => {
+            this.refresh();
+        });
     }
 
     private updateChildren(): void {

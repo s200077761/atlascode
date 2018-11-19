@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as pathlib from 'path';
 import { BitbucketContext } from '../bitbucket/context';
+import { FileDiffQueryParams } from './nodes/pullRequestNode';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
@@ -9,24 +10,24 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
     constructor(private bbContext: BitbucketContext) { }
 
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
-        let { repoUri, remote, branch, path, commit } = JSON.parse(uri.query);
+        const { repoUri, remote, branchName, path, commitHash } = JSON.parse(uri.query) as FileDiffQueryParams;
 
         const u: vscode.Uri = vscode.Uri.parse(repoUri);
         const repo = this.bbContext.getRepository(u);
-        if (!repo || !path || !commit) {
+        if (!repo || !path || !commitHash) {
             return '';
         }
 
         const absolutePath = pathlib.join(repo.rootUri.fsPath, path);
         let content = '';
         try {
-            content = await repo.show(commit, absolutePath);
+            content = await repo.show(commitHash, absolutePath);
         } catch (err) {
             try {
-                await repo.fetch(remote, branch);
-                content = await repo.show(commit, absolutePath);
+                await repo.fetch(remote.name, branchName);
+                content = await repo.show(commitHash, absolutePath);
             } catch (err) {
-                vscode.window.showErrorMessage(`We couldn't find commit ${commit} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
+                vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
             }
         }
 

@@ -149,7 +149,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequestApi.postComment({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! }, text, parentId);
+        await PullRequestApi.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
         await this.forceUpdateComments();
     }
 
