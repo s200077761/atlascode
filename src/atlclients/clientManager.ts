@@ -3,12 +3,10 @@ import {
     ConfigurationChangeEvent,
     ExtensionContext,
     Disposable,
-    StatusBarItem,
-    StatusBarAlignment
   } from "vscode";
   import * as BitbucketKit from "bitbucket";
   import * as JiraKit from "@atlassian/jira";
-  import * as authinfo from "./authInfo";
+  import { AuthProvider, AuthInfo } from "./authInfo";
   import { Container } from "../container";
   import { OAuthDancer } from "./oauthDancer";
   import { CacheMap, Interval } from "../util/cachemap";
@@ -17,8 +15,6 @@ import {
   import * as fs from "fs";
   import { configuration, WorkingSite } from "../config/configuration";
   import { Resources } from "../resources";
-  import { JiraWorkingSiteConfigurationKey } from "../constants";
-  import { Commands } from "../commands";
   import { emptyWorkingSite } from '../jira/jiraIssue';
   
   const SIGNIN_COMMAND = "Sign in";
@@ -37,13 +33,9 @@ import {
   export class ClientManager implements Disposable {
     private _clients: CacheMap = new CacheMap();
     private _dancer: OAuthDancer = new OAuthDancer();
-    private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
-      string,
-      StatusBarItem
-    >();
     private _agent: any | undefined;
     private _optionsDirty: boolean = false;
-    private _showingInfoBox: boolean = false;
+    private _isAuthenticating: boolean = false;
   
     constructor(context: ExtensionContext) {
       context.subscriptions.push(
@@ -54,15 +46,12 @@ import {
   
     dispose() {
       this._clients.clear();
-      this._authenticationStatusBarItems.forEach(item => {
-        item.dispose();
-      });
-      this._authenticationStatusBarItems.clear();
+      
     }
   
-    public async bbrequest(): Promise<BitbucketKit | undefined> {
+    public async bbrequest(promptForAuth:boolean = true): Promise<BitbucketKit | undefined> {
       return this.getClient<BitbucketKit>(
-        authinfo.AuthProvider.BitbucketCloud,
+        AuthProvider.BitbucketCloud,
         info => {
           let extraOptions = {};
           if (this._agent) {
@@ -73,20 +62,16 @@ import {
           bbclient.authenticate({ type: "token", token: info.access });
   
           return bbclient;
-        }
+        }, promptForAuth
       );
     }
-
-    public getWorkingSite(): WorkingSite {
-        return configuration.get<WorkingSite>(JiraWorkingSiteConfigurationKey, null);
-    }
   
-    public async jirarequest(workingSite?: WorkingSite): Promise<JiraKit | undefined> {
-      return this.getClient<JiraKit>(authinfo.AuthProvider.JiraCloud, info => {
+    public async jirarequest(workingSite?: WorkingSite, promptForAuth:boolean = true): Promise<JiraKit | undefined> {
+      return this.getClient<JiraKit>(AuthProvider.JiraCloud, info => {
         let cloudId: string = "";
-  
+        Logger.debug("jirarequest",workingSite);
         if (!workingSite || workingSite === emptyWorkingSite) {
-            workingSite = this.getWorkingSite();
+            workingSite = Container.config.jira.workingSite;
         } 
         if (info.accessibleResources) {
           if (workingSite) {
@@ -94,7 +79,8 @@ import {
             if (foundSite) {
               cloudId = foundSite.id;
             }
-          } else {
+          }
+          if(cloudId === "") {
             cloudId = info.accessibleResources[0].id;
           }
         }
@@ -111,7 +97,7 @@ import {
         jraclient.authenticate({ type: "token", token: info.access });
   
         return jraclient;
-      });
+      }, promptForAuth);
     }
   
     public async removeClient(provider: string) {
@@ -120,14 +106,14 @@ import {
   
     private async getClient<T>(
       provider: string,
-      factory: (info: authinfo.AuthInfo) => any
+      factory: (info: AuthInfo) => any,
+      promptUser:boolean = true
     ): Promise<T | undefined> {
       type TorEmpty = T | EmptyClient;
   
       let clientOrEmpty = await this._clients.getItem<TorEmpty>(provider);
   
       if (isEmptyClient(clientOrEmpty)) {
-        await this.updateAuthenticationStatusBar(provider, undefined);
         return undefined;
       }
   
@@ -137,13 +123,16 @@ import {
         let info = await Container.authManager.getAuthInfo(provider);
   
         if (!info) {
-          info = await this.askUserToDance(provider);
+          info = await this.danceWithUser(provider,promptUser);
   
           if (info) {
             await Container.authManager.saveAuthInfo(provider, info);
-            await this.updateAuthenticationStatusBar(provider, info);
+
+            const product = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+            window.showInformationMessage(
+              `You are now authenticated with ${product}`
+            );
           } else {
-            await this.updateAuthenticationStatusBar(provider, undefined);
             return undefined;
           }
         } else {
@@ -152,18 +141,15 @@ import {
             .then(async newInfo => {
               info = newInfo;
               await Container.authManager.saveAuthInfo(provider, info);
-              await this.updateAuthenticationStatusBar(provider, info);
             })
             .catch(async () => {
               await Container.authManager.removeAuthInfo(provider);
-              info = await this.askUserToDance(provider);
+              info = await this.danceWithUser(provider);
   
               if (info) {
                 await Container.authManager.saveAuthInfo(provider, info);
-                await this.updateAuthenticationStatusBar(provider, info);
                 return info;
               } else {
-                await this.updateAuthenticationStatusBar(provider, undefined);
                 return undefined;
               }
             });
@@ -180,7 +166,6 @@ import {
         if (info) {
           client = factory(info);
           await this._clients.updateItem(provider, client);
-          await this.updateAuthenticationStatusBar(provider, info);
         }
   
         this._optionsDirty = false;
@@ -188,109 +173,71 @@ import {
       return client;
     }
   
-    private async askUserToDance(
-      provider: string
-    ): Promise<authinfo.AuthInfo | undefined> {
+    private async danceWithUser(
+      provider: string,
+      promptUser:boolean = true
+    ): Promise<AuthInfo | undefined> {
       const product =
-        provider === authinfo.AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
   
-      if (!this._showingInfoBox) {
-        this._showingInfoBox = true;
+      if (!this._isAuthenticating) {
+        this._isAuthenticating = true;
       } else {
         return await this.getInLine(provider);
       }
+      
+      let usersChoice = undefined;
+
+      if(promptUser) {
+        usersChoice = await window.showInformationMessage(
+          `In order to use some Atlascode functionality, you need to sign in to ${product}`,
+          SIGNIN_COMMAND
+        );
+      } else {
+        usersChoice = SIGNIN_COMMAND;
+      }
   
-      const result = await window.showInformationMessage(
-        `In order to use some Atlascode functionality, you need to sign in to ${product}`,
-        SIGNIN_COMMAND
-      );
-  
-      Logger.debug("showInforMessage returned", result);
-      if (result === SIGNIN_COMMAND) {
+      if (usersChoice === SIGNIN_COMMAND) {
         let info = await this._dancer.doDance(provider).catch(reason => {
           window.showErrorMessage(`Error logging into ${product}`, reason);
-          this._showingInfoBox = false;
+          this._isAuthenticating = false;
           return undefined;
         });
-        this._showingInfoBox = false;
-        window.showInformationMessage(
-          `You are now authenticated with ${product}`
-        );
+        this._isAuthenticating = false;
         return info;
       } else {
         // user cancelled sign in, remember that and don't ask again until it expires
         await this._clients.setItem(provider, emptyClient, 45 * Interval.MINUTE);
-        this._showingInfoBox = false;
+        this._isAuthenticating = false;
         return undefined;
       }
     }
-  
+    
+    public async authenticate(provider:string): Promise<void> {
+      this._clients.deleteItem(provider);
+      switch(provider) {
+        case AuthProvider.JiraCloud: {
+          await this.jirarequest(undefined,false);
+          break;
+        }
+        case AuthProvider.BitbucketCloud: {
+          await this.bbrequest(false);
+          break;
+        }
+      }
+    }
+
     private async getInLine(
       provider: string
-    ): Promise<authinfo.AuthInfo | undefined> {
-      while (this._showingInfoBox) {
+    ): Promise<AuthInfo | undefined> {
+      while (this._isAuthenticating) {
         await this.delay(1000);
       }
   
       return await Container.authManager.getAuthInfo(provider);
     }
   
-    private async updateAuthenticationStatusBar(
-      provider: string,
-      info: authinfo.AuthInfo | undefined
-    ): Promise<void> {
-      Logger.debug("updating auth status item", provider);
-      const statusBarItem = this._authenticationStatusBarItems.get(provider);
-      if (statusBarItem) {
-        Logger.debug("status item", statusBarItem);
-        await this.updateStatusBarItem(statusBarItem, provider, info);
-      } else {
-        Logger.debug("creating new auth status item", provider);
-        const newStatusBarItem = window.createStatusBarItem(
-          StatusBarAlignment.Left
-        );
-        this._authenticationStatusBarItems.set(provider, newStatusBarItem);
-  
-        await this.updateStatusBarItem(newStatusBarItem, provider, info);
-        newStatusBarItem.show();
-      }
-    }
-  
-    private async updateStatusBarItem(
-      statusBarItem: StatusBarItem,
-      provider: string,
-      info: authinfo.AuthInfo | undefined
-    ): Promise<void> {
-      let text: string;
-      let command: string | undefined;
-  
-      if (info) {
-        const product =
-          provider === authinfo.AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
-        text = `$(person) ${product}: ${info.user.displayName}`;
-        command = undefined;
-      } else {
-        switch (provider) {
-          case authinfo.AuthProvider.JiraCloud.toString(): {
-            text = `$(person) Sign in to Jira`;
-            command = Commands.AuthenticateJira;
-            break;
-          }
-          case authinfo.AuthProvider.BitbucketCloud.toString(): {
-            text = `$(person) Sign in to Bitbucket`;
-            command = Commands.AuthenticateBitbucket;
-            break;
-          }
-          default: {
-            text = `$(person) Unknown Atlascode auth provider ${provider}`;
-            command = undefined;
-          }
-        }
-      }
-  
-      statusBarItem.text = text;
-      statusBarItem.command = command;
-    }
+    
   
     private delay(ms: number) {
       return new Promise(resolve => setTimeout(resolve, ms));

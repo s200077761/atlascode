@@ -3,38 +3,22 @@
 import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
 import { registerCommands } from './commands';
-import {registerJiraTreeViews } from './treeViews';
 import { registerResources } from './resources';
 import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
-import { JiraOutlineProvider } from './views/jira/jiraOutlineProvider';
-import { refreshExplorer } from './commands/jira/refreshExplorer';
-import { JiraContext } from './jira/context';
 import { Container } from './container';
 
 export function activate(context: vscode.ExtensionContext) {
+    registerResources(context);
     Configuration.configure(context);
     Logger.configure(context);
 
     const cfg = configuration.get<IConfig>();
 
     Container.initialize(context, cfg);
-    registerResources(context);
 
-    const assignedTree = new JiraOutlineProvider("You have no assigned issues");
-    const openTree = new JiraOutlineProvider("There are no open issues");
-    registerJiraTreeViews(context, [
-      { id: "assignedIssues", provider: assignedTree },
-      { id: "openIssues", provider: openTree }
-    ]);
-
-    refreshExplorer(assignedTree, openTree);
-    vscode.window.registerTreeDataProvider('assignedIssues', assignedTree);
-    vscode.window.registerTreeDataProvider('openIssues', openTree);
-    const jiraContext: JiraContext = { assignedTree: assignedTree, openTree: openTree };
-
-    registerCommands(context, jiraContext);
+    registerCommands(context);
 
     const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
     if (gitExtension) {

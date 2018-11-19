@@ -1,17 +1,18 @@
-import * as vscode from "vscode";
-import * as authinfo from '../../atlclients/authInfo';
+import { commands, window } from "vscode";
+import { AuthInfo, AuthProvider, AccessibleResource } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
 import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
+import { Commands } from "../../commands";
 
 export async function showSiteSelectionDialog() {
-  Container.authManager.getAuthInfo(authinfo.AuthProvider.JiraCloud).then((info:authinfo.AuthInfo|undefined) => {
+  Container.authManager.getAuthInfo(AuthProvider.JiraCloud).then((info:AuthInfo|undefined) => {
         if(!info) {
           // TODO: show login propmpt.
           return;
         }
-        vscode.window
+        window
         .showQuickPick(info.accessibleResources!.map(site => site.name), {
           placeHolder: "Select a site"
         })
@@ -24,18 +25,17 @@ export async function showSiteSelectionDialog() {
     });
 }
 
-async function saveWorkingSite(site: authinfo.AccessibleResource) {
+async function saveWorkingSite(site: AccessibleResource) {
   Logger.debug('saving site',site);
   await configuration.updateEffective(JiraWorkingSiteConfigurationKey, site)
   .then(async () => {
     Logger.debug('clearing current project');
-    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
-  })
-  .then(() => {
-    vscode.commands.executeCommand('atlascode.jira.refreshExplorer');
-  })
-  .catch(reason => {
-      Logger.debug(`Failed to save working site: ${reason}`);
+    if(Container.config.jira.workingProject) {
+      await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+    } else {
+      commands.executeCommand(Commands.RefreshJiraExplorer);
+    }
+    
   });
 }
 

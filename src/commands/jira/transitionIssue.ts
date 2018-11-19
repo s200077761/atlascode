@@ -59,7 +59,7 @@ async function performTranstion(issue: Issue,transition: Transition) {
         issueIdOrKey: issue.key,
         body: { transition: { id: transition.id } }
       }).then(() => {
-        vscode.commands.executeCommand(Commands.RefreshExplorer).then(b => {
+        vscode.commands.executeCommand(Commands.RefreshJiraExplorer).then(b => {
           Container.jiraIssueViewManager.refreshAll();
         });
       }).catch((err: any) => {
