@@ -30,13 +30,11 @@ export class IssueHoverProvider implements HoverProvider {
       let text = [];
       text.push(new vscode.MarkdownString(header));
       text.push(new vscode.MarkdownString(descriptionText));
-      let encodedURI = encodeURIComponent(JSON.stringify([issue.key]));
-      text.push(
-        new vscode.MarkdownString(
-          `[View](command:${Commands.ShowIssue}?${encodedURI})`
-        )
-      );
+      let encodedKey = encodeURIComponent(JSON.stringify([key]));
+
+      text.push( new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
       text[text.length - 1].isTrusted = true;
+
       return new vscode.Hover(text);
     });
   }

@@ -6,6 +6,7 @@ import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
+import { Logger } from './logger';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -35,8 +36,9 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
-        vscode.commands.registerCommand(Commands.ShowIssue, async (issue) => {
-            await Container.jiraIssueViewManager.createOrShow(issue);
+        vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
+            Logger.debug('args',issue);
+            Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider()),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue))
