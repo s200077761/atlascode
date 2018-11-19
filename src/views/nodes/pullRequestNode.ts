@@ -6,6 +6,11 @@ import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 
+interface Node {
+    data: Bitbucket.Schema.Comment;
+    children: Node[];
+}
+
 export class PullRequestTitlesNode extends BaseNode {
     constructor(private pr: PullRequest) {
         super();
@@ -26,14 +31,63 @@ export class PullRequestTitlesNode extends BaseNode {
             // When a repo's pullrequests are fetched, the response may not have all fields populated.
             // Fetch the specific pullrequest by id to fill in the missing details.
             this.pr = await PullRequestApi.get(this.pr);
-            let fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
+            const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
+            const inlineComments = await this.fetchComments();
+            console.log(inlineComments.keys);
             return [
                 new DescriptionNode(this.pr),
-                ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, fileChange))
+                ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))
             ];
         } else {
             return element.getChildren();
         }
+    }
+
+    private async fetchComments(): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
+        const allComments = await PullRequestApi.getComments(this.pr);
+        const inlineComments = this.toNestedList(allComments);
+        const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
+
+        inlineComments.forEach(val => {
+            if (!threads.get(val.data.inline!.path)) {
+                threads.set(val.data.inline!.path, []);
+            }
+            threads.get(val.data.inline!.path)!.push(this.traverse(val));
+        });
+
+        return threads;
+    }
+
+    private traverse(n: Node): Bitbucket.Schema.Comment[] {
+        let result: Bitbucket.Schema.Comment[] = [];
+        result.push(n.data);
+        for (let i = 0; i < n.children.length; i++) {
+            result.push(...this.traverse(n.children[i]));
+        }
+
+        return result;
+    }
+
+    private toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
+        const inlineComments = comments.filter(c => c.inline);
+        const inlineCommentsTreeMap = new Map<Number, Node>();
+        inlineComments.forEach(c => inlineCommentsTreeMap.set(c.id!, { data: c, children: [] }));
+        inlineComments.forEach(c => {
+            const n = inlineCommentsTreeMap.get(c.id!);
+            const pid = c.parent && c.parent.id;
+            if (pid && inlineCommentsTreeMap.get(pid)) {
+                inlineCommentsTreeMap.get(pid)!.children.push(n!);
+            }
+        });
+
+        const result = new Map<Number, Node>();
+        inlineCommentsTreeMap.forEach((val, key) => {
+            if (!val.data.parent) {
+                result.set(key, val);
+            }
+        });
+
+        return result;
     }
 }
 
@@ -44,9 +98,40 @@ class PullRequestFilesNode extends BaseNode {
 
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(this.fileChange.filename, vscode.TreeItemCollapsibleState.None);
+        let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
+        let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
-        let lhsQueryParam = { query: JSON.stringify({ repoUri: this.pr.repository.rootUri.toString(), remote: this.pr.remote.name, branch: this.pr.data.destination!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.destination!.commit!.hash! }) };
-        let rhsQueryParam = { query: JSON.stringify({ repoUri: this.pr.repository.rootUri.toString(), remote: this.pr.remote.name, branch: this.pr.data.source!.branch!.name!, path: this.fileChange.filename, commit: this.pr.data.source!.commit!.hash! }) };
+        if (this.fileChange.comments) {
+            this.fileChange.comments.forEach((c: Bitbucket.Schema.Comment[]) => {
+                const parentComment = c[0];
+                if (parentComment.inline!.from) {
+                    lhsCommentThreads.push(c);
+                } else {
+                    rhsCommentThreads.push(c);
+                }
+            });
+        }
+
+        let lhsQueryParam = {
+            query: JSON.stringify({
+                repoUri: this.pr.repository.rootUri.toString(),
+                remote: this.pr.remote.name,
+                branch: this.pr.data.destination!.branch!.name!,
+                path: this.fileChange.filename,
+                commit: this.pr.data.destination!.commit!.hash!,
+                commentThreads: lhsCommentThreads
+            })
+        };
+        let rhsQueryParam = {
+            query: JSON.stringify({
+                repoUri: this.pr.repository.rootUri.toString(),
+                remote: this.pr.remote.name,
+                branch: this.pr.data.source!.branch!.name!,
+                path: this.fileChange.filename,
+                commit: this.pr.data.source!.commit!.hash!,
+                commentThreads: rhsCommentThreads
+            })
+        };
         switch (this.fileChange.status) {
             case 'added':
                 item.iconPath = Resources.icons.get('add');
@@ -55,6 +140,7 @@ class PullRequestFilesNode extends BaseNode {
             case 'removed':
                 item.iconPath = Resources.icons.get('delete');
                 rhsQueryParam = { query: JSON.stringify({}) };
+                break;
             default:
                 item.iconPath = Resources.icons.get('edit');
                 break;

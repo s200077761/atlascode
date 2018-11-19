@@ -61,4 +61,5 @@ a:hover {
 
 [class^="styled__TitleWrapper"] {
   margin-bottom: 5px !important;
+  align-items: center !important;
 }
