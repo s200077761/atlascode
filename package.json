@@ -276,6 +276,7 @@
         "@atlaskit/table-tree": "^4.1.11",
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
+        "@atlaskit/checkbox": "^5.0.5",
         "@atlassian/jira": "^0.0.2",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
@@ -293,6 +294,7 @@
         "react": "^16.3.2",
         "react-dom": "^16.3.2",
         "react-loadable": "^5.5.0",
+        "react-collapsible": "^2.3.1",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6"
     },
@@ -308,6 +310,7 @@
         "@types/react": "^16.3.2",
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
+        "@types/react-collapsible":"^2.2.1",
         "mocha": "^5.2.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",

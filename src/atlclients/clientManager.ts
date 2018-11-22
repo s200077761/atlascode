@@ -13,9 +13,8 @@ import {
   import { Logger } from "../logger";
   var tunnel = require("tunnel");
   import * as fs from "fs";
-  import { configuration, WorkingSite } from "../config/configuration";
+  import { configuration, WorkingSite, emptyWorkingSite } from "../config/configuration";
   import { Resources } from "../resources";
-  import { emptyWorkingSite } from '../jira/jiraIssue';
   
   const SIGNIN_COMMAND = "Sign in";
   

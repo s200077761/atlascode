@@ -1,5 +1,5 @@
 import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
-import { WorkingSite } from "../config/model";
+import { WorkingSite, emptyWorkingSite } from "../config/model";
 
     export const emptyStatusCategory:StatusCategory = {
         colorName: '',
@@ -52,13 +52,6 @@ import { WorkingSite } from "../config/model";
         self: '',
         size: -1,
         thumbnail: '',
-    };
-
-    export const emptyWorkingSite: WorkingSite = {
-        name: '',
-        id: '',
-        scopes: [],
-        avatarUrl: ''
     };
 
     export const emptyIssue:Issue = {

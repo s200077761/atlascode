@@ -39,3 +39,31 @@ export enum BitbucketExplorerLocation {
     SourceControl = "SourceControl",
     Atlascode = "Atlascode"
 }
+
+export const emptyWorkingSite: WorkingSite = {
+    name: '',
+    id: '',
+    scopes: [],
+    avatarUrl: ''
+};
+
+export const emptyJiraExplorer: JiraExplorer = {
+    enabled:true
+};
+
+export const emptyJiraConfig:JiraConfig = {
+    workingProject: undefined,
+    workingSite: emptyWorkingSite,
+    explorer: emptyJiraExplorer
+};
+
+export const emptyBitbucketConfig:BitbucketConfig = {
+    explorerLocation: BitbucketExplorerLocation.Atlascode
+};
+
+export const emptyConfig:IConfig = {
+    outputLevel: OutputLevel.Silent,
+    enableCharles:false,
+    jira: emptyJiraConfig,
+    bitbucket: emptyBitbucketConfig
+};
