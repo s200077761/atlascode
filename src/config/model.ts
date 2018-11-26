@@ -29,6 +29,8 @@ export interface JiraConfig {
 
 export interface JiraExplorer {
     enabled:boolean;
+    showOpenIssues:boolean;
+    showAssignedIssues:boolean;
 }
 
 export interface BitbucketConfig {
@@ -39,3 +41,33 @@ export enum BitbucketExplorerLocation {
     SourceControl = "SourceControl",
     Atlascode = "Atlascode"
 }
+
+export const emptyWorkingSite: WorkingSite = {
+    name: '',
+    id: '',
+    scopes: [],
+    avatarUrl: ''
+};
+
+export const emptyJiraExplorer: JiraExplorer = {
+    enabled:true,
+    showOpenIssues:true,
+    showAssignedIssues:true
+};
+
+export const emptyJiraConfig:JiraConfig = {
+    workingProject: undefined,
+    workingSite: emptyWorkingSite,
+    explorer: emptyJiraExplorer
+};
+
+export const emptyBitbucketConfig:BitbucketConfig = {
+    explorerLocation: BitbucketExplorerLocation.Atlascode
+};
+
+export const emptyConfig:IConfig = {
+    outputLevel: OutputLevel.Silent,
+    enableCharles:false,
+    jira: emptyJiraConfig,
+    bitbucket: emptyBitbucketConfig
+};

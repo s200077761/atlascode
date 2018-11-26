@@ -81,14 +81,14 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
                     localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))]
                 }
             );
-
+            
             this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this)
             );
-
+            
             this._panel.webview.html = this._getHtmlForWebview(this.id);
         }
         else {
@@ -106,7 +106,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
         }
     }
 
-    protected onMessageReceived(a: R):boolean {
+    protected async onMessageReceived(a: R):Promise<boolean> {
         switch (a.action) {
             case 'alertError': {
                 if(isAlertable(a)) {

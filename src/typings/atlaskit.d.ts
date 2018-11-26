@@ -3,6 +3,7 @@ declare module '@atlaskit/page-header';
 declare module '@atlaskit/table-tree';
 declare module '@atlaskit/avatar';
 declare module '@atlaskit/avatar-group';
+declare module '@atlaskit/checkbox';
 declare module '@atlaskit/comment';
 declare module '@atlaskit/button';
 declare module '@atlaskit/breadcrumbs';

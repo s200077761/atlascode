@@ -3,6 +3,7 @@ import { AssignedIssuesTreeId } from "../../constants";
 import { Container } from "../../container";
 import { ConfigurationChangeEvent } from "vscode";
 import { configuration } from "../../config/configuration";
+import { Logger } from "../../logger";
 
 export class AssignedIssuesTree extends AbstractIssueTree {
     constructor() {
@@ -14,12 +15,11 @@ export class AssignedIssuesTree extends AbstractIssueTree {
 
     public async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
-
-        if(!initializing && configuration.changed(e, 'jira.workingProject')) {
+        Logger.debug("AssignedIssuesTree got config change",configuration.changed(e, 'jira.workingProject'));
+        if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
             const project = Container.config.jira.workingProject;
 
-            const jql = project ? `assignee=currentUser() and project=${project} and statusCategory in ("In Progress")` : undefined;
-            this.setJql(jql);
+            this.setJql(this.jqlForProject(project));
         }
 
         super.onConfigurationChanged(e);

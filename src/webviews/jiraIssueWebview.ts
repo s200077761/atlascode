@@ -42,8 +42,8 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
         this.forceUpdateIssue();
     }
 
-    protected onMessageReceived(e: Action): boolean {
-        let handled = super.onMessageReceived(e);
+    protected async onMessageReceived(e: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(e);
 
         if(!handled) {
             switch (e.action) {

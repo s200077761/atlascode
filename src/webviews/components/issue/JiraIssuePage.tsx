@@ -10,9 +10,9 @@ import {
   emptyIssueType,
   emptyUser,
   emptyPriority,
-  emptyWorkingSite,
   Issue
 } from "../../../jira/jiraModel";
+import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
   IssueCommentAction

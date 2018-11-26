@@ -16,13 +16,12 @@ export class OpenIssuesTree extends AbstractIssueTree {
     public async onConfigurationChanged(e: ConfigurationChangeEvent) {
         super.onConfigurationChanged(e);
         const initializing = configuration.initializing(e);
-        Logger.debug("OpenIssuesTree got config change",e);
+        Logger.debug("OpenIssuesTree got config change",configuration.changed(e, 'jira.workingProject'));
         
-        if(!initializing && configuration.changed(e, 'jira.workingProject')) {
+        if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
             const project = Container.config.jira.workingProject;
             Logger.debug("OpenIssuesTree jira.workingProject change",Container.config);
-            const jql = project ? `assignee in (EMPTY) and project=${project} order by lastViewed DESC` : undefined;
-            this.setJql(jql);
+            this.setJql(this.jqlForProject(project));
         }
 
     }

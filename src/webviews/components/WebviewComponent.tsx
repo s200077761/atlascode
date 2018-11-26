@@ -36,7 +36,21 @@ export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Com
             const computedStyle = getComputedStyle(body);
 
             const bodyStyle = body.style;
-            let color = computedStyle.getPropertyValue('--vscode-editor-foreground').trim();
+            let color = computedStyle.getPropertyValue('--background-color').trim();
+            bodyStyle.setProperty('--background-color--lighten-05', lighten(color, 5));
+            bodyStyle.setProperty('--background-color--darken-05', darken(color, 5));
+            bodyStyle.setProperty('--background-color--lighten-075', lighten(color, 7.5));
+            bodyStyle.setProperty('--background-color--darken-075', darken(color, 7.5));
+            bodyStyle.setProperty('--background-color--lighten-15', lighten(color, 15));
+            bodyStyle.setProperty('--background-color--darken-15', darken(color, 15));
+            bodyStyle.setProperty('--background-color--lighten-30', lighten(color, 30));
+            bodyStyle.setProperty('--background-color--darken-30', darken(color, 30));
+
+            color = computedStyle.getPropertyValue('--color').trim();
+            bodyStyle.setProperty('--color--75', opacity(color, 75));
+            bodyStyle.setProperty('--color--50', opacity(color, 50));
+
+            color = computedStyle.getPropertyValue('--vscode-editor-foreground').trim();
             bodyStyle.setProperty('--vscode-editor-foreground--75', opacity(color, 75));
             bodyStyle.setProperty('--vscode-editor-foreground--50', opacity(color, 50));
 
