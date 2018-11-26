@@ -7,6 +7,7 @@ import { ClientManager } from './atlclients/clientManager';
 import { AuthManager } from './atlclients/authStore';
 import { JiraExplorer } from './views/jira/jiraExplorer';
 import { AuthStatusBar } from './views/authStatusBar';
+import { JiraSiteManager } from './jira/siteManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig) {
@@ -19,6 +20,7 @@ export class Container {
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
+        context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
 
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
@@ -76,6 +78,11 @@ export class Container {
     private static _authStatusBar: AuthStatusBar;
     static get authStatusBar() {
         return this._authStatusBar;
+    }
+
+    private static _jiraSiteManager: JiraSiteManager;
+    static get jiraSiteManager() {
+        return this._jiraSiteManager;
     }
 
     static resetConfig() {

@@ -7,11 +7,14 @@ export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
 export const BitbucketContainerConfigurationKey = 'bitbucket.explorerLocation';
 export const OpenIssuesTreeId = 'openIssues';
 export const AssignedIssuesTreeId = 'assignedIssues';
+export const JiraLoginTreeId = 'jiraLogin';
 
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',
-    OpenIssuesTree = 'atlascode:openIssueTreeEnabled',
+    OpenIssuesTree = 'atlascode:openIssuesTreeEnabled',
     AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
+    IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
+    IsBBAuthenticated = 'atlascode:isBBAuthenticated'
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

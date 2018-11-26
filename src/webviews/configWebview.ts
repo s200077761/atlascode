@@ -9,7 +9,6 @@ import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
-import { Project } from '../jira/jiraModel';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -35,10 +34,8 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
             authInfo = emptyAuthInfo;
         }
 
-        const projects:Project[] = [];
-
         Logger.debug('updating config for webview', config);
-        this.updateConfig({type:'update',config:config,authInfo:authInfo,projects:projects});
+        this.updateConfig({type:'update',config:config,authInfo:authInfo,projects:Container.jiraSiteManager.projectsAvailable});
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {

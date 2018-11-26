@@ -135,12 +135,17 @@
                 {
                     "id": "assignedIssues",
                     "name": "Your Issues",
-                    "when": "atlascode:jiraExplorerEnabled"
+                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
                 },
                 {
                     "id": "openIssues",
                     "name": "Open Issues",
-                    "when": "atlascode:jiraExplorerEnabled"
+                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
+                },
+                {
+                    "id": "jiraLogin",
+                    "name": "Login To Jira",
+                    "when": "!atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
@@ -158,7 +163,11 @@
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(assignedIssues|openIssues)/"
+                    "when": "view =~ /(assignedIssues|openIssues)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.selectSite",
+                    "when": "view =~ /(assignedIssues|openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
@@ -176,6 +185,30 @@
                 {
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.selectProject",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.selectSite",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.authenticate",
+                    "when": "!atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.authenticate",
+                    "when": "!atlascode:isBBAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.clearAuth",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.clearAuth",
+                    "when": "atlascode:isBBAuthenticated"
                 }
             ]
         },

@@ -216,6 +216,7 @@ import {
       this._clients.deleteItem(provider);
       switch(provider) {
         case AuthProvider.JiraCloud: {
+          Logger.debug('client manager is calling jirarequest');
           await this.jirarequest(undefined,false);
           break;
         }

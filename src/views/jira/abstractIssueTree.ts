@@ -1,10 +1,10 @@
-import { window, Disposable, TreeDataProvider, TreeView, EventEmitter, Event, TreeViewVisibilityChangeEvent, TreeItem, ConfigurationChangeEvent } from 'vscode';
-import { issuesForJQL } from '../../commands/jira/issuesForJQL';
+import { window, Disposable, TreeDataProvider, TreeView, EventEmitter, Event, TreeViewVisibilityChangeEvent, TreeItem, ConfigurationChangeEvent, Command } from 'vscode';
 import { Logger } from '../../logger';
-import { Issue } from '../../jira/jiraModel';
+import { Issue, issueExpand, issueFields, issueFromJsonObject } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { configuration } from '../../config/configuration';
+import { Container } from '../../container';
 
 export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
     refresh():void;
@@ -25,9 +25,10 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
     private _jql: string | undefined;
     private _timer: any | undefined;
     private _emptyState = "No issues";
+    private _emptyStateCommand: Command | undefined;
     private _refreshInterval = 60 * 1000;
 
-    constructor(id:string, jql?:string, emptyState?:string) {
+    constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
         super(() => this.dispose());
 
         this._id = id;
@@ -36,11 +37,19 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
             this._emptyState = emptyState;
         }
 
+        if(emptyStateCommand) {
+            this._emptyStateCommand = emptyStateCommand;
+        }
+
         this._disposables.push(Disposable.from(
             configuration.onDidChange(this.onConfigurationChanged, this)
         ));
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
+    }
+
+    public get id():string {
+        return this._id;
     }
 
     dispose() {
@@ -87,9 +96,9 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
         }
     }
 
-    getChildren(parent?: IssueNode): Promise<IssueNode[]> {
+    async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
         if (parent || !this._jql) {
-            return Promise.resolve([new EmptyStateNode(this._emptyState)]);
+            return Promise.resolve([new EmptyStateNode(this._emptyState, this._emptyStateCommand)]);
         } else if (this._issues) {
             return Promise.resolve(this.nodesForIssues());
         } else {
@@ -106,7 +115,7 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
             return Promise.resolve([]);
         }
 
-        return issuesForJQL(this._jql)
+        return this.issuesForJQL(this._jql)
         .then(newIssues => {
             this._issues = newIssues;
             this._onDidChangeTreeData.fire();
@@ -121,6 +130,32 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
             return [new EmptyStateNode(this._emptyState)];
         }
     }
+
+    async issuesForJQL(jql: string): Promise<Issue[]> {
+        let client = await Container.clientManager.jirarequest();
+      
+        if (client) {
+          return client.search
+            .searchForIssuesUsingJqlGet({
+              expand: issueExpand,
+              jql: jql,
+              fields: issueFields
+            })
+            .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
+              const issues = res.data.issues;
+              if (issues) {
+                return issues.map((issue: any) => {
+                  return issueFromJsonObject(issue, Container.config.jira.workingSite);
+                });
+              }
+              return [];
+            });
+        } else {
+          Logger.debug("issuesForJQL: client undefined");
+        }
+      
+        return Promise.reject();
+      }
 
     private startTimer() {
         if (!this._timer) {

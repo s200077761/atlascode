@@ -3,6 +3,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
 import styled from 'styled-components';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
+import { emptyProject } from '../../../jira/jiraModel';
 
 type changeObject = {[key: string]:any};
 
@@ -12,6 +13,13 @@ align-items: center;
 justify-content: space-between;
 width: 100%;
 `;
+
+export const CompactInlineFlex = styled.div`
+display: inline-flex;
+align-items: center;
+justify-content: space-between;
+`;
+
 export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
@@ -51,7 +59,12 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
         if(this.props.configData.projects){
             const project = this.props.configData.projects.find(project => project.id === item.target.parentNode.parentNode.dataset.projectId);
             if(project) {
-                //this.onSelectChange('jira.workingSite',project.id);
+                const changes = Object.create(null);
+                changes['jira.workingProject'] = project.id;
+
+                if(this.props.onConfigChange) {
+                    this.props.onConfigChange(changes);
+                }
             }
         }
     }
@@ -106,6 +119,42 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                 </DropdownMenu>;
         }
 
+        let  projectSelect = <div></div>;
+        const projects = this.props.configData.projects;
+
+        if(projects && projects.length > 1) {
+            let selectedProject = projects.find(project => project.id === this.props.configData.config.jira.workingProject);
+
+            if(!selectedProject) {
+                selectedProject = emptyProject;
+                selectedProject.name = "not selected";
+            }
+            let projectItems:any[] = [];
+            projects.forEach(project => {
+                if(this.props.configData.config.jira.workingProject !== project.id){
+                    projectItems.push(
+                        <DropdownItem
+                            className='ak-dropdown-item'
+                            id={project.name}
+                            data-project-id={project.id}
+                            onClick={this.onHandleProjectChange}>
+                            {project.name}
+                        </DropdownItem>
+                    );
+                }
+            });
+
+            projectSelect = <DropdownMenu
+                                    triggerType="button"
+                                    trigger={selectedProject.name}
+                                    triggerButtonProps={{className:'ak-button'}}
+                                >
+                                    <DropdownItemGroup>
+                                    {projectItems}
+                                    </DropdownItemGroup>
+                                </DropdownMenu>;
+        }
+
         return (
             <div>
                 <div>
@@ -142,7 +191,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <hr/>
                 <InlineFlex>
-                    {siteSelect}
+                    <CompactInlineFlex>default site: {siteSelect}</CompactInlineFlex>
+                    <CompactInlineFlex>default project: {projectSelect}</CompactInlineFlex>
                 </InlineFlex>
             </div>
             

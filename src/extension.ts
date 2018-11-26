@@ -8,8 +8,10 @@ import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
+import { AuthProvider } from './atlclients/authInfo';
+import { setCommandContext, CommandContext } from './constants';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     registerResources(context);
     Configuration.configure(context);
     Logger.configure(context);
@@ -17,6 +19,9 @@ export function activate(context: vscode.ExtensionContext) {
     const cfg = configuration.get<IConfig>();
 
     Container.initialize(context, cfg);
+
+    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
+    setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
 
     registerCommands(context);
 

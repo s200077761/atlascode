@@ -7,6 +7,7 @@ import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
+import { LoginTree } from "./loginTree";
 
 export class JiraExplorer extends Disposable {
 
@@ -39,8 +40,17 @@ export class JiraExplorer extends Disposable {
             } else {
                 this._trees.push(new OpenIssuesTree());
                 this._trees.push(new AssignedIssuesTree());
+                this._trees.push(new LoginTree());
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
+        }
+
+        if(initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
+            setCommandContext(CommandContext.OpenIssuesTree, Container.config.jira.explorer.showOpenIssues);
+        }
+
+        if(initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
+            setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
     }
 
