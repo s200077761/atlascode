@@ -14,13 +14,13 @@ export class Container {
         this._context = context;
         this._config = config;
 
-        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
-        context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
+        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
+        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
+        context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
 
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));

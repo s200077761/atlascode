@@ -9,6 +9,8 @@ import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
+import { AuthInfoEvent } from '../atlclients/authStore';
+import { JiraSiteUpdateEvent } from '../jira/siteManager';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -16,7 +18,9 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
         super(extensionPath);
 
         Container.context.subscriptions.push(
-            configuration.onDidChange(this.onConfigurationChanged, this)
+            configuration.onDidChange(this.onConfigurationChanged, this),
+            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.jiraSiteManager.onDidSiteChange(this.onDidSiteChange, this),
         );
     }
 
@@ -39,6 +43,14 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
+        this.invalidate();
+    }
+
+    private onDidAuthChange(e:AuthInfoEvent) {
+        this.invalidate();
+    }
+
+    private onDidSiteChange(e:JiraSiteUpdateEvent) {
         this.invalidate();
     }
 
