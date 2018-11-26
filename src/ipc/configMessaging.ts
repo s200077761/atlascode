@@ -14,4 +14,4 @@ export const emptyConfigData:ConfigData = {
     config:emptyConfig,
     authInfo:emptyAuthInfo,
     projects:[]
-}
+};
