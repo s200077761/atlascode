@@ -207,6 +207,18 @@
                     "description": "Enables the Jira Issue Explorer",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.showOpenIssues": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Open Issues in the Jira Issue Explorer",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.showAssignedIssues": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Assigned Issues in the Jira Issue Explorer",
+                    "scope": "window"
+                },
                 "atlascode.jira.workingProject": {
                     "type": "string",
                     "default": "",

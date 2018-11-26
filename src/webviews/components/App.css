@@ -120,3 +120,10 @@ a:hover {
   color: var(--color--75);
 }
 
+[class^="Checkbox__IconWrapper-"] {
+  color:var(--vscode-button-background) !important;
+}
+
+[class^="Checkbox__IconWrapper-"] rect{
+  stroke:var(--vscode-button-background) !important;
+}

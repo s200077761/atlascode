@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import { emptyConfig, IConfig } from '../../../config/model';
 import Collapsible from 'react-collapsible';
 import { ButtonGroup } from '@atlaskit/button';
 import Button from '@atlaskit/button';
@@ -9,6 +8,7 @@ import { AuthAction, SaveSettingsAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import styled from 'styled-components';
+import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 
 type changeObject = {[key: string]:any};
 
@@ -26,21 +26,21 @@ width: 100%;
 `;
 
 type Emit = AuthAction | SaveSettingsAction;
-export default class ConfigPage extends WebviewComponent<Emit, IConfig, {},IConfig> {
+export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},ConfigData> {
     constructor(props: any) {
         super(props);
-        this.state = emptyConfig;
+        this.state = emptyConfigData;
     }
 
-    public onMessageReceived(e: IConfig) {
+    public onMessageReceived(e: ConfigData) {
         console.log("got message from vscode", e);
         this.setState(e);
     }
 
-    public onConfigChange = (change:changeObject) => {
+    public onConfigChange = (change:changeObject, removes?:string[]) => {
         console.log('ConfigPage got change', change);
 
-        this.postMessage({action:'saveSettings', changes:change});
+        this.postMessage({action:'saveSettings', changes:change, removes:removes});
     }
 
     handleJiraLogin = () => {
@@ -107,7 +107,7 @@ export default class ConfigPage extends WebviewComponent<Emit, IConfig, {},IConf
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Issue Explorer','configure the Jira issue explorer')}
                             open={true}>
-                            <JiraExplorer config={this.state} onConfigChange={this.onConfigChange} />
+                            <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

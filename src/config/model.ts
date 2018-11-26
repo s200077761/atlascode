@@ -29,6 +29,8 @@ export interface JiraConfig {
 
 export interface JiraExplorer {
     enabled:boolean;
+    showOpenIssues:boolean;
+    showAssignedIssues:boolean;
 }
 
 export interface BitbucketConfig {
@@ -48,7 +50,9 @@ export const emptyWorkingSite: WorkingSite = {
 };
 
 export const emptyJiraExplorer: JiraExplorer = {
-    enabled:true
+    enabled:true,
+    showOpenIssues:true,
+    showAssignedIssues:true
 };
 
 export const emptyJiraConfig:JiraConfig = {
