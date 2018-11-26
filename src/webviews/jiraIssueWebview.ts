@@ -5,8 +5,9 @@ import { IssueData } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isTransitionIssue } from '../ipc/issueActions';
+import { isTransitionIssue, isIssueComment } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
+import { postComment } from '../commands/jira/postComment';
 
 export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -57,6 +58,17 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
                         transitionIssue(e.issue,e.transition).catch((e: any) => {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
                             window.showErrorMessage('Issue could not be transitioned', e);
+                        });
+                    }
+                }
+                case 'comment': {
+                    if (isIssueComment(e)) {
+                        handled = true;
+                        postComment(e.issue, e.comment).catch((e: any) => {
+                            Logger.error(new Error(`error posting comment: ${e}`));
+                            window.showErrorMessage('Comment could not be posted', e);
+                        }).then(() => {
+                            this.forceUpdateIssue();
                         });
                     }
                 }

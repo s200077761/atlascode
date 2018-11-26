@@ -1,16 +1,17 @@
 import { AuthInfo, AuthProvider } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event } from 'vscode';
+import { Logger } from '../logger';
 
 const keychainServiceName = "atlascode-authinfo";
 
 export type AuthInfoEvent = {
-    authInfo:AuthInfo|undefined;
-    provider:string;
+    authInfo: AuthInfo | undefined;
+    provider: string;
 };
 
 export class AuthManager implements Disposable {
-    private _memStore:Map<string,AuthInfo> = new Map<string,AuthInfo>();
+    private _memStore: Map<string, AuthInfo> = new Map<string, AuthInfo>();
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
     public get onDidAuthChange(): Event<AuthInfoEvent> {
@@ -21,17 +22,17 @@ export class AuthManager implements Disposable {
         this._memStore.clear();
     }
 
-    public async getAuthInfo(provider:string):Promise<AuthInfo | undefined> {
+    public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
         if (this._memStore.has(provider)) {
             return this._memStore.get(provider) as AuthInfo;
         }
-        
+
         if (keychain) {
             try {
                 let infoEntry = await keychain.getPassword(keychainServiceName, provider) || undefined;
                 if (infoEntry) {
-                    let info:AuthInfo = JSON.parse(infoEntry);
-                    this._memStore.set(provider,info);
+                    let info: AuthInfo = JSON.parse(infoEntry);
+                    this._memStore.set(provider, info);
                     return info;
                 }
             } catch { }
@@ -40,29 +41,34 @@ export class AuthManager implements Disposable {
         return undefined;
     }
 
-    public async saveAuthInfo(provider:string, info:AuthInfo):Promise<void> {
-        this._memStore.set(provider,info);
-        
-        this._onDidAuthChange.fire({authInfo:info,provider:provider});
+    public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
+        this._memStore.set(provider, info);
+
+        this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         if (keychain) {
-            return await keychain.setPassword(keychainServiceName,provider,JSON.stringify(info));
+            try {
+                await keychain.setPassword(keychainServiceName, provider, JSON.stringify(info));
+            }
+            catch (e) {
+                Logger.debug("error saving auth info to keychain: ", e);
+            }
         }
     }
 
-    public async removeAuthInfo(provider:string):Promise<boolean> {
+    public async removeAuthInfo(provider: string): Promise<boolean> {
         const product =
-        provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+            provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
 
         this._memStore.delete(provider);
 
         window.showInformationMessage(
             `You have been logged out of ${product}`
-          );
+        );
 
-        this._onDidAuthChange.fire({authInfo:undefined,provider:provider});
+        this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
 
         if (keychain) {
-            return await keychain.deletePassword(keychainServiceName,provider);
+            return await keychain.deletePassword(keychainServiceName, provider);
         }
 
         return false;

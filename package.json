@@ -285,6 +285,7 @@
         "@atlaskit/page": "^8.0.8",
         "@atlaskit/page-header": "^6.0.7",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
+        "@atlaskit/size-detector": "^5.0.8",
         "@atlaskit/table-tree": "^4.1.11",
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
@@ -324,9 +325,9 @@
         "@types/react-loadable": "^5.4.1",
         "@types/react-collapsible":"^2.2.1",
         "mocha": "^5.2.0",
+        "react-scripts-ts": "2.16.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
-        "react-scripts-ts": "2.16.0",
         "vscode": "^1.1.21"
     }
 }

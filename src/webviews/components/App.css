@@ -21,6 +21,18 @@ a:hover {
   color: var(--vscode-textLink-activeForeground) !important;
 }
 
+div.icon-text {
+  height: 2em;
+  display: flex;
+  align-items: center;
+}
+
+div.icon-text img {
+  height: 1.5em;
+  width: 1.5em;
+  margin-right: 5pt;
+}
+
 .ak-button {
   background: var(--vscode-button-background) !important;
 }

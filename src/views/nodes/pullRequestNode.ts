@@ -5,10 +5,22 @@ import { PullRequest, PaginatedPullRequests } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
+import { Remote } from '../../typings/git';
 
-interface Node {
+interface NestedComment {
     data: Bitbucket.Schema.Comment;
-    children: Node[];
+    children: NestedComment[];
+}
+
+export interface FileDiffQueryParams {
+    lhs: boolean;
+    prId: number;
+    repoUri: string;
+    remote: Remote;
+    branchName: string;
+    commitHash: string;
+    path: string;
+    commentThreads: Bitbucket.Schema.Comment[][];
 }
 
 export class PullRequestTitlesNode extends BaseNode {
@@ -58,7 +70,7 @@ export class PullRequestTitlesNode extends BaseNode {
         return threads;
     }
 
-    private traverse(n: Node): Bitbucket.Schema.Comment[] {
+    private traverse(n: NestedComment): Bitbucket.Schema.Comment[] {
         let result: Bitbucket.Schema.Comment[] = [];
         result.push(n.data);
         for (let i = 0; i < n.children.length; i++) {
@@ -68,9 +80,9 @@ export class PullRequestTitlesNode extends BaseNode {
         return result;
     }
 
-    private toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
+    private toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, NestedComment> {
         const inlineComments = comments.filter(c => c.inline);
-        const inlineCommentsTreeMap = new Map<Number, Node>();
+        const inlineCommentsTreeMap = new Map<Number, NestedComment>();
         inlineComments.forEach(c => inlineCommentsTreeMap.set(c.id!, { data: c, children: [] }));
         inlineComments.forEach(c => {
             const n = inlineCommentsTreeMap.get(c.id!);
@@ -80,7 +92,7 @@ export class PullRequestTitlesNode extends BaseNode {
             }
         });
 
-        const result = new Map<Number, Node>();
+        const result = new Map<Number, NestedComment>();
         inlineCommentsTreeMap.forEach((val, key) => {
             if (!val.data.parent) {
                 result.set(key, val);
@@ -97,7 +109,7 @@ class PullRequestFilesNode extends BaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem(this.fileChange.filename, vscode.TreeItemCollapsibleState.None);
+        let item = new vscode.TreeItem(`${this.fileChange.comments ? '💬 ' : ''}${this.fileChange.filename}`, vscode.TreeItemCollapsibleState.None);
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
@@ -114,23 +126,27 @@ class PullRequestFilesNode extends BaseNode {
 
         let lhsQueryParam = {
             query: JSON.stringify({
+                lhs: true,
+                prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.remote.name,
-                branch: this.pr.data.destination!.branch!.name!,
+                remote: this.pr.remote,
+                branchName: this.pr.data.destination!.branch!.name!,
+                commitHash: this.pr.data.destination!.commit!.hash!,
                 path: this.fileChange.filename,
-                commit: this.pr.data.destination!.commit!.hash!,
                 commentThreads: lhsCommentThreads
-            })
+            } as FileDiffQueryParams)
         };
         let rhsQueryParam = {
             query: JSON.stringify({
+                lhs: false,
+                prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.remote.name,
-                branch: this.pr.data.source!.branch!.name!,
+                remote: this.pr.remote,
+                branchName: this.pr.data.source!.branch!.name!,
+                commitHash: this.pr.data.source!.commit!.hash!,
                 path: this.fileChange.filename,
-                commit: this.pr.data.source!.commit!.hash!,
                 commentThreads: rhsCommentThreads
-            })
+            } as FileDiffQueryParams)
         };
         switch (this.fileChange.status) {
             case 'added':
