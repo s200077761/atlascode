@@ -10,6 +10,7 @@ import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
 import { setCommandContext, CommandContext } from './constants';
+import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 
 export async function activate(context: vscode.ExtensionContext) {
     registerResources(context);
@@ -24,6 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
     setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
 
     registerCommands(context);
+    activateCodebucket(context);
 
     const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
     if (gitExtension) {
