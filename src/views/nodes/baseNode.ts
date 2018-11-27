@@ -1,11 +1,11 @@
-import * as vscode from 'vscode';
+import { Disposable, TreeItem } from 'vscode';
 
 // BaseNode is an abstract tree node which all other *nodes* must extend.
 // It also takes care of disposables if they are added to the `disposables` field.
-export abstract class BaseNode implements vscode.Disposable {
-    public readonly disposables: vscode.Disposable[] = [];
+export abstract class BaseNode implements Disposable {
+    public readonly disposables: Disposable[] = [];
 
-    abstract getTreeItem(): vscode.TreeItem;
+    abstract getTreeItem(): TreeItem;
     abstract async getChildren(element?: BaseNode): Promise<BaseNode[]>;
 
     dispose() {

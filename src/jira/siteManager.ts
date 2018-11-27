@@ -36,6 +36,7 @@ export class JiraSiteManager extends Disposable {
 
     dispose() {
         this._disposable.dispose();
+        this._onDidSiteChange.dispose();
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {

@@ -14,12 +14,6 @@ justify-content: space-between;
 width: 100%;
 `;
 
-export const CompactInlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-justify-content: space-between;
-`;
-
 export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
@@ -37,9 +31,9 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
 
     onHandleSiteChange = (item:any) => {
         console.log('site select change',item.target.parentNode.parentNode.dataset.siteId);
-        if(this.props.configData.authInfo.accessibleResources){
+        if(this.props.configData.sites){
             console.log('looking for site');
-            const site = this.props.configData.authInfo.accessibleResources.find(site => site.id === item.target.parentNode.parentNode.dataset.siteId);
+            const site = this.props.configData.sites.find(site => site.id === item.target.parentNode.parentNode.dataset.siteId);
             console.log('found site',site);
             if(site) {
                 const changes = Object.create(null);
@@ -89,7 +83,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
 
     render() {
         let  siteSelect = <div></div>;
-        const sites = this.props.configData.authInfo.accessibleResources;
+        const sites = this.props.configData.sites;
 
         if(sites && sites.length > 1) {
             const selectedSite = this.props.configData.config.jira.workingSite;
@@ -108,7 +102,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 }
             });
 
-            siteSelect = <DropdownMenu
+            siteSelect = <div className='labelAndSelect'><span>default site:</span> <DropdownMenu
                                     triggerType="button"
                                     trigger={selectedSite.name}
                                     triggerButtonProps={{className:'ak-button'}}
@@ -116,7 +110,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                     <DropdownItemGroup>
                                     {siteItems}
                                     </DropdownItemGroup>
-                                </DropdownMenu>;
+                                </DropdownMenu>
+                            </div>;
         }
 
         let  projectSelect = <div></div>;
@@ -144,7 +139,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 }
             });
 
-            projectSelect = <DropdownMenu
+            projectSelect = <div className='labelAndSelect'><span>default project:</span> <DropdownMenu
                                     triggerType="button"
                                     trigger={selectedProject.name}
                                     triggerButtonProps={{className:'ak-button'}}
@@ -152,7 +147,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                     <DropdownItemGroup>
                                     {projectItems}
                                     </DropdownItemGroup>
-                                </DropdownMenu>;
+                                </DropdownMenu></div>;
         }
 
         return (
@@ -191,8 +186,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <hr/>
                 <InlineFlex>
-                    <CompactInlineFlex>default site: {siteSelect}</CompactInlineFlex>
-                    <CompactInlineFlex>default project: {projectSelect}</CompactInlineFlex>
+                    {siteSelect}
+                    {projectSelect}
                 </InlineFlex>
             </div>
             

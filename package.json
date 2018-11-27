@@ -128,29 +128,29 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.ctxKey.bb.explorerLocation == SourceControl"
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
                 }
             ],
             "atlascode-drawer": [
                 {
-                    "id": "assignedIssues",
+                    "id": "atlascode.views.jira.assignedIssues",
                     "name": "Your Issues",
                     "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
                 },
                 {
-                    "id": "openIssues",
+                    "id": "atlascode.views.jira.openIssues",
                     "name": "Open Issues",
                     "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
                 },
                 {
-                    "id": "jiraLogin",
-                    "name": "Login To Jira",
-                    "when": "!atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled"
-                },
-                {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.ctxKey.bb.explorerLocation == Atlascode"
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                },
+                {
+                    "id": "atlascode.views.jira.login",
+                    "name": "Login To Jira",
+                    "when": "!atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled"
                 }
             ]
         },
@@ -158,27 +158,27 @@
             "view/title": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
-                    "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(assignedIssues|openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(assignedIssues|openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(assignedIssues|openIssues)/",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "view =~ /(assignedIssues|openIssues)/"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 }
             ],
             "commandPalette": [
@@ -284,9 +284,15 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
-                "atlascode.bitbucket.explorerLocation": {
+                "atlascode.bitbucket.explorer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.location": {
                     "type": "string",
-                    "default": "SourceControl",
+                    "default": "Atlascode",
                     "enum": [
                         "SourceControl",
                         "Atlascode"

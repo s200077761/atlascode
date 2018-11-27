@@ -139,3 +139,22 @@ div.icon-text img {
 [class^="Checkbox__IconWrapper-"] rect{
   stroke:var(--vscode-button-background) !important;
 }
+
+.labelAndSelect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.labelAndSelect>span{
+  color: var(--color--75);
+  padding-right: 1rem;
+}
+
+hr {
+  height: 1px;
+  border: 0;
+  background-color: var(--color--50);
+  margin-top: 1em;
+  margin-bottom: 1em;
+}

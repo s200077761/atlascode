@@ -9,6 +9,7 @@ import { AuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import styled from 'styled-components';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
+import BitbucketExplorer from './BBExplorer';
 
 type changeObject = {[key: string]:any};
 
@@ -113,6 +114,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
+                            <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

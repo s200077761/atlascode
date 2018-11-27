@@ -6,4 +6,5 @@ export class LoginTree extends AbstractIssueTree {
     constructor() {
         super(JiraLoginTreeId,undefined,"Please login to Jira", {command:Commands.AuthenticateJira,title:"Login to Jira"});
     }
+
 }

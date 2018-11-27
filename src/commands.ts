@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { currentUserJira } from './commands//jira/currentUser';
-import { authenticateJira, clearJiraAuth } from './commands/authenticate';
+import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth } from './commands/authenticate';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { IssueHoverProvider } from './views/jira/issueHoverProvider';
@@ -34,6 +34,8 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
         vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
+        vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
+        vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {

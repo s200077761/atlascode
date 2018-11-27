@@ -59,6 +59,8 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
         });
         
         this._disposables = [];
+
+        this._onDidChangeTreeData.dispose();
     }
 
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -78,9 +80,11 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
     }
 
     refresh() {
-        Logger.debug(`Refreshing issue tree: ${this._id}`);
-        this._issues = undefined;
-        this._onDidChangeTreeData.fire();
+        if(this._tree && this._tree.visible) {
+            Logger.debug(`Refreshing issue tree: ${this._id}`);
+            this._issues = undefined;
+            this._onDidChangeTreeData.fire();
+        }
     }
 
     setJql(jql: string | undefined) {

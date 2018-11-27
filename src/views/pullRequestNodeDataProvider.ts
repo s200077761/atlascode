@@ -1,29 +1,32 @@
-import * as vscode from 'vscode';
+import { TreeDataProvider, Disposable, EventEmitter, Event, commands, workspace, TreeItem} from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/context';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
 import { RepositoriesNode } from './nodes/repositoriesNode';
 import { getPRDocumentCommentProvider } from './pullRequestCommentProvider';
+import { Commands } from '../commands';
 
-export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<BaseNode>, vscode.Disposable {
-    private _onDidChangeTreeData: vscode.EventEmitter<BaseNode | undefined> = new vscode.EventEmitter<BaseNode | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
+export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
+    private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
+    readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
 
     static SCHEME = 'atlascode.bbpr';
-    private _disposables: vscode.Disposable[] = [];
+    private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {
-        this._disposables.push(vscode.workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)));
-        this._disposables.push(vscode.workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()));
-        ctx.onDidChangeBitbucketContext(() => {
-            this.updateChildren();
-            this.refresh();
-        });
-        getPRDocumentCommentProvider().onDidChangeCommentThreads(() => {
-            this.refresh();
-        });
+        commands.registerCommand(Commands.BitbucketRefreshPullRequests, this.refresh, this);
+
+        this._disposable = Disposable.from(
+            workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
+            workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()),
+            getPRDocumentCommentProvider().onDidChangeCommentThreads(this.refresh,this),
+            ctx.onDidChangeBitbucketContext(() => {
+                this.updateChildren();
+                this.refresh();
+            }),
+        );
     }
 
     private updateChildren(): void {
@@ -51,7 +54,7 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
         this.refresh();
     }
 
-    getTreeItem(element: BaseNode): vscode.TreeItem {
+    getTreeItem(element: BaseNode): TreeItem {
         return element.getTreeItem();
     }
 
@@ -66,6 +69,7 @@ export class PullRequestNodeDataProvider implements vscode.TreeDataProvider<Base
     }
 
     dispose() {
-        this._disposables.forEach(disposable => disposable && disposable.dispose());
+        this._disposable.dispose();
+        this._onDidChangeTreeData.dispose();
     }
 }

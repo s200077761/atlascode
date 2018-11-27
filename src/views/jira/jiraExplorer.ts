@@ -8,6 +8,8 @@ import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { LoginTree } from "./loginTree";
+import { AuthProvider } from "../../atlclients/authInfo";
+import { Logger } from "../../logger";
 
 export class JiraExplorer extends Disposable {
 
@@ -17,11 +19,12 @@ export class JiraExplorer extends Disposable {
     constructor() {
         super(() => this.dispose());
 
+        commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
+        
         this._disposable = Disposable.from(
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
         );
-        commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
-            
+        
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
@@ -52,6 +55,11 @@ export class JiraExplorer extends Disposable {
         if(initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
+
+        if(initializing) {
+            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
+        }
     }
 
     dispose() {
@@ -67,7 +75,13 @@ export class JiraExplorer extends Disposable {
         });
     }
 
-    onDidAuthChange(e:AuthInfoEvent) {
-        this.refresh();
+    async onDidAuthChange(e:AuthInfoEvent) {
+        if(e.provider === AuthProvider.JiraCloud) {
+            
+            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            Logger.debug('setting login tree', !isLoggedIn);
+            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
+            this.refresh();
+        }
     }
 }

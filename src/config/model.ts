@@ -34,7 +34,12 @@ export interface JiraExplorer {
 }
 
 export interface BitbucketConfig {
-    explorerLocation: BitbucketExplorerLocation;
+    explorer: BitbucketExplorer;
+}
+
+export interface BitbucketExplorer {
+    enabled:boolean;
+    location:BitbucketExplorerLocation;
 }
 
 export enum BitbucketExplorerLocation {
@@ -61,8 +66,13 @@ export const emptyJiraConfig:JiraConfig = {
     explorer: emptyJiraExplorer
 };
 
+export const emptyBitbucketExplorer: BitbucketExplorer = {
+    enabled:true,
+    location:BitbucketExplorerLocation.Atlascode
+};
+
 export const emptyBitbucketConfig:BitbucketConfig = {
-    explorerLocation: BitbucketExplorerLocation.Atlascode
+    explorer: emptyBitbucketExplorer
 };
 
 export const emptyConfig:IConfig = {

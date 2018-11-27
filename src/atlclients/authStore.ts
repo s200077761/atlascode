@@ -21,6 +21,7 @@ export class AuthManager implements Disposable {
 
     dispose() {
         this._memStore.clear();
+        this._onDidAuthChange.dispose();
     }
 
     public async isAuthenticated(provider:string): Promise<boolean> {
@@ -50,14 +51,19 @@ export class AuthManager implements Disposable {
     public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
         this._memStore.set(provider, info);
 
-        const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
-        if(info !== emptyAuthInfo) {
-            setCommandContext(cmdctx, true);
-        } else {
-            setCommandContext(cmdctx, false);
+        const oldInfo = await this.getAuthInfo(provider);
+
+        if(oldInfo && oldInfo.access === info.access) {
+            const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
+            if(info !== emptyAuthInfo) {
+                setCommandContext(cmdctx, true);
+            } else {
+                setCommandContext(cmdctx, false);
+            }
+
+            this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         }
 
-        this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         if (keychain) {
             try {
                 await keychain.setPassword(keychainServiceName, provider, JSON.stringify(info));
@@ -69,22 +75,24 @@ export class AuthManager implements Disposable {
     }
 
     public async removeAuthInfo(provider: string): Promise<boolean> {
-        const product =
-            provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        const product = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
 
-        this._memStore.delete(provider);
-
-        const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
-        setCommandContext(cmdctx, false);
-
-        window.showInformationMessage(
-            `You have been logged out of ${product}`
-        );
-
-        this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
+        let wasMemDeleted = this._memStore.delete(provider);
+        let wasKeyDeleted = false;
 
         if (keychain) {
-            return await keychain.deletePassword(keychainServiceName, provider);
+            wasKeyDeleted = await keychain.deletePassword(keychainServiceName, provider);
+        }
+
+        if(wasMemDeleted || wasKeyDeleted) {
+            const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
+            setCommandContext(cmdctx, false);
+            this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
+            window.showInformationMessage(
+                `You have been logged out of ${product}`
+            );
+
+            return true;
         }
 
         return false;

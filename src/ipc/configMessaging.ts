@@ -1,17 +1,21 @@
 import { Message } from "./messaging";
 import { IConfig, emptyConfig } from "../config/model";
-import { AuthInfo, emptyAuthInfo } from "../atlclients/authInfo";
+import { AccessibleResource } from "../atlclients/authInfo";
 import { Project } from "../jira/jiraModel";
 
 export interface ConfigData extends Message {
     config:IConfig;
-    authInfo:AuthInfo;
+    sites:AccessibleResource[];
     projects:Project[];
+    isJiraAuthenticated:boolean;
+    isBitbucketAuthenticated:boolean;
 }
 
 export const emptyConfigData:ConfigData = {
     type:'init',
     config:emptyConfig,
-    authInfo:emptyAuthInfo,
-    projects:[]
+    sites:[],
+    projects:[],
+    isJiraAuthenticated: false,
+    isBitbucketAuthenticated: false
 };

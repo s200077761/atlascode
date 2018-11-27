@@ -4,7 +4,7 @@ import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction } from '../ipc/configActions';
-import { AuthProvider, AuthInfo, emptyAuthInfo } from '../atlclients/authInfo';
+import { AuthProvider } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -33,13 +33,16 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 
     public async invalidate() {
         const config:IConfig = await configuration.get<IConfig>();
-        let authInfo:AuthInfo|undefined = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-        if(!authInfo) {
-            authInfo = emptyAuthInfo;
-        }
 
         Logger.debug('updating config for webview', config);
-        this.updateConfig({type:'update',config:config,authInfo:authInfo,projects:Container.jiraSiteManager.projectsAvailable});
+        this.updateConfig({
+            type:'update',
+            config:config,
+            sites:Container.jiraSiteManager.sitesAvailable,
+            projects:Container.jiraSiteManager.projectsAvailable,
+            isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud),
+            isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)
+        });
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
