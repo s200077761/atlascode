@@ -76,7 +76,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                 case 'checkout': {
                     if (isCheckout(e)) {
                         handled = true;
-                        this.checkout(e.branch).catch((e: any) => {
+                        this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             window.showErrorMessage('Branch could not be checked out');
                         });
@@ -137,16 +137,25 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
         await this.forceUpdatePullRequest();
     }
 
-    private async checkout(branch: string) {
+    private async checkout(branch: string, isSourceBranch: boolean) {
+        if (isSourceBranch && this._state.sourceRemote && this._state.sourceRemote !== this._state.remote) {
+            // pull request is from a fork repository
+            await this._state.repository!.getConfig(`remote.${this._state.sourceRemote!.name}.url`)
+                .then(async url => {
+                    if (!url) {
+                        await this._state.repository!.addRemote(this._state.sourceRemote!.name, gup(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                    }
+                })
+                .catch(async _ => {
+                    await this._state.repository!.addRemote(this._state.sourceRemote!.name, gup(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                });
+        }
+        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
             .then(() => this.postMessage({
                 type: 'checkout',
                 currentBranch: this._state.repository!.state.HEAD!.name!
             }))
-            .catch(async (e: any) => {
-                await this._state.repository!.addRemote(this._state.sourceRemote!.name, gup(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
-                await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
-            })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
                 window.showErrorMessage('Pull request branch could not be checked out');

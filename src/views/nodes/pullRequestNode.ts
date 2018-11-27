@@ -45,7 +45,6 @@ export class PullRequestTitlesNode extends BaseNode {
             this.pr = await PullRequestApi.get(this.pr);
             const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
             const inlineComments = await this.fetchComments();
-            console.log(inlineComments.keys);
             return [
                 new DescriptionNode(this.pr),
                 ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))

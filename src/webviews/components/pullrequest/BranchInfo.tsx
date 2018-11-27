@@ -28,11 +28,12 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
         }
     }
 
-    handleCheckout = (branchName: string) => {
+    handleCheckout = (branchName: string, isSourceBranch: boolean) => {
         this.setState({ loading: branchName !== this.props.prData.currentBranch });
         this.props.postMessage({
             action: 'checkout',
-            branch: branchName
+            branch: branchName,
+            isSourceBranch: isSourceBranch
         });
     }
 
@@ -66,7 +67,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                         }
                     >
                         <DropdownItemGroup>
-                            <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout branch</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.source!.branch!.name!, true)}>Checkout branch</DropdownItem>
                             <DropdownItem className='ak-dropdown-item' href={`${pr.source!.repository!.links!.html!.href}/src/${pr.source!.branch!.name}`}>Open branch on bitbucket.org</DropdownItem>
                         </DropdownItemGroup>
                     </DropdownMenu>
@@ -93,7 +94,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                                     </FixedWidth>
                                 }>
                                 <DropdownItemGroup>
-                                    <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.destination!.branch!.name!)}>Checkout branch</DropdownItem>
+                                    <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.destination!.branch!.name!, false)}>Checkout branch</DropdownItem>
                                     <DropdownItem className='ak-dropdown-item' href={`${pr.destination!.repository!.links!.html!.href}/src/${pr.destination!.branch!.name}`}>Open branch on bitbucket.org</DropdownItem>
                                 </DropdownItemGroup>
                             </DropdownMenu>
