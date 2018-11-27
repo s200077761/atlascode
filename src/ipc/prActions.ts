@@ -16,6 +16,7 @@ export interface Approve extends Action {
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;
+    isSourceBranch: boolean;
 }
 
 export function isCheckout(a: Action): a is Checkout {

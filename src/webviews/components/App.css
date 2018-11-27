@@ -13,6 +13,10 @@ p {
   color: var(--vscode-editor-foreground);
 }
 
+h1 {
+  color: var(--vscode-editor-foreground);
+}
+
 a {
   color: var(--vscode-textLink-foreground) !important;
 }
@@ -49,6 +53,18 @@ div.icon-text img {
   color: var(--vscode-button-foreground) !important;
 }
 
+.ak-textarea {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font: inherit;
+  width: inherit;
+}
+
+.ak-textarea:focus {
+  outline-color: var(--vscode-focusBorder);
+  outline-width: 2px;
+}
+
 [class^="Droplist__Content"] {
   background: var(--vscode-sideBar-background) !important;
 }
@@ -79,8 +95,22 @@ div.icon-text img {
 }
 
 [class^="styled__TitleWrapper"] {
-  margin-bottom: 5px !important;
+  margin-bottom: 0px !important;
   align-items: center !important;
+}
+
+
+[class^="styled__StyledTitle"] {
+  margin: 0px !important;
+}
+
+[class^="LayoutStyles__Container"] {
+    padding: inherit !important;
+}
+
+[class^="styled__Cell"] {
+    padding-top: inherit !important;
+    padding-bottom: inherit !important;
 }
 
 .Collapsible {

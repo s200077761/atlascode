@@ -4,6 +4,7 @@ import * as Bitbucket from 'bitbucket';
 export interface PullRequest {
     repository: Repository;
     remote: Remote;
+    sourceRemote?: Remote;
     data: Bitbucket.Schema.Pullrequest;
 }
 

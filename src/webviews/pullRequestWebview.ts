@@ -8,10 +8,12 @@ import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout } from '../ipc/prActions';
+import * as gup from 'git-url-parse';
 
 interface PRState {
     prData: PRData;
     remote?: Remote;
+    sourceRemote?: Remote;
     repository?: Repository;
 }
 
@@ -74,7 +76,10 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                 case 'checkout': {
                     if (isCheckout(e)) {
                         handled = true;
-                        this.checkout(e.branch);
+                        this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
+                            Logger.error(new Error(`error checking out the branch: ${e}`));
+                            window.showErrorMessage('Branch could not be checked out');
+                        });
                     }
                     break;
                 }
@@ -110,6 +115,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                 this._state = {
                     repository: pr.repository,
                     remote: pr.remote,
+                    sourceRemote: pr.sourceRemote || pr.remote,
                     prData: {
                         type: 'update'
                         , currentUser: currentUser
@@ -127,11 +133,24 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     private async approve() {
-        await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
+        await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
         await this.forceUpdatePullRequest();
     }
 
-    private checkout(branch: string) {
+    private async checkout(branch: string, isSourceBranch: boolean) {
+        if (isSourceBranch && this._state.sourceRemote && this._state.sourceRemote !== this._state.remote) {
+            // pull request is from a fork repository
+            await this._state.repository!.getConfig(`remote.${this._state.sourceRemote!.name}.url`)
+                .then(async url => {
+                    if (!url) {
+                        await this._state.repository!.addRemote(this._state.sourceRemote!.name, gup(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                    }
+                })
+                .catch(async _ => {
+                    await this._state.repository!.addRemote(this._state.sourceRemote!.name, gup(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                });
+        }
+        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
             .then(() => this.postMessage({
                 type: 'checkout',
@@ -154,7 +173,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     private async forceUpdatePullRequest() {
-        const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! });
+        const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
         this._state.prData.pr = result.data;
         this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
         await this.updatePullRequest(result).catch(reason => {
@@ -163,7 +182,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     private async forceUpdateComments() {
-        const pr = { repository: this._state.repository!, remote: this._state.remote!, data: this._state.prData.pr! };
+        const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
         this._state.prData.comments = await PullRequestApi.getComments(pr);
         await this.updatePullRequest(pr);
     }

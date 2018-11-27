@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as pathlib from 'path';
 import { BitbucketContext } from '../bitbucket/context';
 import { FileDiffQueryParams } from './nodes/pullRequestNode';
+import * as gup from 'git-url-parse';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
@@ -27,7 +28,13 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                 await repo.fetch(remote.name, branchName);
                 content = await repo.show(commitHash, absolutePath);
             } catch (err) {
-                vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
+                try {
+                    await repo.addRemote(remote.name, gup(remote.fetchUrl!).toString("ssh"));
+                    await repo.fetch(remote.name, branchName);
+                    content = await repo.show(commitHash, absolutePath);
+                } catch (err) {
+                    vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
+                }
             }
         }
 

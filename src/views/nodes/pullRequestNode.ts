@@ -45,7 +45,6 @@ export class PullRequestTitlesNode extends BaseNode {
             this.pr = await PullRequestApi.get(this.pr);
             const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
             const inlineComments = await this.fetchComments();
-            console.log(inlineComments.keys);
             return [
                 new DescriptionNode(this.pr),
                 ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))
@@ -141,7 +140,7 @@ class PullRequestFilesNode extends BaseNode {
                 lhs: false,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.remote,
+                remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branch!.name!,
                 commitHash: this.pr.data.source!.commit!.hash!,
                 path: this.fileChange.filename,
