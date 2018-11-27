@@ -7,6 +7,7 @@ import * as express from 'express';
 import * as passport from 'passport';
 import * as http from 'http';
 import * as authinfo from './authInfo';
+import { Resources } from '../resources';
 
 export class OAuthDancer {
     private _srv: http.Server | undefined;
@@ -16,36 +17,36 @@ export class OAuthDancer {
         clientID: "DQhnLnWwACPXJXW2qX",
         clientSecret: "uwACseDkGP4hc7JvWHAatZZruHzYpLMH",
         callbackURL: "http://127.0.0.1:9090/" + authinfo.AuthProvider.BitbucketCloud
-      },this.verify.bind(this));
+    }, this.verify.bind(this));
 
-      private _jiraCloudStrategy = new AtlassianStrategy({
+    private _jiraCloudStrategy = new AtlassianStrategy({
         clientID: 'PNchU3mOSFLJt1qp3HUDOEUL231OX6lu',
         clientSecret: '9DObTr9hl8OEZ9sMlQ4TlFbWm6ijKeHDA9PXf4jM5LoLhyIu5oQR7Xppo_Yq2pye',
         callbackURL: 'http://127.0.0.1:9090/' + authinfo.AuthProvider.JiraCloud,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access',
-      }, this.verify.bind(this));
+    }, this.verify.bind(this));
 
     public constructor() {
-        passport.serializeUser(function(user, done) {
+        passport.serializeUser(function (user, done) {
             done(null, user);
         });
-        
-        passport.deserializeUser(function(obj, done) {
+
+        passport.deserializeUser(function (obj, done) {
             done(null, obj);
         });
 
-         passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-         passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-         refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-         refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
+        passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
+        refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
     }
 
-    private verify(accessToken: string, refreshToken: string, profile: any, done: any):void {
-        let resources:authinfo.AccessibleResource[] = [];
+    private verify(accessToken: string, refreshToken: string, profile: any, done: any): void {
+        let resources: authinfo.AccessibleResource[] = [];
 
         if (profile.accessibleResources) {
             Logger.debug("got resources");
-            profile.accessibleResources.forEach( (resource:authinfo.AccessibleResource) => {
+            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
                 resources.push(resource);
             });
         }
@@ -69,7 +70,7 @@ export class OAuthDancer {
         return done(null, profile.id);
     }
 
-    public async doDance(provider:string): Promise<authinfo.AuthInfo> {
+    public async doDance(provider: string): Promise<authinfo.AuthInfo> {
         Logger.debug("doing dance...");
 
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
@@ -79,21 +80,23 @@ export class OAuthDancer {
 
             _app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
                 passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
-                function(req, res){
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
+                function (req, res) {
+                    // The request will be redirected to Bitbucket for authentication, so this
+                    // function will not be called.
+                });
 
             _app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
                 passport.authenticate(authinfo.AuthProvider.JiraCloud),
-                function(req, res){
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
+                function (req, res) {
+                    // The request will be redirected to Bitbucket for authentication, so this
+                    // function will not be called.
+                });
 
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
-                res.send('We\'re done here.');
+                res.send(Resources.html.get('authSuccessHtml')!({
+                    product: 'Bitbucket'
+                }));
                 if (this._srv) {
                     this._srv.close();
                     this._srv = undefined;
@@ -103,7 +106,9 @@ export class OAuthDancer {
 
             _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
-                res.send('We\'re done here.');
+                res.send(Resources.html.get('authSuccessHtml')!({
+                    product: 'Jira'
+                }));
                 if (this._srv) {
                     this._srv.close();
                     this._srv = undefined;
@@ -113,7 +118,7 @@ export class OAuthDancer {
 
             _app.get('/error', (req, res) => {
                 Logger.debug("got jira error");
-                res.send('We\'re done here.');
+                res.send(Resources.html.get('authFailureHtml')!({}));
                 if (this._srv) {
                     this._srv.close();
                     this._srv = undefined;
@@ -122,21 +127,21 @@ export class OAuthDancer {
             });
 
             Logger.debug("building callback server");
-            
+
             this._srv = _app.listen(9090, () => console.log('server started on port 9090'));
-            
+
             Logger.debug("authenticating...");
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/auth/${provider}`));
         });
     }
 
-    public async refresh(authInfo:authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
+    public async refresh(authInfo: authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
-            refresh.requestNewAccessToken(authInfo.user.provider,authInfo.refresh,(err:Error,accessToken:string,refreshToken:string) => {
+            refresh.requestNewAccessToken(authInfo.user.provider, authInfo.refresh, (err: Error, accessToken: string, refreshToken: string) => {
                 if (err) {
                     Logger.debug("refresh error: " + err);
                 }
-                let newAuth:authinfo.AuthInfo = authInfo;
+                let newAuth: authinfo.AuthInfo = authInfo;
                 newAuth.access = accessToken;
 
                 if (newAuth.access && newAuth.access !== '') {
