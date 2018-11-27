@@ -64,7 +64,15 @@ export namespace PullRequestApi {
             repo_slug: parsed.name,
             username: parsed.owner
         });
-        return { repository: pr.repository, remote: pr.remote, data: data };
+        let sourceRemote: Remote | undefined = undefined;
+        if (data.source!.repository!.links!.html!.href! !== data.destination!.repository!.links!.html!.href!) {
+            sourceRemote = {
+                fetchUrl: data.source!.repository!.links!.html!.href!,
+                name: data.source!.repository!.full_name!,
+                isReadOnly: true
+            };
+        }
+        return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: data };
     }
 
     export async function getChangedFiles(pr: PullRequest): Promise<any[]> {

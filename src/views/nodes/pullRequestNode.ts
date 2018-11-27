@@ -141,7 +141,7 @@ class PullRequestFilesNode extends BaseNode {
                 lhs: false,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.remote,
+                remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branch!.name!,
                 commitHash: this.pr.data.source!.commit!.hash!,
                 path: this.fileChange.filename,
