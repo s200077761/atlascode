@@ -1,0 +1,98 @@
+import * as path from 'path';
+import * as vscode from 'vscode';
+
+import { Backend } from '../backend/backend-base';
+import { GitBackend } from '../backend/backend-git';
+import { Shell } from '../../util/shell';
+
+export abstract class CommandBase {
+
+  /**
+   * Run the command and handle any resulting errors
+   */
+  public async run(): Promise<void> {
+    try {
+      await this.execute();
+    } catch (e) {
+      if (e instanceof Error) {
+        vscode.window.showInformationMessage(e.message);
+      } else {
+        // tslint:disable-next-line:no-console
+        console.error(e);
+        vscode.window.showErrorMessage(`Encountered an unexpected error: ${e.message}`);
+      }
+    }
+  }
+
+  /**
+   * Command implementation
+   */
+  protected abstract async execute(): Promise<void>;
+
+  /**
+   * Get the backend (Git or Mercurial) for the current project.
+   */
+  protected async getBackend(): Promise<Backend> {
+    const workingDirectory = this.getDirectory();
+    const shell = new Shell(workingDirectory);
+    for (const backend of [GitBackend]) {
+      const { code, stdout } = await shell.exec(backend.root);
+      if (code === 0) {
+        return new backend(stdout.trim());
+      }
+    }
+    throw new Error('Unable to find a Git/Hg repository');
+  }
+
+  /**
+   * Get the open directory containing the current file.
+   */
+  protected getDirectory(): string {
+    const editor = this.getOpenEditor();
+    return path.dirname(editor.document.fileName);
+  }
+
+  /**
+   * Get the path to the current file, relative to the repository root.
+   */
+  protected getFilePath(root: string): string {
+    const editor = this.getOpenEditor();
+    return path.relative(root, editor.document.fileName);
+  }
+
+  /**
+   * Get the list of currently selected line ranges, in start:end format
+   */
+  protected getLineRanges(): string[] {
+    const editor = this.getOpenEditor();
+    return editor.selections.map(selection => {
+      // vscode provides 0-based line numbers but Bitbucket line numbers start with 1.
+      return `${selection.start.line + 1}:${selection.end.line + 1}`;
+    });
+  }
+
+  /**
+   * Get the 1-based line number of the (first) currently selected line.
+   */
+  protected getCurrentLine(): number {
+    const selection = this.getOpenEditor().selection;
+    return selection.start.line + 1;
+  }
+
+  /**
+   * Open a URL in the default browser.
+   */
+  protected openUrl(url: string): void {
+    const uri = vscode.Uri.parse(url);
+    vscode.commands.executeCommand('vscode.open', uri);
+  }
+
+  private getOpenEditor(): vscode.TextEditor {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      throw new Error('No open editor');
+    }
+    return editor;
+  }
+
+}
