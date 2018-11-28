@@ -3,7 +3,16 @@
 out/test/**
 out/**/*.map
 src/**
+patches/**
 .gitignore
+bitbucket-pipelines.yml
+*.pem
+*.vsix
 tsconfig.json
-vsc-extension-quickstart.md
+tsconfig.prod.json
 tslint.json
+node_modules/**
+yarn.lock
+yarn-error.log
+webpack.config.js
+build/**/*.map

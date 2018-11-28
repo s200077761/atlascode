@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as BitbucketStrategy from 'passport-bitbucket-oauth2';
+const BitbucketStrategy = require('passport-bitbucket-oauth2');
 const AtlassianStrategy = require('passport-atlassian-oauth2');
 import * as refresh from 'passport-oauth2-refresh';
 import { Logger } from '../logger';

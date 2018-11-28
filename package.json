@@ -35,7 +35,7 @@
     "extensionDependencies": [
         "vscode.git"
     ],
-    "main": "./out/extension",
+    "main": "./build/extension/extension",
     "contributes": {
         "commands": [
             {
@@ -419,11 +419,11 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "yarn run compile",
-        "compile": "react-scripts-ts build && tsc -p tsconfig.extension.json",
-        "watch": "tsc -watch -p tsconfig.extension.json",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "vscode:prepublish": "react-scripts-ts build && webpack --env.production",
+        "compile": "react-scripts-ts build && webpack --env.development",
+        "watch": "tsc --watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install && patch-package",
+        "test": "yarn run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
         "@atlaskit/avatar": "^14.1.2",
@@ -431,12 +431,12 @@
         "@atlaskit/breadcrumbs": "^6.0.10",
         "@atlaskit/button": "^9.0.16",
         "@atlaskit/checkbox": "^5.0.5",
-        "@atlaskit/flag": "^9.1.6",
-        "@atlaskit/feedback-collector": "^1.0.1",
         "@atlaskit/comment": "^6.0.23",
         "@atlaskit/css-reset": "^3.0.2",
         "@atlaskit/dropdown-menu": "^6.1.20",
         "@atlaskit/field-text-area": "^4.0.11",
+        "@atlaskit/feedback-collector": "^1.0.1",
+        "@atlaskit/flag": "^9.1.6",
         "@atlaskit/icon": "^14.2.1",
         "@atlaskit/lozenge": "^6.2.2",
         "@atlaskit/page": "^8.0.8",
@@ -485,9 +485,14 @@
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
         "mocha": "^5.2.0",
+        "patch-package": "^5.1.1",
+        "postinstall-postinstall": "^2.0.0",
         "react-scripts-ts": "2.16.0",
+        "ts-loader": "^5.3.1",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.21"
+        "vscode": "^1.1.21",
+        "webpack": "^4.26.1",
+        "webpack-cli": "^3.1.2"
     }
 }

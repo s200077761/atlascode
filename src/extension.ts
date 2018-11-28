@@ -11,6 +11,7 @@ import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
 import { setCommandContext, CommandContext } from './constants';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
+require('node-fetch');
 
 export async function activate(context: vscode.ExtensionContext) {
     registerResources(context);
