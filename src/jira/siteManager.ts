@@ -81,9 +81,11 @@ export class JiraSiteManager extends Disposable {
             .then((res: JIRA.Response<JIRA.Schema.PageBeanProjectBean>) => {
               return this.readProjects(res.data.values);
             });
+        } else {
+            Logger.debug("sitemanager couldn't get a client");
         }
       
-        return Promise.reject();
+        return [];
     }
 
     private readProjects(projects: JIRA.Schema.ProjectBean[] | undefined): Project[] {
