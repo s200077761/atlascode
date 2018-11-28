@@ -12,6 +12,7 @@ import { setCommandContext, CommandContext, GlobalStateVersionKey } from './cons
 import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
+require('node-fetch');
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();

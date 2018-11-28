@@ -35,7 +35,7 @@
     "extensionDependencies": [
         "vscode.git"
     ],
-    "main": "./out/extension",
+    "main": "./build/extension/extension",
     "contributes": {
         "commands": [
             {
@@ -431,17 +431,20 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "yarn run compile",
-        "compile": "react-scripts-ts build && tsc -p tsconfig.extension.json",
-        "watch": "tsc -watch -p tsconfig.extension.json",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "vscode:prepublish": "react-scripts-ts build && webpack --env.production",
+        "compile": "react-scripts-ts build && webpack --env.development",
+        "watch": "tsc --watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install && patch-package",
+        "test": "yarn run compile && node ./node_modules/vscode/bin/test"
     },
     "dependencies": {
         "@atlaskit/avatar": "^14.1.2",
         "@atlaskit/avatar-group": "^2.1.5",
         "@atlaskit/breadcrumbs": "^6.0.10",
-        "@atlaskit/button": "^9.0.16",
+        "@atlaskit/button": "^10.0.1",
+        "@atlaskit/checkbox": "^5.0.5",
+        "@atlaskit/flag": "^9.1.6",
+        "@atlaskit/feedback-collector": "^1.0.1",
         "@atlaskit/comment": "^6.0.23",
         "@atlaskit/css-reset": "^3.0.2",
         "@atlaskit/dropdown-menu": "^6.1.20",
@@ -455,9 +458,6 @@
         "@atlaskit/table-tree": "^4.1.11",
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
-        "@atlaskit/checkbox": "^5.0.5",
-        "@atlaskit/flag": "^9.1.6",
-        "@atlaskit/feedback-collector": "^1.0.1",
         "@atlassian/jira": "^0.0.2",
         "@atlassiansox/analytics-node-client": "^1.0.103",
         "ajv": "^6.5.4",
@@ -476,10 +476,11 @@
         "passport-oauth2": "^1.4.0",
         "passport-oauth2-refresh": "^1.1.0",
         "react": "^16.3.2",
+        "react-collapsible": "^2.3.1",
         "react-dom": "^16.3.2",
         "react-loadable": "^5.5.0",
-        "react-collapsible": "^2.3.1",
         "styled-components": "^3.2.6",
+        "spawn-sync": "^2.0.0",
         "semver": "^5.6.0",
         "tunnel": "^0.0.6"
     },
@@ -495,14 +496,19 @@
         "@types/passport": "^0.4.6",
         "@types/passport-oauth2": "^1.4.6",
         "@types/react": "^16.3.2",
+        "@types/react-collapsible": "^2.2.1",
+        "@types/semver": "^5.5.0",
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
-        "@types/react-collapsible":"^2.2.1",
-        "@types/semver": "^5.5.0",
         "mocha": "^5.2.0",
+        "patch-package": "^5.1.1",
+        "postinstall-postinstall": "^2.0.0",
         "react-scripts-ts": "2.16.0",
+        "ts-loader": "^5.3.1",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
-        "vscode": "^1.1.21"
+        "vscode": "^1.1.21",
+        "webpack": "^4.26.1",
+        "webpack-cli": "^3.1.2"
     }
 }

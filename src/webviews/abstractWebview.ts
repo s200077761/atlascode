@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import {
     Disposable,
     Uri,
@@ -143,7 +144,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
     }
 
     private _getHtmlForWebview(viewName:string) {
-        const manifest = require(path.join(this._extensionPath, 'build', 'asset-manifest.json'));
+        const manifest = JSON.parse(fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString());
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
 

@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
-        "outDir": "out/dist",
-        "module": "esnext",
+        "outDir": "build/extension",
+        "module": "commonjs",
         "target": "es6",
         "lib": [
             "es6",
@@ -12,7 +12,7 @@
         "allowJs": true,
         "jsx": "react",
         "moduleResolution": "node",
-        "rootDir": "src",
+        "rootDir": ".",
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
@@ -21,7 +21,11 @@
         "strictNullChecks": true,
         "suppressImplicitAnyIndexErrors": true,
         "noUnusedLocals": true,
-        "jsxFactory": "React.createElement"
+        "jsxFactory": "React.createElement",
+        "typeRoots": [
+            "node_modules/@types",
+            "src/typings/"
+        ]
     },
     "exclude": [
         "out",
@@ -32,6 +36,7 @@
         "webpack",
         "jest",
         "src/setupTests.ts",
-        ".vscode-test"
+        ".vscode-test",
+        "webpack.config.js"
     ]
 }
