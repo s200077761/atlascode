@@ -8,5 +8,6 @@ pipelines:
         script:
           - apt-get update && apt-get install -y libsecret-1-dev
           - printf "//`node -p \"require('url').parse(process.env.NPM_REGISTRY_URL || 'https://registry.npmjs.org').host\"`/:_authToken=${NPM_TOKEN}\nregistry=${NPM_REGISTRY_URL}\n" >> ~/.npmrc
+          - cat ~/.npmrc
           - yarn
           - npm run vscode:prepublish
