@@ -1,5 +1,6 @@
 "use strict";
 
+import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
 import { registerCommands, Commands } from './commands';
 import { registerResources } from './resources';
@@ -11,6 +12,7 @@ import { AuthProvider } from './atlclients/authInfo';
 import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
 import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
+import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
@@ -30,6 +32,7 @@ export async function activate(context: ExtensionContext) {
     setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
 
     registerCommands(context);
+    activateCodebucket(context);
 
     const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
     if (gitExtension) {

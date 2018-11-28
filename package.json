@@ -117,6 +117,31 @@
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.showPullRequest",
+                "title": "Show Pull Request",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.openInBitbucket",
+                "title": "Open in Bitbucket",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.openChangeset",
+                "title": "Open Changeset",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.viewPullRequest",
+                "title": "View Pull Request",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.copyPullRequest",
+                "title": "Copy Pull Request Url to Clipboard",
+                "category": "AtlasCode"
             }
         ],
         "viewsContainers": {
@@ -160,6 +185,24 @@
             ]
         },
         "menus": {
+            "editor/context": [
+                {
+                    "command": "atlascode.bb.openInBitbucket",
+                    "group": "atlascode"
+                },
+                {
+                    "command": "atlascode.bb.openChangeset",
+                    "group": "atlascode"
+                },
+                {
+                    "command": "atlascode.bb.viewPullRequest",
+                    "group": "atlascode"
+                },
+                {
+                    "command": "atlascode.bb.copyPullRequest",
+                    "group": "atlascode"
+                }
+            ],
             "view/title": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
@@ -420,6 +463,8 @@
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.5.0",
+        "clipboardy": "^1.2.3",
+        "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
         "handlebars": "^4.0.12",
@@ -440,6 +485,8 @@
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
+        "@types/clipboardy": "^1.1.0",
+        "@types/escape-string-regexp": "^1.0.0",
         "@types/git-url-parse": "^9.0.0",
         "@types/handlebars": "^4.0.39",
         "@types/keytar": "^4.0.1",
