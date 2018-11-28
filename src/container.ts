@@ -7,18 +7,22 @@ import { ClientManager } from './atlclients/clientManager';
 import { AuthManager } from './atlclients/authStore';
 import { JiraExplorer } from './views/jira/jiraExplorer';
 import { AuthStatusBar } from './views/authStatusBar';
+import { JiraSiteManager } from './jira/siteManager';
+import { WelcomeWebview } from './webviews/welcomeWebview';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig) {
         this._context = context;
         this._config = config;
 
-        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
-        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
-        context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
+        context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
+        context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
+        context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
+        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
+        context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
 
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
@@ -46,6 +50,11 @@ export class Container {
     private static _configWebview: ConfigWebview;
     static get configWebview() {
         return this._configWebview;
+    }
+
+    private static _welcomeWebview: WelcomeWebview;
+    static get welcomeWebview() {
+        return this._welcomeWebview;
     }
 
     private static _pullRequestViewManager: PullRequestViewManager;
@@ -76,6 +85,11 @@ export class Container {
     private static _authStatusBar: AuthStatusBar;
     static get authStatusBar() {
         return this._authStatusBar;
+    }
+
+    private static _jiraSiteManager: JiraSiteManager;
+    static get jiraSiteManager() {
+        return this._jiraSiteManager;
     }
 
     static resetConfig() {

@@ -1,56 +1,57 @@
-import * as vscode from 'vscode';
+import { Disposable, EventEmitter, Event, ConfigurationChangeEvent, TreeView, window, commands, Uri } from 'vscode';
 import { Repository, API as GitApi } from "../typings/git";
-import { configuration } from '../config/configuration';
+import { configuration, BitbucketExplorerLocation } from '../config/configuration';
 import { BaseNode } from '../views/nodes/baseNode';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { PaginatedPullRequests } from './model';
 import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
-import { authenticateBitbucket, clearBitbucketAuth } from '../commands/authenticate';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
-import { BitbucketContainerConfigurationKey } from '../constants';
+import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
     atlascode: 'Atlascode'
 };
-const vscodeContextSettingKey = 'atlascode.ctxKey.bb.explorerLocation';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
-export class BitbucketContext implements vscode.Disposable {
-    private _onDidChangeBitbucketContext: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
-    readonly onDidChangeBitbucketContext: vscode.Event<void> = this._onDidChangeBitbucketContext.event;
+export class BitbucketContext extends Disposable {
+    private _onDidChangeBitbucketContext: EventEmitter<void> = new EventEmitter<void>();
+    readonly onDidChangeBitbucketContext: Event<void> = this._onDidChangeBitbucketContext.event;
 
     private _gitApi: GitApi;
     private _repoMap: Map<string, Repository> = new Map();
+    private _tree:TreeView<BaseNode> | undefined;
+    private _dataProvider:PullRequestNodeDataProvider;
+    private _disposable:Disposable;
 
-    constructor(vscodeContext: vscode.ExtensionContext, gitApi: GitApi) {
+    constructor(gitApi: GitApi) {
+        super(() => this.dispose());
         this._gitApi = gitApi;
-        this.refreshRepos();
-        this._gitApi.onDidOpenRepository(() => this.refreshRepos());
-        this._gitApi.onDidCloseRepository(() => this.refreshRepos());
+        this._dataProvider = new PullRequestNodeDataProvider(this);
 
-        this.setLocationContext();
-
-        let prNodeDataProvider: PullRequestNodeDataProvider = new PullRequestNodeDataProvider(this);
-        vscodeContext.subscriptions.push(
-            vscode.window.registerTreeDataProvider<BaseNode>('atlascode.views.bb.pullrequestsTreeView', prNodeDataProvider),
-            vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
-            vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
-            vscode.commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
-            vscode.commands.registerCommand(Commands.BitbucketRefreshPullRequests, prNodeDataProvider.refresh, prNodeDataProvider),
-            vscode.commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
+        Container.context.subscriptions.push(
+            configuration.onDidChange(this.onConfigurationChanged, this),
+            
+            commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
+            
+            commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
-            vscode.commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
+            commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const result = await PullRequestApi.nextPage(prs);
-                prNodeDataProvider.addItems(result);
-            })
+                this.addTreeItems(result);
+            },this)
         );
 
-        vscodeContext.subscriptions.push(configuration.onDidChange(this.configChangeHandler));
+        this._disposable = Disposable.from(
+            this._gitApi.onDidOpenRepository(this.refreshRepos, this),
+            this._gitApi.onDidCloseRepository(this.refreshRepos, this)
+        );
+
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private refreshRepos() {
@@ -59,29 +60,59 @@ export class BitbucketContext implements vscode.Disposable {
         this._onDidChangeBitbucketContext.fire();
     }
 
-    private configChangeHandler = (e: vscode.ConfigurationChangeEvent) => {
-        if (!configuration.changed(e, BitbucketContainerConfigurationKey)) { return; }
+    addTreeItems(page:PaginatedPullRequests) {
+        if(this._dataProvider) {
+            this._dataProvider.addItems(page);
+        }
+    }
 
-        this.setLocationContext();
-        this._onDidChangeBitbucketContext.fire();
+    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+        const initializing = configuration.initializing(e);
+
+        if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled')) {
+            if(!Container.config.bitbucket.explorer.enabled) {
+                this.disposeForNow();
+            } else {
+                this._onDidChangeBitbucketContext = new EventEmitter<void>();
+                this._tree = window.createTreeView(PullRequestTreeViewId, {
+                    treeDataProvider: this._dataProvider
+                });
+                this.refreshRepos();
+            }
+            setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
+        }
+
+        if(initializing || configuration.changed(e, 'bitbucket.explorer.location')) {
+            this.setLocationContext();
+        }
     }
 
     private setLocationContext() {
-        let location = configuration.get<string>(BitbucketContainerConfigurationKey);
+        let location = Container.config.bitbucket.explorer.location;
         if (location !== explorerLocation.sourceControl && location !== explorerLocation.atlascode) {
-            location = explorerLocation.sourceControl;
+            location = BitbucketExplorerLocation.Atlascode;
         }
-        vscode.commands.executeCommand('setContext', vscodeContextSettingKey, location);
+        setCommandContext(CommandContext.BitbucketExplorerLocation, location);
     }
 
     public getAllRepositores(): Repository[] {
         return this._gitApi.repositories;
     }
-    public getRepository(repoUri: vscode.Uri): Repository | undefined {
+    public getRepository(repoUri: Uri): Repository | undefined {
         return this._repoMap.get(repoUri.toString());
     }
 
     dispose() {
+        this.disposeForNow();
+        this._disposable.dispose();
+    }
+
+    disposeForNow() {
+        if(this._tree) {
+            this._tree.dispose();
+            this._tree = undefined;
+        }
+
         this._onDidChangeBitbucketContext.dispose();
     }
 }

@@ -35,6 +35,7 @@ import {
     private _agent: any | undefined;
     private _optionsDirty: boolean = false;
     private _isAuthenticating: boolean = false;
+    private _isGettingClient: Map<string,boolean> = new Map<string,boolean>();
   
     constructor(context: ExtensionContext) {
       context.subscriptions.push(
@@ -119,6 +120,14 @@ import {
       let client: T | undefined = clientOrEmpty;
   
       if (!client) {
+
+        if (!this.isLocked(provider)) {
+          this.lockClient(provider);
+        } else {
+          return await this.getInClientLine<T>(provider);
+        }
+
+        Logger.debug('no client found', provider);
         let info = await Container.authManager.getAuthInfo(provider);
   
         if (!info) {
@@ -132,6 +141,7 @@ import {
               `You are now authenticated with ${product}`
             );
           } else {
+            this.unlockClient(provider);
             return undefined;
           }
         } else {
@@ -147,8 +157,10 @@ import {
   
               if (info) {
                 await Container.authManager.saveAuthInfo(provider, info);
+                this.unlockClient(provider);
                 return info;
               } else {
+                this.unlockClient(provider);
                 return undefined;
               }
             });
@@ -169,9 +181,33 @@ import {
   
         this._optionsDirty = false;
       }
+      this.unlockClient(provider);
       return client;
     }
+    
+    private isLocked(provider:string): boolean {
+        let locked = this._isGettingClient.get(provider);
+        if(locked === undefined) { locked = false; }
+
+        return locked;
+    }
+
+    private lockClient(provider:string) {
+      this._isGettingClient.set(provider,true);
+    }
+
+    private unlockClient(provider:string) {
+      this._isGettingClient.set(provider,false);
+    }
+
+    private async getInClientLine<T>(provider:string): Promise<T | undefined> {
+      while (this.isLocked(provider)) {
+        await this.delay(1000);
+      }
   
+      return await this._clients.getItem<T>(provider);
+    }
+
     private async danceWithUser(
       provider: string,
       promptUser:boolean = true
@@ -182,7 +218,7 @@ import {
       if (!this._isAuthenticating) {
         this._isAuthenticating = true;
       } else {
-        return await this.getInLine(provider);
+        return await this.getInAuthLine(provider);
       }
       
       let usersChoice = undefined;
@@ -216,6 +252,7 @@ import {
       this._clients.deleteItem(provider);
       switch(provider) {
         case AuthProvider.JiraCloud: {
+          Logger.debug('client manager is calling jirarequest');
           await this.jirarequest(undefined,false);
           break;
         }
@@ -226,9 +263,7 @@ import {
       }
     }
 
-    private async getInLine(
-      provider: string
-    ): Promise<AuthInfo | undefined> {
+    private async getInAuthLine(provider:string): Promise<AuthInfo | undefined> {
       while (this._isAuthenticating) {
         await this.delay(1000);
       }

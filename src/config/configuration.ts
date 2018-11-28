@@ -8,7 +8,8 @@ import {
     EventEmitter,
     ExtensionContext,
     Uri,
-    workspace
+    workspace,
+    Disposable
 } from 'vscode';
 import { extensionId } from '../constants';
 import { Logger } from '../logger';
@@ -20,7 +21,7 @@ const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 Configuration is a helper to manage configuration changes in various parts of the system.
 It basically abstracts away the details of dealing with the workspace settings driectly.
 */
-export class Configuration {
+export class Configuration extends Disposable {
     static configure(context: ExtensionContext) {
         context.subscriptions.push(
             workspace.onDidChangeConfiguration(configuration.onConfigurationChanged, configuration)
@@ -34,6 +35,11 @@ export class Configuration {
     }
 
     constructor() {
+        super(() => this.dispose());
+    }
+
+    dispose() {
+        this._onDidChange.dispose();
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {

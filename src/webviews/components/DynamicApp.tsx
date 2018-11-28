@@ -13,6 +13,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadableWelcomeView = Loadable({
+    loader: () => import(/* webpackChunkName: "welcomeView" */ './config/Welcome'),
+    loading: Loading,
+  });
+
   const LoadablePullRequestView = Loadable({
     loader: () => import(/* webpackChunkName: "pullRequestView" */ './pullrequest/PullRequestPage'),
     loading: Loading,
@@ -47,6 +52,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return(
                     <div>
                         <LoadableConfigView />
+                    </div>
+                );
+            }
+            case 'welcomeView': {
+                return(
+                    <div>
+                        <LoadableWelcomeView />
                     </div>
                 );
             }

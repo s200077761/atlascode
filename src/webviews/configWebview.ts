@@ -4,12 +4,13 @@ import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction } from '../ipc/configActions';
-import { AuthProvider, AuthInfo, emptyAuthInfo } from '../atlclients/authInfo';
+import { AuthProvider } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
-import { Project } from '../jira/jiraModel';
+import { AuthInfoEvent } from '../atlclients/authStore';
+import { JiraSiteUpdateEvent } from '../jira/siteManager';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -17,7 +18,9 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
         super(extensionPath);
 
         Container.context.subscriptions.push(
-            configuration.onDidChange(this.onConfigurationChanged, this)
+            configuration.onDidChange(this.onConfigurationChanged, this),
+            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.jiraSiteManager.onDidSiteChange(this.onDidSiteChange, this),
         );
     }
 
@@ -30,18 +33,27 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 
     public async invalidate() {
         const config:IConfig = await configuration.get<IConfig>();
-        let authInfo:AuthInfo|undefined = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-        if(!authInfo) {
-            authInfo = emptyAuthInfo;
-        }
-
-        const projects:Project[] = [];
 
         Logger.debug('updating config for webview', config);
-        this.updateConfig({type:'update',config:config,authInfo:authInfo,projects:projects});
+        this.updateConfig({
+            type:'update',
+            config:config,
+            sites:Container.jiraSiteManager.sitesAvailable,
+            projects:Container.jiraSiteManager.projectsAvailable,
+            isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud),
+            isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)
+        });
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
+        this.invalidate();
+    }
+
+    private onDidAuthChange(e:AuthInfoEvent) {
+        this.invalidate();
+    }
+
+    private onDidSiteChange(e:JiraSiteUpdateEvent) {
         this.invalidate();
     }
 

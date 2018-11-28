@@ -138,6 +138,8 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
         if(this._disposablePanel) {
             this._disposablePanel.dispose();
         }
+
+        this._onDidPanelDispose.dispose();
     }
 
     private _getHtmlForWebview(viewName:string) {

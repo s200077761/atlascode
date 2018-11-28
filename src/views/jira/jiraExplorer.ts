@@ -7,6 +7,9 @@ import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
+import { LoginTree } from "./loginTree";
+import { AuthProvider } from "../../atlclients/authInfo";
+import { Logger } from "../../logger";
 
 export class JiraExplorer extends Disposable {
 
@@ -16,11 +19,12 @@ export class JiraExplorer extends Disposable {
     constructor() {
         super(() => this.dispose());
 
+        commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
+        
         this._disposable = Disposable.from(
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
         );
-        commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
-            
+        
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
@@ -39,8 +43,22 @@ export class JiraExplorer extends Disposable {
             } else {
                 this._trees.push(new OpenIssuesTree());
                 this._trees.push(new AssignedIssuesTree());
+                this._trees.push(new LoginTree());
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
+        }
+
+        if(initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
+            setCommandContext(CommandContext.OpenIssuesTree, Container.config.jira.explorer.showOpenIssues);
+        }
+
+        if(initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
+            setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
+        }
+
+        if(initializing) {
+            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
         }
     }
 
@@ -57,7 +75,13 @@ export class JiraExplorer extends Disposable {
         });
     }
 
-    onDidAuthChange(e:AuthInfoEvent) {
-        this.refresh();
+    async onDidAuthChange(e:AuthInfoEvent) {
+        if(e.provider === AuthProvider.JiraCloud) {
+            
+            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            Logger.debug('setting login tree', !isLoggedIn);
+            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
+            this.refresh();
+        }
     }
 }

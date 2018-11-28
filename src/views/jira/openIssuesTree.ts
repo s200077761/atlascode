@@ -10,7 +10,7 @@ export class OpenIssuesTree extends AbstractIssueTree {
         super(OpenIssuesTreeId,undefined,"There are no open issues");
 
         const project = Container.config.jira.workingProject;
-        this.setJql(this.jqlForProject(project));
+        this.setJql(this.jqlForProject(project.id));
     }
 
     public async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -21,7 +21,7 @@ export class OpenIssuesTree extends AbstractIssueTree {
         if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
             const project = Container.config.jira.workingProject;
             Logger.debug("OpenIssuesTree jira.workingProject change",Container.config);
-            this.setJql(this.jqlForProject(project));
+            this.setJql(this.jqlForProject(project.id));
         }
 
     }

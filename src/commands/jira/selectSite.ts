@@ -1,5 +1,5 @@
 import { commands, window } from "vscode";
-import { AuthInfo, AuthProvider, AccessibleResource } from '../../atlclients/authInfo';
+import { AccessibleResource } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
@@ -7,22 +7,16 @@ import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } f
 import { Commands } from "../../commands";
 
 export async function showSiteSelectionDialog() {
-  Container.authManager.getAuthInfo(AuthProvider.JiraCloud).then((info:AuthInfo|undefined) => {
-        if(!info) {
-          // TODO: show login propmpt.
-          return;
-        }
         window
-        .showQuickPick(info.accessibleResources!.map(site => site.name), {
+        .showQuickPick(Container.jiraSiteManager.sitesAvailable.map(site => site.name), {
           placeHolder: "Select a site"
         })
         .then(result => {
-          const selected = info.accessibleResources!.find(site => site.name === result);
+          const selected = Container.jiraSiteManager.sitesAvailable.find(site => site.name === result);
           if (selected) {
             saveWorkingSite(selected);
           }
         });
-    });
 }
 
 async function saveWorkingSite(site: AccessibleResource) {

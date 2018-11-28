@@ -112,6 +112,11 @@
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.showWelcomePage",
+                "title": "Open Welcome",
+                "category": "AtlasCode"
             }
         ],
         "viewsContainers": {
@@ -128,24 +133,29 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.ctxKey.bb.explorerLocation == SourceControl"
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
                 }
             ],
             "atlascode-drawer": [
                 {
-                    "id": "assignedIssues",
+                    "id": "atlascode.views.jira.assignedIssues",
                     "name": "Your Issues",
-                    "when": "atlascode:jiraExplorerEnabled"
+                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
                 },
                 {
-                    "id": "openIssues",
+                    "id": "atlascode.views.jira.openIssues",
                     "name": "Open Issues",
-                    "when": "atlascode:jiraExplorerEnabled"
+                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode.ctxKey.bb.explorerLocation == Atlascode"
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                },
+                {
+                    "id": "atlascode.views.jira.login",
+                    "name": "Login To Jira",
+                    "when": "!atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled"
                 }
             ]
         },
@@ -153,29 +163,57 @@
             "view/title": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
-                    "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(assignedIssues|openIssues)/"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.selectSite",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(assignedIssues|openIssues)/",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "view =~ /(assignedIssues|openIssues)/"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.selectProject",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.selectSite",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.authenticate",
+                    "when": "!atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.authenticate",
+                    "when": "!atlascode:isBBAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.clearAuth",
+                    "when": "atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.clearAuth",
+                    "when": "atlascode:isBBAuthenticated"
                 }
             ]
         },
@@ -219,9 +257,58 @@
                     "description": "Enables the Assigned Issues in the Jira Issue Explorer",
                     "scope": "window"
                 },
+                "atlascode.jira.statusbar.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Jira StatusBar Item",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showProduct": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the product name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showUser": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the user's name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showSite": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Shows the default site name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showProject": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Shows the default project name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.jira.statusbar.showLogin": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows a login button in the status bar",
+                    "scope": "window"
+                },
                 "atlascode.jira.workingProject": {
-                    "type": "string",
-                    "default": "",
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "id": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "key": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    },
                     "description": "Jira project for workspace",
                     "scope": "resource"
                 },
@@ -251,14 +338,44 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
-                "atlascode.bitbucket.explorerLocation": {
+                "atlascode.bitbucket.explorer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.location": {
                     "type": "string",
-                    "default": "SourceControl",
+                    "default": "Atlascode",
                     "enum": [
                         "SourceControl",
                         "Atlascode"
                     ],
                     "description": "Explorer location for Bitbucket pull requests",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.statusbar.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Bitbucket StatusBar Item",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.statusbar.showProduct": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the product name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.statusbar.showUser": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows the user's name in the status bar",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.statusbar.showLogin": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shows a login button in the status bar",
                     "scope": "window"
                 }
             }
@@ -290,6 +407,8 @@
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
         "@atlaskit/checkbox": "^5.0.5",
+        "@atlaskit/flag": "^9.1.6",
+        "@atlaskit/feedback-collector": "^1.0.1",
         "@atlassian/jira": "^0.0.2",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",

@@ -5,6 +5,7 @@ import { Commands } from "../commands";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
+import { Resources } from "../resources";
 
 export class AuthStatusBar extends Disposable {
     private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -21,7 +22,7 @@ export class AuthStatusBar extends Disposable {
             ,configuration.onDidChange(this.onConfigurationChanged, this)
             );
 
-        this.initialize();
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     async onDidAuthChange(e:AuthInfoEvent) {
@@ -29,18 +30,31 @@ export class AuthStatusBar extends Disposable {
     }
 
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        //const initializing = configuration.initializing(e);
-        // TODO: check for status bar enabled and do stuff
+        const initializing = configuration.initializing(e);
+        if(initializing || configuration.changed(e,'jira.statusbar')) {
+          const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
+          const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+          this.updateAuthenticationStatusBar(AuthProvider.JiraCloud,jiraInfo);
+
+          if(configuration.changed(e, 'jira.statusbar.enabled')) {
+            if(!Container.config.jira.statusbar.enabled) {
+              jiraItem.hide();
+            }
+          }
+        }
+
+        if(initializing || configuration.changed(e,'bitbucket.statusbar')) {
+          const bitbucketItem = this.ensureStatusItem(AuthProvider.BitbucketCloud);
+          const bitbucketInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+          this.updateAuthenticationStatusBar(AuthProvider.BitbucketCloud,bitbucketInfo);
+
+          if(configuration.changed(e, 'bitbucket.statusbar.enabled')) {
+            if(!Container.config.bitbucket.statusbar.enabled) {
+              bitbucketItem.hide();
+            }
+          }
+        }
     }
-
-    async initialize() {
-        const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-        const bbInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
-
-        this.updateAuthenticationStatusBar(AuthProvider.JiraCloud,jiraInfo);
-        this.updateAuthenticationStatusBar(AuthProvider.BitbucketCloud,bbInfo);
-    }
-
     dispose() {
         this._authenticationStatusBarItems.forEach(item => {
             item.dispose();
@@ -50,25 +64,22 @@ export class AuthStatusBar extends Disposable {
         this._disposable.dispose();
     }
 
+    private ensureStatusItem(provider:string):StatusBarItem {
+      let statusBarItem = this._authenticationStatusBarItems.get(provider);
+      if(!statusBarItem) {
+        statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+        this._authenticationStatusBarItems.set(provider, statusBarItem);
+      }
+      return statusBarItem;
+    }
+
     private async updateAuthenticationStatusBar(
         provider: string,
         info: AuthInfo | undefined
       ): Promise<void> {
         Logger.debug("updating auth status item", provider);
-        const statusBarItem = this._authenticationStatusBarItems.get(provider);
-        if (statusBarItem) {
-          Logger.debug("status item", statusBarItem);
-          await this.updateStatusBarItem(statusBarItem, provider, info);
-        } else {
-          Logger.debug("creating new auth status item", provider);
-          const newStatusBarItem = window.createStatusBarItem(
-            StatusBarAlignment.Left
-          );
-          this._authenticationStatusBarItems.set(provider, newStatusBarItem);
-    
-          await this.updateStatusBarItem(newStatusBarItem, provider, info);
-          newStatusBarItem.show();
-        }
+        const statusBarItem = this.ensureStatusItem(provider);
+        await this.updateStatusBarItem(statusBarItem, provider, info);
       }
     
       private async updateStatusBarItem(
@@ -76,34 +87,82 @@ export class AuthStatusBar extends Disposable {
         provider: string,
         info: AuthInfo | undefined
       ): Promise<void> {
-        let text: string;
+        let text: string = "$(sign-in)";
         let command: string | undefined;
-    
-        if (info) {
-          const product =
-            provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
-          text = `$(person) ${product}: ${info.user.displayName}`;
-          command = undefined;
-        } else {
-          switch (provider) {
-            case AuthProvider.JiraCloud.toString(): {
-              text = `$(sign-in) Sign in to Jira`;
-              command = Commands.AuthenticateJira;
-              break;
+        let product:string = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        let showIt:boolean = true;
+        const tmpl = Resources.html.get('statusBarText');
+
+        switch (provider) {
+          case AuthProvider.JiraCloud.toString(): {
+            if(info) {
+              text = `$(person) ${product}: ${info.user.displayName}`;
+
+              if(tmpl) {
+                let site = Container.config.jira.workingSite.name;
+                if(site === '') {
+                  site = Container.jiraSiteManager.sitesAvailable[0].name;
+                }
+
+                let project = Container.config.jira.workingProject.name;
+                if(project === '') {
+                  project = Container.jiraSiteManager.projectsAvailable[0].name;
+                }
+
+                let data = {product:product, user:info.user.displayName, site:site, project:project};
+                let ctx = {...Container.config.jira.statusbar, ...data};
+                Logger.debug('jira status context',ctx);
+                text = tmpl(ctx);
+              }
+              
+            } else {
+              if(Container.config.jira.statusbar.showLogin) {
+                text = `$(sign-in) Sign in to Jira`;
+                command = Commands.AuthenticateJira;
+                product = "Jira";
+              } else {
+                statusBarItem.hide();
+                showIt = false;
+              }
             }
-            case AuthProvider.BitbucketCloud.toString(): {
-              text = `$(sign-in) Sign in to Bitbucket`;
-              command = Commands.AuthenticateBitbucket;
-              break;
+            
+            break;
+          }
+          case AuthProvider.BitbucketCloud.toString(): {
+            if(info) {
+              text = `$(person) ${product}: ${info.user.displayName}`;
+
+              if(tmpl) {
+                let data = {product:product, user:info.user.displayName};
+                let ctx = merge(Container.config.bitbucket.statusbar,data);
+                text = tmpl(ctx);
+              }
+            } else {
+              if(Container.config.bitbucket.statusbar.showLogin) {
+                text = `$(sign-in) Sign in to Bitbucket`;
+                command = Commands.AuthenticateBitbucket;
+                product = "Bitbucket";
+              } else {
+                statusBarItem.hide();
+                showIt = false;
+              }
             }
-            default: {
-              text = `$(person) Unknown Atlascode auth provider ${provider}`;
-              command = undefined;
-            }
+            
+            break;
+          }
+          default: {
+            text = `$(person) Unknown Atlascode auth provider ${provider}`;
+            command = undefined;
           }
         }
-    
+        
+        Logger.debug(`${product} status tect is`, text);
         statusBarItem.text = text;
         statusBarItem.command = command;
+        statusBarItem.tooltip = `${product}`;
+
+        if(showIt) {
+          statusBarItem.show();
+        }
       }
 }
