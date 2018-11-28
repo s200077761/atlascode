@@ -23,6 +23,7 @@ export interface WorkingProject {
 export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles:boolean;
+    showWelcomeOnInstall:boolean;
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
     
@@ -127,6 +128,7 @@ export const emptyBitbucketConfig:BitbucketConfig = {
 export const emptyConfig:IConfig = {
     outputLevel: OutputLevel.Silent,
     enableCharles:false,
+    showWelcomeOnInstall:true,
     jira: emptyJiraConfig,
     bitbucket: emptyBitbucketConfig
 };

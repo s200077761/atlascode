@@ -239,6 +239,12 @@
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
                     "scope": "window"
                 },
+                "atlascode.showWelcomeOnInstall": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables showing the welcome screen when a new version is installed",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -410,6 +416,7 @@
         "@atlaskit/flag": "^9.1.6",
         "@atlaskit/feedback-collector": "^1.0.1",
         "@atlassian/jira": "^0.0.2",
+        "@atlassiansox/analytics-node-client": "^1.0.103",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.5.0",
@@ -428,6 +435,7 @@
         "react-loadable": "^5.5.0",
         "react-collapsible": "^2.3.1",
         "styled-components": "^3.2.6",
+        "semver": "^5.6.0",
         "tunnel": "^0.0.6"
     },
     "devDependencies": {
@@ -443,6 +451,7 @@
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
         "@types/react-collapsible":"^2.2.1",
+        "@types/semver": "^5.5.0",
         "mocha": "^5.2.0",
         "react-scripts-ts": "2.16.0",
         "tslint": "^5.8.0",
