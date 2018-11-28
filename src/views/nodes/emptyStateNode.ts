@@ -8,10 +8,7 @@ export class EmptyStateNode extends IssueNode {
 
     constructor(private text: string, command?:Command) {
         super(emptyIssue);
-
-        if(command) {
-            this.command = command;
-        }
+        this.command = command;
     }
 
     getTreeItem(): TreeItem {
