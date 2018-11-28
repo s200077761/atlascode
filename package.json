@@ -282,6 +282,12 @@
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
                     "scope": "window"
                 },
+                "atlascode.showWelcomeOnInstall": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables showing the welcome screen when a new version is installed",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -381,9 +387,15 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
-                "atlascode.bitbucket.explorerLocation": {
+                "atlascode.bitbucket.explorer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.location": {
                     "type": "string",
-                    "default": "SourceControl",
+                    "default": "Atlascode",
                     "enum": [
                         "SourceControl",
                         "Atlascode"
@@ -431,12 +443,12 @@
         "@atlaskit/breadcrumbs": "^6.0.10",
         "@atlaskit/button": "^10.0.1",
         "@atlaskit/checkbox": "^5.0.5",
+        "@atlaskit/flag": "^9.1.6",
+        "@atlaskit/feedback-collector": "^1.0.1",
         "@atlaskit/comment": "^6.0.23",
         "@atlaskit/css-reset": "^3.0.2",
         "@atlaskit/dropdown-menu": "^6.1.20",
         "@atlaskit/field-text-area": "^4.0.11",
-        "@atlaskit/feedback-collector": "^1.0.1",
-        "@atlaskit/flag": "^9.1.6",
         "@atlaskit/icon": "^14.2.1",
         "@atlaskit/lozenge": "^6.2.2",
         "@atlaskit/page": "^8.0.8",
@@ -447,6 +459,7 @@
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
         "@atlassian/jira": "^0.0.2",
+        "@atlassiansox/analytics-node-client": "^1.0.103",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.5.0",
@@ -468,6 +481,7 @@
         "react-loadable": "^5.5.0",
         "styled-components": "^3.2.6",
         "spawn-sync": "^2.0.0",
+        "semver": "^5.6.0",
         "tunnel": "^0.0.6"
     },
     "devDependencies": {
@@ -483,6 +497,7 @@
         "@types/passport-oauth2": "^1.4.6",
         "@types/react": "^16.3.2",
         "@types/react-collapsible": "^2.2.1",
+        "@types/semver": "^5.5.0",
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
         "mocha": "^5.2.0",
