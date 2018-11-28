@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
-import { FieldTextAreaStateless } from '@atlaskit/field-text-area';
 
 export default class CommentForm extends React.Component<{
     currentUser: Bitbucket.Schema.User,
@@ -38,13 +37,13 @@ export default class CommentForm extends React.Component<{
                         src={this.props.currentUser.links!.avatar!.href}
                         size="medium"
                     />
-                    <div style={{ width: 600, marginLeft: 8 }}>
-                        <FieldTextAreaStateless
+                    <div style={{ width: '100%', marginLeft: 8 }}>
+                        <textarea
                             className='ak-textarea'
-                            placeholder="Add a comment"
-                            isLabelHidden enableResize shouldFitContainer minimumRows={3}
-                            onChange={this.handleChange}
+                            rows={3}
+                            placeholder='Add a comment'
                             value={this.state.commentInput}
+                            onChange={this.handleChange}
                         />
                         <ButtonGroup>
                             <Button className='ak-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>

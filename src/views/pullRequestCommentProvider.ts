@@ -8,6 +8,13 @@ export class PullRequestCommentProvider implements vscode.DocumentCommentProvide
     public onDidChangeCommentThreads: vscode.Event<vscode.CommentThreadChangedEvent> = this._onDidChangeCommentThreads.event;
 
     async provideDocumentComments(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CommentInfo> {
+        if (document.uri.scheme !== PullRequestNodeDataProvider.SCHEME) {
+            return {
+                commentingRanges: undefined,
+                threads: []
+            };
+        }
+
         const { commentThreads, path } = JSON.parse(document.uri.query) as FileDiffQueryParams;
         let commentingRanges: vscode.Range[] = [];
         if (path) {

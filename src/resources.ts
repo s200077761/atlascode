@@ -23,5 +23,7 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
     Resources.html.set('reactHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()));
     Resources.html.set('statusBarText', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'statusbar.html'))).toString()));
+    Resources.html.set('authSuccessHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-success.html'))).toString()));
+    Resources.html.set('authFailureHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-failure.html'))).toString()));
 }
 
