@@ -13,6 +13,13 @@ export interface WorkingSite {
     scopes: Array<string>;
     avatarUrl: string;
 }
+
+export interface WorkingProject {
+    name:string;
+    id:string;
+    key:string;
+}
+
 export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles:boolean;
@@ -22,9 +29,19 @@ export interface IConfig {
 }
 
 export interface JiraConfig {
-    workingProject:string | undefined;
+    workingProject: WorkingProject;
     workingSite: WorkingSite;
     explorer:JiraExplorer;
+    statusbar:JiraStatusBar;
+}
+
+export interface JiraStatusBar {
+    enabled:boolean;
+    showProduct:boolean;
+    showUser:boolean;
+    showSite:boolean;
+    showProject:boolean;
+    showLogin:boolean;
 }
 
 export interface JiraExplorer {
@@ -35,11 +52,19 @@ export interface JiraExplorer {
 
 export interface BitbucketConfig {
     explorer: BitbucketExplorer;
+    statusbar:BitbucketStatusBar;
 }
 
 export interface BitbucketExplorer {
     enabled:boolean;
     location:BitbucketExplorerLocation;
+}
+
+export interface BitbucketStatusBar {
+    enabled:boolean;
+    showProduct:boolean;
+    showUser:boolean;
+    showLogin:boolean;
 }
 
 export enum BitbucketExplorerLocation {
@@ -54,16 +79,32 @@ export const emptyWorkingSite: WorkingSite = {
     avatarUrl: ''
 };
 
+export const emptyWorkingProject: WorkingProject = {
+    name: '',
+    id: '',
+    key: ''
+};
+
 export const emptyJiraExplorer: JiraExplorer = {
     enabled:true,
     showOpenIssues:true,
     showAssignedIssues:true
 };
 
+export const emptyJiraStatusBar: JiraStatusBar = {
+    enabled:true,
+    showProduct:true,
+    showUser:true,
+    showSite:false,
+    showProject:false,
+    showLogin:true
+};
+
 export const emptyJiraConfig:JiraConfig = {
-    workingProject: undefined,
+    workingProject: emptyWorkingProject,
     workingSite: emptyWorkingSite,
-    explorer: emptyJiraExplorer
+    explorer: emptyJiraExplorer,
+    statusbar: emptyJiraStatusBar
 };
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {
@@ -71,8 +112,16 @@ export const emptyBitbucketExplorer: BitbucketExplorer = {
     location:BitbucketExplorerLocation.Atlascode
 };
 
+export const emptyBitbucketStatusBar: BitbucketStatusBar = {
+    enabled:true,
+    showProduct:true,
+    showUser:true,
+    showLogin:true
+};
+
 export const emptyBitbucketConfig:BitbucketConfig = {
-    explorer: emptyBitbucketExplorer
+    explorer: emptyBitbucketExplorer,
+    statusbar:emptyBitbucketStatusBar
 };
 
 export const emptyConfig:IConfig = {

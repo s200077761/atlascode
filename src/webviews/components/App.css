@@ -49,6 +49,10 @@ div.icon-text img {
   color: var(--vscode-button-foreground) !important;
 }
 
+.ak-button:disabled {
+  background: var(--vscode-button-background--50) !important;
+}
+
 [class^="Droplist__Content"] {
   background: var(--vscode-sideBar-background) !important;
 }

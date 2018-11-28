@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
 import styled from 'styled-components';
-// import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
+import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
+import { BitbucketExplorerLocation } from '../../../config/model';
 
 
 type changeObject = {[key: string]:any};
@@ -13,7 +14,6 @@ align-items: center;
 justify-content: space-between;
 width: 100%;
 `;
-
 
 export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
     constructor(props: any) {
@@ -30,79 +30,74 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
         }
     }
 
+    onHandleLocationChange = (item:any) => {
+        const loc = item.target.parentNode.parentNode.id;
+        if(loc) {
+            const changes = Object.create(null);
+            changes['bitbucket.explorer.location'] = loc;
+
+            if(this.props.onConfigChange) {
+                this.props.onConfigChange(changes);
+            }
+        }
+    }
+
     checklabel = (label:string) => <span className='checkboxLabel'>{label}</span>;
 
     render() {
-        // let  siteSelect = <div></div>;
-        // const sites = this.props.configData.authInfo.accessibleResources;
+        let  locationSelect = <div></div>;
+        
+        const locations = Object.keys(BitbucketExplorerLocation)
+                                .map((key:any) => BitbucketExplorerLocation[key]);
+        console.log('got locations',locations);
+        if(locations && locations.length > 1) {
+            const selectedLocation = this.props.configData.config.bitbucket.explorer.location;
+            let locItems:any[] = [];
+            locations.forEach(loc => {
+                if(this.props.configData.config.bitbucket.explorer.location !== loc){
+                    locItems.push(
+                        <DropdownItem
+                            className='ak-dropdown-item'
+                            id={loc}
+                            onClick={this.onHandleLocationChange}>
+                            {loc}
+                        </DropdownItem>
+                    );
+                }
+            });
 
-        // if(sites && sites.length > 1) {
-        //     const selectedSite = this.props.configData.config.jira.workingSite;
-        //     let siteItems:any[] = [];
-        //     sites.forEach(site => {
-        //         if(this.props.configData.config.jira.workingSite.id !== site.id){
-        //             siteItems.push(
-        //                 <DropdownItem
-        //                     className='ak-dropdown-item'
-        //                     id={site.name}
-        //                     data-site-id={site.id}
-        //                     onClick={this.onHandleSiteChange}>
-        //                     {site.name}
-        //                 </DropdownItem>
-        //             );
-        //         }
-        //     });
-
-        //     siteSelect = <div className='labelAndSelect'><span>default site:</span> <DropdownMenu
-        //                             triggerType="button"
-        //                             trigger={selectedSite.name}
-        //                             triggerButtonProps={{className:'ak-button'}}
-        //                         >
-        //                             <DropdownItemGroup>
-        //                             {siteItems}
-        //                             </DropdownItemGroup>
-        //                         </DropdownMenu>
-        //                     </div>;
-        // }
+            locationSelect = <div className='labelAndSelect'><span>show in:</span> <DropdownMenu
+                                    triggerType="button"
+                                    trigger={selectedLocation}
+                                    triggerButtonProps={{className:'ak-button', 
+                                    isDisabled: !this.props.configData.config.bitbucket.explorer.enabled}}
+                                >
+                                    <DropdownItemGroup>
+                                    {locItems}
+                                    </DropdownItemGroup>
+                                </DropdownMenu>
+                            </div>;
+        }
 
         return (
             <div>
-                <div>
-                    <Checkbox
-                    value="bitbucket.explorer.enabled"
-                    label={this.checklabel("Enable Bitbucket Pull Request Explorer")}
-                    isChecked={this.props.configData.config.bitbucket.explorer.enabled}
-                    onChange={this.onCheckboxChange}
-                    name="pr-explorer-enabled"/>
-                    {/* <div
-                        style={{
+                <div style={{
                             display: 'flex',
                             flexDirection: 'column',
                             paddingLeft: '24px',
-                        }}
-                        >
-                        <Checkbox
-                            isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
-                            onChange={this.onCheckboxChange}
-                            label={this.checklabel("Show My Open Issues")}
-                            value="jira.explorer.showOpenIssues"
-                            name="explorer-openissues"
-                        />
-                        <Checkbox
-                            isChecked={this.props.configData.config.jira.explorer.showAssignedIssues}
-                            onChange={this.onCheckboxChange}
-                            label={this.checklabel("Show My Assigned Issues")}
-                            value="jira.explorer.showAssignedIssues"
-                            name="explorer-assigned-issues"
-                        />
+                        }}>
+
+                    <Checkbox
+                        value="bitbucket.explorer.enabled"
+                        label={this.checklabel("Enable Bitbucket Pull Request Explorer")}
+                        isChecked={this.props.configData.config.bitbucket.explorer.enabled}
+                        onChange={this.onCheckboxChange}
+                        name="pr-explorer-enabled"/>
+
+                    <div style={{ marginLeft:'3em' }}>
+                        {locationSelect}
                     </div>
                 </div>
-                <hr/>
-                <InlineFlex>
-                    {siteSelect}
-                    {projectSelect}
-                </InlineFlex> */}
-            </div>
             </div>
             
         );

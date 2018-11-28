@@ -30,11 +30,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
     }
 
     onHandleSiteChange = (item:any) => {
-        console.log('site select change',item.target.parentNode.parentNode.dataset.siteId);
         if(this.props.configData.sites){
-            console.log('looking for site');
             const site = this.props.configData.sites.find(site => site.id === item.target.parentNode.parentNode.dataset.siteId);
-            console.log('found site',site);
             if(site) {
                 const changes = Object.create(null);
                 const removes = [];
@@ -54,7 +51,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
             const project = this.props.configData.projects.find(project => project.id === item.target.parentNode.parentNode.dataset.projectId);
             if(project) {
                 const changes = Object.create(null);
-                changes['jira.workingProject'] = project.id;
+                changes['jira.workingProject'] = {id:project.id, name:project.name, key:project.key};
 
                 if(this.props.onConfigChange) {
                     this.props.onConfigChange(changes);
@@ -118,7 +115,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
         const projects = this.props.configData.projects;
 
         if(projects && projects.length > 1) {
-            let selectedProject = projects.find(project => project.id === this.props.configData.config.jira.workingProject);
+            let selectedProject = projects.find(project => project.id === this.props.configData.config.jira.workingProject.id);
 
             if(!selectedProject) {
                 selectedProject = emptyProject;
@@ -126,7 +123,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
             }
             let projectItems:any[] = [];
             projects.forEach(project => {
-                if(this.props.configData.config.jira.workingProject !== project.id){
+                if(this.props.configData.config.jira.workingProject.id !== project.id){
                     projectItems.push(
                         <DropdownItem
                             className='ak-dropdown-item'

@@ -10,7 +10,7 @@ export class AssignedIssuesTree extends AbstractIssueTree {
         super(AssignedIssuesTreeId,undefined,"You have no assigned issues");
 
         const project = Container.config.jira.workingProject;
-        this.setJql(this.jqlForProject(project));
+        this.setJql(this.jqlForProject(project.id));
     }
 
     public async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -19,7 +19,7 @@ export class AssignedIssuesTree extends AbstractIssueTree {
         if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
             const project = Container.config.jira.workingProject;
 
-            this.setJql(this.jqlForProject(project));
+            this.setJql(this.jqlForProject(project.id));
         }
 
         super.onConfigurationChanged(e);

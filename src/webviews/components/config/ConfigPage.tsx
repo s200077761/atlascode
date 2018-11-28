@@ -10,6 +10,8 @@ import JiraExplorer from './JiraExplorer';
 import styled from 'styled-components';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
+import StatusBar from './StatusBar';
+import DisplayFeedback from './DisplayFeedback';
 
 type changeObject = {[key: string]:any};
 
@@ -120,9 +122,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Status Bar','configure the status bar items for Jira and Bitbucket')}
                             open={true}>
+                            <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
                     </GridColumn>
-                    <GridColumn medium={3}>sidebar</GridColumn>
+                    <GridColumn medium={3}>
+                        <DisplayFeedback />
+                    </GridColumn>
                 </Grid>
             </Page>
         );
