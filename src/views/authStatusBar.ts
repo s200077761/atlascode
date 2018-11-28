@@ -6,7 +6,6 @@ import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { Resources } from "../resources";
-import { merge } from "lodash";
 
 export class AuthStatusBar extends Disposable {
     private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -111,7 +110,7 @@ export class AuthStatusBar extends Disposable {
                 }
 
                 let data = {product:product, user:info.user.displayName, site:site, project:project};
-                let ctx = merge(Container.config.jira.statusbar,data);
+                let ctx = {...Container.config.jira.statusbar, ...data};
                 Logger.debug('jira status context',ctx);
                 text = tmpl(ctx);
               }
