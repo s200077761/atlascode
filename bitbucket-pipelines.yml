@@ -10,5 +10,5 @@ pipelines:
           - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
           - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
           - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-          - yarn --verbose
+          - yarn
           - npm run vscode:prepublish
