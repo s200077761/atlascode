@@ -8,6 +8,7 @@ export const OpenIssuesTreeId = 'atlascode.views.jira.openIssues';
 export const AssignedIssuesTreeId = 'atlascode.views.jira.assignedIssues';
 export const JiraLoginTreeId = 'atlascode.views.jira.login';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
+export const GlobalStateVersionKey = 'atlascodeVersion';
 
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',
