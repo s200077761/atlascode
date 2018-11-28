@@ -134,7 +134,7 @@ export class AuthStatusBar extends Disposable {
 
               if(tmpl) {
                 let data = {product:product, user:info.user.displayName};
-                let ctx = merge(Container.config.bitbucket.statusbar,data);
+                let ctx = {...Container.config.bitbucket.statusbar, ...data};
                 text = tmpl(ctx);
               }
             } else {
