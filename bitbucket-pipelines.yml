@@ -7,6 +7,8 @@ pipelines:
           - node
         script:
           - apt-get update && apt-get install -y libsecret-1-dev
-          - printf "@atlassian:registry=${NPM_REGISTRY_URL}\n@atlassiansox:registry=${NPM_REGISTRY_URL}\n//`node -p \"require('url').parse(process.env.NPM_REGISTRY_URL || 'https://registry.npmjs.org').host\"`/:_authToken=${NPM_TOKEN}\n" >> ~/.npmrc
+          - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
+          - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
+          - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
           - yarn --verbose
           - npm run vscode:prepublish
