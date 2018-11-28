@@ -73,20 +73,20 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
     public render() {
         return (
             <Page>
-                <Grid spacing='comfortable' layout='fluid'>
+                <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
                         <h1>AtlasCode</h1>
                     </GridColumn>
                 </Grid>
 
                 <div className='sticky'>
-                    <Grid spacing='comfortable' layout='fluid'>
+                    <Grid spacing='comfortable' layout='fixed'>
                         <GridColumn medium={9}>
                             <h2>Settings</h2>
                         </GridColumn>
                     </Grid>
                 </div>
-                <Grid spacing='comfortable' layout='fluid'>
+                <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Authentication','configure authentication for Jira and Bitbucket')}

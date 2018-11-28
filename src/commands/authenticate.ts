@@ -1,5 +1,7 @@
 import { AuthProvider } from '../atlclients/authInfo';
 import { Container } from '../container';
+import { configuration } from '../config/configuration';
+import { JiraWorkingProjectConfigurationKey } from '../constants';
 
 export async function authenticateBitbucket() {
     authenticate(AuthProvider.BitbucketCloud);
@@ -14,6 +16,7 @@ export async function clearBitbucketAuth() {
 }
 
 export async function clearJiraAuth() {
+    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
     clearAuth(AuthProvider.JiraCloud);
 }
 

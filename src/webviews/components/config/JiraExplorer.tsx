@@ -11,7 +11,6 @@ export const InlineFlex = styled.div`
 display: inline-flex;
 align-items: center;
 justify-content: space-between;
-width: 100%;
 `;
 
 export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
@@ -183,7 +182,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <hr/>
                 <InlineFlex>
-                    {siteSelect}
+                    <div style={{ marginRight:'3em' }}>{siteSelect}</div>
                     {projectSelect}
                 </InlineFlex>
             </div>

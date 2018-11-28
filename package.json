@@ -112,6 +112,11 @@
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.showWelcomePage",
+                "title": "Open Welcome",
+                "category": "AtlasCode"
             }
         ],
         "viewsContainers": {

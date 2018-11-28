@@ -28,8 +28,8 @@ export default class DisplayFeedback extends React.Component<{}, MyState> {
           </FlagGroup>
         )}
         
-        <Button appearance="primary" onClick={this.open}>
-          Display Feedback
+        <Button className='ak-button' onClick={this.open}>
+          Send Feedback
         </Button>
 
         {isOpen && (

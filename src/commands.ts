@@ -25,12 +25,14 @@ export enum Commands {
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowWelcomePage = 'atlascode.showWelcomePage',
     TransitionIssue = 'atlascode.jira.transitionIssue'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
         vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
         vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
