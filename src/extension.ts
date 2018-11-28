@@ -1,6 +1,5 @@
 "use strict";
 
-import * as vscode from 'vscode';
 import { BitbucketContext } from './bitbucket/context';
 import { registerCommands, Commands } from './commands';
 import { registerResources } from './resources';
