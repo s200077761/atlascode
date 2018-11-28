@@ -1,4 +1,4 @@
-import { ExtensionContext, Disposable } from 'vscode';
+import { ExtensionContext, Disposable, env } from 'vscode';
 import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
@@ -9,6 +9,7 @@ import { JiraExplorer } from './views/jira/jiraExplorer';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
+import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig) {
@@ -24,6 +25,14 @@ export class Container {
         context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
 
+        let analyticsEnv:string = configuration.isDebugging ? 'local' : 'prod';
+
+        this._analyticsClient = new AnalyticsClient({
+            env:analyticsEnv,
+            product:'externalProductIntegrations',
+            subproduct: 'atlascode'
+        });
+
         if (config.jira.explorer.enabled) {
             context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
         } else {
@@ -35,6 +44,9 @@ export class Container {
                 }
            });
         }
+    }
+    static get machineId() {
+        return env.machineId;
     }
 
     private static _config: IConfig | undefined;
@@ -90,6 +102,11 @@ export class Container {
     private static _jiraSiteManager: JiraSiteManager;
     static get jiraSiteManager() {
         return this._jiraSiteManager;
+    }
+
+    private static _analyticsClient:AnalyticsClient;
+    static get analyticsClient() {
+        return this._analyticsClient;
     }
 
     static resetConfig() {
