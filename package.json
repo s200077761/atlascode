@@ -165,22 +165,17 @@
                 {
                     "id": "atlascode.views.jira.assignedIssues",
                     "name": "Your Issues",
-                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
+                    "when": "atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
                 },
                 {
                     "id": "atlascode.views.jira.openIssues",
                     "name": "Open Issues",
-                    "when": "atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
+                    "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
-                },
-                {
-                    "id": "atlascode.views.jira.login",
-                    "name": "Login To Jira",
-                    "when": "!atlascode:isJiraAuthenticated && atlascode:jiraExplorerEnabled"
                 }
             ]
         },
