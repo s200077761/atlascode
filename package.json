@@ -158,7 +158,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
+                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
                 }
             ],
             "atlascode-drawer": [
@@ -175,7 +175,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
                 }
             ]
         },

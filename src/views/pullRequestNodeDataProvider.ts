@@ -6,6 +6,9 @@ import { PaginatedPullRequests } from '../bitbucket/model';
 import { RepositoriesNode } from './nodes/repositoriesNode';
 import { getPRDocumentCommentProvider } from './pullRequestCommentProvider';
 import { Commands } from '../commands';
+import { Container } from '../container';
+import { AuthProvider } from '../atlclients/authInfo';
+import { EmptyStateNode } from './nodes/emptyStateNode';
 
 export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -59,6 +62,9 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     }
 
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+        if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            return Promise.resolve([new EmptyStateNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
+        }
         if (element) {
             return element.getChildren();
         }
