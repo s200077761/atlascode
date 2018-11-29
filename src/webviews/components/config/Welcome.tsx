@@ -5,6 +5,8 @@ import Button from '@atlaskit/button';
 import styled from 'styled-components';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
+const bitbucketLogo:string =require('../images/bitbucket-logo.png');
+const strideLogo:string =require('../images/stride-logo.png');
 
 export const InlineFlex = styled.div`
 display: inline-flex;
@@ -25,16 +27,28 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
     handleConfigure = () => {
         this.postMessage({action:'showConfigPage'});
     }
+
+    handleSourceLink = () => {
+        this.postMessage({action:'sourceLink'});
+    }
+
+    handleHelpLink = () => {
+        this.postMessage({action:'helpLink'});
+    }
    
     public render() {
+        const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
+        const strideicon = <img src={strideLogo} width="17" height="12"/>;
         return (
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
                         <h1>Welcome To AtlasCode!</h1>
                         <InlineFlex>
-                        <div style={{ marginRight:'3em' }}><Button className='ak-button' onClick={this.handleConfigure}>Configure Atlascode</Button></div>
-                        <DisplayFeedback />
+                            <div style={{ marginRight:'3em' }}><Button className='ak-button' onClick={this.handleConfigure}>Configure Atlascode</Button></div>
+                            <DisplayFeedback />
+                            <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                            <Button className='ak-link-button' appearance="link" iconBefore={strideicon} onClick={this.handleHelpLink}>Need Help?</Button>
                         </InlineFlex>
                     </GridColumn>
                 </Grid>

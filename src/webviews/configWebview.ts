@@ -1,7 +1,7 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { IConfig } from '../config/model';
 import { Action } from '../ipc/messaging';
-import { commands, ConfigurationChangeEvent } from 'vscode';
+import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction } from '../ipc/configActions';
 import { AuthProvider } from '../atlclients/authInfo';
@@ -123,6 +123,16 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                             }
                         }
                     }
+                    break;
+                }
+                case 'sourceLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    break;
+                }
+                case 'helpLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://applink.atlassian.com/stride/a436116f-02ce-4520-8fbb-7301462a1674/chat/20317f63-2ed0-40d2-86b2-7611fa9b0035`));
                     break;
                 }
             }
