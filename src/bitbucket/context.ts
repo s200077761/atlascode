@@ -9,6 +9,7 @@ import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
+import { AuthProvider } from '../atlclients/authInfo';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
@@ -34,7 +35,13 @@ export class BitbucketContext extends Disposable {
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
-            
+
+            Container.authManager.onDidAuthChange((e) => {
+                if (e.provider === AuthProvider.BitbucketCloud) {
+                    this._onDidChangeBitbucketContext.fire();
+                }
+            }),
+
             commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
             
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
@@ -73,7 +80,6 @@ export class BitbucketContext extends Disposable {
             if(!Container.config.bitbucket.explorer.enabled) {
                 this.disposeForNow();
             } else {
-                this._onDidChangeBitbucketContext = new EventEmitter<void>();
                 this._tree = window.createTreeView(PullRequestTreeViewId, {
                     treeDataProvider: this._dataProvider
                 });
