@@ -391,6 +391,12 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
+                "atlascode.jira.hover.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Jira hover provider",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.explorer.enabled": {
                     "type": "boolean",
                     "default": true,
