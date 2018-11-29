@@ -4,6 +4,7 @@ import { feedbackEvent } from "../analytics";
 import { Logger } from "../logger";
 import fetch from 'node-fetch';
 import { AuthProvider } from "../atlclients/authInfo";
+import { window } from 'vscode';
 
 
 export async function submitFeedback(feedback:FeedbackData, source:string) {
@@ -17,9 +18,9 @@ export async function submitFeedback(feedback:FeedbackData, source:string) {
             'Content-Type': 'application/json',
             Authorization: 'Bearer pK6Oi3p5epMrC0uyZcDN'
         },
-    })
-    .then(res => res.json())
-    .then(json => Logger.debug(json));
+    });
+
+    window.showInformationMessage('The Atlascode team thanks you for your feedback!');
 }
 
 async function appCard(feedback:FeedbackData, source:string): Promise<any> {
