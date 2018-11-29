@@ -134,6 +134,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.bb.createPullRequest",
+                "title": "Create Pull Request",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.viewPullRequest",
                 "title": "View Pull Request",
                 "category": "AtlasCode"
@@ -181,6 +186,10 @@
         },
         "menus": {
             "editor/context": [
+                {
+                    "command": "atlascode.bb.createPullRequest",
+                    "group": "atlascode"
+                },
                 {
                     "command": "atlascode.bb.openInBitbucket",
                     "group": "atlascode"

@@ -9,6 +9,7 @@ import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
+import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
 
 const explorerLocation = {
@@ -50,7 +51,8 @@ export class BitbucketContext extends Disposable {
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addTreeItems(result);
-            },this)
+            },this),
+            commands.registerCommand(Commands.CreatePullRequest, () => createPullRequest(this))
         );
 
         this._disposable = Disposable.from(

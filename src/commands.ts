@@ -26,7 +26,8 @@ export enum Commands {
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowWelcomePage = 'atlascode.showWelcomePage',
-    TransitionIssue = 'atlascode.jira.transitionIssue'
+    TransitionIssue = 'atlascode.jira.transitionIssue',
+    CreatePullRequest = 'atlascode.bb.createPullRequest'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {

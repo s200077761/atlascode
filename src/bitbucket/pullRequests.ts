@@ -10,7 +10,7 @@ const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
 
 // had to do this as the library introduced a bug with latest update
-function GitUrlParse(url: string): gup.GitUrl {
+export function GitUrlParse(url: string): gup.GitUrl {
     let parsed = gup(url);
     parsed.owner = parsed.owner.replace(':', '');
     parsed.name = parsed.name.replace(':', '');
@@ -152,7 +152,7 @@ export namespace PullRequestApi {
         return data.values || [];
     }
 
-    function getBitbucketRemotes(repository: Repository): Remote[] {
+    export function getBitbucketRemotes(repository: Repository): Remote[] {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
             let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
