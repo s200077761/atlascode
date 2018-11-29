@@ -5,6 +5,7 @@ import Button from '@atlaskit/button';
 import styled from 'styled-components';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
+import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 const bitbucketLogo:string =require('../images/bitbucket-logo.png');
 const strideLogo:string =require('../images/stride-logo.png');
 
@@ -14,7 +15,7 @@ align-items: center;
 justify-content: space-between;
 `;
 
-type Emit = Action;
+type Emit = SubmitFeedbackAction | Action;
 export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
     constructor(props: any) {
         super(props);
@@ -35,6 +36,10 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
     handleHelpLink = () => {
         this.postMessage({action:'helpLink'});
     }
+
+    handleFeedback = (feedback:FeedbackData) => {
+        this.postMessage({action:'submitFeedback', feedback:feedback});
+    }
    
     public render() {
         const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
@@ -46,7 +51,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
                         <h1>Welcome To AtlasCode!</h1>
                         <InlineFlex>
                             <div style={{ marginRight:'3em' }}><Button className='ak-button' onClick={this.handleConfigure}>Configure Atlascode</Button></div>
-                            <DisplayFeedback />
+                            <DisplayFeedback onFeedback={this.handleFeedback} />
                             <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                             <Button className='ak-link-button' appearance="link" iconBefore={strideicon} onClick={this.handleHelpLink}>Need Help?</Button>
                         </InlineFlex>

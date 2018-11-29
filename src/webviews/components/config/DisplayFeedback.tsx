@@ -1,33 +1,30 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
-import { FlagGroup } from '@atlaskit/flag';
-import FeedbackForm, { FeedbackFlag } from '@atlaskit/feedback-collector';
+import { FeedbackForm } from '@atlaskit/feedback-collector';
+import { FeedbackData } from '../../../ipc/configActions';
 
-type MyState = { isOpen: boolean, displayFlag: boolean };
-const name = 'Feedback Sender';
-const email = 'fsender@atlassian.com';
-export default class DisplayFeedback extends React.Component<{}, MyState> {
+type MyState = { isOpen: boolean };
+
+export default class DisplayFeedback extends React.Component<{onFeedback: (feedback:FeedbackData) => void}, MyState> {
 
   constructor(props: any) {
       super(props);
   }
-  state = { isOpen: false, displayFlag: false };
+  state = { isOpen: false };
 
   open = () => this.setState({ isOpen: true });
   close = () => this.setState({ isOpen: false });
-  displayFlag = () => this.setState({ displayFlag: true });
-  hideFlag = () => this.setState({ displayFlag: false });
 
+  handleFeedback = (feedback:FeedbackData) => {
+    this.setState({ isOpen: false });
+    if(this.props.onFeedback) {
+      this.props.onFeedback(feedback);
+    }
+  }
   render() {
-    const { isOpen, displayFlag } = this.state;
+    const { isOpen } = this.state;
     return (
       <div>
-        {displayFlag && (
-          <FlagGroup onDismissed={this.hideFlag}>
-            <FeedbackFlag />
-          </FlagGroup>
-        )}
-        
         <Button className='ak-button' onClick={this.open}>
           Send Feedback
         </Button>
@@ -35,9 +32,7 @@ export default class DisplayFeedback extends React.Component<{}, MyState> {
         {isOpen && (
           <FeedbackForm
             onClose={this.close}
-            onSubmit={this.displayFlag}
-            email={email}
-            name={name}
+            onSubmit={this.handleFeedback}
           />
         )}
 
