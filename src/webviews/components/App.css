@@ -41,7 +41,7 @@ div.icon-text img {
   background: var(--vscode-button-background) !important;
 }
 
-.ak-button span{
+.ak-button span {
   color: var(--vscode-button-foreground) !important;
 }
 
@@ -83,6 +83,23 @@ div.icon-text img {
   color: var(--vscode-list-focusForeground) !important;
 }
 
+.jira-comment {
+  color: var(--vscode-editor-foreground)
+}
+
+.jira-comment-author {
+  color: var(--vscode-editor-foreground)
+}
+
+[class^="styledCache__StyledSpan"] {
+  background: var(--background-color--lighten-05) !important;
+  color: var(--vscode-editor-foreground) !important;
+}
+
+[class^="AvatarItem__"] {
+  color: var(--vscode-editor-foreground) !important;
+}
+
 [class^="FieldTextArea"] [class^="Content-"] {
   background: var(--vscode-input-background) !important;
   border-width: 2px;
@@ -108,26 +125,25 @@ div.icon-text img {
 }
 
 [class^="LayoutStyles__Container"] {
-    padding: inherit !important;
+  padding: inherit !important;
 }
 
 [class^="styled__Cell"] {
-    padding-top: inherit !important;
-    padding-bottom: inherit !important;
+  padding-top: inherit !important;
+  padding-bottom: inherit !important;
 }
 
 .Collapsible {
   border-radius: 5px;
   margin-bottom: 1em;
   padding: 1rem;
-  
 }
 .vscode-dark .Collapsible {
   background: var(--background-color--lighten-05);
 }
 
 .Collapsible .vscode-light {
-  background:  var(--background-color--darken-05)
+  background: var(--background-color--darken-05);
 }
 
 .Collapsible__trigger {
@@ -166,11 +182,11 @@ div.icon-text img {
 }
 
 [class^="Checkbox__IconWrapper-"] {
-  color:var(--vscode-button-background) !important;
+  color: var(--vscode-button-background) !important;
 }
 
-[class^="Checkbox__IconWrapper-"] rect{
-  stroke:var(--vscode-button-background) !important;
+[class^="Checkbox__IconWrapper-"] rect {
+  stroke: var(--vscode-button-background) !important;
 }
 .labelAndSelect {
   display: inline-flex;
@@ -178,7 +194,7 @@ div.icon-text img {
   justify-content: space-between;
 }
 
-.labelAndSelect>span{
+.labelAndSelect > span {
   color: var(--color--75);
   padding-right: 1rem;
 }
@@ -191,7 +207,7 @@ hr {
   margin-bottom: 1em;
 }
 
-.ak-link-button>span {
+.ak-link-button > span {
   color: var(--vscode-button-foreground) !important;
 }
 
@@ -200,6 +216,6 @@ hr {
   text-decoration: none;
 }
 
-.ak-link-button>button {
+.ak-link-button > button {
   padding: 0px !important;
 }

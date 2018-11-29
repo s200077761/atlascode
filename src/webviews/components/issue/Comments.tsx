@@ -44,8 +44,8 @@ export class Comments extends React.Component<
               size="medium"
             />
           }
-          author={<CommentAuthor>{comment.author.displayName}</CommentAuthor>}
-          content={comment.body}
+          author={<CommentAuthor><div className="jira-comment-author">{comment.author.displayName}</div></CommentAuthor>}
+          content={<div className="jira-comment">{comment.body}</div>}
         />
       );
       result.push(commentMarkup);
