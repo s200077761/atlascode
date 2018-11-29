@@ -12,3 +12,33 @@ pipelines:
           - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
           - yarn
           - npm run vscode:prepublish
+  tags:
+    - step:
+      caches:
+        - node
+        script:
+          - apt-get update && apt-get install -y libsecret-1-dev
+          - npm install -g vsce
+          - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
+          - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
+          - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
+          - npm version ${BITBUCKET_TAG}
+          - yarn
+          - vsce package curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
+  custom:
+    nightly:
+      - step:
+      caches:
+        - node
+        script:
+          - apt-get update && apt-get install -y libsecret-1-dev
+          - npm install -g vsce
+          - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
+          - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
+          - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
+          - PACKAGE_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
+          - DATE=$(date +%Y%m%d)
+          - NIGHTLY=${PACKAGE_VERSION}-${DATE}_${BITBUCKET_COMMIT}
+          - npm version ${NIGHTLY}
+          - yarn
+          - vsce package curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${NIGHTLY}.vsix"
