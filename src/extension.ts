@@ -12,6 +12,7 @@ import { setCommandContext, CommandContext, GlobalStateVersionKey } from './cons
 import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
+import { uninstalledEvent, installedEvent } from './analytics';
 require('node-fetch');
 
 export async function activate(context: ExtensionContext) {
@@ -26,7 +27,7 @@ export async function activate(context: ExtensionContext) {
 
     const cfg = configuration.get<IConfig>();
 
-    Container.initialize(context, cfg);
+    Container.initialize(context, cfg, atlascodeVersion);
 
     setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
     setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
@@ -53,16 +54,7 @@ export async function activate(context: ExtensionContext) {
 async function runInstallationRoutines(version: string, previousVersion: string | undefined) {
     if (previousVersion === undefined) {
         Logger.debug('first time install');
-        Container.analyticsClient.sendTrackEvent({
-            tenantIdType:null,
-            userIdType:'atlassianAccount',
-            trackEvent:{
-                action:'installed',
-                actionSubject:'atlascode',
-                source:'vscode',
-                attributes: {machineId:Container.machineId, version:version},
-            }
-        });
+        Container.analyticsClient.sendTrackEvent(await installedEvent(version));
 
         if (Container.config.showWelcomeOnInstall) {
             await commands.executeCommand(Commands.ShowWelcomePage);
@@ -73,16 +65,7 @@ async function runInstallationRoutines(version: string, previousVersion: string 
 
     if (semver.gt(version,previousVersion)) {
         Logger.debug(`Atlascode upgraded from v${previousVersion} to v${version}`);
-        Container.analyticsClient.sendTrackEvent({
-            tenantIdType:null,
-            userIdType:'atlassianAccount',
-            trackEvent:{
-                action:'upgraded',
-                actionSubject:'atlascode',
-                source:'vscode',
-                attributes: {machineId:Container.machineId, version:version, previousVersion:previousVersion},
-            }
-        });
+        Container.analyticsClient.sendTrackEvent(await uninstalledEvent(version,previousVersion));
 
         if(Container.config.showWelcomeOnInstall) {
             await commands.executeCommand(Commands.ShowWelcomePage);

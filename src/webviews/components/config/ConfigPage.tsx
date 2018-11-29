@@ -4,7 +4,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Collapsible from 'react-collapsible';
 import { ButtonGroup } from '@atlaskit/button';
 import Button from '@atlaskit/button';
-import { AuthAction, SaveSettingsAction } from '../../../ipc/configActions';
+import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import styled from 'styled-components';
@@ -31,7 +31,7 @@ justify-content: space-between;
 width: 100%;
 `;
   
-type Emit = AuthAction | SaveSettingsAction | Action;
+type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | Action;
 export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},ConfigData> {
     constructor(props: any) {
         super(props);
@@ -80,6 +80,10 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
 
     handleHelpLink = () => {
         this.postMessage({action:'helpLink'});
+    }
+
+    handleFeedback = (feedback:FeedbackData) => {
+        this.postMessage({action:'submitFeedback', feedback:feedback});
     }
 
     public render() {
@@ -141,7 +145,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
                     </GridColumn>
                     <GridColumn medium={3}>
-                        <DisplayFeedback />
+                        <DisplayFeedback onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                             <Button className='ak-link-button' appearance="link" iconBefore={strideicon} onClick={this.handleHelpLink}>Need Help?</Button>

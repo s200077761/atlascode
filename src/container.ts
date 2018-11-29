@@ -12,7 +12,7 @@ import { WelcomeWebview } from './webviews/welcomeWebview';
 import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
 
 export class Container {
-    static initialize(context: ExtensionContext, config: IConfig) {
+    static initialize(context: ExtensionContext, config: IConfig, version:string) {
         this._context = context;
         this._config = config;
 
@@ -25,12 +25,14 @@ export class Container {
         context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
 
-        let analyticsEnv:string = configuration.isDebugging ? 'local' : 'prod';
+        let analyticsEnv:string = configuration.isDebugging ? 'stg' : 'prod';
 
         this._analyticsClient = new AnalyticsClient({
+            origin:'desktop',
             env:analyticsEnv,
             product:'externalProductIntegrations',
-            subproduct: 'atlascode'
+            subproduct: 'atlascode',
+            version: version
         });
 
         if (config.jira.explorer.enabled) {

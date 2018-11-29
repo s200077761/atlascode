@@ -6,7 +6,7 @@ declare module '@atlassiansox/analytics-node-client' {
         subproduct?:any;
         datacenter?:any;
         version?:any;
-        origin?:any;
+        origin:any;
         flushAt?:any;
         flushInterval?:any;
         baseUrl?:any;
@@ -14,7 +14,7 @@ declare module '@atlassiansox/analytics-node-client' {
 
     export interface BaseEvent {
         userIdType:any;
-        userId?:any;
+        userId:any;
         anonymousId?:any;
         tenantIdType:any;
         tenantId?:any;
@@ -36,6 +36,8 @@ declare module '@atlassiansox/analytics-node-client' {
     }
 
     export interface TrackEventData {
+        platform:any,
+        origin:any,
         source:any;
         action:any;
         actionSubject:any;
@@ -44,6 +46,8 @@ declare module '@atlassiansox/analytics-node-client' {
     }
 
     export interface UIEventData {
+        platform:any,
+        origin:any,
         source?:any;
         action:any;
         actionSubject:any;
