@@ -8,7 +8,7 @@ import { window } from 'vscode';
 
 
 export async function submitFeedback(feedback:FeedbackData, source:string) {
-    Container.analyticsClient.sendTrackEvent(await feedbackEvent(feedback, source)).catch(reason => Logger.debug('error sending analytics',reason));
+    feedbackEvent(feedback, source).then(e => { Container.analyticsClient.sendTrackEvent(e) });
 
     // temporarily sedn to stride so we can see it easily
     fetch('https://api.atlassian.com/site/a436116f-02ce-4520-8fbb-7301462a1674/conversation/f31de456-7b2a-4d11-8142-1550ddf3adba/message', {

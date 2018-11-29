@@ -21,7 +21,7 @@ export async function installedEvent(version:string):Promise<TrackEvent> {
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-export async function uninstalledEvent(version:string, previousVersion:string):Promise<TrackEvent> {
+export async function upgradedEvent(version:string, previousVersion:string):Promise<TrackEvent> {
     const e = {
         tenantIdType:null,
         userIdType:'atlassianAccount',

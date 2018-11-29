@@ -12,7 +12,7 @@ import { setCommandContext, CommandContext, GlobalStateVersionKey } from './cons
 import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
-import { uninstalledEvent, installedEvent } from './analytics';
+import { installedEvent, upgradedEvent } from './analytics';
 require('node-fetch');
 
 export async function activate(context: ExtensionContext) {
@@ -54,7 +54,7 @@ export async function activate(context: ExtensionContext) {
 async function runInstallationRoutines(version: string, previousVersion: string | undefined) {
     if (previousVersion === undefined) {
         Logger.debug('first time install');
-        Container.analyticsClient.sendTrackEvent(await installedEvent(version));
+        installedEvent(version).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         if (Container.config.showWelcomeOnInstall) {
             await commands.executeCommand(Commands.ShowWelcomePage);
@@ -65,7 +65,8 @@ async function runInstallationRoutines(version: string, previousVersion: string 
 
     if (semver.gt(version,previousVersion)) {
         Logger.debug(`Atlascode upgraded from v${previousVersion} to v${version}`);
-        Container.analyticsClient.sendTrackEvent(await uninstalledEvent(version,previousVersion));
+
+        upgradedEvent(version,previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         if(Container.config.showWelcomeOnInstall) {
             await commands.executeCommand(Commands.ShowWelcomePage);
