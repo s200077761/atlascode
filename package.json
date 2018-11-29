@@ -458,7 +458,7 @@
         "@atlaskit/table-tree": "^4.1.11",
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
-        "@atlassian/jira": "^0.0.2",
+        "@atlassian/jira": "^0.0.3",
         "@atlassiansox/analytics-node-client": "^1.0.103",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
