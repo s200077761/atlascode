@@ -5,6 +5,8 @@ import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
+import { AuthProvider } from '../../atlclients/authInfo';
+import { Commands } from '../../commands';
 
 export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
     refresh():void;
@@ -101,6 +103,9 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
     }
 
     async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
+        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            return Promise.resolve([new EmptyStateNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+        }
         if (parent || !this._jql) {
             return Promise.resolve([new EmptyStateNode(this._emptyState, this._emptyStateCommand)]);
         } else if (this._issues) {
