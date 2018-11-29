@@ -190,3 +190,16 @@ hr {
   margin-top: 1em;
   margin-bottom: 1em;
 }
+
+.ak-link-button>span {
+  color: var(--vscode-button-foreground) !important;
+}
+
+.ak-link-button:hover {
+  color: var(--vscode-button-foreground) !important;
+  text-decoration: none;
+}
+
+.ak-link-button>button {
+  padding: 0px !important;
+}

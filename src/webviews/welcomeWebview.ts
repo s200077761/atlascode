@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { Logger } from '../logger';
 
@@ -30,6 +30,16 @@ export class WelcomeWebview extends AbstractReactWebview<{},Action> {
                     Logger.debug('got showConfig request from webview',e);
                     handled = true;
                     commands.executeCommand(Commands.ShowConfigPage);
+                    break;
+                }
+                case 'sourceLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    break;
+                }
+                case 'helpLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://applink.atlassian.com/stride/a436116f-02ce-4520-8fbb-7301462a1674/chat/20317f63-2ed0-40d2-86b2-7611fa9b0035`));
                     break;
                 }
             }
