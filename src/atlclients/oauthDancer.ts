@@ -14,14 +14,14 @@ export class OAuthDancer {
     public _authInfo: authinfo.AuthInfo | undefined;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
-        clientID: "DQhnLnWwACPXJXW2qX",
-        clientSecret: "uwACseDkGP4hc7JvWHAatZZruHzYpLMH",
+        clientID: "3hasX42a7Ugka2FJja",
+        clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
         callbackURL: "http://127.0.0.1:9090/" + authinfo.AuthProvider.BitbucketCloud
     }, this.verify.bind(this));
 
     private _jiraCloudStrategy = new AtlassianStrategy({
-        clientID: 'PNchU3mOSFLJt1qp3HUDOEUL231OX6lu',
-        clientSecret: '9DObTr9hl8OEZ9sMlQ4TlFbWm6ijKeHDA9PXf4jM5LoLhyIu5oQR7Xppo_Yq2pye',
+        clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
+        clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
         callbackURL: 'http://127.0.0.1:9090/' + authinfo.AuthProvider.JiraCloud,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access',
     }, this.verify.bind(this));
