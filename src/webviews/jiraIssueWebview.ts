@@ -20,7 +20,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
         return "Jira Issue";
     }
     public get id(): string {
-        return "jiraIssueView";
+        return "viewIssueScreen";
     }
 
     initialize(data: issueOrKey) {

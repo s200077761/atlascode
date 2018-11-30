@@ -1,4 +1,4 @@
-import { TrackEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, ScreenEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider } from './atlclients/authInfo';
@@ -53,6 +53,20 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
     };
 
     return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function viewScreenEvent(screenName:string):Promise<ScreenEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        name:screenName,
+        screenEvent:{
+            origin:'desktop',
+            platform:process.platform,
+        }
+    };
+
+    return await anyUserOrAnonymous<ScreenEvent>(e);
 }
 
 async function anyUserOrAnonymous<T>(e:Object):Promise<T> {

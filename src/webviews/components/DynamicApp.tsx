@@ -9,22 +9,22 @@ import * as Loadable from 'react-loadable';
 // Note: ALL loadables can reuse the same Loading function.
 
 const LoadableConfigView = Loadable({
-    loader: () => import(/* webpackChunkName: "configView" */ './config/ConfigPage'),
+    loader: () => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage'),
     loading: Loading,
   });
 
   const LoadableWelcomeView = Loadable({
-    loader: () => import(/* webpackChunkName: "welcomeView" */ './config/Welcome'),
+    loader: () => import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome'),
     loading: Loading,
   });
 
   const LoadablePullRequestView = Loadable({
-    loader: () => import(/* webpackChunkName: "pullRequestView" */ './pullrequest/PullRequestPage'),
+    loader: () => import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage'),
     loading: Loading,
   });
 
   const LoadableIssuewView = Loadable({
-    loader: () => import(/* webpackChunkName: "jiraIssueView" */ './issue/JiraIssuePage'),
+    loader: () => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage'),
     loading: Loading,
   });
 
@@ -48,28 +48,28 @@ class DynamicApp extends React.Component<{view:string|null}>  {
     public render() {
         // props.view must match the webChunkName above AND the id() returned by the vscode webview component.
         switch(this.props.view) {
-            case 'configView': {
+            case 'atlascodeSettings': {
                 return(
                     <div>
                         <LoadableConfigView />
                     </div>
                 );
             }
-            case 'welcomeView': {
+            case 'atlascodeWelcomeScreen': {
                 return(
                     <div>
                         <LoadableWelcomeView />
                     </div>
                 );
             }
-            case 'pullRequestView': {
+            case 'pullRequestDetailsScreen': {
                 return(
                     <div>
                         <LoadablePullRequestView />
                     </div>
                 );
             }
-            case 'jiraIssueView': {
+            case 'viewIssueScreen': {
                 return(
                     <div>
                         <LoadableIssuewView />
