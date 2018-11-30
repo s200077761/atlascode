@@ -101,7 +101,7 @@ export class OAuthDancer {
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket
                 }));
-                this.shutdown()
+                this.shutdown();
                 resolve(this._authInfo);
             });
 
