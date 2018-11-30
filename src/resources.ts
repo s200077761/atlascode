@@ -27,5 +27,4 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.html.set('statusBarText', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'statusbar.html'))).toString()));
     Resources.html.set('authSuccessHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-success.html'))).toString()));
     Resources.html.set('authFailureHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-failure.html'))).toString()));
-    Resources.html.set('authTimeoutHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'auth-timeout.html'))).toString()));
 }
