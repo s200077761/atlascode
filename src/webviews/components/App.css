@@ -48,12 +48,35 @@ div.icon-text img {
 .ak-button:hover {
   background: var(--vscode-button-hoverBackground) !important;
 }
+
 .ak-button:active {
   background: var(--vscode-button-background--darken-05) !important;
   color: var(--vscode-button-foreground) !important;
 }
 
 .ak-button:disabled {
+  background: var(--vscode-button-background--50) !important;
+}
+
+/* Content__ActionItem is the class given to the buttons in the feedback collector */
+[class^="Content__ActionItem"] {
+  background: var(--vscode-button-background) !important;
+}
+
+[class^="Content__ActionItem"] span {
+  color: var(--vscode-button-foreground) !important;
+}
+
+[class^="Content__ActionItem"]:hover {
+  background: var(--vscode-button-hoverBackground) !important;
+}
+
+[class^="Content__ActionItem"]:active {
+  background: var(--vscode-button-background--darken-05) !important;
+  color: var(--vscode-button-foreground) !important;
+}
+
+[class^="Content__ActionItem"]:disabled {
   background: var(--vscode-button-background--50) !important;
 }
 
@@ -89,6 +112,25 @@ div.icon-text img {
 
 .jira-comment-author {
   color: var(--vscode-editor-foreground)
+}
+
+[class^="Modal__Dialog"] {
+  background: var(--background-color) !important;
+  color: var(--vscode-input-foreground) !important; 
+}
+
+/* Sketchy way of coloring the background of the drop-down menu in the feedback collector */
+body div[class^="css-"] div[class^="css-"] {
+  background: var(--background-color) !important;
+  color: var(--vscode-input-foreground) !important; 
+}
+
+[class^="Checkbox__Label"] {
+  color: var(--vscode-input-foreground) !important; 
+}
+
+[class^="Field__Label"] {
+  color: var(--vscode-input-foreground) !important; 
 }
 
 [class^="styledCache__StyledSpan"] {
