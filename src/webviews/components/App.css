@@ -142,8 +142,8 @@ div.icon-text img {
   background: var(--background-color--lighten-05);
 }
 
-.Collapsible .vscode-light {
-  background: var(--background-color--darken-05);
+.vscode-light .Collapsible {
+  background: var(--background-color--darken-05)
 }
 
 .Collapsible__trigger {
@@ -207,12 +207,12 @@ hr {
   margin-bottom: 1em;
 }
 
-.ak-link-button > span {
-  color: var(--vscode-button-foreground) !important;
+.ak-link-button>span {
+  color: var(--vscode-textlink-foreground) !important;
 }
 
 .ak-link-button:hover {
-  color: var(--vscode-button-foreground) !important;
+  color: var(--vscode-textlink-foreground) !important;
   text-decoration: none;
 }
 

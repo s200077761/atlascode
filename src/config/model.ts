@@ -59,6 +59,7 @@ export interface JiraHover {
 export interface BitbucketConfig {
     explorer: BitbucketExplorer;
     statusbar:BitbucketStatusBar;
+    contextMenus:BitbucketContextMenus;
 }
 
 export interface BitbucketExplorer {
@@ -76,6 +77,10 @@ export interface BitbucketStatusBar {
 export enum BitbucketExplorerLocation {
     SourceControl = "SourceControl",
     Atlascode = "Atlascode"
+}
+
+export interface BitbucketContextMenus {
+    enabled:boolean;
 }
 
 export const emptyWorkingSite: WorkingSite = {
@@ -130,9 +135,14 @@ export const emptyBitbucketStatusBar: BitbucketStatusBar = {
     showLogin:true
 };
 
+export const emptyBitbucketContextMenus: BitbucketContextMenus = {
+    enabled:true
+};
+
 export const emptyBitbucketConfig:BitbucketConfig = {
     explorer: emptyBitbucketExplorer,
-    statusbar:emptyBitbucketStatusBar
+    statusbar:emptyBitbucketStatusBar,
+    contextMenus:emptyBitbucketContextMenus
 };
 
 export const emptyConfig:IConfig = {

@@ -4,7 +4,7 @@ import { ConfigData } from '../../../ipc/configMessaging';
 
 type changeObject = { [key: string]: any };
 
-export default class JiraHover extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class WelcomeConfig extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -23,11 +23,11 @@ export default class JiraHover extends React.Component<{ configData: ConfigData,
     render() {
         return (
             <Checkbox
-                value={"jira.hover.enabled"}
-                label={this.checklabel("Enable Jira hover provider")}
-                isChecked={this.props.configData.config.jira.hover.enabled}
+                value={"showWelcomeOnInstall"}
+                label={this.checklabel("Show welcome screen when extension is updated")}
+                isChecked={this.props.configData.config.showWelcomeOnInstall}
                 onChange={this.onCheckboxChange}
-                name="jira-hover-enabled" />
+                name="bitbucket-contextmenus-enabled" />
         );
     }
 }

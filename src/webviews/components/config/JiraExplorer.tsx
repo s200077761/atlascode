@@ -1,17 +1,11 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
-import styled from 'styled-components';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import { emptyProject } from '../../../jira/jiraModel';
+import { InlineFlex } from './ConfigPage';
 
 type changeObject = {[key: string]:any};
-
-export const InlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-justify-content: space-between;
-`;
 
 export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
     constructor(props: any) {
@@ -19,7 +13,6 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
     }
 
     onCheckboxChange = (e:any) => {
-        console.log('explorer clicked',e.target.value, e.target.checked);
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 

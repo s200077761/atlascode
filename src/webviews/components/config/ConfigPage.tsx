@@ -14,7 +14,8 @@ import StatusBar from './StatusBar';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import JiraHover from './JiraHover';
-
+import BitbucketContextMenus from './BBContextMenus';
+import WelcomeConfig from './WelcomeConfig';
 
 const bitbucketLogo:string =require('../images/bitbucket-logo.png');
 const strideLogo:string =require('../images/stride-logo.png');
@@ -136,7 +137,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
-                            trigger={Trigger('Jira Hover Provider','enable or disable hover provider for Jira issues')}
+                            trigger={Trigger('Jira Hover Provider','configure the hover provider for Jira issues')}
                             open={true}>
                             <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
@@ -148,9 +149,21 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
+                            trigger={Trigger('Bitbucket Context Menus','configure the Bitbucket context menus in editor')}
+                            open={true}>
+                            <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
                             trigger={Trigger('Status Bar','configure the status bar items for Jira and Bitbucket')}
                             open={true}>
                             <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
+                            trigger={Trigger('','miscellaneous settings')}
+                            open={true}>
+                            <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
                     </GridColumn>
                     <GridColumn medium={3}>
