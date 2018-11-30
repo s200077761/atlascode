@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscode";
 import { Container } from "../container";
-import { configuration } from "../config/configuration";
+import { configuration, emptyWorkingSite, WorkingSite, WorkingProject, emptyWorkingProject } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
@@ -105,5 +105,29 @@ export class JiraSiteManager extends Disposable {
 
     public get projectsAvailable() {
         return this._projectsAvailable;
+    }
+
+    public get effectiveSite():WorkingSite {
+        let workingSite = emptyWorkingSite;
+        const configSite = Container.config.jira.workingSite;
+
+        if(configSite && configSite !== emptyWorkingSite) {
+            workingSite = configSite;
+        } else if(this._sitesAvailable.length > 0) {
+            workingSite = this._sitesAvailable[0];
+        }
+
+        return workingSite;
+    }
+
+    public get effectiveProject():WorkingProject {
+        let workingProject = emptyWorkingProject;
+        const configProject = Container.config.jira.workingProject;
+
+        if(configProject) {
+            workingProject = configProject;
+        }
+
+        return workingProject;
     }
 }

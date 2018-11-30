@@ -16,7 +16,7 @@ export class WelcomeWebview extends AbstractReactWebview<{},Action> {
         return "AtlasCode Welcome";
     }
     public get id(): string {
-        return "welcomeView";
+        return "atlascodeWelcomeScreen";
     }
 
     public async invalidate() {

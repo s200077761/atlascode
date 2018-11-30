@@ -34,6 +34,7 @@ export interface JiraConfig {
     workingSite: WorkingSite;
     explorer:JiraExplorer;
     statusbar:JiraStatusBar;
+    hover: JiraHover;
 }
 
 export interface JiraStatusBar {
@@ -49,6 +50,10 @@ export interface JiraExplorer {
     enabled:boolean;
     showOpenIssues:boolean;
     showAssignedIssues:boolean;
+}
+
+export interface JiraHover {
+    enabled:boolean;
 }
 
 export interface BitbucketConfig {
@@ -101,11 +106,16 @@ export const emptyJiraStatusBar: JiraStatusBar = {
     showLogin:true
 };
 
+export const emptyJiraHover: JiraHover = {
+    enabled: true
+};
+
 export const emptyJiraConfig:JiraConfig = {
     workingProject: emptyWorkingProject,
     workingSite: emptyWorkingSite,
     explorer: emptyJiraExplorer,
-    statusbar: emptyJiraStatusBar
+    statusbar: emptyJiraStatusBar,
+    hover: emptyJiraHover
 };
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {

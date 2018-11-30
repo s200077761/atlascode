@@ -4,6 +4,7 @@ export const extensionId = 'atlascode';
 export const extensionOutputChannelName = 'Atlascode';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
+export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
 export const OpenIssuesTreeId = 'atlascode.views.jira.openIssues';
 export const AssignedIssuesTreeId = 'atlascode.views.jira.assignedIssues';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';

@@ -12,7 +12,7 @@ import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
 import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
-import { authenticateButtonEvent, logoutButtonEvent } from '../analytics';
+import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent } from '../analytics';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -30,7 +30,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
         return "AtlasCode Settings";
     }
     public get id(): string {
-        return "configView";
+        return "atlascodeSettings";
     }
 
     public async invalidate() {
@@ -118,7 +118,12 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                             const inspect = await configuration.inspect(key)!;
 
                             const value = e.changes[key];
+                            
                             await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
+
+                            if (typeof value === "boolean"){
+                                featureChangeEvent(key,value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
+                            }
                         }
 
                         if(e.removes){

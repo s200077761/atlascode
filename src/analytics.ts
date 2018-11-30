@@ -1,4 +1,4 @@
-import { TrackEvent, UIEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, ScreenEvent, UIEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider, AuthInfo } from './atlclients/authInfo';
@@ -50,6 +50,24 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
             actionSubject:'feedback',
             source:source,
             attributes: {feedback:feedback.description,feedbackType:feedback.type,canContact:feedback.canBeContacted},
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function featureChangeEvent(featureId:string,enabled:boolean):Promise<TrackEvent> {
+    let action = enabled ? 'enabled' : 'disabled';
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:action,
+            actionSubject:'feature',
+            actionSubjectId:featureId,
+            source:'atlascodeSettings'
         }
     };
 
@@ -126,6 +144,21 @@ export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
+export async function viewScreenEvent(screenName:string, tenantId?:string):Promise<ScreenEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        name:screenName,
+        screenEvent:{
+            origin:'desktop',
+            platform:process.platform,
+        }
+    };
+
+    
+    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
+}
+
 async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
@@ -162,6 +195,18 @@ async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     } else {
         newObj = {...e, ...{anonymousId:userId}};
     }
+
+    return newObj as T;
+}
+
+async function tenantOrNull<T>(e:Object, tenantId?:string):Promise<T> {
+    let tenantType:string|null = 'cloudId';
+    let newObj:Object;
+
+    if(!tenantId) {
+        tenantType = null;
+    }
+    newObj = {...e, ...{tenantIdType:tenantType, tenantId:tenantId}};
 
     return newObj as T;
 }
