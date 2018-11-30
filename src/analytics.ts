@@ -1,7 +1,8 @@
 import { TrackEvent, UIEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
-import { AuthProvider } from './atlclients/authInfo';
+import { AuthProvider, AuthInfo } from './atlclients/authInfo';
+import { ProductJira, ProductBitbucket } from './constants';
 
 export async function installedEvent(version:string):Promise<TrackEvent> {
 
@@ -125,14 +126,30 @@ export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
+async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
+    let authInfo:AuthInfo|undefined = undefined;
+    
     let newObj:Object;
 
-    let authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-    if(!authInfo) {
-        authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+    switch(hostProduct) {
+        case undefined: 
+        default: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            if(!authInfo) {
+                authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+            }
+            break;
+        }
+        case ProductJira: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            break;
+        }
+        case ProductBitbucket: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+            break;
+        }
     }
 
     if(authInfo) {

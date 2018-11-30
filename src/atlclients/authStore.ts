@@ -2,7 +2,7 @@ import { AuthInfo, AuthProvider, emptyAuthInfo } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event } from 'vscode';
 import { Logger } from '../logger';
-import { setCommandContext, CommandContext } from '../constants';
+import { setCommandContext, CommandContext, ProductJira, ProductBitbucket } from '../constants';
 import { loggedOutEvent } from '../analytics';
 import { Container } from '../container';
 
@@ -78,7 +78,7 @@ export class AuthManager implements Disposable {
     }
 
     public async removeAuthInfo(provider: string): Promise<boolean> {
-        const product = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        const product = provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
 
         let wasMemDeleted = this._memStore.delete(provider);
         let wasKeyDeleted = false;
