@@ -17,7 +17,7 @@ export async function fetchIssue(issue: string, workingSite?: WorkingSite): Prom
         fields: issueFields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        return issueFromJsonObject(res.data, workingSite || Container.config.jira.workingSite);
+        return issueFromJsonObject(res.data, workingSite || Container.jiraSiteManager.effectiveSite);
       });
   }
   return Promise.reject(apiConnectivityError);

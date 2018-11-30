@@ -157,7 +157,7 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
               const issues = res.data.issues;
               if (issues) {
                 return issues.map((issue: any) => {
-                  return issueFromJsonObject(issue, Container.config.jira.workingSite);
+                  return issueFromJsonObject(issue, Container.jiraSiteManager.effectiveSite);
                 });
               }
               return [];
