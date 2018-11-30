@@ -12,7 +12,7 @@ import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
 import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
-import { featureChangeEvent } from '../analytics';
+import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent } from '../analytics';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -87,6 +87,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                                 break;
                             }
                         }
+                        authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); } );
                     }
                     break;
                 }
@@ -106,6 +107,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                                 break;
                             }
                         }
+                        logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); } );
                     }
                     break;
                 }
@@ -114,6 +116,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                     if(isSaveSettingsAction(e)){
                         for (const key in e.changes) {
                             const inspect = await configuration.inspect(key)!;
+
                             const value = e.changes[key];
                             
                             await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);

@@ -1,7 +1,8 @@
-import { TrackEvent, ScreenEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, ScreenEvent, UIEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
-import { AuthProvider } from './atlclients/authInfo';
+import { AuthProvider, AuthInfo } from './atlclients/authInfo';
+import { ProductJira, ProductBitbucket } from './constants';
 
 export async function installedEvent(version:string):Promise<TrackEvent> {
 
@@ -73,6 +74,76 @@ export async function featureChangeEvent(featureId:string,enabled:boolean):Promi
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
+export async function authenticateButtonEvent(source:string):Promise<UIEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        uiEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'clicked',
+            actionSubject:'button',
+            actionSubjectId:'authenticateButton',
+            source:source
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function logoutButtonEvent(source:string):Promise<UIEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        uiEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'clicked',
+            actionSubject:'button',
+            actionSubjectId:'logoutButton',
+            source:source
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function authenticatedEvent(hostProduct:string):Promise<TrackEvent> {
+
+    const e = {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'authenticated',
+            actionSubject:'atlascode',
+            source:'vscode',
+            attributes: {machineId:Container.machineId, hostProduct:hostProduct},
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
+
+    const e = {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'unauthenticated',
+            actionSubject:'atlascode',
+            source:'vscode',
+            attributes: {machineId:Container.machineId, hostProduct:hostProduct},
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
 export async function viewScreenEvent(screenName:string, tenantId?:string):Promise<ScreenEvent> {
     const e =  {
         tenantIdType:null,
@@ -88,14 +159,30 @@ export async function viewScreenEvent(screenName:string, tenantId?:string):Promi
     return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
 }
 
-async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
+async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
+    let authInfo:AuthInfo|undefined = undefined;
+    
     let newObj:Object;
 
-    let authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-    if(!authInfo) {
-        authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+    switch(hostProduct) {
+        case undefined: 
+        default: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            if(!authInfo) {
+                authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+            }
+            break;
+        }
+        case ProductJira: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            break;
+        }
+        case ProductBitbucket: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+            break;
+        }
     }
 
     if(authInfo) {

@@ -8,6 +8,7 @@ import * as passport from 'passport';
 import * as http from 'http';
 import * as authinfo from './authInfo';
 import { Resources } from '../resources';
+import { ProductBitbucket, ProductJira } from '../constants';
 
 export class OAuthDancer {
     private _srv: http.Server | undefined;
@@ -95,7 +96,7 @@ export class OAuthDancer {
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
-                    product: 'Bitbucket'
+                    product: ProductBitbucket
                 }));
                 if (this._srv) {
                     this._srv.close();
@@ -107,7 +108,7 @@ export class OAuthDancer {
             _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
-                    product: 'Jira'
+                    product: ProductJira
                 }));
                 if (this._srv) {
                     this._srv.close();

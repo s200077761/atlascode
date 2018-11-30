@@ -15,6 +15,8 @@ import {
   import * as fs from "fs";
   import { configuration, WorkingSite, emptyWorkingSite } from "../config/configuration";
   import { Resources } from "../resources";
+import { authenticatedEvent } from "../analytics";
+import { ProductJira, ProductBitbucket } from "../constants";
   
   const SIGNIN_COMMAND = "Sign in";
   
@@ -136,10 +138,9 @@ import {
           if (info) {
             await Container.authManager.saveAuthInfo(provider, info);
 
-            const product = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
-            window.showInformationMessage(
-              `You are now authenticated with ${product}`
-            );
+            const product = provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
+            window.showInformationMessage(`You are now authenticated with ${product}`);
+            authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
           } else {
             this.unlockClient(provider);
             return undefined;
@@ -213,7 +214,7 @@ import {
       promptUser:boolean = true
     ): Promise<AuthInfo | undefined> {
       const product =
-        provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
   
       if (!this._isAuthenticating) {
         this._isAuthenticating = true;

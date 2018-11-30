@@ -6,6 +6,7 @@ import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { Resources } from "../resources";
+import { ProductJira, ProductBitbucket } from "../constants";
 
 export class AuthStatusBar extends Disposable {
     private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -89,7 +90,7 @@ export class AuthStatusBar extends Disposable {
       ): Promise<void> {
         let text: string = "$(sign-in)";
         let command: string | undefined;
-        let product:string = provider === AuthProvider.JiraCloud ? "Jira" : "Bitbucket";
+        let product:string = provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
         let showIt:boolean = true;
         const tmpl = Resources.html.get('statusBarText');
 
@@ -119,7 +120,7 @@ export class AuthStatusBar extends Disposable {
               if(Container.config.jira.statusbar.showLogin) {
                 text = `$(sign-in) Sign in to Jira`;
                 command = Commands.AuthenticateJira;
-                product = "Jira";
+                product = ProductJira;
               } else {
                 statusBarItem.hide();
                 showIt = false;
@@ -141,7 +142,7 @@ export class AuthStatusBar extends Disposable {
               if(Container.config.bitbucket.statusbar.showLogin) {
                 text = `$(sign-in) Sign in to Bitbucket`;
                 command = Commands.AuthenticateBitbucket;
-                product = "Bitbucket";
+                product = ProductBitbucket;
               } else {
                 statusBarItem.hide();
                 showIt = false;
