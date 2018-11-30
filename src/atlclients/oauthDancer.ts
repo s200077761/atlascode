@@ -9,10 +9,13 @@ import * as http from 'http';
 import * as authinfo from './authInfo';
 import { Resources } from '../resources';
 import { ProductBitbucket, ProductJira } from '../constants';
+import { Time } from '../util/time';
 
 export class OAuthDancer {
     private _srv: http.Server | undefined;
     public _authInfo: authinfo.AuthInfo | undefined;
+    private _timer:any;
+    private _browserTimeout =  1 * Time.MINUTES;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "3hasX42a7Ugka2FJja",
@@ -98,10 +101,7 @@ export class OAuthDancer {
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket
                 }));
-                if (this._srv) {
-                    this._srv.close();
-                    this._srv = undefined;
-                }
+                this.shutdown()
                 resolve(this._authInfo);
             });
 
@@ -110,21 +110,22 @@ export class OAuthDancer {
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductJira
                 }));
-                if (this._srv) {
-                    this._srv.close();
-                    this._srv = undefined;
-                }
+                this.shutdown();
                 resolve(this._authInfo);
             });
 
             _app.get('/error', (req, res) => {
                 Logger.debug("got jira error");
                 res.send(Resources.html.get('authFailureHtml')!({}));
-                if (this._srv) {
-                    this._srv.close();
-                    this._srv = undefined;
-                }
+                this.shutdown();
                 resolve(this._authInfo);
+            });
+
+            _app.get('/timeout', (req, res) => {
+                Logger.debug("oauth timed out");
+                res.send(Resources.html.get('authTimeoutHtml')!({}));
+                this.shutdown();
+                reject("authentication timed out");
             });
 
             Logger.debug("building callback server");
@@ -133,7 +134,33 @@ export class OAuthDancer {
 
             Logger.debug("authenticating...");
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/auth/${provider}`));
+            this.startTimer();
         });
+    }
+
+    private shutdown() {
+
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = undefined;
+        }
+
+        if (this._srv) {
+            this._srv.close();
+            this._srv = undefined;
+        }
+    }
+
+    private startTimer() {
+        //make sure we clear the old one in case they click multiple times
+        if(this._timer) {
+            clearInterval(this._timer);
+            this._timer = undefined;
+        }
+        
+        this._timer = setInterval(() => {
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/timeout`));
+        }, this._browserTimeout);
     }
 
     public async refresh(authInfo: authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
