@@ -69,6 +69,10 @@ import { ProductJira, ProductBitbucket } from "../constants";
     }
   
     public async jirarequest(workingSite?: WorkingSite, promptForAuth:boolean = true): Promise<JiraKit | undefined> {
+      // if workingSite is passed in and is different from the one in config, 
+      // it is for a one-off request (eg. a request from webview from previously configured workingSite)
+      const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
+
       return this.getClient<JiraKit>(AuthProvider.JiraCloud, info => {
         let cloudId: string = "";
         Logger.debug("jirarequest",workingSite);
@@ -99,7 +103,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
         jraclient.authenticate({ type: "token", token: info.access });
   
         return jraclient;
-      }, promptForAuth);
+      }, promptForAuth, doNotUpdateCache);
     }
   
     public async removeClient(provider: string) {
@@ -109,7 +113,8 @@ import { ProductJira, ProductBitbucket } from "../constants";
     private async getClient<T>(
       provider: string,
       factory: (info: AuthInfo) => any,
-      promptUser:boolean = true
+      promptUser:boolean = true,
+      doNotUpdateCache:boolean = true
     ): Promise<T | undefined> {
       type TorEmpty = T | EmptyClient;
   
@@ -172,6 +177,15 @@ import { ProductJira, ProductBitbucket } from "../constants";
         await this._clients.setItem(provider, client, 45 * Interval.MINUTE);
       }
   
+
+      if (doNotUpdateCache) {
+        let info = await Container.authManager.getAuthInfo(provider);
+  
+        if (info) {
+          client = factory(info);
+        }
+      }
+
       if (this._optionsDirty) {
         let info = await Container.authManager.getAuthInfo(provider);
   
@@ -182,6 +196,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
   
         this._optionsDirty = false;
       }
+
       this.unlockClient(provider);
       return client;
     }

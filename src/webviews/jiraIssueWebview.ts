@@ -33,12 +33,12 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
         }
 
         fetchIssue(data)
-        .then((issue: Issue) => {
-            this.updateIssue(issue);
-        })
-        .catch((reason: any) => {
-            Logger.error(reason);
-        });
+            .then((issue: Issue) => {
+                this.updateIssue(issue);
+            })
+            .catch((reason: any) => {
+                Logger.error(reason);
+            });
     }
 
     public invalidate() {
@@ -96,7 +96,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
 
     private async forceUpdateIssue() {
         if(this._state.key !== ""){
-            fetchIssue(this._state.key)
+            fetchIssue(this._state.key, this._state.workingSite)
                 .then((issue: Issue) => {
                     this.updateIssue(issue);
                 })
