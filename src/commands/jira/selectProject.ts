@@ -4,6 +4,7 @@ import { configuration } from "../../config/configuration";
 import { JiraWorkingProjectConfigurationKey } from "../../constants";
 import { Project } from "../../jira/jiraModel";
 import { Logger } from "../../logger";
+import { projectSelectedEvent } from "../../analytics";
 
 export async function showProjectSelectionDialog() {
     vscode.window
@@ -24,5 +25,7 @@ async function saveWorkingProject(project: Project) {
   .catch(reason => {
     Logger.debug("rejected config update", reason);
   });
+
+  projectSelectedEvent(project.id, Container.jiraSiteManager.effectiveSite.id).then(e => {Container.analyticsClient.sendTrackEvent(e); });
 }
 
