@@ -13,7 +13,7 @@ pipelines:
           - yarn
           - npm run vscode:prepublish
   tags:
-    release-*:
+    "*":
       - step:
           caches:
             - node
