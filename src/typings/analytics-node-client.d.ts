@@ -48,7 +48,7 @@ declare module '@atlassiansox/analytics-node-client' {
     export interface UIEventData {
         platform:any,
         origin:any,
-        source?:any;
+        source:any;
         action:any;
         actionSubject:any;
         actionSubjectId?:any;

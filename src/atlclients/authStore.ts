@@ -3,6 +3,8 @@ import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event } from 'vscode';
 import { Logger } from '../logger';
 import { setCommandContext, CommandContext } from '../constants';
+import { loggedOutEvent } from '../analytics';
+import { Container } from '../container';
 
 const keychainServiceName = "atlascode-authinfo";
 
@@ -49,11 +51,12 @@ export class AuthManager implements Disposable {
     }
 
     public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
+        const oldInfo = await this.getAuthInfo(provider);
         this._memStore.set(provider, info);
 
-        const oldInfo = await this.getAuthInfo(provider);
+        const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
 
-        if(oldInfo && oldInfo.access === info.access) {
+        if(hasNewInfo) {
             const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
             if(info !== emptyAuthInfo) {
                 setCommandContext(cmdctx, true);
@@ -61,16 +64,16 @@ export class AuthManager implements Disposable {
                 setCommandContext(cmdctx, false);
             }
 
-            this._onDidAuthChange.fire({ authInfo: info, provider: provider });
-        }
+            if (keychain) {
+                try {
+                    await keychain.setPassword(keychainServiceName, provider, JSON.stringify(info));
+                }
+                catch (e) {
+                    Logger.debug("error saving auth info to keychain: ", e);
+                }
+            }
 
-        if (keychain) {
-            try {
-                await keychain.setPassword(keychainServiceName, provider, JSON.stringify(info));
-            }
-            catch (e) {
-                Logger.debug("error saving auth info to keychain: ", e);
-            }
+            this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         }
     }
 
@@ -88,10 +91,9 @@ export class AuthManager implements Disposable {
             const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
             setCommandContext(cmdctx, false);
             this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
-            window.showInformationMessage(
-                `You have been logged out of ${product}`
-            );
+            window.showInformationMessage(`You have been logged out of ${product}`);
 
+            loggedOutEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
             return true;
         }
 

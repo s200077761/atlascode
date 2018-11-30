@@ -1,4 +1,4 @@
-import { TrackEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, UIEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider } from './atlclients/authInfo';
@@ -49,6 +49,76 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
             actionSubject:'feedback',
             source:source,
             attributes: {feedback:feedback.description,feedbackType:feedback.type,canContact:feedback.canBeContacted},
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function authenticateButtonEvent(source:string):Promise<UIEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        uiEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'clicked',
+            actionSubject:'button',
+            actionSubjectId:'authenticateButton',
+            source:source
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function logoutButtonEvent(source:string):Promise<UIEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        uiEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'clicked',
+            actionSubject:'button',
+            actionSubjectId:'logoutButton',
+            source:source
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function authenticatedEvent(hostProduct:string):Promise<TrackEvent> {
+
+    const e = {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'authenticated',
+            actionSubject:'atlascode',
+            source:'vscode',
+            attributes: {machineId:Container.machineId, hostProduct:hostProduct},
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
+
+    const e = {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'unauthenticated',
+            actionSubject:'atlascode',
+            source:'vscode',
+            attributes: {machineId:Container.machineId, hostProduct:hostProduct},
         }
     };
 

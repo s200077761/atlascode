@@ -12,6 +12,7 @@ import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
 import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
+import { authenticateButtonEvent, logoutButtonEvent } from '../analytics';
 
 export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 	
@@ -86,6 +87,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                                 break;
                             }
                         }
+                        authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); } );
                     }
                     break;
                 }
@@ -105,6 +107,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
                                 break;
                             }
                         }
+                        logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); } );
                     }
                     break;
                 }
