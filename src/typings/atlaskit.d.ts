@@ -10,6 +10,7 @@ declare module '@atlaskit/breadcrumbs';
 declare module '@atlaskit/dropdown-menu';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/icon';
+declare module '@atlaskit/logo';
 declare module '@atlaskit/field-text-area';
 declare module '@atlaskit/tag';
 declare module '@atlaskit/tooltip';

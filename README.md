@@ -7,7 +7,7 @@ Currently Atlascode uses some features from VSCode's "Proposed API" and cannot b
 This will be fixed before GTM, but for now you have two options:
 
 ### Option 1 (recommended) - whitelist Atlascode
-This options requires tweaking vscode's product.json file to whitelist the atlascode extension to use the proposed API within the stable release of VSCode.
+This option requires tweaking vscode's product.json file to whitelist the atlascode extension to use the proposed API within the stable release of VSCode.
 
 You only need to do this once and Atlascode will work from then on. Here's how:
 
