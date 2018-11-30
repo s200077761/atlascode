@@ -116,14 +116,20 @@ export class OAuthDancer {
 
             _app.get('/error', (req, res) => {
                 Logger.debug("got jira error");
-                res.send(Resources.html.get('authFailureHtml')!({}));
+                res.send(Resources.html.get('authFailureHtml')!({
+                    errMessage: "We weren't able to authorize your account.",
+                    actionMessage: 'Give it a moment and try again.'
+                }));
                 this.shutdown();
                 resolve(this._authInfo);
             });
 
             _app.get('/timeout', (req, res) => {
                 Logger.debug("oauth timed out");
-                res.send(Resources.html.get('authTimeoutHtml')!({}));
+                res.send(Resources.html.get('authFailureHtml')!({
+                    errMessage: 'Authorization did not complete in the time alotted.',
+                    actionMessage: 'Please try again.'
+                }));
                 this.shutdown();
                 reject("authentication timed out");
             });
