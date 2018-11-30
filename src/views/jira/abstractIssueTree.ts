@@ -7,6 +7,7 @@ import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
+import { viewScreenEvent } from '../../analytics';
 
 export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
     refresh():void;
@@ -96,6 +97,7 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
 
     onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible) {
+            viewScreenEvent(this.id, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             this.startTimer();
         } else {
             this.stopTimer();

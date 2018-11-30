@@ -8,12 +8,15 @@ import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
+import { Container } from '../container';
+import { emptyWorkingSite } from '../config/model';
 
 export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
 
     constructor(extensionPath: string) {
         super(extensionPath);
+        this.tenantId = Container.jiraSiteManager.effectiveSite.id;
     }
 
     public get title(): string {
@@ -80,6 +83,10 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
+        if(issue.workingSite !== emptyWorkingSite) {
+            this.tenantId = issue.workingSite.id;
+        }
+
         if(this._panel){ this._panel.title = `Jira Issue ${issue.key}`; }
 
         let msg = issue as IssueData;

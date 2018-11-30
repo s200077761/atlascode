@@ -55,7 +55,7 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-export async function viewScreenEvent(screenName:string):Promise<ScreenEvent> {
+export async function viewScreenEvent(screenName:string, tenantId?:string):Promise<ScreenEvent> {
     const e =  {
         tenantIdType:null,
         userIdType:'atlassianAccount',
@@ -66,7 +66,8 @@ export async function viewScreenEvent(screenName:string):Promise<ScreenEvent> {
         }
     };
 
-    return await anyUserOrAnonymous<ScreenEvent>(e);
+    
+    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
 }
 
 async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
@@ -89,6 +90,18 @@ async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
     } else {
         newObj = {...e, ...{anonymousId:userId}};
     }
+
+    return newObj as T;
+}
+
+async function tenantOrNull<T>(e:Object, tenantId?:string):Promise<T> {
+    let tenantType:string|null = 'cloudId';
+    let newObj:Object;
+
+    if(!tenantId) {
+        tenantType = null;
+    }
+    newObj = {...e, ...{tenantIdType:tenantType, tenantId:tenantId}};
 
     return newObj as T;
 }

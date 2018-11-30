@@ -47,6 +47,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
+    protected tenantId:string | undefined;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -99,7 +100,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
             this._panel.reveal(ViewColumn.Active); // , false);
         }
 
-        viewScreenEvent(this.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+        viewScreenEvent(this.id, this.tenantId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {

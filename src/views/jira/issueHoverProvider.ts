@@ -39,7 +39,7 @@ export class IssueHoverProvider implements HoverProvider {
       text.push( new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
       text[text.length - 1].isTrusted = true;
 
-      viewScreenEvent('issueHover').then(e => { Container.analyticsClient.sendScreenEvent(e); });
+      viewScreenEvent('issueHover', Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
       
       return new vscode.Hover(text);
     });
