@@ -15,7 +15,7 @@ export class OAuthDancer {
     private _srv: http.Server | undefined;
     public _authInfo: authinfo.AuthInfo | undefined;
     private _timer:any;
-    private _browserTimeout =  1 * Time.MINUTES;
+    private _browserTimeout =  5 * Time.MINUTES;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "3hasX42a7Ugka2FJja",
