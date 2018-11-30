@@ -13,7 +13,6 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
     }
 
     onCheckboxChange = (e:any) => {
-        console.log('explorer clicked',e.target.value, e.target.checked);
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 

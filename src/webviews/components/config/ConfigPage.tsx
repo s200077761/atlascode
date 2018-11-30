@@ -161,7 +161,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
-                            trigger={Trigger('Welcome Page','configure the welcome page')}
+                            trigger={Trigger('','miscellaneous settings')}
                             open={true}>
                             <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>

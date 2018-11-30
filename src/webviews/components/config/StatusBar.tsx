@@ -10,7 +10,6 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
     }
 
     onCheckboxChange = (e:any) => {
-        console.log('explorer clicked',e.target.value, e.target.checked);
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 

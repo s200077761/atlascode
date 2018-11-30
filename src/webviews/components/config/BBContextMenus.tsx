@@ -10,7 +10,6 @@ export default class BitbucketContextMenus extends React.Component<{ configData:
     }
 
     onCheckboxChange = (e: any) => {
-        console.log('explorer clicked', e.target.value, e.target.checked);
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 
