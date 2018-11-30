@@ -23,7 +23,7 @@ pipelines:
             - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
             - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-            - npm version ${BITBUCKET_TAG}
+            - npm -no-git-tag-version -f version ${BITBUCKET_TAG}
             - yarn
             - vsce package curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
   custom:
@@ -40,6 +40,6 @@ pipelines:
             - PACKAGE_VERSION=$(./curver.sh)
             - DATE=$(date +%Y%m%d)
             - NIGHTLY=${PACKAGE_VERSION}-${DATE}_${BITBUCKET_COMMIT}
-            - npm version ${NIGHTLY}
+            - npm -no-git-tag-version -f version ${NIGHTLY}
             - yarn
             - vsce package curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${NIGHTLY}.vsix"
