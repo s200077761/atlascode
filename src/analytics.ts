@@ -55,6 +55,24 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
+export async function featureChangeEvent(featureId:string,enabled:boolean):Promise<TrackEvent> {
+    let action = enabled ? 'enabled' : 'disabled';
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:action,
+            actionSubject:'feature',
+            actionSubjectId:featureId,
+            source:'atlascodeSettings'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
 async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
