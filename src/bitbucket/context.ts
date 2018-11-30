@@ -12,6 +12,7 @@ import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../con
 import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
 import { viewScreenEvent } from '../analytics';
+import { Time } from '../util/time';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
@@ -29,6 +30,8 @@ export class BitbucketContext extends Disposable {
     private _tree:TreeView<BaseNode> | undefined;
     private _dataProvider:PullRequestNodeDataProvider;
     private _disposable:Disposable;
+    private _timer: any | undefined;
+    private _refreshInterval = 5 * Time.MINUTES;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -102,6 +105,9 @@ export class BitbucketContext extends Disposable {
     onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible) {
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            this.startTimer();
+        } else {
+            this.stopTimer();
         }
     }
     
@@ -118,6 +124,23 @@ export class BitbucketContext extends Disposable {
     }
     public getRepository(repoUri: Uri): Repository | undefined {
         return this._repoMap.get(repoUri.toString());
+    }
+
+    private startTimer() {
+        if (!this._timer) {
+            this._timer = setInterval(() => {
+                if (this._tree && this._dataProvider) {
+                    this._onDidChangeBitbucketContext.fire();
+                }
+            }, this._refreshInterval);
+        }
+    }
+
+    private stopTimer() {
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = undefined;
+        }
     }
 
     dispose() {
