@@ -13,6 +13,9 @@ import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
+import JiraHover from './JiraHover';
+
+
 const bitbucketLogo:string =require('../images/bitbucket-logo.png');
 const strideLogo:string =require('../images/stride-logo.png');
 
@@ -130,6 +133,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Issue Explorer','configure the Jira issue explorer')}
                             open={true}>
                             <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
+                            trigger={Trigger('Jira Hover Provider','enable or disable hover provider for Jira issues')}
+                            open={true}>
+                            <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

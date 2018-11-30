@@ -10,6 +10,7 @@ import { AuthStatusBar } from './views/authStatusBar';
 import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
 import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
+import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version:string) {
@@ -24,6 +25,7 @@ export class Container {
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
+        context.subscriptions.push(new IssueHoverProviderManager());
 
         let analyticsEnv:string = configuration.isDebugging ? 'stg' : 'prod';
 
