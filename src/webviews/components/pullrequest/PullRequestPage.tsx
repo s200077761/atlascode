@@ -92,7 +92,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             breadcrumbs={breadcrumbs}
                             bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
                         >
-                            {pr.title}
+                            <p>{pr.title}</p>
                         </PageHeader>
                         <hr />
                         <h3>Commits</h3>
