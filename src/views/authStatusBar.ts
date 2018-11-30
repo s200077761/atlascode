@@ -100,8 +100,8 @@ export class AuthStatusBar extends Disposable {
               text = `$(person) ${product}: ${info.user.displayName}`;
 
               if(tmpl) {
-                const site = Container.jiraSiteManager.effectiveSite;
-                const project = Container.jiraSiteManager.effectiveProject;
+                const site = Container.jiraSiteManager.effectiveSite.name;
+                const project = Container.jiraSiteManager.effectiveProject.name;
 
                 let data = {product:product, user:info.user.displayName, site:site, project:project};
                 let ctx = {...Container.config.jira.statusbar, ...data};
