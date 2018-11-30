@@ -4,6 +4,5 @@ node_modules
 .vscode-test/
 *.vsix
 .yo-*
-yarn.lock
 yarn-error.log
 .vscode/
