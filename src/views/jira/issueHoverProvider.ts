@@ -3,6 +3,8 @@ import * as vscode from "vscode";
 import { HoverProvider } from "vscode";
 import { fetchIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
+import { viewScreenEvent } from "../../analytics";
+import { Container } from "../../container";
 
 const IssueKeyRegEx = /[A-Z]+-\d+/g;
 
@@ -17,6 +19,8 @@ export class IssueHoverProvider implements HoverProvider {
   }
 
   private getIssueDetails(key: string): Promise<vscode.Hover> {
+    // TODO: make sure the key exists in our list of known project before we try to fetch the issue
+    // e.g. if the issue key is in a different site, or is completely made up, we shouldn't fetch.
     return fetchIssue(key).then(issue => {
       let summaryText = issue.summary ? issue.summary : "";
       let statusText = issue.status.name;
@@ -35,6 +39,8 @@ export class IssueHoverProvider implements HoverProvider {
       text.push( new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
       text[text.length - 1].isTrusted = true;
 
+      viewScreenEvent('issueHover', Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+      
       return new vscode.Hover(text);
     });
   }

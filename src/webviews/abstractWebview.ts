@@ -13,6 +13,8 @@ import {
 import { Resources } from '../resources';
 import { Action, isAlertable } from '../ipc/messaging';
 import { Logger } from '../logger';
+import { viewScreenEvent } from '../analytics';
+import { Container } from '../container';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -45,6 +47,7 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
+    protected tenantId:string | undefined;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -96,6 +99,8 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
             this._panel.webview.html = this._getHtmlForWebview(this.id);
             this._panel.reveal(ViewColumn.Active); // , false);
         }
+
+        viewScreenEvent(this.id, this.tenantId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {

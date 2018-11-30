@@ -30,7 +30,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
         return "Pull Request";
     }
     public get id(): string {
-        return "pullRequestView";
+        return "pullRequestDetailsScreen";
     }
 
     initialize(data: PullRequest) {
