@@ -8,6 +8,7 @@ import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { viewScreenEvent } from '../../analytics';
+import { Time } from '../../util/time';
 
 export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
     refresh():void;
@@ -29,7 +30,7 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
     private _timer: any | undefined;
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
-    private _refreshInterval = 60 * 1000;
+    private _refreshInterval = 1 * Time.MINUTES;
 
     constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
         super(() => this.dispose());
