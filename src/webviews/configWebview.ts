@@ -30,7 +30,7 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
         return "AtlasCode Settings";
     }
     public get id(): string {
-        return "configView";
+        return "atlascodeSettings";
     }
 
     public async invalidate() {

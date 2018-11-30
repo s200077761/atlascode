@@ -1,4 +1,4 @@
-import { Disposable, EventEmitter, Event, ConfigurationChangeEvent, TreeView, window, commands, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, ConfigurationChangeEvent, TreeView, window, commands, Uri, TreeViewVisibilityChangeEvent } from 'vscode';
 import { Repository, API as GitApi } from "../typings/git";
 import { configuration, BitbucketExplorerLocation } from '../config/configuration';
 import { BaseNode } from '../views/nodes/baseNode';
@@ -11,6 +11,7 @@ import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
 import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
+import { viewScreenEvent } from '../analytics';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
@@ -85,6 +86,9 @@ export class BitbucketContext extends Disposable {
                 this._tree = window.createTreeView(PullRequestTreeViewId, {
                     treeDataProvider: this._dataProvider
                 });
+
+                this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+
                 this.refreshRepos();
             }
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
@@ -95,6 +99,12 @@ export class BitbucketContext extends Disposable {
         }
     }
 
+    onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+        if (event.visible) {
+            viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+        }
+    }
+    
     private setLocationContext() {
         let location = Container.config.bitbucket.explorer.location;
         if (location !== explorerLocation.sourceControl && location !== explorerLocation.atlascode) {

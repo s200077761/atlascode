@@ -3,7 +3,6 @@ import { currentUserJira } from './commands//jira/currentUser';
 import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth } from './commands/authenticate';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
-import { IssueHoverProvider } from './views/jira/issueHoverProvider';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
@@ -45,7 +44,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Logger.debug('args',issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
-        vscode.languages.registerHoverProvider({ scheme: 'file' }, new IssueHoverProvider()),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue))
     );
 }

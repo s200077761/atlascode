@@ -161,6 +161,7 @@ class PullRequestFilesNode extends BaseNode {
                 break;
         }
 
+        // TODO: create a command wrapper so we can send analytics when they view the diff screen.
         item.command = {
             command: 'vscode.diff',
             title: 'Diff file',

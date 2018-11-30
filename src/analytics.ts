@@ -1,4 +1,4 @@
-import { TrackEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, ScreenEvent } from '@atlassiansox/analytics-node-client';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider } from './atlclients/authInfo';
@@ -73,6 +73,21 @@ export async function featureChangeEvent(featureId:string,enabled:boolean):Promi
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
+export async function viewScreenEvent(screenName:string, tenantId?:string):Promise<ScreenEvent> {
+    const e =  {
+        tenantIdType:null,
+        userIdType:'atlassianAccount',
+        name:screenName,
+        screenEvent:{
+            origin:'desktop',
+            platform:process.platform,
+        }
+    };
+
+    
+    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
+}
+
 async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
@@ -93,6 +108,18 @@ async function anyUserOrAnonymous<T>(e:Object):Promise<T> {
     } else {
         newObj = {...e, ...{anonymousId:userId}};
     }
+
+    return newObj as T;
+}
+
+async function tenantOrNull<T>(e:Object, tenantId?:string):Promise<T> {
+    let tenantType:string|null = 'cloudId';
+    let newObj:Object;
+
+    if(!tenantId) {
+        tenantType = null;
+    }
+    newObj = {...e, ...{tenantIdType:tenantType, tenantId:tenantId}};
 
     return newObj as T;
 }
