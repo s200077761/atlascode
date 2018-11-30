@@ -188,23 +188,28 @@
             "editor/context": [
                 {
                     "command": "atlascode.bb.createPullRequest",
-                    "group": "atlascode"
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
                 },
                 {
                     "command": "atlascode.bb.openInBitbucket",
-                    "group": "atlascode"
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
                 },
                 {
                     "command": "atlascode.bb.openChangeset",
-                    "group": "atlascode"
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
                 },
                 {
                     "command": "atlascode.bb.viewPullRequest",
-                    "group": "atlascode"
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
                 },
                 {
                     "command": "atlascode.bb.copyPullRequest",
-                    "group": "atlascode"
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
                 }
             ],
             "view/title": [
@@ -411,6 +416,12 @@
                         "Atlascode"
                     ],
                     "description": "Explorer location for Bitbucket pull requests",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.contextMenus.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Bitbucket context menu items in editor",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.statusbar.enabled": {

@@ -1,19 +1,11 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
-import styled from 'styled-components';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import { BitbucketExplorerLocation } from '../../../config/model';
 
 
 type changeObject = {[key: string]:any};
-
-export const InlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-justify-content: space-between;
-width: 100%;
-`;
 
 export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
     constructor(props: any) {
