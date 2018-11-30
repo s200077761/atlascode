@@ -1,32 +1,67 @@
-# atlascode
+# Atlascode 0.0.1
+### Atlassian integrations for VSCode
+Atlascode brings the functionality of multiple Atlassian products to your favorite IDE!
 
-**atlascode**: Atlassian extensions for VSCode
+## Installation
+Currently Atlascode uses some features from VSCode's "Proposed API" and cannot be installed directly into VSCode without a bit of tweaking.
+This will be fixed before GTM, but for now you have two options:
+
+### Option 1 (reccomended) - whitelist Atlascode
+This options requires tweaking vscode's product.json file to whitelist the atlascode extension to use the proposed API within the stable release of VSCode.
+
+You only need to do this once and Atlascode will work from then on. Here's how:
+
+**LINUX**:
+the product.json can be found here: `/usr/share/code/resources/app/product.json`.
+
+**MAC**:
+the product.son can be found by going to the Applications folder, finding VSCode, right click, and choose "Open Contents".
+
+From there, the file can be found in `Resources/app/product.json`
+
+Edit the file and look for the entry array `"extensionAllowedProposedApi"`
+
+Add this entry to the bottom of the array: `"atlassianlabs.atlascode"`
+
+The full thing should look something like:
+```
+"extensionAllowedProposedApi": [
+    "ms-vscode.references-view",
+    "ms-vsliveshare.vsliveshare",
+    "atlassianlabs.atlascode"
+],
+```
+
+Save the file and restart VSCode. You're now ready to install.
+
+### Option 2 (NOT reccomended) - use VSCode Insiders
+You can install Atlascode within [VSCode Insiders](https://code.visualstudio.com/insiders) without any modifications. HOWEVER, the Insiders builds are extremely volitale and buggy so we don't reccomend this.
+
+OK, finally, to actually install the thing, open the Extensions drawer in VSCode and use the "meatball" menu in the top right corner to select "Install from VSIX".  Then find the atlascode vsix and install it.
 
 ## Features
 
-`Jira Explorer`: shows a treeview of Jira Issues and shows a detail screen when clicked on
-`Jira Issue Hover`: hover over any Jira issue key in the IDE and gt a hover with issue details
-`Bitbucket PR Explorer`: shows a treeview of PRs for the Bitbucket cloud repos in the workspace
-`Bitbucket PR Review`: allows checkout, diff, comment, and approve PRs right within VSCode
+`Issue Explorer`: shows a treeview of Jira Issues which open the issue view when clicked
 
-## Requirements
+`Issue View`: shows the details of an issue and allows you to submit new comments and transition the issue
 
-Requires an Atlassian cloud account to authenticate and perform actions.
+`Issue Hovers`: hover over something that looks like an issue key in your source code to get the details
 
-## Extension Settings
+`Pull Request Explorer`: shows a treeview of PRs for the Bitbucket cloud repos in the workspace which will open detail views when clicked
 
-This extension contributes the following settings:
+`PR Details View`: allows you to see the PR summary, checkout the PR branch, add comments, and approve the PR
 
-* `atlascode.jira.workingSite`: Set the working Atlassian cloud site
-* `atlascode.jira.workingProject`: Set the working project for Jira actions
-* `atlascode.bitbucket.explorerLocation`: Select which container to show Bitbucket pull requests in
+`PR Diff View`: click on any file in the PR Explorer to get a diff view of the file as well as read and add comments
 
-## Known Issues
+`Configuration`: a custom config screen is provider to authenticate with the Atlassian products as well as customize almost everything about the extension. You can get to it by looking for `Atlascode: Open Settings` in the command palette.
 
-This is a preview release. Some features may not work properly.
 
-## Release Notes
+## Be Kind
 
-### 0.0.1
+This is a preview release. Some features may not work properly...
 
-Initial release.
+Please use the in-app feedback form to send us feedback.
+
+If you're really stuck, you can ping us in the [Atlascode Help Stride room](https://applink.atlassian.com/stride/a436116f-02ce-4520-8fbb-7301462a1674/chat/20317f63-2ed0-40d2-86b2-7611fa9b0035).
+
+
