@@ -6,7 +6,7 @@ Atlascode brings the functionality of multiple Atlassian products to your favori
 Currently Atlascode uses some features from VSCode's "Proposed API" and cannot be installed directly into VSCode without a bit of tweaking.
 This will be fixed before GTM, but for now you have two options:
 
-### Option 1 (reccomended) - whitelist Atlascode
+### Option 1 (recommended) - whitelist Atlascode
 This options requires tweaking vscode's product.json file to whitelist the atlascode extension to use the proposed API within the stable release of VSCode.
 
 You only need to do this once and Atlascode will work from then on. Here's how:
@@ -15,7 +15,7 @@ You only need to do this once and Atlascode will work from then on. Here's how:
 the product.json can be found here: `/usr/share/code/resources/app/product.json`.
 
 **MAC**:
-the product.son can be found by going to the Applications folder, finding VSCode, right click, and choose "Open Contents".
+the product.json can be found by going to the Applications folder, finding VSCode, right click, and choose "Open Contents".
 
 From there, the file can be found in `Resources/app/product.json`
 
