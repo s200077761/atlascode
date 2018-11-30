@@ -159,6 +159,42 @@ export async function viewScreenEvent(screenName:string, tenantId?:string):Promi
     return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
 }
 
+export async function siteSelectedEvent(siteId:string):Promise<TrackEvent> {
+    const e = {
+        tenantIdType:'cloudId',
+        tenantId:siteId,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'selected',
+            actionSubject:'defaultJiraSite',
+            actionSubjectId:siteId,
+            source:'vscode'
+        }
+    };
+    
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function projectSelectedEvent(projectId:string, tenantId:string):Promise<TrackEvent> {
+    const e = {
+        tenantIdType:'cloudId',
+        tenantId:tenantId,
+        userIdType:'atlassianAccount',
+        trackEvent:{
+            origin:'desktop',
+            platform:process.platform,
+            action:'selected',
+            actionSubject:'defaultJiraProject',
+            actionSubjectId:projectId,
+            source:'vscode'
+        }
+    };
+    
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
 async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;

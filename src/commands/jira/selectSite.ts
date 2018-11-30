@@ -5,6 +5,7 @@ import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
 import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
 import { Commands } from "../../commands";
+import { siteSelectedEvent } from "../../analytics";
 
 export async function showSiteSelectionDialog() {
         window
@@ -30,6 +31,7 @@ async function saveWorkingSite(site: AccessibleResource) {
       commands.executeCommand(Commands.RefreshJiraExplorer);
     }
     
+    siteSelectedEvent(site.id).then(e => {Container.analyticsClient.sendTrackEvent(e); });
   });
 }
 
