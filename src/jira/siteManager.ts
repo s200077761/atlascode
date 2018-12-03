@@ -72,6 +72,10 @@ export class JiraSiteManager extends Disposable {
     }
 
     async getProjects(): Promise<Project[]> {
+        if(this._projectsAvailable.length > 0) {
+            return this._projectsAvailable;
+        }
+
         Logger.debug('site manager is calling jirarequest');
         let client = await Container.clientManager.jirarequest();
       
@@ -99,12 +103,16 @@ export class JiraSiteManager extends Disposable {
         return [];
       }
 
-    public get sitesAvailable() {
-        return this._sitesAvailable;
-    }
+    public async getSitesAvailable() {
+        if(this._sitesAvailable.length < 1) {
+            const ai = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
 
-    public get projectsAvailable() {
-        return this._projectsAvailable;
+            if(ai && ai.accessibleResources) {
+                this._sitesAvailable = ai.accessibleResources;
+            }
+        }
+
+        return this._sitesAvailable;
     }
 
     public get effectiveSite():WorkingSite {

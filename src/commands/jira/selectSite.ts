@@ -8,12 +8,13 @@ import { Commands } from "../../commands";
 import { siteSelectedEvent } from "../../analytics";
 
 export async function showSiteSelectionDialog() {
+  const sites = await Container.jiraSiteManager.getSitesAvailable();
         window
-        .showQuickPick(Container.jiraSiteManager.sitesAvailable.map(site => site.name), {
+        .showQuickPick(sites.map(site => site.name), {
           placeHolder: "Select a site"
         })
         .then(result => {
-          const selected = Container.jiraSiteManager.sitesAvailable.find(site => site.name === result);
+          const selected = sites.find(site => site.name === result);
           if (selected) {
             saveWorkingSite(selected);
           }

@@ -40,8 +40,8 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
         this.updateConfig({
             type:'update',
             config:config,
-            sites:Container.jiraSiteManager.sitesAvailable,
-            projects:Container.jiraSiteManager.projectsAvailable,
+            sites:await Container.jiraSiteManager.getSitesAvailable(),
+            projects:await Container.jiraSiteManager.getProjects(),
             isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud),
             isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)
         });
