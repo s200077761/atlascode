@@ -22,7 +22,7 @@ export async function showProjectSelectionDialog() {
 
 async function saveWorkingProject(project: Project) {
   Logger.debug("saving project to config", project.id);
-  await configuration.updateEffective(JiraWorkingProjectConfigurationKey, project.id)
+  await configuration.updateEffective(JiraWorkingProjectConfigurationKey, {id:project.id, name:project.name, key:project.key})
   .catch(reason => {
     Logger.debug("rejected config update", reason);
   });
