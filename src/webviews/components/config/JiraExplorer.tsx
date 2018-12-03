@@ -48,6 +48,11 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 if(this.props.onConfigChange) {
                     this.props.onConfigChange(changes);
                 }
+            } else if(item.target.parentNode.parentNode.dataset.projectId === 'empty') {
+                const removes = ['jira.workingProject'];
+                if(this.props.onConfigChange) {
+                    this.props.onConfigChange([],removes);
+                }
             }
         }
     }
@@ -113,7 +118,13 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 selectedProject = emptyProject;
                 selectedProject.name = "not selected";
             }
-            let projectItems:any[] = [];
+            let projectItems:any[] = [<DropdownItem
+                className='ak-dropdown-item'
+                id='empty-project'
+                data-project-id='empty'
+                onClick={this.onHandleProjectChange}>
+                not selected
+            </DropdownItem>];
             projects.forEach(project => {
                 if(this.props.configData.config.jira.workingProject.id !== project.id){
                     projectItems.push(
