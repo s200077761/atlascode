@@ -131,7 +131,7 @@ export default class JiraIssuePage extends WebviewComponent<
         <h3>Assignee</h3>
         <AvatarItem
           avatar={<Avatar src={issue.assignee.avatarUrls["48x48"]} />}
-          primaryText={issue.assignee.displayName}
+          primaryText={issue.assignee.displayName || "Unassigned"}
         />
       </div>
     );
