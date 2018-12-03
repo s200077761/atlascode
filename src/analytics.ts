@@ -47,7 +47,7 @@ export async function feedbackEvent(feedback:FeedbackData, source:string):Promis
             origin:'desktop',
             platform:process.platform,
             action:'submitted',
-            actionSubject:'feedback',
+            actionSubject:'atlascodeFeedback',
             source:source,
             attributes: {feedback:feedback.description,feedbackType:feedback.type,canContact:feedback.canBeContacted},
         }
