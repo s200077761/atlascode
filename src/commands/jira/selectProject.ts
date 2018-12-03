@@ -7,12 +7,13 @@ import { Logger } from "../../logger";
 import { projectSelectedEvent } from "../../analytics";
 
 export async function showProjectSelectionDialog() {
+  const projects = await Container.jiraSiteManager.getProjects();
     vscode.window
-      .showQuickPick(Container.jiraSiteManager.projectsAvailable.map(project => project.name), {
+      .showQuickPick(projects.map(project => project.name), {
         placeHolder: "Select a project"
       })
       .then(async (result) => {
-        const selected = Container.jiraSiteManager.projectsAvailable.find(proj => proj.name === result);
+        const selected = projects.find(proj => proj.name === result);
         if (selected) {
           await saveWorkingProject(selected);
         }
