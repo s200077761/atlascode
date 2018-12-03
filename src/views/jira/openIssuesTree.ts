@@ -27,6 +27,6 @@ export class OpenIssuesTree extends AbstractIssueTree {
     }
 
     private jqlForProject(project?:string): string {
-        return project ? `assignee in (EMPTY) and project=${project} order by lastViewed DESC` : 'assignee in (EMPTY) order by lastViewed DESC';
+        return project ? `assignee in (EMPTY) and project=${project} and resolution = Unresolved order by lastViewed DESC` : 'assignee in (EMPTY) and resolution = Unresolved order by lastViewed DESC';
     }
 }

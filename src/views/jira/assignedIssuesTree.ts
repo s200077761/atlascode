@@ -26,6 +26,6 @@ export class AssignedIssuesTree extends AbstractIssueTree {
     }
 
     private jqlForProject(project?:string): string {
-        return project ? `assignee=currentUser() and project=${project} and statusCategory in ("In Progress")` : 'assignee=currentUser() and statusCategory in ("In Progress")';
+        return project ? `assignee=currentUser() and project=${project} and resolution = Unresolved` : 'assignee=currentUser() and resolution = Unresolved';
     }
 }
