@@ -53,6 +53,8 @@ OK, finally, to actually install the thing, open the Extensions drawer in VSCode
 
 `PR Diff View`: click on any file in the PR Explorer to get a diff view of the file as well as read and add comments
 
+`Bitbucket Context Menus`: right-click to get context menus that let you quickly navigate to specific code in Bitbucket or copy the url to the clipboard
+
 `Configuration`: a custom config screen is provider to authenticate with the Atlassian products as well as customize almost everything about the extension. You can get to it by looking for `Atlascode: Open Settings` in the command palette.
 
 

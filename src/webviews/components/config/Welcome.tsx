@@ -100,6 +100,12 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
                             </ul>
                         </section>
                         <section>
+                            <h4><BitbucketIcon size="xsmall"/> Bitbucket Context Menus</h4>
+                            <ul>
+                                <li>right-click to get context menus that let you quickly navigate to specific code in Bitbucket or copy the url to the clipboard</li>
+                            </ul>
+                        </section>
+                        <section>
                             <h4><PreferencesIcon size="small" label="configuration"/> Configuration</h4>
                             <ul>
                                 <li>a custom config screen is provider to authenticate with the Atlassian products as well as customize almost everything about the extension. You can get to it by looking for `Atlascode: Open Settings` in the command palette.</li>
