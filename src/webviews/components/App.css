@@ -134,7 +134,7 @@ body div[class^="css-"] div[class^="css-"] {
 }
 
 [class^="styledCache__StyledSpan"] {
-  background: var(--background-color--lighten-05) !important;
+  background: var(--background-color) !important;
   color: var(--vscode-editor-foreground) !important;
 }
 
