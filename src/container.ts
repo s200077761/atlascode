@@ -27,7 +27,7 @@ export class Container {
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        let analyticsEnv:string = configuration.isDebugging ? 'stg' : 'prod';
+        let analyticsEnv:string = configuration.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = new AnalyticsClient({
             origin:'desktop',
