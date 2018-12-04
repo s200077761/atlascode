@@ -107,6 +107,7 @@ export class AuthStatusBar extends Disposable {
 
                 let data = {product:product, user:info.user.displayName, site:site, project:project};
                 let ctx = {...Container.config.jira.statusbar, ...data};
+                command = Commands.ShowConfigPage;
                 Logger.debug('jira status context',ctx);
                 text = tmpl(ctx);
               }
@@ -131,6 +132,7 @@ export class AuthStatusBar extends Disposable {
               if(tmpl) {
                 let data = {product:product, user:info.user.displayName};
                 let ctx = {...Container.config.bitbucket.statusbar, ...data};
+                command = Commands.ShowConfigPage;
                 text = tmpl(ctx);
               }
             } else {
