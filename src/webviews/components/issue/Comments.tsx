@@ -2,7 +2,6 @@ import * as React from "react";
 import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import Comment, { CommentAuthor } from "@atlaskit/comment";
-import { FieldTextAreaStateless } from "@atlaskit/field-text-area";
 import { Comment as JiraComment, Issue } from "../../../jira/jiraModel";
 
 export class Comments extends React.Component<
@@ -55,38 +54,18 @@ export class Comments extends React.Component<
 
   commentForm(): any {
     return (
-      <div
-        style={{
-          marginRight: 8,
-          marginLeft: 8,
-          marginTop: 10,
-          marginBottom: 10
-        }}
-      >
-        <FieldTextAreaStateless
-          className="ak-textarea"
-          placeholder="Add a comment"
-          isLabelHidden
-          enableResize
-          shouldFitContainer
-          minimumRows={3}
-          onChange={this.handleChange}
+      <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box'}}>
+        <textarea
+          className='ak-textarea'
+          rows={3}
+          placeholder='Add a comment'
           value={this.state.commentInput}
+          onChange={this.handleChange}
         />
-        <div style={{ marginTop: 5 }}>
-          <ButtonGroup>
-            <Button
-              className="ak-button"
-              onClick={this.handleSave}
-              isDisabled={!this.state.commentInput.trim()}
-            >
-              Save
-            </Button>
-            <Button appearance="default" onClick={this.handleCancel}>
-              Cancel
-            </Button>
-          </ButtonGroup>
-        </div>
+        <ButtonGroup>
+          <Button className='ak-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
+          <Button appearance="default" onClick={this.handleCancel}>Cancel</Button>
+        </ButtonGroup>
       </div>
     );
   }
