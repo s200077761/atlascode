@@ -2,7 +2,7 @@
     "name": "atlascode",
     "displayName": "Atlassian VSCode Extensions",
     "description": "VSCode Atlassian Extensions",
-    "version": "0.0.1",
+    "version": "0.0.0",
     "publisher": "atlassianlabs",
     "license": "SEE LICENSE IN LICENSE",
     "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
