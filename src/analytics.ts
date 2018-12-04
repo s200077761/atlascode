@@ -8,7 +8,6 @@ export async function installedEvent(version:string):Promise<TrackEvent> {
 
     const e = {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -25,7 +24,6 @@ export async function installedEvent(version:string):Promise<TrackEvent> {
 export async function upgradedEvent(version:string, previousVersion:string):Promise<TrackEvent> {
     const e = {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -42,7 +40,6 @@ export async function upgradedEvent(version:string, previousVersion:string):Prom
 export async function feedbackEvent(feedback:FeedbackData, source:string):Promise<TrackEvent> {
     const e =  {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -60,7 +57,6 @@ export async function featureChangeEvent(featureId:string,enabled:boolean):Promi
     let action = enabled ? 'enabled' : 'disabled';
     const e =  {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -77,7 +73,6 @@ export async function featureChangeEvent(featureId:string,enabled:boolean):Promi
 export async function authenticateButtonEvent(source:string):Promise<UIEvent> {
     const e =  {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         uiEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -94,7 +89,6 @@ export async function authenticateButtonEvent(source:string):Promise<UIEvent> {
 export async function logoutButtonEvent(source:string):Promise<UIEvent> {
     const e =  {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         uiEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -112,7 +106,6 @@ export async function authenticatedEvent(hostProduct:string):Promise<TrackEvent>
 
     const e = {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -130,7 +123,6 @@ export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
 
     const e = {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -147,7 +139,6 @@ export async function loggedOutEvent(hostProduct:string):Promise<TrackEvent> {
 export async function viewScreenEvent(screenName:string, tenantId?:string):Promise<ScreenEvent> {
     const e =  {
         tenantIdType:null,
-        userIdType:'atlassianAccount',
         name:screenName,
         screenEvent:{
             origin:'desktop',
@@ -163,7 +154,6 @@ export async function siteSelectedEvent(siteId:string):Promise<TrackEvent> {
     const e = {
         tenantIdType:'cloudId',
         tenantId:siteId,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -181,7 +171,6 @@ export async function projectSelectedEvent(projectId:string, tenantId:string):Pr
     const e = {
         tenantIdType:'cloudId',
         tenantId:tenantId,
-        userIdType:'atlassianAccount',
         trackEvent:{
             origin:'desktop',
             platform:process.platform,
@@ -227,7 +216,7 @@ async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     }
 
     if(userType === 'userId') {
-        newObj = {...e, ...{userId:userId}};
+        newObj = {...e, ...{userId:userId, userIdType:'atlassianAccount'}};
     } else {
         newObj = {...e, ...{anonymousId:userId}};
     }
