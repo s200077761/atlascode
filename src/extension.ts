@@ -89,7 +89,9 @@ async function checkForNewVersion(current:string) {
             resp.json()
             .then(jsonResp => {
                 jsonResp.values!.forEach((val:any) => {
-                    tags.push(val.name);
+                    if(semver.prerelease(val.name) === null) {
+                        tags.push(val.name);
+                    }
                 });
 
                 let sorted = semver.rsort(tags);
@@ -97,6 +99,7 @@ async function checkForNewVersion(current:string) {
 
                 if(sorted.length > 0) {
                     latest = sorted[0];
+                    Logger.debug('tags',sorted);
                 }
 
                 if(semver.gt(latest,current)) {
