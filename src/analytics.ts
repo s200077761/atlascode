@@ -227,7 +227,7 @@ async function anyUserOrAnonymous<T>(e:Object, hostProduct?:string):Promise<T> {
     }
 
     if(userType === 'userId') {
-        newObj = {...e, ...{userId:userId}};
+        newObj = {...e, ...{userId:userId, userIdType:'atlassianAccount'}};
     } else {
         newObj = {...e, ...{anonymousId:userId}};
     }
