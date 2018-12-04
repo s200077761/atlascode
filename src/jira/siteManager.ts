@@ -46,7 +46,6 @@ export class JiraSiteManager extends Disposable {
             this._projectsAvailable = [];
 
             if(await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)){
-                Logger.debug('site manager got config change', Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
                 await this.getProjects().then(projects => {
                     this._projectsAvailable = projects;
                 });
@@ -59,8 +58,8 @@ export class JiraSiteManager extends Disposable {
     async onDidAuthChange(e:AuthInfoEvent) {
         this._sitesAvailable = [];
         this._projectsAvailable = [];
+        Logger.debug('site manager got auth change', e.authInfo);
         if(e.provider === AuthProvider.JiraCloud && e.authInfo && e.authInfo.accessibleResources) {
-            Logger.debug('site manager got auth change', e.authInfo);
             this._sitesAvailable = e.authInfo.accessibleResources;
 
             await this.getProjects().then(projects => {
@@ -76,17 +75,20 @@ export class JiraSiteManager extends Disposable {
             return this._projectsAvailable;
         }
 
-        Logger.debug('site manager is calling jirarequest');
-        let client = await Container.clientManager.jirarequest();
-      
-        if (client) {
-          return client.project
-            .getProjectsPaginated({})
-            .then((res: JIRA.Response<JIRA.Schema.PageBeanProjectBean>) => {
-              return this.readProjects(res.data.values);
-            });
-        } else {
-            Logger.debug("sitemanager couldn't get a client");
+        // don't force auth
+        if(await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            Logger.debug('site manager is calling jirarequest for projects');
+            let client = await Container.clientManager.jirarequest();
+        
+            if (client) {
+            return client.project
+                .getProjectsPaginated({})
+                .then((res: JIRA.Response<JIRA.Schema.PageBeanProjectBean>) => {
+                return this.readProjects(res.data.values);
+                });
+            } else {
+                Logger.debug("sitemanager couldn't get a client");
+            }
         }
       
         return [];

@@ -102,8 +102,8 @@ export class BitbucketContext extends Disposable {
         }
     }
 
-    onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible) {
+    async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+        if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             this.startTimer();
         } else {

@@ -27,10 +27,12 @@ export class AuthStatusBar extends Disposable {
     }
 
     async onDidAuthChange(e:AuthInfoEvent) {
+      Logger.debug('statusBar got auth change', e);
         this.updateAuthenticationStatusBar(e.provider,e.authInfo);
     }
 
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
+      Logger.debug('statusBar got config change', e);
         const initializing = configuration.initializing(e);
         if(initializing || configuration.changed(e,'jira.statusbar')) {
           const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);

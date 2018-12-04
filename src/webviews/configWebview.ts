@@ -48,14 +48,17 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
+        Logger.debug('configWebview got config', e);
         this.invalidate();
     }
 
     private onDidAuthChange(e:AuthInfoEvent) {
+        Logger.debug('configWebview got auth change', e.authInfo);
         this.invalidate();
     }
 
     private onDidSiteChange(e:JiraSiteUpdateEvent) {
+        Logger.debug('configWebview got site change', e);
         this.invalidate();
     }
 
