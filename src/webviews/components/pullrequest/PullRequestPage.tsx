@@ -9,7 +9,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
-import { Approve, Checkout, PostComment } from '../../../ipc/prActions';
+import { Approve, Merge, Checkout, PostComment } from '../../../ipc/prActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
 import styled from 'styled-components';
@@ -23,19 +23,26 @@ display: inline-flex;
 align-items: center;
 `;
 
-type Emit = Approve | Checkout | PostComment;
+type Emit = Approve | Merge | Checkout | PostComment;
 type Receive = PRData | CheckoutResult;
 
-export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, branchError?: string }> {
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false };
+        this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false, isMergeButtonLoading: false };
     }
 
     handleApprove = () => {
         this.setState({ isApproveButtonLoading: true });
         this.postMessage({
             action: 'approve'
+        });
+    }
+
+    handleMerge = () => {
+        this.setState({ isMergeButtonLoading: true });
+        this.postMessage({
+            action: 'merge'
         });
     }
 
@@ -49,7 +56,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     onMessageReceived(e: Receive): void {
         if (isPRData(e)) {
-            this.setState({ pr: e, isApproveButtonLoading: false });
+            this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false });
         }
         else if (isCheckoutError(e)) {
             this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch } });
@@ -73,6 +80,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         : <p> <Tag text="✔ You approved this PR" color="green" /></p>
                     }
                 </Spacer>
+                {pr.state === "OPEN"
+                    ? <Button className='ak-button' isLoading={this.state.isMergeButtonLoading} onClick={this.handleMerge}>Merge</Button>
+                    : <Button className='ak-button' isDisabled>{pr.state}</Button>
+                }
             </InlineFlex>
         );
         const breadcrumbs = (
@@ -84,30 +95,32 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
 
         return (
-            <Page>
-                <Grid>
-                    <GridColumn>
-                        <PageHeader
-                            actions={actionsContent}
-                            breadcrumbs={breadcrumbs}
-                            bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
-                        >
-                            <p>{pr.title}</p>
-                        </PageHeader>
-                        <hr />
-                        <h3>Commits</h3>
-                        <Commits {...this.state.pr} />
-                        <hr />
-                        <h3>Summary</h3>
-                        <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }}>
-                        </p>
-                        <hr />
-                        <h3>Comments</h3>
-                        <Comments prData={this.state.pr} onComment={this.handlePostComment} />
-                        <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
-                    </GridColumn>
-                </Grid>
-            </Page >
+            <div className='bitbucket-page'>
+                <Page>
+                    <Grid>
+                        <GridColumn>
+                            <PageHeader
+                                actions={actionsContent}
+                                breadcrumbs={breadcrumbs}
+                                bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
+                            >
+                                <p>{pr.title}</p>
+                            </PageHeader>
+                            <hr />
+                            <h3>Commits</h3>
+                            <Commits {...this.state.pr} />
+                            <hr />
+                            <h3>Summary</h3>
+                            <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }}>
+                            </p>
+                            <hr />
+                            <h3>Comments</h3>
+                            <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                        </GridColumn>
+                    </Grid>
+                </Page>
+            </div>
         );
     }
 }

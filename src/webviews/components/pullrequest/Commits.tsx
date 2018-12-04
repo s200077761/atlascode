@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
+import Tooltip from '@atlaskit/tooltip';
 import { PRData } from '../../../ipc/prMessaging';
 
 const style = { fontFamily: "monospace" };
@@ -9,6 +10,10 @@ const Hash = (props: any) =>
         <span style={style}>{props.hash}</span>
     </Button>;
 const Message = (props: any) => <p style={{ display: "inline" }}>{props.message}</p>;
+const Timestamp = (props: any) => {
+    const d = new Date(props.ts);
+    return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}</p></Tooltip>;
+};
 
 export default class Commits extends React.Component<PRData, {}> {
     constructor(props: any) {
@@ -20,20 +25,23 @@ export default class Commits extends React.Component<PRData, {}> {
             return {
                 hash: commit.hash!,
                 message: commit.message,
-                href: commit.links.html.href
+                href: commit.links.html.href,
+                ts: commit.date
             };
         });
 
         return (
             <TableTree
-                columns={[Hash, Message]}
+                columns={[Hash, Message, Timestamp]}
+                columnWidths={['120px', '100%', '180px']}
                 items={commitsData.map(c => {
                     return {
                         id: c.hash,
                         content: {
                             hash: c.hash.substring(0, 8),
                             message: c.message,
-                            href: c.href
+                            href: c.href,
+                            ts: c.ts
                         }
                     };
                 })}

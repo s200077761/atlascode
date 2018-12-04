@@ -3,6 +3,7 @@ import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
+import Avatar from '@atlaskit/avatar';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
@@ -41,13 +42,23 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
         const pr = this.props.prData.pr!;
         let sourcePrefix = '';
         let destinationPrefix = '';
-        if (this.props.prData.pr!.source!.repository!.links!.html!.href! !== this.props.prData.pr!.destination!.repository!.links!.html!.href!) {
-            sourcePrefix = this.props.prData.pr!.source!.repository!.full_name! + ':';
-            destinationPrefix = this.props.prData.pr!.destination!.repository!.full_name! + ':';
+        if (pr.source!.repository!.links!.html!.href! !== pr.destination!.repository!.links!.html!.href!) {
+            sourcePrefix = pr.source!.repository!.full_name! + ':';
+            destinationPrefix = pr.destination!.repository!.full_name! + ':';
         }
+        const sourceHref = `${pr.source!.repository!.links!.html!.href}/src/${pr.source!.commit!.hash}/?at=${pr.source!.branch!.name!}`;
+        const destinationHref = `${pr.destination!.repository!.links!.html!.href}/src/${pr.destination!.commit!.hash}/?at=${pr.destination!.branch!.name!}`;
         return (
             <React.Fragment>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Spacer>
+                        <Avatar
+                            appearance="circle"
+                            name={pr.author!.display_name}
+                            src={pr.author!.links!.avatar!.href}
+                            size="small"
+                        />
+                    </Spacer>
                     <DropdownMenu
                         trigger={
                             <FixedWidth>
@@ -68,7 +79,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                     >
                         <DropdownItemGroup>
                             <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.source!.branch!.name!, true)}>Checkout branch</DropdownItem>
-                            <DropdownItem className='ak-dropdown-item' href={`${pr.source!.repository!.links!.html!.href}/src/${pr.source!.branch!.name}`}>Open branch on bitbucket.org</DropdownItem>
+                            <DropdownItem className='ak-dropdown-item' href={sourceHref}>Open branch on bitbucket.org</DropdownItem>
                         </DropdownItemGroup>
                     </DropdownMenu>
                     <Spacer>
@@ -95,7 +106,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                                 }>
                                 <DropdownItemGroup>
                                     <DropdownItem className='ak-dropdown-item' onClick={() => this.handleCheckout(pr.destination!.branch!.name!, false)}>Checkout branch</DropdownItem>
-                                    <DropdownItem className='ak-dropdown-item' href={`${pr.destination!.repository!.links!.html!.href}/src/${pr.destination!.branch!.name}`}>Open branch on bitbucket.org</DropdownItem>
+                                    <DropdownItem className='ak-dropdown-item' href={destinationHref}>Open branch on bitbucket.org</DropdownItem>
                                 </DropdownItemGroup>
                             </DropdownMenu>
                         </Tooltip>

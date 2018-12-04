@@ -13,6 +13,10 @@ export interface Approve extends Action {
     action: 'approve';
 }
 
+export interface Merge extends Action {
+    action: 'merge';
+}
+
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;

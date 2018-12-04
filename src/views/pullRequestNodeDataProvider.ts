@@ -1,4 +1,4 @@
-import { TreeDataProvider, Disposable, EventEmitter, Event, commands, workspace, TreeItem} from 'vscode';
+import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem} from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/context';
 import { GitContentProvider } from './gitContentProvider';
@@ -19,8 +19,6 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {
-        commands.registerCommand(Commands.BitbucketRefreshPullRequests, this.refresh, this);
-
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()),

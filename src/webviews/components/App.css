@@ -254,3 +254,8 @@ hr {
 .ak-link-button > button {
   padding: 0px !important;
 }
+
+/* img::after is triggered only if img loading fails */
+.bitbucket-page img::after {
+  content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+}

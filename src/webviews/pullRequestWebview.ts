@@ -63,6 +63,14 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     });
                     break;
                 }
+                case 'merge': {
+                    handled = true;
+                    this.merge().catch((e: any) => {
+                        Logger.error(new Error(`error merging pull request: ${e}`));
+                        window.showErrorMessage('Pull reqeust could not be merged');
+                    });
+                    break;
+                }
                 case 'comment': {
                     if (isPostComment(e)) {
                         handled = true;
@@ -134,6 +142,11 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
 
     private async approve() {
         await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+        await this.forceUpdatePullRequest();
+    }
+
+    private async merge() {
+        await PullRequestApi.merge({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
         await this.forceUpdatePullRequest();
     }
 
