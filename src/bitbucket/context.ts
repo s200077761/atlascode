@@ -48,6 +48,7 @@ export class BitbucketContext extends Disposable {
             }),
 
             commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
+            commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this._onDidChangeBitbucketContext.fire(), this),
             
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
@@ -56,7 +57,7 @@ export class BitbucketContext extends Disposable {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addTreeItems(result);
             },this),
-            commands.registerCommand(Commands.CreatePullRequest, () => createPullRequest(this))
+            commands.registerCommand(Commands.CreatePullRequest, () => createPullRequest(this)),
         );
 
         this._disposable = Disposable.from(

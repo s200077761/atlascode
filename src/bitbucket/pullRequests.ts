@@ -173,6 +173,19 @@ export namespace PullRequestApi {
         });
     }
 
+    export async function merge(pr: PullRequest) {
+        let bb = await Container.clientManager.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        return await bb.pullrequests.merge({
+            pull_request_id: String(pr.data.id!),
+            repo_slug: parsed.name,
+            username: parsed.owner
+        });
+    }
+
     export async function postComment(
         remote: Remote,
         prId: number, text: string,
