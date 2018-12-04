@@ -85,6 +85,7 @@ div.icon-text img {
   color: var(--vscode-input-foreground);
   font: inherit;
   width: inherit;
+  padding: 6px;
 }
 
 .ak-textarea:focus {
