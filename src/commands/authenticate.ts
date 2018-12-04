@@ -16,8 +16,8 @@ export async function clearBitbucketAuth() {
 }
 
 export async function clearJiraAuth() {
-    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
     clearAuth(AuthProvider.JiraCloud);
+    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
 }
 
 async function authenticate(provider:string) {

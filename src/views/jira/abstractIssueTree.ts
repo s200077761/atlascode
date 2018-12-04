@@ -96,8 +96,8 @@ export abstract class AbstractIssueTree extends Disposable implements IssueTree 
         this.refresh();
     }
 
-    onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible) {
+    async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+        if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
             viewScreenEvent(this.id, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             this.startTimer();
         } else {

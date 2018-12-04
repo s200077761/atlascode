@@ -28,8 +28,10 @@ export class AuthManager implements Disposable {
 
     public async isAuthenticated(provider:string): Promise<boolean> {
         const info:AuthInfo|undefined = await this.getAuthInfo(provider);
-
-        return (info !== undefined && info !== emptyAuthInfo);
+        const isAuthed:boolean = (info !== undefined && info !== emptyAuthInfo);
+        Logger.debug("auth man checkfor for auth",info);
+        Logger.debug("auth man returning",isAuthed);
+        return isAuthed;
     }
     public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
         if (this._memStore.has(provider)) {
