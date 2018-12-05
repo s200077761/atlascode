@@ -38,7 +38,8 @@ pipelines:
             - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
             - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-            - npm -no-git-tag-version -f version $(./nightlyver.sh ${BITBUCKET_COMMIT})
+            - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
+            - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
             - yarn
             - vsce package
-            - curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-$(./nightlyver.sh ${BITBUCKET_COMMIT}).vsix"
+            - curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${NIGHTLY_VERSION}.vsix"
