@@ -6,6 +6,8 @@ import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
+import { assignIssue } from './commands/jira/assignIssue';
+import { IssueNode } from './views/nodes/issueNode';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -26,6 +28,7 @@ export enum Commands {
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowWelcomePage = 'atlascode.showWelcomePage',
     TransitionIssue = 'atlascode.jira.transitionIssue',
+    AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     CreatePullRequest = 'atlascode.bb.createPullRequest'
 }
 
@@ -44,6 +47,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Logger.debug('args',issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
-        vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue))
+        vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode))
     );
 }
