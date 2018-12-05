@@ -177,6 +177,14 @@ body div[class^="css-"] div[class^="css-"] {
   padding-bottom: inherit !important;
 }
 
+.vscode-dark [class^="styledPanel__PanelHeader"]:hover {
+  background: var(--background-color--lighten-05);
+}
+
+.vscode-light [class^="styledPanel__PanelHeader"]:hover {
+  background: var(--background-color--darken-05);
+}
+
 .Collapsible {
   border-radius: 5px;
   margin-bottom: 1em;

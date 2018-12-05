@@ -75,6 +75,20 @@
     babel-runtime "^6.26.0"
     tslib "^1.8.0"
 
+"@atlaskit/button@^10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-10.1.0.tgz#390ccbd2ff2f6d8eb4788b061d3f81df149e7ed2"
+  integrity sha512-1zEDHRlnwrpbOZIwiYvLJMS89vTRhIKi4r0td8i1L2ylLOndsOCeFA2yw1JYjM7D4ZTeX8Qb2x/yz9lvQQpUKw==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.1"
+    "@atlaskit/analytics-next-types" "^3.1.2"
+    "@atlaskit/spinner" "9.0.12"
+    "@atlaskit/theme" "^7.0.0"
+    "@atlaskit/type-helpers" "^2.0.0"
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+    tslib "^1.8.0"
+
 "@atlaskit/button@^9.0.15":
   version "9.0.16"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-9.0.16.tgz#1e5cf95ab20c879ba2b2548d17cfd7ac509cabea"
@@ -153,12 +167,12 @@
     keycode "^2.1.7"
     prop-types "^15.5.10"
 
-"@atlaskit/feedback-collector@^1.0.1":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@atlaskit/feedback-collector/-/feedback-collector-1.0.2.tgz#c8ab7b75fe585366999fc01acd8fefa5faec9ee5"
-  integrity sha512-Hvj/UJ1yzcRWoAXJLMnBsZ0LSjey2mvJvo7DoSJn5SMJEseuQ+o6gsedNuoizg61lolb7SXmD/9+xwCPwtnC4w==
+"@atlaskit/feedback-collector@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/feedback-collector/-/feedback-collector-2.0.0.tgz#5501379088496fab90f4bd9a9d363052aa43d2cb"
+  integrity sha512-PtPeRmkJeR8LQD4z+cEZqrB3+S7jkLWZPtp/o2YWPz1WQKNPBKDTx0Y6YD7VYTO2RUCgP+NkYupVT6KPNzMggw==
   dependencies:
-    "@atlaskit/button" "^10.0.4"
+    "@atlaskit/button" "^10.1.0"
     "@atlaskit/checkbox" "^5.0.8"
     "@atlaskit/field-text-area" "^4.0.13"
     "@atlaskit/flag" "^9.1.7"
@@ -182,7 +196,7 @@
     "@babel/runtime" "^7.0.0"
     babel-runtime "^6.26.0"
 
-"@atlaskit/field-text-area@^4.0.11", "@atlaskit/field-text-area@^4.0.13":
+"@atlaskit/field-text-area@^4.0.13":
   version "4.0.13"
   resolved "https://registry.yarnpkg.com/@atlaskit/field-text-area/-/field-text-area-4.0.13.tgz#645f0c90f749eb3795bae3dda076e557efeed7f5"
   integrity sha512-omurE+qLvydqrpnM/Je7rSK/G0nM8RYFX4qm8DsXp1PELSpm11e0QMoB3LwVbPBNUN6sVTZi/AOikX2m/d6B8w==
@@ -321,6 +335,19 @@
   integrity sha512-2HozJCL8imfVVDPkVSCQriJ9R0FwnT7vg2LqZVVv9BY28Pa8i2kE+8ZcXUnTUO3/Rb9v6Pv1gkpb0O3gyK0wBQ==
   dependencies:
     "@babel/runtime" "^7.0.0"
+
+"@atlaskit/panel@^0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@atlaskit/panel/-/panel-0.0.10.tgz#52f2669c9322f925932537b20ef9510ff9100b7e"
+  integrity sha512-4jE3BoC3kmp803QCd9Ygn+zih9N/ZCu+jKkaMZ8EMmFYAOQqEqxP0KTU1sBeR2mm4QKoglaFAQESH4/kdKrNLw==
+  dependencies:
+    "@atlaskit/button" "^10.0.4"
+    "@atlaskit/icon" "^15.0.1"
+    "@atlaskit/size-detector" "^5.0.8"
+    "@atlaskit/theme" "^7.0.0"
+    "@babel/runtime" "^7.0.0"
+    react-animate-height "^2.0.5"
+    react-focus-within "^2.0.1"
 
 "@atlaskit/popper@^0.3.3":
   version "0.3.3"
@@ -742,6 +769,14 @@
   version "16.7.11"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.7.11.tgz#1743b82ea6a0c659467f0c7317c233edb1f10be9"
   integrity sha512-KZvX2XjzBPz+Dh7cjgDzzLxUmg4k8CnCSsB1V2Vtt1YtSIGe1sfHp2+Htl3S5DzeKrHnioaDHTMN/fjAvnEsSg==
+  dependencies:
+    "@types/prop-types" "*"
+    csstype "^2.2.0"
+
+"@types/react@^15.0.0 || ^16.0.0":
+  version "16.7.13"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-16.7.13.tgz#d2369ae78377356d42fb54275d30218e84f2247a"
+  integrity sha512-WhqrQLAE9z65hfcvWqZfR6qUtIazFRyb8LXqHo8440R53dAQqNkt2OlVJ3FXwqOwAXXg4nfYxt0qgBvE18o5XA==
   dependencies:
     "@types/prop-types" "*"
     csstype "^2.2.0"
@@ -8726,6 +8761,14 @@ react-addons-text-content@^0.0.4:
   resolved "https://registry.yarnpkg.com/react-addons-text-content/-/react-addons-text-content-0.0.4.tgz#d2e259fdc951d1d8906c08902002108dce8792e5"
   integrity sha1-0uJZ/clR0diQbAiQIAIQjc6HkuU=
 
+react-animate-height@^2.0.5:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/react-animate-height/-/react-animate-height-2.0.7.tgz#e73608a3b31224ef2c3f75b5b3f1351211d30140"
+  integrity sha512-NbdKlopeFDUY7oDlLV5T3XvpV/yi8sqO7b78mzObpgWr+prPJ/tipKYNGTDHetjElnmrC5dyC5vHUu86ua3G1A==
+  dependencies:
+    classnames "^2.2.5"
+    prop-types "^15.6.1"
+
 react-clientside-effect@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/react-clientside-effect/-/react-clientside-effect-1.2.0.tgz#db823695f75e9616a5e4dd6d908e5ea627fb2516"
@@ -8792,6 +8835,14 @@ react-focus-lock@^1.11.3:
     focus-lock "^0.5.2"
     prop-types "^15.6.2"
     react-clientside-effect "^1.2.0"
+
+react-focus-within@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/react-focus-within/-/react-focus-within-2.0.1.tgz#6bd727a96e81a9a602052396d681b5138818ba67"
+  integrity sha512-lsP9+UW/9iSoqAqZ34wARnypP2izt3BjQ14+5+VpfvTnsNet1wFn071GtJYMmUR0pT6Pa59WnW+HhSguFGXVQg==
+  dependencies:
+    "@types/react" "^15.0.0 || ^16.0.0"
+    prop-types "^15.6.1"
 
 react-input-autosize@^2.2.1:
   version "2.2.1"
