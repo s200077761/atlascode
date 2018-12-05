@@ -61,7 +61,7 @@
     "@babel/runtime" "^7.0.0"
     babel-runtime "^6.26.0"
 
-"@atlaskit/button@^10.0.1", "@atlaskit/button@^10.0.4":
+"@atlaskit/button@^10.0.4":
   version "10.0.4"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-10.0.4.tgz#4c366cc411177d2250e50534557381a0d63aac39"
   integrity sha512-nmJa28GyZMTGaSW0hgM+qCcPwVp52QIJDu+jyO8Z627GwU/SEnOdRHAFLJpGOW89A0My86Eb7j6Rj9EqX4TEuA==

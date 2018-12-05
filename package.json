@@ -471,7 +471,7 @@
         "@atlaskit/avatar": "^14.1.2",
         "@atlaskit/avatar-group": "^2.1.5",
         "@atlaskit/breadcrumbs": "^6.0.10",
-        "@atlaskit/button": "^10.0.1",
+        "@atlaskit/button": "^10.1.0",
         "@atlaskit/checkbox": "^5.0.5",
         "@atlaskit/comment": "^6.0.23",
         "@atlaskit/css-reset": "^3.0.2",
