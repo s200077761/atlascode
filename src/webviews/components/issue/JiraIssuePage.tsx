@@ -19,6 +19,8 @@ import {
 } from "../../../ipc/issueActions";
 import {TransitionMenu} from "./TransitionMenu";
 import {Comments} from "./Comments";
+import Button from "@atlaskit/button";
+import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 
 type Emit = TransitionIssueAction | IssueCommentAction | Action | Alert;
 const emptyIssueData: IssueData = {
@@ -37,7 +39,8 @@ const emptyIssueData: IssueData = {
   labels: [],
   attachments: [],
   transitions: [],
-  workingSite: emptyWorkingSite
+  workingSite: emptyWorkingSite,
+  isAssignedToMe: false
 };
 
 type MyState = {
@@ -88,6 +91,13 @@ export default class JiraIssuePage extends WebviewComponent<
     this.setState({ commentInput: "" });
   }
 
+  handleAssign = (issue: Issue) => {
+    this.postMessage({
+      action: "assign",
+      issue: issue
+    });
+  }
+
   onHandleStatusChange = (item: any) => {
     const transition = this.state.data.transitions.find(
       trans =>
@@ -133,6 +143,7 @@ export default class JiraIssuePage extends WebviewComponent<
           avatar={<Avatar src={issue.assignee.avatarUrls["48x48"]} />}
           primaryText={issue.assignee.displayName || "Unassigned"}
         />
+        {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
       </div>
     );
   }
