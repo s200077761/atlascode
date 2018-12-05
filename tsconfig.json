@@ -2,7 +2,7 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "build/extension",
-        "module": "commonjs",
+        "module": "esnext",
         "target": "es6",
         "lib": [
             "es6",
