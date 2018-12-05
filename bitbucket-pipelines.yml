@@ -39,6 +39,7 @@ pipelines:
             - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
+            - echo "nv-${NIGHTLY_VERSION}"
             - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
             - yarn
             - vsce package
