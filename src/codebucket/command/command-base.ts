@@ -4,6 +4,8 @@ import * as vscode from 'vscode';
 import { Backend } from '../backend/backend-base';
 import { GitBackend } from '../backend/backend-git';
 import { Shell } from '../../util/shell';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { FileDiffQueryParams } from '../../views/nodes/pullRequestNode';
 
 export abstract class CommandBase {
 
@@ -48,7 +50,11 @@ export abstract class CommandBase {
    * Get the open directory containing the current file.
    */
   protected getDirectory(): string {
-    const editor = this.getOpenEditor();
+    const editor = CommandBase.getOpenEditor();
+    if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
+      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      return vscode.Uri.parse(queryParams.repoUri).fsPath;
+    }
     return path.dirname(editor.document.fileName);
   }
 
@@ -56,7 +62,11 @@ export abstract class CommandBase {
    * Get the path to the current file, relative to the repository root.
    */
   protected getFilePath(root: string): string {
-    const editor = this.getOpenEditor();
+    const editor = CommandBase.getOpenEditor();
+    if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
+      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      return queryParams.path;
+    }
     return path.relative(root, editor.document.fileName);
   }
 
@@ -64,7 +74,7 @@ export abstract class CommandBase {
    * Get the list of currently selected line ranges, in start:end format
    */
   protected getLineRanges(): string[] {
-    const editor = this.getOpenEditor();
+    const editor = CommandBase.getOpenEditor();
     return editor.selections.map(selection => {
       // vscode provides 0-based line numbers but Bitbucket line numbers start with 1.
       return `${selection.start.line + 1}:${selection.end.line + 1}`;
@@ -75,7 +85,7 @@ export abstract class CommandBase {
    * Get the 1-based line number of the (first) currently selected line.
    */
   protected getCurrentLine(): number {
-    const selection = this.getOpenEditor().selection;
+    const selection = CommandBase.getOpenEditor().selection;
     return selection.start.line + 1;
   }
 
@@ -87,7 +97,7 @@ export abstract class CommandBase {
     vscode.commands.executeCommand('vscode.open', uri);
   }
 
-  private getOpenEditor(): vscode.TextEditor {
+  public static getOpenEditor(): vscode.TextEditor {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       throw new Error('No open editor');
