@@ -7,7 +7,6 @@ import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
 import { assignIssue } from './commands/jira/assignIssue';
-import { AuthProvider } from './atlclients/authInfo';
 import { IssueNode } from './views/nodes/issueNode';
 
 export enum Commands {
@@ -49,12 +48,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
-        vscode.commands.registerCommand(Commands.AssignIssueToMe, async (issuNode: IssueNode) => {
-            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-            if (authInfo) {
-                await assignIssue(issuNode.issue, authInfo.user.id);
-                Container.jiraExplorer.refresh();
-            }
-        })
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode))
     );
 }
