@@ -3,6 +3,7 @@ import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
+import Panel from '@atlaskit/panel';
 import Tag from '@atlaskit/tag';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
@@ -107,16 +108,18 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <p>{pr.title}</p>
                             </PageHeader>
                             <hr />
-                            <h3>Commits</h3>
-                            <Commits {...this.state.pr} />
+                            <Panel isDefaultExpanded header={<h3>Summary</h3>}>
+                                <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
+                            </Panel>
                             <hr />
-                            <h3>Summary</h3>
-                            <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }}>
-                            </p>
+                            <Panel isDefaultExpanded header={<h3>Commits</h3>}>
+                                <Commits {...this.state.pr} />
+                            </Panel>
                             <hr />
-                            <h3>Comments</h3>
-                            <Comments prData={this.state.pr} onComment={this.handlePostComment} />
-                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                            <Panel isDefaultExpanded header={<h3>Comments</h3>}>
+                                <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                                <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                            </Panel>
                         </GridColumn>
                     </Grid>
                 </Page>
