@@ -100,6 +100,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.assignIssueToMe",
+                "title": "Assign Issue to Me",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.refreshPullRequests",
                 "title": "Refresh Bitbucket pull requests",
                 "icon": {
@@ -236,6 +241,10 @@
                 {
                     "command": "atlascode.jira.transitionIssue",
                     "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.jira.assignIssueToMe",
+                    "when": "view =~ /(atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 }
             ],
             "commandPalette": [
