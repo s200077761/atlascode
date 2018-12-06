@@ -9,7 +9,7 @@
   dependencies:
     "@atlaskit/type-helpers" "^2.0.0"
 
-"@atlaskit/analytics-next@^3.0.10", "@atlaskit/analytics-next@^3.1.0", "@atlaskit/analytics-next@^3.1.1":
+"@atlaskit/analytics-next@^3.1.0", "@atlaskit/analytics-next@^3.1.1":
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-3.1.1.tgz#53dac77ec39486b41b4b7a13d06f9a576fc0842c"
   integrity sha512-7a9EXZpZqbFI17AB8cUxLvfyf32LdUWJxrx2Xvu3NM82AhKISFd4UY3eJMEkV0Kr/C3UTfL1BeZQTxkkxZAifA==
@@ -88,17 +88,6 @@
     "@babel/runtime" "^7.0.0"
     babel-runtime "^6.26.0"
     tslib "^1.8.0"
-
-"@atlaskit/button@^9.0.15":
-  version "9.0.16"
-  resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-9.0.16.tgz#1e5cf95ab20c879ba2b2548d17cfd7ac509cabea"
-  integrity sha512-VFk7Qyp+IM2AxsPseHubrqU4ORq5BQPRDafWHVFqg/yf2AzKU1sDavRIX8jQfchnu5rBdBgmQjffX5cArzCawg==
-  dependencies:
-    "@atlaskit/analytics-next" "^3.0.10"
-    "@atlaskit/spinner" "9.0.10"
-    "@atlaskit/theme" "^6.1.1"
-    "@babel/runtime" "^7.0.0"
-    babel-runtime "^6.26.0"
 
 "@atlaskit/checkbox@^5.0.5", "@atlaskit/checkbox@^5.0.8":
   version "5.0.8"
@@ -231,16 +220,6 @@
     "@atlaskit/icon" "^15.0.1"
     "@atlaskit/theme" "^7.0.0"
     "@babel/runtime" "^7.0.0"
-
-"@atlaskit/icon@^14.0.2", "@atlaskit/icon@^14.2.1":
-  version "14.6.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-14.6.1.tgz#cc5581395f85044922bcb5e859430eb13d23a41b"
-  integrity sha512-CtpULHTYtOpJGRwoFeZUSNYVyFFknoOCL8qqY1pr/z9LxDi/hmGYTfby3JBLMODSwxb5hS/cYMENqzRzMihxpg==
-  dependencies:
-    "@atlaskit/theme" "^6.2.1"
-    "@babel/runtime" "^7.0.0"
-    babel-runtime "^6.26.0"
-    uuid "^3.1.0"
 
 "@atlaskit/icon@^15.0.1":
   version "15.0.1"
@@ -404,17 +383,7 @@
     babel-runtime "^6.26.0"
     raf-schd "^2.1.0"
 
-"@atlaskit/spinner@9.0.10":
-  version "9.0.10"
-  resolved "https://registry.yarnpkg.com/@atlaskit/spinner/-/spinner-9.0.10.tgz#4cb6526fcd2a527a0b2c6fca0fca7fe1c1017e64"
-  integrity sha512-1akBXR6uC/cRWzwGPF4IfS7YpCsHdlncvo98p4W9ZGRn822SBQk9hiZBL0BfvkEFViAakPV7JZ5zZKc75UExhA==
-  dependencies:
-    "@atlaskit/theme" "^6.1.1"
-    "@babel/runtime" "^7.0.0"
-    babel-runtime "^6.26.0"
-    react-transition-group "^2.2.1"
-
-"@atlaskit/spinner@9.0.12", "@atlaskit/spinner@^9.0.10", "@atlaskit/spinner@^9.0.12":
+"@atlaskit/spinner@9.0.12", "@atlaskit/spinner@^9.0.12":
   version "9.0.12"
   resolved "https://registry.yarnpkg.com/@atlaskit/spinner/-/spinner-9.0.12.tgz#88fbe934427cc1a1f067813dc1e20a685f4ae702"
   integrity sha512-VovSvK9NN+jIw+gLV87gWUFWukbv7I5mXj+G5BnoY0fXJkf4IXfxkkwD8mCiCXg28paUDWJxWlrXDrdwsclPpA==
@@ -424,16 +393,16 @@
     babel-runtime "^6.26.0"
     react-transition-group "^2.2.1"
 
-"@atlaskit/table-tree@^4.1.11":
-  version "4.1.11"
-  resolved "https://registry.yarnpkg.com/@atlaskit/table-tree/-/table-tree-4.1.11.tgz#d5c53d5ed350c8abc9ffd73abc9317a18c18bbaf"
-  integrity sha512-aXpUhOr1OLzTF5xEDekKIvp0sYqthrh5UE5Bwu1BChnG318y9BBAzFMBk6R+jBKiMZm0QrWwzzbSaAn2hyPN6g==
+"@atlaskit/table-tree@^5.0.4":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@atlaskit/table-tree/-/table-tree-5.0.4.tgz#ad472a88ffeec3f5d8890f9fae28ef8a52d60a92"
+  integrity sha512-SHQxFIBFF6R6om4cmsYVXDBQGWeNcQ7vCgLI7Ffu3VTiLmkRhqxCMXpxDzIfG3cyLeiOxHCEUGHah16EF7opRw==
   dependencies:
-    "@atlaskit/analytics-next" "^3.0.10"
-    "@atlaskit/button" "^9.0.15"
-    "@atlaskit/icon" "^14.0.2"
-    "@atlaskit/spinner" "^9.0.10"
-    "@atlaskit/theme" "^6.1.1"
+    "@atlaskit/analytics-next" "^3.1.1"
+    "@atlaskit/button" "^10.0.4"
+    "@atlaskit/icon" "^15.0.1"
+    "@atlaskit/spinner" "^9.0.12"
+    "@atlaskit/theme" "^7.0.0"
     "@babel/runtime" "^7.0.0"
     lodash.get "^4.4.2"
     lodash.set "^4.3.2"
@@ -451,14 +420,6 @@
     babel-runtime "^6.26.0"
     create-error "^0.3.1"
     debug "^2.2.0"
-
-"@atlaskit/theme@^6.1.1", "@atlaskit/theme@^6.2.1":
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/theme/-/theme-6.2.1.tgz#2d84a5b8dbd05c5d94064c0ab29e6f6a2f1ff415"
-  integrity sha512-6u0OxpnZ2n+G7Wc1wckgtOEiYl3wmJ2HvBd28N7d+Fi/fbi+C4TzfBvyeENUqtrp1UIEhweVbB2WLoVoKA5c/w==
-  dependencies:
-    "@babel/runtime" "^7.0.0"
-    prop-types "^15.5.10"
 
 "@atlaskit/theme@^7.0.0":
   version "7.0.0"
