@@ -9,6 +9,7 @@ export interface ConfigData extends Message {
     projects:Project[];
     isJiraAuthenticated:boolean;
     isBitbucketAuthenticated:boolean;
+    jiraAccessToken: string;
 }
 
 export const emptyConfigData:ConfigData = {
@@ -17,5 +18,6 @@ export const emptyConfigData:ConfigData = {
     sites:[],
     projects:[],
     isJiraAuthenticated: false,
-    isBitbucketAuthenticated: false
+    isBitbucketAuthenticated: false,
+    jiraAccessToken: ''
 };
