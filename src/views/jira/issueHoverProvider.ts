@@ -6,11 +6,11 @@ import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
 import { Container } from "../../container";
 
-const IssueKeyRegEx = /[A-Z]+-\d+/g;
+export const IssueKeyRegEx = new RegExp(/[A-Z]+-\d+/g);
 
 export class IssueHoverProvider implements HoverProvider {
   provideHover(doc: vscode.TextDocument, position: vscode.Position) {
-    let range = doc.getWordRangeAtPosition(position, new RegExp(IssueKeyRegEx));
+    let range = doc.getWordRangeAtPosition(position, IssueKeyRegEx);
     if (range === undefined || range.isEmpty) {
       return null;
     }

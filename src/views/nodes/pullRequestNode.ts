@@ -6,6 +6,9 @@ import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
+import { GitBackend } from '../../codebucket/backend/backend-git';
+import { IssueKeyRegEx } from '../jira/issueHoverProvider';
+import { StaticIssuesNode } from '../jira/staticIssuesNode';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
@@ -44,18 +47,43 @@ export class PullRequestTitlesNode extends BaseNode {
             // Fetch the specific pullrequest by id to fill in the missing details.
             this.pr = await PullRequestApi.get(this.pr);
             const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
-            const inlineComments = await this.fetchComments();
-            return [
-                new DescriptionNode(this.pr),
-                ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))
-            ];
+            const allComments = await PullRequestApi.getComments(this.pr);
+            const inlineComments = await this.fetchComments(allComments);
+            const jiraIssueKeys = await this.parseJiraIssueKeys(allComments);
+
+            const children: BaseNode[] = [new DescriptionNode(this.pr)];
+            if (jiraIssueKeys.length > 0) {
+                children.push(new StaticIssuesNode(jiraIssueKeys, 'Related Jira issues'));
+            }
+            children.push(...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) })));
+
+            return  children;
         } else {
             return element.getChildren();
         }
     }
 
-    private async fetchComments(): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
-        const allComments = await PullRequestApi.getComments(this.pr);
+    private async parseJiraIssueKeys(allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
+        const result = new Set<string>();
+
+        const b = new GitBackend(this.pr.repository.rootUri.fsPath);
+        const text = await b.getRevisionMessage(`${this.pr.data.destination!.commit!.hash!}..${this.pr.data.source!.commit!.hash!}`);
+        const commitMessageMatches = text.match(IssueKeyRegEx) || [];
+        commitMessageMatches.forEach(m => result.add(m));
+
+        const prTitleMatches = this.pr.data.title!.match(IssueKeyRegEx) || [];
+        prTitleMatches.forEach(m => result.add(m));
+
+        const prSummaryMatches = this.pr.data.summary!.raw!.match(IssueKeyRegEx) || [];
+        prSummaryMatches.forEach(m => result.add(m));
+
+        const prCommentsMatches = allComments.map(c => c.content!.raw!).join().match(IssueKeyRegEx) || [];
+        prCommentsMatches.forEach(m => result.add(m));
+
+        return Array.from(result);
+    }
+
+    private async fetchComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
         const inlineComments = this.toNestedList(allComments);
         const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
 
