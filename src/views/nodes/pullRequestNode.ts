@@ -6,6 +6,7 @@ import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
+import { RelatedIssuesNode } from './relatedIssuesNode';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
@@ -44,18 +45,23 @@ export class PullRequestTitlesNode extends BaseNode {
             // Fetch the specific pullrequest by id to fill in the missing details.
             this.pr = await PullRequestApi.get(this.pr);
             const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
-            const inlineComments = await this.fetchComments();
-            return [
-                new DescriptionNode(this.pr),
-                ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))
-            ];
+            const allComments = await PullRequestApi.getComments(this.pr);
+            const inlineComments = await this.fetchComments(allComments);
+
+            const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments);
+
+            const children: BaseNode[] = [new DescriptionNode(this.pr)];
+            if (relatedIssuesNode) {
+                children.push(relatedIssuesNode);
+            }
+            children.push(...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) })));
+            return  children;
         } else {
             return element.getChildren();
         }
     }
 
-    private async fetchComments(): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
-        const allComments = await PullRequestApi.getComments(this.pr);
+    private async fetchComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
         const inlineComments = this.toNestedList(allComments);
         const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
 

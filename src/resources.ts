@@ -21,6 +21,8 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.icons.set('delete', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'blocker.svg'))));
     Resources.icons.set('detail', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'detail-view.svg'))));
 
+    Resources.icons.set('issues', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
+
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 
     Resources.html.set('reactHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()));

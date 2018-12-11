@@ -427,6 +427,12 @@
                     "description": "Explorer location for Bitbucket pull requests",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.relatedJiraIssues.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show related Jira issues for Bitbucket pull requests",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.contextMenus.enabled": {
                     "type": "boolean",
                     "default": true,

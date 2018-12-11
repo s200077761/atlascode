@@ -65,6 +65,11 @@ export interface BitbucketConfig {
 export interface BitbucketExplorer {
     enabled:boolean;
     location:BitbucketExplorerLocation;
+    relatedJiraIssues:BitbucketRelatedJiraIssues;
+}
+
+export interface BitbucketRelatedJiraIssues {
+    enabled:boolean;
 }
 
 export interface BitbucketStatusBar {
@@ -123,9 +128,14 @@ export const emptyJiraConfig:JiraConfig = {
     hover: emptyJiraHover
 };
 
+export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
+    enabled: true
+};
+
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
-    location:BitbucketExplorerLocation.Atlascode
+    location:BitbucketExplorerLocation.Atlascode,
+    relatedJiraIssues: emptyRelatedJiraIssues
 };
 
 export const emptyBitbucketStatusBar: BitbucketStatusBar = {
