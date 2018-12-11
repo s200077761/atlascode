@@ -16,3 +16,18 @@ export interface PaginatedPullRequests {
     data: PullRequest[];
     next?: string;
 }
+
+export interface PaginatedCommits {
+    data: Bitbucket.Schema.Commit[];
+    next?: string;
+}
+
+export interface PaginatedComments {
+    data: Bitbucket.Schema.PullrequestComment[];
+    next?: string;
+}
+
+export interface PaginatedFileChanges {
+    data: any[];
+    next?: string;
+}

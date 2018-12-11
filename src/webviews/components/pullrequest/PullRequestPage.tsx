@@ -5,6 +5,8 @@ import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Panel from '@atlaskit/panel';
 import Tag from '@atlaskit/tag';
+import Tooltip from '@atlaskit/tooltip';
+import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -84,6 +86,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 {pr.state === "OPEN"
                     ? <Button className='ak-button' isLoading={this.state.isMergeButtonLoading} onClick={this.handleMerge}>Merge</Button>
                     : <Button className='ak-button' isDisabled>{pr.state}</Button>
+                }
+                {
+                    this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
             </InlineFlex>
         );

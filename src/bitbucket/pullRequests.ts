@@ -1,13 +1,18 @@
 import * as gup from 'git-url-parse';
 import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
 import { Container } from "../container";
 import { Logger } from '../logger';
 
 const bitbucketHost = "bitbucket.org";
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
+const maxItemsSupported = {
+    commits: 100,
+    comments: 100,
+    fileChanges: 100
+};
 
 // had to do this as the library introduced a bug with latest update
 export function GitUrlParse(url: string): gup.GitUrl {
@@ -75,7 +80,7 @@ export namespace PullRequestApi {
         return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: data };
     }
 
-    export async function getChangedFiles(pr: PullRequest): Promise<any[]> {
+    export async function getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -117,10 +122,10 @@ export namespace PullRequestApi {
             });
         });
 
-        return result;
+        return { data: result, next: undefined };
     }
 
-    export async function getCommits(pr: PullRequest): Promise<Bitbucket.Schema.Commit[]> {
+    export async function getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -130,13 +135,13 @@ export namespace PullRequestApi {
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner,
-            pagelen: 100
+            pagelen: maxItemsSupported.commits
         });
 
-        return data.values || [];
+        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
-    export async function getComments(pr: PullRequest): Promise<Bitbucket.Schema.Comment[]> {
+    export async function getComments(pr: PullRequest): Promise<PaginatedComments> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -146,10 +151,10 @@ export namespace PullRequestApi {
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
             username: parsed.owner,
-            pagelen: 100
+            pagelen: maxItemsSupported.comments
         });
 
-        return data.values || [];
+        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
     export function getBitbucketRemotes(repository: Repository): Remote[] {

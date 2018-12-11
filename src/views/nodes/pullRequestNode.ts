@@ -7,6 +7,7 @@ import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
 import { RelatedIssuesNode } from './relatedIssuesNode';
+import { EmptyStateNode } from './emptyStateNode';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
@@ -44,17 +45,20 @@ export class PullRequestTitlesNode extends BaseNode {
             // When a repo's pullrequests are fetched, the response may not have all fields populated.
             // Fetch the specific pullrequest by id to fill in the missing details.
             this.pr = await PullRequestApi.get(this.pr);
-            const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
+            const fileChanges = await PullRequestApi.getChangedFiles(this.pr);
             const allComments = await PullRequestApi.getComments(this.pr);
-            const inlineComments = await this.fetchComments(allComments);
+            const inlineComments = await this.fetchComments(allComments.data);
 
-            const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments);
+            const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
 
             const children: BaseNode[] = [new DescriptionNode(this.pr)];
             if (relatedIssuesNode) {
                 children.push(relatedIssuesNode);
             }
-            children.push(...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) })));
+            children.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) })));
+            if (fileChanges.next) {
+                children.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
+            }
             return  children;
         } else {
             return element.getChildren();

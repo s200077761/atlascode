@@ -128,9 +128,10 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         type: 'update'
                         , currentUser: currentUser
                         , pr: pr.data
-                        , commits: commits
-                        , comments: comments
+                        , commits: commits.data
+                        , comments: comments.data
                         , currentBranch: pr.repository.state.HEAD!.name!
+                        , errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR has more items (commits/comments) than what is supported by this extension.' : undefined
                     }
                 };
                 this.postMessage(this._state.prData);
@@ -196,7 +197,8 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
 
     private async forceUpdateComments() {
         const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
-        this._state.prData.comments = await PullRequestApi.getComments(pr);
+        const paginatedComments = await PullRequestApi.getComments(pr);
+        this._state.prData.comments = paginatedComments.data;
         await this.updatePullRequest(pr);
     }
 }
