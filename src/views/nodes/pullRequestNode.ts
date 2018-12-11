@@ -55,7 +55,7 @@ export class PullRequestTitlesNode extends BaseNode {
             if (relatedIssuesNode) {
                 children.push(relatedIssuesNode);
             }
-            children.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) })));
+            children.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments.get(fileChange.filename) )));
             if (fileChanges.next) {
                 children.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
             }
@@ -113,17 +113,31 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private pr: PullRequest, private fileChange: any) {
+    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private comments?: Bitbucket.Schema.Comment[][]) {
         super();
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem(`${this.fileChange.comments ? '💬 ' : ''}${this.fileChange.filename}`, vscode.TreeItemCollapsibleState.None);
+        let fileDisplayName = '';
+        switch (this.fileChange.status) {
+            case 'removed':
+                fileDisplayName = this.fileChange.old!.path!;
+                break;
+            case 'renamed':
+                fileDisplayName = `${this.fileChange.old!.path!} → ${this.fileChange.new!.path!}`;
+                break;
+            case 'added':
+            case 'modified':
+            default:
+                fileDisplayName = this.fileChange.new!.path!;
+                break;
+        }
+        let item = new vscode.TreeItem(`${this.comments ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
-        if (this.fileChange.comments) {
-            this.fileChange.comments.forEach((c: Bitbucket.Schema.Comment[]) => {
+        if (this.comments) {
+            this.comments.forEach((c: Bitbucket.Schema.Comment[]) => {
                 const parentComment = c[0];
                 if (parentComment.inline!.from) {
                     lhsCommentThreads.push(c);
@@ -141,7 +155,7 @@ class PullRequestFilesNode extends BaseNode {
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branch!.name!,
                 commitHash: this.pr.data.destination!.commit!.hash!,
-                path: this.fileChange.filename,
+                path: this.fileChange.old ? this.fileChange.old.path! : undefined,
                 commentThreads: lhsCommentThreads
             } as FileDiffQueryParams)
         };
@@ -153,7 +167,7 @@ class PullRequestFilesNode extends BaseNode {
                 remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branch!.name!,
                 commitHash: this.pr.data.source!.commit!.hash!,
-                path: this.fileChange.filename,
+                path: this.fileChange.new ? this.fileChange.new.path! : undefined,
                 commentThreads: rhsCommentThreads
             } as FileDiffQueryParams)
         };
@@ -176,9 +190,9 @@ class PullRequestFilesNode extends BaseNode {
             command: 'vscode.diff',
             title: 'Diff file',
             arguments: [
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(lhsQueryParam),
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(rhsQueryParam),
-                this.fileChange.filename
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
+                fileDisplayName
             ]
         };
 
