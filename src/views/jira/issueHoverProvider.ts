@@ -1,12 +1,10 @@
 import * as vscode from "vscode";
-
 import { HoverProvider } from "vscode";
 import { fetchIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
 import { Container } from "../../container";
-
-export const IssueKeyRegEx = new RegExp(/[A-Z]+-\d+/g);
+import { IssueKeyRegEx } from "../../jira/issueKeyParser";
 
 export class IssueHoverProvider implements HoverProvider {
   provideHover(doc: vscode.TextDocument, position: vscode.Position) {
