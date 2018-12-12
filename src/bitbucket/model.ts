@@ -28,6 +28,6 @@ export interface PaginatedComments {
 }
 
 export interface PaginatedFileChanges {
-    data: any[];
+    data: Bitbucket.Schema.Diffstat[];
     next?: string;
 }
