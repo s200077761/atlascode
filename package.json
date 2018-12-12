@@ -240,11 +240,11 @@
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "view =~ /(atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated"
                 }
             ],
             "commandPalette": [
