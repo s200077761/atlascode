@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { BaseNode } from './baseNode';
-import { PullRequest, PaginatedPullRequests } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
 import { RelatedIssuesNode } from './relatedIssuesNode';
 import { EmptyStateNode } from './emptyStateNode';
+import { Logger } from '../../logger';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
@@ -42,30 +43,58 @@ export class PullRequestTitlesNode extends BaseNode {
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!element) {
             if (!this.pr) { return []; }
-            // When a repo's pullrequests are fetched, the response may not have all fields populated.
-            // Fetch the specific pullrequest by id to fill in the missing details.
-            this.pr = await PullRequestApi.get(this.pr);
-            const fileChanges = await PullRequestApi.getChangedFiles(this.pr);
-            const allComments = await PullRequestApi.getComments(this.pr);
-            const inlineComments = await this.fetchComments(allComments.data);
 
-            const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
+            this.pr = await this.hydratePullRequest(this.pr);
 
-            const children: BaseNode[] = [new DescriptionNode(this.pr)];
-            if (relatedIssuesNode) {
-                children.push(relatedIssuesNode);
-            }
-            children.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments.get(fileChange.filename) )));
-            if (fileChanges.next) {
-                children.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
-            }
-            return  children;
+            let promises = Promise.all([
+                PullRequestApi.getChangedFiles(this.pr),
+                PullRequestApi.getComments(this.pr)
+            ]);
+
+            return promises.then(
+                async result => {
+                    let [fileChanges, allComments] = result;
+
+                    const children: BaseNode[] = [new DescriptionNode(this.pr)];
+                    children.push(...await this.createRelatedJiraIssueNode(allComments));
+                    children.push(...await this.createFileChangesNodes(allComments, fileChanges));
+                    return children;
+                },
+                reason => {
+                    Logger.debug('error fetching pull request details', reason);
+                    return [new EmptyStateNode('⚠️ Error: fetching pull request details failed')];
+                });
         } else {
             return element.getChildren();
         }
     }
 
-    private async fetchComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
+    // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
+    // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
+    private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
+        return await PullRequestApi.get(pr);
+    }
+
+    private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
+        const result: BaseNode[] = [];
+        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
+        if (relatedIssuesNode) {
+            result.push(relatedIssuesNode);
+        }
+        return result;
+    }
+
+    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<BaseNode[]> {
+        const result: BaseNode[] = [];
+        const inlineComments = await this.getInlineComments(allComments.data);
+        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments)));
+        if (fileChanges.next) {
+            result.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
+        }
+        return result;
+    }
+
+    private async getInlineComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
         const inlineComments = this.toNestedList(allComments);
         const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
 
@@ -113,7 +142,7 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private comments?: Bitbucket.Schema.Comment[][]) {
+    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>) {
         super();
     }
 
@@ -132,20 +161,27 @@ class PullRequestFilesNode extends BaseNode {
                 fileDisplayName = this.fileChange.new!.path!;
                 break;
         }
-        let item = new vscode.TreeItem(`${this.comments ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
+
+        const comments: Bitbucket.Schema.Comment[][] = [];
+        if (this.fileChange.old && this.commentsMap.has(this.fileChange.old!.path!)) {
+            comments.push(...this.commentsMap.get(this.fileChange.old!.path!)!);
+        }
+        if (this.fileChange.new && this.commentsMap.has(this.fileChange.new!.path!)) {
+            comments.push(...this.commentsMap.get(this.fileChange.new!.path!)!);
+        }
+
+        let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
-        if (this.comments) {
-            this.comments.forEach((c: Bitbucket.Schema.Comment[]) => {
-                const parentComment = c[0];
-                if (parentComment.inline!.from) {
-                    lhsCommentThreads.push(c);
-                } else {
-                    rhsCommentThreads.push(c);
-                }
-            });
-        }
+        comments.forEach((c: Bitbucket.Schema.Comment[]) => {
+            const parentComment = c[0];
+            if (parentComment.inline!.from) {
+                lhsCommentThreads.push(c);
+            } else {
+                rhsCommentThreads.push(c);
+            }
+        });
 
         let lhsQueryParam = {
             query: JSON.stringify({
