@@ -13,6 +13,7 @@ export class EmptyStateNode extends IssueNode {
 
     getTreeItem(): TreeItem {
         let treeItem = new TreeItem(this.text, TreeItemCollapsibleState.None);
+        treeItem.tooltip = this.text;
 
         if(this.command) {
             treeItem.command = this.command;

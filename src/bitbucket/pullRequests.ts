@@ -1,13 +1,17 @@
 import * as gup from 'git-url-parse';
-import * as GitDiffParser from 'parse-diff';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
 import { Container } from "../container";
 import { Logger } from '../logger';
 
 const bitbucketHost = "bitbucket.org";
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
+const maxItemsSupported = {
+    commits: 100,
+    comments: 100,
+    fileChanges: 100
+};
 
 // had to do this as the library introduced a bug with latest update
 export function GitUrlParse(url: string): gup.GitUrl {
@@ -75,52 +79,22 @@ export namespace PullRequestApi {
         return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: data };
     }
 
-    export async function getChangedFiles(pr: PullRequest): Promise<any[]> {
+    export async function getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
-        let result: any[] = [];
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
-        let { data } = await bb.pullrequests.getDiff({
+        let { data } = await bb.pullrequests.getDiffStat({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner
         });
 
-        let files = GitDiffParser(data);
-        files.forEach(item => {
-            let status = 'modified';
-            if (item.to === '/dev/null') {
-                item.to = undefined;
-            }
-            if (item.from === '/dev/null') {
-                item.from = undefined;
-            }
-            if (item.from && item.to) {
-                status = 'modified';
-            } else if (item.to) {
-                status = 'added';
-            } else if (item.from) {
-                status = 'removed';
-            }
-            result.push({
-                blob_url: remoteUrl,
-                raw_url: remoteUrl,
-                contents_url: remoteUrl,
-                filename: item.to ? item.to : item.from,
-                status: status,
-                patch: item.chunks.reduce((acc, i) => {
-                    return acc + i.changes.reduce((acc1, i1) => acc1 + '\n' + i1.content, i.content);
-                }, ''),
-                sha: undefined
-            });
-        });
-
-        return result;
+        return data.values ? { data: data.values as Bitbucket.Schema.Diffstat[], next: data.next } : { data: [], next: undefined };
     }
 
-    export async function getCommits(pr: PullRequest): Promise<Bitbucket.Schema.Commit[]> {
+    export async function getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -130,13 +104,13 @@ export namespace PullRequestApi {
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner,
-            pagelen: 100
+            pagelen: maxItemsSupported.commits
         });
 
-        return data.values || [];
+        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
-    export async function getComments(pr: PullRequest): Promise<Bitbucket.Schema.Comment[]> {
+    export async function getComments(pr: PullRequest): Promise<PaginatedComments> {
         let bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
 
@@ -146,10 +120,10 @@ export namespace PullRequestApi {
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
             username: parsed.owner,
-            pagelen: 100
+            pagelen: maxItemsSupported.comments
         });
 
-        return data.values || [];
+        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
     export function getBitbucketRemotes(repository: Repository): Remote[] {

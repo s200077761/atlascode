@@ -506,7 +506,6 @@
         "git-url-parse": "^10.1.0",
         "handlebars": "^4.0.12",
         "keytar": "^4.3.0",
-        "parse-diff": "^0.5.1",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.0",
         "passport-bitbucket-oauth2": "^0.1.2",
