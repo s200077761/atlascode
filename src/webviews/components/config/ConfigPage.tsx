@@ -157,7 +157,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
-                            <CustomJQL inputId="" cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
+                            <CustomJQL configData={this.state} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

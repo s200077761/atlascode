@@ -4,6 +4,7 @@ export const extensionId = 'atlascode';
 export const extensionOutputChannelName = 'Atlascode';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
+export const CustomJQLKey = "jira.customJql";
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
 export const BitbucketRelatedIssuesConfigurationKey = 'bitbucket.explorer.relatedJiraIssues.enabled';
 export const BitbucketContextMenusConfigurationKey = 'bitbucket.contextMenus.enabled';
