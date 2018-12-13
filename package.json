@@ -39,6 +39,11 @@
     "contributes": {
         "commands": [
             {
+                "command": "todolense.showOpenProjects",
+                "title": "Show open editor windows",
+                "category": "AtlasCode"
+              },
+            {
                 "command": "atlascode.bb.authenticate",
                 "title": "Authenticate With Bitbucket",
                 "category": "AtlasCode"
@@ -462,7 +467,7 @@
         "@atlaskit/avatar": "^14.1.2",
         "@atlaskit/avatar-group": "^2.1.5",
         "@atlaskit/breadcrumbs": "^6.0.10",
-        "@atlaskit/button": "^10.0.1",
+        "@atlaskit/button": "^10.1.0",
         "@atlaskit/checkbox": "^5.0.5",
         "@atlaskit/comment": "^6.0.23",
         "@atlaskit/css-reset": "^3.0.2",
@@ -504,7 +509,8 @@
         "semver": "^5.6.0",
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
-        "tunnel": "^0.0.6"
+        "tunnel": "^0.0.6",
+        "electron": "3.0.2"
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
@@ -532,6 +538,7 @@
         "typescript": "^2.6.1",
         "vscode": "^1.1.21",
         "webpack": "^4.26.1",
-        "webpack-cli": "^3.1.2"
+        "webpack-cli": "^3.1.2",
+        "@types/electron": "^1.6.10"
     }
 }
