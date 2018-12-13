@@ -7,6 +7,7 @@ export interface PRData extends Message {
     commits?: Bitbucket.Schema.Commit[];
     comments?: Bitbucket.Schema.Comment[];
     currentBranch: string;
+    errors?: string;
 }
 
 export function isPRData(a: Message): a is PRData {

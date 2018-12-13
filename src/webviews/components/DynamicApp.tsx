@@ -23,8 +23,13 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
-  const LoadableIssuewView = Loadable({
+  const LoadableIssueView = Loadable({
     loader: () => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage'),
+    loading: Loading,
+  });
+
+  const LoadableCreateIssueView = Loadable({
+    loader: () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
     loading: Loading,
   });
 
@@ -72,7 +77,14 @@ class DynamicApp extends React.Component<{view:string|null}>  {
             case 'viewIssueScreen': {
                 return(
                     <div>
-                        <LoadableIssuewView />
+                        <LoadableIssueView />
+                    </div>
+                );
+            }
+            case 'atlascodeCreateIssueScreen': {
+                return(
+                    <div>
+                        <LoadableCreateIssueView />
                     </div>
                 );
             }

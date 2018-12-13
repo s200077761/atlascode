@@ -2,7 +2,6 @@ import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Collapsible from 'react-collapsible';
-import { ButtonGroup } from '@atlaskit/button';
 import Button from '@atlaskit/button';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
@@ -90,6 +89,26 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
         this.postMessage({action:'submitFeedback', feedback:feedback});
     }
 
+    private jiraButton():any {
+        if (this.state.isJiraAuthenticated) {
+            return(<Button className='ak-button' 
+                onClick={this.handleJiraLogout}>Logout</Button>);
+        } else {
+            return (<Button className='ak-button' 
+                onClick={this.handleJiraLogin}>Authenticate</Button>);
+        }
+    }
+
+    private bitBucketButton():any {
+        if (this.state.isBitbucketAuthenticated) {
+            return( <Button className='ak-button' 
+                onClick={this.handleBBLogout}>Logout</Button>);
+        } else {
+            return (<Button className='ak-button' 
+                onClick={this.handleBBLogin}>Authenticate</Button>);
+        }
+    }
+
     public render() {
         const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
         const strideicon = <img src={strideLogo} width="17" height="12"/>;
@@ -115,20 +134,11 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Authentication','configure authentication for Jira and Bitbucket')}
                             open={true}>
                             <h3>Jira</h3>
-                            <ButtonGroup>
-                            <Button className='ak-button' 
-                                onClick={this.handleJiraLogin}>Authenticate</Button>
-                            <Button className='ak-button' 
-                                onClick={this.handleJiraLogout}>Logout</Button>
-                            </ButtonGroup>
+                            {this.jiraButton()}
+                            <p>to authenticate with a new Jira working site log out of your current site and log in to the new site</p>
                             <h3>Bitbucket</h3>
-                            <ButtonGroup>
-                            <Button className='ak-button' 
-                                onClick={this.handleBBLogin}>Authenticate</Button>
-                            <Button className='ak-button' 
-                                onClick={this.handleBBLogout}>Logout</Button>
-                            </ButtonGroup>
-                        </Collapsible>
+                            {this.bitBucketButton()}
+                            </Collapsible>
 
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Issue Explorer','configure the Jira issue explorer')}

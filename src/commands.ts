@@ -8,6 +8,8 @@ import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
+import { assignIssue } from './commands/jira/assignIssue';
+import { IssueNode } from './views/nodes/issueNode';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -23,11 +25,13 @@ export enum Commands {
     ClearJiraAuth = 'atlascode.jira.clearAuth',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
+    CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowWelcomePage = 'atlascode.showWelcomePage',
     TransitionIssue = 'atlascode.jira.transitionIssue',
+    AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     CreatePullRequest = 'atlascode.bb.createPullRequest'
 }
 
@@ -42,11 +46,13 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
+        vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
             Logger.debug('args',issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
 
         vscode.commands.registerCommand('todolense.showOpenProjects', () => {
         

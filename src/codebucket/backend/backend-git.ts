@@ -1,4 +1,7 @@
 import { Backend } from './backend-base';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { FileDiffQueryParams } from '../../views/nodes/pullRequestNode';
+import { CommandBase } from '../command/command-base';
 
 export class GitBackend extends Backend {
   public static root = 'git rev-parse --show-toplevel';
@@ -8,6 +11,12 @@ export class GitBackend extends Backend {
   }
 
   public async findCurrentRevision(): Promise<string> {
+    const editor = CommandBase.getOpenEditor();
+    if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
+      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      return queryParams.commitHash;
+    }
+
     const lines = await this.shell.lines('git show HEAD');
     for (const line of lines) {
       const match = line.match(/commit (\w+)/);
@@ -39,6 +48,12 @@ export class GitBackend extends Backend {
   }
 
   public async getPullRequestId(targetRevision: string): Promise<number> {
+    const editor = CommandBase.getOpenEditor();
+    if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
+      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      return queryParams.prId;
+    }
+
     const mergeRevision = await this.getMergeRevision(targetRevision);
     const message = await this.getRevisionMessage(mergeRevision);
 

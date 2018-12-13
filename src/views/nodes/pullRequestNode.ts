@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { BaseNode } from './baseNode';
-import { PullRequest, PaginatedPullRequests } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
+import { RelatedIssuesNode } from './relatedIssuesNode';
+import { EmptyStateNode } from './emptyStateNode';
+import { Logger } from '../../logger';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
@@ -40,22 +43,58 @@ export class PullRequestTitlesNode extends BaseNode {
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!element) {
             if (!this.pr) { return []; }
-            // When a repo's pullrequests are fetched, the response may not have all fields populated.
-            // Fetch the specific pullrequest by id to fill in the missing details.
-            this.pr = await PullRequestApi.get(this.pr);
-            const fileChanges: any[] = await PullRequestApi.getChangedFiles(this.pr);
-            const inlineComments = await this.fetchComments();
-            return [
-                new DescriptionNode(this.pr),
-                ...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, { ...fileChange, comments: inlineComments.get(fileChange.filename) }))
-            ];
+
+            this.pr = await this.hydratePullRequest(this.pr);
+
+            let promises = Promise.all([
+                PullRequestApi.getChangedFiles(this.pr),
+                PullRequestApi.getComments(this.pr)
+            ]);
+
+            return promises.then(
+                async result => {
+                    let [fileChanges, allComments] = result;
+
+                    const children: BaseNode[] = [new DescriptionNode(this.pr)];
+                    children.push(...await this.createRelatedJiraIssueNode(allComments));
+                    children.push(...await this.createFileChangesNodes(allComments, fileChanges));
+                    return children;
+                },
+                reason => {
+                    Logger.debug('error fetching pull request details', reason);
+                    return [new EmptyStateNode('⚠️ Error: fetching pull request details failed')];
+                });
         } else {
             return element.getChildren();
         }
     }
 
-    private async fetchComments(): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
-        const allComments = await PullRequestApi.getComments(this.pr);
+    // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
+    // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
+    private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
+        return await PullRequestApi.get(pr);
+    }
+
+    private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
+        const result: BaseNode[] = [];
+        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
+        if (relatedIssuesNode) {
+            result.push(relatedIssuesNode);
+        }
+        return result;
+    }
+
+    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<BaseNode[]> {
+        const result: BaseNode[] = [];
+        const inlineComments = await this.getInlineComments(allComments.data);
+        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments)));
+        if (fileChanges.next) {
+            result.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
+        }
+        return result;
+    }
+
+    private async getInlineComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
         const inlineComments = this.toNestedList(allComments);
         const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
 
@@ -103,25 +142,46 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private pr: PullRequest, private fileChange: any) {
+    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>) {
         super();
     }
 
     getTreeItem(): vscode.TreeItem {
-        let item = new vscode.TreeItem(`${this.fileChange.comments ? '💬 ' : ''}${this.fileChange.filename}`, vscode.TreeItemCollapsibleState.None);
+        let fileDisplayName = '';
+        switch (this.fileChange.status) {
+            case 'removed':
+                fileDisplayName = this.fileChange.old!.path!;
+                break;
+            case 'renamed':
+                fileDisplayName = `${this.fileChange.old!.path!} → ${this.fileChange.new!.path!}`;
+                break;
+            case 'added':
+            case 'modified':
+            default:
+                fileDisplayName = this.fileChange.new!.path!;
+                break;
+        }
+
+        const comments: Bitbucket.Schema.Comment[][] = [];
+        if (this.fileChange.old && this.commentsMap.has(this.fileChange.old!.path!)) {
+            comments.push(...this.commentsMap.get(this.fileChange.old!.path!)!);
+        }
+        if (this.fileChange.new && this.commentsMap.has(this.fileChange.new!.path!)) {
+            comments.push(...this.commentsMap.get(this.fileChange.new!.path!)!);
+        }
+
+        let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
-        if (this.fileChange.comments) {
-            this.fileChange.comments.forEach((c: Bitbucket.Schema.Comment[]) => {
-                const parentComment = c[0];
-                if (parentComment.inline!.from) {
-                    lhsCommentThreads.push(c);
-                } else {
-                    rhsCommentThreads.push(c);
-                }
-            });
-        }
+        comments.forEach((c: Bitbucket.Schema.Comment[]) => {
+            const parentComment = c[0];
+            if (parentComment.inline!.from) {
+                lhsCommentThreads.push(c);
+            } else {
+                rhsCommentThreads.push(c);
+            }
+        });
 
         let lhsQueryParam = {
             query: JSON.stringify({
@@ -131,7 +191,7 @@ class PullRequestFilesNode extends BaseNode {
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branch!.name!,
                 commitHash: this.pr.data.destination!.commit!.hash!,
-                path: this.fileChange.filename,
+                path: this.fileChange.old ? this.fileChange.old.path! : undefined,
                 commentThreads: lhsCommentThreads
             } as FileDiffQueryParams)
         };
@@ -143,7 +203,7 @@ class PullRequestFilesNode extends BaseNode {
                 remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branch!.name!,
                 commitHash: this.pr.data.source!.commit!.hash!,
-                path: this.fileChange.filename,
+                path: this.fileChange.new ? this.fileChange.new.path! : undefined,
                 commentThreads: rhsCommentThreads
             } as FileDiffQueryParams)
         };
@@ -166,9 +226,9 @@ class PullRequestFilesNode extends BaseNode {
             command: 'vscode.diff',
             title: 'Diff file',
             arguments: [
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(lhsQueryParam),
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${this.fileChange.filename}`).with(rhsQueryParam),
-                this.fileChange.filename
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
+                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
+                fileDisplayName
             ]
         };
 

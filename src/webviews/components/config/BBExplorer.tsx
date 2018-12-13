@@ -88,6 +88,14 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                     <div style={{ marginLeft:'3em' }}>
                         {locationSelect}
                     </div>
+
+                    <Checkbox
+                        value="bitbucket.explorer.relatedJiraIssues.enabled"
+                        label={this.checklabel("Show related Jira issues for Bitbucket pull requests")}
+                        isChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}
+                        onChange={this.onCheckboxChange}
+                        name="pr-explorer-relatedjiraissues-enabled"/>
+
                 </div>
             </div>
             

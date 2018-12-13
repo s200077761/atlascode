@@ -55,7 +55,7 @@ async function performTranstion(issue: Issue,transition: Transition) {
   let client = await Container.clientManager.jirarequest(issue.workingSite);
 
   if (client) {
-    client.issue.doTransition({
+    client.issue.transitionIssue({
         issueIdOrKey: issue.key,
         body: { transition: { id: transition.id } }
       }).then(() => {
