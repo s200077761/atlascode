@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 
 export type IssueTrackerConfig = JiraIssueTrackerConfig;
 
-export type HostType = 'bitbucket' | 'bitbucket-server';
+export type HostType = 'bitbucket' | 'bitbucket-staging' | 'bitbucket-server';
 
 export interface HostSettings {
   type: HostType;
@@ -22,6 +22,11 @@ export function bitbucketHosts(): HostSettings[] {
     type: 'bitbucket',
     gitHost: 'bitbucket.org',
     webHost: 'https://bitbucket.org'
+  },
+  {
+    type: 'bitbucket-staging',
+    gitHost: 'staging.bb-inf.net',
+    webHost: 'https://staging.bb-inf.net'
   }];
   const config = vscode.workspace.getConfiguration('codebucket');
   for (const host of config.get<string[]>('bitbucketHosts') || []) {

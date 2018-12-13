@@ -59,11 +59,9 @@ export class AuthManager implements Disposable {
         const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
 
         if(hasNewInfo) {
-            const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
-            if(info !== emptyAuthInfo) {
-                setCommandContext(cmdctx, true);
-            } else {
-                setCommandContext(cmdctx, false);
+            const cmdctx = this.commandContextFor(provider);
+            if (cmdctx !== undefined) {
+                setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
             }
 
             if (keychain) {
@@ -77,6 +75,18 @@ export class AuthManager implements Disposable {
 
             this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         }
+    }
+
+    private commandContextFor(provider: string): string | undefined {
+        switch (provider) {
+            case AuthProvider.JiraCloud:
+                return CommandContext.IsJiraAuthenticated;
+            case AuthProvider.BitbucketCloud:
+                return CommandContext.IsBBAuthenticated;
+            case AuthProvider.BitbucketCloudStaging:
+                return undefined;
+        }
+        return undefined;
     }
 
     public async removeAuthInfo(provider: string): Promise<boolean> {
