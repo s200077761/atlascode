@@ -15,6 +15,7 @@ import { Action } from '../../../ipc/messaging';
 import JiraHover from './JiraHover';
 import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
+import CustomJQL from './CustomJQL';
 
 const bitbucketLogo:string =require('../images/bitbucket-logo.png');
 const strideLogo:string =require('../images/stride-logo.png');
@@ -156,6 +157,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                            <CustomJQL inputId="" cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

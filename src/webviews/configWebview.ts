@@ -4,7 +4,7 @@ import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { AuthProvider } from '../atlclients/authInfo';
+import { AuthProvider, emptyAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -35,7 +35,10 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
 
     public async invalidate() {
         const config:IConfig = await configuration.get<IConfig>();
-
+        var authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+        if (!authInfo) {
+            authInfo = emptyAuthInfo;
+        }
         Logger.debug('updating config for webview', config);
         this.updateConfig({
             type:'update',
@@ -43,7 +46,8 @@ export class ConfigWebview extends AbstractReactWebview<ConfigData,Action> {
             sites:await Container.jiraSiteManager.getSitesAvailable(),
             projects:await Container.jiraSiteManager.getProjects(),
             isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud),
-            isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)
+            isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud),
+            jiraAccessToken: authInfo!.access
         });
     }
 
