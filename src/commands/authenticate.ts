@@ -7,12 +7,17 @@ export async function authenticateBitbucket() {
     authenticate(AuthProvider.BitbucketCloud);
 }
 
+export async function authenticateBitbucketStaging() {
+    authenticate(AuthProvider.BitbucketCloudStaging);
+}
+
 export async function authenticateJira() {
     authenticate(AuthProvider.JiraCloud);
 }
 
 export async function clearBitbucketAuth() {
     clearAuth(AuthProvider.BitbucketCloud);
+    clearAuth(AuthProvider.BitbucketCloudStaging);
 }
 
 export async function clearJiraAuth() {

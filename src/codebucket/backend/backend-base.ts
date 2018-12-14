@@ -40,6 +40,7 @@ export abstract class Backend {
           };
           switch (host.type) {
             case 'bitbucket':
+            case 'bitbucket-staging':
               return new BitbucketHost(config);
             case 'bitbucket-server':
               return new BitbucketServerHost(config);

@@ -9,6 +9,7 @@ import { Commands } from '../commands';
 import { Container } from '../container';
 import { AuthProvider } from '../atlclients/authInfo';
 import { EmptyStateNode } from './nodes/emptyStateNode';
+import { PullRequestApi } from '../bitbucket/pullRequests';
 
 export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -68,6 +69,14 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         }
         if (!this._childrenMap) {
             this.updateChildren();
+        }
+        if (this.ctx.getAllRepositores()
+            .find(repo =>
+                !!PullRequestApi.getBitbucketRemotes(repo)
+                    .find(remote => (remote.fetchUrl! || remote.pushUrl!)
+                        .indexOf("bb-inf.net") !== -1))
+            && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
+            return Promise.resolve([new EmptyStateNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })]);
         }
         return Array.from(this._childrenMap!.values());
     }

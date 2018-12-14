@@ -67,7 +67,24 @@ import { ProductJira, ProductBitbucket } from "../constants";
         }, promptForAuth
       );
     }
+
+    public async bbrequestStaging(promptForAuth:boolean = true): Promise<BitbucketKit | undefined> {
+      return this.getClient<BitbucketKit>(
+        AuthProvider.BitbucketCloudStaging,
+        info => {
+          let extraOptions = {};
+          if (this._agent) {
+            extraOptions = { agent: this._agent };
+          }
   
+          let bbclient = new BitbucketKit({ baseUrl: "https://api-staging.bb-inf.net/2.0", options: extraOptions });
+          bbclient.authenticate({ type: "token", token: info.access });
+  
+          return bbclient;
+        }, promptForAuth
+      );
+    }
+
     public async jirarequest(workingSite?: WorkingSite, promptForAuth:boolean = true): Promise<JiraKit | undefined> {
       // if workingSite is passed in and is different from the one in config, 
       // it is for a one-off request (eg. a request from webview from previously configured workingSite)
@@ -274,6 +291,10 @@ import { ProductJira, ProductBitbucket } from "../constants";
         }
         case AuthProvider.BitbucketCloud: {
           await this.bbrequest(false);
+          break;
+        }
+        case AuthProvider.BitbucketCloudStaging: {
+          await this.bbrequestStaging(false);
           break;
         }
       }

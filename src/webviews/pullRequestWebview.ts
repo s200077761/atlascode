@@ -111,8 +111,9 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
             this.postMessage(this._state.prData);
             return;
         }
+        const isStagingRepo = pr.remote && pr.remote.fetchUrl!.indexOf('bb-inf.net') !== -1;
         let promises = Promise.all([
-            getCurrentUser(),
+            getCurrentUser(isStagingRepo),
             PullRequestApi.getCommits(pr),
             PullRequestApi.getComments(pr)
         ]);
