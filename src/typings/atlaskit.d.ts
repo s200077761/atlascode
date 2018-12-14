@@ -18,3 +18,4 @@ declare module '@atlaskit/size-detector';
 declare module '@atlaskit/flag';
 declare module '@atlaskit/feedback-collector';
 declare module '@atlaskit/panel';
+declare module '@atlaskit/select';

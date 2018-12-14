@@ -15,6 +15,10 @@ export interface IssueAssignAction extends Action {
     issue: Issue;
 }
 
+export interface FetchProjectsAction extends Action {
+    query: string;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -25,4 +29,8 @@ export function isIssueComment(a: Action): a is  IssueCommentAction {
 
 export function isIssueAssign(a: Action): a is  IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
+}
+
+export function isFetchProjects(a: Action): a is  FetchProjectsAction {
+    return (<FetchProjectsAction>a).query !== undefined;
 }

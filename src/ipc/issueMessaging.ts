@@ -1,5 +1,5 @@
 import { Message } from "./messaging";
-import { Issue } from "../jira/jiraModel";
+import { Issue, Project } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -20,4 +20,8 @@ export interface CreateIssueScreen {
     id:string;
     iconUrl?:string;
     fields:JIRA.Schema.FieldMetaBean[];
+}
+
+export interface ProjectList extends Message {
+    availableProjects:Project[];
 }

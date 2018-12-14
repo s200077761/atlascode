@@ -2,12 +2,14 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueScreen, CreateIssueData } from '../ipc/issueMessaging';
+import { CreateIssueScreen, CreateIssueData, ProjectList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
+import { isFetchProjects } from '../ipc/issueActions';
 
 const KNOWNFIELDS:string[] = ['summary','description','fixVersions', 'components'];
 
-export class CreateIssueWebview extends AbstractReactWebview<CreateIssueData,Action> {
+type Emit = CreateIssueData | ProjectList;
+export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 	
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -30,14 +32,21 @@ export class CreateIssueWebview extends AbstractReactWebview<CreateIssueData,Act
     }
 
     async updateFields(project?:WorkingProject) {
-        const screens = await this.getScreenFields(project);
+        const availableProjects = await Container.jiraSiteManager.getProjects();
+
+        let effProject = project;
+        if(!effProject) {
+            effProject = await Container.jiraSiteManager.getEffectiveProject();
+        }
+
+        const screens = await this.getScreenFields(effProject);
 
         Logger.debug('creating create data...');
 
         const createData = {
             type:'screenRefresh',
-            selectedProject:(project !== undefined)? project : Container.jiraSiteManager.effectiveProject,
-            availableProjects:await Container.jiraSiteManager.getProjects(),
+            selectedProject:(project !== undefined)? project : effProject,
+            availableProjects:availableProjects,
             issueTypeScreens:screens
         };
 
@@ -45,13 +54,12 @@ export class CreateIssueWebview extends AbstractReactWebview<CreateIssueData,Act
         this.postMessage(createData);
     }
 
-    async getScreenFields(project?:WorkingProject): Promise<Map<string,any>> {
+    async getScreenFields(project:WorkingProject): Promise<Map<string,any>> {
         Logger.debug('getting screen fields');
-        let client = await Container.clientManager.jirarequest(Container.config.jira.workingSite);
+        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
         
         if (client) {
-
-            const projects:string[] = (project !== undefined)? [project.key] : [Container.jiraSiteManager.effectiveProject.key];
+            const projects:string[] = [project.key];
 
             return client.issue
             .getCreateIssueMetadata({projectKeys:projects, expand:'projects.issuetypes.fields'})
@@ -67,6 +75,17 @@ export class CreateIssueWebview extends AbstractReactWebview<CreateIssueData,Act
 
         if(!handled) {
             switch (e.action) {
+                case 'fetchProjects': {
+                    Logger.debug('got login request from webview',e);
+                    handled = true;
+                    if(isFetchProjects(e)) {
+
+                        Container.jiraSiteManager.getProjects('name',e.query).then(projects => {
+                            this.postMessage({type:'projectList', availableProjects:projects});
+                        });
+                    }
+                    break;
+                }
                 default: {
                     break;
                 }

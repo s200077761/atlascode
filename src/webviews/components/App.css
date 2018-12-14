@@ -121,10 +121,10 @@ div.icon-text img {
 }
 
 /* Sketchy way of coloring the background of the drop-down menu in the feedback collector */
-body div[class^="css-"] div[class^="css-"] {
+/* body div[class^="css-"] div[class^="css-"] {
   background: var(--background-color) !important;
   color: var(--vscode-input-foreground) !important; 
-}
+} */
 
 [class^="Checkbox__Label"] {
   color: var(--vscode-input-foreground) !important; 
@@ -267,4 +267,37 @@ hr {
 /* img::after is triggered only if img loading fails */
 .bitbucket-page img::after {
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+}
+
+.ak-select__control {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: var(--vscode-dropdown-border) !important;
+}
+
+.ak-select__menu-list, .ak-select__single-value, .ak-select__indicator {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+.ak-select__option {
+  cursor: pointer !important;
+}
+
+.ak-select__option--is-focused {
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+.ak-select__option--is-selected {
+  background: var(--vscode-list-activeSelectionBackground) !important;
+  color: var(--vscode-list-activeSelectionForeground) !important;
+}
+
+.ak-select-container {
+  border: var(--vscode-dropdown-border) !important;
+}
+
+.ak-select__value-container {
+  padding: 0px!important;
 }
