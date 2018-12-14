@@ -405,6 +405,24 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
+                "atlascode.jira.customJql": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "siteId": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "jql": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
                 "atlascode.jira.hover.enabled": {
                     "type": "boolean",
                     "default": true,

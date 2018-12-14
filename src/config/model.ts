@@ -35,6 +35,7 @@ export interface JiraConfig {
     explorer:JiraExplorer;
     statusbar:JiraStatusBar;
     hover: JiraHover;
+    customJql: SiteJQL[];
 }
 
 export interface JiraStatusBar {
@@ -54,6 +55,11 @@ export interface JiraExplorer {
 
 export interface JiraHover {
     enabled:boolean;
+}
+
+export interface SiteJQL {
+    siteId: string;
+    jql: string[];
 }
 
 export interface BitbucketConfig {
@@ -125,7 +131,8 @@ export const emptyJiraConfig:JiraConfig = {
     workingSite: emptyWorkingSite,
     explorer: emptyJiraExplorer,
     statusbar: emptyJiraStatusBar,
-    hover: emptyJiraHover
+    hover: emptyJiraHover,
+    customJql: []
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

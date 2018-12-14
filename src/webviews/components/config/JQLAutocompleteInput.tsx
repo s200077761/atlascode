@@ -285,6 +285,7 @@ export class JQLAutocompleteInput extends PureComponent<
     if (value.trim() !== this.props.inputValue) {
       this.validateInput(event);
       this.onOpenChange({ event, isOpen: true });
+      event.target.dataIndex = this.props['data-index'];
       this.props.onChange(event);
     }
   }
