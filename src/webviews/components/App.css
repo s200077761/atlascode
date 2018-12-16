@@ -272,10 +272,18 @@ hr {
 .ak-select__control {
   background: var(--vscode-dropdown-background) !important;
   color: var(--vscode-dropdown-foreground) !important;
-  border: var(--vscode-dropdown-border) !important;
+  border-color: var(--vscode-dropdown-background) !important;
 }
 
-.ak-select__menu-list, .ak-select__single-value, .ak-select__indicator {
+.ak-select__control:hover {
+  border-color: var(--vscode-focusBorder) !important;
+}
+
+.ak-select__control--is-focused {
+  border-color: var(--vscode-focusBorder) !important;
+}
+
+.ak-select__menu, .ak-select__menu-list, .ak-select__single-value, .ak-select__indicator, .ak-select__input {
   background: var(--vscode-dropdown-background) !important;
   color: var(--vscode-dropdown-foreground) !important;
 }
@@ -283,6 +291,7 @@ hr {
 .ak-select__option {
   cursor: pointer !important;
 }
+
 
 .ak-select__option--is-focused {
   background: var(--vscode-list-focusBackground) !important;
@@ -294,8 +303,11 @@ hr {
   color: var(--vscode-list-activeSelectionForeground) !important;
 }
 
-.ak-select-container {
-  border: var(--vscode-dropdown-border) !important;
+.ak-select__menu {
+  border-color: var(--vscode-focusBorder) !important;
+  border-radius: 2px!important;
+  border-width: 2px!important;
+  border-style: solid!important;
 }
 
 .ak-select__value-container {

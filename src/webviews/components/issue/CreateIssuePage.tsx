@@ -56,7 +56,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
         return (
             <div>
                 <h3>Status</h3>
-                <JiraProjectSelect initialOptions={this.state.availableProjects} onQuery={this.handleProjectInput}/>
+                <JiraProjectSelect selectedOption={this.state.selectedProject} initialOptions={this.state.availableProjects} onQuery={this.handleProjectInput}/>
         
             </div>
         );
