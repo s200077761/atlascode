@@ -4,7 +4,17 @@ import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments
 import { Container } from "../container";
 import { Logger } from '../logger';
 
-const bitbucketHost = "bitbucket.org";
+const bitbucketHosts = new Map()
+    .set("bitbucket.org", async () => {
+        const bb = await Container.clientManager.bbrequest();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+        return bb;
+    })
+    .set("bb-inf.net", async () => {
+        const bb = await Container.clientManager.bbrequestStaging();
+        if (!bb) { return Promise.reject(apiConnectivityError); }
+        return bb;
+    });
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
 const maxItemsSupported = {
@@ -25,15 +35,13 @@ export namespace PullRequestApi {
 
     export async function getList(repository: Repository): Promise<PaginatedPullRequests> {
         Logger.debug('getting PRs...');
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         let remotes = getBitbucketRemotes(repository);
 
         Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const bb = await bitbucketHosts.get(parsed.source)();
             const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
             const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
             const next = data.next;
@@ -49,9 +57,8 @@ export namespace PullRequestApi {
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
+        let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+        const bb = await bitbucketHosts.get(parsed.source)();
         const { data } = await bb.getNextPage({ next: next });
         //@ts-ignore
         const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
@@ -59,10 +66,8 @@ export namespace PullRequestApi {
     }
 
     export async function get(pr: PullRequest): Promise<PullRequest> {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         let parsed = GitUrlParse(pr.remote.fetchUrl! || pr.remote.pushUrl!);
+        const bb = await bitbucketHosts.get(parsed.source)();
         let { data } = await bb.repositories.getPullRequest({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -80,11 +85,9 @@ export namespace PullRequestApi {
     }
 
     export async function getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         let { data } = await bb.pullrequests.getDiffStat({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -95,11 +98,9 @@ export namespace PullRequestApi {
     }
 
     export async function getCommits(pr: PullRequest): Promise<PaginatedCommits> {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         let { data } = await bb.pullrequests.listCommits({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -111,11 +112,9 @@ export namespace PullRequestApi {
     }
 
     export async function getComments(pr: PullRequest): Promise<PaginatedComments> {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         let { data } = await bb.pullrequests.listComments({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -130,16 +129,14 @@ export namespace PullRequestApi {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
             let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
-            return parsed && parsed.source === bitbucketHost;
+            return parsed && bitbucketHosts.has(parsed.source);
         });
     }
 
     export async function approve(pr: PullRequest) {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         return await bb.pullrequests.createApproval({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -148,11 +145,9 @@ export namespace PullRequestApi {
     }
 
     export async function merge(pr: PullRequest) {
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         return await bb.pullrequests.merge({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -166,12 +161,9 @@ export namespace PullRequestApi {
         parentCommentId?: number,
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Bitbucket.Schema.Comment> {
-
-        let bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
         //@ts-ignore
         return await bb.pullrequests.createComment({
             pull_request_id: prId,

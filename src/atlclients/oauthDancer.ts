@@ -23,6 +23,15 @@ export class OAuthDancer {
         callbackURL: "http://127.0.0.1:9090/" + authinfo.AuthProvider.BitbucketCloud
     }, this.verify.bind(this));
 
+    private _bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
+        clientID: "7jspxC7fgemuUbnWQL",
+        clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
+        callbackURL: "http://127.0.0.1:9090/" + authinfo.AuthProvider.BitbucketCloudStaging,
+        authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
+        tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
+        userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
+    }, this.verify.bind(this));
+
     private _jiraCloudStrategy = new AtlassianStrategy({
         clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
         clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
@@ -40,8 +49,10 @@ export class OAuthDancer {
         });
 
         passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        passport.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
         refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        refresh.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
     }
 
@@ -56,6 +67,9 @@ export class OAuthDancer {
         }
 
         let provider = profile.provider === 'atlassian' ? authinfo.AuthProvider.JiraCloud : authinfo.AuthProvider.BitbucketCloud;
+        if (profile.profileUrl && profile.profileUrl.indexOf('bb-inf.net') !== -1) {
+            provider = authinfo.AuthProvider.BitbucketCloudStaging;
+        }
 
         this._authInfo = {
             access: accessToken,
@@ -89,6 +103,13 @@ export class OAuthDancer {
                     // function will not be called.
                 });
 
+            _app.get('/auth/' + authinfo.AuthProvider.BitbucketCloudStaging,
+                passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging),
+                function (req, res) {
+                    // The request will be redirected to Bitbucket for authentication, so this
+                    // function will not be called.
+            });
+
             _app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
                 passport.authenticate(authinfo.AuthProvider.JiraCloud),
                 function (req, res) {
@@ -97,6 +118,15 @@ export class OAuthDancer {
                 });
 
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
+                Logger.debug("got bb callback");
+                res.send(Resources.html.get('authSuccessHtml')!({
+                    product: ProductBitbucket
+                }));
+                this.shutdown();
+                resolve(this._authInfo);
+            });
+
+            _app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket

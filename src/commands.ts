@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as child from 'child_process';
 import { currentUserJira } from './commands//jira/currentUser';
-import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth } from './commands/authenticate';
+import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth, authenticateBitbucketStaging } from './commands/authenticate';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
@@ -18,6 +18,7 @@ export enum Commands {
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
+    AuthenticateBitbucketStaging = 'atlascode.bb.authenticateStaging',
     ClearBitbucketAuth = 'atlascode.bb.clearAuth',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
@@ -43,6 +44,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
         vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
+        vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
