@@ -62,7 +62,30 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
 
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
-                        <h3>🎉 What's New in 0.0.1 🎉</h3>
+                    <h3>🎉 What's New in 0.1.1 🎉</h3>
+                        <section>
+                            <h4><JiraIcon size="xsmall"/> Issue View</h4>
+                            <ul>
+                                <li>fixed: Webviews don't work properly in split view.</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><BitbucketIcon size="xsmall"/> Pull Request Explorer</h4>
+                            <ul>
+                                <li>show issues in BB explorer</li>
+                                <li>map BB staging clone urls to BB client base url</li>
+                                <li>Use diffstat instead of patch to get files changed in a PR</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><PreferencesIcon size="small" label="configuration"/> Configuration</h4>
+                            <ul>
+                                <li>Integrate JQL autocomplete input</li>
+                                <li>Persist custom JQL for each site</li>
+                            </ul>
+                        </section>
+
+                        <h3>🎉 What's New in 0.1.0 🎉</h3>
                         <section>
                             <h4><JiraIcon size="xsmall"/> Issue Explorer</h4>
                             <ul>
