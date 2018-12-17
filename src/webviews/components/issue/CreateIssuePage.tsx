@@ -6,13 +6,15 @@ import JiraProjectSelect from '../JiraProjectSelect';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
 import { FetchProjectsAction, ScreensForProjectsAction } from '../../../ipc/issueActions';
 import Form, { Field, FormFooter } from '@atlaskit/form';
-import FieldText from '@atlaskit/field-text';
+//import FieldText from '@atlaskit/field-text';
 import Select, { components } from '@atlaskit/select';
 import Button from '@atlaskit/button';
 
 type Emit = FetchProjectsAction | ScreensForProjectsAction | Action;
 type Accept = CreateIssueData | ProjectList;
 type IssueType = { id:string, name:string, iconUrl:string };
+
+
 const emptyState:CreateIssueData = {
     type:'',
     selectedProject:emptyWorkingProject,
@@ -120,13 +122,11 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
                 screen.fields.forEach(field => {
                     console.log('CREATING NEW FIELD',field.name);
                     const fieldMarkup = (
-                        <Field className='ak-formfield'
+                        <Field
                         label={field.name}
                         isRequired={field.required}
                         >
-                        <FieldText className='ak-forminput'
-                            name={field.name}
-                        />
+                        <input name={field.name} defaultValue='' key={field.id + '_' + this.state.selectedIssueType.id}/>
                     </Field>
                     );
 
