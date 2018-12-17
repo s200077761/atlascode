@@ -13,6 +13,7 @@ import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
 import { viewScreenEvent } from '../analytics';
 import { Time } from '../util/time';
+import { PullRequestCreatedNotifier } from './prCreatedNotifier';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
@@ -29,6 +30,7 @@ export class BitbucketContext extends Disposable {
     private _repoMap: Map<string, Repository> = new Map();
     private _tree:TreeView<BaseNode> | undefined;
     private _dataProvider:PullRequestNodeDataProvider;
+    private _prCreatedNotifier: PullRequestCreatedNotifier;
     private _disposable:Disposable;
     private _timer: any | undefined;
     private _refreshInterval = 5 * Time.MINUTES;
@@ -37,6 +39,7 @@ export class BitbucketContext extends Disposable {
         super(() => this.dispose());
         this._gitApi = gitApi;
         this._dataProvider = new PullRequestNodeDataProvider(this);
+        this._prCreatedNotifier = new PullRequestCreatedNotifier(this);
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
@@ -62,7 +65,8 @@ export class BitbucketContext extends Disposable {
 
         this._disposable = Disposable.from(
             this._gitApi.onDidOpenRepository(this.refreshRepos, this),
-            this._gitApi.onDidCloseRepository(this.refreshRepos, this)
+            this._gitApi.onDidCloseRepository(this.refreshRepos, this),
+            this._prCreatedNotifier
         );
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);

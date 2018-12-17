@@ -72,10 +72,15 @@ export interface BitbucketExplorer {
     enabled:boolean;
     location:BitbucketExplorerLocation;
     relatedJiraIssues:BitbucketRelatedJiraIssues;
+    notifications:BitbucketNotifications;
 }
 
 export interface BitbucketRelatedJiraIssues {
     enabled:boolean;
+}
+
+export interface BitbucketNotifications {
+    pullRequestCreated:boolean;
 }
 
 export interface BitbucketStatusBar {
@@ -139,10 +144,15 @@ export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true
 };
 
+export const emptyBitbucketNotfications: BitbucketNotifications = {
+    pullRequestCreated: true
+};
+
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
     location:BitbucketExplorerLocation.Atlascode,
-    relatedJiraIssues: emptyRelatedJiraIssues
+    relatedJiraIssues: emptyRelatedJiraIssues,
+    notifications: emptyBitbucketNotfications
 };
 
 export const emptyBitbucketStatusBar: BitbucketStatusBar = {

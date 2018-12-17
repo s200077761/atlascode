@@ -96,6 +96,12 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                         onChange={this.onCheckboxChange}
                         name="pr-explorer-relatedjiraissues-enabled"/>
 
+                    <Checkbox
+                        value="bitbucket.explorer.notifications.pullRequestCreated"
+                        label={this.checklabel("Periodically check for newly created pull reqeuests and show an information message if there are any")}
+                        isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
+                        onChange={this.onCheckboxChange}
+                        name="pr-explorer-notifications-prcreated"/>
                 </div>
             </div>
             
