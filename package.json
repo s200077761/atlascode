@@ -186,6 +186,11 @@
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
                     "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                },
+                {
+                    "id": "atlascode.views.jira.customJql",
+                    "name": "Custom JQL",
+                    "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
                 }
             ]
         },

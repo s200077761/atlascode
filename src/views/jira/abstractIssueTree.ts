@@ -8,8 +8,11 @@ import { viewScreenEvent } from '../../analytics';
 import { Time } from '../../util/time';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
-export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
-    refresh():void;
+export interface RefreshableTree extends Disposable {
+    refresh(): void;
+}
+
+export interface IssueTree extends RefreshableTree, TreeDataProvider<IssueNode> {
     setJql(jql: string | undefined):void;
 }
 
@@ -40,13 +43,13 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
         if (initializing) {
             this._onDidChangeTreeData = new EventEmitter<IssueNode>();
 
-            this._tree = window.createTreeView(this._id, {
-                treeDataProvider: this
-            });
-
-            this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-            this._disposables.push(this._tree);
-
+            if (this._id.length > 0) {
+                this._tree = window.createTreeView(this._id, {
+                    treeDataProvider: this
+                });
+                this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+                this._disposables.push(this._tree);
+            }
         }
     }
 

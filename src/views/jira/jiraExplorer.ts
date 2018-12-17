@@ -2,17 +2,18 @@ import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { OpenIssuesTree } from "./openIssuesTree";
 import { AssignedIssuesTree } from "./assignedIssuesTree";
 import { Commands } from "../../commands";
-import { IssueTree } from "./abstractIssueTree";
+import { RefreshableTree } from "./abstractIssueTree";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
-import { configuration } from "../../config/configuration";
+import { configuration, SiteJQL } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { Logger } from "../../logger";
+import { CustomJQLRoot } from "./customJqlRoot";
 
 export class JiraExplorer extends Disposable {
 
-    private _trees:IssueTree[] = [];
+    private _trees:RefreshableTree[] = [];
     private _disposable:Disposable;
 
     constructor() {
@@ -42,6 +43,10 @@ export class JiraExplorer extends Disposable {
             } else {
                 this._trees.push(new OpenIssuesTree());
                 this._trees.push(new AssignedIssuesTree());
+                const customJql = this.customJqlForWorkingSite();
+                if (customJql.length > 0) {
+                    this._trees.push(new CustomJQLRoot(customJql) as any);
+                }
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
@@ -58,6 +63,18 @@ export class JiraExplorer extends Disposable {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
         }
+    }
+
+    private customJqlForWorkingSite(): string[] {
+        const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => {
+            return item.siteId === Container.config.jira.workingSite.id;
+        });
+        if (siteJql) {
+            return siteJql.jql.filter((jql: string) => {
+                return jql.trim().length > 0;
+            });
+        }
+        return [];
     }
 
     dispose() {
