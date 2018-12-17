@@ -20,7 +20,8 @@ const emptyState:CreateIssueData = {
     selectedProject:emptyWorkingProject,
     availableProjects:[],
     selectedIssueType:{},
-    issueTypeScreens:{}
+    issueTypeScreens:{},
+    fieldValues:{}
 };
 
 const { Option } = components;
@@ -45,8 +46,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
     constructor(props: any) {
         super(props);
         this.state = emptyState;
-        console.log('empty',this.state.issueTypeScreens);
-        console.log(IconOption);
     }
 
     onMessageReceived(e:Accept): void {
@@ -91,7 +90,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
         console.log('onSubmitHandler', e);
         // Calling validate on the form will update it's fields state
         const validateResult = this.formRef.validate();
-        console.log(validateResult);
     
         if (validateResult.isInvalid) {
           console.log('onSubmitHandler = Form Fields Invalid');
@@ -106,27 +104,31 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
     }
 
     issueTypeOptionValue = (option:IssueType) => {
-        console.log('issuetype get value', option.id);
         return option.id;
     }
 
+    setFieldValue = (item: any) => {
+        let val = {};
+        val[item.target.id] = item.target.value;
+        const newObj = {...this.state.fieldValues, ...val};
+
+        this.setState({fieldValues:newObj});
+    }
     
     public render() {
         let renderableFields: any[] = [];
 
         if(this.state.selectedIssueType.id) {
-            console.log('current map', this.state.issueTypeScreens);
             
             const screen = this.state.issueTypeScreens[this.state.selectedIssueType.id];
             if(screen) {
                 screen.fields.forEach(field => {
-                    console.log('CREATING NEW FIELD',field.name);
                     const fieldMarkup = (
                         <Field
                         label={field.name}
                         isRequired={field.required}
                         >
-                        <input name={field.name} defaultValue='' key={field.id + '_' + this.state.selectedIssueType.id}/>
+                        <input id={field.key} defaultValue='' onChange={this.setFieldValue} value={this.state.fieldValues[field.key]}/>
                     </Field>
                     );
 

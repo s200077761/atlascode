@@ -14,6 +14,7 @@ export interface CreateIssueData extends Message {
     selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean;
     availableProjects:WorkingProject[];
     issueTypeScreens:{[k:string]:CreateIssueScreen};
+    fieldValues:{[k:string]:any};
 }
 
 export interface CreateIssueScreen {
