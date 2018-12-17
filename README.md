@@ -1,6 +1,18 @@
-# Atlascode 0.0.1
+# Atlascode 0.1.1
 ### Atlassian integrations for VSCode
 Atlascode brings the functionality of multiple Atlassian products to your favorite IDE!
+
+## What's New In 0.1.1
+### Bug
+* [VSCODE-108](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-108) - Webviews don't work properly in split view.
+
+### Task
+* [VSCODE-48](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-48) - Handle pagination in all Bitbucket apis
+* [VSCODE-131](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-131) - issues in BB explorer
+* [VSCODE-141](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-141) - map BB staging clone urls to BB client base url
+* [VSCODE-161](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-161) - Use diffstat instead of patch to get files changed in a PR
+* [VSCODE-163](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-163) - Integrate JQL autocomplete input
+* [VSCODE-164](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-164) - Persist custom JQL for each site
 
 ## Installation
 Currently Atlascode uses some features from VSCode's "Proposed API" and cannot be installed directly into VSCode without a bit of tweaking.
