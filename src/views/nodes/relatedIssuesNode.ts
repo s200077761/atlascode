@@ -6,6 +6,7 @@ import { PullRequest } from '../../bitbucket/model';
 import { GitBackend } from '../../codebucket/backend/backend-git';
 import { parseJiraIssueKeys } from '../../jira/issueKeyParser';
 import { Container } from '../../container';
+import { Logger } from '../../logger';
 
 export class RelatedIssuesNode extends BaseNode {
     private _delegate: StaticIssuesNode;
@@ -37,20 +38,26 @@ export class RelatedIssuesNode extends BaseNode {
     private static async getRelatedIssueKeys(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
         const result = new Set<string>();
 
-        const b = new GitBackend(pr.repository.rootUri.fsPath);
-        const text = await b.getRevisionMessage(`${pr.data.destination!.commit!.hash!}..${pr.data.source!.commit!.hash!}`);
-        const commitMessageMatches = parseJiraIssueKeys(text);
-        commitMessageMatches.forEach(m => result.add(m));
+        try {
+            await pr.repository.fetch();
+            const b = new GitBackend(pr.repository.rootUri.fsPath);
+            const text = await b.getRevisionMessage(`${pr.data.destination!.commit!.hash!}..${pr.data.source!.commit!.hash!}`);
+            const commitMessageMatches = parseJiraIssueKeys(text);
+            commitMessageMatches.forEach(m => result.add(m));
 
-        const prTitleMatches = parseJiraIssueKeys(pr.data.title!);
-        prTitleMatches.forEach(m => result.add(m));
+            const prTitleMatches = parseJiraIssueKeys(pr.data.title!);
+            prTitleMatches.forEach(m => result.add(m));
+    
+            const prSummaryMatches = parseJiraIssueKeys(pr.data.summary!.raw!);
+            prSummaryMatches.forEach(m => result.add(m));
 
-        const prSummaryMatches = parseJiraIssueKeys(pr.data.summary!.raw!);
-        prSummaryMatches.forEach(m => result.add(m));
+            const prCommentsMatches = allComments.map(c => parseJiraIssueKeys(c.content!.raw!)).reduce((prev, curr) => prev.concat(curr), []);
+            prCommentsMatches.forEach(m => result.add(m));
 
-        const prCommentsMatches = allComments.map(c => parseJiraIssueKeys(c.content!.raw!)).reduce((prev, curr) => prev.concat(curr), []);
-        prCommentsMatches.forEach(m => result.add(m));
-
-        return Array.from(result);
+            return Array.from(result);
+        } catch (e) {
+            Logger.debug('error fetching related Jira issues: ', e);
+            return [];
+        }
     }
 }
