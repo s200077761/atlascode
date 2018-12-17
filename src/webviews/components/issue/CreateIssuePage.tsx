@@ -128,7 +128,8 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},C
                         label={field.name}
                         isRequired={field.required}
                         >
-                        <input id={field.key} defaultValue='' onChange={this.setFieldValue} value={this.state.fieldValues[field.key]}/>
+                        <div><input id={field.key} defaultValue='' onChange={this.setFieldValue} value={this.state.fieldValues[field.key]}/></div>
+                        
                     </Field>
                     );
 
