@@ -80,8 +80,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
                         <section>
                             <h4><PreferencesIcon size="small" label="configuration"/> Configuration</h4>
                             <ul>
-                                <li>Integrate JQL autocomplete input</li>
-                                <li>Persist custom JQL for each site</li>
+                                <li>experimental: Integrate JQL autocomplete input</li>
+                                <li>experimental: Persist custom JQL for each site</li>
                             </ul>
                         </section>
 
