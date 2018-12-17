@@ -11,8 +11,9 @@ export interface IssueData extends Issue {
 
 export interface CreateIssueData extends Message {
     selectedProject:WorkingProject;
+    selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean;
     availableProjects:WorkingProject[];
-    issueTypeScreens:Map<string,CreateIssueScreen>;
+    issueTypeScreens:{[k:string]:CreateIssueScreen};
 }
 
 export interface CreateIssueScreen {

@@ -2,7 +2,7 @@ import React from 'react';
 import { AsyncSelect } from '@atlaskit/select';
 import { WorkingProject } from '../../config/model';
 
-type myProps = { initialOptions: WorkingProject[], selectedOption:WorkingProject, onQuery:(input:string) => Promise<any> };
+type myProps = { initialOptions: WorkingProject[], selectedOption:WorkingProject, onSelect:(selected:WorkingProject)=>void, onQuery:(input:string) => Promise<any> };
 export default class JiraProjectSelect extends React.Component<myProps, WorkingProject> {
     constructor(props: any) {
         super(props);
@@ -30,6 +30,7 @@ export default class JiraProjectSelect extends React.Component<myProps, WorkingP
 
     handleChange = (selectedValue:WorkingProject) => {
         this.setState(selectedValue);
+        this.props.onSelect(selectedValue);
     }
 
     render() {

@@ -24,7 +24,7 @@
         "multi-root ready"
     ],
     "engines": {
-        "vscode": "^1.29.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Other"
@@ -522,7 +522,9 @@
         "@atlaskit/droplist": "^7.0.16",
         "@atlaskit/feedback-collector": "^2.0.0",
         "@atlaskit/field-base": "^11.0.12",
+        "@atlaskit/field-text": "^7.0.18",
         "@atlaskit/flag": "^9.1.6",
+        "@atlaskit/form": "^4.0.21",
         "@atlaskit/icon": "^15.0.1",
         "@atlaskit/input": "^4.0.9",
         "@atlaskit/layer-manager": "^5.0.18",
@@ -589,11 +591,11 @@
         "mocha": "^5.2.0",
         "patch-package": "^5.1.1",
         "postinstall-postinstall": "^2.0.0",
-        "react-scripts-ts": "2.16.0",
+        "react-scripts-ts": "^3.1.0",
         "ts-loader": "^5.3.1",
-        "tslint": "^5.8.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.21",
+        "tslint": "^5.11.0",
+        "typescript": "^3.2.2",
+        "vscode": "^1.1.26",
         "webpack": "^4.26.1",
         "webpack-cli": "^3.1.2",
         "@types/electron": "^1.6.10"

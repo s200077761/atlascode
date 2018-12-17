@@ -4,7 +4,7 @@ import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueScreen, CreateIssueData, ProjectList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isFetchProjects } from '../ipc/issueActions';
+import { isFetchProjects, isScreensForProjects } from '../ipc/issueActions';
 
 const KNOWNFIELDS:string[] = ['summary','description','fixVersions', 'components'];
 
@@ -39,22 +39,23 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
             effProject = await Container.jiraSiteManager.getEffectiveProject();
         }
 
-        const screens = await this.getScreenFields(effProject);
+        const screenData = await this.getScreenFields(effProject);
 
         Logger.debug('creating create data...');
-
+        const foundProject = (project !== undefined)? project : effProject;
         const createData = {
             type:'screenRefresh',
-            selectedProject:(project !== undefined)? project : effProject,
+            selectedProject:foundProject,
+            selectedIssueType:screenData.selectedIssueType,
             availableProjects:availableProjects,
-            issueTypeScreens:screens
+            issueTypeScreens:screenData.screens
         };
 
         Logger.debug('posting create data to webview',createData);
         this.postMessage(createData);
     }
 
-    async getScreenFields(project:WorkingProject): Promise<Map<string,any>> {
+    async getScreenFields(project:WorkingProject):Promise<{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens: {[k:string]:CreateIssueScreen}}> {
         Logger.debug('getting screen fields');
         let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
         
@@ -76,13 +77,19 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
         if(!handled) {
             switch (e.action) {
                 case 'fetchProjects': {
-                    Logger.debug('got login request from webview',e);
                     handled = true;
                     if(isFetchProjects(e)) {
 
                         Container.jiraSiteManager.getProjects('name',e.query).then(projects => {
                             this.postMessage({type:'projectList', availableProjects:projects});
                         });
+                    }
+                    break;
+                }
+                case 'getScreensForProject': {
+                    handled = true;
+                    if(isScreensForProjects(e)) {
+                        this.updateFields(e.project);
                     }
                     break;
                 }
@@ -95,8 +102,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
         return handled;
     }
 
-    prepareFields(project:JIRA.Schema.CreateMetaProjectBean):Map<string,CreateIssueScreen> {
-        let preparedFields:Map<string,CreateIssueScreen> = new Map<string,CreateIssueScreen>();
+    prepareFields(project:JIRA.Schema.CreateMetaProjectBean):{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens: {[k:string]:CreateIssueScreen}} {
+        let preparedFields = {};
 
         project.issuetypes!.forEach(issueType => {
             Logger.debug('processing issueType', issueType);
@@ -106,7 +113,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                 Logger.debug('processing issueType field', k);
                 const field:JIRA.Schema.FieldMetaBean = issueType.fields![k];
 
-                if(field.required || this.isKnownField(field)) {
+                if(!this.shouldFilterField(field) && (field.required || this.isKnownField(field))) {
                     fields.push(field);
                 }
 
@@ -124,10 +131,16 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
         });
 
         Logger.debug('prepared fields', preparedFields);
-        return preparedFields;
+        return {selectedIssueType:project.issuetypes![0], screens:preparedFields};
     }
 
     isKnownField(field:JIRA.Schema.FieldMetaBean):boolean {
         return (KNOWNFIELDS.indexOf(field.key) > -1 || field.name === 'Epic Link');
+    }
+
+    shouldFilterField(field:JIRA.Schema.FieldMetaBean):boolean {
+        return field.key === 'issuetype' 
+            || field.key === 'project'
+            || field.key === 'reporter';
     }
 }
