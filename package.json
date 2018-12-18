@@ -544,12 +544,14 @@
         "@atlaskit/droplist": "^7.0.16",
         "@atlaskit/feedback-collector": "^2.0.0",
         "@atlaskit/field-base": "^11.0.12",
+        "@atlaskit/field-text": "^7.0.19",
         "@atlaskit/flag": "^9.1.6",
         "@atlaskit/icon": "^15.0.1",
         "@atlaskit/input": "^4.0.9",
         "@atlaskit/layer-manager": "^5.0.18",
         "@atlaskit/logo": "^9.2.5",
         "@atlaskit/lozenge": "^6.2.2",
+        "@atlaskit/modal-dialog": "^7.1.1",
         "@atlaskit/page": "^8.0.8",
         "@atlaskit/page-header": "^6.0.7",
         "@atlaskit/panel": "^0.0.10",
@@ -586,7 +588,8 @@
         "semver": "^5.6.0",
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
-        "tunnel": "^0.0.6"
+        "tunnel": "^0.0.6",
+        "uuid": "^3.3.2"
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
@@ -606,6 +609,7 @@
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
         "@types/semver": "^5.5.0",
+        "@types/uuid": "^3.4.4",
         "mocha": "^5.2.0",
         "patch-package": "^5.1.1",
         "postinstall-postinstall": "^2.0.0",

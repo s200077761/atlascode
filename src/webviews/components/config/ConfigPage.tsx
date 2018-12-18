@@ -140,6 +140,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
+                            trigger={Trigger('Custom JQL','configure custom JQL queries')}
+                            open={true}>
+                            <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
                             trigger={Trigger('Jira Hover Provider','configure the hover provider for Jira issues')}
                             open={true}>
                             <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
@@ -149,7 +155,6 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
-                            <CustomJQL configData={this.state} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

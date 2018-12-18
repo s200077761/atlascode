@@ -22,6 +22,8 @@ declare module '@atlaskit/input';
 declare module '@atlaskit/droplist';
 declare module '@atlaskit/status';
 declare module '@atlaskit/spinner';
+declare module '@atlaskit/modal-dialog';
+declare module '@atlaskit/field-text';
 declare module '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 declare module '@atlaskit/logo/dist/esm/JiraLogo/Icon';
 declare module '@atlaskit/logo/dist/esm/StrideLogo/Icon';

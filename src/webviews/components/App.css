@@ -63,6 +63,17 @@ div.icon-text img {
   background: var(--vscode-button-background--50) !important;
 }
 
+div#jql-row {
+  color: var(--vscode-editor-foreground);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 3pt;
+  margin-top: 3pt;
+  margin-bottom: 3pt;
+  background-color: var(--vscode-input-background)
+}
+
 /* Content__ActionItem is the class given to the buttons in the feedback collector */
 [class^="Content__ActionItem"] {
   background: var(--vscode-button-background) !important;

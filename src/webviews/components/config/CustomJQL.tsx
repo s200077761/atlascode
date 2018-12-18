@@ -1,72 +1,107 @@
 import React from "react";
-import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
-import fetch, { Request, Response } from "node-fetch";
-import { ConfigData } from "../../../ipc/configMessaging";
 import { SiteJQL, emptyJQLEntry, JQLEntry } from "../../../config/model";
+import Button from "@atlaskit/button";
+import { Checkbox } from "@atlaskit/checkbox";
+import EditJQL from "./EditJQL";
+import { v4 } from "uuid";
 
 type changeObject = { [key: string]: any };
 
-export default class CustomJQL extends React.Component<{
-  configData: ConfigData;
-  onConfigChange: (changes: changeObject, removes?: string[]) => void;
-  cloudId: string;
-  jiraAccessToken: string;
-}> {
+export default class CustomJQL extends React.Component<
+  {
+    siteJqlList: SiteJQL[];
+    onConfigChange: (changes: changeObject, removes?: string[]) => void;
+    cloudId: string;
+    jiraAccessToken: string;
+  },
+  {
+    inputValue: string;
+    editingEntry: JQLEntry | undefined;
+    editingId: string | undefined;
+  }
+> {
   constructor(props: any) {
     super(props);
+
+    this.state = {
+      inputValue: "",
+      editingEntry: undefined,
+      editingId: undefined
+    };
   }
 
-  async fetchEndpoint(endpoint: string): Promise<any> {
-    const fullUrl = `https://api.atlassian.com/ex/jira/${
-      this.props.cloudId
-    }/rest/api/2/${endpoint}`;
-    const r = new Request(fullUrl, {
-      headers: {
-        Authorization: `Bearer ${this.props.jiraAccessToken}`,
-        "Content-Type": "application/json"
+  private copySiteJql(siteJqlList: SiteJQL[]) {
+    return siteJqlList.map((siteJql: SiteJQL) => {
+      return {siteId: siteJql.siteId, jql: siteJql.jql.map((entry: JQLEntry) => {
+        return Object.assign({}, entry);
+      })};
+    });
+  }
+
+  private publishChanges(jqlList: JQLEntry[]) {
+    const siteJqlList = this.copySiteJql(this.props.siteJqlList);
+    siteJqlList.forEach((siteJql: SiteJQL) => {
+      if (siteJql.siteId === this.props.cloudId) {
+        siteJql.jql = jqlList;
       }
     });
 
-    return fetch(r).then((res: Response) => {
-      return res.json();
-    });
-  }
-
-  getSuggestionsRequest = async (fieldName: string) => {
-    return this.fetchEndpoint(
-      `jql/autocompletedata/suggestions?fieldName=${fieldName}`
-    );
-  }
-
-  validationRequest = async (jql: string) => {
-    return this.fetchEndpoint(
-      `/search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
-    );
-  }
-
-  getAutocompleteDataRequest = () => {
-    return this.fetchEndpoint("/jql/autocompletedata");
-  }
-
-  onJQLChange = (event: any) => {
-    this.setState({
-      inputValue: event.target.value
-    });
-
-    const jqlList = this.siteJqlList();
-    const jqlEntry = jqlList[event.target.dataIndex];
-    jqlEntry.query = event.target.value;
-
     const changes = Object.create(null);
-    changes["jira.customJql"] = this.props.configData.config.jira.customJql;
+    changes["jira.customJql"] = siteJqlList;
 
     if (this.props.onConfigChange) {
       this.props.onConfigChange(changes);
     }
   }
 
-  private siteJqlList(): JQLEntry[] {
-    const customJqlList = this.props.configData.config.jira.customJql;
+  onNewQuery = () => {
+    const id = v4();
+    this.setState({
+      editingId: id,
+      editingEntry: { id: id, name: "", query: "", enabled: true }
+    });
+  }
+
+  onEditQuery = (id: string) => {
+    const entry = this.readJqlListFromProps().find((entry: JQLEntry) => {
+      return entry.id === id;
+    });
+    if (entry) {
+      this.setState({
+        editingId: entry.id,
+        editingEntry: Object.assign({}, entry)
+      });
+    } else {
+      // This entry has disappered from under us.
+      this.onNewQuery();
+    }
+  }
+
+  deleteQuery = (id: string) => {
+    var jqlList = this.readJqlListFromProps().map((entry: JQLEntry) => {
+      return Object.assign({}, entry);
+    });
+    const index = this.indexForId(jqlList, id);
+    if (index >= 0) {
+      jqlList.splice(index, 1);
+      this.publishChanges(jqlList);
+    }
+  }
+
+  toggleEnable = (e: any) => {
+    const id = e.target.value;
+    var jqlList = this.readJqlListFromProps();
+    const index = this.indexForId(jqlList, id);
+
+    if (index >= 0) {
+      const entry = jqlList[index];
+      entry.enabled = e.target.checked;
+      this.publishChanges(jqlList);
+    }
+  }
+
+  private readJqlListFromProps(): JQLEntry[] {
+    const customJqlList = this.props.siteJqlList;
     const siteJql = customJqlList.find((item: SiteJQL) => {
       return item.siteId === this.props.cloudId;
     });
@@ -77,33 +112,94 @@ export default class CustomJQL extends React.Component<{
       return newJql.jql;
     }
 
-    return siteJql.jql;
+    return siteJql.jql.map((item: JQLEntry) => {return Object.assign({}, item);});
+  }
+
+  handleCancelEdit = () => {
+    this.setState({ editingId: undefined, editingEntry: undefined });
+  }
+
+  indexForId(jqlList: JQLEntry[], id: string | undefined) {
+    return jqlList.findIndex((entry: JQLEntry) => {
+      return entry.id === id;
+    });
+  }
+
+  handleSaveEdit = (jqlEntry: JQLEntry) => {
+    const jqlList = this.readJqlListFromProps();
+    const index = this.indexForId(jqlList, this.state.editingId);
+
+    if (index >= 0) {
+      jqlList[index] = jqlEntry;
+    } else {
+      jqlList.push(jqlEntry);
+    }
+
+    this.setState({
+      editingId: undefined,
+      editingEntry: undefined
+    });
+    this.publishChanges(jqlList);
   }
 
   render() {
     if (!this.props.cloudId && !this.props.jiraAccessToken) {
       return <div />;
     }
-
-    const jql = this.siteJqlList();
+    
+    const jql = this.readJqlListFromProps();
 
     return (
       <React.Fragment>
+        {this.state.editingEntry && (
+          <EditJQL
+            cloudId={this.props.cloudId}
+            jiraAccessToken={this.props.jiraAccessToken}
+            jqlEntry={this.state.editingEntry}
+            onCancel={this.handleCancelEdit}
+            onSave={this.handleSaveEdit}
+          />
+        )}
         {jql.map((element, index) => {
           return (
-            <JQLAutocompleteInput
-              data-index={index}
-              getAutocompleteDataRequest={this.getAutocompleteDataRequest}
-              getSuggestionsRequest={this.getSuggestionsRequest}
-              initialValue={element.query}
-              inputId={`jqlAutocomplete_${index}`}
-              label={"JQL"}
-              onChange={this.onJQLChange}
-              // setValue={this.props.setValue}
-              validationRequest={this.validationRequest}
-            />
+            <div data-index={index} id="jql-row">
+              <div>
+                <Checkbox
+                  value={element.id}
+                  isChecked={element.enabled}
+                  onChange={this.toggleEnable}
+                  name={`jql-enabled-${index}`}
+                />
+              </div>
+
+              <div style={{ flexGrow: 1 }}>{element.name}</div>
+
+              <div>
+                <Button
+                  className="ak-button"
+                  onClick={() => {
+                    this.onEditQuery(element.id);
+                  }}
+                >
+                  Edit
+                </Button>
+              </div>
+              <div>
+                <Button
+                  className="ak-button"
+                  onClick={() => {
+                    this.deleteQuery(element.id);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
           );
         })}
+        <Button className="ak-button" onClick={this.onNewQuery}>
+          Add Query
+        </Button>
       </React.Fragment>
     );
   }
