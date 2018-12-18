@@ -24,7 +24,7 @@
         "multi-root ready"
     ],
     "engines": {
-        "vscode": "^1.29.0"
+        "vscode": "^1.30.0"
     },
     "categories": [
         "Other"
@@ -530,7 +530,6 @@
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "bitbucket": "^1.5.0",
-        "clipboardy": "^1.2.3",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
@@ -554,7 +553,6 @@
     },
     "devDependencies": {
         "@types/atlaskit__button": "^6.4.1",
-        "@types/clipboardy": "^1.1.0",
         "@types/escape-string-regexp": "^1.0.0",
         "@types/git-url-parse": "^9.0.0",
         "@types/handlebars": "^4.0.39",
