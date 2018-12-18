@@ -25,6 +25,11 @@ a:hover {
   color: var(--vscode-textLink-activeForeground) !important;
 }
 
+input {
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+}
+
 div.icon-text {
   height: 2em;
   display: flex;
@@ -232,6 +237,10 @@ body div[class^="css-"] div[class^="css-"] {
 .labelAndSelect > span {
   color: var(--color--75);
   padding-right: 1rem;
+}
+
+.refreshInterval > span {
+  color: var(--color--75);
 }
 
 hr {

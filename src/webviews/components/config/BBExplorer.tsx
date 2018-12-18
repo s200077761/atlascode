@@ -4,7 +4,6 @@ import { ConfigData } from '../../../ipc/configMessaging';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import { BitbucketExplorerLocation } from '../../../config/model';
 
-
 type changeObject = {[key: string]:any};
 
 export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
@@ -15,6 +14,15 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
     onCheckboxChange = (e:any) => {
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
+
+        if(this.props.onConfigChange) {
+            this.props.onConfigChange(changes);
+        }
+    }
+
+    handleInputChange = (e:any, configKey:string) => {
+        const changes = Object.create(null);
+        changes[configKey] = e.target.value;
 
         if(this.props.onConfigChange) {
             this.props.onConfigChange(changes);
@@ -88,6 +96,14 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                     <div style={{ marginLeft:'3em' }}>
                         {locationSelect}
                     </div>
+                    <div className="refreshInterval"  style={{ marginLeft: '3em' }}>
+                        <span>refresh every: </span>
+                        <input style={{ width: '40px' }} name="pr-explorer-refresh-interval"
+                            type="number" min="0"
+                            value={this.props.configData.config.bitbucket.explorer.refreshInterval}
+                            onChange={(e: any) => this.handleInputChange(e, "bitbucket.explorer.refreshInterval")} />
+                        <span> minutes (setting to 0 disables auto-refresh)</span>
+                    </div>
 
                     <Checkbox
                         value="bitbucket.explorer.relatedJiraIssues.enabled"
@@ -102,6 +118,15 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                         isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
                         onChange={this.onCheckboxChange}
                         name="pr-explorer-notifications-prcreated"/>
+
+                    <div className="refreshInterval" style={{ marginLeft: '3em' }}>
+                        <span>check every: </span>
+                        <input style={{width: '40px'}} name="pr-notifications-refresh-interval"
+                            type="number" min="1"
+                            value={this.props.configData.config.bitbucket.explorer.notifications.refreshInterval}
+                            onChange={(e:any) => this.handleInputChange(e, "bitbucket.explorer.notifications.refreshInterval")} />
+                        <span> minutes</span>
+                    </div>
                 </div>
             </div>
             
