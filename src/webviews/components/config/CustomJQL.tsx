@@ -66,17 +66,17 @@ export default class CustomJQL extends React.Component<{
 
   siteJqlList = () => {
     const customJqlList = this.props.configData.config.jira.customJql;
-    const siteJql = customJqlList.filter((item: SiteJQL) => {
+    const siteJql = customJqlList.find((item: SiteJQL) => {
       return item.siteId === this.props.cloudId;
     });
     
-    if (siteJql.length === 0) {
+    if (!siteJql) {
       const newJql = { siteId: this.props.cloudId, jql: [""] };
       customJqlList.push(newJql);
       return newJql.jql;
     }
 
-    return siteJql[0].jql;
+    return siteJql.jql;
   }
 
   render() {
