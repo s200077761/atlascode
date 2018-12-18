@@ -422,7 +422,25 @@
                             "jql": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "default": ""
+                                        },
+                                        "enabled": {
+                                            "type": "boolean",
+                                            "default": true
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "default": ""
+                                        },
+                                        "query": {
+                                            "type": "string",
+                                            "default": ""
+                                        }
+                                    }
                                 }
                             }
                         }
