@@ -6,12 +6,15 @@ import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { configuration, BitbucketExplorerLocation } from "../config/configuration";
 import { Container } from "../container";
 import { Commands } from "../commands";
+import { AuthProvider } from "../atlclients/authInfo";
+
+const defaultRefreshInterval = 10 * Time.MINUTES;
 
 export class PullRequestCreatedNotifier implements Disposable {
     private _disposable: Disposable;
     private _newPrNotificationTimer: any | undefined;
     private _lastCheckedTime = new Map<String, Date>();
-    private _refreshInterval = 10 * Time.MINUTES;
+    private _refreshInterval = defaultRefreshInterval;
 
     constructor(private _bbCtx: BitbucketContext) {
         this._disposable = configuration.onDidChange(this.onConfigurationChanged, this);
@@ -23,8 +26,16 @@ export class PullRequestCreatedNotifier implements Disposable {
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled') || configuration.changed(e, 'bitbucket.explorer.notifications.pullRequestCreated')) {
-            if(Container.config.bitbucket.explorer.enabled  && Container.config.bitbucket.explorer.notifications.pullRequestCreated) {
+        if (initializing
+            || configuration.changed(e, 'bitbucket.explorer.enabled')
+            || configuration.changed(e, 'bitbucket.explorer.notifications.pullRequestCreated')
+            || configuration.changed(e, 'bitbucket.explorer.notifications.refreshInterval')) {
+
+            this._refreshInterval = Container.config.bitbucket.explorer.notifications.refreshInterval > 0
+                ? Container.config.bitbucket.explorer.notifications.refreshInterval * Time.MINUTES
+                : defaultRefreshInterval;
+
+            if (Container.config.bitbucket.explorer.enabled && Container.config.bitbucket.explorer.notifications.pullRequestCreated) {
                 this.enable();
             } else {
                 this.disable();
@@ -36,6 +47,10 @@ export class PullRequestCreatedNotifier implements Disposable {
         this.disable();
 
         this._newPrNotificationTimer = setInterval(async () => {
+            if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+                return;
+            }
+
             const promises = this._bbCtx.getAllRepositores().map(repo => {
                 return PullRequestApi.getLatest(repo).then(prList => {
                     const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())

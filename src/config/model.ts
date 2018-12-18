@@ -70,6 +70,7 @@ export interface BitbucketConfig {
 
 export interface BitbucketExplorer {
     enabled:boolean;
+    refreshInterval:number;
     location:BitbucketExplorerLocation;
     relatedJiraIssues:BitbucketRelatedJiraIssues;
     notifications:BitbucketNotifications;
@@ -80,6 +81,7 @@ export interface BitbucketRelatedJiraIssues {
 }
 
 export interface BitbucketNotifications {
+    refreshInterval:number;
     pullRequestCreated:boolean;
 }
 
@@ -145,11 +147,13 @@ export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
 };
 
 export const emptyBitbucketNotfications: BitbucketNotifications = {
+    refreshInterval: 10,
     pullRequestCreated: true
 };
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
+    refreshInterval:5,
     location:BitbucketExplorerLocation.Atlascode,
     relatedJiraIssues: emptyRelatedJiraIssues,
     notifications: emptyBitbucketNotfications
