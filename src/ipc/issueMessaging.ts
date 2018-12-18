@@ -27,3 +27,19 @@ export interface CreateIssueScreen {
 export interface ProjectList extends Message {
     availableProjects:Project[];
 }
+
+export interface CreatedSomething extends Message {
+    createdData:any;
+}
+
+export interface IssueCreated extends Message {
+    issueData:any;
+}
+
+export function isCreatedSomething(m: Message): m is  CreatedSomething {
+    return (<CreatedSomething>m).createdData !== undefined;
+}
+
+export function isIssueCreated(m: Message): m is  IssueCreated {
+    return (<IssueCreated>m).issueData !== undefined;
+}

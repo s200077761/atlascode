@@ -81,16 +81,52 @@ div.icon-text img {
 }
 
 .ak-textarea {
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background)!important;
+  color: var(--vscode-input-foreground)!important;
   font: inherit;
   width: inherit;
   padding: 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--vscode-input-border)!important;
+  transition-property: background-color, border-color;
+  transition-duration: 200ms, 200ms;
+  transition-timing-function: ease-in-out, ease-in-out;
+  transition-delay: initial, initial;
+  outline-width: 0px!important;
 }
 
-.ak-textarea:focus {
-  outline-color: var(--vscode-focusBorder);
-  outline-width: 2px;
+.ak-textarea:focus, .ak-textarea:hover {
+  border-color: var(--vscode-focusBorder)!important;
+  outline-width: 0px!important;
+}
+
+.ak-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
+}
+
+.ak-inputField {
+  background: var(--vscode-input-background)!important;
+  color: var(--vscode-input-foreground)!important;
+  font: inherit;
+  width: inherit;
+  padding: 6px;
+  display: block;
+  border: 1px solid var(--vscode-input-border)!important;
+  transition-property: background-color, border-color;
+  transition-duration: 200ms, 200ms;
+  transition-timing-function: ease-in-out, ease-in-out;
+  transition-delay: initial, initial;
+  outline-width: 0px!important;
+  box-sizing: border-box;
+}
+
+.ak-inputField::placeholder {
+    color: var(--vscode-input-placeholderForeground) !important;
+}
+
+.ak-inputField:focus, .ak-inputField:hover {
+  border-color: var(--vscode-focusBorder)!important;
+  outline-width: 0px!important;
 }
 
 [class^="Droplist__Content"] {
@@ -272,7 +308,7 @@ hr {
 .ak-select__control {
   background: var(--vscode-dropdown-background) !important;
   color: var(--vscode-dropdown-foreground) !important;
-  border-color: var(--vscode-dropdown-background) !important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
 }
 
 .ak-select__control:hover {
@@ -292,6 +328,9 @@ hr {
   cursor: pointer !important;
 }
 
+.ak-select__placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
+}
 
 .ak-select__option--is-focused {
   background: var(--vscode-list-focusBackground) !important;
@@ -304,10 +343,8 @@ hr {
 }
 
 .ak-select__menu {
-  border-color: var(--vscode-focusBorder) !important;
+  border: 1px solid var(--vscode-focusBorder)!important;
   border-radius: 2px!important;
-  border-width: 2px!important;
-  border-style: solid!important;
 }
 
 .ak-select__value-container {

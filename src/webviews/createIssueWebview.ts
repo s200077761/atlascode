@@ -2,13 +2,15 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueScreen, CreateIssueData, ProjectList } from '../ipc/issueMessaging';
+import { CreateIssueScreen, CreateIssueData, ProjectList, CreatedSomething, IssueCreated } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isFetchProjects, isScreensForProjects } from '../ipc/issueActions';
+import { isFetchProjects, isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction } from '../ipc/issueActions';
+import { commands } from 'vscode';
+import { Commands } from '../commands';
 
 const KNOWNFIELDS:string[] = ['summary','description','fixVersions', 'components'];
 
-type Emit = CreateIssueData | ProjectList;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated;
 export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 	
     constructor(extensionPath: string) {
@@ -90,6 +92,47 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                     handled = true;
                     if(isScreensForProjects(e)) {
                         this.updateFields(e.project);
+                    }
+                    break;
+                }
+                case 'createVersion': {
+                    handled = true;
+                    if(isCreateSomething(e)) {
+                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                        if(client) {
+                            client.version.createVersion({body:{name:e.createData.name, project:e.createData.project}})
+                                .then(resp => {
+                                    this.postMessage({type:'versionCreated', createdData:resp.data});
+                                })
+                                .catch(reason => {
+                                    this.postMessage({type:'versionCreated', createdData:{id:'error', name:'', archived:false, released:false}});
+                                    Logger.debug('error creating version',reason);
+                                });
+                        }
+                    }
+                    break;
+                }
+                case 'createIssue': {
+                    handled = true;
+                    if(isCreateIssue(e)) {
+                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                        if(client) {
+                            client.issue.createIssue({body:e.issueData})
+                                .then(resp => {
+                                    this.postMessage({type:'issueCreated', issueData:resp.data});
+                                })
+                                .catch(reason => {
+                                    this.postMessage({type:'issueCreated', issueData:{id:'error'}});
+                                    Logger.debug('error creating issue',reason);
+                                });
+                        }
+                    }
+                    break;
+                }
+                case 'openIssue': {
+                    handled = true;
+                    if(isOpenIssueAction(e)) {
+                        commands.executeCommand(Commands.ShowIssue,e.key);
                     }
                     break;
                 }

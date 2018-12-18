@@ -24,6 +24,18 @@ export interface ScreensForProjectsAction extends Action {
     project: WorkingProject;
 }
 
+export interface CreateSomethingAction extends Action {
+    createData: any;
+}
+
+export interface CreateIssueAction extends Action {
+    issueData: any;
+}
+
+export interface OpenIssueAction extends Action {
+    key: string;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -42,4 +54,16 @@ export function isFetchProjects(a: Action): a is  FetchProjectsAction {
 
 export function isScreensForProjects(a: Action): a is  ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
+}
+
+export function isCreateSomething(a: Action): a is  CreateSomethingAction {
+    return (<CreateSomethingAction>a).createData !== undefined;
+}
+
+export function isCreateIssue(a: Action): a is  CreateIssueAction {
+    return (<CreateIssueAction>a).issueData !== undefined;
+}
+
+export function isOpenIssueAction(a: Action): a is  OpenIssueAction {
+    return (<OpenIssueAction>a).key !== undefined;
 }
