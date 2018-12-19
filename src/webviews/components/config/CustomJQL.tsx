@@ -2,7 +2,7 @@ import React from "react";
 import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import fetch, { Request, Response } from "node-fetch";
 import { ConfigData } from "../../../ipc/configMessaging";
-import { SiteJQL } from "../../../config/model";
+import { SiteJQL, emptyJQLEntry, JQLEntry } from "../../../config/model";
 
 type changeObject = { [key: string]: any };
 
@@ -28,7 +28,7 @@ export default class CustomJQL extends React.Component<{
     });
 
     return fetch(r).then((res: Response) => {
-      return res.json(); 
+      return res.json();
     });
   }
 
@@ -53,8 +53,9 @@ export default class CustomJQL extends React.Component<{
       inputValue: event.target.value
     });
 
-    var jqlList = this.siteJqlList();
-    jqlList[event.target.dataIndex] = event.target.value;
+    const jqlList = this.siteJqlList();
+    const jqlEntry = jqlList[event.target.dataIndex];
+    jqlEntry.query = event.target.value;
 
     const changes = Object.create(null);
     changes["jira.customJql"] = this.props.configData.config.jira.customJql;
@@ -64,14 +65,14 @@ export default class CustomJQL extends React.Component<{
     }
   }
 
-  siteJqlList = () => {
+  private siteJqlList(): JQLEntry[] {
     const customJqlList = this.props.configData.config.jira.customJql;
     const siteJql = customJqlList.find((item: SiteJQL) => {
       return item.siteId === this.props.cloudId;
     });
-    
+
     if (!siteJql) {
-      const newJql = { siteId: this.props.cloudId, jql: [""] };
+      const newJql = { siteId: this.props.cloudId, jql: [emptyJQLEntry] };
       customJqlList.push(newJql);
       return newJql.jql;
     }
@@ -89,13 +90,12 @@ export default class CustomJQL extends React.Component<{
     return (
       <React.Fragment>
         {jql.map((element, index) => {
-          console.log(`${index}, ${element}`);
           return (
             <JQLAutocompleteInput
-              data-index = {index}
+              data-index={index}
               getAutocompleteDataRequest={this.getAutocompleteDataRequest}
               getSuggestionsRequest={this.getSuggestionsRequest}
-              initialValue={element}
+              initialValue={element.query}
               inputId={`jqlAutocomplete_${index}`}
               label={"JQL"}
               onChange={this.onJQLChange}

@@ -5,7 +5,7 @@ import { Commands } from "../../commands";
 import { RefreshableTree } from "./abstractIssueTree";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
-import { configuration, SiteJQL } from "../../config/configuration";
+import { configuration, SiteJQL, JQLEntry } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { Logger } from "../../logger";
@@ -65,13 +65,14 @@ export class JiraExplorer extends Disposable {
         }
     }
 
-    private customJqlForWorkingSite(): string[] {
+    private customJqlForWorkingSite(): JQLEntry[] {
         const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => {
             return item.siteId === Container.config.jira.workingSite.id;
         });
+        
         if (siteJql) {
-            return siteJql.jql.filter((jql: string) => {
-                return jql.trim().length > 0;
+            return siteJql.jql.filter((jql: JQLEntry) => {
+                return jql.enabled;
             });
         }
         return [];

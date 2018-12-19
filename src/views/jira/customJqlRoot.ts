@@ -9,13 +9,14 @@ import { BaseNode } from "../nodes/baseNode";
 import { CustomJQLTreeId } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { RefreshableTree } from "./abstractIssueTree";
+import { JQLEntry } from "src/config/model";
 
 export class CustomJQLRoot
   implements TreeDataProvider<BaseNode | CustomJQLTree>, RefreshableTree {
   private _tree: TreeView<BaseNode | CustomJQLTree> | undefined;
   private _children: CustomJQLTree[];
 
-  constructor(private _jqlList: string[]) {
+  constructor(private _jqlList: JQLEntry[]) {
     this._children = [];
 
     this._tree = window.createTreeView(CustomJQLTreeId, {
@@ -27,7 +28,8 @@ export class CustomJQLRoot
     if (element instanceof BaseNode) {
       return element.getTreeItem();
     } else {
-      const item = new TreeItem(element.getJql()!);
+      const item = new TreeItem(element.jqlEntry.name);
+      item.tooltip = element.jqlEntry.query;
       item.collapsibleState = TreeItemCollapsibleState.Collapsed;
       return item;
     }
@@ -35,8 +37,8 @@ export class CustomJQLRoot
 
   getChildren(element: BaseNode | CustomJQLTree | undefined) {
     if (!element) {
-      return this._jqlList.map((jql: string) => {
-        const childTree = new CustomJQLTree(jql, this);
+      return this._jqlList.map((jql: JQLEntry) => {
+        const childTree = new CustomJQLTree(jql);
         this._children.push(childTree);
         return childTree;
       });

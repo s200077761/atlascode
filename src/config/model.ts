@@ -59,7 +59,14 @@ export interface JiraHover {
 
 export interface SiteJQL {
     siteId: string;
-    jql: string[];
+    jql: JQLEntry[];
+}
+
+export interface JQLEntry {
+    id: string;
+    enabled: boolean;
+    name: string;
+    query: string;
 }
 
 export interface BitbucketConfig {
@@ -129,6 +136,13 @@ export const emptyJiraStatusBar: JiraStatusBar = {
 
 export const emptyJiraHover: JiraHover = {
     enabled: true
+};
+
+export const emptyJQLEntry: JQLEntry = {
+    id: "",
+    enabled:true,
+    name:"",
+    query:""
 };
 
 export const emptyJiraConfig:JiraConfig = {
