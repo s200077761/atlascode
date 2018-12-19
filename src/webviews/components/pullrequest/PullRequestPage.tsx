@@ -4,9 +4,9 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Panel from '@atlaskit/panel';
-import Tag from '@atlaskit/tag';
 import Tooltip from '@atlaskit/tooltip';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
+import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -18,7 +18,8 @@ import BranchInfo from './BranchInfo';
 import styled from 'styled-components';
 
 export const Spacer = styled.div`
-margin: 10px;
+margin-left: 10px;
+margin-right: 10px;
 `;
 
 export const InlineFlex = styled.div`
@@ -69,6 +70,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     render() {
         const pr = this.state.pr.pr!;
         if (!pr) { return <div></div>; }
+        const isPrOpen = pr.state === "OPEN";
 
         let currentUserApproved = pr.participants!
             .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
@@ -78,15 +80,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             <InlineFlex>
                 <Reviewers {...this.state.pr} />
                 <Spacer>
-                    {!currentUserApproved
-                        ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
-                        : <p> <Tag text="✔ You approved this PR" color="green" /></p>
-                    }
+                    <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
+                        <Button className='ak-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                            isDisabled={currentUserApproved}
+                            isLoading={this.state.isApproveButtonLoading}
+                            onClick={this.handleApprove}>
+                            Approve
+                        </Button>
+                    </Tooltip>
                 </Spacer>
-                {pr.state === "OPEN"
-                    ? <Button className='ak-button' isLoading={this.state.isMergeButtonLoading} onClick={this.handleMerge}>Merge</Button>
-                    : <Button className='ak-button' isDisabled>{pr.state}</Button>
-                }
+                <Button className='ak-button'
+                    isDisabled={!isPrOpen}
+                    isLoading={this.state.isMergeButtonLoading}
+                    onClick={this.handleMerge}>
+                    {isPrOpen ? 'Merge' : pr.state}
+                </Button>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
