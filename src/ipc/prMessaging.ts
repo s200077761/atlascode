@@ -1,4 +1,5 @@
 import { Message } from "./messaging";
+import { Issue } from "../jira/jiraModel";
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
@@ -7,6 +8,7 @@ export interface PRData extends Message {
     commits?: Bitbucket.Schema.Commit[];
     comments?: Bitbucket.Schema.Comment[];
     currentBranch: string;
+    relatedJiraIssues: Issue[];
     errors?: string;
 }
 

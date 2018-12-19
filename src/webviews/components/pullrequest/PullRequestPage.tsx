@@ -12,10 +12,12 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
-import { Approve, Merge, Checkout, PostComment } from '../../../ipc/prActions';
+import { Approve, Merge, Checkout, PostComment, OpenJiraIssue } from '../../../ipc/prActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
 import styled from 'styled-components';
+import { Issue } from '../../../jira/jiraModel';
+import IssueList from '../issue/IssueList';
 
 export const Spacer = styled.div`
 margin-left: 10px;
@@ -27,13 +29,13 @@ display: inline-flex;
 align-items: center;
 `;
 
-type Emit = Approve | Merge | Checkout | PostComment;
+type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssue;
 type Receive = PRData | CheckoutResult;
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false, isMergeButtonLoading: false };
+        this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false };
     }
 
     handleApprove = () => {
@@ -55,6 +57,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             action: 'comment',
             content: content,
             parentCommentId: parentCommentId
+        });
+    }
+
+    handleIssueClicked = (issue: Issue) => {
+        this.postMessage({
+            action: 'openJiraIssue',
+            issue: issue
         });
     }
 
@@ -124,6 +133,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>
+                            {this.state.pr.relatedJiraIssues.length > 0 &&
+                            <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
+                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssue) => this.postMessage(e)} />
+                            </Panel>
+                            }
                             <hr />
                             <Panel isDefaultExpanded header={<h3>Commits</h3>}>
                                 <Commits {...this.state.pr} />

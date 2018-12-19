@@ -555,6 +555,7 @@
         "@atlaskit/panel": "^0.0.10",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
         "@atlaskit/size-detector": "^5.0.8",
+        "@atlaskit/status": "^0.2.11",
         "@atlaskit/table-tree": "^5.0.4",
         "@atlaskit/tag": "^6.1.0",
         "@atlaskit/tooltip": "^12.1.9",
