@@ -468,6 +468,12 @@
                     "description": "Explorer location for Bitbucket pull requests",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.refreshInterval": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Time (in minutes) to wait before refreshing the pull reqeusts explorer (set to 0 to disable auto-refresh)",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.explorer.relatedJiraIssues.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -478,6 +484,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Periodically check for newly created pull reqeuests and show an information message if there are any",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.notifications.refreshInterval": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Time (in minutes) to wait before checking for newly created pull requests",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.contextMenus.enabled": {

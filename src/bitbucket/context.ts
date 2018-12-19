@@ -19,6 +19,7 @@ const explorerLocation = {
     sourceControl: 'SourceControl',
     atlascode: 'Atlascode'
 };
+const defaultRefreshInterval = 5 * Time.MINUTES;
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -33,7 +34,7 @@ export class BitbucketContext extends Disposable {
     private _prCreatedNotifier: PullRequestCreatedNotifier;
     private _disposable:Disposable;
     private _timer: any | undefined;
-    private _refreshInterval = 5 * Time.MINUTES;
+    private _refreshInterval = defaultRefreshInterval;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -105,6 +106,19 @@ export class BitbucketContext extends Disposable {
         if(initializing || configuration.changed(e, 'bitbucket.explorer.location')) {
             this.setLocationContext();
         }
+
+        if (initializing || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
+            if (Container.config.bitbucket.explorer.refreshInterval === 0) {
+                this._refreshInterval = 0;
+                this.stopTimer();
+            } else {
+                this._refreshInterval = Container.config.bitbucket.explorer.refreshInterval > 0
+                    ? Container.config.bitbucket.explorer.refreshInterval * Time.MINUTES
+                    : defaultRefreshInterval;
+                this.stopTimer();
+                this.startTimer();
+            }
+        }
     }
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
@@ -132,7 +146,7 @@ export class BitbucketContext extends Disposable {
     }
 
     private startTimer() {
-        if (!this._timer) {
+        if (!this._timer && this._refreshInterval > 0) {
             this._timer = setInterval(() => {
                 if (this._tree && this._dataProvider) {
                     this._onDidChangeBitbucketContext.fire();
