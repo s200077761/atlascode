@@ -277,3 +277,7 @@ hr {
 .bitbucket-page img::after {
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
 }
+
+.bitbucket-page h3 {
+  margin: 5px;
+}

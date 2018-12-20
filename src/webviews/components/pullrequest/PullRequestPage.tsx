@@ -4,6 +4,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Panel from '@atlaskit/panel';
+import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
@@ -27,6 +28,12 @@ margin-right: 10px;
 export const InlineFlex = styled.div`
 display: inline-flex;
 align-items: center;
+`;
+
+export const BlockCentered = styled.div`
+display: block;
+text-align: center;
+margin: 20px;
 `;
 
 type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssue;
@@ -112,7 +119,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
                 <BreadcrumbsItem text={this.state.pr.pr!.destination!.repository!.name} key={this.state.pr.pr!.destination!.repository!.name} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />
-                <BreadcrumbsItem text="Pull requests" key="Pull requests" />
+                <BreadcrumbsItem text="Pull requests" key="Pull requests" href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />
                 <BreadcrumbsItem text={pr.id} key={pr.id} href={pr.links!.html!.href} />
             </BreadcrumbsStateless>
         );
@@ -129,24 +136,28 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             >
                                 <p>{pr.title}</p>
                             </PageHeader>
-                            <hr />
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>
-                            {this.state.pr.relatedJiraIssues.length > 0 &&
-                            <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
-                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssue) => this.postMessage(e)} />
-                            </Panel>
+                            {
+                                !this.state.pr.commits && !this.state.pr.comments && !this.state.pr.relatedJiraIssues
+                                    ? <BlockCentered><Spinner size="large" /></BlockCentered>
+                                    : <React.Fragment>
+                                        {
+                                            this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&
+                                            <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
+                                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssue) => this.postMessage(e)} />
+                                            </Panel>
+                                        }
+                                        <Panel isDefaultExpanded header={<h3>Commits</h3>}>
+                                            <Commits {...this.state.pr} />
+                                        </Panel>
+                                        <Panel isDefaultExpanded header={<h3>Comments</h3>}>
+                                            <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                                        </Panel>
+                                    </React.Fragment>
                             }
-                            <hr />
-                            <Panel isDefaultExpanded header={<h3>Commits</h3>}>
-                                <Commits {...this.state.pr} />
-                            </Panel>
-                            <hr />
-                            <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                <Comments prData={this.state.pr} onComment={this.handlePostComment} />
-                                <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
-                            </Panel>
                         </GridColumn>
                     </Grid>
                 </Page>
