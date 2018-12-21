@@ -6,4 +6,5 @@ import { Issue } from "../jira/jiraModel";
 export interface IssueData extends Message {}
 export interface IssueData extends Issue {
     isAssignedToMe: boolean;
+    childIssues: Issue[];
 }

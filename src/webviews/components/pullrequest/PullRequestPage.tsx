@@ -13,30 +13,15 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
-import { Approve, Merge, Checkout, PostComment, OpenJiraIssue } from '../../../ipc/prActions';
+import { Approve, Merge, Checkout, PostComment } from '../../../ipc/prActions';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
-import styled from 'styled-components';
 import { Issue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
+import { Spacer, BlockCentered, InlineFlex } from '../styles';
 
-export const Spacer = styled.div`
-margin-left: 10px;
-margin-right: 10px;
-`;
-
-export const InlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-`;
-
-export const BlockCentered = styled.div`
-display: block;
-text-align: center;
-margin: 20px;
-`;
-
-type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssue;
+type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, branchError?: string }> {
@@ -146,7 +131,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         {
                                             this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
-                                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssue) => this.postMessage(e)} />
+                                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>

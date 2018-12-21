@@ -90,6 +90,7 @@ div.icon-text img {
   color: var(--vscode-input-foreground);
   font: inherit;
   width: inherit;
+  box-sizing: border-box;
   padding: 6px;
 }
 

@@ -1,5 +1,4 @@
 import { Action } from "./messaging";
-import { Issue } from "src/jira/jiraIssue";
 
 export interface PostComment extends Action {
     content: string;
@@ -18,11 +17,6 @@ export interface Merge extends Action {
     action: 'merge';
 }
 
-export interface OpenJiraIssue extends Action {
-    action: 'openJiraIssue';
-    issue: Issue;
-}
-
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;
@@ -31,8 +25,4 @@ export interface Checkout extends Action {
 
 export function isCheckout(a: Action): a is Checkout {
     return (<Checkout>a).branch !== undefined;
-}
-
-export function isOpenJiraIssue(a: Action): a is OpenJiraIssue {
-    return (<OpenJiraIssue>a).issue !== undefined;
 }
