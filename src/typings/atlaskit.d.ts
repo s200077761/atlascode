@@ -21,3 +21,5 @@ declare module '@atlaskit/panel';
 declare module '@atlaskit/field-base';
 declare module '@atlaskit/input';
 declare module '@atlaskit/droplist';
+declare module '@atlaskit/status';
+declare module '@atlaskit/spinner';

@@ -1,14 +1,18 @@
-import { window } from 'vscode';
+import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest } from '../bitbucket/model';
+import { PullRequest, PaginatedComments } from '../bitbucket/model';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout } from '../ipc/prActions';
+import { isPostComment, isCheckout, isOpenJiraIssue } from '../ipc/prActions';
 import * as gup from 'git-url-parse';
+import { fetchIssue } from '../jira/fetchIssue';
+import { Commands } from '../commands';
+import { Issue } from '../jira/jiraModel';
+import { extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 
 interface PRState {
     prData: PRData;
@@ -17,7 +21,7 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', currentBranch: '' } };
+const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
 
 export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutResult, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
@@ -59,7 +63,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     handled = true;
                     this.approve().catch((e: any) => {
                         Logger.error(new Error(`error approving pull request: ${e}`));
-                        window.showErrorMessage('Pull reqeust could not be approved');
+                        vscode.window.showErrorMessage('Pull reqeust could not be approved');
                     });
                     break;
                 }
@@ -67,7 +71,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     handled = true;
                     this.merge().catch((e: any) => {
                         Logger.error(new Error(`error merging pull request: ${e}`));
-                        window.showErrorMessage('Pull reqeust could not be merged');
+                        vscode.window.showErrorMessage('Pull reqeust could not be merged');
                     });
                     break;
                 }
@@ -76,7 +80,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         handled = true;
                         this.postComment(e.content, e.parentCommentId).catch((e: any) => {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
-                            window.showErrorMessage('Pull reqeust comment could not be posted');
+                            vscode.window.showErrorMessage('Pull reqeust comment could not be posted');
                         });
                     }
                     break;
@@ -86,7 +90,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         handled = true;
                         this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
-                            window.showErrorMessage('Branch could not be checked out');
+                            vscode.window.showErrorMessage('Branch could not be checked out');
                         });
                     }
                     break;
@@ -95,6 +99,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     handled = true;
                     this.forceUpdatePullRequest();
                     break;
+                }
+                case 'openJiraIssue': {
+                    if (isOpenJiraIssue(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.issue);
+                        break;
+                    }
                 }
             }
         }
@@ -111,35 +122,65 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
             this.postMessage(this._state.prData);
             return;
         }
+
+        await this.postInitialState(pr);
+        await this.postAugmentedState(pr);
+    }
+
+    private async postInitialState(pr: PullRequest) {
         const isStagingRepo = pr.remote && pr.remote.fetchUrl!.indexOf('bb-inf.net') !== -1;
+        const currentUser = this._state.prData.currentUser || await getCurrentUser(isStagingRepo);
+        this._state = {
+            repository: pr.repository,
+            remote: pr.remote,
+            sourceRemote: pr.sourceRemote || pr.remote,
+            prData: {
+                type: 'update',
+                pr: pr.data,
+                currentUser: currentUser,
+                currentBranch: pr.repository.state.HEAD!.name!,
+                commits: undefined,
+                comments: undefined,
+                relatedJiraIssues: undefined,
+                errors: undefined
+            }
+        };
+
+        this.postMessage(this._state.prData);
+    }
+
+    private async postAugmentedState(pr: PullRequest) {
         let promises = Promise.all([
-            getCurrentUser(isStagingRepo),
             PullRequestApi.getCommits(pr),
             PullRequestApi.getComments(pr)
         ]);
+        const [commits, comments] = await promises;
+        const issues = await this.fetchRelatedIssues(pr, comments);
+        this._state.prData = {
+            ...this._state.prData,
+            ...{
+                type: 'update',
+                commits: commits.data,
+                comments: comments.data,
+                relatedJiraIssues: issues,
+                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR has more items (commits/comments) than what is supported by this extension.' : undefined
+            }
+        };
 
-        promises.then(
-            result => {
-                let [currentUser, commits, comments] = result;
-                this._state = {
-                    repository: pr.repository,
-                    remote: pr.remote,
-                    sourceRemote: pr.sourceRemote || pr.remote,
-                    prData: {
-                        type: 'update'
-                        , currentUser: currentUser
-                        , pr: pr.data
-                        , commits: commits.data
-                        , comments: comments.data
-                        , currentBranch: pr.repository.state.HEAD!.name!
-                        , errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR has more items (commits/comments) than what is supported by this extension.' : undefined
-                    }
-                };
-                this.postMessage(this._state.prData);
-            },
-            reason => {
-                Logger.debug("promise rejected!", reason);
-            });
+        this.postMessage(this._state.prData);
+    }
+
+    private async fetchRelatedIssues(pr: PullRequest, comments: PaginatedComments): Promise<Issue[]> {
+        let result: Issue[] = [];
+        try {
+            const issueKeys = await extractIssueKeys(pr, comments.data);
+            result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
+        }
+        catch (e) {
+            result = [];
+            Logger.debug('error fetching related pull requests: ', e);
+        }
+        return result;
     }
 
     private async approve() {
@@ -173,7 +214,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
             }))
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                window.showErrorMessage('Pull request branch could not be checked out');
+                vscode.window.showErrorMessage('Pull request branch could not be checked out');
                 this.postMessage({
                     type: 'checkout',
                     error: e.stderr || e,

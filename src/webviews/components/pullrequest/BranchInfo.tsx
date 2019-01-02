@@ -112,13 +112,16 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                         </Tooltip>
                     </FixedWidth>
                 </div >
-                {this.props.prData.currentBranch === pr.source!.branch!.name && <Tag text="✔ Checked out" color="blueLight" />}
-                {
-                    this.props.error &&
-                    <Tooltip content={this.props.error} type="warning">
-                        <Button appearance="subtle-link" spacing="none" iconBefore={<WarningIcon label="" size="small" />}>Checkout error</Button>
-                    </Tooltip>
-                }
+                <div style={{marginLeft: '45px'}}>
+                    {this.props.prData.currentBranch === pr.source!.branch!.name && <Tag text="✔ Checked out" color="blueLight" />}
+                    {
+                        this.props.error &&
+                        <Tooltip content={this.props.error} type="warning">
+                            <Button appearance="subtle-link" spacing="none" iconBefore={<WarningIcon label="" size="small" />}>Checkout error</Button>
+                        </Tooltip>
+                    }
+                </div>
+
             </React.Fragment >
         );
     }
