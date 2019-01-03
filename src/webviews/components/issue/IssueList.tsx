@@ -4,10 +4,10 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import { Status } from '@atlaskit/status';
 import { Issue } from '../../../jira/jiraModel';
-import { OpenJiraIssue } from '../../../ipc/prActions';
-import { InlineFlex } from '../pullrequest/PullRequestPage';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { InlineFlex } from '../styles';
 
-type ItemData = { issue: Issue, postMessage: (e: OpenJiraIssue) => void};
+type ItemData = { issue: Issue, postMessage: (e: OpenJiraIssueAction) => void};
 
 const IssueKey = (data: ItemData) =>
     <InlineFlex>
@@ -20,7 +20,7 @@ const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
 const StatusColumn = (data: ItemData) => <p style={{ display: "inline"}}><Status text={data.issue.status.name} color={data.issue.status.statusCategory.colorName} /></p>;
 
-export default class IssueList extends React.Component<{issues: Issue[], postMessage: (e: OpenJiraIssue) => void}, {}> {
+export default class IssueList extends React.Component<{issues: Issue[], postMessage: (e: OpenJiraIssueAction) => void}, {}> {
     constructor(props: any) {
         super(props);
     }

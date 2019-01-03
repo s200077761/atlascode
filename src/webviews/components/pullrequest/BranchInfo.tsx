@@ -10,7 +10,7 @@ import Tooltip from '@atlaskit/tooltip';
 import Tag from '@atlaskit/tag';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
-import { Spacer } from './PullRequestPage';
+import { Spacer } from '../styles';
 import styled from 'styled-components';
 
 const FixedWidth = styled.div`

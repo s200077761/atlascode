@@ -4,7 +4,6 @@ import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
-import { Action, Alert } from "../../../ipc/messaging";
 import {
   emptyStatus,
   emptyIssueType,
@@ -15,14 +14,17 @@ import {
 import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
-  IssueCommentAction
+  IssueCommentAction,
+  IssueAssignAction
 } from "../../../ipc/issueActions";
 import {TransitionMenu} from "./TransitionMenu";
 import {Comments} from "./Comments";
 import Button from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import IssueList from "./IssueList";
+import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 
-type Emit = TransitionIssueAction | IssueCommentAction | Action | Alert;
+type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction;
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
@@ -40,7 +42,8 @@ const emptyIssueData: IssueData = {
   attachments: [],
   transitions: [],
   workingSite: emptyWorkingSite,
-  isAssignedToMe: false
+  isAssignedToMe: false,
+  childIssues: []
 };
 
 type MyState = {
@@ -150,7 +153,14 @@ export default class JiraIssuePage extends WebviewComponent<
 
   render() {
     const issue = this.state.data;
-  
+
+    const childIssues = this.state.data.childIssues.length === 0
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+          <h3>Child issues</h3>
+          <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+        </React.Fragment>;
+
     return (
       <Page>
         <SizeDetector>
@@ -160,22 +170,26 @@ export default class JiraIssuePage extends WebviewComponent<
                 <div>
                   {this.header(issue)}
                   {this.details(issue)}
+                  {childIssues}
                   <h3>Comments</h3>
                   <Comments issue={issue} onSave={this.handleSave} />
                 </div>
               );
             }
             return (
-              <Grid>
-                <GridColumn medium={8}>
-                  {this.header(issue)}
-                  <h3>Comments</h3>
-                  <Comments issue={issue} onSave={this.handleSave} />
-                </GridColumn>
-        
-                <GridColumn medium={4}>{this.details(issue)}</GridColumn>
-              </Grid>
-            );        
+              <div style={{ maxWidth: '1200px', margin: 'auto' }}>
+                <Grid layout="fluid">
+                  <GridColumn medium={8}>
+                    {this.header(issue)}
+                    {childIssues}
+                    <h3>Comments</h3>
+                    <Comments issue={issue} onSave={this.handleSave} />
+                  </GridColumn>
+
+                  <GridColumn medium={4}>{this.details(issue)}</GridColumn>
+                </Grid>
+              </div>
+            );
           }}
         </SizeDetector>
       </Page>

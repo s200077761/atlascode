@@ -3,16 +3,15 @@ import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Button from '@atlaskit/button';
+import { colors } from '@atlaskit/theme';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import { InlineFlex } from './ConfigPage';
-import { Spacer } from '../pullrequest/PullRequestPage';
-import {JiraIcon, BitbucketIcon} from '@atlaskit/logo';
+import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
+import JiraIcon from '@atlaskit/logo/dist/esm/JiraLogo/Icon';
+import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
-
-const bitbucketLogo:string =require('../images/bitbucket-logo.png');
-const strideLogo:string =require('../images/stride-logo.png');
+import { Spacer, InlineFlex } from '../styles';
 
 type Emit = SubmitFeedbackAction | Action;
 export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
@@ -41,8 +40,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
     }
 
     public render() {
-        const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
-        const strideicon = <img src={strideLogo} width="17" height="12"/>;
+        const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
+        const strideicon = <StrideIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         const actionsContent =
             <InlineFlex>

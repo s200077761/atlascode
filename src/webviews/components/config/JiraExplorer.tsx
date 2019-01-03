@@ -3,7 +3,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import { emptyProject } from '../../../jira/jiraModel';
-import { InlineFlex } from './ConfigPage';
+import { InlineFlex } from '../styles';
 
 type changeObject = {[key: string]:any};
 
