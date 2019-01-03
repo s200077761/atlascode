@@ -1,5 +1,5 @@
 import { Container } from "../container";
-import { Issue, issueExpand, issueFields, issueFromJsonObject } from "../jira/jiraModel";
+import { Issue, issueExpand, issueFields, issueFromJsonObject } from "./jiraModel";
 import { Logger } from "../logger";
 import { WorkingSite } from "../config/model";
 

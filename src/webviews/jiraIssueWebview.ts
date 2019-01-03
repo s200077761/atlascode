@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
 import { IssueData } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, issueOrKey, isIssue, issueExpand, issueFields, issueFromJsonObject } from '../jira/jiraModel';
+import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue } from '../ipc/issueActions';
@@ -13,6 +13,7 @@ import { emptyWorkingSite } from '../config/model';
 import { AuthProvider } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
+import { issuesForJQL } from '../jira/issuesForJql';
 
 export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -122,34 +123,8 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
         let msg = issue as IssueData;
         msg.type = 'update';
         msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
-        msg.childIssues = await this.issuesForJQL(`"Parent link"=${issue.key}`);
+        msg.childIssues = await issuesForJQL(`"Parent link"=${issue.key}`);
         this.postMessage(msg);
-    }
-
-    async issuesForJQL(jql: string): Promise<Issue[]> {
-        let client = await Container.clientManager.jirarequest();
-
-        if (client) {
-            return client.search
-                .searchForIssuesUsingJqlGet({
-                    expand: issueExpand,
-                    jql: jql,
-                    fields: issueFields
-                })
-                .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
-                    const issues = res.data.issues;
-                    if (issues) {
-                        return issues.map((issue: any) => {
-                            return issueFromJsonObject(issue, Container.jiraSiteManager.effectiveSite);
-                        });
-                    }
-                    return [];
-                });
-        } else {
-            Logger.debug("issuesForJQL: client undefined");
-        }
-
-        return Promise.reject();
     }
 
     private async forceUpdateIssue() {

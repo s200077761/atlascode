@@ -1,11 +1,11 @@
 import { Disposable, TreeItem, Command } from 'vscode';
-import { Logger } from '../../logger';
-import { Issue, issueExpand, issueFields, issueFromJsonObject } from '../../jira/jiraModel';
+import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
+import { issuesForJQL } from '../../jira/issuesForJql';
 
 
 export abstract class AbstractIssueTreeNode extends Disposable {
@@ -66,7 +66,7 @@ export abstract class AbstractIssueTreeNode extends Disposable {
             return Promise.resolve([]);
         }
 
-        return this.issuesForJQL(this._jql)
+        return issuesForJQL(this._jql)
         .then(newIssues => {
             this._issues = newIssues;
             return this.nodesForIssues();
@@ -80,30 +80,4 @@ export abstract class AbstractIssueTreeNode extends Disposable {
             return [new EmptyStateNode(this._emptyState)];
         }
     }
-
-    async issuesForJQL(jql: string): Promise<Issue[]> {
-        let client = await Container.clientManager.jirarequest();
-      
-        if (client) {
-          return client.search
-            .searchForIssuesUsingJqlGet({
-              expand: issueExpand,
-              jql: jql,
-              fields: issueFields
-            })
-            .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
-              const issues = res.data.issues;
-              if (issues) {
-                return issues.map((issue: any) => {
-                  return issueFromJsonObject(issue, Container.jiraSiteManager.effectiveSite);
-                });
-              }
-              return [];
-            });
-        } else {
-          Logger.debug("issuesForJQL: client undefined");
-        }
-      
-        return Promise.reject();
-      }
 }
