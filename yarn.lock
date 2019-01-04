@@ -66,6 +66,15 @@
     "@atlaskit/theme" "^7.0.0"
     "@babel/runtime" "^7.0.0"
 
+"@atlaskit/blanket@^7.0.12":
+  version "7.0.12"
+  resolved "https://registry.yarnpkg.com/@atlaskit/blanket/-/blanket-7.0.12.tgz#1f48f74310463e785774dada9f8c8c07150e4b89"
+  integrity sha512-IWnXU2N42M14kvTU1YhATiK7vGYPZPsk/c2A+b8tNhRJTcfcTxTPMfcmGOvWYPD128el2TSly4uOvn9B9WKc9A==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+
 "@atlaskit/breadcrumbs@^6.0.10":
   version "6.0.12"
   resolved "https://registry.yarnpkg.com/@atlaskit/breadcrumbs/-/breadcrumbs-6.0.12.tgz#d8e43326ccf6aa45a8cd7f2eed8b69e7876d3042"
@@ -101,6 +110,20 @@
     "@atlaskit/analytics-next-types" "^3.1.2"
     "@atlaskit/spinner" "9.0.12"
     "@atlaskit/theme" "^7.0.0"
+    "@atlaskit/type-helpers" "^2.0.0"
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+    tslib "^1.8.0"
+
+"@atlaskit/button@^10.1.1":
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-10.1.1.tgz#7f2a54fe5df41a015390d54df107ce0e8fb888e1"
+  integrity sha512-tDnBqMmngLexgDrrdBTRlJYZ0exlB07AYm4Xgda2rohRmes7pNmvQkkkEeFR/hL9ZUaaz0baz9RfH/XayWtOBA==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/analytics-next-types" "^3.1.2"
+    "@atlaskit/spinner" "9.0.13"
+    "@atlaskit/theme" "^7.0.1"
     "@atlaskit/type-helpers" "^2.0.0"
     "@babel/runtime" "^7.0.0"
     babel-runtime "^6.26.0"
@@ -226,7 +249,7 @@
     babel-runtime "^6.26.0"
     prop-types "^15.5.10"
 
-"@atlaskit/field-text@^7.0.18":
+"@atlaskit/field-text@^7.0.18", "@atlaskit/field-text@^7.0.19":
   version "7.0.19"
   resolved "https://registry.yarnpkg.com/@atlaskit/field-text/-/field-text-7.0.19.tgz#99320a57d8b743c8ac47e0ffeae9de93f64ece73"
   integrity sha512-0vdu64ZSRE58zdeKKhFLPm2KRmNpT0n6hKoz0IgYsxT8kMQHx+chL8r89hd43U1Zy0MYPN4F0qHqjD1QF1lwPQ==
@@ -390,6 +413,26 @@
     react-transition-group "^2.2.1"
     tiny-invariant "^0.0.3"
 
+"@atlaskit/modal-dialog@^7.1.1":
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/modal-dialog/-/modal-dialog-7.1.1.tgz#e98b455b03cab610d3e20e1be4f3ed218011fb86"
+  integrity sha512-k/BqrXHY2LMab4bC5N59r/2ogn9umd7VrpdG6l9vKTxY3nNsl+/xTxhjNxAoXhDSpJNh/riCtfPyLy7ua7f1BA==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/blanket" "^7.0.12"
+    "@atlaskit/button" "^10.1.1"
+    "@atlaskit/icon" "^15.0.2"
+    "@atlaskit/portal" "^0.0.17"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+    exenv "^1.2.2"
+    prop-types "^15.5.10"
+    raf-schd "^2.1.0"
+    react-focus-lock "^1.11.3"
+    react-scrolllock "^3.0.2"
+    react-transition-group "^2.2.1"
+    tiny-invariant "^0.0.3"
+
 "@atlaskit/page-header@^6.0.7":
   version "6.0.9"
   resolved "https://registry.yarnpkg.com/@atlaskit/page-header/-/page-header-6.0.9.tgz#2a3a245b5ca3f0509c0cf81e1222150390a0d7f5"
@@ -446,6 +489,16 @@
     exenv "^1.2.2"
     tiny-invariant "^0.0.3"
 
+"@atlaskit/portal@^0.0.17":
+  version "0.0.17"
+  resolved "https://registry.yarnpkg.com/@atlaskit/portal/-/portal-0.0.17.tgz#0b2a016d2f0fee22e06db4e9f65f37da02c541c8"
+  integrity sha512-nn7b0xd1f/zHaAVCl18vmInPS5/P3zJyDP5pVBeH6Lg4Xo60BR1SDOca9EzKqvxs0FFE84HWcjpWSBRxHZ5sHw==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+    exenv "^1.2.2"
+    tiny-invariant "^0.0.3"
+
 "@atlaskit/reduced-ui-pack@^10.1.1":
   version "10.5.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/reduced-ui-pack/-/reduced-ui-pack-10.5.2.tgz#1953a7edbfd92086f9610c347d632921f25673b3"
@@ -492,7 +545,7 @@
     babel-runtime "^6.26.0"
     react-transition-group "^2.2.1"
 
-"@atlaskit/spinner@^9.0.13":
+"@atlaskit/spinner@9.0.13", "@atlaskit/spinner@^9.0.13":
   version "9.0.13"
   resolved "https://registry.yarnpkg.com/@atlaskit/spinner/-/spinner-9.0.13.tgz#030005c51a8acab842ce0771e16fe8c6cc7d585a"
   integrity sha512-EA5weoo1lftixC1oxVT1ePNCWATNaWETrAwOf6uuj/fpPTXjZ5HEwbgddlyCLVZ3vcljpXFTwmM1Nj24sGnrdg==
@@ -928,6 +981,13 @@
   integrity sha512-SudIN9TRJ+v8g5pTG8RRCqfqTMNqgWCKKd3vtynhGzkIIjxaicNAMuY5TRadJ6tzDu3Dotf3ngaMILtmOdmWEQ==
   dependencies:
     source-map "^0.6.1"
+
+"@types/uuid@^3.4.4":
+  version "3.4.4"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-3.4.4.tgz#7af69360fa65ef0decb41fd150bf4ca5c0cefdf5"
+  integrity sha512-tPIgT0GUmdJQNSHxp0X2jnpQfBSTfGxUMc/2CXBU2mnyTFVYVa2ojpoQ74w0U2yn2vw3jnC640+77lkFFpdVDw==
+  dependencies:
+    "@types/node" "*"
 
 "@types/webpack@*":
   version "4.4.20"
