@@ -1,16 +1,16 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
+import { Action, ErrorMessage } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueScreen, CreateIssueData, ProjectList, CreatedSomething, IssueCreated } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isFetchProjects, isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction, isFetchQuery } from '../ipc/issueActions';
 import { commands } from 'vscode';
 import { Commands } from '../commands';
+import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
+import { IssueTypeIdScreens } from '../jira/createIssueMeta';
 
-const KNOWNFIELDS:string[] = ['summary','description','fixVersions', 'components'];
-
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | ErrorMessage | LabelList;
 export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 	
     constructor(extensionPath: string) {
@@ -57,7 +57,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
         this.postMessage(createData);
     }
 
-    async getScreenFields(project:WorkingProject):Promise<{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens: {[k:string]:CreateIssueScreen}}> {
+    async getScreenFields(project:WorkingProject):Promise<{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens:IssueTypeIdScreens}> {
         Logger.debug('getting screen fields');
         let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
         
@@ -67,7 +67,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
             return client.issue
             .getCreateIssueMetadata({projectKeys:projects, expand:'projects.issuetypes.fields'})
             .then((res: JIRA.Response<JIRA.Schema.CreateMetaBean>) => {
-                return this.prepareFields(res.data.projects![0]);
+                let transformation = transformIssueScreens(res.data.projects![0]);
+                Logger.debug('getScreenFields returning',transformation);
+                return transformation;
             });
         }
         return Promise.reject("oops getScreenFields");
@@ -80,12 +82,44 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
             switch (e.action) {
                 case 'fetchProjects': {
                     handled = true;
-                    if(isFetchProjects(e)) {
-
+                    if(isFetchQuery(e)) {
                         Container.jiraSiteManager.getProjects('name',e.query).then(projects => {
                             this.postMessage({type:'projectList', availableProjects:projects});
                         });
                     }
+                    break;
+                }
+                case 'fetchLabels': {
+                    handled = true;
+                    if(isFetchQuery(e)) {
+                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+      
+                        if (client) {
+                            client.jql.getFieldAutoCompleteSuggestions({
+                                fieldName: 'labels',
+                                fieldValue: `${e.query}`
+                            })
+                            .then((res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper>) => {
+                                const suggestions = res.data.results;
+                                let options:any[] = [];
+
+                                if (suggestions && suggestions.length > 0) {
+                                    options = suggestions.map((suggestion: any) => {
+                                        return suggestion.value;
+                                    });
+                                }
+
+                                this.postMessage({type:'labelList', labels:options});
+
+                            }).catch(reason => {
+                                Logger.debug('error getting labels',reason);
+                                this.postMessage({type:'error', reason:reason});
+                            });
+                        } else {
+                            Logger.debug("label autocomplete: client undefined");
+                        }
+                    }
+
                     break;
                 }
                 case 'getScreensForProject': {
@@ -95,18 +129,53 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                     }
                     break;
                 }
-                case 'createVersion': {
+                case 'createOption': {
                     handled = true;
                     if(isCreateSomething(e)) {
                         let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
                         if(client) {
-                            client.version.createVersion({body:{name:e.createData.name, project:e.createData.project}})
+                            switch(e.createData.fieldKey) {
+                                case 'fixVersions': 
+                                case 'versions': {
+                                    client.version.createVersion({body:{name:e.createData.name, project:e.createData.project}})
+                                        .then(resp => {
+                                            this.postMessage({type:'optionCreated', createdData:resp.data});
+                                        })
+                                        .catch(reason => {
+                                            Logger.debug('error creating version',reason);
+                                            this.postMessage({type:'error', reason:reason});
+                                        });
+                                    break;
+                                }
+                                case 'components': {
+                                    client.component.createComponent({body:{name:e.createData.name, project:e.createData.project}})
+                                        .then(resp => {
+                                            this.postMessage({type:'optionCreated', createdData:resp.data});
+                                        })
+                                        .catch(reason => {
+                                            Logger.debug('error creating component',reason);
+                                            this.postMessage({type:'error', reason:reason});
+                                        });
+                                    break;
+                                }
+                            }
+                            
+                        }
+                    }
+                    break;
+                }
+                case 'createComponent': {
+                    handled = true;
+                    if(isCreateSomething(e)) {
+                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                        if(client) {
+                            client.component.createComponent({body:{name:e.createData.name, project:e.createData.project}})
                                 .then(resp => {
-                                    this.postMessage({type:'versionCreated', createdData:resp.data});
+                                    this.postMessage({type:'componentCreated', createdData:resp.data});
                                 })
                                 .catch(reason => {
-                                    this.postMessage({type:'versionCreated', createdData:{id:'error', name:'', archived:false, released:false}});
-                                    Logger.debug('error creating version',reason);
+                                    this.postMessage({type:'componentCreated', createdData:{id:'error', name:'', archived:false, released:false}});
+                                    Logger.debug('error creating component',reason);
                                 });
                         }
                     }
@@ -143,47 +212,5 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
         }
 
         return handled;
-    }
-
-    prepareFields(project:JIRA.Schema.CreateMetaProjectBean):{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens: {[k:string]:CreateIssueScreen}} {
-        let preparedFields = {};
-
-        project.issuetypes!.forEach(issueType => {
-            Logger.debug('processing issueType', issueType);
-            let fields:JIRA.Schema.FieldMetaBean[] = [];
-
-            Object.keys(issueType.fields!).forEach(k => {
-                Logger.debug('processing issueType field', k);
-                const field:JIRA.Schema.FieldMetaBean = issueType.fields![k];
-
-                if(!this.shouldFilterField(field) && (field.required || this.isKnownField(field))) {
-                    fields.push(field);
-                }
-
-            });
-
-            let issueTypeScreen = {
-                name:issueType.name!,
-                id:issueType.id!,
-                iconUrl:issueType.iconUrl,
-                fields:fields
-            };
-
-            Logger.debug(`setting ${issueType.id} to `, issueTypeScreen);
-            preparedFields[issueType.id!] = issueTypeScreen;
-        });
-
-        Logger.debug('prepared fields', preparedFields);
-        return {selectedIssueType:project.issuetypes![0], screens:preparedFields};
-    }
-
-    isKnownField(field:JIRA.Schema.FieldMetaBean):boolean {
-        return (KNOWNFIELDS.indexOf(field.key) > -1 || field.name === 'Epic Link');
-    }
-
-    shouldFilterField(field:JIRA.Schema.FieldMetaBean):boolean {
-        return field.key === 'issuetype' 
-            || field.key === 'project'
-            || field.key === 'reporter';
     }
 }

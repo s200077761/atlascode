@@ -25,6 +25,3 @@ declare module '@atlaskit/droplist';
 declare module '@atlaskit/select';
 declare module '@atlaskit/form';
 declare module '@atlaskit/field-text';
-// declare module '@atlaskit/editor-core';
-// declare module '@atlaskit/editor-jira-transformer';
-// declare module '@atlaskit/profilecard';

@@ -80,7 +80,7 @@ div.icon-text img {
   background: var(--vscode-button-background--50) !important;
 }
 
-.ak-textarea {
+.ak-textarea, .ak-inputField {
   background: var(--vscode-input-background)!important;
   color: var(--vscode-input-foreground)!important;
   font: inherit;
@@ -88,46 +88,22 @@ div.icon-text img {
   padding: 6px;
   box-sizing: border-box;
   border: 1px solid var(--vscode-input-border)!important;
-  transition-property: background-color, border-color;
-  transition-duration: 200ms, 200ms;
-  transition-timing-function: ease-in-out, ease-in-out;
-  transition-delay: initial, initial;
-  outline-width: 0px!important;
-}
-
-.ak-textarea:focus, .ak-textarea:hover {
-  border-color: var(--vscode-focusBorder)!important;
-  outline-width: 0px!important;
-}
-
-.ak-textarea::placeholder {
-  color: var(--vscode-input-placeholderForeground) !important;
+  outline: 0px!important;
 }
 
 .ak-inputField {
-  background: var(--vscode-input-background)!important;
-  color: var(--vscode-input-foreground)!important;
-  font: inherit;
-  width: inherit;
-  padding: 6px;
   display: block;
-  border: 1px solid var(--vscode-input-border)!important;
-  transition-property: background-color, border-color;
-  transition-duration: 200ms, 200ms;
-  transition-timing-function: ease-in-out, ease-in-out;
-  transition-delay: initial, initial;
-  outline-width: 0px!important;
-  box-sizing: border-box;
 }
 
-.ak-inputField::placeholder {
-    color: var(--vscode-input-placeholderForeground) !important;
+.ak-textarea:focus, .ak-textarea:hover, .ak-inputField:focus, .ak-inputField:hover {
+  border: 1px solid var(--vscode-focusBorder)!important;
+  outline: 0px!important;
 }
 
-.ak-inputField:focus, .ak-inputField:hover {
-  border-color: var(--vscode-focusBorder)!important;
-  outline-width: 0px!important;
+.ak-textarea::placeholder, .ak-inputField::placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
 }
+
 
 [class^="Droplist__Content"] {
   background: var(--vscode-sideBar-background) !important;

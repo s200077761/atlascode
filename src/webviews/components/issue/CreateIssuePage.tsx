@@ -1,26 +1,25 @@
 import * as React from 'react';
 import { Action } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated } from '../../../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList } from '../../../ipc/issueMessaging';
 import JiraProjectSelect from '../JiraProjectSelect';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
-import { FetchProjectsAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueAction } from '../../../ipc/issueActions';
+import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueAction } from '../../../ipc/issueActions';
 import Form, { Field, FormFooter } from '@atlaskit/form';
-import Select, { CreatableSelect, components } from '@atlaskit/select';
+import Select, { CreatableSelect, AsyncCreatableSelect, components } from '@atlaskit/select';
 import Button from '@atlaskit/button';
 import Banner from '@atlaskit/banner';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-// import { Editor } from '@atlaskit/editor-core';
-// import { JIRATransformer } from '@atlaskit/editor-jira-transformer';
+import { SelectScreenField, ScreenField, UIType } from '../../../jira/createIssueMeta';
 
-type Emit = FetchProjectsAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
-type Accept = CreateIssueData | ProjectList | CreatedSomething;
+type Emit = FetchQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
+type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList;
 type IssueType = { id:string, name:string, iconUrl:string };
-type Version = { id:string, name:string, archived:boolean, released:boolean };
+
 interface ViewState extends CreateIssueData {
     isSomethingLoading:boolean;
     loadingField:string;
-    versionOptions:any[];
+    fieldOptions:{[k:string]:any};
     isBannerOpen:boolean;
     createdIssue:any;
 }
@@ -31,14 +30,12 @@ const emptyState:ViewState = {
     selectedIssueType:{},
     issueTypeScreens:{},
     fieldValues:{},
-    versionOptions:[],
+    fieldOptions:{},
     isSomethingLoading:false,
     loadingField:'',
     isBannerOpen:false,
     createdIssue:{}
 };
-
-const emptyVersion = {id:'',name:'',archived:false, released:false};
 
 const { Option } = components;
 
@@ -57,7 +54,8 @@ const ValueComponent = (props:any) => (
 
 export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},ViewState> {
     private newProjects:WorkingProject[] = [];
-    private newVersion:Version;
+    private labelSuggestions:string[] | undefined = undefined;
+    private newOption:any;
 
     private formRef:any;
 
@@ -66,44 +64,68 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
         this.state = emptyState;
     }
 
-    getVersionOptions(typeId:string|undefined, issueData:CreateIssueData):any[] {
-        let vOpts:any[] = [];
+    refreshSelectFields(issueTypeId:string|undefined, issueData:CreateIssueData):Object {
+        let fieldOptions = {};
+        if(issueTypeId) {
+            let selectFields = issueData.issueTypeScreens[issueTypeId].fields.filter(field => {return field.uiType === UIType.Select;});
 
-        if(typeId) {
-            console.log('looking for version field',typeId);
-            const vField = issueData.issueTypeScreens[typeId].fields.find(field => field.key === 'fixVersions');
-            console.log('version field is',vField);
-            if(vField && vField.allowedValues) {
-                let unreleasedOpts = vField.allowedValues.filter(opt => {return !opt.released;});
-                let releasedOpts = vField.allowedValues.filter(opt => {return opt.released;});
+            selectFields.forEach(field => {
+                fieldOptions[field.key] = this.getSelectOptions(issueTypeId,field.key,issueData);
+            });
+        }
+        return fieldOptions;
+    }
 
-                vOpts = [
-                    {label:'Unreleased Versions', options:unreleasedOpts}
-                    ,{label:'Released Versions', options:releasedOpts}
-                ];
-                console.log('vOpts',vOpts);
+    getSelectOptions(issueTypeId:string|undefined, fieldKey:string, issueData:CreateIssueData):any[] {
+        let opts:any[] = [];
+
+        if(issueTypeId) {
+            console.log('looking for screen',issueTypeId);
+            const field:SelectScreenField | undefined = issueData.issueTypeScreens[issueTypeId].fields.find(field => field.key === fieldKey) as SelectScreenField | undefined;
+            console.log('field is',field);
+            if(field && field.allowedValues) {
+                switch(fieldKey) {
+                    case 'fixVersions':
+                    case 'versions': {
+                        let unreleasedOpts = field.allowedValues.filter(opt => {return !opt.released && !opt.archived;});
+                        let releasedOpts = field.allowedValues.filter(opt => {return opt.released && !opt.archived;});
+
+                        opts = [
+                            {label:'Unreleased Versions', options:unreleasedOpts}
+                            ,{label:'Released Versions', options:releasedOpts}
+                        ];
+                        break;
+                    }
+
+                    default: {
+                        field.allowedValues.forEach(opt => {opts.push(opt);});
+                        break;
+                    }
+                }
             }
         }
         
-        return vOpts;
+        return opts;
     }
 
     onMessageReceived(e:Accept): void {
         switch (e.type) {
             case 'screenRefresh': {
                 const issueData = e as CreateIssueData;
-                
-                this.setState({...issueData, ...{versionOptions:this.getVersionOptions(issueData.selectedIssueType.id,issueData)}});
-                console.log('got refresh',this.state.versionOptions);
+                this.setState({...issueData, ...{fieldOptions:this.refreshSelectFields(issueData.selectedIssueType.id,issueData)}});
                 break;
             }
             case 'projectList': {
                 this.newProjects = (e as ProjectList).availableProjects;
                 break;
             }
-            case 'versionCreated': {
+            case 'labelList': {
+                this.labelSuggestions = (e as LabelList).labels;
+                break;
+            }
+            case 'optionCreated': {
                 if(isCreatedSomething(e)){
-                    this.newVersion = (e.createdData as Version);
+                    this.newOption = e.createdData;
                 }
                 break;
             }
@@ -141,42 +163,77 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
 
     onIssueTypeSelected = (selected:IssueType):void => {
         console.log('selected type',selected);
-        this.setState({selectedIssueType:selected, versionOptions:this.getVersionOptions(selected.id,this.state)});
+        this.setState({
+            selectedIssueType:selected,
+            fieldOptions:this.refreshSelectFields(selected.id,this.state)
+        });
     }
 
-    onVersionCreate = (input:any):void => {
-        this.setState({isSomethingLoading:true, loadingField:'fixVersions'});
-        this.postMessage({action:'createVersion', createData:{name:input,project:this.state.selectedProject.key}});
+    handleOptionCreate = (input:any, fieldKey:string):void => {
+        this.newOption = undefined;
+        this.setState({isSomethingLoading:true, loadingField:fieldKey});
+        this.postMessage({action:'createOption', createData:{fieldKey:fieldKey,name:input,project:this.state.selectedProject.key}});
         let timer = setInterval(() => {
-            if(this.newVersion && this.newVersion.id.length > 0) {
+            if(this.newOption && this.newOption.id.length > 0) {
                 clearInterval(timer);
-                if(this.newVersion.id !== 'error') {
-                    let newVals = this.state.fieldValues.fixVersions;
-                    if(!newVals) {
-                        newVals = [];
-                    }
-                    newVals.push(this.newVersion);
-                    this.setState({isSomethingLoading:false, loadingField:'', fieldValues:{...this.state.fieldValues,...{fixVersions:newVals}}, versionOptions:[...this.state.versionOptions, this.newVersion]});
-                } else {
-                    this.setState({isSomethingLoading:false, loadingField:''});
+                let newVals = this.state.fieldValues[fieldKey];
+                if(!newVals) {
+                    newVals = [];
                 }
-                this.newVersion = emptyVersion;
+                newVals.push(this.newOption);
+                console.log('old option state', this.state.fieldOptions[fieldKey]);
+
+                let newOptions = {...this.state.fieldOptions, ...{[fieldKey]:[...this.state.fieldOptions[fieldKey],...[this.newOption]]}};
+
+                if(fieldKey === 'versions' || fieldKey === 'fixVersions') {
+                    let vOptions = this.state.fieldOptions[fieldKey];
+                    vOptions[0].options.push(this.newOption);
+
+                    newOptions = {...this.state.fieldOptions, ...{[fieldKey]:vOptions}};
+                }
+                
+                console.log('new option state', newOptions);
+                this.setState(
+                    {isSomethingLoading:false, 
+                        loadingField:'', 
+                        fieldValues:{...this.state.fieldValues,...{[fieldKey]:newVals}}, 
+                        fieldOptions:newOptions
+                    });
+                    
+            } else {
+                this.setState({isSomethingLoading:false, loadingField:''});
             }
         }, 500);
     }
 
-    validateRequiredInput = (val:string,opts?:any):boolean => {
-        let valid = true;
-        if(opts && opts.required) {
-            if(val.length < 1) {
-                valid = false;
-            }
-        }
-
-        return valid;
+    loadLabelOptions = (input:string):Promise<any> => {
+        return new Promise(resolve => {
+            this.labelSuggestions = undefined;
+            this.postMessage({action:'fetchLabels', query:input});
+            let timer = setInterval(() => {
+                if(this.labelSuggestions !== undefined) {
+                    clearInterval(timer);
+                    resolve(this.labelSuggestions);
+                }
+            }, 500);
+        });
     }
 
-    onSubmit = (e?:any):void => {
+    handleLabelCreate = (input:any, fieldKey:string):void => {
+        let newVals = this.state.fieldValues[fieldKey];
+        if(!newVals) {
+            newVals = [];
+        }
+        newVals.push(input);
+        this.setState(
+            {isSomethingLoading:false, 
+                loadingField:'', 
+                fieldValues:{...this.state.fieldValues,...{[fieldKey]:newVals}}, 
+                fieldOptions:{...this.state.fieldOptions, ...{[fieldKey]:[...this.state.fieldOptions[fieldKey],...[input]]}}
+            });
+    }
+
+    handleSubmit = (e?:any):void => {
         console.log('onSubmitHandler', e);
         // Calling validate on the form will update it's fields state
         const validateResult = this.formRef.validate();
@@ -245,7 +302,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                                 </Field>
                             <Form
                                 name="layout-example"
-                                onSubmit={this.onSubmit}
+                                onSubmit={this.handleSubmit}
                                 ref={(form:any) => {
                                     this.formRef = form;
                                 }}
@@ -264,78 +321,150 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
         );
     }
 
-    getFieldMarkup(field:JIRA.Schema.FieldMetaBean):any {
-        if(field.key === 'description') {
-            return (
-                <Field
-                    label={field.name}
-                    isRequired={field.required}
-                    >
+    getFieldMarkup(field:ScreenField):any {
+        switch(field.uiType) {
+            case UIType.Textarea: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
                         <textarea
                         style={{width:'100%', display:'block'}}
                         id={field.key}
                         className='ak-textarea'
                         rows={3}
-                        placeholder='add description'
                         onChange={this.setTextFieldValue} 
                         value={this.state.fieldValues[field.key]}
                         disabled={this.state.isSomethingLoading}
                         />
-                </Field>
-                // <Editor
-                //     appearance="comment"
-                //     placeholder="What do you want to say?"
-                //     allowCodeBlocks={true}
-                //     allowLists={true}
-                //     allowRule={true}
-                //     contentTransformerProvider={(schema:any) =>
-                //       new JIRATransformer(schema)
-                //     }
-                //   />
-            );
+                    </Field>
+                );
+            }
+            case UIType.Input: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.Checkbox: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.Radio: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.Date: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.DateTime: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.User: {
+                return (
+                    <Field label={field.name} isRequired={field.required}>
+                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    </Field>
+                );
+            }
+            case UIType.Select: {
+                const selectField = field as SelectScreenField;
+                if(selectField.isCreateable) {
+                    return this.createableSelect(selectField);
+                }
+            }
         }
 
-        if(field.key === 'fixVersions') {
-            
-            return(
+        return (
+            <Field label={field.name} isRequired={field.required}>
+                <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+            </Field>
+        );
+    }
+
+    createableSelect(field:SelectScreenField):any {
+        if(field.key === 'labels') {
+            return (
                 <Field label={field.name} isRequired={field.required}>
-                    <CreatableSelect
+                    <AsyncCreatableSelect
+                        loadOptions={this.loadLabelOptions}
                         id={field.key}
-                        isMulti={true}
-                        isClearable={true}
+                        isMulti={field.isMulti}
+                        isClearable={!field.required}
                         className="ak-select-container"
                         classNamePrefix="ak-select"
-                        getOptionLabel={(option:any) => option.name}
-                        getOptionValue={(option:any) => option.id}
+                        getOptionLabel={(option:any) => option}
+                        getOptionValue={(option:any) => option}
                         value={this.state.fieldValues[field.key]}
                         onChange={(selected:any) => {
-                            this.setState({fieldValues:{...this.state.fieldValues,...{fixVersions:selected}}});
+                            this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
                         }}
-                        options={this.state.versionOptions}
-                        onCreateOption={this.onVersionCreate}
+                        defaultOptions={this.state.fieldOptions[field.key]}
+                        onCreateOption={(input:any):void => {this.handleLabelCreate(input,field.key);}}
                         isLoading={this.state.loadingField === field.key}
                         isDisabled={this.state.isSomethingLoading}
                         isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
                             if (
-                              inputValue.trim().length === 0 ||
-                              selectOptions.find(option => option.name === inputValue)
+                                inputValue.trim().length === 0 ||
+                                selectOptions.find(option => option === inputValue)
                             ) {
-                              return false;
+                                return false;
                             }
                             return true;
-                          }}
-                          getNewOptionData={(inputValue:any, optionLabel:any) => ({
-                            id: inputValue,
-                            name: optionLabel,
-                          })}
-                    />
+                            }}
+                        getNewOptionData={(inputValue:any, optionLabel:any) => (inputValue)}
+                    >
+
+                    </AsyncCreatableSelect>
                 </Field>
             );
         }
 
-        return (
-            <Field label={field.name} isRequired={field.required} width>
-                <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+        return(
+            <Field label={field.name} isRequired={field.required}>
+                <CreatableSelect
+                    id={field.key}
+                    isMulti={field.isMulti}
+                    isClearable={!field.required}
+                    className="ak-select-container"
+                    classNamePrefix="ak-select"
+                    getOptionLabel={(option:any) => option.name}
+                    getOptionValue={(option:any) => option.id}
+                    value={this.state.fieldValues[field.key]}
+                    onChange={(selected:any) => {
+                        this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
+                    }}
+                    options={this.state.fieldOptions[field.key]}
+                    onCreateOption={(input:any):void => {this.handleOptionCreate(input,field.key);}}
+                    isLoading={this.state.loadingField === field.key}
+                    isDisabled={this.state.isSomethingLoading}
+                    isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
+                        if (
+                            inputValue.trim().length === 0 ||
+                            selectOptions.find(option => option.name === inputValue)
+                        ) {
+                            return false;
+                        }
+                        return true;
+                        }}
+                    getNewOptionData={(inputValue:any, optionLabel:any) => ({
+                        id: inputValue,
+                        name: optionLabel,
+                    })}
+                />
             </Field>
         );
     }
