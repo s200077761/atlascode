@@ -41,13 +41,13 @@ const { Option } = components;
 
 const IconOption = (props:any) => (
     <Option {...props}>
-      <span><img src={props.data.iconUrl}/>{props.label}</span>
+      <span><img src={props.data.iconUrl} width="16" height="16"/>{props.label}</span>
     </Option>
 );
 
 const ValueComponent = (props:any) => (
       <components.SingleValue {...props}>
-        <span><img src={props.data.iconUrl}/>{props.data.name}</span>
+        <span><img src={props.data.iconUrl} width="16" height="16"/>{props.data.name}</span>
       </components.SingleValue>
 
   );
@@ -385,6 +385,27 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 if(selectField.isCreateable) {
                     return this.createableSelect(selectField);
                 }
+
+                return (
+                    <Field label={selectField.name} isRequired={selectField.required}>
+                        <Select
+                            id={field.key}
+                            isMulti={selectField.isMulti}
+                            isClearable={!field.required}
+                            className="ak-select-container"
+                            classNamePrefix="ak-select"
+                            getOptionLabel={(option:any) => (option.name) ? option.name : option.value}
+                            getOptionValue={(option:any) => option.id}
+                            value={this.state.fieldValues[field.key]}
+                            onChange={(selected:any) => {
+                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
+                            }}
+                            options={this.state.fieldOptions[field.key]}
+                            isDisabled={this.state.isSomethingLoading}
+                            components={(selectField.allowedValues[0].iconUrl)? { Option: IconOption, SingleValue:ValueComponent }: {}}
+                        />
+                    </Field>
+                );
             }
         }
 
