@@ -36,7 +36,8 @@ export class JiraExplorer extends Disposable {
         const initializing = configuration.initializing(e);
         if (
             initializing ||
-            configuration.changed(e, 'jira.explorer.enabled')
+            configuration.changed(e, 'jira.explorer.enabled') ||
+            configuration.changed(e, 'jira.customJql')
         ) {
             if(!Container.config.jira.explorer.enabled) {
                 this.dispose();
