@@ -63,14 +63,38 @@ div.icon-text img {
   background: var(--vscode-button-background--50) !important;
 }
 
+div#jql-row-container {
+  margin-top: 2pt;
+  margin-bottom: 2pt;
+  padding-top: 3pt;
+  padding-bottom: 3pt;
+  align-items: center;
+  height: 3em;
+  background-color: transparent
+}
+
+div#jql-row-drop-overlay {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+div#empty-jql-row {
+  background-color: transparent;
+  height: 100%;
+  border: 1pt;
+  border-style: solid;
+  border-color: var(--vscode-button-hoverBackground);
+}
+
 div#jql-row {
   color: var(--vscode-editor-foreground);
+  height: 100%;
+  padding-left: 3pt;
+  padding-right: 3pt;
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 3pt;
-  margin-top: 3pt;
-  margin-bottom: 3pt;
   background-color: var(--vscode-input-background)
 }
 
