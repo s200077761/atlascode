@@ -18,6 +18,8 @@ export default class CustomJQL extends React.Component<
     inputValue: string;
     editingEntry: JQLEntry | undefined;
     editingId: string | undefined;
+    dragTargetIndex: number | undefined;
+    dragSourceIndex: number | undefined;
   }
 > {
   constructor(props: any) {
@@ -26,15 +28,20 @@ export default class CustomJQL extends React.Component<
     this.state = {
       inputValue: "",
       editingEntry: undefined,
-      editingId: undefined
+      editingId: undefined,
+      dragTargetIndex: undefined,
+      dragSourceIndex: undefined
     };
   }
 
   private copySiteJql(siteJqlList: SiteJQL[]) {
     return siteJqlList.map((siteJql: SiteJQL) => {
-      return {siteId: siteJql.siteId, jql: siteJql.jql.map((entry: JQLEntry) => {
-        return Object.assign({}, entry);
-      })};
+      return {
+        siteId: siteJql.siteId,
+        jql: siteJql.jql.map((entry: JQLEntry) => {
+          return Object.assign({}, entry);
+        })
+      };
     });
   }
 
@@ -112,7 +119,9 @@ export default class CustomJQL extends React.Component<
       return newJql.jql;
     }
 
-    return siteJql.jql.map((item: JQLEntry) => {return Object.assign({}, item);});
+    return siteJql.jql.map((item: JQLEntry) => {
+      return Object.assign({}, item);
+    });
   }
 
   handleCancelEdit = () => {
@@ -142,11 +151,133 @@ export default class CustomJQL extends React.Component<
     this.publishChanges(jqlList);
   }
 
+  handleDragStart = (e: any) => {
+    const objIndex = e.target.getAttribute("data-index");
+    if (!objIndex) {
+      return;
+    }
+    const index = Number(objIndex);
+    e.dataTransfer.dropEffect = "copy";
+    this.setState({ dragSourceIndex: index });
+  }
+
+  handleDragEnd = (e: any) => {
+    this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
+  }
+
+  handleDragEnter = (e: any) => {
+    const objIndex = e.currentTarget.getAttribute("data-index");
+    if (objIndex) {
+      const index = Number(objIndex);
+      if (index !== undefined) {
+        this.setState({ dragTargetIndex: index });
+      }
+    }
+  }
+
+  handleDragOver = (e: any) => {
+    e.preventDefault();
+  }
+
+  handleDrop = (e: any) => {
+    e.preventDefault();
+
+    if (this.state.dragSourceIndex !== undefined &&
+      this.state.dragTargetIndex !== undefined &&
+      this.state.dragSourceIndex !== this.state.dragTargetIndex) {
+        var jql = this.readJqlListFromProps();
+        const temp = jql[this.state.dragSourceIndex];
+        jql.splice(this.state.dragSourceIndex, 1);
+        jql.splice(this.state.dragTargetIndex, 0, temp);
+        this.publishChanges(jql);
+      }
+    this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
+  }
+
+  htmlForJQLEntry = (element: JQLEntry, displayIndex: number) => {
+    return (
+      <div
+        data-index={displayIndex}
+        id="jql-row"
+        data-id={element.id}
+        draggable={true}
+        onDragStart={this.handleDragStart}
+        onDragEnd={this.handleDragEnd}
+      >
+        <div>
+          <Checkbox
+            value={element.id}
+            isChecked={element.enabled}
+            onChange={this.toggleEnable}
+          />
+        </div>
+
+        <div style={{ flexGrow: 1 }}>{element.name}</div>
+
+        <div>
+          <Button
+            className="ak-button"
+            onClick={() => {
+              this.onEditQuery(element.id);
+            }}
+          >
+            Edit
+          </Button>
+        </div>
+        <div>
+          <Button
+            className="ak-button"
+            onClick={() => {
+              this.deleteQuery(element.id);
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  htmlElementAtIndex = (jql: JQLEntry[], index: number) => {
+    var element = undefined;
+
+    if (this.state.dragSourceIndex !== undefined && this.state.dragTargetIndex !== undefined) {
+      if (index === this.state.dragTargetIndex) {
+        element = <div id="empty-jql-row" data-index={index}/>;
+      } else if ((index < this.state.dragSourceIndex && index < this.state.dragTargetIndex) ||
+      (index > this.state.dragSourceIndex && index > this.state.dragTargetIndex)) {
+        element = this.htmlForJQLEntry(jql[index], index);
+      } else if (this.state.dragSourceIndex < this.state.dragTargetIndex) {
+        element = this.htmlForJQLEntry(jql[index + 1], index + 1);
+      } else {
+        element = this.htmlForJQLEntry(jql[index - 1], index - 1);
+      }
+    } else {
+      element = this.htmlForJQLEntry(jql[index], index);
+    }
+
+    return (
+      <div
+        id="jql-row-container"
+        data-index={index}
+      >
+        <div id="jql-row-drop-overlay"
+          data-index={index}
+          onDragEnter={this.handleDragEnter}
+          onDragOver={this.handleDragOver}
+          onDrop={this.handleDrop}
+        >
+          {element}
+        </div>
+      </div>
+    );
+  }
+
   render() {
     if (!this.props.cloudId && !this.props.jiraAccessToken) {
       return <div />;
     }
-    
+
     const jql = this.readJqlListFromProps();
 
     return (
@@ -160,42 +291,8 @@ export default class CustomJQL extends React.Component<
             onSave={this.handleSaveEdit}
           />
         )}
-        {jql.map((element, index) => {
-          return (
-            <div data-index={index} id="jql-row">
-              <div>
-                <Checkbox
-                  value={element.id}
-                  isChecked={element.enabled}
-                  onChange={this.toggleEnable}
-                  name={`jql-enabled-${index}`}
-                />
-              </div>
-
-              <div style={{ flexGrow: 1 }}>{element.name}</div>
-
-              <div>
-                <Button
-                  className="ak-button"
-                  onClick={() => {
-                    this.onEditQuery(element.id);
-                  }}
-                >
-                  Edit
-                </Button>
-              </div>
-              <div>
-                <Button
-                  className="ak-button"
-                  onClick={() => {
-                    this.deleteQuery(element.id);
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          );
+        {jql.map((_, index) => {
+          return this.htmlElementAtIndex(jql, index);
         })}
         <Button className="ak-button" onClick={this.onNewQuery}>
           Add Query
