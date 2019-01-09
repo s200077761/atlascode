@@ -4,7 +4,7 @@ import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments
 import { Container } from "../container";
 import { Logger } from '../logger';
 
-const bitbucketHosts = new Map()
+export const bitbucketHosts = new Map()
     .set("bitbucket.org", async () => {
         const bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
@@ -15,13 +15,13 @@ const bitbucketHosts = new Map()
         if (!bb) { return Promise.reject(apiConnectivityError); }
         return bb;
     });
-const apiConnectivityError = new Error('cannot connect to bitbucket api');
-const dummyRemote = { name: '', isReadOnly: true };
-const maxItemsSupported = {
+export const maxItemsSupported = {
     commits: 100,
     comments: 100,
     fileChanges: 100
 };
+const apiConnectivityError = new Error('cannot connect to bitbucket api');
+const dummyRemote = { name: '', isReadOnly: true };
 
 // had to do this as the library introduced a bug with latest update
 export function GitUrlParse(url: string): gup.GitUrl {
@@ -154,6 +154,25 @@ export namespace PullRequestApi {
             let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
             return parsed && bitbucketHosts.has(parsed.source);
         });
+    }
+
+    export async function create(pr: PullRequest): Promise<PullRequest> {
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.pullrequests.create({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            _body: {
+                type: pr.data.type,
+                title: pr.data.title,
+                summary: pr.data.summary,
+                source: pr.data.source,
+                destination: pr.data.destination
+            }
+        });
+
+        return {...pr, ...{data: data}};
     }
 
     export async function approve(pr: PullRequest) {

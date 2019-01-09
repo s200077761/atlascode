@@ -183,14 +183,14 @@
                     "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
                 },
                 {
-                    "id": "atlascode.views.bb.pullrequestsTreeView",
-                    "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
-                },
-                {
                     "id": "atlascode.views.jira.customJql",
                     "name": "Custom JQL",
                     "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
+                },
+                {
+                    "id": "atlascode.views.bb.pullrequestsTreeView",
+                    "name": "Bitbucket pull requests",
+                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
                 }
             ]
         },
@@ -556,11 +556,14 @@
         "@atlaskit/page-header": "^6.0.7",
         "@atlaskit/panel": "^0.0.10",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
+        "@atlaskit/select": "^6.1.15",
         "@atlaskit/size-detector": "^5.0.8",
         "@atlaskit/spinner": "^9.0.13",
         "@atlaskit/status": "^0.2.11",
         "@atlaskit/table-tree": "^5.0.4",
         "@atlaskit/tag": "^6.1.0",
+        "@atlaskit/textarea": "^0.2.3",
+        "@atlaskit/textfield": "^0.1.5",
         "@atlaskit/tooltip": "^12.1.9",
         "@atlaskit/util-shared-styles": "^3.0.0",
         "@atlassian/jira": "^0.0.3",
