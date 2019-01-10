@@ -37,9 +37,9 @@ export default class EditJQL extends PureComponent<{
     });
   }
 
-  getSuggestionsRequest = async (fieldName: string) => {
+  getSuggestionsRequest = async (fieldName: string, fieldValue:string) => {
     return this.fetchEndpoint(
-      `jql/autocompletedata/suggestions?fieldName=${fieldName}`
+      `jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=${fieldValue}`
     );
   }
 
@@ -88,6 +88,7 @@ export default class EditJQL extends PureComponent<{
             onClose={this.props.onCancel}
             heading="Edit JQL"
             onOpenComplete={this.onOpenComplete}
+            shouldCloseOnEscapePress={false}
           >
             <TextField
               style={{ width: "100%"}}
