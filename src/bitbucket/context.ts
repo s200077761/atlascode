@@ -9,7 +9,6 @@ import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
-import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
 import { viewScreenEvent } from '../analytics';
 import { Time } from '../util/time';
@@ -61,7 +60,7 @@ export class BitbucketContext extends Disposable {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addTreeItems(result);
             },this),
-            commands.registerCommand(Commands.CreatePullRequest, () => createPullRequest(this)),
+            commands.registerCommand(Commands.CreatePullRequest, Container.pullRequestCreatorView.createOrShow, Container.pullRequestCreatorView)
         );
 
         this._disposable = Disposable.from(

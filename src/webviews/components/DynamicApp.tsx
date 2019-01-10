@@ -23,6 +23,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadableCreatePullRequestView = Loadable({
+    loader: () => import(/* webpackChunkName: "createPullRequestScreen" */ './pullrequest/CreatePullRequestPage'),
+    loading: Loading,
+  });
+
   const LoadableIssuewView = Loadable({
     loader: () => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage'),
     loading: Loading,
@@ -66,6 +71,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return(
                     <div>
                         <LoadablePullRequestView />
+                    </div>
+                );
+            }
+            case 'createPullRequestScreen': {
+                return(
+                    <div>
+                        <LoadableCreatePullRequestView />
                     </div>
                 );
             }

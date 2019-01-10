@@ -526,6 +526,25 @@
     react-transition-group "^2.2.1"
     shallow-equal "^1.0.0"
 
+"@atlaskit/select@^6.1.15":
+  version "6.1.15"
+  resolved "https://registry.yarnpkg.com/@atlaskit/select/-/select-6.1.15.tgz#c0dce68e4fb8756f00d1b3661cdb5b8fb55e87bb"
+  integrity sha512-lAGgi2x+3/ViL4lzjiL9py2koQv+LUthKB3rvyBkLYDwExNmUNIspN42huy1jotUVutAuZjQTWeZ4R9HbLom4Q==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/icon" "^15.0.2"
+    "@atlaskit/spinner" "^9.0.13"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+    focus-trap "^2.4.5"
+    memoize-one "^3.0.1"
+    react-fast-compare "^2.0.1"
+    react-node-resolver "^1.0.1"
+    react-popper "1.0.2"
+    react-select "^2.1.1"
+    react-transition-group "^2.2.1"
+    shallow-equal "^1.0.0"
+
 "@atlaskit/size-detector@^5.0.8":
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/@atlaskit/size-detector/-/size-detector-5.0.8.tgz#8858c79b168ac750cafacaf86ddeea9473fe0bad"
@@ -596,6 +615,26 @@
     babel-runtime "^6.26.0"
     create-error "^0.3.1"
     debug "^2.2.0"
+
+"@atlaskit/textarea@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@atlaskit/textarea/-/textarea-0.2.3.tgz#65f7b0d0880f6093928b49c34936b10c624eeba3"
+  integrity sha512-fA+rUuHLuohshmu7QHQKIiDuPmGQOalrCCG8tFTTAMGbmzl58Ng502sRJTjSVHHq8HMM3QtCtGFA0GF7AipXzg==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/analytics-next-types" "^3.1.2"
+    "@atlaskit/theme" "^7.0.1"
+    "@atlaskit/type-helpers" "^2.0.0"
+    tslib "^1.8.0"
+
+"@atlaskit/textfield@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@atlaskit/textfield/-/textfield-0.1.5.tgz#10c16cd265b147cd494394d1cd3c0fb225701fa0"
+  integrity sha512-LPusXGPQ6x4gl2BfJCdgrlBppKO83Vf/xn8MiszS414LOFlxP6PMAu5U3FfvIGeHCfPM32aTf1bXn5bzVaFzDA==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
 
 "@atlaskit/theme@^7.0.0":
   version "7.0.0"
