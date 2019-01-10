@@ -8,7 +8,7 @@ import { viewScreenEvent } from '../../analytics';
 import { Time } from '../../util/time';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
-const defaultRefreshInterval = 1 * Time.MINUTES;
+const defaultRefreshInterval = 5 * Time.MINUTES;
 
 export interface RefreshableTree extends Disposable {
     refresh(): void;
