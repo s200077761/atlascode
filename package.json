@@ -329,6 +329,12 @@
                     "description": "Enables the Assigned Issues in the Jira Issue Explorer",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.refreshInterval": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "Time (in minutes) to wait before refreshing the Jira Issue Explorer (set to 0 to disable auto-refresh)",
+                    "scope": "window"
+                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,

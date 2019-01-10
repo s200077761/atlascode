@@ -51,6 +51,7 @@ export interface JiraExplorer {
     enabled:boolean;
     showOpenIssues:boolean;
     showAssignedIssues:boolean;
+    refreshInterval:number;
 }
 
 export interface JiraHover {
@@ -124,7 +125,8 @@ export const emptyWorkingProject: WorkingProject = {
 export const emptyJiraExplorer: JiraExplorer = {
     enabled:true,
     showOpenIssues:true,
-    showAssignedIssues:true
+    showAssignedIssues:true,
+    refreshInterval: 1
 };
 
 export const emptyJiraStatusBar: JiraStatusBar = {

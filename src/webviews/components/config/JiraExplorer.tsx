@@ -57,6 +57,15 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
         }
     }
 
+    handleInputChange = (e: any, configKey: string) => {
+        const changes = Object.create(null);
+        changes[configKey] = e.target.value;
+
+        if(this.props.onConfigChange) {
+            this.props.onConfigChange(changes);
+        }
+    }
+
     getIsExplorerIndeterminate = ():boolean => {
         if(!this.props.configData.config.jira.explorer.enabled) {
             return false;
@@ -168,6 +177,15 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             paddingLeft: '24px',
                         }}
                         >
+                        <div className="refreshInterval">
+                            <span>refresh every: </span>
+                                <input style={{ width: '40px' }} name="jira-explorer-refresh-interval"
+                                    type="number" min="0"
+                                    value={this.props.configData.config.jira.explorer.refreshInterval}
+                                    onChange={(e: any) => this.handleInputChange(e, "jira.explorer.refreshInterval")} />
+                            <span> minutes (setting to 0 disables auto-refresh)</span>
+                        </div>
+
                         <Checkbox
                             isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
                             onChange={this.onCheckboxChange}
