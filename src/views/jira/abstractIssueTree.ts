@@ -8,6 +8,8 @@ import { viewScreenEvent } from '../../analytics';
 import { Time } from '../../util/time';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
+const defaultRefreshInterval = 5 * Time.MINUTES;
+
 export interface RefreshableTree extends Disposable {
     refresh(): void;
 }
@@ -25,7 +27,7 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
 
     private _tree: TreeView<IssueNode> | undefined;
     private _timer: any | undefined;
-    private _refreshInterval = 1 * Time.MINUTES;
+    private _refreshInterval = defaultRefreshInterval;
 
     constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
         super(id, jql, emptyState, emptyStateCommand);
@@ -50,6 +52,18 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
                 this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
                 this._disposables.push(this._tree);
             }
+        }
+
+
+        if (initializing || configuration.changed(e, 'jira.explorer.refreshInterval')) {
+            this._refreshInterval = Container.config.jira.explorer.refreshInterval * Time.MINUTES;
+            if (this._refreshInterval <= 0) {
+                this._refreshInterval = 0;
+                this.stopTimer();
+            } else {
+                this.stopTimer();
+                this.startTimer();
+            }            
         }
     }
 
@@ -76,7 +90,7 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
     }
 
     private startTimer() {
-        if (!this._timer) {
+        if (this._refreshInterval > 0 && !this._timer) {
             this._timer = setInterval(() => {
                 this.refresh();
             }, this._refreshInterval);
