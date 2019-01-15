@@ -56,15 +56,3 @@ export interface FetchDetails extends Action {
 export function isFetchDetails(a: Action): a is FetchDetails {
     return (<FetchDetails>a).action === 'fetchDetails';
 }
-
-export interface PushBranch extends Action {
-    action: 'pushBranch';
-    repoUri: string;
-    remote: Remote;
-    sourceBranch: Branch;
-    destinationBranch: Branch;
-}
-
-export function isPushBranch(a: Action): a is PushBranch {
-    return (<PushBranch>a).action === 'pushBranch';
-}

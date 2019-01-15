@@ -3,27 +3,22 @@ import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
-import SectionMessage from '@atlaskit/section-message';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, CreatePullRequestResult, isCreatePullRequestResult, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import { InlineFlex, TextFieldStyles, TextAreaStyles, VerticalPadding } from '../styles';
+import { InlineFlex, VerticalPadding } from '../styles';
 import Select from '@atlaskit/select';
-import Textfield from '@atlaskit/textfield';
-import TextArea from '@atlaskit/textarea';
-import { CreatePullRequest, FetchDetails, PushBranch } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
-import styled from 'styled-components';
 import { Remote, Branch, Ref } from '../../../typings/git';
+import BranchWarning from './BranchWarning';
+import CreatePRTitleSummary from './CreatePRTitleSummary';
 
-type Emit = CreatePullRequest | FetchDetails | PushBranch;
+type Emit = CreatePullRequest | FetchDetails;
 type Receive = CreatePRData | CreatePullRequestResult | CommitsResult;
 
-const Padding = styled.div`
-  padding: 8px;
-`;
-
+const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: []};
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (
@@ -42,7 +37,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
                         }}
                     >
                         <InlineFlex>
-                            {`tracking upstream ${option.value.upstream ? option.value.upstream.remote + '/' + option.value.upstream.name : 'none'}`}
+                            {`tracking upstream ${option.value.upstream.remote}'/'${option.value.upstream.name}`}
                         </InlineFlex>
                     </div>
                 ) : null}
@@ -139,16 +134,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({pushLocalChanges: e.target.checked});
     }
 
-    handlePushBranch = () => {
-        this.postMessage({
-            action: 'pushBranch',
-            repoUri: this.state.repo!.value.uri,
-            remote: this.state.remote!.value,
-            sourceBranch: this.state.sourceBranch!.value,
-            destinationBranch: this.state.destinationBranch!.value
-        });
-    }
-
     handleCreatePR = () => {
         this.setState({isCreateButtonLoading: true});
         this.postMessage({
@@ -182,11 +167,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     render() {
+
+        const repo = this.state.repo || {label:'', value: emptyRepoData};
+
         const actionsContent = (
             <InlineFlex>
                 <Button className='ak-button' href={
-                    this.state.repo && this.state.repo.value.href
-                        ? `${this.state.repo.value.href}/pull-requests/new`
+                    repo && repo.value.href
+                        ? `${repo.value.href}/pull-requests/new`
                         : `https://bitbucket.org/dashboard/overview`
                 }>Create on bitbucket.org...</Button>
             </InlineFlex>
@@ -209,13 +197,13 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                                     onChange={this.handleRepoChange}
                                     placeholder='Loading...'
-                                    value={this.state.repo} />
+                                    value={repo} />
 
-                                {this.state.repo && this.state.repo.value.remotes.length > 1 &&
+                                {repo.value.remotes.length > 1 &&
                                     <React.Fragment>
                                         <label>Remote</label>
                                         <Select
-                                            options={this.state.repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
+                                            options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
                                             onChange={this.handleRemoteChange}
                                             value={this.state.remote} />
                                     </React.Fragment>
@@ -228,16 +216,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             <label>Source branch (local)</label>
                             <Select
                                 formatOptionLabel={formatOptionLabel}
-                                options={
-                                    this.state.repo
-                                        ? this.state.repo.value.localBranches.map(branch => {
-                                            return {
-                                                label: `${branch.name}`,
-                                                value: branch
-                                            };
-                                        })
-                                        : []
-                                }
+                                options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                                 onChange={this.handleSourceBranchChange}
                                 value={this.state.sourceBranch} />
                         </GridColumn>
@@ -252,25 +231,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 onChange={this.handlePushLocalChangesChange}
                                 name="push-local-branch-enabled" />
 
-                            {this.state.sourceRemoteBranchName && !this.state.repo!.value.remoteBranches.find(branch => this.state.sourceRemoteBranchName === branch.name) &&
-                                <Padding>
-                                    <SectionMessage appearance="warning" title="No upstream branch">
-                                        <p>No upstream branch found. Check the box above to push the local changes to remote while creating the pull request.</p>
-                                    </SectionMessage>
-                                </Padding>
-                            }
+                            <BranchWarning sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches}/>
                         </GridColumn>
                         <GridColumn medium={6}>
                             <VerticalPadding>
                                 <label>Destination branch</label>
                                 <Select
-                                    options={this.state.repo && this.state.remote
-                                        ? this.state.repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name).map(branch => {
-                                            return {
-                                                label: branch.name,
-                                                value: branch
-                                            };
-                                        })
+                                    options={this.state.remote
+                                        ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name)
+                                            .map(branch => ({ label: branch.name, value: branch }))
                                         : []}
                                     onChange={this.handleDestinationBranchChange}
                                     value={this.state.destinationBranch} />
@@ -278,25 +247,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </GridColumn>
 
                         <GridColumn medium={12}>
-                            <VerticalPadding>
-                                <label htmlFor="title">Title</label>
-                                <Textfield name="title" defaultValue="Pull request title" onChange={this.handleTitleChange} isInvalid={!this.state.title || this.state.title.trim().length === 0}
-                                    theme={(theme: any, props: any) => ({
-                                        ...theme(props),
-                                        ...TextFieldStyles
-                                    })
-                                    }
-                                />
-
-                                <label>Summary</label>
-                                <TextArea resize='auto' minimumRows={3}
-                                    onChange={this.handleSummaryChange}
-                                    theme={(theme: any, props: any) => ({
-                                        ...theme(props),
-                                        ...TextAreaStyles
-                                    })
-                                    } />
-                            </VerticalPadding>
+                            <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
                         </GridColumn>
 
                         <GridColumn medium={12}>

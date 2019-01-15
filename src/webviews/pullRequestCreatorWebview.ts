@@ -5,7 +5,7 @@ import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
 import { CreatePRData, RepoData, CreatePullRequestResult, CommitsResult } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isPushBranch, PushBranch } from '../ipc/prActions';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 
@@ -69,16 +69,6 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                     }
                     break;
                 }
-                case 'pushBranch': {
-                    if (isPushBranch(e)) {
-                        handled = true;
-                        this.pushBranch(e).catch((e: any) => {
-                            Logger.error(new Error(`error pushing branch: ${e}`));
-                            window.showErrorMessage('Branch push failed');
-                        });
-                    }
-                    break;
-                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
@@ -110,14 +100,6 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             type: 'commitsResult',
             commits: result
         });
-    }
-
-    private async pushBranch(pushBranchAction: PushBranch) {
-        const {repoUri, remote, sourceBranch} = pushBranchAction;
-        const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
-
-        await repo.push(remote.name, sourceBranch.name);
-        await this.invalidate();
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
