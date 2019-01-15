@@ -1,13 +1,17 @@
 import styled from 'styled-components';
 
+export const MarginAuto = styled.div`
+margin: auto;
+`;
+
 export const Spacer = styled.div`
 margin-left: 10px;
 margin-right: 10px;
 `;
 
-export const VerticalSpacer = styled.div`
-margin-top: 10px;
-margin-bottom: 10px;
+export const VerticalPadding = styled.div`
+padding-top: 10px;
+padding-bottom: 10px;
 `;
 
 export const InlineFlex = styled.div`

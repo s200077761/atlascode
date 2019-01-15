@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { Branch } from "../typings/git";
+import { Branch, Remote } from "../typings/git";
 
 export interface PostComment extends Action {
     content: string;
@@ -18,10 +18,6 @@ export interface Merge extends Action {
     action: 'merge';
 }
 
-export interface CheckoutCommand extends Action {
-    action: 'checkoutCommand';
-}
-
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;
@@ -35,10 +31,12 @@ export function isCheckout(a: Action): a is Checkout {
 export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     repoUri: string;
+    remote: Remote;
     title: string;
     summary: string;
     sourceBranch: Branch;
     destinationBranch: Branch;
+    pushLocalChanges: boolean;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
@@ -48,6 +46,7 @@ export function isCreatePullRequest(a: Action): a is CreatePullRequest {
 export interface FetchDetails extends Action {
     action: 'fetchDetails';
     repoUri: string;
+    remote: Remote;
     title: string;
     summary: string;
     sourceBranch: Branch;
@@ -56,4 +55,16 @@ export interface FetchDetails extends Action {
 
 export function isFetchDetails(a: Action): a is FetchDetails {
     return (<FetchDetails>a).action === 'fetchDetails';
+}
+
+export interface PushBranch extends Action {
+    action: 'pushBranch';
+    repoUri: string;
+    remote: Remote;
+    sourceBranch: Branch;
+    destinationBranch: Branch;
+}
+
+export function isPushBranch(a: Action): a is PushBranch {
+    return (<PushBranch>a).action === 'pushBranch';
 }

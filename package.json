@@ -562,6 +562,7 @@
         "@atlaskit/page-header": "^6.0.7",
         "@atlaskit/panel": "^0.0.10",
         "@atlaskit/reduced-ui-pack": "^10.1.1",
+        "@atlaskit/section-message": "^1.0.15",
         "@atlaskit/select": "^6.1.15",
         "@atlaskit/size-detector": "^5.0.8",
         "@atlaskit/spinner": "^9.0.13",

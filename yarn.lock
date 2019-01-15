@@ -507,6 +507,16 @@
     "@atlaskit/theme" "^7.0.0"
     fbjs "^1.0.0"
 
+"@atlaskit/section-message@^1.0.15":
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/@atlaskit/section-message/-/section-message-1.0.15.tgz#92b50bd2968493f75b319e0f55022ba5f098ef07"
+  integrity sha512-YwmbrJnY+Szf7ia2D8m4Z+oDmVMg09e47hNdNwBwjNzHDEs7q+1SkasbVhyzsKN48fSwBo5y34ZquzMq4/shHw==
+  dependencies:
+    "@atlaskit/button" "^10.1.1"
+    "@atlaskit/icon" "^15.0.2"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+
 "@atlaskit/select@^6.1.10":
   version "6.1.10"
   resolved "https://registry.yarnpkg.com/@atlaskit/select/-/select-6.1.10.tgz#7957146cee2e31c36290c2c37b333d217b37a9eb"

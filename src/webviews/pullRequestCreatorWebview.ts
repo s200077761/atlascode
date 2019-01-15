@@ -1,11 +1,11 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { commands, window, Uri } from 'vscode';
+import { window, Uri } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
 import { CreatePRData, RepoData, CreatePullRequestResult, CommitsResult } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } from '../ipc/prActions';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isPushBranch, PushBranch } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 
@@ -27,11 +27,22 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         const repos = Container.bitbucketContext.getAllRepositores();
         for (let i = 0; i < repos.length; i++) {
             const r = repos[i];
+            if (r.state.remotes.length === 0) {
+                break;
+            }
+
             const [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(r.state.remotes[0])]);
             const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
             await state.push({
                 uri: r.rootUri.toString(),
-                branches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
+                href: repo.links!.html!.href,
+                remotes: r.state.remotes,
+                localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
+                remoteBranches: await Promise.all(
+                    r.state.refs
+                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
+                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
+                ),
                 mainbranch: mainbranch
             });
         }
@@ -49,23 +60,24 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
 
         if(!handled) {
             switch (e.action) {
-                case 'checkoutCommand': {
-                    handled = true;
-                    this.checkout().catch((e: any) => {
-                        Logger.error(new Error(`error checking out branch: ${e}`));
-                        window.showErrorMessage('Branch checkout failed');
-                    });
-                    break;
-                }
                 case 'fetchDetails': {
                     if (isFetchDetails(e)) {
                         handled = true;
                         this.fetchDetails(e).catch((e: any) => {
                             Logger.error(new Error(`error fetching details: ${e}`));
-                            window.showErrorMessage('Fetching branch details failed');
                         });
-                        break;
                     }
+                    break;
+                }
+                case 'pushBranch': {
+                    if (isPushBranch(e)) {
+                        handled = true;
+                        this.pushBranch(e).catch((e: any) => {
+                            Logger.error(new Error(`error pushing branch: ${e}`));
+                            window.showErrorMessage('Branch push failed');
+                        });
+                    }
+                    break;
                 }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
@@ -79,8 +91,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                                 Logger.error(new Error(`error creating pull request: ${e}`));
                                 window.showErrorMessage('Pull request creation failed');
                             });
-                        break;
                     }
+                    break;
                 }
             }
         }
@@ -88,28 +100,36 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         return handled;
     }
 
-    private async checkout() {
-        await commands.executeCommand('git.checkout');
-    }
-
     private async fetchDetails(fetchDetailsAction: FetchDetails) {
-        const {repoUri, sourceBranch, destinationBranch} = fetchDetailsAction;
-        const remoteName = destinationBranch.upstream!.remote;
-        const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
-        const remote = repo.state.remotes.find(r => r.name === remoteName)!;
+        const {remote, sourceBranch, destinationBranch} = fetchDetailsAction;
+        const sourceBranchName = sourceBranch.name!;
+        const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
-        const result = await RepositoriesApi.getCommitsForRefs(remote, sourceBranch.name!, destinationBranch.name!);
+        const result = await RepositoriesApi.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
         this.postMessage({
             type: 'commitsResult',
             commits: result
         });
     }
 
-    private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const {repoUri, title, summary, sourceBranch, destinationBranch} = createPullRequestAction;
-        const remoteName = destinationBranch.upstream!.remote;
+    private async pushBranch(pushBranchAction: PushBranch) {
+        const {repoUri, remote, sourceBranch} = pushBranchAction;
         const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
-        const remote = repo.state.remotes.find(r => r.name === remoteName)!;
+
+        await repo.push(remote.name, sourceBranch.name);
+        await this.invalidate();
+    }
+
+    private async createPullRequest(createPullRequestAction: CreatePullRequest) {
+        const {repoUri, remote, title, summary, sourceBranch, destinationBranch, pushLocalChanges} = createPullRequestAction;
+        const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
+        const sourceBranchName = sourceBranch.name!;
+        const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
+
+        if (pushLocalChanges) {
+            Logger.info(`pushing local changes for branch: ${sourceBranchName} to remote: ${remote.name} `);
+            await repo.push(remote.name, sourceBranchName);
+        }
 
         let pr: Bitbucket.Schema.Pullrequest = {
             type: 'pullrequest',
@@ -119,12 +139,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             },
             source: {
                 branch: {
-                    name: sourceBranch.name!
+                    name: sourceBranchName
                 }
             },
             destination: {
                 branch: {
-                    name: destinationBranch.name!
+                    name: destinationBranchName
                 }
             }
         };
