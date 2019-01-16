@@ -47,8 +47,6 @@ export interface FetchDetails extends Action {
     action: 'fetchDetails';
     repoUri: string;
     remote: Remote;
-    title: string;
-    summary: string;
     sourceBranch: Branch;
     destinationBranch: Branch;
 }
