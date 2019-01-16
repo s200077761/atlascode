@@ -37,7 +37,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
                         }}
                     >
                         <InlineFlex>
-                            {`tracking upstream ${option.value.upstream.remote}'/'${option.value.upstream.name}`}
+                            {`tracking upstream ${option.value.upstream.remote}/${option.value.upstream.name}`}
                         </InlineFlex>
                     </div>
                 ) : null}
@@ -109,21 +109,24 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleBranchChange = () => {
-        const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.name}` : undefined;
+        const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch
+            ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.remote.value.name
+                ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.upstream.name}`
+                : `${this.state.remote.value.name}/${this.state.sourceBranch.value.name}`
+            : undefined;
         this.setState({commits: [], sourceRemoteBranchName: sourceRemoteBranchName});
 
         if (this.state.repo &&
             this.state.remote &&
             this.state.sourceBranch &&
             this.state.destinationBranch &&
-            this.state.sourceBranch.value !== this.state.destinationBranch.value) {
+            this.state.sourceBranch.value !== this.state.destinationBranch.value &&
+            this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
 
             this.postMessage({
                 action: 'fetchDetails',
                 repoUri: this.state.repo!.value.uri,
                 remote: this.state.remote!.value,
-                title: this.state.title,
-                summary: this.state.summary,
                 sourceBranch: this.state.sourceBranch!.value,
                 destinationBranch: this.state.destinationBranch!.value
             });
@@ -231,7 +234,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 onChange={this.handlePushLocalChangesChange}
                                 name="push-local-branch-enabled" />
 
-                            <BranchWarning sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches}/>
+                            <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches}/>
                         </GridColumn>
                         <GridColumn medium={6}>
                             <VerticalPadding>
