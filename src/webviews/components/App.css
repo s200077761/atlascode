@@ -209,6 +209,10 @@ body div[class^="css-"] div[class^="css-"] {
   margin: 0px !important;
 }
 
+[class^="styled__Title"] {
+  margin: 0px !important;
+}
+
 [class^="LayoutStyles__Container"] {
   padding: inherit !important;
 }

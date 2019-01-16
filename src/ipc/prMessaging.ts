@@ -1,6 +1,6 @@
 import { Message } from "./messaging";
 import { Issue } from "../jira/jiraModel";
-import { Branch } from "../typings/git";
+import { Branch, Remote } from "../typings/git";
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
@@ -19,7 +19,10 @@ export function isPRData(a: Message): a is PRData {
 
 export interface RepoData {
     uri: string;
-    branches: Branch[];
+    href?: string;
+    remotes: Remote[];
+    localBranches: Branch[];
+    remoteBranches: Branch[];
     mainbranch?: string;
 }
 
