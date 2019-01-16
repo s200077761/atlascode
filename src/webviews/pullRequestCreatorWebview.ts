@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { window, Uri } from 'vscode';
+import { window, Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
@@ -8,6 +8,8 @@ import { CreatePRData, RepoData, CreatePullRequestResult, CommitsResult } from '
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
+import { BitbucketExplorerLocation } from '../config/configuration';
+import { Commands } from '../commands';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CreatePullRequestResult | CommitsResult,Action> {
 
@@ -69,6 +71,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                     }
                     break;
                 }
+                case 'showPullRequestsExplorer': {
+                    handled = true;
+                    this.showPullRequestsExplorer().catch((e: any) => {
+                        Logger.error(new Error(`error showing pull requests explorer: ${e}`));
+                    });
+                    break;
+                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
@@ -90,6 +99,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         return handled;
     }
 
+    private async showPullRequestsExplorer() {
+        const openLocationCommand = Container.config.bitbucket.explorer.location === BitbucketExplorerLocation.Atlascode
+            ? 'workbench.view.extension.atlascode-drawer'
+            : 'workbench.view.scm';
+        commands.executeCommand(openLocationCommand);
+        commands.executeCommand(Commands.BitbucketRefreshPullRequests);
+
+    }
     private async fetchDetails(fetchDetailsAction: FetchDetails) {
         const {remote, sourceBranch, destinationBranch} = fetchDetailsAction;
         const sourceBranchName = sourceBranch.name!;
