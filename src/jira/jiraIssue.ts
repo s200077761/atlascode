@@ -58,6 +58,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         key: '',
         id: '',
         self: '',
+        created: new Date(0),
         description: '',
         summary: '',
         status: emptyStatus,
@@ -141,6 +142,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             key: issueJson.key,
             id: issueJson.id,
             self: issueJson.self,
+            created: new Date(Date.parse(issueJson.fields.created)),
             description: issueJson.fields.description,
             summary: issueJson.fields.summary,
             status: isStatus(issueJson.fields.status) ? issueJson.fields.status : emptyStatus,
@@ -161,6 +163,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         key: string;
         id: string;
         self: string;
+        created: Date;
         description: string;
         summary: string;
         status: Status;

@@ -201,6 +201,14 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             name="explorer-assigned-issues"
                         />
                     </div>
+                    <div className="refreshInterval">
+                        <span>Notify of new Jira issues: </span>
+                            <input style={{ width: '40px' }} name="jira-issue-monitor-refresh-interval"
+                                type="number" min="0"
+                                value={this.props.configData.config.jira.issueMonitor.refreshInterval}
+                                onChange={(e: any) => this.handleInputChange(e, "jira.issueMonitor.refreshInterval")} />
+                        <span> minutes (setting to 0 disables notification)</span>
+                    </div>
                 </div>
                 <hr/>
                 <InlineFlex>

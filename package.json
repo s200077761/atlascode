@@ -344,6 +344,12 @@
                     "description": "Time (in minutes) to wait before refreshing the Jira Issue Explorer (set to 0 to disable auto-refresh)",
                     "scope": "window"
                 },
+                "atlascode.jira.issueMonitor.refreshInterval": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Time (in minutes) to wait before checking for new issues in the working project (set to 0 to disable auto-refresh)",
+                    "scope": "window"
+                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -596,6 +602,7 @@
         "jquery": "^3.3.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
+        "moment": "^2.23.0",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.0",
         "passport-bitbucket-oauth2": "^0.1.2",
@@ -620,6 +627,7 @@
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
         "@types/mocha": "^5.2.2",
+        "@types/moment": "^2.13.0",
         "@types/node": "^8.10.25",
         "@types/node-fetch": "^2.1.4",
         "@types/passport": "^0.4.6",

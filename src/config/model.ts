@@ -33,6 +33,7 @@ export interface JiraConfig {
     workingProject: WorkingProject;
     workingSite: WorkingSite;
     explorer:JiraExplorer;
+    issueMonitor:JiraIssueMonitor;
     statusbar:JiraStatusBar;
     hover: JiraHover;
     customJql: SiteJQL[];
@@ -45,6 +46,10 @@ export interface JiraStatusBar {
     showSite:boolean;
     showProject:boolean;
     showLogin:boolean;
+}
+
+export interface JiraIssueMonitor {
+    refreshInterval:number;
 }
 
 export interface JiraExplorer {
@@ -126,7 +131,11 @@ export const emptyJiraExplorer: JiraExplorer = {
     enabled:true,
     showOpenIssues:true,
     showAssignedIssues:true,
-    refreshInterval: 1
+    refreshInterval: 5
+};
+
+export const emtpyIssueMonitor: JiraIssueMonitor = {
+    refreshInterval: 5
 };
 
 export const emptyJiraStatusBar: JiraStatusBar = {
@@ -153,6 +162,7 @@ export const emptyJiraConfig:JiraConfig = {
     workingProject: emptyWorkingProject,
     workingSite: emptyWorkingSite,
     explorer: emptyJiraExplorer,
+    issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: []
