@@ -141,6 +141,10 @@
             {
                 "command": "atlascode.bb.createPullRequest",
                 "title": "Create Pull Request",
+                "icon": {
+                    "dark": "resources/dark/add.svg",
+                    "light": "resources/light/add.svg"
+                },
                 "category": "AtlasCode"
             },
             {
@@ -225,6 +229,11 @@
             "view/title": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.createPullRequest",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
                 },
