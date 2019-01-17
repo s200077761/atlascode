@@ -8,14 +8,14 @@ import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, CreatePullRequestResult, isCreatePullRequestResult, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
 import { InlineFlex, VerticalPadding } from '../styles';
 import Select from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails, ShowPullRequestsExplorer } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
 import BranchWarning from './BranchWarning';
 import CreatePRTitleSummary from './CreatePRTitleSummary';
 
-type Emit = CreatePullRequest | FetchDetails;
+type Emit = CreatePullRequest | FetchDetails | ShowPullRequestsExplorer;
 type Receive = CreatePRData | CreatePullRequestResult | CommitsResult;
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: []};
@@ -137,6 +137,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({pushLocalChanges: e.target.checked});
     }
 
+    handleShowPullRequestsExplorer = () => {
+        this.postMessage({
+            action: 'showPullRequestsExplorer'
+        });
+    }
+
     handleCreatePR = () => {
         this.setState({isCreateButtonLoading: true});
         this.postMessage({
@@ -255,8 +261,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                         <GridColumn medium={12}>
                             {this.state.result
-                                ? <p>Created pull request - <Button apprarance='link' href={this.state.result}>{this.state.result}</Button></p>
-                                : <Button className='ak-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create</Button>
+                                ? <React.Fragment>
+                                    <p>Created pull request - <Button appearance='link' href={this.state.result}>{this.state.result}</Button></p>
+                                    <Button className='ak-button' onClick={this.handleShowPullRequestsExplorer}>Show pull requests explorer</Button>
+                                  </React.Fragment>
+                                : <Button className='ak-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
                             }
                         </GridColumn>
 

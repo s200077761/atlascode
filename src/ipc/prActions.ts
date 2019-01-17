@@ -54,3 +54,7 @@ export interface FetchDetails extends Action {
 export function isFetchDetails(a: Action): a is FetchDetails {
     return (<FetchDetails>a).action === 'fetchDetails';
 }
+
+export interface ShowPullRequestsExplorer extends Action {
+    action: 'showPullRequestsExplorer';
+}
