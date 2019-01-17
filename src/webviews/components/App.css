@@ -37,6 +37,7 @@ div.icon-text img {
   margin-right: 5pt;
 }
 
+/* ak-button should be the className on all atlaskit button components */
 .ak-button {
   background: var(--vscode-button-background) !important;
 }
@@ -80,6 +81,7 @@ div.icon-text img {
   background: var(--vscode-button-background--50) !important;
 }
 
+/* ak-textarea and ak-textfield should be the classNames on atlaskit input components */
 .ak-textarea, .ak-inputField {
   background: var(--vscode-input-background)!important;
   color: var(--vscode-input-foreground)!important;
@@ -281,6 +283,7 @@ hr {
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
 }
 
+/* ak-select is the classNamePrefix that should be applied to atlaskit select components */
 .ak-select__control {
   background: var(--vscode-dropdown-background) !important;
   color: var(--vscode-dropdown-foreground) !important;
@@ -325,4 +328,43 @@ hr {
 
 .ak-select__value-container {
   padding: 0px!important;
+}
+
+/* Calendar__Wrapper is the only way to style the calendar popup */
+[class^="Calendar__Wrapper"] {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: 1px solid var(--vscode-focusBorder)!important;
+}
+
+[class^="Heading__MonthAndYear"] {
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Calendar__CalendarTh"] {
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Date__DateDiv"] {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Date__DateDiv"]:hover {
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+[class^="Date__DateDiv"]:disabled {
+  background: var(--vscode-list-focusBackground) !important;
+  color: red !important;
+}
+
+[class^="Calendar__Wrapper"] > [class^="Icon__IconWrapper"]{
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="DateTimePicker__Flex-"] {
+  background: var(--vscode-dropdown-background) !important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
 }

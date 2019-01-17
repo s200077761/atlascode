@@ -9,6 +9,8 @@ import Form, { Field, FormFooter } from '@atlaskit/form';
 import Select, { CreatableSelect, AsyncCreatableSelect, components } from '@atlaskit/select';
 import Button from '@atlaskit/button';
 import Banner from '@atlaskit/banner';
+import { DateTimePicker, DatePicker } from '@atlaskit/datetime-picker';
+
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import { SelectScreenField, ScreenField, UIType } from '../../../jira/createIssueMeta';
 
@@ -162,11 +164,14 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
     }
 
     onIssueTypeSelected = (selected:IssueType):void => {
+        // TODO: try to clear field values
         console.log('selected type',selected);
         this.setState({
             selectedIssueType:selected,
             fieldOptions:this.refreshSelectFields(selected.id,this.state)
         });
+
+        console.log('field values',this.state.fieldValues);
     }
 
     handleOptionCreate = (input:any, fieldKey:string):void => {
@@ -360,16 +365,34 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 );
             }
             case UIType.Date: {
+
                 return (
                     <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                        <DatePicker 
+                            onChange={(value:any) => {
+                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:value}}});
+                                console.log('date value', this.state.fieldValues[field.key]);
+                            }}
+                            className="ak-select-container"
+                            value={this.state.fieldValues[field.key]}
+                            selectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                            />
                     </Field>
                 );
             }
             case UIType.DateTime: {
                 return (
                     <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                        <DateTimePicker 
+                            onChange={(value:any) => {
+                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:value}}});
+                                console.log('date value', this.state.fieldValues[field.key]);
+                            }}
+                            className="ak-select-container"
+                            value={this.state.fieldValues[field.key]}
+                            datePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                            timePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                            />
                     </Field>
                 );
             }
@@ -402,7 +425,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                             }}
                             options={this.state.fieldOptions[field.key]}
                             isDisabled={this.state.isSomethingLoading}
-                            components={(selectField.allowedValues[0].iconUrl)? { Option: IconOption, SingleValue:ValueComponent }: {}}
+                            components={(selectField.allowedValues.length > 0 && selectField.allowedValues[0].iconUrl)? { Option: IconOption, SingleValue:ValueComponent }: {}}
                         />
                     </Field>
                 );

@@ -192,8 +192,12 @@ import { Logger } from "../logger";
 
                 issueTypeIdScreens[issueType.id!] = issueTypeScreen;
             });
+
+            if(!renderableIssueTypes.includes(firstIssueType) && renderableIssueTypes.length > 0) {
+                firstIssueType = renderableIssueTypes[0];
+            }
         }
-        
+
         return {selectedIssueType:firstIssueType, screens:issueTypeIdScreens};
     }
 

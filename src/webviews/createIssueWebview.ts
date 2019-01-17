@@ -67,7 +67,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
             return client.issue
             .getCreateIssueMetadata({projectKeys:projects, expand:'projects.issuetypes.fields'})
             .then((res: JIRA.Response<JIRA.Schema.CreateMetaBean>) => {
-                let transformation = transformIssueScreens(res.data.projects![0]);
+                let transformation = transformIssueScreens(res.data.projects![0],undefined,false);
                 Logger.debug('getScreenFields returning',transformation);
                 return transformation;
             });
