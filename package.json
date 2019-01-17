@@ -562,6 +562,7 @@
         "@atlaskit/field-text": "^7.0.19",
         "@atlaskit/flag": "^9.1.6",
         "@atlaskit/icon": "^15.0.1",
+        "@atlaskit/inline-dialog": "^9.0.13",
         "@atlaskit/input": "^4.0.9",
         "@atlaskit/layer-manager": "^5.0.18",
         "@atlaskit/logo": "^9.2.5",

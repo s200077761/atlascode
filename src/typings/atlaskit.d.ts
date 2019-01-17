@@ -24,6 +24,7 @@ declare module '@atlaskit/select';
 declare module '@atlaskit/status';
 declare module '@atlaskit/spinner';
 declare module '@atlaskit/modal-dialog';
+declare module '@atlaskit/inline-dialog';
 declare module '@atlaskit/field-text';
 declare module '@atlaskit/textfield';
 declare module '@atlaskit/section-message';
