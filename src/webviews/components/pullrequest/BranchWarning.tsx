@@ -2,6 +2,7 @@ import * as React from "react";
 import { Branch } from "../../../typings/git";
 import SectionMessage from '@atlaskit/section-message';
 import styled from "styled-components";
+import { VerticalPadding } from "../styles";
 
 const Padding = styled.div`
   padding: 8px;
@@ -22,8 +23,10 @@ export default class BranchWarning extends React.Component<{ sourceBranch: Branc
             return (
                 <Padding>
                     <SectionMessage appearance="warning" title="No upstream branch">
-                        <p>Upstream branch ({this.props.sourceRemoteBranchName}) not found.</p>
-                        <p>Check the box above to push the local changes to remote while creating the pull request.</p>
+                        <VerticalPadding>
+                            <div style={{ color: 'black' }}>Upstream branch ({this.props.sourceRemoteBranchName}) not found.</div>
+                        </VerticalPadding>
+                        <div style={{ color: 'black' }}>Check the box above to push the local changes to remote while creating the pull request.</div>
                     </SectionMessage>
                 </Padding>
             );
@@ -33,7 +36,9 @@ export default class BranchWarning extends React.Component<{ sourceBranch: Branc
             return (
                 <Padding>
                     <SectionMessage appearance="warning" title="Upstream branch not up to date">
-                        <p>Upstream branch ({this.props.sourceRemoteBranchName}) commit hash does not match with local branch ({this.props.sourceBranch.name}).</p>
+                        <VerticalPadding>
+                            <p>Upstream branch ({this.props.sourceRemoteBranchName}) commit hash does not match with local branch ({this.props.sourceBranch.name}).</p>
+                        </VerticalPadding>
                         <p>Check the box above to push the local changes to remote while creating the pull request.</p>
                     </SectionMessage>
                 </Padding>

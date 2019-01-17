@@ -162,7 +162,7 @@ div#jql-row {
 }
 
 /* Sketchy way of coloring the background of the drop-down menu in the feedback collector */
-body div[class^="css-"] div[class^="css-"] {
+[class^="Modal__Dialog"] div[class^="css-"] div[class^="css-"] {
   background: var(--background-color) !important;
   color: var(--vscode-input-foreground) !important; 
 }
@@ -211,6 +211,7 @@ body div[class^="css-"] div[class^="css-"] {
 
 [class^="styled__Title"] {
   margin: 0px !important;
+  color: black;
 }
 
 [class^="LayoutStyles__Container"] {
