@@ -30,6 +30,7 @@ const emptyIssueData: IssueData = {
   key: "",
   id: "",
   self: "",
+  created: new Date(0),
   description: "",
   summary: "",
   status: emptyStatus,
