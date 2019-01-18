@@ -27,18 +27,68 @@ text-align: center;
 margin: 20px;
 `;
 
-export const TextFieldStyles = {
-    backgroundColor: 'var(--vscode-input-background)',
-    backgroundColorFocus: 'var(--vscode-input-focus)',
-    backgroundColorHover: 'var(--vscode-input-background--darken-10)',
-    // borderColor: 'var(--vscode-input-border)',
-    borderColorFocus: 'var(--vscode-inputOption-activeBorder)'
+export const TextFieldStyles = () => {
+    let style = {
+        backgroundColor: 'var(--vscode-input-background)',
+        backgroundColorFocus: 'var(--vscode-input-background)',
+        backgroundColorHover: 'var(--background-color--darken-05)',
+        // borderColor: 'var(--vscode-input-border)',
+        borderColorFocus: 'var(--vscode-inputOption-activeBorder)',
+        borderColorHover: 'var(--vscode-inputOption-activeBorder)',
+        textColor: 'var(--vscode-input-foreground)'
+    };
+
+    if(document.getElementsByClassName('vscode-dark').length > 0) {
+        style = {...style, backgroundColorHover: 'var(--background-color--lighten-05)'};
+    }
+
+    return style;
 };
 
-export const TextAreaStyles = {
-    backgroundColor: 'var(--vscode-input-background)',
-    backgroundColorFocus: 'var(--vscode-input-focus)',
-    backgroundColorHover: 'var(--vscode-input-background--darken-10)',
-    // borderColor: 'var(--vscode-input-border)',
-    borderColorFocus: 'var(--vscode-inputOption-activeBorder)'
+export const TextAreaStyles = () => {
+    let style = {
+        backgroundColor: 'var(--vscode-input-background)',
+        backgroundColorFocus: 'var(--vscode-input-background)',
+        backgroundColorHover: 'var(--background-color--darken-05)',
+        // borderColor: 'var(--vscode-input-border)',
+        borderColorFocus: 'var(--vscode-inputOption-activeBorder)',
+        borderColorHover: 'var(--vscode-inputOption-activeBorder)',
+        textColor: 'var(--vscode-input-foreground)'
+    };
+
+    if(document.getElementsByClassName('vscode-dark').length > 0) {
+        style = {...style, backgroundColorHover: 'var(--background-color--lighten-05)'};
+    }
+
+    return style;
+};
+
+export const SelectStyles = () => {
+    const backgroundColorActive = document.getElementsByClassName('vscode-dark').length > 0 ? 'var(--background-color--lighten-05)' :  'var(--background-color--darken-05)';
+
+    return {
+        option: (styles: any, state: any) => ({
+            ...styles,
+            color: 'var(--vscode-input-foreground)',
+            backgroundColor: state.isSelected ? backgroundColorActive : 'var(--vscode-input-background)'
+        }),
+        singleValue: (styles: any, state: any) => ({
+            ...styles,
+            color: 'var(--vscode-input-foreground)'
+        }),
+        input: (styles: any, state: any) => ({
+            ...styles,
+            color: 'var(--vscode-input-foreground)',
+            backgroundColor: 'var(--vscode-input-background)'
+        }),
+        control: (styles: any, state: any) => ({
+            ...styles,
+            color: 'var(--vscode-input-foreground)',
+            backgroundColor: 'var(--vscode-input-background)',
+            ':hover': {
+                backgroundColor: backgroundColorActive,
+                borderColor: 'var(--vscode-inputOption-activeBorder)'
+            }
+        })
+    };
 };

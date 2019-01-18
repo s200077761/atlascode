@@ -6,7 +6,7 @@ import Panel from '@atlaskit/panel';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, CreatePullRequestResult, isCreatePullRequestResult, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import { InlineFlex, VerticalPadding } from '../styles';
+import { InlineFlex, VerticalPadding, SelectStyles } from '../styles';
 import Select from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, ShowPullRequestsExplorer } from '../../../ipc/prActions';
 import Commits from './Commits';
@@ -206,7 +206,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                                     onChange={this.handleRepoChange}
                                     placeholder='Loading...'
-                                    value={repo} />
+                                    value={repo}
+                                    styles={SelectStyles()} />
 
                                 {repo.value.remotes.length > 1 &&
                                     <React.Fragment>
@@ -214,7 +215,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <Select
                                             options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
                                             onChange={this.handleRemoteChange}
-                                            value={this.state.remote} />
+                                            value={this.state.remote}
+                                            styles={SelectStyles()} />
                                     </React.Fragment>
                                 }
                             </VerticalPadding>
@@ -227,7 +229,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 formatOptionLabel={formatOptionLabel}
                                 options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                                 onChange={this.handleSourceBranchChange}
-                                value={this.state.sourceBranch} />
+                                value={this.state.sourceBranch}
+                                styles={SelectStyles()} />
                         </GridColumn>
                         <GridColumn medium={4}>
                             <label>Source branch (remote)</label>
@@ -251,7 +254,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             .map(branch => ({ label: branch.name, value: branch }))
                                         : []}
                                     onChange={this.handleDestinationBranchChange}
-                                    value={this.state.destinationBranch} />
+                                    value={this.state.destinationBranch}
+                                    styles={SelectStyles()} />
                             </VerticalPadding>
                         </GridColumn>
 

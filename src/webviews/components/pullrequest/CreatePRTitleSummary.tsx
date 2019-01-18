@@ -4,8 +4,11 @@ import TextArea from '@atlaskit/textarea';
 import { VerticalPadding, TextFieldStyles, TextAreaStyles } from "../styles";
 
 export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, {}> {
+    private _dummyRef: React.RefObject<HTMLHtmlElement>;
+
     constructor(props: any) {
         super(props);
+        this._dummyRef = React.createRef();
     }
 
     render() {
@@ -15,9 +18,10 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                 <Textfield name="title" defaultValue="Pull request title" onChange={this.props.onTitleChange} isInvalid={!this.props.title || this.props.title.trim().length === 0}
                     theme={(theme: any, props: any) => ({
                         ...theme(props),
-                        ...TextFieldStyles
+                        ...TextFieldStyles()
                     })
                     }
+                    ref={this._dummyRef}
                 />
 
                 <label>Summary</label>
@@ -25,7 +29,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                     onChange={this.props.onSummaryChange}
                     theme={(theme: any, props: any) => ({
                         ...theme(props),
-                        ...TextAreaStyles
+                        ...TextAreaStyles()
                     })
                     } />
             </VerticalPadding>
