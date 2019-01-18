@@ -50,7 +50,9 @@ const formatOptionLabel = (option: any, { context }: any) => {
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, {
     data: CreatePRData,
     title: string,
+    titleManuallyEdited: boolean,
     summary: string,
+    summaryManuallyEdited: boolean,
     repo?: { label: string, value: RepoData },
     remote?: { label: string, value: Remote },
     sourceBranch?: { label: string, value: Branch },
@@ -63,15 +65,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 }> {
     constructor(props: any) {
         super(props);
-        this.state = { data: {type: 'createPullRequest', repositories: []}, title: 'Pull request title', summary: '', pushLocalChanges: false, commits: [], isCreateButtonLoading: false };
+        this.state = { data: {type: 'createPullRequest', repositories: []}, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: false, commits: [], isCreateButtonLoading: false };
     }
 
     handleTitleChange = (e: any) => {
-        this.setState({ title: e.target.value });
+        this.setState({ title: e.target.value , titleManuallyEdited: true });
     }
 
     handleSummaryChange = (e: any) => {
-        this.setState({ summary: e.target.value });
+        this.setState({ summary: e.target.value, summaryManuallyEdited: true });
     }
 
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
@@ -114,7 +116,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.upstream.name}`
                 : `${this.state.remote.value.name}/${this.state.sourceBranch.value.name}`
             : undefined;
-        this.setState({commits: [], sourceRemoteBranchName: sourceRemoteBranchName});
+
+        this.setState({
+            commits: [],
+            sourceRemoteBranchName: sourceRemoteBranchName,
+            title: this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)
+                ? this.state.sourceBranch!.label
+                : this.state.title,
+            summary: ''
+        });
 
         if (this.state.repo &&
             this.state.remote &&
@@ -162,7 +172,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             this.setState({isCreateButtonLoading: false, commits: [], result: e.url});
         }
         if (isCommitsResult(e)) {
-            this.setState({commits: e.commits});
+            this.setState({
+                commits: e.commits,
+                title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
+                    ? e.commits[0].message!
+                    : this.state.title,
+                summary: e.commits.length > 1 && this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
+                    ? e.commits.map(c => `- ${c.message}`).join('\n')
+                    : this.state.summary
+            });
         }
         if (isCreatePRData(e)) {
             this.setState({ data: e });
