@@ -234,13 +234,21 @@ import { Logger } from "../logger";
                     uiType:UIType.Textarea
                 };
             }
-            case UIType.Checkbox:
+            case UIType.Checkbox: {
+                return {
+                    required:field.required,
+                    name:field.name,
+                    key:field.key,
+                    uiType:UIType.Checkbox,
+                    allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : []
+                };
+            }
             case UIType.Radio: {
                 return {
                     required:field.required,
                     name:field.name,
                     key:field.key,
-                    uiType:UIType.Input,
+                    uiType:UIType.Radio,
                     allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : []
                 };
             }

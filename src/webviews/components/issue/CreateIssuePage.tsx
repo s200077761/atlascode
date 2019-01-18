@@ -12,7 +12,7 @@ import Banner from '@atlaskit/banner';
 import { DateTimePicker, DatePicker } from '@atlaskit/datetime-picker';
 
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import { SelectScreenField, ScreenField, UIType } from '../../../jira/createIssueMeta';
+import { SelectScreenField, ScreenField, UIType, OptionableScreenField } from '../../../jira/createIssueMeta';
 
 type Emit = FetchQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList;
@@ -261,6 +261,25 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
         console.log('set new field value',item.target.id, newObj);
         this.setState({fieldValues:newObj});
     }
+
+    setCheckboxValue = (item: any) => {
+        console.log('setCheckboxValue',item.target.id);
+
+        let newVals:any[] = this.state.fieldValues[item.target.id];
+        if(!newVals) {
+            newVals = [];
+        }
+
+        if(item.target.checked) {
+            newVals.push(item.target.value);
+        } else if(newVals.includes(item.target.value)) {
+            let i = newVals.indexOf(item.target.value);
+            newVals.splice(i,1);
+        }
+        
+        this.setState(
+            {fieldValues:{...this.state.fieldValues,...{[item.target.id]:newVals}}});
+    }
     
     public render() {
         let renderableFields: any[] = [];
@@ -351,16 +370,30 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 );
             }
             case UIType.Checkbox: {
+                let checkboxItems:any[] = [];
+                const checkField = field as OptionableScreenField;
+                checkField.allowedValues.forEach(value => {
+                    checkboxItems.push(
+                        <label>{value.value}: <input type='checkbox' id={field.key} onChange={this.setCheckboxValue} value={value.id} checked={this.state.fieldValues[field.key] !== undefined && this.state.fieldValues[field.key].contains(value.id)}/></label>
+                    );
+                });
                 return (
                     <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                       <div>{checkboxItems}</div>
                     </Field>
                 );
             }
             case UIType.Radio: {
+                let radioItems:any[] = [];
+                const radioField = field as OptionableScreenField;
+                radioField.allowedValues.forEach(value => {
+                    radioItems.push(
+                        <label>hello</label>
+                    );
+                });
                 return (
                     <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                       <div>{radioItems}</div>
                     </Field>
                 );
             }
