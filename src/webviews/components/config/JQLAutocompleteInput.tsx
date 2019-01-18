@@ -4,6 +4,7 @@ import debounce from "lodash.debounce";
 import jQuery from "jquery";
 import { akColorG400, akColorR400 } from "@atlaskit/util-shared-styles";
 import Input from "@atlaskit/input";
+import InlineDialog from "@atlaskit/inline-dialog";
 import DropList, { Group, Item } from "@atlaskit/droplist";
 import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
 import CrossCircleIcon from "@atlaskit/icon/glyph/cross-circle";
@@ -52,7 +53,6 @@ export class JQLAutocompleteInput extends PureComponent<
   private constructorData: any;
   private jql: any;
   private jqlTimer: NodeJS.Timer | undefined;
-  // private textInput: string;
   private containerNode: any;
 
   state = {
@@ -120,24 +120,26 @@ export class JQLAutocompleteInput extends PureComponent<
           shouldFlip={shouldFlip}
           trigger={
             <FieldBaseWrapper>
-              <FieldBase
+              <FieldBase  
                 isPaddingDisabled={true}
                 isFitContainerWidthEnabled
-              //  invalidMessage={jqlError}
               >
                 {Icon}
-                <Input
+                <InlineDialog
+                content={jqlError}
+                isOpen={jqlError}
+                placement="right"
+                >
+                  <Input
                   isEditing
                   defaultValue={this.props.initialValue}
                   onInput={this.handleInputChange}
                   autocomplete={"off"}
                   id={this.props.inputId}
                   style={{ paddingLeft: 8, cursor: "auto", marginTop: 8 }}
-                  ref={(input: string) => {
-                    // this.textInput = input;
-                  }}
-                />
-                </FieldBase>
+                  />
+                </InlineDialog>
+              </FieldBase>
             </FieldBaseWrapper>
           }
         >
@@ -295,9 +297,9 @@ export class JQLAutocompleteInput extends PureComponent<
         this.props
           .validationRequest(value)
           .then((res: any) => {
-            if (res.errorMessages) {
+            if (res.errorMessages && res.errorMessages.length > 0) {
               this.setState({
-                jqlError: JSON.stringify(res.errorMessages)
+                jqlError: JSON.stringify(res.errorMessages[0])
               });
             } else {
               this.setState({ jqlError: null });
