@@ -557,7 +557,7 @@
         "@atlaskit/css-reset": "^3.0.2",
         "@atlaskit/dropdown-menu": "^6.1.20",
         "@atlaskit/droplist": "^7.0.16",
-        "@atlaskit/feedback-collector": "^2.0.0",
+        "@atlaskit/feedback-collector": "2.0.0",
         "@atlaskit/field-base": "^11.0.12",
         "@atlaskit/field-text": "^7.0.19",
         "@atlaskit/flag": "^9.1.6",

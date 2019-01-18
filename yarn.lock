@@ -196,7 +196,7 @@
     keycode "^2.1.7"
     prop-types "^15.5.10"
 
-"@atlaskit/feedback-collector@^2.0.0":
+"@atlaskit/feedback-collector@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@atlaskit/feedback-collector/-/feedback-collector-2.0.0.tgz#5501379088496fab90f4bd9a9d363052aa43d2cb"
   integrity sha512-PtPeRmkJeR8LQD4z+cEZqrB3+S7jkLWZPtp/o2YWPz1WQKNPBKDTx0Y6YD7VYTO2RUCgP+NkYupVT6KPNzMggw==
