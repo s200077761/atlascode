@@ -3,7 +3,8 @@ import {
   TreeItem,
   TreeView,
   window,
-  TreeItemCollapsibleState
+  TreeItemCollapsibleState,
+  TreeViewVisibilityChangeEvent
 } from "vscode";
 import { BaseNode } from "../nodes/baseNode";
 import { CustomJQLTreeId } from "../../constants";
@@ -22,6 +23,7 @@ export class CustomJQLRoot
     this._tree = window.createTreeView(CustomJQLTreeId, {
       treeDataProvider: this
     });
+    this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
   }
 
   getTreeItem(element: BaseNode | CustomJQLTree) {
@@ -62,5 +64,14 @@ export class CustomJQLRoot
     this._children.forEach((child: CustomJQLTree) => {
       child.dispose();
     });
+  }
+
+  async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+    this._children.forEach((child: CustomJQLTree) => {
+      child.setVisibility(event.visible);
+    });
+    if (event.visible) {
+      this.refresh();
+    }
   }
 }

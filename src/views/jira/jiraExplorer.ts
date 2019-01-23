@@ -10,11 +10,16 @@ import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { Logger } from "../../logger";
 import { CustomJQLRoot } from "./customJqlRoot";
+import { Time } from '../../util/time';
+
+const defaultRefreshInterval = 5 * Time.MINUTES;
 
 export class JiraExplorer extends Disposable {
 
     private _trees:RefreshableTree[] = [];
     private _disposable:Disposable;
+    private _timer: any | undefined;
+    private _refreshInterval = defaultRefreshInterval;
 
     constructor() {
         super(() => this.dispose());
@@ -60,6 +65,24 @@ export class JiraExplorer extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
+        if (initializing ||
+             configuration.changed(e, 'jira.explorer.refreshInterval') ||
+             configuration.changed(e, 'jira.explorer.enabled')) {
+            this._refreshInterval = Container.config.jira.explorer.refreshInterval * Time.MINUTES;
+            const enabled = Container.config.jira.explorer.enabled;
+            
+            if (this._refreshInterval <= 0) {
+                this._refreshInterval = 0;
+            }
+
+            if (this._refreshInterval === 0 || !enabled) {
+                this.stopTimer();
+            } else {
+                this.stopTimer();
+                this.startTimer();
+            }            
+        }
+
         if(initializing) {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
@@ -99,6 +122,21 @@ export class JiraExplorer extends Disposable {
             Logger.debug('setting login tree', !isLoggedIn);
             setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
             this.refresh();
+        }
+    }
+
+    private startTimer() {
+        if (this._refreshInterval > 0 && !this._timer) {
+            this._timer = setInterval(() => {
+                this.refresh();
+            }, this._refreshInterval);
+        }
+    }
+
+    private stopTimer() {
+        if (this._timer) {
+            clearInterval(this._timer);
+            this._timer = undefined;
         }
     }
 }
