@@ -2,8 +2,12 @@ import React from "react";
 import { SiteJQL, emptyJQLEntry, JQLEntry } from "../../../config/model";
 import Button from "@atlaskit/button";
 import { Checkbox } from "@atlaskit/checkbox";
+import Tooltip from '@atlaskit/tooltip';
+import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled';
+import TrashIcon from '@atlaskit/icon/glyph/trash';
 import EditJQL from "./EditJQL";
 import { v4 } from "uuid";
+import { ButtonGroup } from "@atlaskit/button";
 
 type changeObject = { [key: string]: any };
 
@@ -214,26 +218,26 @@ export default class CustomJQL extends React.Component<
 
         <div style={{ flexGrow: 1 }}>{element.name}</div>
 
-        <div>
-          <Button
-            className="ak-button"
-            onClick={() => {
-              this.onEditQuery(element.id);
-            }}
-          >
-            Edit
-          </Button>
-        </div>
-        <div>
-          <Button
-            className="ak-button"
-            onClick={() => {
-              this.deleteQuery(element.id);
-            }}
-          >
-            Delete
-          </Button>
-        </div>
+        <ButtonGroup>
+          <Tooltip content="Edit">
+            <Button
+              className="ak-button"
+              iconBefore={<EditFilledIcon label="edit" />}
+              onClick={() => {
+                this.onEditQuery(element.id);
+              }}
+            />
+          </Tooltip>
+          <Tooltip content="Delete">
+            <Button
+              className="ak-button"
+              iconBefore={<TrashIcon label="delete" />}
+              onClick={() => {
+                this.deleteQuery(element.id);
+              }}
+            />
+          </Tooltip>
+        </ButtonGroup>
       </div>
     );
   }
