@@ -613,6 +613,14 @@
     lodash.set "^4.3.2"
     prop-types "^15.5.10"
 
+"@atlaskit/tag-group@^6.0.8":
+  version "6.0.8"
+  resolved "https://registry.yarnpkg.com/@atlaskit/tag-group/-/tag-group-6.0.8.tgz#47737e7c3758cb90c0c8be050cbba5f5e838a047"
+  integrity sha512-jGQSG+AJxQc0LdFoOULmS/9wCt/s3seakjS25MNaYBAsFuimsil/6oq/WJyQ2RGMTBNmKOxzVsztIQYumKH3Iw==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+
 "@atlaskit/tag@^6.1.0":
   version "6.1.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/tag/-/tag-6.1.2.tgz#9b265e48731f66814967850106f971d831d76355"

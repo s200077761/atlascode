@@ -585,6 +585,7 @@
         "@atlaskit/status": "^0.2.11",
         "@atlaskit/table-tree": "^5.0.4",
         "@atlaskit/tag": "^6.1.0",
+        "@atlaskit/tag-group": "^6.0.8",
         "@atlaskit/textarea": "^0.2.3",
         "@atlaskit/textfield": "^0.1.5",
         "@atlaskit/tooltip": "^12.1.9",
