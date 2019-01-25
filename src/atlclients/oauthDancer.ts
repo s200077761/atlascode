@@ -11,6 +11,8 @@ import { Resources } from '../resources';
 import { ProductBitbucket, ProductJira } from '../constants';
 import { Time } from '../util/time';
 
+const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file' : 'vscode://file';
+
 export class OAuthDancer {
     private _srv: http.Server | undefined;
     public _authInfo: authinfo.AuthInfo | undefined;
@@ -120,7 +122,8 @@ export class OAuthDancer {
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductBitbucket
+                    product: ProductBitbucket,
+                    vscodeurl: vscodeurl
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
@@ -129,7 +132,8 @@ export class OAuthDancer {
             _app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductBitbucket
+                    product: ProductBitbucket,
+                    vscodeurl: vscodeurl
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
@@ -138,7 +142,8 @@ export class OAuthDancer {
             _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
                 Logger.debug("got jira callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductJira
+                    product: ProductJira,
+                    vscodeurl: vscodeurl
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
@@ -148,7 +153,8 @@ export class OAuthDancer {
                 Logger.debug("got jira error");
                 res.send(Resources.html.get('authFailureHtml')!({
                     errMessage: "We weren't able to authorize your account.",
-                    actionMessage: 'Give it a moment and try again.'
+                    actionMessage: 'Give it a moment and try again.',
+                    vscodeurl: vscodeurl
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
@@ -158,7 +164,8 @@ export class OAuthDancer {
                 Logger.debug("oauth timed out");
                 res.send(Resources.html.get('authFailureHtml')!({
                     errMessage: 'Authorization did not complete in the time alotted.',
-                    actionMessage: 'Please try again.'
+                    actionMessage: 'Please try again.',
+                    vscodeurl: vscodeurl
                 }));
                 this.shutdown();
                 reject("authentication timed out");

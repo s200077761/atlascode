@@ -18,6 +18,11 @@
             </br>
             {{actionMessage}}
         </p>
+        <p>
+            <a href="{{vscodeurl}}" class="ak-button ak-button__appearance-primary">
+              Back to VS Code
+            </a>
+        </p>
     </main>
 </body>
 <!-- <script>
@@ -57,6 +62,67 @@
         font-size: 14px;
         letter-spacing: -0.005em;
         line-height: 20px;
+    }
+
+    .ak-button {
+        align-items: baseline;
+        box-sizing: border-box;
+        border-radius: 3px;
+        border-width: 0;
+        display: inline-flex;
+        font-style: normal;
+        font-size: inherit;
+        height: 2.28571429em;
+        line-height: 2.28571429em;
+        margin: 0;
+        outline: none;
+        padding: 0 12px;
+        text-align: center;
+        transition: background 0.1s ease-out, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
+        user-select: none;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    .ak-button:hover {
+        cursor: pointer;
+        transition: background 0s ease-out, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38);
+    }
+    .ak-button:active {
+        transition-duration: 0s;
+    }
+    .ak-button:focus {
+        outline: none;
+        transition-duration: 0s, 0.2s;
+    }
+    .ak-button[disabled] {
+        cursor: not-allowed;
+    }
+    .ak-button__appearance-primary {
+        background: #0052CC;
+        color: #FFFFFF;
+        text-decoration: none;
+    }
+    .ak-button__appearance-primary:hover {
+        background: #0065FF;
+    }
+    .ak-button__appearance-primary:active {
+        background: #0747A6;
+        color: #FFFFFF;
+    }
+    .ak-button__appearance-primary:focus {
+        box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.6);
+    }
+    .ak-button__appearance-primary[disabled],
+    .ak-button__appearance-primary[disabled]:active,
+    .ak-button__appearance-primary[disabled]:hover {
+        background: #0052CC;
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+    }
+    .ak-button__appearance-primary[disabled]:focus,
+    .ak-button__appearance-primary[disabled]:active:focus,
+    .ak-button__appearance-primary[disabled]:hover:focus {
+        box-shadow: 0 0 0 2px rgba(38, 132, 255, 0.6);
     }
 </style>
 
