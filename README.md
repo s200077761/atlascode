@@ -73,7 +73,7 @@ The full thing should look something like:
 Save the file and restart VSCode. You're now ready to install.
 
 ### Option 2 (NOT recommended) - use VSCode Insiders
-You can install Atlascode within [VSCode Insiders](https://code.visualstudio.com/insiders) without any modifications. HOWEVER, the Insiders builds are extremely volitale and buggy so we don't reccomend this.
+You can install Atlascode within [VSCode Insiders](https://code.visualstudio.com/insiders) without any modifications. **However**, the Insiders builds are extremely volitale and buggy so we don't reccomend this.
 
 OK, finally, to actually install the thing, open the Extensions drawer in VSCode and use the "meatball" menu in the top right corner to select "Install from VSIX".  Then find the atlascode vsix and install it.
 
