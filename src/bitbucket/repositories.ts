@@ -29,4 +29,17 @@ export namespace RepositoriesApi {
 
         return data.values;
     }
+
+    export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.repositories.getPullrequestsForCommit({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            commit: commitHash
+        });
+
+        return data.values || [];
+    }
 }

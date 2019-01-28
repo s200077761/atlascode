@@ -594,7 +594,7 @@
         "@deviniti/jql-autocomplete": "^1.0.2",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
-        "bitbucket": "^1.5.0",
+        "bitbucket": "^1.8.0",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
