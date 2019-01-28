@@ -11,6 +11,7 @@ declare module '@atlaskit/dropdown-menu';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/icon';
 declare module '@atlaskit/tag';
+declare module '@atlaskit/tag-group';
 declare module '@atlaskit/tooltip';
 declare module '@atlaskit/theme';
 declare module '@atlaskit/size-detector';

@@ -2,6 +2,8 @@ import * as React from "react";
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
 import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import Tag from "@atlaskit/tag";
+import TagGroup from "@atlaskit/tag-group";
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
 import {
@@ -42,6 +44,8 @@ const emptyIssueData: IssueData = {
   labels: [],
   attachments: [],
   transitions: [],
+  components: [],
+  fixVersions: [],
   workingSite: emptyWorkingSite,
   isAssignedToMe: false,
   childIssues: []
@@ -148,8 +152,24 @@ export default class JiraIssuePage extends WebviewComponent<
           primaryText={issue.assignee.displayName || "Unassigned"}
         />
         {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+        <h3>Labels</h3>
+        {this.tags(issue.labels)}
+        <h3>Components</h3>
+        {this.tags(issue.components.map(c => c.name))}
+        <h3>Fix Versions</h3>
+        {this.tags(issue.fixVersions.map(v => v.name))}
       </div>
     );
+  }
+
+  tags(items: string[]) {
+    if (items.length === 0) {
+      return <span className="no-tags">None</span>;
+    }
+    return (
+    <TagGroup>
+      {items.map(i => <Tag text={i} />)}
+    </TagGroup>);
   }
 
   render() {

@@ -63,6 +63,11 @@ div.icon-text img {
   background: var(--vscode-button-background--50) !important;
 }
 
+.no-tags {
+  color: var(--vscode-input-placeholderForeground);
+  padding-left: 5pt;
+}
+
 div#jql-row-container {
   margin-top: 2pt;
   margin-bottom: 2pt;

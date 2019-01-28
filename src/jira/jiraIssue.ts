@@ -70,12 +70,14 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         labels: [],
         attachments: [],
         transitions: [],
+        components: [],
+        fixVersions: [],
         workingSite: emptyWorkingSite
     };
 
     export type issueOrKey = Issue | string;
 
-    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority"];
+    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
     export const issueExpand = "transitions";
 
     export function isIssue(a:any): a is Issue {
@@ -138,6 +140,16 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             });
         }
 
+        let components: IdName[] = [];
+        if (issueJson.fields.components) {
+            components = issueJson.fields.components.map((componentJson: any) => {return {id: componentJson.id, name: componentJson.name};});
+        }
+
+        let fixVersions: IdName[] = [];
+        if (issueJson.fields.fixVersions) {
+            fixVersions = issueJson.fields.fixVersions.map((fixVersion: any) => {return {id: fixVersion.id, name: fixVersion.name};});
+        }
+        
         return {
             key: issueJson.key,
             id: issueJson.id,
@@ -154,6 +166,8 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             labels: issueJson.fields.labels,
             attachments: attachments,
             transitions: transitions,
+            components: components,
+            fixVersions: fixVersions,
             workingSite: workingSite
         };
     }
@@ -175,6 +189,8 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         labels: string[];
         attachments: Attachment[];
         transitions: Transition[];
+        components: IdName[];
+        fixVersions: IdName[];
         workingSite: WorkingSite;
     }
 
@@ -228,4 +244,9 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
       isInitial: boolean;
       name: string;
       to: Status;
+    }
+
+    export interface IdName {
+        id: string;
+        name: string;
     }
