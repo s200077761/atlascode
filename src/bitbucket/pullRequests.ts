@@ -148,6 +148,21 @@ export namespace PullRequestApi {
         return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
+    export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb:Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.pullrequests.listStatuses({
+            pull_request_id: pr.data.id!,
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: maxItemsSupported.comments
+        });
+
+        const statuses = data.values || [];
+        return statuses.filter(status => status.type === 'build');
+    }
+
     export function getBitbucketRemotes(repository: Repository): Remote[] {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;

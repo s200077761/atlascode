@@ -153,9 +153,10 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     private async postAugmentedState(pr: PullRequest) {
         let promises = Promise.all([
             PullRequestApi.getCommits(pr),
-            PullRequestApi.getComments(pr)
+            PullRequestApi.getComments(pr),
+            PullRequestApi.getBuildStatuses(pr)
         ]);
-        const [commits, comments] = await promises;
+        const [commits, comments, buildStatuses] = await promises;
         const issues = await this.fetchRelatedIssues(pr, comments);
         this._state.prData = {
             ...this._state.prData,
@@ -164,7 +165,8 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                 commits: commits.data,
                 comments: comments.data,
                 relatedJiraIssues: issues,
-                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR has more items (commits/comments) than what is supported by this extension.' : undefined
+                buildStatuses: buildStatuses,
+                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
             }
         };
 

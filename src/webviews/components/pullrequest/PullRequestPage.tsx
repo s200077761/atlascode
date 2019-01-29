@@ -20,6 +20,7 @@ import BranchInfo from './BranchInfo';
 import { Issue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import { Spacer, BlockCentered, InlineFlex } from '../styles';
+import BuildStatus from './BuildStatus';
 
 type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
@@ -117,7 +118,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
-                                bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
+                                bottomBar={
+                                    <InlineFlex>
+                                        <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
+                                        <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
+                                    </InlineFlex>
+                                }
                             >
                                 <p>{pr.title}</p>
                             </PageHeader>
