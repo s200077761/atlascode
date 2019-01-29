@@ -19,6 +19,7 @@ import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 import { ButtonGroup } from '@atlaskit/button';
+import PipelinesConfig from './PipelinesConfig';
 
 type changeObject = {[key: string]:any};
 
@@ -154,6 +155,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
+                            trigger={Trigger('Pipeline Explorer','configure the Bitbucket Pipeline explorer')}
+                            open={true}>
+                            <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

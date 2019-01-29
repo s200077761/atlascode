@@ -12,6 +12,7 @@ export const OpenIssuesTreeId = 'atlascode.views.jira.openIssues';
 export const CustomJQLTreeId = 'atlascode.views.jira.customJql';
 export const AssignedIssuesTreeId = 'atlascode.views.jira.assignedIssues';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
+export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
 export const ProductJira = 'Jira';
 export const ProductBitbucket = 'Bitbucket';
@@ -19,6 +20,7 @@ export const ProductBitbucket = 'Bitbucket';
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',
     BitbucketExplorer = 'atlascode:bitbucketExplorerEnabled',
+    PipelineExplorer = 'atlascode:pipelineExplorerEnabled',
     OpenIssuesTree = 'atlascode:openIssuesTreeEnabled',
     AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
