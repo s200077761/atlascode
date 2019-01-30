@@ -319,6 +319,15 @@ hr {
   padding: 0px !important;
 }
 
+.ak-inline-dialog [class^="styled__Container"] {
+  color: var(--vscode-dropdown-color) !important;
+  background-color: var(--vscode-dropdown-background) !important;
+}
+
+.ak-inline-dialog [class^="styled__Container"] a {
+  color: var(--vscode-dropdown-color) !important;
+}
+
 /* img::after is triggered only if img loading fails */
 .bitbucket-page img::after {
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
