@@ -34,22 +34,24 @@ export default class BuildStatus extends React.Component<{ buildStatuses?: Bitbu
                 ? <Tooltip content={`${successes.length} of ${this.props.buildStatuses.length} ${buildString} passed`} position='top'>{successIcon}</Tooltip>
                 : <Tooltip content={`${this.props.buildStatuses.length - successes.length} of ${this.props.buildStatuses.length} ${buildString} unsuccessful`} position='top'>{errorIcon}</Tooltip>;
 
-        return <InlineDialog
-            content={this.props.buildStatuses.map(status =>
-                <Button
-                    appearance='link'
-                    href={status.url}
-                    iconBefore={status.state === 'INPROGRESS'
-                        ? inprogressIcon
-                        : status.state === 'SUCCESSFUL'
-                            ? successIcon
-                            : errorIcon}
-                >
-                    {status.name}
-                </Button>)}
-            isOpen={this.state.dialogOpen}
-            onClose={this.closeDialog}>
-            <Button appearance='link' iconBefore={resultIcon} onClick={this.toggleDialog} />
-        </InlineDialog>;
+        return <div className='ak-inline-dialog'>
+            <InlineDialog
+                content={this.props.buildStatuses.map(status =>
+                    <Button
+                        appearance='link'
+                        href={status.url}
+                        iconBefore={status.state === 'INPROGRESS'
+                            ? inprogressIcon
+                            : status.state === 'SUCCESSFUL'
+                                ? successIcon
+                                : errorIcon}
+                    >
+                        {status.name}
+                    </Button>)}
+                isOpen={this.state.dialogOpen}
+                onClose={this.closeDialog}>
+                <Button appearance='link' iconBefore={resultIcon} onClick={this.toggleDialog} />
+            </InlineDialog>
+        </div>;
     }
 }
