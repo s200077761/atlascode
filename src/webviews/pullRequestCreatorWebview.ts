@@ -4,14 +4,13 @@ import { window, Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
-import { CreatePRData, RepoData, CreatePullRequestResult, CommitsResult } from '../ipc/prMessaging';
+import { CreatePRData, RepoData, CommitsResult } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
-import { BitbucketExplorerLocation } from '../config/configuration';
 import { Commands } from '../commands';
 
-export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CreatePullRequestResult | CommitsResult,Action> {
+export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult,Action> {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -71,21 +70,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                     }
                     break;
                 }
-                case 'showPullRequestsExplorer': {
-                    handled = true;
-                    this.showPullRequestsExplorer().catch((e: any) => {
-                        Logger.error(new Error(`error showing pull requests explorer: ${e}`));
-                    });
-                    break;
-                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
                         this.createPullRequest(e)
-                            .then(result => this.postMessage({
-                                type: 'createPullRequestResult',
-                                url: result!
-                            }))
                             .catch((e: any) => {
                                 Logger.error(new Error(`error creating pull request: ${e}`));
                                 window.showErrorMessage('Pull request creation failed');
@@ -99,14 +87,6 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         return handled;
     }
 
-    private async showPullRequestsExplorer() {
-        const openLocationCommand = Container.config.bitbucket.explorer.location === BitbucketExplorerLocation.Atlascode
-            ? 'workbench.view.extension.atlascode-drawer'
-            : 'workbench.view.scm';
-        commands.executeCommand(openLocationCommand);
-        commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-
-    }
     private async fetchDetails(fetchDetailsAction: FetchDetails) {
         const {remote, sourceBranch, destinationBranch} = fetchDetailsAction;
         const sourceBranchName = sourceBranch.name!;
@@ -149,6 +129,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         };
 
         const result = await PullRequestApi.create({repository: repo, remote: remote, data: pr});
-        return result.data.links!.html!.href;
+        this.hide();
+        commands.executeCommand(Commands.BitbucketShowPullRequestDetails, result);
     }
 }
