@@ -18,6 +18,7 @@ import WelcomeConfig from './WelcomeConfig';
 import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
+import { ButtonGroup } from '@atlaskit/button';
 
 type changeObject = {[key: string]:any};
 
@@ -83,13 +84,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
     }
 
     private jiraButton():any {
-        if (this.state.isJiraAuthenticated) {
-            return(<Button className='ak-button' 
-                onClick={this.handleJiraLogout}>Logout</Button>);
-        } else {
-            return (<Button className='ak-button' 
-                onClick={this.handleJiraLogin}>Authenticate</Button>);
-        }
+        const buttonText = this.state.isJiraAuthenticated ? 'Authenticate with another site' : 'Authenticate';
+
+        return (<ButtonGroup>
+            <Button className='ak-button' onClick={this.handleJiraLogin}>{buttonText}</Button>
+            <Button className='ak-button' onClick={this.handleJiraLogout}>Logout</Button>
+        </ButtonGroup>);
     }
 
     private bitBucketButton():any {
@@ -128,7 +128,6 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             open={true}>
                             <h3>Jira</h3>
                             {this.jiraButton()}
-                            <p>to authenticate with a new Jira working site log out of your current site and log in to the new site</p>
                             <h3>Bitbucket</h3>
                             {this.bitBucketButton()}
                             </Collapsible>
