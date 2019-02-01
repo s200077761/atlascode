@@ -39,7 +39,7 @@ export async function activate(context: ExtensionContext) {
     if (gitExtension) {
         const gitApi = gitExtension.exports.getAPI(1);
         const bbContext = new BitbucketContext(gitApi);
-        context.subscriptions.push(bbContext);
+        Container.initializeBitbucket(bbContext);
     } else {
         Logger.error(new Error('vscode.git extension not found'));
     }

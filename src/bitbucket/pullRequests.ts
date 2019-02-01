@@ -4,7 +4,7 @@ import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments
 import { Container } from "../container";
 import { Logger } from '../logger';
 
-const bitbucketHosts = new Map()
+export const bitbucketHosts = new Map()
     .set("bitbucket.org", async () => {
         const bb = await Container.clientManager.bbrequest();
         if (!bb) { return Promise.reject(apiConnectivityError); }
@@ -15,13 +15,13 @@ const bitbucketHosts = new Map()
         if (!bb) { return Promise.reject(apiConnectivityError); }
         return bb;
     });
-const apiConnectivityError = new Error('cannot connect to bitbucket api');
-const dummyRemote = { name: '', isReadOnly: true };
-const maxItemsSupported = {
+export const maxItemsSupported = {
     commits: 100,
     comments: 100,
     fileChanges: 100
 };
+const apiConnectivityError = new Error('cannot connect to bitbucket api');
+const dummyRemote = { name: '', isReadOnly: true };
 
 // had to do this as the library introduced a bug with latest update
 export function GitUrlParse(url: string): gup.GitUrl {
@@ -34,7 +34,7 @@ export function GitUrlParse(url: string): gup.GitUrl {
 export namespace PullRequestApi {
 
     export async function getList(repository: Repository): Promise<PaginatedPullRequests> {
-        Logger.debug('getting PRs...');
+        Logger.debug('PullRequestApi.getList...');
         let remotes = getBitbucketRemotes(repository);
 
         Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
@@ -47,12 +47,12 @@ export namespace PullRequestApi {
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
-                Logger.debug(`got ${prs.length} PRs for remote: ${remote.name}`);
+                Logger.debug(`PullRequestApi.getList: got ${prs.length} PRs for remote: ${remote.name}`);
                 return { repository: repository, remote: remote, data: prs, next: next };
             }
         }
 
-        Logger.debug('no PRs found');
+        Logger.debug('PullRequestApi.getList: no PRs found');
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
@@ -63,6 +63,29 @@ export namespace PullRequestApi {
         //@ts-ignore
         const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
         return { repository: repository, remote: remote, data: prs, next: data.next };
+    }
+
+    export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
+        Logger.debug('PullRequestApi.getLatest...');
+        let remotes = getBitbucketRemotes(repository);
+
+        Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
+        for (let i = 0; i < remotes.length; i++) {
+            let remote = remotes[i];
+            let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const bb = await bitbucketHosts.get(parsed.source)!();
+            const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name, pagelen: 1, sort: '-created_on' });
+            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
+            const next = data.next;
+            // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
+            if (prs.length > 0) {
+                Logger.debug(`PullRequestApi.getLatest: got ${prs.length} PRs for remote: ${remote.name}`);
+                return { repository: repository, remote: remote, data: prs, next: next };
+            }
+        }
+
+        Logger.debug('PullRequestApi.getLatest: no PRs found');
+        return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
     export async function get(pr: PullRequest): Promise<PullRequest> {
@@ -125,12 +148,46 @@ export namespace PullRequestApi {
         return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
     }
 
+    export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb:Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.pullrequests.listStatuses({
+            pull_request_id: pr.data.id!,
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: maxItemsSupported.comments
+        });
+
+        const statuses = data.values || [];
+        return statuses.filter(status => status.type === 'build');
+    }
+
     export function getBitbucketRemotes(repository: Repository): Remote[] {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
             let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
             return parsed && bitbucketHosts.has(parsed.source);
         });
+    }
+
+    export async function create(pr: PullRequest): Promise<PullRequest> {
+        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.pullrequests.create({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            _body: {
+                type: pr.data.type,
+                title: pr.data.title,
+                summary: pr.data.summary,
+                source: pr.data.source,
+                destination: pr.data.destination
+            }
+        });
+
+        return {...pr, ...{data: data}};
     }
 
     export async function approve(pr: PullRequest) {

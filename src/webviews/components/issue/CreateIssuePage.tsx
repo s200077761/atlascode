@@ -3,7 +3,7 @@ import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
-import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
+import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueByKeyAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
 import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
 import Select, { AsyncCreatableSelect,  AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
@@ -17,7 +17,7 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators } from '../fieldValidators';
 
-type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
+type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueByKeyAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
 type IssueType = { id:string, name:string, iconUrl:string };
 
@@ -71,7 +71,7 @@ const UserOption = (props:any) => {
       <div ref={props.innerRef} {...props.innerProps} style={{display:'flex', 'align-items':'center'}}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{marginLeft:'4px'}}>{props.data.name} ({props.data.displayName})</span></div>
     </Option>
     );
-}
+};
 
 const UserValue = (props:any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
@@ -80,7 +80,7 @@ const UserValue = (props:any) => {
         <div ref={props.innerRef} {...props.innerProps} style={{display:'flex', 'align-items':'center'}}><Avatar size='small'  borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{marginLeft:'4px'}}>{props.data.name} ({props.data.displayName})</span></div>
         </components.SingleValue>
     );
-}
+};
 
 // used to chain onChange function so we can provide custom functionality after internal state changes
 const chain = (...fns:any[]) => (...args:any[]) => fns.forEach(fn => fn(...args));
@@ -354,7 +354,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                     <GridColumn medium={8}>
                         <div>
                             <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
-                                Issue <Button appearance='link' onClick={() => this.postMessage({action:'openIssue',key:this.state.createdIssue.key})}>{this.state.createdIssue.key}</Button> has been created.
+                                Issue <Button appearance='link' onClick={() => this.postMessage({action:'openJiraIssueByKey',key:this.state.createdIssue.key})}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
                             <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
                                 Error: <div><pre>{JSON.stringify(this.state.errorDetails,undefined,4)}</pre></div>

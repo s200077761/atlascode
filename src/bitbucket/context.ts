@@ -9,15 +9,16 @@ import { PullRequestApi } from './pullRequests';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { setCommandContext, CommandContext, PullRequestTreeViewId } from '../constants';
-import { createPullRequest } from '../commands/bitbucket/createPullRequest';
 import { AuthProvider } from '../atlclients/authInfo';
 import { viewScreenEvent } from '../analytics';
 import { Time } from '../util/time';
+import { PullRequestCreatedNotifier } from './prCreatedNotifier';
 
 const explorerLocation = {
     sourceControl: 'SourceControl',
     atlascode: 'Atlascode'
 };
+const defaultRefreshInterval = 5 * Time.MINUTES;
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -29,14 +30,16 @@ export class BitbucketContext extends Disposable {
     private _repoMap: Map<string, Repository> = new Map();
     private _tree:TreeView<BaseNode> | undefined;
     private _dataProvider:PullRequestNodeDataProvider;
+    private _prCreatedNotifier: PullRequestCreatedNotifier;
     private _disposable:Disposable;
     private _timer: any | undefined;
-    private _refreshInterval = 5 * Time.MINUTES;
+    private _refreshInterval = defaultRefreshInterval;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
         this._gitApi = gitApi;
         this._dataProvider = new PullRequestNodeDataProvider(this);
+        this._prCreatedNotifier = new PullRequestCreatedNotifier(this);
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
@@ -57,12 +60,13 @@ export class BitbucketContext extends Disposable {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addTreeItems(result);
             },this),
-            commands.registerCommand(Commands.CreatePullRequest, () => createPullRequest(this)),
+            commands.registerCommand(Commands.CreatePullRequest, Container.pullRequestCreatorView.createOrShow, Container.pullRequestCreatorView)
         );
 
         this._disposable = Disposable.from(
             this._gitApi.onDidOpenRepository(this.refreshRepos, this),
-            this._gitApi.onDidCloseRepository(this.refreshRepos, this)
+            this._gitApi.onDidCloseRepository(this.refreshRepos, this),
+            this._prCreatedNotifier
         );
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
@@ -101,6 +105,19 @@ export class BitbucketContext extends Disposable {
         if(initializing || configuration.changed(e, 'bitbucket.explorer.location')) {
             this.setLocationContext();
         }
+
+        if (initializing || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
+            if (Container.config.bitbucket.explorer.refreshInterval === 0) {
+                this._refreshInterval = 0;
+                this.stopTimer();
+            } else {
+                this._refreshInterval = Container.config.bitbucket.explorer.refreshInterval > 0
+                    ? Container.config.bitbucket.explorer.refreshInterval * Time.MINUTES
+                    : defaultRefreshInterval;
+                this.stopTimer();
+                this.startTimer();
+            }
+        }
     }
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
@@ -128,7 +145,7 @@ export class BitbucketContext extends Disposable {
     }
 
     private startTimer() {
-        if (!this._timer) {
+        if (!this._timer && this._refreshInterval > 0) {
             this._timer = setInterval(() => {
                 if (this._tree && this._dataProvider) {
                     this._onDidChangeBitbucketContext.fire();

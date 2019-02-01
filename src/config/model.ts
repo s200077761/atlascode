@@ -33,6 +33,7 @@ export interface JiraConfig {
     workingProject: WorkingProject;
     workingSite: WorkingSite;
     explorer:JiraExplorer;
+    issueMonitor:JiraIssueMonitor;
     statusbar:JiraStatusBar;
     hover: JiraHover;
     customJql: SiteJQL[];
@@ -47,10 +48,15 @@ export interface JiraStatusBar {
     showLogin:boolean;
 }
 
+export interface JiraIssueMonitor {
+    refreshInterval:number;
+}
+
 export interface JiraExplorer {
     enabled:boolean;
     showOpenIssues:boolean;
     showAssignedIssues:boolean;
+    refreshInterval:number;
 }
 
 export interface JiraHover {
@@ -59,7 +65,14 @@ export interface JiraHover {
 
 export interface SiteJQL {
     siteId: string;
-    jql: string[];
+    jql: JQLEntry[];
+}
+
+export interface JQLEntry {
+    id: string;
+    enabled: boolean;
+    name: string;
+    query: string;
 }
 
 export interface BitbucketConfig {
@@ -70,12 +83,19 @@ export interface BitbucketConfig {
 
 export interface BitbucketExplorer {
     enabled:boolean;
+    refreshInterval:number;
     location:BitbucketExplorerLocation;
     relatedJiraIssues:BitbucketRelatedJiraIssues;
+    notifications:BitbucketNotifications;
 }
 
 export interface BitbucketRelatedJiraIssues {
     enabled:boolean;
+}
+
+export interface BitbucketNotifications {
+    refreshInterval:number;
+    pullRequestCreated:boolean;
 }
 
 export interface BitbucketStatusBar {
@@ -132,7 +152,12 @@ export function notEmptyProject(p: WorkingProject): p is WorkingProject {
 export const emptyJiraExplorer: JiraExplorer = {
     enabled:true,
     showOpenIssues:true,
-    showAssignedIssues:true
+    showAssignedIssues:true,
+    refreshInterval: 5
+};
+
+export const emtpyIssueMonitor: JiraIssueMonitor = {
+    refreshInterval: 5
 };
 
 export const emptyJiraStatusBar: JiraStatusBar = {
@@ -148,10 +173,18 @@ export const emptyJiraHover: JiraHover = {
     enabled: true
 };
 
+export const emptyJQLEntry: JQLEntry = {
+    id: "",
+    enabled:true,
+    name:"",
+    query:""
+};
+
 export const emptyJiraConfig:JiraConfig = {
     workingProject: emptyWorkingProject,
     workingSite: emptyWorkingSite,
     explorer: emptyJiraExplorer,
+    issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: []
@@ -161,10 +194,17 @@ export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true
 };
 
+export const emptyBitbucketNotfications: BitbucketNotifications = {
+    refreshInterval: 10,
+    pullRequestCreated: true
+};
+
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
+    refreshInterval:5,
     location:BitbucketExplorerLocation.Atlascode,
-    relatedJiraIssues: emptyRelatedJiraIssues
+    relatedJiraIssues: emptyRelatedJiraIssues,
+    notifications: emptyBitbucketNotfications
 };
 
 export const emptyBitbucketStatusBar: BitbucketStatusBar = {

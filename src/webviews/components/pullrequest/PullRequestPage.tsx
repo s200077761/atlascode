@@ -4,35 +4,31 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Panel from '@atlaskit/panel';
-import Tag from '@atlaskit/tag';
+import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
+import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
 import { Approve, Merge, Checkout, PostComment } from '../../../ipc/prActions';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
-import styled from 'styled-components';
+import { Issue } from '../../../jira/jiraModel';
+import IssueList from '../issue/IssueList';
+import { Spacer, BlockCentered, InlineFlex } from '../styles';
+import BuildStatus from './BuildStatus';
 
-export const Spacer = styled.div`
-margin: 10px;
-`;
-
-export const InlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-`;
-
-type Emit = Approve | Merge | Checkout | PostComment;
+type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '', currentBranch: '' }, isApproveButtonLoading: false, isMergeButtonLoading: false };
+        this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false };
     }
 
     handleApprove = () => {
@@ -57,6 +53,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
+    handleIssueClicked = (issue: Issue) => {
+        this.postMessage({
+            action: 'openJiraIssue',
+            issue: issue
+        });
+    }
+
     onMessageReceived(e: Receive): void {
         if (isPRData(e)) {
             this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false });
@@ -69,6 +72,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     render() {
         const pr = this.state.pr.pr!;
         if (!pr) { return <div></div>; }
+        const isPrOpen = pr.state === "OPEN";
 
         let currentUserApproved = pr.participants!
             .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
@@ -78,15 +82,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             <InlineFlex>
                 <Reviewers {...this.state.pr} />
                 <Spacer>
-                    {!currentUserApproved
-                        ? <Button className='ak-button' isLoading={this.state.isApproveButtonLoading} onClick={this.handleApprove}>Approve</Button>
-                        : <p> <Tag text="✔ You approved this PR" color="green" /></p>
-                    }
+                    <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
+                        <Button className='ak-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                            isDisabled={currentUserApproved}
+                            isLoading={this.state.isApproveButtonLoading}
+                            onClick={this.handleApprove}>
+                            Approve
+                        </Button>
+                    </Tooltip>
                 </Spacer>
-                {pr.state === "OPEN"
-                    ? <Button className='ak-button' isLoading={this.state.isMergeButtonLoading} onClick={this.handleMerge}>Merge</Button>
-                    : <Button className='ak-button' isDisabled>{pr.state}</Button>
-                }
+                <Button className='ak-button'
+                    isDisabled={!isPrOpen}
+                    isLoading={this.state.isMergeButtonLoading}
+                    onClick={this.handleMerge}>
+                    {isPrOpen ? 'Merge' : pr.state}
+                </Button>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
@@ -95,7 +105,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
                 <BreadcrumbsItem text={this.state.pr.pr!.destination!.repository!.name} key={this.state.pr.pr!.destination!.repository!.name} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />
-                <BreadcrumbsItem text="Pull requests" key="Pull requests" />
+                <BreadcrumbsItem text="Pull requests" key="Pull requests" href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />
                 <BreadcrumbsItem text={pr.id} key={pr.id} href={pr.links!.html!.href} />
             </BreadcrumbsStateless>
         );
@@ -108,23 +118,37 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
-                                bottomBar={<BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />}
+                                bottomBar={
+                                    <InlineFlex>
+                                        <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
+                                        <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
+                                    </InlineFlex>
+                                }
                             >
                                 <p>{pr.title}</p>
                             </PageHeader>
-                            <hr />
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>
-                            <hr />
-                            <Panel isDefaultExpanded header={<h3>Commits</h3>}>
-                                <Commits {...this.state.pr} />
-                            </Panel>
-                            <hr />
-                            <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                <Comments prData={this.state.pr} onComment={this.handlePostComment} />
-                                <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
-                            </Panel>
+                            {
+                                !this.state.pr.commits && !this.state.pr.comments && !this.state.pr.relatedJiraIssues
+                                    ? <BlockCentered><Spinner size="large" /></BlockCentered>
+                                    : <React.Fragment>
+                                        {
+                                            this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&
+                                            <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
+                                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+                                            </Panel>
+                                        }
+                                        <Panel isDefaultExpanded header={<h3>Commits</h3>}>
+                                            <Commits {...this.state.pr} />
+                                        </Panel>
+                                        <Panel isDefaultExpanded header={<h3>Comments</h3>}>
+                                            <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                                        </Panel>
+                                    </React.Fragment>
+                            }
                         </GridColumn>
                     </Grid>
                 </Page>

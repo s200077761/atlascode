@@ -3,16 +3,17 @@ import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Button from '@atlaskit/button';
+import { colors } from '@atlaskit/theme';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import { InlineFlex } from './ConfigPage';
-import { Spacer } from '../pullrequest/PullRequestPage';
-import {JiraIcon, BitbucketIcon} from '@atlaskit/logo';
+import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
+import JiraIcon from '@atlaskit/logo/dist/esm/JiraLogo/Icon';
+import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
-
-const bitbucketLogo:string =require('../images/bitbucket-logo.png');
-const strideLogo:string =require('../images/stride-logo.png');
+import IssuesIcon from '@atlaskit/icon/glyph/issues';
+import ArrowUpCircleIcon from '@atlaskit/icon/glyph/arrow-up-circle';
+import { Spacer, InlineFlex } from '../styles';
 
 type Emit = SubmitFeedbackAction | Action;
 export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
@@ -41,8 +42,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
     }
 
     public render() {
-        const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
-        const strideicon = <img src={strideLogo} width="17" height="12"/>;
+        const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
+        const strideicon = <StrideIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         const actionsContent =
             <InlineFlex>
@@ -62,6 +63,66 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
 
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
+                    <h3>🎉 What's New in 0.2.0 🎉</h3>
+                        <section>
+                            <h4><BitbucketIcon size="xsmall"/> Pull Request Explorer</h4>
+                            <ul>
+                                <li>🔥 Added + button on title bar for creating new pull requests</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><BitbucketIcon size="xsmall"/> Bitbucket Context Menus</h4>
+                            <ul>
+                                <li>🔥 Added right+click context menu for creating new pull requests</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><BitbucketIcon size="xsmall"/> 🔥Create Pull Request View</h4>
+                            <ul>
+                                <li>Added a new screen for creating pull requests</li>
+                                <li>Options to give the pull request a title and description before submitting</li>
+                                <li>Validates source branch by comparing local/remote changes</li>
+                                <li>Option to push local changes before submitting pull request</li>
+                                <li>Links to the pull request tree view when a pull request is created</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><BitbucketIcon size="xsmall"/> Pull Request Details View</h4>
+                            <ul>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Now shows related issues on pull request details screen</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><JiraIcon size="xsmall"/> Issue View</h4>
+                            <ul>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Now shows related issues for epics on issue view screen</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><JiraIcon size="xsmall"/> Issue Explorer</h4>
+                            <ul>
+                                <li>🔥 Added custom JQL treeview</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><PreferencesIcon size="small" label="configuration"/> Configuration</h4>
+                            <ul>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> added ability to configure jira auto-refresh time</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> added ability to configure bitbucket auto-refresh time</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> allow re-ordering of custom JQL queries</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> allow multiple custom JQL queries</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> allow re-ordering of custom JQL queries</li>
+                                <li>🔥 Update Jira explorer when custom JQL is updated</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4><IssuesIcon size="small" label="miscellaneous"/> Miscellaneous</h4>
+                            <ul>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Quick pick dropdown for selecting Jira project now allows searching all projects</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Added popup notification when new pull requests are detected</li>
+                                <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Use the new VS Code clipboard API instead of the library we're using for copying things</li>
+                            </ul>
+                        </section>
                     <h3>🎉 What's New in 0.1.1 🎉</h3>
                         <section>
                             <h4><JiraIcon size="xsmall"/> Issue View</h4>

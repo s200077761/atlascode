@@ -1,7 +1,11 @@
+import { Uri } from 'vscode';
 import { Backend } from './backend-base';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 import { FileDiffQueryParams } from '../../views/nodes/pullRequestNode';
 import { CommandBase } from '../command/command-base';
+import { Container } from '../../container';
+import { RepositoriesApi } from '../../bitbucket/repositories';
+import { PullRequestApi } from '../../bitbucket/pullRequests';
 
 export class GitBackend extends Backend {
   public static root = 'git rev-parse --show-toplevel';
@@ -54,15 +58,16 @@ export class GitBackend extends Backend {
       return queryParams.prId;
     }
 
-    const mergeRevision = await this.getMergeRevision(targetRevision);
-    const message = await this.getRevisionMessage(mergeRevision);
-
-    const match = message.match(/pull request #(\d+)/);
-    if (match) {
-      return parseInt(match[1], 10);
+    const repo = Container.bitbucketContext.getRepository(Uri.file(this.root));
+    const remotes = PullRequestApi.getBitbucketRemotes(repo!);
+    if (remotes.length > 0) {
+      const prs = await RepositoriesApi.getPullRequestsForCommit(remotes[0], targetRevision);
+      if (prs.length > 0) {
+        return prs[0].id!;
+      }
     }
 
-    throw new Error('Unable to determine the pull request where the commit was merged');
+    throw new Error('Unable to determine the pull request');
   }
 
   public async getRemoteList(): Promise<string[]> {
@@ -72,21 +77,4 @@ export class GitBackend extends Backend {
   public async getRevisionMessage(revision: string): Promise<string> {
     return await this.shell.output(`git show ${revision} --format="%s%n%n%b" --no-patch`);
   }
-
-  private async getMergeRevision(targetRevision: string): Promise<string> {
-    const defaultBranch = await this.getDefaultBranch();
-    const revspec = `${targetRevision}..${defaultBranch}`;
-
-    // First find the merge commit where the given commit was merged into the default branch.
-    const ancestryPath = await this.shell.lines(`git rev-list ${revspec} --ancestry-path --merges`);
-    const firstParent = await this.shell.lines(`git rev-list ${revspec} --first-parent --merges`);
-
-    const firstParentSet = new Set(firstParent);
-    const mergeRevision = ancestryPath.reverse().find(path => firstParentSet.has(path));
-    if (!mergeRevision) {
-      throw new Error('Unable to determine the merge commit');
-    }
-    return mergeRevision;
-  }
-
 }

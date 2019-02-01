@@ -4,7 +4,7 @@ import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction, isFetchQuery, isFetchUsersQuery } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchUsersQuery, isOpenIssueByKey } from '../ipc/issueActions';
 import { commands } from 'vscode';
 import { Commands } from '../commands';
 import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
@@ -212,9 +212,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                     }
                     break;
                 }
-                case 'openIssue': {
+                case 'openIssueByKey': {
                     handled = true;
-                    if(isOpenIssueAction(e)) {
+                    if(isOpenIssueByKey(e)) {
                         commands.executeCommand(Commands.ShowIssue,e.key);
                     }
                     break;

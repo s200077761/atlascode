@@ -3,10 +3,10 @@ import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Collapsible from 'react-collapsible';
 import Button from '@atlaskit/button';
+import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
-import styled from 'styled-components';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
@@ -16,9 +16,8 @@ import JiraHover from './JiraHover';
 import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import CustomJQL from './CustomJQL';
-
-const bitbucketLogo:string =require('../images/bitbucket-logo.png');
-const strideLogo:string =require('../images/stride-logo.png');
+import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
+import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 
 type changeObject = {[key: string]:any};
 
@@ -28,13 +27,6 @@ const Trigger = (heading:string,subheading:string) =>
     <p>{subheading}</p>
     </div>;
 
-export const InlineFlex = styled.div`
-display: inline-flex;
-align-items: center;
-justify-content: space-between;
-width: 100%;
-`;
-  
 type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | Action;
 export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},ConfigData> {
     constructor(props: any) {
@@ -111,8 +103,8 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
     }
 
     public render() {
-        const bbicon = <img src={bitbucketLogo} width="15" height="14"/>;
-        const strideicon = <img src={strideLogo} width="17" height="12"/>;
+        const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
+        const strideicon = <StrideIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
             <Page>
@@ -148,6 +140,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
+                            trigger={Trigger('Custom JQL','configure custom JQL queries')}
+                            open={true}>
+                            <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
+                        </Collapsible>
+
+                        <Collapsible transitionTime={30} 
                             trigger={Trigger('Jira Hover Provider','configure the hover provider for Jira issues')}
                             open={true}>
                             <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
@@ -157,7 +155,6 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
-                            <CustomJQL configData={this.state} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 

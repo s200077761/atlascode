@@ -3,7 +3,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData } from '../../../ipc/configMessaging';
 import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import { emptyProject } from '../../../jira/jiraModel';
-import { InlineFlex } from './ConfigPage';
+import { InlineFlex } from '../styles';
 
 type changeObject = {[key: string]:any};
 
@@ -54,6 +54,15 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                     this.props.onConfigChange([],removes);
                 }
             }
+        }
+    }
+
+    handleInputChange = (e: any, configKey: string) => {
+        const changes = Object.create(null);
+        changes[configKey] = e.target.value;
+
+        if(this.props.onConfigChange) {
+            this.props.onConfigChange(changes);
         }
     }
 
@@ -168,6 +177,15 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             paddingLeft: '24px',
                         }}
                         >
+                        <div className="refreshInterval">
+                            <span>refresh every: </span>
+                                <input style={{ width: '40px' }} name="jira-explorer-refresh-interval"
+                                    type="number" min="0"
+                                    value={this.props.configData.config.jira.explorer.refreshInterval}
+                                    onChange={(e: any) => this.handleInputChange(e, "jira.explorer.refreshInterval")} />
+                            <span> minutes (setting to 0 disables auto-refresh)</span>
+                        </div>
+
                         <Checkbox
                             isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
                             onChange={this.onCheckboxChange}
@@ -182,6 +200,14 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             value="jira.explorer.showAssignedIssues"
                             name="explorer-assigned-issues"
                         />
+                    </div>
+                    <div className="refreshInterval">
+                        <span>Notify of new Jira issues: </span>
+                            <input style={{ width: '40px' }} name="jira-issue-monitor-refresh-interval"
+                                type="number" min="0"
+                                value={this.props.configData.config.jira.issueMonitor.refreshInterval}
+                                onChange={(e: any) => this.handleInputChange(e, "jira.issueMonitor.refreshInterval")} />
+                        <span> minutes (setting to 0 disables notification)</span>
                     </div>
                 </div>
                 <hr/>

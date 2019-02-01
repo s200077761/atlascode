@@ -9,6 +9,7 @@ export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
 export const BitbucketRelatedIssuesConfigurationKey = 'bitbucket.explorer.relatedJiraIssues.enabled';
 export const BitbucketContextMenusConfigurationKey = 'bitbucket.contextMenus.enabled';
 export const OpenIssuesTreeId = 'atlascode.views.jira.openIssues';
+export const CustomJQLTreeId = 'atlascode.views.jira.customJql';
 export const AssignedIssuesTreeId = 'atlascode.views.jira.assignedIssues';
 export const PullRequestTreeViewId = 'atlascode.views.bb.pullrequestsTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';

@@ -12,6 +12,9 @@ import { WelcomeWebview } from './webviews/welcomeWebview';
 import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
+import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
+import { BitbucketContext } from './bitbucket/context';
+import { NewIssueMonitor } from './jira/newIssueMonitor';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version:string) {
@@ -24,9 +27,11 @@ export class Container {
         context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
-        context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
-        context.subscriptions.push((this._pullRequestViewManager = new PullRequestViewManager(context.extensionPath)));
+        context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
+        context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
+	context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
+        context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
 
         let analyticsEnv:string = configuration.isDebugging ? 'staging' : 'prod';
@@ -51,6 +56,11 @@ export class Container {
            });
         }
     }
+
+    static initializeBitbucket(bbCtx: BitbucketContext) {
+        this._bitbucketContext = bbCtx;
+    }
+
     static get machineId() {
         return env.machineId;
     }
@@ -63,6 +73,11 @@ export class Container {
     private static _context: ExtensionContext;
     static get context() {
         return this._context;
+    }
+
+    private static _bitbucketContext: BitbucketContext;
+    static get bitbucketContext() {
+        return this._bitbucketContext;
     }
 
     private static _configWebview: ConfigWebview;
@@ -83,6 +98,11 @@ export class Container {
     private static _pullRequestViewManager: PullRequestViewManager;
     static get pullRequestViewManager() {
         return this._pullRequestViewManager;
+    }
+
+    private static _pullRequestCreatorView: PullRequestCreatorWebview;
+    static get pullRequestCreatorView() {
+        return this._pullRequestCreatorView;
     }
 
     private static _jiraExplorer: JiraExplorer | undefined;
@@ -120,6 +140,11 @@ export class Container {
         return this._analyticsClient;
     }
 
+    private static _newIssueMonitor:NewIssueMonitor;
+    static get newIssueMonitor() {
+        return this._newIssueMonitor;
+    }
+    
     static resetConfig() {
         this._config = undefined;
     }

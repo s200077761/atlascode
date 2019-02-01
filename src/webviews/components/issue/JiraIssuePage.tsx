@@ -2,9 +2,10 @@ import * as React from "react";
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
 import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import Tag from "@atlaskit/tag";
+import TagGroup from "@atlaskit/tag-group";
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
-import { Action, Alert } from "../../../ipc/messaging";
 import {
   emptyStatus,
   emptyIssueType,
@@ -15,19 +16,23 @@ import {
 import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
-  IssueCommentAction
+  IssueCommentAction,
+  IssueAssignAction
 } from "../../../ipc/issueActions";
 import {TransitionMenu} from "./TransitionMenu";
 import {Comments} from "./Comments";
 import Button from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import IssueList from "./IssueList";
+import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 
-type Emit = TransitionIssueAction | IssueCommentAction | Action | Alert;
+type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction;
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
   id: "",
   self: "",
+  created: new Date(0),
   description: "",
   summary: "",
   status: emptyStatus,
@@ -39,8 +44,11 @@ const emptyIssueData: IssueData = {
   labels: [],
   attachments: [],
   transitions: [],
+  components: [],
+  fixVersions: [],
   workingSite: emptyWorkingSite,
-  isAssignedToMe: false
+  isAssignedToMe: false,
+  childIssues: []
 };
 
 type MyState = {
@@ -144,13 +152,36 @@ export default class JiraIssuePage extends WebviewComponent<
           primaryText={issue.assignee.displayName || "Unassigned"}
         />
         {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+        <h3>Labels</h3>
+        {this.tags(issue.labels)}
+        <h3>Components</h3>
+        {this.tags(issue.components.map(c => c.name))}
+        <h3>Fix Versions</h3>
+        {this.tags(issue.fixVersions.map(v => v.name))}
       </div>
     );
   }
 
+  tags(items: string[]) {
+    if (items.length === 0) {
+      return <span className="no-tags">None</span>;
+    }
+    return (
+    <TagGroup>
+      {items.map(i => <Tag text={i} />)}
+    </TagGroup>);
+  }
+
   render() {
     const issue = this.state.data;
-  
+
+    const childIssues = this.state.data.childIssues.length === 0
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+          <h3>Child issues</h3>
+          <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+        </React.Fragment>;
+
     return (
       <Page>
         <SizeDetector>
@@ -160,22 +191,26 @@ export default class JiraIssuePage extends WebviewComponent<
                 <div>
                   {this.header(issue)}
                   {this.details(issue)}
+                  {childIssues}
                   <h3>Comments</h3>
                   <Comments issue={issue} onSave={this.handleSave} />
                 </div>
               );
             }
             return (
-              <Grid>
-                <GridColumn medium={8}>
-                  {this.header(issue)}
-                  <h3>Comments</h3>
-                  <Comments issue={issue} onSave={this.handleSave} />
-                </GridColumn>
-        
-                <GridColumn medium={4}>{this.details(issue)}</GridColumn>
-              </Grid>
-            );        
+              <div style={{ maxWidth: '1200px', margin: 'auto' }}>
+                <Grid layout="fluid">
+                  <GridColumn medium={8}>
+                    {this.header(issue)}
+                    {childIssues}
+                    <h3>Comments</h3>
+                    <Comments issue={issue} onSave={this.handleSave} />
+                  </GridColumn>
+
+                  <GridColumn medium={4}>{this.details(issue)}</GridColumn>
+                </Grid>
+              </div>
+            );
           }}
         </SizeDetector>
       </Page>

@@ -3,17 +3,30 @@ import { Transition, Issue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 
 export interface TransitionIssueAction extends Action {
+    action: 'transitionIssue';
     issue: Issue;
     transition: Transition;
 }
 
 export interface IssueCommentAction extends Action {
+    action: 'comment';
     issue: Issue;
     comment: string;
 }
 
 export interface IssueAssignAction extends Action {
+    action: 'assign';
     issue: Issue;
+}
+
+export interface OpenJiraIssueAction extends Action {
+    action: 'openJiraIssue';
+    issue: Issue;
+}
+
+export interface OpenIssueByKeyAction extends Action {
+    action: 'openIssueByKey';
+    key: string;
 }
 
 export interface FetchQueryAction extends Action {
@@ -37,10 +50,6 @@ export interface CreateIssueAction extends Action {
     issueData: any;
 }
 
-export interface OpenIssueAction extends Action {
-    key: string;
-}
-
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -51,6 +60,13 @@ export function isIssueComment(a: Action): a is  IssueCommentAction {
 
 export function isIssueAssign(a: Action): a is  IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
+}
+export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
+    return (<OpenJiraIssueAction>a).issue !== undefined;
+}
+
+export function isOpenIssueByKey(a: Action): a is OpenIssueByKeyAction {
+    return (<OpenIssueByKeyAction>a).key !== undefined;
 }
 
 export function isFetchQuery(a: Action): a is  FetchQueryAction {
@@ -74,6 +90,3 @@ export function isCreateIssue(a: Action): a is  CreateIssueAction {
     return (<CreateIssueAction>a).issueData !== undefined;
 }
 
-export function isOpenIssueAction(a: Action): a is  OpenIssueAction {
-    return (<OpenIssueAction>a).key !== undefined;
-}

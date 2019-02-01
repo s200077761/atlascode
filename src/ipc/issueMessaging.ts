@@ -9,6 +9,7 @@ import { IssueTypeIdScreens } from "../jira/createIssueMeta";
 export interface IssueData extends Message {}
 export interface IssueData extends Issue {
     isAssignedToMe: boolean;
+    childIssues: Issue[];
 }
 
 export interface CreateIssueData extends Message {

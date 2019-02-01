@@ -602,7 +602,6 @@
         "typescript": "^3.2.2",
         "vscode": "^1.1.26",
         "webpack": "^4.26.1",
-        "webpack-cli": "^3.1.2",
-        "@types/electron": "^1.6.10"
+        "webpack-cli": "^3.1.2"
     }
 }

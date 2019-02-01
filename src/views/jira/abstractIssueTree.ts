@@ -5,11 +5,13 @@ import { configuration } from '../../config/configuration';
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { viewScreenEvent } from '../../analytics';
-import { Time } from '../../util/time';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
-export interface IssueTree extends Disposable,TreeDataProvider<IssueNode> {
-    refresh():void;
+export interface RefreshableTree extends Disposable {
+    refresh(): void;
+}
+
+export interface IssueTree extends RefreshableTree, TreeDataProvider<IssueNode> {
     setJql(jql: string | undefined):void;
 }
 
@@ -20,9 +22,8 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
         return this._onDidChangeTreeData.event;
     }
 
+    private _isVisible = false;
     private _tree: TreeView<IssueNode> | undefined;
-    private _timer: any | undefined;
-    private _refreshInterval = 1 * Time.MINUTES;
 
     constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
         super(id, jql, emptyState, emptyStateCommand);
@@ -34,25 +35,29 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
+    public setVisibility(isVisible: boolean) {
+        this._isVisible = isVisible;
+    }
+
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
         if (initializing) {
             this._onDidChangeTreeData = new EventEmitter<IssueNode>();
 
-            this._tree = window.createTreeView(this._id, {
-                treeDataProvider: this
-            });
-
-            this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-            this._disposables.push(this._tree);
-
+            if (this._id.length > 0) {
+                this._tree = window.createTreeView(this._id, {
+                    treeDataProvider: this
+                });
+                this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+                this._disposables.push(this._tree);
+            }
         }
     }
 
     refresh() {
-        if(this._tree && this._tree.visible) {
-            Logger.debug(`Refreshing issue tree: ${this._id}`);
+        if (this._isVisible) {
+	        Logger.debug(`Refreshing issue tree: ${this._id}`);
             this._issues = undefined;
             this._onDidChangeTreeData.fire();
         }
@@ -66,24 +71,7 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
             viewScreenEvent(this.id, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-            this.startTimer();
-        } else {
-            this.stopTimer();
         }
-    }
-
-    private startTimer() {
-        if (!this._timer) {
-            this._timer = setInterval(() => {
-                this.refresh();
-            }, this._refreshInterval);
-        }
-    }
-
-    private stopTimer() {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = undefined;
-        }
+        this.setVisibility(event.visible);
     }
 }
