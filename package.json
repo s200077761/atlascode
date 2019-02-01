@@ -39,11 +39,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "todolense.showOpenProjects",
-                "title": "Show open editor windows",
-                "category": "AtlasCode"
-              },
-            {
                 "command": "atlascode.bb.authenticate",
                 "title": "Authenticate With Bitbucket",
                 "category": "AtlasCode"

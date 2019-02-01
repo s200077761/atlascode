@@ -54,29 +54,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
-        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
-
-        vscode.commands.registerCommand('todolense.showOpenProjects', () => {
-        
-            let command = vscodeContext.asAbsolutePath(path.join('node_modules/.bin/electron'));
-
-            // source
-            var cwd = vscodeContext.asAbsolutePath(path.join('extension-ui/'));
-            
-            command = command.replace(/\//g, path.sep);
-            cwd = cwd.replace(/\//g, path.sep);
-            
-            var spawn_env = JSON.parse(JSON.stringify(process.env));
-            
-            // remove those env vars
-            delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
-            delete spawn_env.ELECTRON_RUN_AS_NODE;
-            Logger.debug(cwd);
-            Logger.debug(command);
-            
-            child.spawn(command, ['.'], {cwd: cwd, env: spawn_env});
-
-            //sp.unref();
-        })
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode))
     );
 }
