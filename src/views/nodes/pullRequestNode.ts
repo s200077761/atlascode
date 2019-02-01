@@ -10,6 +10,8 @@ import { RelatedIssuesNode } from './relatedIssuesNode';
 import { EmptyStateNode } from './emptyStateNode';
 import { Logger } from '../../logger';
 
+const PullRequestContextValue = 'pullrequest';
+
 interface NestedComment {
     data: Bitbucket.Schema.Comment;
     children: NestedComment[];
@@ -35,7 +37,8 @@ export class PullRequestTitlesNode extends BaseNode {
         let item = new vscode.TreeItem(`#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}`;
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.links!.avatar!.href!);
-        item.contextValue = 'pullrequest';
+        item.contextValue = PullRequestContextValue;
+        item.resourceUri = vscode.Uri.parse(this.pr.data.links!.html!.href!);
 
         return item;
     }
@@ -232,6 +235,9 @@ class PullRequestFilesNode extends BaseNode {
             ]
         };
 
+        item.contextValue = PullRequestContextValue;
+        item.resourceUri = vscode.Uri.parse(`${this.pr.data.links!.html!.href!}#chg-${fileDisplayName}`);
+
         return item;
     }
 
@@ -254,6 +260,9 @@ class DescriptionNode extends BaseNode {
             title: 'Open pull request details',
             arguments: [this.pr]
         };
+
+        item.contextValue = PullRequestContextValue;
+        item.resourceUri = vscode.Uri.parse(this.pr.data.links!.html!.href!);
 
         return item;
     }
