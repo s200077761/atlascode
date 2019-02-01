@@ -1,7 +1,8 @@
 import { Message } from "./messaging";
 import { Issue, Project } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
-import { IssueTypeIdScreens } from '../jira/issueCreateScreenTransformer';
+import { IssueTypeIdScreens } from "../jira/createIssueMeta";
+
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
@@ -12,10 +13,9 @@ export interface IssueData extends Issue {
 
 export interface CreateIssueData extends Message {
     selectedProject:WorkingProject;
-    selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean;
+    selectedIssueTypeId:string | undefined;
     availableProjects:WorkingProject[];
     issueTypeScreens:IssueTypeIdScreens;
-    fieldValues:{[k:string]:any};
 }
 
 export interface ProjectList extends Message {
@@ -24,6 +24,10 @@ export interface ProjectList extends Message {
 
 export interface LabelList extends Message {
     labels:any[];
+}
+
+export interface UserList extends Message {
+    users:any[];
 }
 
 export interface CreatedSomething extends Message {

@@ -5,7 +5,7 @@ export interface Message {
     type:string;
 }
 
-export interface ErrorMessage extends Message {
+export interface HostErrorMessage extends Message {
     reason:string;
 }
 

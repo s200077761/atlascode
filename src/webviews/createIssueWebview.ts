@@ -1,16 +1,16 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, ErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction, isFetchQuery } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateSomething, isCreateIssue, isOpenIssueAction, isFetchQuery, isFetchUsersQuery } from '../ipc/issueActions';
 import { commands } from 'vscode';
 import { Commands } from '../commands';
 import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
 import { IssueTypeIdScreens } from '../jira/createIssueMeta';
 
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | ErrorMessage | LabelList;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList;
 export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 	
     constructor(extensionPath: string) {
@@ -26,7 +26,6 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 
     async createOrShow(): Promise<void> {
         await super.createOrShow();
-        await this.invalidate();
     }
 
     public async invalidate() {
@@ -45,16 +44,19 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 
         Logger.debug('creating create data...');
         const foundProject = (project !== undefined)? project : effProject;
-        const createData = {
+        const createData:CreateIssueData = {
             type:'screenRefresh',
             selectedProject:foundProject,
-            selectedIssueType:screenData.selectedIssueType,
+            selectedIssueTypeId:screenData.selectedIssueType.id,
             availableProjects:availableProjects,
             issueTypeScreens:screenData.screens
         };
 
+        
+        Logger.debug('posting...');
         Logger.debug('posting create data to webview',createData);
         this.postMessage(createData);
+            
     }
 
     async getScreenFields(project:WorkingProject):Promise<{selectedIssueType:JIRA.Schema.CreateMetaIssueTypeBean, screens:IssueTypeIdScreens}> {
@@ -67,8 +69,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
             return client.issue
             .getCreateIssueMetadata({projectKeys:projects, expand:'projects.issuetypes.fields'})
             .then((res: JIRA.Response<JIRA.Schema.CreateMetaBean>) => {
-                let transformation = transformIssueScreens(res.data.projects![0],undefined,true);
-                Logger.debug('getScreenFields returning',transformation);
+                let transformation = transformIssueScreens(res.data.projects![0],undefined,false);
                 return transformation;
             });
         }
@@ -80,6 +81,12 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 
         if(!handled) {
             switch (e.action) {
+                case 'refresh': {
+                    handled = true;
+                    this.invalidate();
+                    break;
+                }
+
                 case 'fetchProjects': {
                     handled = true;
                     if(isFetchQuery(e)) {
@@ -116,10 +123,30 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                                 this.postMessage({type:'error', reason:reason});
                             });
                         } else {
+                            this.postMessage({type:'error', reason:"jira client undefined"});
                             Logger.debug("label autocomplete: client undefined");
                         }
                     }
 
+                    break;
+                }
+                case 'fetchUsers': {
+                    handled = true;
+                    if(isFetchUsersQuery(e)) {
+                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                        if (client) {
+                            client.user.findUsersAssignableToIssues({project:`${e.project}`, query:`${e.query}`})
+                            .then((res:JIRA.Response<JIRA.Schema.User[]>) => {
+                                this.postMessage({type:'userList', users:res.data});
+                            }).catch(reason => {
+                                Logger.debug('error getting users',reason);
+                                this.postMessage({type:'error', reason:reason});
+                            });
+                        } else {
+                            Logger.debug("label autocomplete: client undefined");
+                            this.postMessage({type:'error', reason:"jira client undefined"});
+                        }
+                    }
                     break;
                 }
                 case 'getScreensForProject': {
@@ -160,23 +187,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                                 }
                             }
                             
-                        }
-                    }
-                    break;
-                }
-                case 'createComponent': {
-                    handled = true;
-                    if(isCreateSomething(e)) {
-                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-                        if(client) {
-                            client.component.createComponent({body:{name:e.createData.name, project:e.createData.project}})
-                                .then(resp => {
-                                    this.postMessage({type:'componentCreated', createdData:resp.data});
-                                })
-                                .catch(reason => {
-                                    this.postMessage({type:'componentCreated', createdData:{id:'error', name:'', archived:false, released:false}});
-                                    Logger.debug('error creating component',reason);
-                                });
+                        } else {
+                            this.postMessage({type:'error', reason:"jira client undefined"});
                         }
                     }
                     break;
@@ -186,14 +198,16 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
                     if(isCreateIssue(e)) {
                         let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
                         if(client) {
-                            client.issue.createIssue({body:e.issueData})
+                            client.issue.createIssue({body:{fields:e.issueData}})
                                 .then(resp => {
                                     this.postMessage({type:'issueCreated', issueData:resp.data});
                                 })
                                 .catch(reason => {
-                                    this.postMessage({type:'issueCreated', issueData:{id:'error'}});
+                                    this.postMessage({type:'error', reason:reason});
                                     Logger.debug('error creating issue',reason);
                                 });
+                        } else {
+                            this.postMessage({type:'error', reason:"jira client undefined"});
                         }
                     }
                     break;

@@ -26,3 +26,6 @@ declare module '@atlaskit/select';
 declare module '@atlaskit/form';
 declare module '@atlaskit/field-text';
 declare module '@atlaskit/datetime-picker';
+declare module '@atlaskit/field-radio-group';
+declare module '@atlaskit/radio';
+declare module '@atlaskit/user-picker';

@@ -1,4 +1,5 @@
 import { Logger } from "../logger";
+import { UIType, InputValueType, IssueTypeIdScreens, IssueTypeScreen } from "./createIssueMeta";
 
     const defaultFieldFilters:string[] = ['issuetype','project','reporter'];
 
@@ -26,14 +27,13 @@ import { Logger } from "../logger";
         //,'attachment'
         ,'versions'
         ,'duedate'
-        ,'issuelinks'
+        //,'issuelinks' // TODO: handle issuelinks in UI
         //,'worklog'
         ,'assignee'
     ];
     
     const knownCustomSchemas:string[] = [
-        'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect'
-        ,'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
+        'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:select'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:textarea'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:textfield'
@@ -46,12 +46,14 @@ import { Logger } from "../logger";
         ,'com.atlassian.jira.plugin.system.customfieldtypes:labels'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:float'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons'
+        //,'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect' // TODO: handle cascading selects in UI
     ];
 
     const multiSelectSchemas:string[] = [
         'components'
         ,'fixVersions'
         ,'labels'
+        ,'com.atlassian.jira.plugin.system.customfieldtypes:labels'
         ,'versions'
         ,'issuelinks'
         ,'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
@@ -61,25 +63,9 @@ import { Logger } from "../logger";
         'components'
         ,'fixVersions'
         ,'labels'
+        ,'com.atlassian.jira.plugin.system.customfieldtypes:labels'
         ,'versions'
     ];
-
-    export enum UIType {
-        Select = 'select',
-        Checkbox = 'checkbox',
-        Radio = 'radio',
-        Textarea = 'textarea',
-        Input = 'input',
-        Date = 'date',
-        DateTime = 'datetime',
-        User = 'user'
-    }
-    
-    export enum InputValueType {
-        String = 'string',
-        Number = 'number',
-        Url = 'url'
-    }
     
     const schemaToUIMap:Map<string,UIType> = new Map<string,UIType>(
         [['summary',UIType.Input]
@@ -121,43 +107,6 @@ import { Logger } from "../logger";
         ,['com.atlassian.jira.plugin.system.customfieldtypes:url',InputValueType.Url]
     ]
     );
-
-    export interface ScreenField {
-        required:boolean;
-        name:string;
-        key:string;
-        uiType:UIType;
-    
-    }
-    
-    export interface InputScreenField extends ScreenField {
-        valueType:InputValueType;
-    }
-    
-    export interface OptionableScreenField extends ScreenField {
-        allowedValues:any[];
-    }
-
-    export interface UserScreenField extends ScreenField {
-        isMulti:boolean;
-    }
-    
-    export interface SelectScreenField extends OptionableScreenField {
-        isMulti:boolean;
-        isCascading:boolean;
-        isCreateable:boolean;
-        autoCompleteUrl:string;
-    }
-    
-    export interface IssueTypeScreen {
-        name:string;
-        id:string;
-        iconUrl:string;
-        fields:ScreenField[];
-    }
-    
-    export type IssueTypeIdScreens = {[k:string]:IssueTypeScreen};
-
     
     export function transformIssueScreens(project:JIRA.Schema.CreateMetaProjectBean
         ,filterFieldKeys:string[] = defaultFieldFilters
@@ -210,6 +159,11 @@ import { Logger } from "../logger";
             if(!field.required && !commonFields.includes(field.key)) {
                 return true;
             }
+        } else {
+            if(!field.required && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
+            ||(field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))){
+                return true;
+            }
         }
 
         return false;
@@ -223,7 +177,8 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.Input,
-                    valueType: inputValueTypeForField(field.schema)
+                    valueType: inputValueTypeForField(field.schema),
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.Textarea: {
@@ -231,7 +186,8 @@ import { Logger } from "../logger";
                     required:field.required,
                     name:field.name,
                     key:field.key,
-                    uiType:UIType.Textarea
+                    uiType:UIType.Textarea,
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.Checkbox: {
@@ -240,7 +196,8 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.Checkbox,
-                    allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : []
+                    allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : [],
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.Radio: {
@@ -249,7 +206,8 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.Radio,
-                    allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : []
+                    allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : [],
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.Date: {
@@ -258,6 +216,7 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.Date,
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.DateTime: {
@@ -266,6 +225,7 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.DateTime,
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.User: {
@@ -274,7 +234,8 @@ import { Logger } from "../logger";
                     name:field.name,
                     key:field.key,
                     uiType:UIType.User,
-                    isMulti:(field.schema && field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker') ? true : false
+                    isMulti:(field.schema && field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker') ? true : false,
+                    advanced:isAdvanced(field)
                 };
             }
             case UIType.Select: {
@@ -286,13 +247,17 @@ import { Logger } from "../logger";
                     allowedValues:(field.allowedValues !== undefined) ? field.allowedValues : [],
                     isMulti:isMultiSelect(field.schema),
                     isCascading:(field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
-                    isCreateable:(field.schema.system && createableSelectSchemas.includes(field.schema.system)),
+                    isCreateable:isCreateableSelect(field.schema),
                     autoCompleteUrl:(field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
+                    advanced:isAdvanced(field)
                 };
             }
         }
     }
 
+    function isAdvanced(field:JIRA.Schema.FieldMetaBean):boolean {
+        return (!commonFields.includes(field.key) && !field.required);
+    }
     function isMultiSelect(schema:{type:string,system?:string,custom?:string}):boolean {
         if(
             (schema.system && multiSelectSchemas.includes(schema.system))
@@ -303,8 +268,17 @@ import { Logger } from "../logger";
         return false;
     }
 
+    function isCreateableSelect(schema:{type:string,system?:string,custom?:string}):boolean {
+        if(
+            (schema.system && createableSelectSchemas.includes(schema.system))
+            ||(schema.custom && createableSelectSchemas.includes(schema.custom))) {
+            return true;
+        }
+
+        return false;
+    }
+
     function uiTypeForField(schema:{type:string,system?:string,custom?:string}):UIType {
-        Logger.debug(`looking for ui type`,schema);
         if(schema.system && schemaToUIMap.has(schema.system)) {
             return schemaToUIMap.get(schema.system)!;
         }
@@ -313,7 +287,6 @@ import { Logger } from "../logger";
             return schemaToUIMap.get(schema.custom)!;
         }
 
-        Logger.debug('returning default uiType');
         return UIType.Input;
     }
 

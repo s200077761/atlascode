@@ -2,14 +2,14 @@
 # yarn lockfile v1
 
 
-"@atlaskit/analytics-next-types@^3.1.2":
+"@atlaskit/analytics-next-types@^3.1.1", "@atlaskit/analytics-next-types@^3.1.2":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next-types/-/analytics-next-types-3.2.0.tgz#7b07367994ed16726d1d8a6fcffc0b7e1af141e9"
   integrity sha512-RvWeorJrA4WpSoBn/pdBwSD6m705HV+P3SnVtS7o3hwFabfuwrF2AorgmkxsdaRyZRkDnF7ffJyMSXl0qtLBtQ==
   dependencies:
     "@atlaskit/type-helpers" "^2.1.0"
 
-"@atlaskit/analytics-next@^3.1.1", "@atlaskit/analytics-next@^3.1.2":
+"@atlaskit/analytics-next@^3.1.0", "@atlaskit/analytics-next@^3.1.1", "@atlaskit/analytics-next@^3.1.2":
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-3.2.1.tgz#c6c3bafc6d5a4160dd8d7fe4be5b50e2c079819d"
   integrity sha512-NHhis0wkzBHPnZKewAfBS5p8khiXoVnOA+00iKh1Mo4EIiVdgc4VXeFp97nb4hhyFcBguCoY3Zs6V1kta48nnw==
@@ -70,7 +70,7 @@
     "@babel/runtime" "^7.0.0"
     babel-runtime "^6.26.0"
 
-"@atlaskit/button@^10.0.4", "@atlaskit/button@^10.1.0", "@atlaskit/button@^10.1.1":
+"@atlaskit/button@^10.0.4", "@atlaskit/button@^10.1.1":
   version "10.1.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-10.1.1.tgz#7f2a54fe5df41a015390d54df107ce0e8fb888e1"
   integrity sha512-tDnBqMmngLexgDrrdBTRlJYZ0exlB07AYm4Xgda2rohRmes7pNmvQkkkEeFR/hL9ZUaaz0baz9RfH/XayWtOBA==
@@ -237,15 +237,6 @@
     react-transition-group "^2.2.1"
     uuid "^3.1.0"
 
-"@atlaskit/form@^4.0.21":
-  version "4.0.21"
-  resolved "https://registry.yarnpkg.com/@atlaskit/form/-/form-4.0.21.tgz#23afbc693ffde6e0d30700d63e9564721da5e2e5"
-  integrity sha512-PvpdBI39tTIb/s2Cz2B7Lga8G/rSL1NhN6NCxf5adN6VBzwhM6PStfjsrChVHc0v2nqqHnSd1P2GB3Hl3Vqsig==
-  dependencies:
-    "@atlaskit/icon" "^15.0.2"
-    "@atlaskit/theme" "^7.0.1"
-    "@babel/runtime" "^7.0.0"
-
 "@atlaskit/form@^5.0.0", "@atlaskit/form@^5.1.1":
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/form/-/form-5.1.1.tgz#497a40b157f5509d2362110a0e19f9ecd6fe14a4"
@@ -261,10 +252,35 @@
     tiny-invariant "^0.0.3"
     uuid "^3.1.0"
 
+"@atlaskit/form@^5.1.3":
+  version "5.1.3"
+  resolved "https://registry.yarnpkg.com/@atlaskit/form/-/form-5.1.3.tgz#7c7c25df257300e8074ac6c7ee0668dfd0db2475"
+  integrity sha512-CCXgyAMGT7QsXW7sCzCx9zo3giwDvq1Wgpi2V2gCBa6fncTldXkMM4F977TpUjl2TTXABz4JC/NIkoVlEYKX2w==
+  dependencies:
+    "@atlaskit/icon" "^16.0.0"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+    final-form "^4.10.0"
+    final-form-focus "^1.1.0"
+    memoize-one "^3.0.1"
+    shallow-equal "^1.0.0"
+    tiny-invariant "^0.0.3"
+    uuid "^3.1.0"
+
 "@atlaskit/icon@^15.0.1", "@atlaskit/icon@^15.0.2":
   version "15.0.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-15.0.3.tgz#6071ac0a33d2445d6985972a66957c05d871423d"
   integrity sha512-UAf7U0/+5giS2uMlOeVMYmhuWD4fQy0eRcp7r8oEDBqZXNH0yIuHrfu1bPgt2SbFotrjxZdPpOX1i1dXEu7y6g==
+  dependencies:
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+    uuid "^3.1.0"
+
+"@atlaskit/icon@^16.0.0":
+  version "16.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-16.0.0.tgz#8627593c7f83b858c7bc077ef3b4188133d3ed55"
+  integrity sha512-sdPAAEd/A5tw7aREPalva2M/2R3sxbgcfDxE5YYrGXiVjIxYeSBTgYas1Qr5S+t8ZI8n75zijJ1E+aOcLlYrWg==
   dependencies:
     "@atlaskit/theme" "^7.0.1"
     "@babel/runtime" "^7.0.0"
@@ -333,7 +349,7 @@
     prop-types "^15.5.10"
     uuid "^3.1.0"
 
-"@atlaskit/lozenge@^6.2.2", "@atlaskit/lozenge@^6.2.3":
+"@atlaskit/lozenge@^6.2.2", "@atlaskit/lozenge@^6.2.3", "@atlaskit/lozenge@^6.2.4":
   version "6.2.4"
   resolved "https://registry.yarnpkg.com/@atlaskit/lozenge/-/lozenge-6.2.4.tgz#9993917bf8cfa59dc0b3289d216ce7fc60513dec"
   integrity sha512-yueV7yVnC8T+Fw9RrocuUrCk15yrr8Xt72bpJYctFlqJuydTDMX5wKuEInr3KjXJZQBpVrsPnooGb5aNeWwVEw==
@@ -411,6 +427,16 @@
     exenv "^1.2.2"
     tiny-invariant "^0.0.3"
 
+"@atlaskit/radio@^0.4.6":
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/@atlaskit/radio/-/radio-0.4.6.tgz#8e8c533ee50dcc2cdf749ae4f95b7396681127d6"
+  integrity sha512-zXnZgb1J96jXj6SNHwHTTqkqz9VJKekscfJV9wJkwF45riphupdLd9XZg9IvshyPB/5QM+QfAsPZkMNuCEjQ5Q==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/icon" "^16.0.0"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+
 "@atlaskit/reduced-ui-pack@^10.1.1":
   version "10.5.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/reduced-ui-pack/-/reduced-ui-pack-10.5.3.tgz#ca5fa5de35f9dbe6b6477eb6b7b1734a8c5656f8"
@@ -485,6 +511,19 @@
     create-error "^0.3.1"
     debug "^2.2.0"
 
+"@atlaskit/tag@^6.1.3":
+  version "6.1.4"
+  resolved "https://registry.yarnpkg.com/@atlaskit/tag/-/tag-6.1.4.tgz#4f96d6cb089f808a9dd5db48ff325fb5a208de36"
+  integrity sha512-4msLWXQOtu/+wXrmhuSHE36N/Lkf1mskD/gQp+qMGK/BPhsEEF+Mlnar/zrP/gm46SBwHkPk407/X+mUir1dbw==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.2"
+    "@atlaskit/icon" "^16.0.0"
+    "@atlaskit/theme" "^7.0.1"
+    "@babel/runtime" "^7.0.0"
+    babel-runtime "^6.26.0"
+    create-error "^0.3.1"
+    debug "^2.2.0"
+
 "@atlaskit/textarea@^0.2.3":
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/textarea/-/textarea-0.2.3.tgz#65f7b0d0880f6093928b49c34936b10c624eeba3"
@@ -534,6 +573,23 @@
   integrity sha512-1UMF+OCAq1QcqXJOXBQfmaOO5iSsEuLlvSTd/uKn9k9xUxPAV5GdCEPYNaORnIVhVUGIZF+WukeBYR+3MDw6CQ==
   dependencies:
     react "^16.4.0"
+
+"@atlaskit/user-picker@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@atlaskit/user-picker/-/user-picker-1.0.11.tgz#12cc8ee4475cf9c90fb5fb0878ca25939126d5b2"
+  integrity sha512-FUIHkobCqSAU/N6zYoDAVNLdpYVAqDqeqpnsYizqOTTzItth2Se5OTZfgEfKp9Npw+bGMTCVY7YsWFgvCd+8ew==
+  dependencies:
+    "@atlaskit/analytics-next" "^3.1.0"
+    "@atlaskit/analytics-next-types" "^3.1.1"
+    "@atlaskit/avatar" "^14.1.7"
+    "@atlaskit/lozenge" "^6.2.4"
+    "@atlaskit/select" "^6.1.13"
+    "@atlaskit/tag" "^6.1.3"
+    "@atlaskit/theme" "^7.0.1"
+    "@atlaskit/tooltip" "^12.1.13"
+    lodash.debounce "^4.0.8"
+    memoize-one "^3.0.1"
+    uuid "^3.1.0"
 
 "@atlaskit/util-shared-styles@^3.0.0":
   version "3.1.1"
@@ -789,7 +845,7 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.18.tgz#1d3ca764718915584fcd9f6344621b7672665c67"
   integrity sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
 
-"@types/node@^8.0.24", "@types/node@^8.10.25":
+"@types/node@^8.10.25":
   version "8.10.39"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.39.tgz#e7e87ad00364dd7bc485c940926345b8ec1a26ca"
   integrity sha512-rE7fktr02J8ybFf6eysife+WF+L4sAHWzw09DgdCebEu+qDwMvv4zl6Bc+825ttGZP73kCKxa3dhJOoGJ8+5mA==
@@ -4010,15 +4066,6 @@ electron@*:
     electron-download "^4.1.0"
     extract-zip "^1.0.3"
 
-electron@3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-3.0.2.tgz#0aed43a331b43dfe671ddb54d75fc4102d362959"
-  integrity sha512-BsU/KJRPODlEoaOZhsmFTIaG2h1Y28JCrqeTGVqGL+fef/7xQZdHx5ZCStUDXXUSTcoqiHlc5QvLH4PfZFbOmg==
-  dependencies:
-    "@types/node" "^8.0.24"
-    electron-download "^4.1.0"
-    extract-zip "^1.0.3"
-
 elliptic@^6.0.0:
   version "6.4.1"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.4.1.tgz#c2d0b7776911b86722c632c3c06c60f2f819939a"
@@ -5432,7 +5479,7 @@ hmac-drbg@^1.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
 
-hoist-non-react-statics@^2.5.0:
+hoist-non-react-statics@^2.5.0, hoist-non-react-statics@^2.5.5:
   version "2.5.5"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
   integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
@@ -5721,7 +5768,31 @@ interpret@^1.0.0, interpret@^1.1.0:
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.2.0.tgz#d5061a6224be58e8083985f5014d844359576296"
   integrity sha512-mT34yGKMNceBQUoVn7iCDKDntA7SC6gycMAWzGx1z/CMCTV7b2AAtXlo3nRyHZ1FelRkQbQjprHSYGwzLtkVbw==
 
-invariant@^2.2.2:
+intl-format-cache@^2.0.5:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/intl-format-cache/-/intl-format-cache-2.1.0.tgz#04a369fecbfad6da6005bae1f14333332dcf9316"
+  integrity sha1-BKNp/sv61tpgBbrh8UMzMy3PkxY=
+
+intl-messageformat-parser@1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/intl-messageformat-parser/-/intl-messageformat-parser-1.4.0.tgz#b43d45a97468cadbe44331d74bb1e8dea44fc075"
+  integrity sha1-tD1FqXRoytvkQzHXS7Ho3qRPwHU=
+
+intl-messageformat@^2.0.0, intl-messageformat@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/intl-messageformat/-/intl-messageformat-2.2.0.tgz#345bcd46de630b7683330c2e52177ff5eab484fc"
+  integrity sha1-NFvNRt5jC3aDMwwuUhd/9eq0hPw=
+  dependencies:
+    intl-messageformat-parser "1.4.0"
+
+intl-relativeformat@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/intl-relativeformat/-/intl-relativeformat-2.1.0.tgz#010f1105802251f40ac47d0e3e1a201348a255df"
+  integrity sha1-AQ8RBYAiUfQKxH0OPhogE0iiVd8=
+  dependencies:
+    intl-messageformat "^2.0.0"
+
+invariant@^2.1.1, invariant@^2.2.2:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
   integrity sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
@@ -9148,6 +9219,13 @@ react-fast-compare@^2.0.1:
   resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-2.0.4.tgz#e84b4d455b0fec113e0402c329352715196f81f9"
   integrity sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==
 
+react-final-form@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/react-final-form/-/react-final-form-4.0.2.tgz#fa829d7fb60dcc168804bf2edda58f3d62c4607b"
+  integrity sha512-EdFWrT8nMWu5sHViuZ/VmlaYT+mLu/q5TMDWZZj5gnssUAWfgcila0QpptFNDg6+qNtepGgFh5ZPASlivoEXUA==
+  dependencies:
+    "@babel/runtime" "^7.1.2"
+
 react-focus-lock@^1.11.3:
   version "1.17.6"
   resolved "https://registry.yarnpkg.com/react-focus-lock/-/react-focus-lock-1.17.6.tgz#dd87cff63bedc755a846fb3d16f57ee7449ac7ad"
@@ -9172,6 +9250,17 @@ react-input-autosize@^2.2.1:
   integrity sha512-3+K4CD13iE4lQQ2WlF8PuV5htfmTRLH6MDnfndHM6LuBRszuXnuyIfE7nhSKt8AzRBZ50bu0sAhkNMeS5pxQQA==
   dependencies:
     prop-types "^15.5.8"
+
+react-intl@^2.8.0:
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/react-intl/-/react-intl-2.8.0.tgz#20b0c1f01d1292427768aa8ec9e51ab7e36503ba"
+  integrity sha512-1cSasNkHxZOXYYhms9Q1tSEWF8AWZQNq3nPLB/j8mYV0ZTSt2DhGQXHfKrKQMu4cgj9J1Crqg7xFPICTBgzqtQ==
+  dependencies:
+    hoist-non-react-statics "^2.5.5"
+    intl-format-cache "^2.0.5"
+    intl-messageformat "^2.1.0"
+    intl-relativeformat "^2.1.0"
+    invariant "^2.1.1"
 
 react-is@^16.3.1:
   version "16.7.0"

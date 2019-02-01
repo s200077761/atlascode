@@ -20,7 +20,7 @@ export interface ScreenField {
     name:string;
     key:string;
     uiType:UIType;
-
+    advanced:boolean;
 }
 
 export interface InputScreenField extends ScreenField {

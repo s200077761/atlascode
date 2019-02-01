@@ -140,11 +140,7 @@ div.icon-text img {
   color: var(--vscode-input-foreground) !important; 
 } */
 
-[class^="Checkbox__Label"] {
-  color: var(--vscode-input-foreground) !important; 
-}
-
-[class^="Field__Label"] {
+[class^="Checkbox__Label"],[class^="Radio__Label"],[class^="Field__Label"] {
   color: var(--vscode-input-foreground) !important; 
 }
 
@@ -230,11 +226,11 @@ div.icon-text img {
   color: var(--color--75);
 }
 
-[class^="Checkbox__IconWrapper-"] {
+[class^="Checkbox__IconWrapper-"], [class^="Radio__IconWrapper-"] {
   color: var(--vscode-button-background) !important;
 }
 
-[class^="Checkbox__IconWrapper-"] rect {
+[class^="Checkbox__IconWrapper-"] rect, [class^="Radio__IconWrapper-"] circle {
   stroke: var(--vscode-button-background) !important;
 }
 .labelAndSelect {

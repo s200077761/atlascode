@@ -1,65 +1,96 @@
 import * as React from 'react';
-import { Action } from "../../../ipc/messaging";
+import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList } from '../../../ipc/issueMessaging';
-import JiraProjectSelect from '../JiraProjectSelect';
+import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
-import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueAction } from '../../../ipc/issueActions';
-import Form, { Field, FormFooter } from '@atlaskit/form';
-import Select, { CreatableSelect, AsyncCreatableSelect, components } from '@atlaskit/select';
+import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
+import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
+import Select, { AsyncCreatableSelect,  AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
+import { RadioGroup } from '@atlaskit/radio';
+import { Checkbox } from '@atlaskit/checkbox';
 import Button from '@atlaskit/button';
 import Banner from '@atlaskit/banner';
-import { DateTimePicker, DatePicker } from '@atlaskit/datetime-picker';
-
+import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
+import Avatar from '@atlaskit/avatar';
+import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import { SelectScreenField, ScreenField, UIType, OptionableScreenField } from '../../../jira/createIssueMeta';
+import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
+import { FieldValidators } from '../fieldValidators';
 
-type Emit = FetchQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
-type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList;
+type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueAction | Action;
+type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
 type IssueType = { id:string, name:string, iconUrl:string };
 
 interface ViewState extends CreateIssueData {
     isSomethingLoading:boolean;
     loadingField:string;
     fieldOptions:{[k:string]:any};
-    isBannerOpen:boolean;
+    isCreateBannerOpen:boolean;
+    isErrorBannerOpen:boolean;
+    errorDetails:any;
     createdIssue:any;
+    defaultIssueType:any;
+    fieldValues:{[k:string]:any};
 }
 const emptyState:ViewState = {
     type:'',
     selectedProject:emptyWorkingProject,
     availableProjects:[],
-    selectedIssueType:{},
+    selectedIssueTypeId:'',
+    defaultIssueType:{},
     issueTypeScreens:{},
     fieldValues:{},
     fieldOptions:{},
     isSomethingLoading:false,
     loadingField:'',
-    isBannerOpen:false,
+    isCreateBannerOpen:false,
+    isErrorBannerOpen:false,
+    errorDetails:undefined,
     createdIssue:{}
 };
 
+// Used to render custom select options with icons
 const { Option } = components;
-
 const IconOption = (props:any) => (
     <Option {...props}>
       <span><img src={props.data.iconUrl} width="16" height="16"/>{props.label}</span>
     </Option>
 );
 
-const ValueComponent = (props:any) => (
+const IconValue = (props:any) => (
       <components.SingleValue {...props}>
         <span><img src={props.data.iconUrl} width="16" height="16"/>{props.data.name}</span>
       </components.SingleValue>
 
   );
 
+const UserOption = (props:any) => {
+    let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+    return (
+    <Option {...props}>
+      <div ref={props.innerRef} {...props.innerProps} style={{display:'flex', 'align-items':'center'}}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{marginLeft:'4px'}}>{props.data.name} ({props.data.displayName})</span></div>
+    </Option>
+    );
+}
+
+const UserValue = (props:any) => {
+    let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+    return (
+        <components.SingleValue {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{display:'flex', 'align-items':'center'}}><Avatar size='small'  borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{marginLeft:'4px'}}>{props.data.name} ({props.data.displayName})</span></div>
+        </components.SingleValue>
+    );
+}
+
+// used to chain onChange function so we can provide custom functionality after internal state changes
+const chain = (...fns:any[]) => (...args:any[]) => fns.forEach(fn => fn(...args));
+
 export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},ViewState> {
     private newProjects:WorkingProject[] = [];
+    private issueTypes:any[] = [];
     private labelSuggestions:string[] | undefined = undefined;
+    private userSuggestions:any[] | undefined = undefined;
     private newOption:any;
-
-    private formRef:any;
 
     constructor(props: any) {
         super(props);
@@ -79,13 +110,11 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
     }
 
     getSelectOptions(issueTypeId:string|undefined, fieldKey:string, issueData:CreateIssueData):any[] {
-        let opts:any[] = [];
+        let opts:any[] = new Array();
 
         if(issueTypeId) {
-            console.log('looking for screen',issueTypeId);
             const field:SelectScreenField | undefined = issueData.issueTypeScreens[issueTypeId].fields.find(field => field.key === fieldKey) as SelectScreenField | undefined;
-            console.log('field is',field);
-            if(field && field.allowedValues) {
+            if(field && field.allowedValues && field.allowedValues.length > 0) {
                 switch(fieldKey) {
                     case 'fixVersions':
                     case 'versions': {
@@ -110,11 +139,23 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
         return opts;
     }
 
-    onMessageReceived(e:Accept): void {
+    componentDidMount() {
+        this.postMessage({action:'refresh'});
+    }
+
+    onMessageReceived(e:any): void {
         switch (e.type) {
+            case 'error': {
+                this.setState({isSomethingLoading:false, loadingField:'', isErrorBannerOpen:true, errorDetails:e.reason});
+
+                break;
+            }
             case 'screenRefresh': {
                 const issueData = e as CreateIssueData;
-                this.setState({...issueData, ...{fieldOptions:this.refreshSelectFields(issueData.selectedIssueType.id,issueData)}});
+                this.issueTypes = Object.entries(issueData.issueTypeScreens).map(([key, value]) => { return { id:value.id, name:value.name, iconUrl:value.iconUrl }; });
+
+                const selectedType = this.issueTypes.find(it => it.id === issueData.selectedIssueTypeId);
+                this.setState({...issueData, ...{isSomethingLoading:false, loadingField:'', defaultIssueType:selectedType, fieldOptions:this.refreshSelectFields(issueData.selectedIssueTypeId,issueData)}});
                 break;
             }
             case 'projectList': {
@@ -125,6 +166,10 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 this.labelSuggestions = (e as LabelList).labels;
                 break;
             }
+            case 'userList': {
+                this.userSuggestions = (e as UserList).users;
+                break;
+            }
             case 'optionCreated': {
                 if(isCreatedSomething(e)){
                     this.newOption = e.createdData;
@@ -133,9 +178,9 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
             }
             case 'issueCreated': {
                 if(isIssueCreated(e)){
-                    this.setState({isSomethingLoading:false, loadingField:'', isBannerOpen:true, createdIssue:e.issueData, fieldValues:{...this.state.fieldValues,...{description:'',summary:''}}});
+                    this.setState({isSomethingLoading:false, loadingField:'', isCreateBannerOpen:true, createdIssue:e.issueData, fieldValues:{...this.state.fieldValues,...{description:'',summary:''}}});
                     setTimeout(()=>{
-                        this.setState({isBannerOpen:false});
+                        this.setState({isCreateBannerOpen:false});
                     },6000);
                 }
                 break;
@@ -146,197 +191,265 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
         }
     }
 
-    handleProjectInput = (input:string):Promise<any> => {
+    loadProjectOptions = (input:string):Promise<any> => {
         return new Promise(resolve => {
             this.newProjects = [];
             this.postMessage({action:'fetchProjects', query:input});
+            const start = Date.now();
             let timer = setInterval(() => {
-                if(this.newProjects.length > 0) {
+                const end = Date.now();
+                if(this.newProjects.length > 0 || (end - start) > 2000) {
                     clearInterval(timer);
                     resolve(this.newProjects);
                 }
-            }, 500);
+            }, 100);
         });
     }
 
-    onProjectSelected = (selected:WorkingProject):void => {
+    handleProjectChange = (selected:WorkingProject):void => {
+        this.state = emptyState;
+        this.setState({...emptyState, ...{isSomethingLoading:true, loadingField:'' }});
         this.postMessage({action:'getScreensForProject', project:selected});
     }
 
-    onIssueTypeSelected = (selected:IssueType):void => {
-        // TODO: try to clear field values
-        console.log('selected type',selected);
-        this.setState({
-            selectedIssueType:selected,
-            fieldOptions:this.refreshSelectFields(selected.id,this.state)
+    handleIssueTypeChange = (newType:IssueType, prevType:IssueType):IssueType => {
+        this.setState((oldState, props) => {
+           return {
+                selectedIssueTypeId:newType.id,
+                fieldOptions:this.refreshSelectFields(newType.id,oldState)
+            };
         });
 
-        console.log('field values',this.state.fieldValues);
+        return newType;
+    }
+
+    handleSelectChange = (selected:any, fieldKey:string):void => {
+        this.state.fieldValues[fieldKey] = selected;
     }
 
     handleOptionCreate = (input:any, fieldKey:string):void => {
         this.newOption = undefined;
         this.setState({isSomethingLoading:true, loadingField:fieldKey});
         this.postMessage({action:'createOption', createData:{fieldKey:fieldKey,name:input,project:this.state.selectedProject.key}});
+
+        const start = Date.now();
         let timer = setInterval(() => {
+            const end = Date.now();
             if(this.newOption && this.newOption.id.length > 0) {
                 clearInterval(timer);
-                let newVals = this.state.fieldValues[fieldKey];
-                if(!newVals) {
-                    newVals = [];
-                }
-                newVals.push(this.newOption);
-                console.log('old option state', this.state.fieldOptions[fieldKey]);
-
-                let newOptions = {...this.state.fieldOptions, ...{[fieldKey]:[...this.state.fieldOptions[fieldKey],...[this.newOption]]}};
-
-                if(fieldKey === 'versions' || fieldKey === 'fixVersions') {
-                    let vOptions = this.state.fieldOptions[fieldKey];
-                    vOptions[0].options.push(this.newOption);
-
-                    newOptions = {...this.state.fieldOptions, ...{[fieldKey]:vOptions}};
-                }
-                
-                console.log('new option state', newOptions);
-                this.setState(
-                    {isSomethingLoading:false, 
-                        loadingField:'', 
-                        fieldValues:{...this.state.fieldValues,...{[fieldKey]:newVals}}, 
-                        fieldOptions:newOptions
-                    });
+                this.setState((oldState, props) => {
                     
-            } else {
+                    if(!oldState.fieldValues[fieldKey]) {
+                        oldState.fieldValues[fieldKey] = [];
+                    }
+
+                    if(!oldState.fieldOptions[fieldKey]) {
+                        oldState.fieldOptions[fieldKey] = [];
+                    }
+
+                    let newOptions = oldState.fieldOptions[fieldKey];
+
+                    if(fieldKey === 'versions' || fieldKey === 'fixVersions') {
+                        newOptions[0].options.push(this.newOption);
+                    } else {
+                        newOptions.push(this.newOption);
+                    }
+                    return {
+                        isSomethingLoading:false, 
+                        loadingField:'',
+                        fieldValues:{...oldState.fieldValues, ...{[fieldKey]:[...oldState.fieldValues[fieldKey],...[this.newOption]]}},
+                        fieldOptions:{...oldState.fieldOptions, ...{[fieldKey]:newOptions}}
+                    };
+                });
+            } else if((end - start) > 2000) {
+                clearInterval(timer); 
                 this.setState({isSomethingLoading:false, loadingField:''});
             }
-        }, 500);
+        }, 100);
     }
 
     loadLabelOptions = (input:string):Promise<any> => {
         return new Promise(resolve => {
             this.labelSuggestions = undefined;
             this.postMessage({action:'fetchLabels', query:input});
+
+            const start = Date.now();
             let timer = setInterval(() => {
-                if(this.labelSuggestions !== undefined) {
+                const end = Date.now();
+                if(this.labelSuggestions !== undefined || (end - start) > 2000) {
+                    if(this.labelSuggestions === undefined) {
+                        this.labelSuggestions = [];
+                    }
+
                     clearInterval(timer);
+                    this.setState({isSomethingLoading:false, loadingField:'' });
                     resolve(this.labelSuggestions);
                 }
-            }, 500);
+            }, 100);
         });
     }
 
-    handleLabelCreate = (input:any, fieldKey:string):void => {
-        let newVals = this.state.fieldValues[fieldKey];
-        if(!newVals) {
-            newVals = [];
-        }
-        newVals.push(input);
-        this.setState(
-            {isSomethingLoading:false, 
-                loadingField:'', 
-                fieldValues:{...this.state.fieldValues,...{[fieldKey]:newVals}}, 
-                fieldOptions:{...this.state.fieldOptions, ...{[fieldKey]:[...this.state.fieldOptions[fieldKey],...[input]]}}
-            });
+    loadUserOptions = (input:string):Promise<any> => {
+        return new Promise(resolve => {
+            this.userSuggestions = undefined;
+            this.postMessage({action:'fetchUsers', query:input, project:this.state.selectedProject.key});
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if(this.userSuggestions !== undefined || (end - start) > 2000) {
+                    if(this.userSuggestions === undefined) {
+                        this.userSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({isSomethingLoading:false, loadingField:'' });
+                    resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
     }
 
-    handleSubmit = (e?:any):void => {
-        console.log('onSubmitHandler', e);
-        // Calling validate on the form will update it's fields state
-        const validateResult = this.formRef.validate();
-        console.log('validate result',validateResult);
-        if (validateResult.isInvalid) {
-          console.log('onSubmitHandler = Form Fields Invalid');
-        } else {
-            this.setState({isSomethingLoading:true,loadingField:'submitButton'});
-          // Now call submit when your done
-          this.postMessage({action:'createIssue',issueData:{fields:{...this.state.fieldValues,...{project:{id:this.state.selectedProject.id},issuetype:{id:this.state.selectedIssueType.id}}}}});
-          console.log('valid submit',this.formRef);
-        }
-    }
+    handleSubmit = (e:any) => {
+        let requiredFields = this.state.issueTypeScreens[this.state.selectedIssueTypeId!].fields.filter(field => {return field.required;});
+        let errs = {};
+        requiredFields.forEach((field:ScreenField) => {
+            if(e[field.key] === undefined || (e[field.key].length < 1)){
+                errs[field.key] = 'EMPTY';
+            }
+        });
 
-    setTextFieldValue = (item: any) => {
-        console.log('setFieldValue',item);
-        let val = {};
-        val[item.target.id] = item.target.value;
-        const newObj = {...this.state.fieldValues, ...val};
-        console.log('set new field value',item.target.id, newObj);
-        this.setState({fieldValues:newObj});
-    }
-
-    setCheckboxValue = (item: any) => {
-        console.log('setCheckboxValue',item.target.id);
-
-        let newVals:any[] = this.state.fieldValues[item.target.id];
-        if(!newVals) {
-            newVals = [];
-        }
-
-        if(item.target.checked) {
-            newVals.push(item.target.value);
-        } else if(newVals.includes(item.target.value)) {
-            let i = newVals.indexOf(item.target.value);
-            newVals.splice(i,1);
-        }
         
-        this.setState(
-            {fieldValues:{...this.state.fieldValues,...{[item.target.id]:newVals}}});
+        if(Object.keys(errs).length > 0) {
+            return errs;
+        }
+
+        this.postMessage({action:'createIssue', issueData:e});
+
+        return undefined;
     }
-    
+
     public render() {
         let renderableFields: any[] = [];
+        let advancedFields: any[] = [];
 
-        if(this.state.selectedIssueType.id) {
+        if(this.state.selectedIssueTypeId && this.state.selectedIssueTypeId !== '') {
             
-            const screen = this.state.issueTypeScreens[this.state.selectedIssueType.id];
-            if(screen) {
+            const screen = this.state.issueTypeScreens[this.state.selectedIssueTypeId];
+            if(screen && screen.fields && screen.fields.length > 0) {
+                renderableFields = [];
+                advancedFields = [];
                 screen.fields.forEach(field => {
-                    renderableFields.push(this.getFieldMarkup(field));
+                    (field.advanced) ? advancedFields.push(this.getFieldMarkup(field)) : renderableFields.push(this.getFieldMarkup(field));
+                    
                 });
             }
+        } else {
+            return (<div>waiting for data...</div>);
         }
-        
-        const issueTypes = Object.entries(this.state.issueTypeScreens).map(([key, value]) => { return { id:value.id, name:value.name, iconUrl:value.iconUrl }; });
 
         return (
             <Page>
                 <Grid>
                     <GridColumn medium={8}>
                         <div>
-                            <Banner isOpen={this.state.isBannerOpen} appearance="announcement">
+                            <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
                                 Issue <Button appearance='link' onClick={() => this.postMessage({action:'openIssue',key:this.state.createdIssue.key})}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
+                            <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
+                                Error: <div><pre>{JSON.stringify(this.state.errorDetails,undefined,4)}</pre></div>
+                                
+                                <div><Button appearance='link' onClick={() => this.setState({isErrorBannerOpen:false, errorDetails:undefined})}>close</Button></div>
+                            </Banner>
                             <h2>Create Issue</h2>
-                            <JiraProjectSelect selectedOption={this.state.selectedProject} initialOptions={this.state.availableProjects} onSelect={this.onProjectSelected} onQuery={this.handleProjectInput}/>
-                            <Field className='ak-formfield'
-                                    label="Issue Type"
-                                    isRequired={true}
-                                    >
-                                    <Select
-                                        className="ak-select-container"
-                                        classNamePrefix="ak-select"
-                                        name="issuetype"
-                                        options={issueTypes}
-                                        placeholder="Select Issue Type"
-                                        components={{ Option: IconOption, SingleValue:ValueComponent }}
-                                        getOptionLabel={(option:any) => option.name}
-                                        getOptionValue={(option:any) => option.id}
-                                        value={this.state.selectedIssueType}
-                                        onChange={this.onIssueTypeSelected}
-                                        isDisabled={this.state.isSomethingLoading}
-                                    />
-                                </Field>
                             <Form
-                                name="layout-example"
+                                name="create-issue"
                                 onSubmit={this.handleSubmit}
-                                ref={(form:any) => {
-                                    this.formRef = form;
-                                }}
                                 >
-                                {renderableFields}
-                                <FormFooter actions={{}}>
-                                    <Button type="submit" className='ak-button' isLoading={this.state.loadingField === 'submitButton'}>
-                                    Submit
-                                    </Button>
-                                </FormFooter>
+                                    {(frmArgs:any) => {
+                                        return(<form {...frmArgs.formProps}>
+                                        <Field  defaultValue={this.state.selectedProject} 
+                                                label='Project'
+                                                isRequired={true}
+                                                id='project'
+                                                name='project'
+                                                validate={FieldValidators.validateSingleSelect}>
+                                        {
+                                            (fieldArgs:any) => {
+                                                let errDiv = <span/>;
+                                                if(fieldArgs.error === 'EMPTY'){
+                                                    errDiv = <ErrorMessage>Project is required</ErrorMessage>;
+                                                }
+                                                return (
+                                                    <div>
+                                                        <AsyncSelect
+                                                            {...fieldArgs.fieldProps}
+                                                            className="ak-select-container"
+                                                            classNamePrefix="ak-select"
+                                                            getOptionLabel={(option:WorkingProject) => {
+                                                                return option.name;
+                                                            }}
+                                                            getOptionValue={(option:WorkingProject) => {
+                                                                return option.key;
+                                                            }}
+                                                            onChange={chain(fieldArgs.fieldProps.onChange, this.handleProjectChange)} 
+                                                            defaultOptions={this.state.availableProjects}
+                                                            loadOptions={this.loadProjectOptions}
+                                                            placeholder="Choose a Project"
+                                                            isDisabled={this.state.isSomethingLoading}
+                                                            isLoading={this.state.loadingField === 'project'}
+                                                        />
+                                                    {errDiv}
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        </Field>
+                                        
+                                        <Field  defaultValue={this.state.defaultIssueType} 
+                                                label='Issue Type'
+                                                isRequired={true}
+                                                id='issuetype'
+                                                name='issuetype'
+                                                validate={FieldValidators.validateSingleSelect}>
+                                        {
+                                            (fieldArgs:any) => {
+                                                let errDiv = <span/>;
+                                                if(fieldArgs.error === 'EMPTY'){
+                                                    errDiv = <ErrorMessage>Issue Type is required</ErrorMessage>;
+                                                }
+                                                return (
+                                                    <div>
+                                                        <Select
+                                                        {...fieldArgs.fieldProps}
+                                                        className="ak-select-container"
+                                                        classNamePrefix="ak-select"
+                                                        options={this.issueTypes}
+                                                        placeholder="Select Issue Type"
+                                                        components={{ Option: IconOption, SingleValue:IconValue }}
+                                                        getOptionLabel={(option:any) => option.name}
+                                                        getOptionValue={(option:any) => option.id}
+                                                        isDisabled={this.state.isSomethingLoading}
+                                                        onChange={chain(fieldArgs.fieldProps.onChange, this.handleIssueTypeChange)}
+                                                        />
+                                                    {errDiv}
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        </Field>
+
+                                        {renderableFields}
+                                        <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
+                                            <div>{advancedFields}</div>
+                                        </Panel>
+                                        <FormFooter actions={{}}>
+                                            <Button type="submit" className='ak-button' isDisabled={this.state.isSomethingLoading} isLoading={this.state.loadingField === 'submitButton'}>
+                                            Submit
+                                            </Button>
+                                        </FormFooter>
+                                        </form>);
+                                    }}
                             </Form>
                         </div>
                     </GridColumn>
@@ -348,24 +461,82 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
     getFieldMarkup(field:ScreenField):any {
         switch(field.uiType) {
             case UIType.Textarea: {
+                let validateFunc = field.required ? FieldValidators.validateString : undefined;
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                        <textarea
-                        style={{width:'100%', display:'block'}}
-                        id={field.key}
-                        className='ak-textarea'
-                        rows={3}
-                        onChange={this.setTextFieldValue} 
-                        value={this.state.fieldValues[field.key]}
-                        disabled={this.state.isSomethingLoading}
-                        />
+                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    {
+                        ( fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = 
+                                <ErrorMessage>
+                                {field.name} is required
+                                </ErrorMessage>;
+                            }
+                            return (
+                                <div>
+                                <textarea {...fieldArgs.fieldProps}
+                                    style={{width:'100%', display:'block'}}
+                                    className='ak-textarea'
+                                    rows={3}
+                                    disabled={this.state.isSomethingLoading}
+                                    />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
             case UIType.Input: {
+                let validateFunc = undefined;
+                let valType = (field as InputScreenField).valueType;
+                switch(valType) {
+                    case InputValueType.Number: {
+                        validateFunc = (value:any, state:any) => {
+                            if(field.required){
+                                return FieldValidators.validateRequiredNumber(value,state);
+                            }
+                            
+                            return FieldValidators.validateNumber(value,state);
+                        };
+
+                        break;
+                    }
+                    case InputValueType.Url: {
+                        validateFunc = (field.required) ? FieldValidators.validateRequiredUrl : FieldValidators.validateUrl;
+                        break;
+                    }
+                    default: {
+                        if(field.required) {
+                            validateFunc = FieldValidators.validateString;
+                            break;
+                        }
+                        break;
+                    }
+                }
+
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    {
+                        ( fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                            } else if(fieldArgs.error === 'NOT_NUMBER'){
+                                errDiv = <ErrorMessage>{field.name} must be a number</ErrorMessage>;
+                            } else if(fieldArgs.error === 'NOT_URL'){
+                                errDiv = <ErrorMessage>{field.name} must be a url</ErrorMessage>;
+                            }
+                            return (
+                                <div>
+                                <input {...fieldArgs.fieldProps} style={{width:'100%', display:'block'}} className='ak-inputField' disabled={this.state.isSomethingLoading} />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
@@ -374,65 +545,140 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 const checkField = field as OptionableScreenField;
                 checkField.allowedValues.forEach(value => {
                     checkboxItems.push(
-                        <label>{value.value}: <input type='checkbox' id={field.key} onChange={this.setCheckboxValue} value={value.id} checked={this.state.fieldValues[field.key] !== undefined && this.state.fieldValues[field.key].contains(value.id)}/></label>
+                        <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
+                        {
+                            ( fieldArgs:any) => {
+                                return (<Checkbox {...fieldArgs.fieldProps} label={value.value} />);
+                            }
+                        }
+                        </CheckboxField>
+
                     );
                 });
+
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                       <div>{checkboxItems}</div>
-                    </Field>
+                    <Fieldset legend={field.name}>
+                        {checkboxItems}
+                    </Fieldset>
                 );
             }
             case UIType.Radio: {
                 let radioItems:any[] = [];
                 const radioField = field as OptionableScreenField;
                 radioField.allowedValues.forEach(value => {
-                    radioItems.push(
-                        <label>hello</label>
-                    );
+                    radioItems.push({name:field.key, label:value.value, value:value.id});
                 });
+
+                let validateFunc = field.required ? FieldValidators.validateMultiSelect : undefined;
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                       <div>{radioItems}</div>
+                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    {
+                        ( fieldArgs:any) => {
+                            return ( <RadioGroup {...fieldArgs.fieldProps} options={radioItems} />);
+                        }
+                    }
                     </Field>
                 );
             }
             case UIType.Date: {
-
+                let validateFunc = field.required ? FieldValidators.validateString : undefined;
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                        <DatePicker 
-                            onChange={(value:any) => {
-                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:value}}});
-                                console.log('date value', this.state.fieldValues[field.key]);
-                            }}
-                            className="ak-select-container"
-                            value={this.state.fieldValues[field.key]}
-                            selectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
-                            />
+                    <Field 
+                        label={field.name} 
+                        isRequired={field.required} 
+                        id={field.key} 
+                        name={field.key} 
+                        validate={validateFunc}
+                        >
+                    {
+                        ( fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                            }
+                            return (
+                                <div>
+                                 <DatePicker 
+                                    {...fieldArgs.fieldProps}
+                                    className="ak-select-container"
+                                    selectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                                />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
             case UIType.DateTime: {
+                let validateFunc = field.required ? FieldValidators.validateString : undefined;
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                        <DateTimePicker 
-                            onChange={(value:any) => {
-                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:value}}});
-                                console.log('date value', this.state.fieldValues[field.key]);
-                            }}
-                            className="ak-select-container"
-                            value={this.state.fieldValues[field.key]}
-                            datePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
-                            timePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
-                            />
+                    <Field 
+                        label={field.name} 
+                        isRequired={field.required} 
+                        id={field.key} 
+                        name={field.key} 
+                        validate={validateFunc}
+                        >
+                    {
+                        ( fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                            }
+                            return (
+                                <div>
+                                 <DateTimePicker 
+                                    {...fieldArgs.fieldProps}
+                                    className="ak-select-container"
+                                    datePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                                    timePickerSelectProps={{className:"ak-select-container", classNamePrefix:"ak-select"}}
+                                />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
             case UIType.User: {
+                let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
+                const selectField = field as SelectScreenField;
                 return (
-                    <Field label={field.name} isRequired={field.required}>
-                        <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+                     <Field label={field.name}
+                            isRequired={field.required} 
+                            id={field.key} 
+                            name={field.key}
+                            validate={validateFunc}>
+                    {
+                        (fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                            }
+
+                            return(
+                                <div>
+                                    <AsyncSelect
+                                        {...fieldArgs.fieldProps}
+                                        className="ak-select-container"
+                                        classNamePrefix="ak-select"
+                                        loadOptions={this.loadUserOptions}
+                                        getOptionLabel={(option:any) => option.name}
+                                        getOptionValue={(option:any) => option.accountId}
+                                        placeholder="Search for a User"
+                                        isLoading={this.state.loadingField === field.key}
+                                        isDisabled={this.state.isSomethingLoading}
+                                        isMulti={selectField.isMulti}
+                                        components={{ Option: UserOption, SingleValue:UserValue }}
+                                    />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
@@ -441,108 +687,169 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
                 if(selectField.isCreateable) {
                     return this.createableSelect(selectField);
                 }
-
+                
+                let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
                 return (
-                    <Field label={selectField.name} isRequired={selectField.required}>
-                        <Select
-                            id={field.key}
-                            isMulti={selectField.isMulti}
-                            isClearable={!field.required}
-                            className="ak-select-container"
-                            classNamePrefix="ak-select"
-                            getOptionLabel={(option:any) => (option.name) ? option.name : option.value}
-                            getOptionValue={(option:any) => option.id}
-                            value={this.state.fieldValues[field.key]}
-                            onChange={(selected:any) => {
-                                this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
-                            }}
-                            options={this.state.fieldOptions[field.key]}
-                            isDisabled={this.state.isSomethingLoading}
-                            components={(selectField.allowedValues.length > 0 && selectField.allowedValues[0].iconUrl)? { Option: IconOption, SingleValue:ValueComponent }: {}}
-                        />
+                    <Field label={field.name}
+                            isRequired={field.required} 
+                            id={field.key} 
+                            name={field.key}
+                            validate={validateFunc}>
+                    {
+                        (fieldArgs:any) => {
+                            let errDiv = <span/>;
+                            if(fieldArgs.error === 'EMPTY'){
+                                errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                            }
+
+                            return(
+                                <div>
+                                <Select
+                                    {...fieldArgs.fieldProps}
+                                    isMulti={selectField.isMulti}
+                                    isClearable={!field.required && selectField.isMulti}
+                                    className="ak-select-container"
+                                    classNamePrefix="ak-select"
+                                    getOptionLabel={(option:any) => (option.name) ? option.name : option.value}
+                                    getOptionValue={(option:any) => option.id}
+                                    options={this.state.fieldOptions[field.key]}
+                                    components={(selectField.allowedValues.length > 0 && selectField.allowedValues[0].iconUrl)? { Option: IconOption, SingleValue:IconValue }: {}}
+                                />
+                                {errDiv}
+                                </div>
+                            );
+                        }
+                    }
                     </Field>
                 );
             }
         }
 
+        // catch-all for unknown field types
+        let validateFunc = field.required ? FieldValidators.validateString : undefined;
         return (
-            <Field label={field.name} isRequired={field.required}>
-                <input style={{width:'100%', display:'block'}} className='ak-inputField' id={field.key} onChange={this.setTextFieldValue} value={this.state.fieldValues[field.key]}/>
+            <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+            {
+                ( fieldArgs:any) => {
+                    let errDiv = <span/>;
+                    if(fieldArgs.error === 'EMPTY'){
+                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                    }
+                    return (
+                        <div>
+                        <input {...fieldArgs.fieldProps} style={{width:'100%', display:'block'}} className='ak-inputField' />
+                        {errDiv}
+                        </div>
+                    );
+                }
+            }
             </Field>
         );
     }
 
     createableSelect(field:SelectScreenField):any {
-        if(field.key === 'labels') {
-            return (
-                <Field label={field.name} isRequired={field.required}>
-                    <AsyncCreatableSelect
-                        loadOptions={this.loadLabelOptions}
-                        id={field.key}
-                        isMulti={field.isMulti}
-                        isClearable={!field.required}
-                        className="ak-select-container"
-                        classNamePrefix="ak-select"
-                        getOptionLabel={(option:any) => option}
-                        getOptionValue={(option:any) => option}
-                        value={this.state.fieldValues[field.key]}
-                        onChange={(selected:any) => {
-                            this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
-                        }}
-                        defaultOptions={this.state.fieldOptions[field.key]}
-                        onCreateOption={(input:any):void => {this.handleLabelCreate(input,field.key);}}
-                        isLoading={this.state.loadingField === field.key}
-                        isDisabled={this.state.isSomethingLoading}
-                        isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
-                            if (
-                                inputValue.trim().length === 0 ||
-                                selectOptions.find(option => option === inputValue)
-                            ) {
-                                return false;
-                            }
-                            return true;
-                            }}
-                        getNewOptionData={(inputValue:any, optionLabel:any) => (inputValue)}
-                    >
+        let validateFunc = undefined;
+        if(field.required){
+            validateFunc = (field.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;
+        }
 
-                    </AsyncCreatableSelect>
+        if(field.key === 'labels' || field.autoCompleteUrl.includes('/rest/api/1.0/labels/suggest')) {
+            return (
+                <Field label={field.name}
+                        isRequired={field.required} 
+                        id={field.key} 
+                        name={field.key}
+                        validate={validateFunc}
+                        defaultValue={[]}
+                        >
+                {
+                    (fieldArgs:any) => {
+                        let errDiv = <span/>;
+                        if(fieldArgs.error === 'EMPTY'){
+                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                        }
+
+                        return(
+                            <div>
+                                <AsyncCreatableSelect
+                                    {...fieldArgs.fieldProps}
+                                    loadOptions={this.loadLabelOptions}
+                                    isMulti={field.isMulti}
+                                    isClearable={!field.required && field.isMulti}
+                                    className="ak-select-container"
+                                    classNamePrefix="ak-select"
+                                    getOptionLabel={(option:any) => option}
+                                    getOptionValue={(option:any) => option}
+                                    isLoading={this.state.loadingField === field.key}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
+                                            if (inputValue.trim().length === 0 || selectOptions.find(option => option === inputValue)) {
+                                                return false;
+                                            }
+                                            return true;
+                                        }
+                                    }
+                                    getNewOptionData={(inputValue:any, optionLabel:any) => (inputValue)}
+                                >
+                                </AsyncCreatableSelect>
+                                {errDiv}
+                                </div>
+                        );
+                    }
+                }
                 </Field>
             );
         }
 
         return(
-            <Field label={field.name} isRequired={field.required}>
-                <CreatableSelect
-                    id={field.key}
-                    isMulti={field.isMulti}
-                    isClearable={!field.required}
-                    className="ak-select-container"
-                    classNamePrefix="ak-select"
-                    getOptionLabel={(option:any) => option.name}
-                    getOptionValue={(option:any) => option.id}
-                    value={this.state.fieldValues[field.key]}
-                    onChange={(selected:any) => {
-                        this.setState({fieldValues:{...this.state.fieldValues,...{[field.key]:selected}}});
-                    }}
-                    options={this.state.fieldOptions[field.key]}
-                    onCreateOption={(input:any):void => {this.handleOptionCreate(input,field.key);}}
-                    isLoading={this.state.loadingField === field.key}
-                    isDisabled={this.state.isSomethingLoading}
-                    isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
-                        if (
-                            inputValue.trim().length === 0 ||
-                            selectOptions.find(option => option.name === inputValue)
-                        ) {
-                            return false;
+            <Field label={field.name}
+                    isRequired={field.required} 
+                    id={field.key} 
+                    name={field.key}
+                    validate={validateFunc}
+                    defaultValue={this.state.fieldValues[field.key]}
+            >
+                {
+                    (fieldArgs:any) => {
+                        let errDiv = <span/>;
+                        if(fieldArgs.error === 'EMPTY'){
+                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
                         }
-                        return true;
-                        }}
-                    getNewOptionData={(inputValue:any, optionLabel:any) => ({
-                        id: inputValue,
-                        name: optionLabel,
-                    })}
-                />
-            </Field>
+                        
+                        return(
+                            <div>
+                                <CreatableSelect
+                                    {...fieldArgs.fieldProps}
+                                    isMulti={field.isMulti}
+                                    isClearable={!field.required && field.isMulti}
+                                    className="ak-select-container"
+                                    classNamePrefix="ak-select"
+                                    getOptionLabel={(option:any) => option.name}
+                                    getOptionValue={(option:any) => option.id}
+                                    options={this.state.fieldOptions[field.key]}
+                                    onCreateOption={(input:any):void => {this.handleOptionCreate(input,field.key);}}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected:any) => {this.handleSelectChange(selected,field.key);})}
+
+                                    isLoading={this.state.loadingField === field.key}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    isValidNewOption = {(inputValue:any, selectValue:any, selectOptions:any[]) => {
+                                        if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
+                                            return false;
+                                        }
+                                        return true;
+                                    }}
+                                    getNewOptionData={(inputValue:any, optionLabel:any) => ({
+                                        id: inputValue,
+                                        name: optionLabel,
+                                    })}
+                                >
+                                </CreatableSelect>
+                                {errDiv}
+                                </div>
+                        );
+                    }
+                }
+                </Field>
         );
     }
 }
