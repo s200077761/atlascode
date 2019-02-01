@@ -114,6 +114,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.bb.viewInWebBrowser",
+                "title": "View on bitbucket.org",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
                 "category": "AtlasCode"
@@ -259,6 +264,10 @@
                 {
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.viewInWebBrowser",
+                    "when": "viewItem == pullrequest"
                 }
             ],
             "commandPalette": [

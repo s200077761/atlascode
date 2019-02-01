@@ -8,6 +8,7 @@ import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
 import { assignIssue } from './commands/jira/assignIssue';
 import { IssueNode } from './views/nodes/issueNode';
+import { BaseNode } from './views/nodes/baseNode';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -15,6 +16,7 @@ export enum Commands {
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
+    BitbucketViewInWebBrowser = 'atlascode.bb.viewInWebBrowser',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     AuthenticateBitbucketStaging = 'atlascode.bb.authenticateStaging',
     ClearBitbucketAuth = 'atlascode.bb.clearAuth',
@@ -43,6 +45,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
+        vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', prNode.getTreeItem().resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
