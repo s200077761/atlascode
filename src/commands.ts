@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as child from 'child_process';
 import { currentUserJira } from './commands//jira/currentUser';
 import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth, authenticateBitbucketStaging } from './commands/authenticate';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
