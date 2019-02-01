@@ -51,7 +51,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
       
     }
   
-    public async bbrequest(promptForAuth:boolean = true): Promise<BitbucketKit | undefined> {
+    public async bbrequest(promptForAuth:boolean = true, reauthenticate:boolean = false): Promise<BitbucketKit | undefined> {
       return this.getClient<BitbucketKit>(
         AuthProvider.BitbucketCloud,
         info => {
@@ -64,11 +64,11 @@ import { ProductJira, ProductBitbucket } from "../constants";
           bbclient.authenticate({ type: "token", token: info.access });
   
           return bbclient;
-        }, promptForAuth
+        }, promptForAuth, false, reauthenticate
       );
     }
 
-    public async bbrequestStaging(promptForAuth:boolean = true): Promise<BitbucketKit | undefined> {
+    public async bbrequestStaging(promptForAuth:boolean = true, reauthenticate:boolean = false): Promise<BitbucketKit | undefined> {
       return this.getClient<BitbucketKit>(
         AuthProvider.BitbucketCloudStaging,
         info => {
@@ -81,11 +81,11 @@ import { ProductJira, ProductBitbucket } from "../constants";
           bbclient.authenticate({ type: "token", token: info.access });
   
           return bbclient;
-        }, promptForAuth
+        }, promptForAuth, false, reauthenticate
       );
     }
 
-    public async jirarequest(workingSite?: WorkingSite, promptForAuth:boolean = true): Promise<JiraKit | undefined> {
+    public async jirarequest(workingSite?: WorkingSite, promptForAuth:boolean = true, reauthenticate:boolean = false): Promise<JiraKit | undefined> {
       // if workingSite is passed in and is different from the one in config, 
       // it is for a one-off request (eg. a request from webview from previously configured workingSite)
       const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
@@ -120,7 +120,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
         jraclient.authenticate({ type: "token", token: info.access });
   
         return jraclient;
-      }, promptForAuth, doNotUpdateCache);
+      }, promptForAuth, doNotUpdateCache, reauthenticate);
     }
   
     public async removeClient(provider: string) {
@@ -131,11 +131,12 @@ import { ProductJira, ProductBitbucket } from "../constants";
       provider: string,
       factory: (info: AuthInfo) => any,
       promptUser:boolean = true,
-      doNotUpdateCache:boolean = true
+      doNotUpdateCache:boolean = true,
+      reauthenticate:boolean=false
     ): Promise<T | undefined> {
       type TorEmpty = T | EmptyClient;
   
-      let clientOrEmpty = await this._clients.getItem<TorEmpty>(provider);
+      const clientOrEmpty = await this._clients.getItem<TorEmpty>(provider);
   
       if (isEmptyClient(clientOrEmpty)) {
         return undefined;
@@ -143,7 +144,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
   
       let client: T | undefined = clientOrEmpty;
   
-      if (!client) {
+      if (!client || reauthenticate) {
 
         if (!this.isLocked(provider)) {
           this.lockClient(provider);
@@ -154,7 +155,7 @@ import { ProductJira, ProductBitbucket } from "../constants";
         Logger.debug('no client found', provider);
         let info = await Container.authManager.getAuthInfo(provider);
   
-        if (!info) {
+        if (!info || reauthenticate) {
           info = await this.danceWithUser(provider,promptUser);
   
           if (info) {
@@ -282,19 +283,22 @@ import { ProductJira, ProductBitbucket } from "../constants";
     }
     
     public async authenticate(provider:string): Promise<void> {
-      this._clients.deleteItem(provider);
+      if (isEmptyClient(this._clients.getItem(provider))) {
+        this._clients.deleteItem(provider);
+      }
+
       switch(provider) {
         case AuthProvider.JiraCloud: {
           Logger.debug('client manager is calling jirarequest');
-          await this.jirarequest(undefined,false);
+          await this.jirarequest(undefined,false,true);
           break;
         }
         case AuthProvider.BitbucketCloud: {
-          await this.bbrequest(false);
+          await this.bbrequest(false,true);
           break;
         }
         case AuthProvider.BitbucketCloudStaging: {
-          await this.bbrequestStaging(false);
+          await this.bbrequestStaging(false,true);
           break;
         }
       }
