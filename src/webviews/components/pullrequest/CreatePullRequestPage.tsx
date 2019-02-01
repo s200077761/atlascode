@@ -5,18 +5,18 @@ import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
-import { CreatePRData, CreatePullRequestResult, isCreatePullRequestResult, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
+import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
 import { InlineFlex, VerticalPadding, SelectStyles } from '../styles';
 import Select from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, ShowPullRequestsExplorer } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
 import BranchWarning from './BranchWarning';
 import CreatePRTitleSummary from './CreatePRTitleSummary';
 
-type Emit = CreatePullRequest | FetchDetails | ShowPullRequestsExplorer;
-type Receive = CreatePRData | CreatePullRequestResult | CommitsResult;
+type Emit = CreatePullRequest | FetchDetails;
+type Receive = CreatePRData | CommitsResult;
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: []};
 const formatOptionLabel = (option: any, { context }: any) => {
@@ -147,12 +147,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({pushLocalChanges: e.target.checked});
     }
 
-    handleShowPullRequestsExplorer = () => {
-        this.postMessage({
-            action: 'showPullRequestsExplorer'
-        });
-    }
-
     handleCreatePR = () => {
         this.setState({isCreateButtonLoading: true});
         this.postMessage({
@@ -168,9 +162,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     onMessageReceived(e: Receive): void {
-        if (isCreatePullRequestResult(e)) {
-            this.setState({isCreateButtonLoading: false, commits: [], result: e.url});
-        }
         if (isCommitsResult(e)) {
             this.setState({
                 commits: e.commits,
@@ -282,13 +273,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </GridColumn>
 
                         <GridColumn medium={12}>
-                            {this.state.result
-                                ? <React.Fragment>
-                                    <p>Created pull request - <Button appearance='link' href={this.state.result}>{this.state.result}</Button></p>
-                                    <Button className='ak-button' onClick={this.handleShowPullRequestsExplorer}>Show pull requests explorer</Button>
-                                  </React.Fragment>
-                                : <Button className='ak-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
-                            }
+                            <Button className='ak-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
                         </GridColumn>
 
                         <GridColumn medium={12}>

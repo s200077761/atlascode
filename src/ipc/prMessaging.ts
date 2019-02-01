@@ -53,12 +53,3 @@ export interface CommitsResult extends Message {
 export function isCommitsResult(a: Message): a is CommitsResult {
     return (<CommitsResult>a).type === 'commitsResult';
 }
-
-export interface CreatePullRequestResult extends Message {
-    error?: string;
-    url: string;
-}
-
-export function isCreatePullRequestResult(a: Message): a is CreatePullRequestResult {
-    return (<CreatePullRequestResult>a).type === 'createPullRequestResult';
-}
