@@ -121,15 +121,11 @@ export const emptyWorkingSite: WorkingSite = {
     avatarUrl: ''
 };
 
-export function notEmptySite(s:WorkingSite): s is WorkingSite {
-    return (<WorkingSite>s).name !== undefined
-        && (<WorkingSite>s).name !== ''
-        && (<WorkingSite>s).id !== undefined
-        && (<WorkingSite>s).id !== ''
-        && (<WorkingSite>s).avatarUrl !== undefined
-        && (<WorkingSite>s).avatarUrl !== ''
-        && (<WorkingSite>s).scopes !== undefined
-        && (<WorkingSite>s).scopes !== []
+export function isEmptySite(s:WorkingSite): boolean {
+    return ((s.name === undefined || s.name === '')
+        && (s.id === undefined || s.id === '')
+        && (s.avatarUrl === undefined || s.avatarUrl === '')
+        && (s.scopes === undefined || s.scopes === []))
     ;
 }
 

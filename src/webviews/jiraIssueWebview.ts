@@ -9,7 +9,7 @@ import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue } fro
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
-import { notEmptySite } from '../config/model';
+import { isEmptySite } from '../config/model';
 import { AuthProvider } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
@@ -110,7 +110,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
-        if(notEmptySite(issue.workingSite)) {
+        if(!isEmptySite(issue.workingSite)) {
             this.tenantId = issue.workingSite.id;
         }
         if (!this._currentUserId ) {
