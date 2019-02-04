@@ -42,6 +42,7 @@ div.icon-text img {
   margin-right: 5pt;
 }
 
+/* ak-button should be the className on all atlaskit button components */
 .ak-button {
   background: var(--vscode-button-background) !important;
 }
@@ -125,19 +126,31 @@ div#jql-row {
   background: var(--vscode-button-background--50) !important;
 }
 
-.ak-textarea {
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
+/* ak-textarea and ak-textfield should be the classNames on atlaskit input components */
+.ak-textarea, .ak-inputField {
+  background: var(--vscode-input-background)!important;
+  color: var(--vscode-input-foreground)!important;
   font: inherit;
   width: inherit;
-  box-sizing: border-box;
   padding: 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--vscode-input-border)!important;
+  outline: 0px!important;
 }
 
 .ak-textarea:focus {
   outline-color: var(--vscode-focusBorder);
   outline-width: 2px;
 }
+
+.ak-inputField {
+  display: block;
+}
+
+.ak-textarea::placeholder, .ak-inputField::placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
+}
+
 
 [class^="Droplist__Content"] {
   background: var(--vscode-sideBar-background) !important;
@@ -167,16 +180,12 @@ div#jql-row {
 }
 
 /* Sketchy way of coloring the background of the drop-down menu in the feedback collector */
-[class^="Modal__Dialog"] div[class^="css-"] div[class^="css-"] {
+/*[class^="Modal__Dialog"] div[class^="css-"] div[class^="css-"] {
   background: var(--background-color) !important;
   color: var(--vscode-input-foreground) !important; 
-}
+} */
 
-[class^="Checkbox__Label"] {
-  color: var(--vscode-input-foreground) !important; 
-}
-
-[class^="Field__Label"] {
+[class^="Checkbox__Label"],[class^="Radio__Label"],[class^="Field__Label"] {
   color: var(--vscode-input-foreground) !important; 
 }
 
@@ -267,11 +276,11 @@ div#jql-row {
   color: var(--color--75);
 }
 
-[class^="Checkbox__IconWrapper-"] {
+[class^="Checkbox__IconWrapper-"], [class^="Radio__IconWrapper-"] {
   color: var(--vscode-button-background) !important;
 }
 
-[class^="Checkbox__IconWrapper-"] rect {
+[class^="Checkbox__IconWrapper-"] rect, [class^="Radio__IconWrapper-"] circle {
   stroke: var(--vscode-button-background) !important;
 }
 .labelAndSelect {
@@ -331,6 +340,92 @@ hr {
 /* img::after is triggered only if img loading fails */
 .bitbucket-page img::after {
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+}
+
+/* ak-select is the classNamePrefix that should be applied to atlaskit select components */
+.ak-select__control {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
+}
+
+.ak-select__control:hover {
+  border-color: var(--vscode-focusBorder) !important;
+}
+
+.ak-select__control--is-focused {
+  border-color: var(--vscode-focusBorder) !important;
+}
+
+.ak-select__menu, .ak-select__menu-list, .ak-select__single-value, .ak-select__indicator, .ak-select__input {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+.ak-select__option {
+  cursor: pointer !important;
+}
+
+.ak-select__placeholder {
+  color: var(--vscode-input-placeholderForeground) !important;
+}
+
+.ak-select__option--is-focused {
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+.ak-select__option--is-selected {
+  background: var(--vscode-list-activeSelectionBackground) !important;
+  color: var(--vscode-list-activeSelectionForeground) !important;
+}
+
+.ak-select__menu {
+  border: 1px solid var(--vscode-focusBorder)!important;
+  border-radius: 2px!important;
+}
+
+.ak-select__value-container {
+  padding: 0px!important;
+}
+
+/* Calendar__Wrapper is the only way to style the calendar popup */
+[class^="Calendar__Wrapper"] {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: 1px solid var(--vscode-focusBorder)!important;
+}
+
+[class^="Heading__MonthAndYear"] {
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Calendar__CalendarTh"] {
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Date__DateDiv"] {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="Date__DateDiv"]:hover {
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important;
+}
+
+[class^="Date__DateDiv"]:disabled {
+  background: var(--vscode-list-focusBackground) !important;
+  color: red !important;
+}
+
+[class^="Calendar__Wrapper"] > [class^="Icon__IconWrapper"]{
+  color: var(--vscode-dropdown-foreground) !important;
+}
+
+[class^="DateTimePicker__Flex-"] {
+  background: var(--vscode-dropdown-background) !important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
 }
 
 .bitbucket-page h3 {

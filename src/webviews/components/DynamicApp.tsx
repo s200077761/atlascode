@@ -33,6 +33,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadableCreateIssueView = Loadable({
+    loader: () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
+    loading: Loading,
+  });
+
 function Loading(props:Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! { props.error }</div>;
@@ -85,6 +90,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return(
                     <div>
                         <LoadableIssuewView />
+                    </div>
+                );
+            }
+		case 'atlascodeCreateIssueScreen': {
+                return(
+                    <div>
+                        <LoadableCreateIssueView />
                     </div>
                 );
             }

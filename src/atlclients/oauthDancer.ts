@@ -38,7 +38,7 @@ export class OAuthDancer {
         clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
         clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
         callbackURL: 'http://127.0.0.1:9090/' + authinfo.AuthProvider.JiraCloud,
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access',
+        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     }, this.verify.bind(this));
 
     public constructor() {

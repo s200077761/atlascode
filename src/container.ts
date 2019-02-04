@@ -11,6 +11,7 @@ import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
 import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
+import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
@@ -28,6 +29,7 @@ export class Container {
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
         context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
+	context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
@@ -86,6 +88,11 @@ export class Container {
     private static _welcomeWebview: WelcomeWebview;
     static get welcomeWebview() {
         return this._welcomeWebview;
+    }
+
+    private static _createIssueWebview: CreateIssueWebview;
+    static get createIssueWebview() {
+        return this._createIssueWebview;
     }
 
     private static _pullRequestViewManager: PullRequestViewManager;

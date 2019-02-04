@@ -26,6 +26,7 @@ export enum Commands {
     ClearJiraAuth = 'atlascode.jira.clearAuth',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
+    CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
@@ -48,6 +49,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', prNode.getTreeItem().resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
+        vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
             Logger.debug('args',issue);
             Container.jiraIssueViewManager.createOrShow(issue);

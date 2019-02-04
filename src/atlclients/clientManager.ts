@@ -13,7 +13,7 @@ import {
   import { Logger } from "../logger";
   var tunnel = require("tunnel");
   import * as fs from "fs";
-  import { configuration, WorkingSite, emptyWorkingSite } from "../config/configuration";
+  import { configuration, WorkingSite, isEmptySite } from "../config/configuration";
   import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { ProductJira, ProductBitbucket } from "../constants";
@@ -93,11 +93,11 @@ import { ProductJira, ProductBitbucket } from "../constants";
       return this.getClient<JiraKit>(AuthProvider.JiraCloud, info => {
         let cloudId: string = "";
         Logger.debug("jirarequest",workingSite);
-        if (!workingSite || workingSite === emptyWorkingSite) {
+        if (!workingSite || isEmptySite(workingSite)) {
             workingSite = Container.config.jira.workingSite;
         } 
         if (info.accessibleResources) {
-          if (workingSite) {
+          if (workingSite && !isEmptySite(workingSite)) {
             const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
             if (foundSite) {
               cloudId = foundSite.id;

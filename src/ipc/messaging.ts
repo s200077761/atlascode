@@ -5,6 +5,10 @@ export interface Message {
     type:string;
 }
 
+export interface HostErrorMessage extends Message {
+    reason:string;
+}
+
 // Action is the base interface for sending messages from react => vscode
 // Action must have an action so receivers can switch on it.
 // Sub-interfaces should be used to carry action specific data and extend this interface.

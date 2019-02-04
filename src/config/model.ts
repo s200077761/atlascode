@@ -121,11 +121,29 @@ export const emptyWorkingSite: WorkingSite = {
     avatarUrl: ''
 };
 
+export function isEmptySite(s:WorkingSite): boolean {
+    return ((s.name === undefined || s.name === '')
+        && (s.id === undefined || s.id === '')
+        && (s.avatarUrl === undefined || s.avatarUrl === '')
+        && (s.scopes === undefined || s.scopes === []))
+    ;
+}
+
 export const emptyWorkingProject: WorkingProject = {
     name: '',
     id: '',
     key: ''
 };
+
+export function notEmptyProject(p: WorkingProject): p is WorkingProject {
+    return (<WorkingProject>p).name !== undefined
+        && (<WorkingProject>p).name !== ''
+        && (<WorkingProject>p).id !== undefined
+        && (<WorkingProject>p).id !== ''
+        && (<WorkingProject>p).key !== undefined
+        && (<WorkingProject>p).key !== ''
+    ;
+}
 
 export const emptyJiraExplorer: JiraExplorer = {
     enabled:true,

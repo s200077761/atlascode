@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscode";
 import { Container } from "../container";
-import { configuration, emptyWorkingSite, WorkingSite, WorkingProject, emptyWorkingProject } from "../config/configuration";
+import { configuration, emptyWorkingSite, WorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
@@ -12,6 +12,7 @@ export type JiraSiteUpdateEvent = {
     projects: Project[];
 };
 
+type OrderBy = "category"|"-category"|"+category"|"key"|"-key"|"+key"|"name"|"-name"|"+name"|"owner"|"-owner"|"+owner";
 export class JiraSiteManager extends Disposable {
     private _disposable:Disposable;
     private _sitesAvailable:AccessibleResource[] = [];
@@ -70,8 +71,8 @@ export class JiraSiteManager extends Disposable {
         }
     }
 
-    async getProjects(): Promise<Project[]> {
-        if(this._projectsAvailable.length > 0) {
+    async getProjects(orderBy?:OrderBy, query?:string): Promise<Project[]> {
+        if(this._projectsAvailable.length > 0 && query === undefined) {
             return this._projectsAvailable;
         }
 
@@ -81,8 +82,9 @@ export class JiraSiteManager extends Disposable {
             let client = await Container.clientManager.jirarequest();
         
             if (client) {
+                const order = orderBy !== undefined ? orderBy : 'key';
             return client.project
-                .getProjectsPaginated({})
+                .getProjectsPaginated({orderBy:order,query:query})
                 .then((res: JIRA.Response<JIRA.Schema.PageBeanProjectBean>) => {
                 return this.readProjects(res.data.values);
                 });
@@ -121,7 +123,7 @@ export class JiraSiteManager extends Disposable {
         let workingSite = emptyWorkingSite;
         const configSite = Container.config.jira.workingSite;
 
-        if(configSite && configSite !== emptyWorkingSite) {
+        if(configSite && !isEmptySite(configSite)) {
             workingSite = configSite;
         } else if(this._sitesAvailable.length > 0) {
             workingSite = this._sitesAvailable[0];
@@ -130,12 +132,30 @@ export class JiraSiteManager extends Disposable {
         return workingSite;
     }
 
-    public get effectiveProject():WorkingProject {
+    public get workingProjectOrEmpty():WorkingProject {
         let workingProject = emptyWorkingProject;
         const configProject = Container.config.jira.workingProject;
 
-        if(configProject) {
+        if(configProject && notEmptyProject(configProject)) {
             workingProject = configProject;
+        }
+
+        return workingProject;
+    }
+
+    public async getEffectiveProject():Promise<WorkingProject> {
+        let workingProject = emptyWorkingProject;
+        const configProject = Container.config.jira.workingProject;
+
+        if(configProject && notEmptyProject(configProject)) {
+            Logger.debug('sitemanager returning config project', configProject);
+            workingProject = configProject;
+        } else {
+            const projects = await this.getProjects();
+            Logger.debug('sitemanager returning first available project', projects);
+            if(projects.length > 0) {
+                workingProject = projects[0];
+            }
         }
 
         return workingProject;
