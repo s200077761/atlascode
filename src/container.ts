@@ -15,6 +15,7 @@ import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
+import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version:string) {
@@ -59,6 +60,7 @@ export class Container {
 
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
+        this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
     }
 
     static get machineId() {
@@ -108,6 +110,11 @@ export class Container {
     private static _jiraExplorer: JiraExplorer | undefined;
     static get jiraExplorer(): JiraExplorer {
         return this._jiraExplorer!;
+    }
+
+    private static _pipelinesExplorer: PipelinesExplorer | undefined;
+    static get pipelinesExplorer(): PipelinesExplorer {
+        return this._pipelinesExplorer!;
     }
 
     private static _jiraIssueViewManager: JiraIssueViewManager;

@@ -79,6 +79,14 @@ export interface BitbucketConfig {
     explorer: BitbucketExplorer;
     statusbar:BitbucketStatusBar;
     contextMenus:BitbucketContextMenus;
+    pipelines: BitbucketPipelinesConfig;
+}
+
+export interface BitbucketPipelinesConfig {
+    explorer: BitbucketPipelinesExplorer;
+}
+export interface BitbucketPipelinesExplorer {
+    enabled:boolean;
 }
 
 export interface BitbucketExplorer {
@@ -214,10 +222,19 @@ export const emptyBitbucketContextMenus: BitbucketContextMenus = {
     enabled:true
 };
 
+export const emptyPipelinesExplorer:BitbucketPipelinesExplorer = {
+    enabled: true
+};
+
+export const emptyPipelinesConfig:BitbucketPipelinesConfig = {
+    explorer:emptyPipelinesExplorer
+};
+
 export const emptyBitbucketConfig:BitbucketConfig = {
     explorer: emptyBitbucketExplorer,
     statusbar:emptyBitbucketStatusBar,
-    contextMenus:emptyBitbucketContextMenus
+    contextMenus:emptyBitbucketContextMenus,
+    pipelines:emptyPipelinesConfig
 };
 
 export const emptyConfig:IConfig = {

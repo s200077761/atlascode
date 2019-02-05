@@ -23,6 +23,11 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
 
     Resources.icons.set('issues', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
+    Resources.icons.set('pending', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-pending.svg'))));
+    Resources.icons.set('building', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-building.svg'))));
+    Resources.icons.set('success', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-success.svg'))));
+    Resources.icons.set('failed', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-failed.svg'))));
+
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 
     Resources.html.set('reactHtml', Handlebars.compile(fs.readFileSync(vscodeContext.asAbsolutePath(path.join('resources', 'html', 'reactView.html'))).toString()));
