@@ -1,6 +1,6 @@
 import { Disposable, EventEmitter, Event, ConfigurationChangeEvent, TreeView, window, commands, Uri, TreeViewVisibilityChangeEvent } from 'vscode';
 import { Repository, API as GitApi } from "../typings/git";
-import { configuration, BitbucketExplorerLocation } from '../config/configuration';
+import { configuration } from '../config/configuration';
 import { BaseNode } from '../views/nodes/baseNode';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -14,10 +14,6 @@ import { viewScreenEvent } from '../analytics';
 import { Time } from '../util/time';
 import { PullRequestCreatedNotifier } from './prCreatedNotifier';
 
-const explorerLocation = {
-    sourceControl: 'SourceControl',
-    atlascode: 'Atlascode'
-};
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
@@ -102,10 +98,6 @@ export class BitbucketContext extends Disposable {
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
         }
 
-        if(initializing || configuration.changed(e, 'bitbucket.explorer.location')) {
-            this.setLocationContext();
-        }
-
         if (initializing || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
             if (Container.config.bitbucket.explorer.refreshInterval === 0) {
                 this._refreshInterval = 0;
@@ -127,14 +119,6 @@ export class BitbucketContext extends Disposable {
         } else {
             this.stopTimer();
         }
-    }
-    
-    private setLocationContext() {
-        let location = Container.config.bitbucket.explorer.location;
-        if (location !== explorerLocation.sourceControl && location !== explorerLocation.atlascode) {
-            location = BitbucketExplorerLocation.Atlascode;
-        }
-        setCommandContext(CommandContext.BitbucketExplorerLocation, location);
     }
 
     public getAllRepositores(): Repository[] {

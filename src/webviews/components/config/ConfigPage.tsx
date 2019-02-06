@@ -152,13 +152,13 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
-                            trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
+                            trigger={Trigger('Bitbucket Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
                             <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
-                            trigger={Trigger('Pipeline Explorer','configure the Bitbucket Pipeline explorer')}
+                            trigger={Trigger('Bitbucket Pipeline Explorer','configure the Bitbucket Pipeline explorer')}
                             open={true}>
                             <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                         </Collapsible>

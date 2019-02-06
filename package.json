@@ -182,13 +182,6 @@
             ]
         },
         "views": {
-            "scm": [
-                {
-                    "id": "atlascode.views.bb.pullrequestsTreeView",
-                    "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
-                }
-            ],
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.assignedIssues",
@@ -208,7 +201,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                    "when": "atlascode:bitbucketExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
@@ -511,16 +504,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Bitibucket Pipelines Explorer",
-                    "scope": "window"
-                },
-                "atlascode.bitbucket.explorer.location": {
-                    "type": "string",
-                    "default": "Atlascode",
-                    "enum": [
-                        "SourceControl",
-                        "Atlascode"
-                    ],
-                    "description": "Explorer location for Bitbucket pull requests",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.refreshInterval": {
