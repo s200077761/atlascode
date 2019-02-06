@@ -4,7 +4,7 @@ import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Avatar from '@atlaskit/avatar';
-import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
+// import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
 import Tag from '@atlaskit/tag';

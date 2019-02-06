@@ -15,7 +15,7 @@ import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
-import { FieldValidators } from '../fieldValidators';
+import { FieldValidators, chain } from '../fieldValidators';
 
 type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueByKeyAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
@@ -81,9 +81,6 @@ const UserValue = (props:any) => {
         </components.SingleValue>
     );
 };
-
-// used to chain onChange function so we can provide custom functionality after internal state changes
-const chain = (...fns:any[]) => (...args:any[]) => fns.forEach(fn => fn(...args));
 
 export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},ViewState> {
     private newProjects:WorkingProject[] = [];
