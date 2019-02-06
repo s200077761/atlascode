@@ -4,12 +4,11 @@ import RecentIcon from '@atlaskit/icon/glyph/recent';
 import ErrorIcon from '@atlaskit/icon/glyph/error';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
-import { colors } from '@atlaskit/theme';
 import Button from '@atlaskit/button';
 
-const successIcon = <CheckCircleIcon primaryColor={colors.G400} label='build successful' />;
-const inprogressIcon = <RecentIcon primaryColor={colors.B300} label='build in progress' />;
-const errorIcon = <ErrorIcon primaryColor={colors.R400} label='build failure' />;
+const successIcon = <CheckCircleIcon primaryColor='green' label='build successful' />;
+const inprogressIcon = <RecentIcon primaryColor='blue' label='build in progress' />;
+const errorIcon = <ErrorIcon primaryColor='red' label='build failure' />;
 
 export default class BuildStatus extends React.Component<{ buildStatuses?: Bitbucket.Schema.Commitstatus[] }, { dialogOpen: boolean }> {
     constructor(props: any) {
