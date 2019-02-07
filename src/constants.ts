@@ -26,7 +26,6 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
-    BitbucketExplorerLocation = 'atlascode:bitbucketExplorerLocation'
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {

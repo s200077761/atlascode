@@ -92,7 +92,6 @@ export interface BitbucketPipelinesExplorer {
 export interface BitbucketExplorer {
     enabled:boolean;
     refreshInterval:number;
-    location:BitbucketExplorerLocation;
     relatedJiraIssues:BitbucketRelatedJiraIssues;
     notifications:BitbucketNotifications;
 }
@@ -111,11 +110,6 @@ export interface BitbucketStatusBar {
     showProduct:boolean;
     showUser:boolean;
     showLogin:boolean;
-}
-
-export enum BitbucketExplorerLocation {
-    SourceControl = "SourceControl",
-    Atlascode = "Atlascode"
 }
 
 export interface BitbucketContextMenus {
@@ -206,7 +200,6 @@ export const emptyBitbucketNotfications: BitbucketNotifications = {
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
     refreshInterval:5,
-    location:BitbucketExplorerLocation.Atlascode,
     relatedJiraIssues: emptyRelatedJiraIssues,
     notifications: emptyBitbucketNotfications
 };
