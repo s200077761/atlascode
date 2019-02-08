@@ -5,6 +5,7 @@ import { configuration } from "../../config/configuration";
 import { PipelinesTree } from "./PipelinesTree";
 import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../constants";
 import { BitbucketContext } from "../../bitbucket/context";
+import { PipelinesMonitor } from "./PipelinesMonitor";
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -13,6 +14,7 @@ export class PipelinesExplorer extends Disposable {
     private _timer: any | undefined;
     private _refreshInterval = defaultRefreshInterval;
     private _tree: PipelinesTree | undefined;
+    private _monitor: PipelinesMonitor | undefined;
 
     constructor(private _ctx: BitbucketContext) {
         super (() => this.dispose());
@@ -20,13 +22,17 @@ export class PipelinesExplorer extends Disposable {
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
-        void this.onConfigurationChanged(configuration.initializingChangeEvent);    
+        this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
-        if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorer.enabled')) {
-            if(!Container.config.bitbucket.pipelines.explorer.enabled) {
+        if (initializing || configuration.changed(e, 'bitbucket.pipelines.refreshInterval')) {
+            this._refreshInterval = Container.config.bitbucket.pipelines.refreshInterval * Time.MINUTES;
+        }
+
+        if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
+            if(!Container.config.bitbucket.pipelines.explorerEnabled) {
                 this._tree = undefined;
             } else {
                 const repos = this._ctx.getAllRepositores();
@@ -35,15 +41,20 @@ export class PipelinesExplorer extends Disposable {
                     window.createTreeView(PipelinesTreeViewId, {treeDataProvider: this._tree!});
                 }
             }
-            setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorer.enabled);
+            setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled);
         }
 
-
-        if (this._refreshInterval <= 0) {
-            this._refreshInterval = 0;
+        if (initializing || configuration.changed(e, "bitbucket.pipelines.monitorEnabled")) {
+            const repos = this._ctx.getAllRepositores();
+            if (Container.config.bitbucket.pipelines.monitorEnabled) {
+                this._monitor = new PipelinesMonitor(repos);
+            } else {
+                this._monitor = undefined;
+            }
         }
 
-        if (this._refreshInterval === 0 || !Container.config.bitbucket.pipelines.explorer.enabled) {
+        if (!Container.config.bitbucket.pipelines.explorerEnabled &&
+            !Container.config.bitbucket.pipelines.monitorEnabled) {
             this.stopTimer();
         } else {
             this.stopTimer();
@@ -58,6 +69,9 @@ export class PipelinesExplorer extends Disposable {
     refresh() {
         if (this._tree) {
             this._tree.refresh();
+        }
+        if (this._monitor) {
+            this._monitor.checkForNewResults();
         }
     }
 

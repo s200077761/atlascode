@@ -83,10 +83,9 @@ export interface BitbucketConfig {
 }
 
 export interface BitbucketPipelinesConfig {
-    explorer: BitbucketPipelinesExplorer;
-}
-export interface BitbucketPipelinesExplorer {
-    enabled:boolean;
+    explorerEnabled: boolean;
+    monitorEnabled: boolean;
+    refreshInterval: number;
 }
 
 export interface BitbucketExplorer {
@@ -215,12 +214,10 @@ export const emptyBitbucketContextMenus: BitbucketContextMenus = {
     enabled:true
 };
 
-export const emptyPipelinesExplorer:BitbucketPipelinesExplorer = {
-    enabled: true
-};
-
 export const emptyPipelinesConfig:BitbucketPipelinesConfig = {
-    explorer:emptyPipelinesExplorer
+    explorerEnabled: true,
+    monitorEnabled: true,
+    refreshInterval: 5
 };
 
 export const emptyBitbucketConfig:BitbucketConfig = {

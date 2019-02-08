@@ -507,10 +507,22 @@
                     "description": "Enables the Bitbucket Pull Request Explorer",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.pipelines.explorer.enabled": {
+                "atlascode.bitbucket.pipelines.explorerEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables the Bitibucket Pipelines Explorer",
+                    "description": "Enables the Bitbucket Pipelines Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.pipelines.monitorEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Watch Bitbucket Pipelines For New Build Statuses",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.pipelines.refreshInterval": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Time (in minutes) to wait before refreshing the Pipelines status",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.refreshInterval": {
