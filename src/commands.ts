@@ -7,8 +7,10 @@ import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
 import { Logger } from './logger';
 import { assignIssue } from './commands/jira/assignIssue';
+import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
 import { BaseNode } from './views/nodes/baseNode';
+import { BranchNode } from './views/pipelines/PipelinesTree';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -33,7 +35,9 @@ export enum Commands {
     ShowWelcomePage = 'atlascode.showWelcomePage',
     TransitionIssue = 'atlascode.jira.transitionIssue',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
-    CreatePullRequest = 'atlascode.bb.createPullRequest'
+    CreatePullRequest = 'atlascode.bb.createPullRequest',
+    StartPipeline = 'atlascode.bb.startPipeline',
+    RefreshPipelines = 'atlascode.bb.refreshPipelines'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
@@ -55,6 +59,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
-        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode))
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
+        vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node))
     );
 }

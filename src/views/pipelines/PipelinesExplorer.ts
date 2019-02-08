@@ -1,4 +1,4 @@
-import { Disposable, ConfigurationChangeEvent, window } from "vscode";
+import { Disposable, ConfigurationChangeEvent, window, commands } from "vscode";
 import { Time } from '../../util/time';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
@@ -6,6 +6,7 @@ import { PipelinesTree } from "./PipelinesTree";
 import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../constants";
 import { BitbucketContext } from "../../bitbucket/context";
 import { PipelinesMonitor } from "./PipelinesMonitor";
+import { Commands } from "../../commands";
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -18,6 +19,8 @@ export class PipelinesExplorer extends Disposable {
 
     constructor(private _ctx: BitbucketContext) {
         super (() => this.dispose());
+
+        commands.registerCommand(Commands.RefreshPipelines, this.refresh, this);
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
