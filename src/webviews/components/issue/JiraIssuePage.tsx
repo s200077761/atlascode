@@ -107,19 +107,12 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
   onHandleStatusChange = (item: any) => {
-    const transition = this.state.data.transitions.find(
-      trans =>
-        trans.id === item.target.parentNode.parentNode.dataset.transitionId
-    );
-
-    if (transition) {
       this.setState({ isStatusButtonLoading: true });
       this.postMessage({
         action: "transitionIssue",
-        transition: transition,
+        transition: item,
         issue: this.state.data
       });
-    }
   }
 
   header(issue: any): any {

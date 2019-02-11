@@ -25,10 +25,10 @@ import BuildStatus from './BuildStatus';
 type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
 
-export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, branchError?: string }> {
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, isCheckoutButtonLoading:boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false };
+        this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false };
     }
 
     handleApprove = () => {
@@ -60,12 +60,23 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
+    handleCheckout = (branchName: string) => {
+        this.setState({ isCheckoutButtonLoading:true });
+        this.postMessage({
+            action: 'checkout',
+            branch: branchName,
+            isSourceBranch: true
+        });
+    }
+
     onMessageReceived(e: Receive): void {
         if (isPRData(e)) {
-            this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false });
+            this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
         }
         else if (isCheckoutError(e)) {
-            this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch } });
+            this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch }, isCheckoutButtonLoading: false });
+        } else {
+            this.setState({isCheckoutButtonLoading: false });
         }
     }
 
@@ -118,15 +129,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
-                                bottomBar={
-                                    <InlineFlex>
-                                        <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
-                                        <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
-                                    </InlineFlex>
-                                }
-                            >
+                                >
                                 <p>{pr.title}</p>
                             </PageHeader>
+                            <InlineFlex>
+                                <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
+                                <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
+                            </InlineFlex>
+                            <div style={{ display: 'flex', alignItems: 'center', marginTop:'10px'}}>
+                                <Spacer>
+                                    <Button className='ak-button' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout source branch</Button>
+                                </Spacer>
+                                <Spacer>
+                                    <Button className='ak-button' href={pr.links!.html!.href}>Open on bitbucket.org</Button>
+                                </Spacer>
+                            </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>

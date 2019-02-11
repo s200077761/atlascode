@@ -1,8 +1,7 @@
 import React, { PureComponent } from "react";
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
+// import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import { JQLEntry } from "src/config/model";
-import TextField from "@atlaskit/field-text";
 
 export default class EditJQL extends PureComponent<{
   cloudId: string;
@@ -90,7 +89,7 @@ export default class EditJQL extends PureComponent<{
             onOpenComplete={this.onOpenComplete}
             shouldCloseOnEscapePress={false}
           >
-            <TextField
+            {/* <TextField
               style={{ width: "100%"}}
               type="text"
               label="Name"
@@ -108,7 +107,7 @@ export default class EditJQL extends PureComponent<{
               label={"Query"}
               onChange={this.onJQLChange}
               validationRequest={this.validationRequest}
-            />
+            /> */}
             }
           </Modal>
         </ModalTransition>

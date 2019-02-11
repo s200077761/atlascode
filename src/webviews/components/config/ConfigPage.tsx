@@ -6,9 +6,9 @@ import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
-import JiraExplorer from './JiraExplorer';
+// import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
-import BitbucketExplorer from './BBExplorer';
+// import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
@@ -17,7 +17,6 @@ import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
-import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 import { ButtonGroup } from '@atlaskit/button';
 import PipelinesConfig from './PipelinesConfig';
 
@@ -105,7 +104,6 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
-        const strideicon = <StrideIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
             <Page>
@@ -136,7 +134,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Issue Explorer','configure the Jira issue explorer')}
                             open={true}>
-                            <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                            {/* <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
@@ -154,7 +152,7 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         <Collapsible transitionTime={30} 
                             trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
                             open={true}>
-                            <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                            {/* <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
                         </Collapsible>
 
                         <Collapsible transitionTime={30} 
@@ -185,7 +183,6 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                         <DisplayFeedback onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                            <Button className='ak-link-button' appearance="link" iconBefore={strideicon} onClick={this.handleHelpLink}>Need Help?</Button>
                         </div>
                     </GridColumn>
                 </Grid>

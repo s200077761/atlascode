@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
-import { FeedbackForm } from '@atlaskit/feedback-collector';
+// import { FeedbackForm } from '@atlaskit/feedback-collector';
 import { FeedbackData } from '../../../ipc/configActions';
 
 type MyState = { isOpen: boolean };
@@ -22,19 +22,19 @@ export default class DisplayFeedback extends React.Component<{onFeedback: (feedb
     }
   }
   render() {
-    const { isOpen } = this.state;
+    // const { isOpen } = this.state;
     return (
       <div>
         <Button className='ak-button' onClick={this.open}>
           Send Feedback
         </Button>
 
-        {isOpen && (
+        {/* {isOpen && (
           <FeedbackForm
             onClose={this.close}
             onSubmit={this.handleFeedback}
           />
-        )}
+        )} */}
 
       </div>
     );

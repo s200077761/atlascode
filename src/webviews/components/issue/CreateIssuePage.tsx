@@ -149,6 +149,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {},V
             }
             case 'screenRefresh': {
                 const issueData = e as CreateIssueData;
+                console.log('issue data', issueData);
                 this.issueTypes = Object.entries(issueData.issueTypeScreens).map(([key, value]) => { return { id:value.id, name:value.name, iconUrl:value.iconUrl }; });
 
                 const selectedType = this.issueTypes.find(it => it.id === issueData.selectedIssueTypeId);

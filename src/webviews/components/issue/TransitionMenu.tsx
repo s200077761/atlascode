@@ -16,16 +16,16 @@ const { Option } = components;
 
 const StatusOption = (props:any) => (
     <Option {...props}>
-      <Lozenge appearance={colorToLozengeAppearanceMap[props.data.statusCategory.colorName]}>
-        {props.data.name}
+      <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
+        {props.data.to.name}
       </Lozenge>
     </Option>
 );
 
 const StatusValue = (props:any) => (
       <components.SingleValue {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.statusCategory.colorName]}>
-        {props.data.name}
+        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
+        {props.data.to.name}
       </Lozenge>
       </components.SingleValue>
 
@@ -43,22 +43,21 @@ export class TransitionMenu extends React.Component<{
 
   render() {
     const issue = this.props.issue;
+    const selectedTransition = issue.transitions.find(transition => transition.to.id === issue.status.id);
     if (!issue) {
       return <div />;
     }
-    let statusItems: any[] = [];
-    statusItems = issue.transitions.map(transition => { return transition.to; });
 
     return (
       <Select
         name="status"
-        id="ststus"
+        id="status"
         className="ak-select-container"
         classNamePrefix="ak-select"
-        options={statusItems}
-        value={issue.status}
+        options={issue.transitions}
+        value={selectedTransition}
         components={{ Option: StatusOption, SingleValue:StatusValue }}
-        getOptionLabel={(option:any) => option.name}
+        getOptionLabel={(option:any) => option.to.name}
         getOptionValue={(option:any) => option.id}
         isDisabled={this.props.isStatusButtonLoading}
         isLoading={this.props.isStatusButtonLoading}
