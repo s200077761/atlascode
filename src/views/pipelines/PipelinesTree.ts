@@ -100,6 +100,8 @@ export class PipelinesTree implements TreeDataProvider<Node> {
     }
 }
 
+const PipelineBranchContextValue = 'pipelineBranch';
+
 export abstract class Node {
     abstract treeItem(): TreeItem;
 }
@@ -133,6 +135,7 @@ export class BranchNode extends Node {
     treeItem() {
         const treeItem = new TreeItem(this.branchName);
         treeItem.collapsibleState = TreeItemCollapsibleState.Collapsed;
+        treeItem.contextValue = PipelineBranchContextValue;
         if (this.pipelines && this.pipelines.length > 0) {
             const iconPath = this.iconUriForPipeline(this.pipelines[0]);
             if (iconPath) {

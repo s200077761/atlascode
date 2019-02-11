@@ -170,6 +170,20 @@
                 "command": "atlascode.bb.copyPullRequest",
                 "title": "Copy Pull Request Url to Clipboard",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.startPipeline",
+                "title": "Start Pipeline",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.refreshPipelines",
+                "title": "Refresh Pipelines",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "AtlasCode"
             }
         ],
         "viewsContainers": {
@@ -236,6 +250,11 @@
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.pipelines.explorerEnabled"
                 }
             ],
             "view/title": [
@@ -266,6 +285,11 @@
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.refreshPipelines",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
@@ -287,11 +311,19 @@
                 {
                     "command": "atlascode.bb.viewInWebBrowser",
                     "when": "viewItem == pullrequest"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
+                    "when": "viewItem == pipelineBranch"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
                     "when": "false"
                 },
                 {

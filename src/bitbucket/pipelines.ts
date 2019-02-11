@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../typings/git";
-import { PullRequestApi, GitUrlParse } from "./pullRequests";
+import { PullRequestApi, GitUrlParse, bitbucketHosts } from "./pullRequests";
 import { Container } from "../container";
 import fetch from 'node-fetch';
 import { AuthProvider } from "../atlclients/authInfo";
@@ -27,6 +27,23 @@ export namespace PipelineApi {
     })).then(arrays => {
       return [].concat.apply([], arrays);
     });
+  }
+
+  export async function startPipeline(repository: Repository, branchName: string): Promise<Bitbucket.Schema.Pipeline> {
+    const remotes = PullRequestApi.getBitbucketRemotes(repository);
+    if (remotes.length > 0) {
+      const remote = remotes[0];
+      const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
+      let parsed = GitUrlParse(remoteUrl);
+      const bb = await bitbucketHosts.get(parsed.source)();
+      return bb.pipelines.create({_body: {target:{
+          ref_type: "branch", 
+          type: "pipeline_ref_target", 
+          ref_name: branchName
+        }}, repo_slug: parsed.name, username: parsed.owner}).
+        then((res: Bitbucket.Response<Bitbucket.Schema.Pipeline>) => res.data);  
+    }
+    return Promise.reject("No remote associated with this repository.");
   }
 
   async function getAccessToken(): Promise<string> {
