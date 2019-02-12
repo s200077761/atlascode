@@ -50,6 +50,14 @@ export interface CreateIssueAction extends Action {
     issueData: any;
 }
 
+export interface StartWorkAction extends Action {
+    action: 'startWork';
+    transition: Transition;
+    repoUri: string;
+    sourceBranchName: string;
+    branchName: string;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -90,3 +98,6 @@ export function isCreateIssue(a: Action): a is  CreateIssueAction {
     return (<CreateIssueAction>a).issueData !== undefined;
 }
 
+export function isStartWork(a: Action): a is  StartWorkAction {
+    return (<StartWorkAction>a).transition !== undefined;
+}

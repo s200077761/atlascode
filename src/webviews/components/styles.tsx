@@ -21,6 +21,11 @@ justify-content: space-between;
 width: 100%;
 `;
 
+export const FlexCentered = styled.div`
+display: flex;
+align-items: center;
+`;
+
 export const BlockCentered = styled.div`
 display: block;
 text-align: center;

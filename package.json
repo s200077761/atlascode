@@ -114,6 +114,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.startWorkOnIssue",
+                "title": "Start work on Jira issue",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.refreshPullRequests",
                 "title": "Refresh Bitbucket pull requests",
                 "icon": {
@@ -304,6 +309,11 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.jira.startWorkOnIssue",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
@@ -324,6 +334,10 @@
                 },
                 {
                     "command": "atlascode.bb.startPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.startWorkOnIssue",
                     "when": "false"
                 },
                 {
