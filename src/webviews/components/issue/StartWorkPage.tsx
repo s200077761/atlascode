@@ -18,7 +18,7 @@ import {
 } from "../../../ipc/issueActions";
 import {TransitionMenu} from "./TransitionMenu";
 import Button from "@atlaskit/button";
-import { VerticalPadding, SelectStyles, FlexCentered, BlockCentered } from '../styles';
+import { VerticalPadding, FlexCentered, BlockCentered } from '../styles';
 import Select from '@atlaskit/select';
 import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
@@ -158,7 +158,7 @@ export default class StartWorkPage extends WebviewComponent<
     const issue = this.state.data.issue;
     const repo = this.state.repo || { label: '', value: emptyRepoData };
 
-    if (issue === emptyIssueData) {
+    if (issue.key === '') {
       return <BlockCentered><Spinner size="large" /></BlockCentered>;
     }
 
@@ -173,21 +173,23 @@ export default class StartWorkPage extends WebviewComponent<
               <VerticalPadding>
                 <label>Repository</label>
                 <Select
+                  className="ak-select-container"
+                  classNamePrefix="ak-select"
                   options={this.state.data.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                   onChange={this.handleRepoChange}
                   placeholder='Loading...'
-                  value={repo}
-                  styles={SelectStyles()} />
+                  value={repo} />
               </VerticalPadding>
             </GridColumn>
             <GridColumn medium={12} />
             <GridColumn medium={6}>
               <label>Source branch (local)</label>
               <Select
+                className="ak-select-container"
+                classNamePrefix="ak-select"
                 options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                 onChange={this.handleSourceBranchChange}
-                value={this.state.sourceBranch}
-                styles={SelectStyles()} />
+                value={this.state.sourceBranch} />
             </GridColumn>
             <GridColumn medium={12} />
             <GridColumn medium={6}>

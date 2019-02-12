@@ -34,6 +34,13 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
 
     initialize(data: issueOrKey) {
         if(isIssue(data)) {
+            if (this._state.key !== data.key) {
+                this.postMessage({
+                    type: 'update',
+                    issue: emptyIssue,
+                    repoData: []
+                });
+            }
             this.updateIssue(data);
             return;
         }
