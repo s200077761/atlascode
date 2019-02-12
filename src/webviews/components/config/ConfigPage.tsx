@@ -22,6 +22,7 @@ import PipelinesConfig from './PipelinesConfig';
 import { WorkingProject } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
+import Form from '@atlaskit/form';
 
 type changeObject = { [key: string]: any };
 
@@ -146,68 +147,78 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
-            <Page>
-                <Grid spacing='comfortable' layout='fixed'>
-                    <GridColumn>
-                        <h1>AtlasCode</h1>
-                    </GridColumn>
-                </Grid>
+            <Form
+                name="jira-explorer-form"
+                onSubmit={(e: any) => { }}
+            >
+                {(frmArgs: any) => {
+                    return (<form {...frmArgs.formProps}>
+                        <Page>
+                            <Grid spacing='comfortable' layout='fixed'>
+                                <GridColumn>
+                                    <h1>AtlasCode</h1>
+                                </GridColumn>
+                            </Grid>
 
-                <Grid spacing='comfortable' layout='fixed'>
-                    <GridColumn medium={9}>
-                        <h2>Settings</h2>
-                    </GridColumn>
-                </Grid>
+                            <Grid spacing='comfortable' layout='fixed'>
+                                <GridColumn medium={9}>
+                                    <h2>Settings</h2>
+                                </GridColumn>
+                            </Grid>
 
-                <Grid spacing='comfortable' layout='fixed'>
-                    <GridColumn medium={9}>
-                        <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
-                            <h3>Jira</h3>
-                            {this.jiraButton()}
-                            <h3>Bitbucket</h3>
-                            {this.bitBucketButton()}
-                        </Panel>
+                            <Grid spacing='comfortable' layout='fixed'>
+                                <GridColumn medium={9}>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
+                                        <h3>Jira</h3>
+                                        {this.jiraButton()}
+                                        <h3>Bitbucket</h3>
+                                        {this.bitBucketButton()}
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Issue Explorer', 'configure the Jira issue explorer')}>
-                            <JiraExplorer configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Issue Explorer', 'configure the Jira issue explorer')}>
+                                        <JiraExplorer configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
-                            <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId={this.state.config.jira.workingSite.id} jiraAccessToken={this.state.jiraAccessToken} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
+                                        <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId={this.state.config.jira.workingSite.id} jiraAccessToken={this.state.jiraAccessToken} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Jira Hover Provider', 'configure the hover provider for Jira issues')}>
-                            <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Jira Hover Provider', 'configure the hover provider for Jira issues')}>
+                                        <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
-                            {/* <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
+                                        {/* <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
-                            <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
+                                        <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
-                            <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
+                                        <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar items for Jira and Bitbucket')}>
-                            <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Panel>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar items for Jira and Bitbucket')}>
+                                        <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
 
-                        <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
-                            <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Panel>
-                    </GridColumn>
-                    <GridColumn medium={3}>
-                        <DisplayFeedback onFeedback={this.handleFeedback} />
-                        <div style={{ marginTop: '15px' }}>
-                            <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                        </div>
-                    </GridColumn>
-                </Grid>
-            </Page>
+                                    <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
+                                        <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
+                                </GridColumn>
+                                <GridColumn medium={3}>
+                                    <DisplayFeedback onFeedback={this.handleFeedback} />
+                                    <div style={{ marginTop: '15px' }}>
+                                        <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                                    </div>
+                                </GridColumn>
+                            </Grid>
+                        </Page>
+                    </form>);
+                }
+                }
+            </Form>
         );
     }
 }
