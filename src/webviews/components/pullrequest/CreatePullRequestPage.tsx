@@ -6,7 +6,7 @@ import Panel from '@atlaskit/panel';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import { InlineFlex, VerticalPadding, SelectStyles } from '../styles';
+import { InlineFlex, VerticalPadding } from '../styles';
 import Select from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
 import Commits from './Commits';
@@ -216,7 +216,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     onChange={this.handleRepoChange}
                                     placeholder='Loading...'
                                     value={repo}
-                                    styles={SelectStyles()} />
+                                    className="ak-select-container"
+                                    classNamePrefix="ak-select"/>
 
                                 {repo.value.remotes.length > 1 &&
                                     <React.Fragment>
@@ -225,7 +226,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
                                             onChange={this.handleRemoteChange}
                                             value={this.state.remote}
-                                            styles={SelectStyles()} />
+                                            className="ak-select-container"
+                                            classNamePrefix="ak-select"/>
                                     </React.Fragment>
                                 }
                             </VerticalPadding>
@@ -239,7 +241,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                                 onChange={this.handleSourceBranchChange}
                                 value={this.state.sourceBranch}
-                                styles={SelectStyles()} />
+                                className="ak-select-container"
+                                classNamePrefix="ak-select" />
                         </GridColumn>
                         <GridColumn medium={4}>
                             <label>Source branch (remote)</label>
@@ -264,7 +267,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         : []}
                                     onChange={this.handleDestinationBranchChange}
                                     value={this.state.destinationBranch}
-                                    styles={SelectStyles()} />
+                                    className="ak-select-container"
+                                    classNamePrefix="ak-select"/>
                             </VerticalPadding>
                         </GridColumn>
 

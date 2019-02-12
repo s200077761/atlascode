@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
-import Collapsible from 'react-collapsible';
+import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { AuthProvider } from '../../../atlclients/authInfo';
-// import JiraExplorer from './JiraExplorer';
+import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 // import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
@@ -19,31 +19,54 @@ import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import { ButtonGroup } from '@atlaskit/button';
 import PipelinesConfig from './PipelinesConfig';
+import { WorkingProject } from '../../../config/model';
+import { FetchQueryAction } from '../../../ipc/issueActions';
+import { ProjectList } from '../../../ipc/issueMessaging';
 
-type changeObject = {[key: string]:any};
+type changeObject = { [key: string]: any };
 
-const Trigger = (heading:string,subheading:string) => 
+const panelHeader = (heading: string, subheading: string) =>
     <div>
-    <h2>{heading}</h2>
-    <p>{subheading}</p>
+        <h3 className='inlinePanelHeader'>{heading}</h3>
+        <p className='inlinePanelSubheading'>{subheading}</p>
     </div>;
 
-type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | Action;
-export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},ConfigData> {
+type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | Action;
+type Accept = ConfigData | ProjectList;
+
+interface ViewState extends ConfigData {
+    isProjectsLoading: boolean;
+}
+
+const emptyState: ViewState = { ...emptyConfigData, isProjectsLoading: false }
+
+export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
+    private newProjects: WorkingProject[] = [];
+
     constructor(props: any) {
         super(props);
-        this.state = emptyConfigData;
+        this.state = emptyState;
     }
 
-    public onMessageReceived(e: ConfigData) {
+    public onMessageReceived(e: Accept) {
         console.log("got message from vscode", e);
-        this.setState(e);
+        switch (e.type) {
+            case 'update': {
+                this.setState(e as ConfigData);
+                break;
+            }
+            case 'projectList': {
+                this.newProjects = (e as ProjectList).availableProjects;
+                break;
+            }
+        }
+
     }
 
-    public onConfigChange = (change:changeObject, removes?:string[]) => {
+    public onConfigChange = (change: changeObject, removes?: string[]) => {
         console.log('ConfigPage got change', change);
 
-        this.postMessage({action:'saveSettings', changes:change, removes:removes});
+        this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
     }
 
     handleJiraLogin = () => {
@@ -63,27 +86,44 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
         this.handleLogout(AuthProvider.BitbucketCloud);
     }
 
-    handleLogin = (provider:string) => {
-        this.postMessage({action:'login', provider:provider});
+    handleLogin = (provider: string) => {
+        this.postMessage({ action: 'login', provider: provider });
     }
 
-    handleLogout = (provider:string) => {
-        this.postMessage({action:'logout', provider});
+    handleLogout = (provider: string) => {
+        this.postMessage({ action: 'logout', provider });
     }
 
     handleSourceLink = () => {
-        this.postMessage({action:'sourceLink'});
+        this.postMessage({ action: 'sourceLink' });
     }
 
     handleHelpLink = () => {
-        this.postMessage({action:'helpLink'});
+        this.postMessage({ action: 'helpLink' });
     }
 
-    handleFeedback = (feedback:FeedbackData) => {
-        this.postMessage({action:'submitFeedback', feedback:feedback});
+    handleFeedback = (feedback: FeedbackData) => {
+        this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
 
-    private jiraButton():any {
+    loadProjectOptions = (input: string): Promise<any> => {
+        this.setState({ isProjectsLoading: true });
+        return new Promise(resolve => {
+            this.newProjects = [];
+            this.postMessage({ action: 'fetchProjects', query: input });
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.newProjects.length > 0 || (end - start) > 2000) {
+                    this.setState({ isProjectsLoading: false });
+                    clearInterval(timer);
+                    resolve(this.newProjects);
+                }
+            }, 100);
+        });
+    }
+
+    private jiraButton(): any {
         const buttonText = this.state.isJiraAuthenticated ? 'Authenticate with another site' : 'Authenticate';
 
         return (<ButtonGroup>
@@ -92,12 +132,12 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
         </ButtonGroup>);
     }
 
-    private bitBucketButton():any {
+    private bitBucketButton(): any {
         if (this.state.isBitbucketAuthenticated) {
-            return( <Button className='ak-button' 
+            return (<Button className='ak-button'
                 onClick={this.handleBBLogout}>Logout</Button>);
         } else {
-            return (<Button className='ak-button' 
+            return (<Button className='ak-button'
                 onClick={this.handleBBLogin}>Authenticate</Button>);
         }
     }
@@ -113,71 +153,52 @@ export default class ConfigPage extends WebviewComponent<Emit, ConfigData, {},Co
                     </GridColumn>
                 </Grid>
 
-                <div className='sticky'>
-                    <Grid spacing='comfortable' layout='fixed'>
-                        <GridColumn medium={9}>
-                            <h2>Settings</h2>
-                        </GridColumn>
-                    </Grid>
-                </div>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Authentication','configure authentication for Jira and Bitbucket')}
-                            open={true}>
+                        <h2>Settings</h2>
+                    </GridColumn>
+                </Grid>
+
+                <Grid spacing='comfortable' layout='fixed'>
+                    <GridColumn medium={9}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                             <h3>Jira</h3>
                             {this.jiraButton()}
                             <h3>Bitbucket</h3>
                             {this.bitBucketButton()}
-                            </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Issue Explorer','configure the Jira issue explorer')}
-                            open={true}>
-                            {/* <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
-                        </Collapsible>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Issue Explorer', 'configure the Jira issue explorer')}>
+                            <JiraExplorer configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Custom JQL','configure custom JQL queries')}
-                            open={true}>
-                            <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId = {this.state.config.jira.workingSite.id} jiraAccessToken = {this.state.jiraAccessToken} />
-                        </Collapsible>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
+                            <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId={this.state.config.jira.workingSite.id} jiraAccessToken={this.state.jiraAccessToken} />
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Jira Hover Provider','configure the hover provider for Jira issues')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Jira Hover Provider', 'configure the hover provider for Jira issues')}>
                             <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Pull Request Explorer','configure the Bitbucket pull request explorer')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
                             {/* <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
-                        </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Pipeline Explorer','configure the Bitbucket Pipeline explorer')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
                             <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Bitbucket Context Menus','configure the Bitbucket context menus in editor')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
                             <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('Status Bar','configure the status bar items for Jira and Bitbucket')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar items for Jira and Bitbucket')}>
                             <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Collapsible>
+                        </Panel>
 
-                        <Collapsible transitionTime={30} 
-                            trigger={Trigger('','miscellaneous settings')}
-                            open={true}>
+                        <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                             <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                        </Collapsible>
+                        </Panel>
                     </GridColumn>
                     <GridColumn medium={3}>
                         <DisplayFeedback onFeedback={this.handleFeedback} />

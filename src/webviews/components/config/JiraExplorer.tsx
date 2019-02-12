@@ -1,222 +1,259 @@
-// import * as React from 'react';
-// import { Checkbox } from '@atlaskit/checkbox';
-// import { ConfigData } from '../../../ipc/configMessaging';
-// // import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
-// import { emptyProject } from '../../../jira/jiraModel';
-// import { InlineFlex } from '../styles';
+import * as React from 'react';
+import { Checkbox } from '@atlaskit/checkbox';
+import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
+import Form, { Field, CheckboxField } from '@atlaskit/form';
+import Select, { AsyncSelect, components } from '@atlaskit/select';
+//import { emptyProject } from '../../../jira/jiraModel';
+import { chain } from '../fieldValidators';
+import { InlineFlex } from '../styles';
+import { WorkingSite } from '../../../config/model';
 
-// type changeObject = {[key: string]:any};
+type changeObject = { [key: string]: any };
 
-// export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
-//     constructor(props: any) {
-//         super(props);
-//     }
+const { Option } = components;
+const IconOption = (props: any) => (
+    <Option {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </Option>
+);
 
-//     onCheckboxChange = (e:any) => {
-//         const changes = Object.create(null);
-//         changes[e.target.value] = e.target.checked;
+const IconValue = (props: any) => (
+    <components.SingleValue {...props}>
+        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </components.SingleValue>
 
-//         if(this.props.onConfigChange) {
-//             this.props.onConfigChange(changes);
-//         }
-//     }
+);
 
-//     onHandleSiteChange = (item:any) => {
-//         if(this.props.configData.sites){
-//             const site = this.props.configData.sites.find(site => site.id === item.target.parentNode.parentNode.dataset.siteId);
-//             if(site) {
-//                 const changes = Object.create(null);
-//                 const removes = [];
+export default class JiraExplorer extends React.Component<{ configData: ConfigData, isLoading: boolean, loadProjectOptions: (input: string) => Promise<any>, onConfigChange: (changes: changeObject, removes?: string[]) => void }, ConfigData> {
 
-//                 removes.push('jira.workingProject');
-//                 changes['jira.workingSite'] = site;
+    constructor(props: any) {
+        super(props);
 
-//                 if(this.props.onConfigChange) {
-//                     this.props.onConfigChange(changes,removes);
-//                 }
-//             }
-//         }
-//     }
+        this.state = emptyConfigData;
+    }
 
-//     onHandleProjectChange = (item:any) => {
-//         if(this.props.configData.projects){
-//             const project = this.props.configData.projects.find(project => project.id === item.target.parentNode.parentNode.dataset.projectId);
-//             if(project) {
-//                 const changes = Object.create(null);
-//                 changes['jira.workingProject'] = {id:project.id, name:project.name, key:project.key};
+    componentWillReceiveProps = (nextProps: any) => {
+        console.log('new state', nextProps.configData);
 
-//                 if(this.props.onConfigChange) {
-//                     this.props.onConfigChange(changes);
-//                 }
-//             } else if(item.target.parentNode.parentNode.dataset.projectId === 'empty') {
-//                 const removes = ['jira.workingProject'];
-//                 if(this.props.onConfigChange) {
-//                     this.props.onConfigChange([],removes);
-//                 }
-//             }
-//         }
-//     }
+        if (nextProps.configData.config.jira.workingSite && !nextProps.configData.config.jira.workingSite.id) {
+            nextProps.configData.config.jira.workingSite = '';
+        }
 
-//     handleInputChange = (e: any, configKey: string) => {
-//         const changes = Object.create(null);
-//         changes[configKey] = e.target.value;
+        if (nextProps.configData.config.jira.workingProject && !nextProps.configData.config.jira.workingProject.id) {
+            nextProps.configData.config.jira.workingProject = '';
+        }
+        this.setState(nextProps.configData);
+    }
 
-//         if(this.props.onConfigChange) {
-//             this.props.onConfigChange(changes);
-//         }
-//     }
+    onCheckboxChange = (e: any) => {
+        const changes = Object.create(null);
+        changes[e.target.value] = e.target.checked;
 
-//     getIsExplorerIndeterminate = ():boolean => {
-//         if(!this.props.configData.config.jira.explorer.enabled) {
-//             return false;
-//         }
+        if (this.props.onConfigChange) {
+            this.props.onConfigChange(changes);
+        }
+    }
 
-//         let count = 0;
-//         if(this.props.configData.config.jira.explorer.showAssignedIssues) {
-//             count++;
-//         }
-//         if(this.props.configData.config.jira.explorer.showOpenIssues) {
-//             count++;
-//         }
+    handleSiteChange = (item: WorkingSite) => {
+        console.log('site change', item);
+        if (item) {
+            const changes = Object.create(null);
+            const removes = [];
 
-//         return (count < 2);
-//     }
+            removes.push('jira.workingProject');
+            changes['jira.workingSite'] = item;
 
-//     checklabel = (label:string) => <span className='checkboxLabel'>{label}</span>;
+            if (this.props.onConfigChange) {
+                this.props.onConfigChange(changes, removes);
+            }
+        }
+    }
 
-//     render() {
-//         let  siteSelect = <div></div>;
-//         const sites = this.props.configData.sites;
+    handleProjectChange = (item: any) => {
+        if (item) {
+            const changes = Object.create(null);
+            changes['jira.workingProject'] = { id: item.id, name: item.name, key: item.key };
 
-//         if(sites && sites.length > 1) {
-//             const selectedSite = this.props.configData.config.jira.workingSite;
-//             let siteItems:any[] = [];
-//             sites.forEach(site => {
-//                 if(this.props.configData.config.jira.workingSite.id !== site.id){
-//                     siteItems.push(
-//                         <DropdownItem
-//                             className='ak-dropdown-item'
-//                             id={site.name}
-//                             data-site-id={site.id}
-//                             onClick={this.onHandleSiteChange}>
-//                             {site.name}
-//                         </DropdownItem>
-//                     );
-//                 }
-//             });
+            if (this.props.onConfigChange) {
+                this.props.onConfigChange(changes);
+            }
+        } else {
+            const removes = ['jira.workingProject'];
+            if (this.props.onConfigChange) {
+                this.props.onConfigChange([], removes);
+            }
+        }
+    }
 
-//             siteSelect = <div className='labelAndSelect'><span>default site:</span> <DropdownMenu
-//                                     triggerType="button"
-//                                     trigger={selectedSite.name}
-//                                     triggerButtonProps={{className:'ak-button'}}
-//                                 >
-//                                     <DropdownItemGroup>
-//                                     {siteItems}
-//                                     </DropdownItemGroup>
-//                                 </DropdownMenu>
-//                             </div>;
-//         }
+    handleInputChange = (e: any, configKey: string) => {
+        const changes = Object.create(null);
+        changes[configKey] = e.target.value;
 
-//         let  projectSelect = <div></div>;
-//         const projects = this.props.configData.projects;
+        if (this.props.onConfigChange) {
+            this.props.onConfigChange(changes);
+        }
+    }
 
-//         if(projects && projects.length > 1) {
-//             let selectedProject = projects.find(project => project.id === this.props.configData.config.jira.workingProject.id);
+    getIsExplorerIndeterminate = (): boolean => {
+        if (!this.props.configData.config.jira.explorer.enabled) {
+            return false;
+        }
 
-//             if(!selectedProject) {
-//                 selectedProject = emptyProject;
-//                 selectedProject.name = "not selected";
-//             }
-//             let projectItems:any[] = [<DropdownItem
-//                 className='ak-dropdown-item'
-//                 id='empty-project'
-//                 data-project-id='empty'
-//                 onClick={this.onHandleProjectChange}>
-//                 not selected
-//             </DropdownItem>];
-//             projects.forEach(project => {
-//                 if(this.props.configData.config.jira.workingProject.id !== project.id){
-//                     projectItems.push(
-//                         <DropdownItem
-//                             className='ak-dropdown-item'
-//                             id={project.name}
-//                             data-project-id={project.id}
-//                             onClick={this.onHandleProjectChange}>
-//                             {project.name}
-//                         </DropdownItem>
-//                     );
-//                 }
-//             });
+        let count = 0;
+        if (this.props.configData.config.jira.explorer.showAssignedIssues) {
+            count++;
+        }
+        if (this.props.configData.config.jira.explorer.showOpenIssues) {
+            count++;
+        }
 
-//             projectSelect = <div className='labelAndSelect'><span>default project:</span> <DropdownMenu
-//                                     triggerType="button"
-//                                     trigger={selectedProject.name}
-//                                     triggerButtonProps={{className:'ak-button'}}
-//                                 >
-//                                     <DropdownItemGroup>
-//                                     {projectItems}
-//                                     </DropdownItemGroup>
-//                                 </DropdownMenu></div>;
-//         }
+        return (count < 2);
+    }
 
-//         return (
-//             <div>
-//                 <div>
-//                     <Checkbox
-//                     value="jira.explorer.enabled"
-//                     label={this.checklabel("Enable Jira Issue Explorer")}
-//                     isChecked={this.props.configData.config.jira.explorer.enabled}
-//                     onChange={this.onCheckboxChange}
-//                     name="issue-explorer-enabled"
-//                     isIndeterminate={this.getIsExplorerIndeterminate()}
-//                     />
-//                     <div
-//                         style={{
-//                             display: 'flex',
-//                             flexDirection: 'column',
-//                             paddingLeft: '24px',
-//                         }}
-//                         >
-//                         <div className="refreshInterval">
-//                             <span>refresh every: </span>
-//                                 <input style={{ width: '40px' }} name="jira-explorer-refresh-interval"
-//                                     type="number" min="0"
-//                                     value={this.props.configData.config.jira.explorer.refreshInterval}
-//                                     onChange={(e: any) => this.handleInputChange(e, "jira.explorer.refreshInterval")} />
-//                             <span> minutes (setting to 0 disables auto-refresh)</span>
-//                         </div>
+    render() {
 
-//                         <Checkbox
-//                             isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
-//                             onChange={this.onCheckboxChange}
-//                             label={this.checklabel("Show My Open Issues")}
-//                             value="jira.explorer.showOpenIssues"
-//                             name="explorer-openissues"
-//                         />
-//                         <Checkbox
-//                             isChecked={this.props.configData.config.jira.explorer.showAssignedIssues}
-//                             onChange={this.onCheckboxChange}
-//                             label={this.checklabel("Show My Assigned Issues")}
-//                             value="jira.explorer.showAssignedIssues"
-//                             name="explorer-assigned-issues"
-//                         />
-//                     </div>
-//                     <div className="refreshInterval">
-//                         <span>Notify of new Jira issues: </span>
-//                             <input style={{ width: '40px' }} name="jira-issue-monitor-refresh-interval"
-//                                 type="number" min="0"
-//                                 value={this.props.configData.config.jira.issueMonitor.refreshInterval}
-//                                 onChange={(e: any) => this.handleInputChange(e, "jira.issueMonitor.refreshInterval")} />
-//                         <span> minutes (setting to 0 disables notification)</span>
-//                     </div>
-//                 </div>
-//                 <hr/>
-//                 <InlineFlex>
-//                     <div style={{ marginRight:'3em' }}>{siteSelect}</div>
-//                     {projectSelect}
-//                 </InlineFlex>
-//             </div>
-            
-//         );
-//     }
-// }
+        return (
+            <Form
+                name="jira-explorer-form"
+                onSubmit={(e: any) => { }}
+            >
+                {(frmArgs: any) => {
+                    return (<form {...frmArgs.formProps}>
+                        <div>
+                            <CheckboxField
+                                name='issue-explorer-enabled'
+                                id='issue-explorer-enabled'
+                                value='jira.explorer.enabled'
+                                defaultIsChecked={this.props.configData.config.jira.explorer.enabled}>
+                                {
+                                    (fieldArgs: any) => {
+                                        return (
+                                            <Checkbox {...fieldArgs.fieldProps}
+                                                label='Enable Jira Issue Explorer'
+                                                isIndeterminate={this.getIsExplorerIndeterminate()}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                            />
+                                        );
+                                    }
+                                }
+                            </CheckboxField>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    paddingLeft: '24px',
+                                }}
+                            >
+                                <CheckboxField
+                                    name='explorer-openissues'
+                                    id='explorer-openissues'
+                                    value='jira.explorer.showOpenIssues'
+                                    defaultIsChecked={this.props.configData.config.jira.explorer.showOpenIssues}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <Checkbox {...fieldArgs.fieldProps}
+                                                    label='Show My Open Issues'
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                                />
+                                            );
+                                        }
+                                    }
+                                </CheckboxField>
+                                <CheckboxField
+                                    name='explorer-assigned-issues'
+                                    id='explorer-assigned-issues'
+                                    value='jira.explorer.showAssignedIssues'
+                                    defaultIsChecked={this.props.configData.config.jira.explorer.showAssignedIssues}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <Checkbox {...fieldArgs.fieldProps}
+                                                    label='Show My Assigned Issues'
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                                />
+                                            );
+                                        }
+                                    }
+                                </CheckboxField>
+                            </div>
+                            <div className="refreshInterval">
+                                <span>refresh every: </span>
+                                <input className='ak-inputField-inline' style={{ width: '40px' }} name="jira-explorer-refresh-interval"
+                                    type="number" min="0"
+                                    value={this.props.configData.config.jira.explorer.refreshInterval}
+                                    onChange={(e: any) => this.handleInputChange(e, "jira.explorer.refreshInterval")} />
+                                <span> minutes (setting to 0 disables auto-refresh)</span>
+                            </div>
+                            <div className="refreshInterval">
+                                <span>Notify of new Jira issues: </span>
+                                <input className='ak-inputField-inline' style={{ width: '40px' }} name="jira-issue-monitor-refresh-interval"
+                                    type="number" min="0"
+                                    value={this.props.configData.config.jira.issueMonitor.refreshInterval}
+                                    onChange={(e: any) => this.handleInputChange(e, "jira.issueMonitor.refreshInterval")} />
+                                <span> minutes (setting to 0 disables notification)</span>
+                            </div>
+                            <hr />
+
+                            <InlineFlex>
+                                <Field label='Default Site'
+                                    id='defaultSite'
+                                    name='defaultSite'
+                                    defaultValue={this.state.config.jira.workingSite}
+                                >
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <Select
+                                                    {...fieldArgs.fieldProps}
+                                                    className="ak-select-container"
+                                                    classNamePrefix="ak-select"
+                                                    getOptionLabel={(option: any) => option.name}
+                                                    getOptionValue={(option: any) => option.id}
+                                                    options={this.state.sites}
+                                                    components={{ Option: IconOption, SingleValue: IconValue }}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                                                />
+                                            );
+                                        }
+                                    }
+                                </Field>
+
+                                <Field defaultValue={this.state.config.jira.workingProject}
+                                    label='Project'
+                                    id='project'
+                                    name='project'
+                                >
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <AsyncSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    className="ak-select-container"
+                                                    classNamePrefix="ak-select"
+                                                    getOptionLabel={(option: any) => {
+                                                        return option.name;
+                                                    }}
+                                                    getOptionValue={(option: any) => {
+                                                        return option.key;
+                                                    }}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.handleProjectChange)}
+                                                    defaultOptions={this.state.projects}
+                                                    loadOptions={this.props.loadProjectOptions}
+                                                    placeholder="Choose a Project"
+                                                    isLoading={this.props.isLoading}
+                                                />
+                                            );
+                                        }
+                                    }
+                                </Field>
+                            </InlineFlex>
+
+                        </div>
+                    </form>);
+                }
+                }
+            </Form>
+        );
+    }
+}
