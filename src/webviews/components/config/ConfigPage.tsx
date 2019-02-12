@@ -183,7 +183,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId={this.state.config.jira.workingSite.id} jiraAccessToken={this.state.jiraAccessToken} />
                                     </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Jira Hover Provider', 'configure the hover provider for Jira issues')}>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
                                         <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
@@ -199,7 +199,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar items for Jira and Bitbucket')}>
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Jira and Bitbucket')}>
                                         <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 

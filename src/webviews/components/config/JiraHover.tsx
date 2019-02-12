@@ -24,7 +24,7 @@ export default class JiraHover extends React.Component<{ configData: ConfigData,
         return (
             <Checkbox
                 value={"jira.hover.enabled"}
-                label={this.checklabel("Enable Jira hover provider")}
+                label={this.checklabel("Show details when hovering over issue keys in the editor")}
                 isChecked={this.props.configData.config.jira.hover.enabled}
                 onChange={this.onCheckboxChange}
                 name="jira-hover-enabled" />
