@@ -16,6 +16,7 @@ import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview'
 import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
+import { StartWorkOnIssueViewManager } from './webviews/startWorkOnIssueViewManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version:string) {
@@ -30,8 +31,9 @@ export class Container {
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
         context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
-	context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
+        context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
+        context.subscriptions.push(this._startWorkOnIssueViewManager = new StartWorkOnIssueViewManager(context.extensionPath));
         context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
 
@@ -95,6 +97,11 @@ export class Container {
     private static _createIssueWebview: CreateIssueWebview;
     static get createIssueWebview() {
         return this._createIssueWebview;
+    }
+
+    private static _startWorkOnIssueViewManager: StartWorkOnIssueViewManager;
+    static get startWorkOnIssueViewManager() {
+        return this._startWorkOnIssueViewManager;
     }
 
     private static _pullRequestViewManager: PullRequestViewManager;

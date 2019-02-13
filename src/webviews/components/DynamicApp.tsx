@@ -38,6 +38,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadableStartWorkOnIssueView = Loadable({
+    loader: () => import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage'),
+    loading: Loading,
+  });
+
 function Loading(props:Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! { props.error }</div>;
@@ -93,10 +98,17 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                     </div>
                 );
             }
-		case 'atlascodeCreateIssueScreen': {
+            case 'atlascodeCreateIssueScreen': {
                 return(
                     <div>
                         <LoadableCreateIssueView />
+                    </div>
+                );
+            }
+            case 'startWorkOnIssueScreen': {
+                return (
+                    <div>
+                        <LoadableStartWorkOnIssueView />
                     </div>
                 );
             }

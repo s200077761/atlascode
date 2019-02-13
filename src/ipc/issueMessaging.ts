@@ -2,6 +2,7 @@ import { Message } from "./messaging";
 import { Issue, Project } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 import { IssueTypeIdScreens } from "../jira/createIssueMeta";
+import { RepoData } from "./prMessaging";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -39,10 +40,29 @@ export interface IssueCreated extends Message {
     issueData:any;
 }
 
+export interface StartWorkOnIssueData extends Message {
+    issue: Issue;
+    repoData: RepoData[];
+}
+
+export interface StartWorkOnIssueResult extends Message {
+    type: 'startWorkOnIssueResult';
+    successMessage?: string;
+    error?: string;
+}
+
 export function isCreatedSomething(m: Message): m is  CreatedSomething {
     return (<CreatedSomething>m).createdData !== undefined;
 }
 
 export function isIssueCreated(m: Message): m is  IssueCreated {
     return (<IssueCreated>m).issueData !== undefined;
+}
+
+export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
+    return (<StartWorkOnIssueData>m).issue !== undefined;
+}
+
+export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {
+    return (<StartWorkOnIssueResult>m).type === 'startWorkOnIssueResult';
 }
