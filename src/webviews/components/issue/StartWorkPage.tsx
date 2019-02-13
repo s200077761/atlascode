@@ -3,16 +3,12 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { WebviewComponent } from "../WebviewComponent";
-import { IssueData, isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
+import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import {
-  emptyStatus,
-  emptyIssueType,
-  emptyUser,
-  emptyPriority,
+  emptyIssue,
   Transition,
-  emptyTransition,
+  emptyTransition
 } from "../../../jira/jiraModel";
-import { emptyWorkingSite } from '../../../config/model';
 import {
   StartWorkAction
 } from "../../../ipc/issueActions";
@@ -24,56 +20,36 @@ import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
 
 type Emit = StartWorkAction;
-const emptyIssueData: IssueData = {
-  type: "",
-  key: "",
-  id: "",
-  self: "",
-  created: new Date(0),
-  description: "",
-  summary: "",
-  status: emptyStatus,
-  priority: emptyPriority,
-  issueType: emptyIssueType,
-  reporter: emptyUser,
-  assignee: emptyUser,
-  comments: [],
-  labels: [],
-  attachments: [],
-  transitions: [],
-  components: [],
-  fixVersions: [],
-  workingSite: emptyWorkingSite,
-  isAssignedToMe: false,
-  childIssues: []
-};
 const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: [] };
 
-type MyState = {
+type State = {
   data: StartWorkOnIssueData;
   transition: Transition;
   sourceBranch?: { label: string, value: Branch },
   branchName: string;
-  repo?: { label: string, value: RepoData };
+  repo: { label: string, value: RepoData };
   isStartButtonLoading: boolean;
   result: StartWorkOnIssueResult;
+};
+
+const emptyState: State = {
+  data: { type: 'update', issue: emptyIssue, repoData: [] },
+  transition: emptyTransition,
+  repo: { label: 'No repo found', value: emptyRepoData },
+  branchName: '',
+  isStartButtonLoading: false,
+  result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined }
 };
 
 export default class StartWorkPage extends WebviewComponent<
   Emit,
   StartWorkOnIssueData,
   {},
-  MyState
+  State
 > {
   constructor(props: any) {
     super(props);
-    this.state = {
-      data: {type: 'update', issue: emptyIssueData, repoData: []},
-      transition: emptyTransition,
-      branchName: '',
-      isStartButtonLoading: false,
-      result: {type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined}
-    };
+    this.state = emptyState;
   }
 
   public onMessageReceived(e:any) {
@@ -81,18 +57,25 @@ export default class StartWorkPage extends WebviewComponent<
 
     if(e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
       console.log("got issue data");
-      const repo = this.state.repo === undefined && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
-      const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo!.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo!.value.mainbranch!) !== -1) || repo!.value.localBranches[0];
-      const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
-      const branchName = this.state.branchName.trim() === '' ? `${e.issue.key}-${e.issue.summary.substring(0, 50).trim().replace(/\W+/g, '-')}` : this.state.branchName;
+      if (e.issue.key.length > 0) {
+        const repo = this.state.repo.value === emptyRepoData && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
+        const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
+        const branchName = this.state.branchName.trim().length === 0 ? `${e.issue.key}-${e.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}` : this.state.branchName;
+        const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
+        const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
 
-      this.setState({
-        data: e,
-        repo: repo,
-        sourceBranch: {label: sourceBranchValue.name!, value: sourceBranchValue}, 
-        transition: transition,
-        branchName: branchName
-      });
+        this.setState({
+          data: e,
+          repo: repo,
+          sourceBranch: sourceBranch,
+          transition: transition,
+          branchName: branchName
+        });
+      }
+      else { // empty issue
+        this.setState(emptyState);
+      }
+
     }
     else if (isStartWorkOnIssueResult(e)) {
       this.setState({ isStartButtonLoading: false, result: e });
@@ -115,7 +98,7 @@ export default class StartWorkPage extends WebviewComponent<
 
   handleRepoChange = (repo: { label: string, value: RepoData }) => {
     const sourceBranchValue = repo!.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo!.value.mainbranch!) !== -1);
-    this.setState({ repo: repo, sourceBranch: sourceBranchValue ? { label: sourceBranchValue.name!, value: sourceBranchValue } : undefined});
+    this.setState({ repo: repo, sourceBranch: sourceBranchValue ? { label: sourceBranchValue.name!, value: sourceBranchValue } : undefined });
   }
 
   handleSourceBranchChange = (newValue: { label: string, value: Branch }) => {
@@ -131,7 +114,7 @@ export default class StartWorkPage extends WebviewComponent<
 
     this.postMessage({
       action: 'startWork',
-      repoUri: this.state.repo!.value.uri,
+      repoUri: this.state.repo.value.uri,
       branchName: this.state.branchName,
       sourceBranchName: this.state.sourceBranch!.value.name!,
       transition: this.state.transition
@@ -141,14 +124,16 @@ export default class StartWorkPage extends WebviewComponent<
   header(issue: any): any {
     return (
       <div>
-        <FlexCentered>
-          <em><p>Start work on - </p></em>
-          <div className="icon-text" style={{ margin: 10 }}>
-            <img src={issue.issueType.iconUrl} />
-            {issue.key}
-          </div>
-          <p>{issue.summary}</p>
-        </FlexCentered>
+        <h3>
+          <FlexCentered>
+            <em><p>Start work on - </p></em>
+            <div className="icon-text" style={{ margin: 10 }}>
+              <img src={issue.issueType.iconUrl} />
+              {issue.key}
+            </div>
+            <p>{issue.summary}</p>
+          </FlexCentered>
+        </h3>
         <p>{issue.description}</p>
       </div>
     );
@@ -156,7 +141,7 @@ export default class StartWorkPage extends WebviewComponent<
 
   render() {
     const issue = this.state.data.issue;
-    const repo = this.state.repo || { label: '', value: emptyRepoData };
+    const repo = this.state.repo;
 
     if (issue.key === '') {
       return <BlockCentered><Spinner size="large" /></BlockCentered>;
@@ -164,61 +149,67 @@ export default class StartWorkPage extends WebviewComponent<
 
     return (
       <Page>
-        <div style={{ maxWidth: '1200px', margin: 'auto' }}>
-          <Grid layout="fluid">
-            <GridColumn medium={8}>
-              {this.header(issue)}
-            </GridColumn>
-            <GridColumn medium={6}>
-              <VerticalPadding>
-                <label>Repository</label>
+        <Grid layout="fluid">
+          <GridColumn medium={8}>
+            {this.header(issue)}
+          </GridColumn>
+          <GridColumn medium={12}>
+            <h4>Transition issue</h4>
+            <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+              <div style={{ margin: 10 }}>
+                <label>Select new status</label>
+                <TransitionMenu issue={issue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
+              </div>
+            </div>
+          </GridColumn>
+          <GridColumn medium={6}>
+            <h4>Set up git branch</h4>
+            <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+              <div style={{ margin: 10 }}>
+                {this.state.data.repoData.length > 1 &&
+                  <VerticalPadding>
+                    <label>Repository</label>
+                    <Select
+                      className="ak-select-container"
+                      classNamePrefix="ak-select"
+                      options={this.state.data.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                      onChange={this.handleRepoChange}
+                      placeholder='Loading...'
+                      value={repo} />
+                  </VerticalPadding>
+                }
+                <label>Source branch (this will be the start point for the new branch)</label>
                 <Select
                   className="ak-select-container"
                   classNamePrefix="ak-select"
-                  options={this.state.data.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
-                  onChange={this.handleRepoChange}
-                  placeholder='Loading...'
-                  value={repo} />
-              </VerticalPadding>
-            </GridColumn>
-            <GridColumn medium={12} />
-            <GridColumn medium={6}>
-              <label>Source branch (local)</label>
-              <Select
-                className="ak-select-container"
-                classNamePrefix="ak-select"
-                options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
-                onChange={this.handleSourceBranchChange}
-                value={this.state.sourceBranch} />
-            </GridColumn>
-            <GridColumn medium={12} />
-            <GridColumn medium={6}>
-              <VerticalPadding>
-                <label>Name of the new branch to be created</label>
-                <input style={{ width: '100%', display: 'block' }} className='ak-inputField' value={this.state.branchName} onChange={this.handleBranchNameChange} />
-              </VerticalPadding>
-              <label>New status</label>
-              <TransitionMenu issue={issue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
-            </GridColumn>
-            <GridColumn medium={12}>
-              <VerticalPadding>
-                {this.state.result.successMessage
+                  options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
+                  onChange={this.handleSourceBranchChange}
+                  value={this.state.sourceBranch} />
+                <VerticalPadding>
+                  <label>Name of the new branch to be created</label>
+                  <input style={{ width: '100%', display: 'block' }} className='ak-inputField' value={this.state.branchName} onChange={this.handleBranchNameChange} />
+                </VerticalPadding>
+              </div>
+            </div>
+          </GridColumn>
+          <GridColumn medium={12}>
+            <VerticalPadding>
+              {this.state.result.successMessage
                 ? <p>{this.state.result.successMessage}</p>
                 : <Button className='ak-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>
-                }
-              </VerticalPadding>
-            </GridColumn>
-            <GridColumn medium={12}>
-              {this.state.result.error &&
-                  <SectionMessage appearance="warning" title="Something went wrong">
-                    <VerticalPadding>
-                      <div style={{ color: 'black' }}>{this.state.result.error}</div>
-                    </VerticalPadding>
-                  </SectionMessage>
               }
-            </GridColumn>
-          </Grid>
-        </div>
+            </VerticalPadding>
+          </GridColumn>
+          <GridColumn medium={12}>
+            {this.state.result.error &&
+              <SectionMessage appearance="warning" title="Something went wrong">
+                <VerticalPadding>
+                  <div style={{ color: 'black' }}>{this.state.result.error}</div>
+                </VerticalPadding>
+              </SectionMessage>
+            }
+          </GridColumn>
+        </Grid>
       </Page>
     );
   }
