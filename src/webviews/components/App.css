@@ -42,6 +42,58 @@ div.icon-text img {
   margin-right: 5pt;
 }
 
+.pipeline-head {
+  border-radius: 5px;
+  font-size: 2em;
+  font-weight: bold;
+  color: white;
+  padding: 0.5em;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.pipeline-head-item {
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
+
+.pipeline-head div {
+  float: right;
+  box-sizing: border-box;
+}
+
+.pipeline-step-title {
+  padding: 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-step-head {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.pipeline-step-subhead {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.pipeline-command {
+  font-family: Monaco, "Courier New", Courier, monospace;
+  font-size: 1.2em;
+  margin-left: 1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 /* ak-button should be the className on all atlaskit button components */
 .ak-button {
   background: var(--vscode-button-background) !important;
@@ -255,7 +307,7 @@ div#jql-row {
 }
 
 .vscode-light .Collapsible {
-  background: var(--background-color--darken-05)
+  background: var(--background-color--darken-05);
 }
 
 .Collapsible__trigger {
@@ -276,11 +328,13 @@ div#jql-row {
   color: var(--color--75);
 }
 
-[class^="Checkbox__IconWrapper-"], [class^="Radio__IconWrapper-"] {
+[class^="Checkbox__IconWrapper-"],
+[class^="Radio__IconWrapper-"] {
   color: var(--vscode-button-background) !important;
 }
 
-[class^="Checkbox__IconWrapper-"] rect, [class^="Radio__IconWrapper-"] circle {
+[class^="Checkbox__IconWrapper-"] rect,
+[class^="Radio__IconWrapper-"] circle {
   stroke: var(--vscode-button-background) !important;
 }
 .labelAndSelect {
@@ -306,7 +360,7 @@ hr {
   margin-bottom: 1em;
 }
 
-.vscode-light .ak-link-button>span {
+.vscode-light .ak-link-button > span {
   color: var(--vscode-textlink-foreground) !important;
 }
 
@@ -315,7 +369,7 @@ hr {
   text-decoration: none;
 }
 
-.vscode-dark .ak-link-button>span {
+.vscode-dark .ak-link-button > span {
   color: var(--vscode-button-foreground) !important;
 }
 

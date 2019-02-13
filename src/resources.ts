@@ -27,6 +27,7 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.icons.set('building', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-building.svg'))));
     Resources.icons.set('success', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-success.svg'))));
     Resources.icons.set('failed', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-failed.svg'))));
+    Resources.icons.set('stopped', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-stopped.svg'))));
 
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 

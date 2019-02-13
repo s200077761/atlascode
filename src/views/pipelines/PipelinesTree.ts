@@ -1,14 +1,16 @@
 import { TreeDataProvider, TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri } from "vscode";
-import { PipelineApi } from "../../bitbucket/pipelines";
+import { PipelineApi } from "../../pipelines/pipelines";
+import { Pipeline } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import * as moment from "moment";
 import { Resources } from "../../resources";
+import { Commands } from "../../commands";
 
 export class PipelinesTree implements TreeDataProvider<Node> {
     _branches: [string, Repository][] | undefined;
-    _pipelines: Map<string, Bitbucket.Schema.Pipeline[]> = new Map();
+    _pipelines: Map<string, Pipeline[]> = new Map();
     private _onDidChangeTreeData = new EventEmitter<Node>();
     public get onDidChangeTreeData(): Event<Node> {
         return this._onDidChangeTreeData.event;
@@ -21,15 +23,15 @@ export class PipelinesTree implements TreeDataProvider<Node> {
         return element.treeItem();
     }
 
-    getChildren(element?: Node):Node[] | Promise<Node[]> {
+    getChildren(element?: Node): Node[] | Promise<Node[]> {
         if (!element) {
             if (this._branches) {
-                return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b] ));
+                return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
             } else {
                 return this.fetchBranches()
-                .then(branches => {
-                    return branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
-                });
+                    .then(branches => {
+                        return branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
+                    });
             }
         } else if (element instanceof BranchNode) {
             const branchPipelines = this._pipelines[element.branchName];
@@ -37,9 +39,9 @@ export class PipelinesTree implements TreeDataProvider<Node> {
                 return branchPipelines.map((p: any) => new PipelineNode(p));
             } else {
                 return this.fetchPipelinesForBranch([element.branchName, element.repo])
-                .then (pipelines => {
-                    return pipelines.map(p => new PipelineNode(p));
-                });
+                    .then(pipelines => {
+                        return pipelines.map(p => new PipelineNode(p));
+                    });
             }
         } else if (element instanceof PipelineNode) {
             return Promise.resolve([]);
@@ -56,8 +58,8 @@ export class PipelinesTree implements TreeDataProvider<Node> {
                 const remote = remotes[0];
                 const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
                 const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
-                const branchesResponse = await bb.refs.listBranches({repo_slug: parsed.name, username: parsed.owner});
-                branchesResponse.data.values!.forEach ( v => {
+                const branchesResponse = await bb.refs.listBranches({ repo_slug: parsed.name, username: parsed.owner });
+                branchesResponse.data.values!.forEach(v => {
                     this._branches = this._branches!.concat([[v.name!, repo]]);
                 });
                 this.getAllTheThings(this._branches);
@@ -69,9 +71,9 @@ export class PipelinesTree implements TreeDataProvider<Node> {
 
     async getAllTheThings(branches: [string, Repository][]) {
         await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
-        this._branches!.sort(([a]: [string, any], [b]:[string, any]) => {
-            const pa: Bitbucket.Schema.Pipeline[] = this._pipelines[a];
-            const pb: Bitbucket.Schema.Pipeline[] = this._pipelines[b];
+        this._branches!.sort(([a]: [string, any], [b]: [string, any]) => {
+            const pa: Pipeline[] = this._pipelines[a];
+            const pb: Pipeline[] = this._pipelines[b];
             if (!pa || pa.length === 0) {
                 return -1;
             }
@@ -86,7 +88,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
         this._onDidChangeTreeData.fire();
     }
 
-    async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Bitbucket.Schema.Pipeline[]> {
+    async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Pipeline[]> {
         await Container.clientManager.bbrequest();
         const pipelines = await PipelineApi.getList(repo, branchName);
         this._pipelines[branchName] = pipelines;
@@ -107,7 +109,7 @@ export abstract class Node {
 }
 
 export class PipelineNode extends Node {
-    constructor(private _pipeline: Bitbucket.Schema.Pipeline) {
+    constructor(private _pipeline: Pipeline) {
         super();
     }
 
@@ -123,12 +125,13 @@ export class PipelineNode extends Node {
             }
         }
         const item = new TreeItem(label);
+        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [this._pipeline.uuid] };
         return item;
     }
 }
 
 export class BranchNode extends Node {
-    constructor(readonly branchName: string, readonly repo: Repository, readonly pipelines?: Bitbucket.Schema.Pipeline[]) {
+    constructor(readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
         super();
     }
 
@@ -139,24 +142,24 @@ export class BranchNode extends Node {
         if (this.pipelines && this.pipelines.length > 0) {
             const iconPath = this.iconUriForPipeline(this.pipelines[0]);
             if (iconPath) {
-                treeItem.iconPath=iconPath;
+                treeItem.iconPath = iconPath;
             }
         }
         return treeItem;
     }
 
-    private iconUriForPipeline(pipeline: Bitbucket.Schema.Pipeline): Uri | undefined {
+    private iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
         const iconUriForResult = {
             "pipeline_state_completed_successful": Resources.icons.get('success'),
             "pipeline_state_completed_failed": Resources.icons.get('failed'),
             "pipeline_state_completed_error": Resources.icons.get('failed'),
-            "pipeline_state_completed_stopped": Resources.icons.get('failed')
+            "pipeline_state_completed_stopped": Resources.icons.get('stopped')
         };
 
         if (pipeline && pipeline.state) {
-            switch(pipeline.state.type) {
+            switch (pipeline.state.type) {
                 case "pipeline_state_completed":
-                    return iconUriForResult[pipeline.state.result.type];
+                    return iconUriForResult[pipeline.state!.result!.type];
                     break;
                 case "pipeline_state_in_progress":
                     return Resources.icons.get('building');
