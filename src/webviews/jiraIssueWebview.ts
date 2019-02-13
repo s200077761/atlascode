@@ -102,6 +102,13 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
                         break;
                     }
                 }
+                case 'copyJiraIssueLink': {
+                    handled = true;
+                    const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
+                    await vscode.env.clipboard.writeText(linkUrl);
+                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    break;
+                }
             }
         }
 

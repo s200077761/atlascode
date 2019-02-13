@@ -24,6 +24,10 @@ export interface OpenJiraIssueAction extends Action {
     issue: Issue;
 }
 
+export interface CopyJiraIssueLinkAction extends Action {
+    action: 'copyJiraIssueLink';
+}
+
 export interface OpenIssueByKeyAction extends Action {
     action: 'openIssueByKey';
     key: string;
