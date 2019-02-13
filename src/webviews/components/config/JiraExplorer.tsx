@@ -3,7 +3,6 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { Field, CheckboxField } from '@atlaskit/form';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-//import { emptyProject } from '../../../jira/jiraModel';
 import { chain } from '../fieldValidators';
 import { InlineFlex } from '../styles';
 import { WorkingSite } from '../../../config/model';
@@ -85,9 +84,9 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
         }
     }
 
-    handleInputChange = (e: any, configKey: string) => {
+    handleNumberChange = (e: any, configKey: string) => {
         const changes = Object.create(null);
-        changes[configKey] = e.target.value;
+        changes[configKey] = +e.target.value;
 
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
@@ -150,6 +149,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show My Open Issues'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.configData.config.jira.explorer.enabled}
                                     />
                                 );
                             }
@@ -166,6 +166,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show My Assigned Issues'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.configData.config.jira.explorer.enabled}
                                     />
                                 );
                             }
@@ -173,19 +174,21 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                     </CheckboxField>
                 </div>
                 <div className="refreshInterval">
-                    <span>refresh every: </span>
-                    <input className='ak-inputField-inline' style={{ width: '40px' }} name="jira-explorer-refresh-interval"
+                    <span>Refresh explorer every: </span>
+                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.jira.explorer.refreshInterval}
-                        onChange={(e: any) => this.handleInputChange(e, "jira.explorer.refreshInterval")} />
+                        onChange={(e: any) => this.handleNumberChange(e, "jira.explorer.refreshInterval")}
+                        disabled={!this.props.configData.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
                 <div className="refreshInterval">
                     <span>Notify of new Jira issues: </span>
-                    <input className='ak-inputField-inline' style={{ width: '40px' }} name="jira-issue-monitor-refresh-interval"
+                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="jira-issue-monitor-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.jira.issueMonitor.refreshInterval}
-                        onChange={(e: any) => this.handleInputChange(e, "jira.issueMonitor.refreshInterval")} />
+                        onChange={(e: any) => this.handleNumberChange(e, "jira.issueMonitor.refreshInterval")}
+                        disabled={!this.props.configData.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables notification)</span>
                 </div>
                 <hr />

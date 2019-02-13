@@ -3,7 +3,7 @@ import { Time } from "../util/time";
 import { BitbucketContext } from "./context";
 import { PullRequestApi } from "./pullRequests";
 import { Disposable, ConfigurationChangeEvent } from "vscode";
-import { configuration, BitbucketExplorerLocation } from "../config/configuration";
+import { configuration } from "../config/configuration";
 import { Container } from "../container";
 import { Commands } from "../commands";
 import { AuthProvider } from "../atlclients/authInfo";
@@ -71,10 +71,7 @@ export class PullRequestCreatedNotifier implements Disposable {
                         vscode.window.showInformationMessage(`New pull requests found for the following repositories: ${notifiableRepos.join(', ')}`, 'Show')
                             .then(usersChoice => {
                                 if (usersChoice === 'Show') {
-                                    const openLocationCommand = Container.config.bitbucket.explorer.location === BitbucketExplorerLocation.Atlascode
-                                        ? 'workbench.view.extension.atlascode-drawer'
-                                        : 'workbench.view.scm';
-                                    vscode.commands.executeCommand(openLocationCommand);
+                                    vscode.commands.executeCommand('workbench.view.extension.atlascode-drawer');
                                     vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
                                 }
                             });

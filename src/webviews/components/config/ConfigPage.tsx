@@ -8,7 +8,7 @@ import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } fr
 import { AuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
-// import BitbucketExplorer from './BBExplorer';
+import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
@@ -188,7 +188,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
-                                        {/* <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} /> */}
+                                        <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>

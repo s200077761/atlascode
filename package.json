@@ -170,6 +170,20 @@
                 "command": "atlascode.bb.copyPullRequest",
                 "title": "Copy Pull Request Url to Clipboard",
                 "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.startPipeline",
+                "title": "Start Pipeline",
+                "category": "AtlasCode"
+            },
+            {
+                "command": "atlascode.bb.refreshPipelines",
+                "title": "Refresh Pipelines",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "AtlasCode"
             }
         ],
         "viewsContainers": {
@@ -182,13 +196,6 @@
             ]
         },
         "views": {
-            "scm": [
-                {
-                    "id": "atlascode.views.bb.pullrequestsTreeView",
-                    "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == SourceControl"
-                }
-            ],
             "atlascode-drawer": [
                 {
                     "id": "atlascode.views.jira.assignedIssues",
@@ -208,7 +215,7 @@
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled && atlascode:bitbucketExplorerLocation == Atlascode"
+                    "when": "atlascode:bitbucketExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
@@ -243,6 +250,11 @@
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.pipelines.explorerEnabled"
                 }
             ],
             "view/title": [
@@ -273,25 +285,45 @@
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.refreshPipelines",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated"
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated"
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
+                    "command": "atlascode.jira.createIssue",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup2"
                 },
                 {
                     "command": "atlascode.bb.viewInWebBrowser",
                     "when": "viewItem == pullrequest"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
+                    "when": "viewItem == pipelineBranch"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
                     "when": "false"
                 },
                 {
@@ -507,20 +539,22 @@
                     "description": "Enables the Bitbucket Pull Request Explorer",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.pipelines.explorer.enabled": {
+                "atlascode.bitbucket.pipelines.explorerEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables the Bitibucket Pipelines Explorer",
+                    "description": "Enables the Bitbucket Pipelines Explorer",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.explorer.location": {
-                    "type": "string",
-                    "default": "Atlascode",
-                    "enum": [
-                        "SourceControl",
-                        "Atlascode"
-                    ],
-                    "description": "Explorer location for Bitbucket pull requests",
+                "atlascode.bitbucket.pipelines.monitorEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Watch Bitbucket Pipelines For New Build Statuses",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.pipelines.refreshInterval": {
+                    "type": "integer",
+                    "default": 5,
+                    "description": "Time (in minutes) to wait before refreshing the Pipelines status",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.refreshInterval": {

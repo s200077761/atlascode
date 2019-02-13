@@ -60,7 +60,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
 
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
-                    <h3>🎉 What's New in 0.2.0 🎉</h3>
+                    <h2>🎉 What's New in 0.2.0 🎉</h2>
                         <section>
                             <h4><BitbucketIcon size="xsmall"/> Pull Request Explorer</h4>
                             <ul>
@@ -120,7 +120,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
                                 <li><ArrowUpCircleIcon size="small" primaryColor="green" label="improvement"/> Use the new VS Code clipboard API instead of the library we're using for copying things</li>
                             </ul>
                         </section>
-                    <h3>🎉 What's New in 0.1.1 🎉</h3>
+                    <h2>🎉 What's New in 0.1.1 🎉</h2>
                         <section>
                             <h4><JiraIcon size="xsmall"/> Issue View</h4>
                             <ul>

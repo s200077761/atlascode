@@ -83,16 +83,14 @@ export interface BitbucketConfig {
 }
 
 export interface BitbucketPipelinesConfig {
-    explorer: BitbucketPipelinesExplorer;
-}
-export interface BitbucketPipelinesExplorer {
-    enabled:boolean;
+    explorerEnabled: boolean;
+    monitorEnabled: boolean;
+    refreshInterval: number;
 }
 
 export interface BitbucketExplorer {
     enabled:boolean;
     refreshInterval:number;
-    location:BitbucketExplorerLocation;
     relatedJiraIssues:BitbucketRelatedJiraIssues;
     notifications:BitbucketNotifications;
 }
@@ -111,11 +109,6 @@ export interface BitbucketStatusBar {
     showProduct:boolean;
     showUser:boolean;
     showLogin:boolean;
-}
-
-export enum BitbucketExplorerLocation {
-    SourceControl = "SourceControl",
-    Atlascode = "Atlascode"
 }
 
 export interface BitbucketContextMenus {
@@ -206,7 +199,6 @@ export const emptyBitbucketNotfications: BitbucketNotifications = {
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled:true,
     refreshInterval:5,
-    location:BitbucketExplorerLocation.Atlascode,
     relatedJiraIssues: emptyRelatedJiraIssues,
     notifications: emptyBitbucketNotfications
 };
@@ -222,12 +214,10 @@ export const emptyBitbucketContextMenus: BitbucketContextMenus = {
     enabled:true
 };
 
-export const emptyPipelinesExplorer:BitbucketPipelinesExplorer = {
-    enabled: true
-};
-
 export const emptyPipelinesConfig:BitbucketPipelinesConfig = {
-    explorer:emptyPipelinesExplorer
+    explorerEnabled: true,
+    monitorEnabled: true,
+    refreshInterval: 5
 };
 
 export const emptyBitbucketConfig:BitbucketConfig = {

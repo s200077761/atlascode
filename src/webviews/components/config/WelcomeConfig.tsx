@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
+import { CheckboxField } from '@atlaskit/form';
 import { ConfigData } from '../../../ipc/configMessaging';
+import { chain } from '../fieldValidators';
 
 type changeObject = { [key: string]: any };
 
@@ -18,16 +20,25 @@ export default class WelcomeConfig extends React.Component<{ configData: ConfigD
         }
     }
 
-    checklabel = (label: string) => <span className='checkboxLabel'>{label}</span>;
 
     render() {
         return (
-            <Checkbox
-                value={"showWelcomeOnInstall"}
-                label={this.checklabel("Show welcome screen when extension is updated")}
-                isChecked={this.props.configData.config.showWelcomeOnInstall}
-                onChange={this.onCheckboxChange}
-                name="bitbucket-contextmenus-enabled" />
+            <CheckboxField
+                name='show-welcome-enabled'
+                id='show-welcome-enabled'
+                value='showWelcomeOnInstall'
+                defaultIsChecked={this.props.configData.config.showWelcomeOnInstall}>
+                {
+                    (fieldArgs: any) => {
+                        return (
+                            <Checkbox {...fieldArgs.fieldProps}
+                                label='Show welcome screen when extension is updated'
+                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                            />
+                        );
+                    }
+                }
+            </CheckboxField>
         );
     }
 }
