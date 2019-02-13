@@ -104,6 +104,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleFeedback = (feedback: FeedbackData) => {
+        console.log('submitting feedback', feedback);
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
 
@@ -147,27 +148,29 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
-            <Form
-                name="jira-explorer-form"
-                onSubmit={(e: any) => { }}
-            >
-                {(frmArgs: any) => {
-                    return (<form {...frmArgs.formProps}>
-                        <Page>
-                            <Grid spacing='comfortable' layout='fixed'>
-                                <GridColumn>
-                                    <h1>AtlasCode</h1>
-                                </GridColumn>
-                            </Grid>
 
-                            <Grid spacing='comfortable' layout='fixed'>
-                                <GridColumn medium={9}>
-                                    <h2>Settings</h2>
-                                </GridColumn>
-                            </Grid>
+            <Page>
+                <Grid spacing='comfortable' layout='fixed'>
+                    <GridColumn>
+                        <h1>AtlasCode</h1>
+                    </GridColumn>
+                </Grid>
 
-                            <Grid spacing='comfortable' layout='fixed'>
-                                <GridColumn medium={9}>
+                <Grid spacing='comfortable' layout='fixed'>
+                    <GridColumn medium={9}>
+                        <h2>Settings</h2>
+                    </GridColumn>
+                </Grid>
+
+                <Grid spacing='comfortable' layout='fixed'>
+
+                    <GridColumn medium={9}>
+                        <Form
+                            name="jira-explorer-form"
+                            onSubmit={(e: any) => { console.log('base submit'); }}
+                        >
+                            {(frmArgs: any) => {
+                                return (<form {...frmArgs.formProps}>
                                     <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
@@ -206,19 +209,22 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                                         <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
-                                </GridColumn>
-                                <GridColumn medium={3}>
-                                    <DisplayFeedback onFeedback={this.handleFeedback} />
-                                    <div style={{ marginTop: '15px' }}>
-                                        <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                                    </div>
-                                </GridColumn>
-                            </Grid>
-                        </Page>
-                    </form>);
-                }
-                }
-            </Form>
+                                </form>);
+                            }
+                            }
+                        </Form>
+                    </GridColumn>
+
+
+                    <GridColumn medium={3}>
+                        <DisplayFeedback onFeedback={this.handleFeedback} />
+                        <div style={{ marginTop: '15px' }}>
+                            <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                        </div>
+                    </GridColumn>
+                </Grid>
+            </Page>
+
         );
     }
 }

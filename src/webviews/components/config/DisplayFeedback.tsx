@@ -1,40 +1,190 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
-// import { FeedbackForm } from '@atlaskit/feedback-collector';
 import { FeedbackData } from '../../../ipc/configActions';
+import Form, { FormFooter, Field, ErrorMessage, CheckboxField } from '@atlaskit/form';
+import { Checkbox } from '@atlaskit/checkbox';
+import Select from '@atlaskit/select';
+import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
+import { FieldValidators, chain } from '../fieldValidators';
 
-type MyState = { isOpen: boolean };
+type MyState = { isOpen: boolean, description: string };
 
-export default class DisplayFeedback extends React.Component<{onFeedback: (feedback:FeedbackData) => void}, MyState> {
+export default class DisplayFeedback extends React.Component<{ onFeedback: (feedback: FeedbackData) => void }, MyState> {
 
   constructor(props: any) {
-      super(props);
+    super(props);
+    this.state = { isOpen: false, description: '' };
   }
-  state = { isOpen: false };
 
-  open = () => this.setState({ isOpen: true });
-  close = () => this.setState({ isOpen: false });
+  getActions() {
 
-  handleFeedback = (feedback:FeedbackData) => {
-    this.setState({ isOpen: false });
-    if(this.props.onFeedback) {
+    const isDisabled = (this.state.description.trim().length < 1);
+    console.log('getting actions', isDisabled);
+    console.log('getting actions desc', this.state.description);
+
+    return [
+      {
+        text: 'Send feedback',
+        isDisabled,
+        onClick: this.handleFeedback,
+        className: 'ak-button'
+      },
+      {
+        text: 'Cancel',
+        onClick: this.handleClose,
+        className: 'ak-button'
+      },
+    ];
+  }
+
+  handleOpen = () => this.setState({ isOpen: true });
+  handleClose = () => this.setState({ isOpen: false, description: '' });
+
+  handleFeedback = (formData: any) => {
+
+    const feedback: FeedbackData = {
+      description: formData.description,
+      type: formData.type.value,
+      canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0)
+    }
+
+    console.log('feedback', feedback);
+
+    if (this.props.onFeedback) {
       this.props.onFeedback(feedback);
     }
+
+    this.handleClose();
   }
+
   render() {
-    // const { isOpen } = this.state;
+    const { isOpen } = this.state;
+
+    const selectOptions = [
+      { label: 'Ask a question', value: 'question' },
+      { label: 'Leave a comment', value: 'comment' },
+      { label: 'Report a bug', value: 'bug' },
+      { label: 'Suggest an improvement', value: 'suggestion' },
+    ];
+
     return (
       <div>
-        <Button className='ak-button' onClick={this.open}>
-          Send Feedback
-        </Button>
+        <Button className='ak-button' onClick={this.handleOpen}>Send Feedback</Button>
 
-        {/* {isOpen && (
-          <FeedbackForm
-            onClose={this.close}
-            onSubmit={this.handleFeedback}
-          />
-        )} */}
+        {isOpen && (
+          <ModalTransition>
+            <Modal
+              // actions={this.getActions()}
+              onClose={this.handleClose}
+              heading="Send Feedback"
+              shouldCloseOnEscapePress={false}
+            >
+              <Form
+                name="feedback-collector"
+                onSubmit={this.handleFeedback}
+              >
+                {(frmArgs: any) => {
+                  return (<form {...frmArgs.formProps}>
+                    <Field defaultValue={selectOptions[0]}
+                      label='Type of Feedback'
+                      isRequired={true}
+                      id='type'
+                      name='type'
+                      validate={FieldValidators.validateSingleSelect}>
+                      {
+                        (fieldArgs: any) => {
+                          let errDiv = <span />;
+                          if (fieldArgs.error === 'EMPTY') {
+                            errDiv = <ErrorMessage>Issue Type is required</ErrorMessage>;
+                          }
+                          return (
+                            <div>
+                              <Select
+                                {...fieldArgs.fieldProps}
+                                className="ak-select-container"
+                                classNamePrefix="ak-select"
+                                options={selectOptions}
+                                placeholder="Select Issue Type"
+                                getOptionLabel={(option: any) => option.label}
+                                getOptionValue={(option: any) => option.value}
+                                menuPortalTarget={document.body}
+                                styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
+                              />
+                              {errDiv}
+                            </div>
+                          );
+                        }
+                      }
+                    </Field>
+
+                    <Field label='Description'
+                      isRequired={true}
+                      id='description'
+                      name='description'
+                      defaultValue={this.state.description}
+                      validate={FieldValidators.validateString}>
+                      {
+                        (fieldArgs: any) => {
+                          let errDiv = <span />;
+                          if (fieldArgs.error === 'EMPTY') {
+                            errDiv = <ErrorMessage>Description is required</ErrorMessage>;
+                          }
+                          return (
+                            <div>
+                              <textarea {...fieldArgs.fieldProps}
+                                style={{ width: '100%', display: 'block' }}
+                                className='ak-textarea'
+                                rows={3}
+                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { console.log('ta', item.target.value); this.setState({ description: item.target.value }); })}
+                              />
+                              {errDiv}
+                            </div>
+                          );
+                        }
+                      }
+                    </Field>
+
+                    <CheckboxField
+                      name='canBeContacted'
+                      id='canBeContacted'
+                      value='canBeContacted'
+                      defaultIsChecked={true}>
+                      {
+                        (fieldArgs: any) => {
+                          return (
+                            <Checkbox {...fieldArgs.fieldProps}
+                              label='Atlassian can contact me about this feedback' />
+                          );
+                        }
+                      }
+                    </CheckboxField>
+
+                    <FormFooter actions={{}}>
+                      <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+                        <Button type="submit"
+                          className='ak-button'
+                          isDisabled={(this.state.description.trim().length < 1)}
+                        >
+                          Submit
+                        </Button>
+                      </div>
+                      <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+                        <Button
+                          className='ak-button'
+                          onClick={this.handleClose}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </FormFooter>
+                    <div style={{ height: '20px' }} />
+                  </form>);
+                }}
+              </Form>
+
+            </Modal>
+          </ModalTransition>
+        )}
 
       </div>
     );

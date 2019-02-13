@@ -633,7 +633,6 @@
         "@atlaskit/datetime-picker": "^6.3.24",
         "@atlaskit/dropdown-menu": "^6.1.20",
         "@atlaskit/droplist": "^7.0.16",
-        "@atlaskit/feedback-collector": "^2.0.0",
         "@atlaskit/field-base": "^11.0.12",
         "@atlaskit/field-text": "^7.0.19",
         "@atlaskit/flag": "^9.1.6",
