@@ -127,6 +127,30 @@ div#jql-row {
   background: var(--vscode-button-background--50)!important
 }
 
+/* BEGIN JQL AUTOCOMPLETE INPUT */
+[class^=SingleLineTextInput] {
+  outline: 0px!important;
+}
+
+[class^=Content-] {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-dropdown-foreground)!important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
+}
+
+[class^=Item__Span] {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-dropdown-foreground)!important
+
+}
+
+[class^=Item__Span]:hover {
+  background: var(--vscode-list-focusBackground)!important;
+  color: var(--vscode-dropdown-foreground)!important;
+
+}
+/* END JQL AUTOCOMPLETE INPUT */
+
 .ak-inputField,.ak-inputField-inline,.ak-textarea {
   background: var(--vscode-input-background)!important;
   color: var(--vscode-input-foreground)!important;
@@ -184,7 +208,11 @@ div#jql-row {
   background: var(--background-color)!important
 }
 
-[class^=Checkbox__Label],[class^=Field__Label],[class^=Modal__Dialog],[class^=Radio__Label] {
+section[class^=styled__Container-],section[class^=styled__Container-] h1  {
+  color:#4c4c4c!important;
+}
+
+[class^=Checkbox__Label],[class^=Field__Label],[class^=Label__LabelWrapper-],[class^=Label__LabelInner-],[class^=Modal__Dialog],[class^=Radio__Label] {
   color: var(--vscode-input-foreground)!important
 }
 
@@ -297,8 +325,12 @@ div#jql-row {
   padding-right: 1rem
 }
 
-.labelAndSelect>span,.refreshInterval>span {
+.labelAndSelect>span {
   color: var(--color--75)
+}
+
+.refreshInterval {
+  margin-top:10px;
 }
 
 hr {

@@ -1,7 +1,11 @@
 import React, { PureComponent } from "react";
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-// import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
+import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import { JQLEntry } from "src/config/model";
+import { Field, ErrorMessage } from '@atlaskit/form';
+import { FieldValidators, chain } from "../fieldValidators";
+import Button from '@atlaskit/button';
+import SectionMessage from '@atlaskit/section-message';
 
 export default class EditJQL extends PureComponent<{
   cloudId: string;
@@ -13,17 +17,21 @@ export default class EditJQL extends PureComponent<{
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
+  jqlError: string | null;
+  isEditing: boolean;
 }> {
-  state={
+  state = {
     nameValue: this.props.jqlEntry.name,
     inputValue: this.props.jqlEntry.query,
-    openComplete: false
+    openComplete: false,
+    jqlError: null,
+    isEditing: false
   };
 
   async fetchEndpoint(endpoint: string): Promise<any> {
     const fullUrl = `https://api.atlassian.com/ex/jira/${
       this.props.cloudId
-    }/rest/api/2/${endpoint}`;
+      }/rest/api/2/${endpoint}`;
     const r = new Request(fullUrl, {
       headers: {
         Authorization: `Bearer ${this.props.jiraAccessToken}`,
@@ -36,16 +44,24 @@ export default class EditJQL extends PureComponent<{
     });
   }
 
-  getSuggestionsRequest = async (fieldName: string, fieldValue:string) => {
+  getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {
     return this.fetchEndpoint(
       `jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=${fieldValue}`
     );
   }
 
   validationRequest = async (jql: string) => {
-    return this.fetchEndpoint(
+    this.fetchEndpoint(
       `/search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
-    );
+    ).then((res: any) => {
+      if (res.errorMessages && res.errorMessages.length > 0) {
+        this.setState({
+          jqlError: JSON.stringify(res.errorMessages[0])
+        });
+      } else {
+        this.setState({ jqlError: null });
+      }
+    });
   }
 
   getAutocompleteDataRequest = () => {
@@ -58,6 +74,12 @@ export default class EditJQL extends PureComponent<{
     });
   }
 
+  onJQLOpenChange = (isOpen: boolean) => {
+    this.setState({
+      isEditing: isOpen
+    });
+  }
+
   onNameChange = (e: any) => {
     this.setState({
       nameValue: e.target.value
@@ -65,40 +87,60 @@ export default class EditJQL extends PureComponent<{
   }
 
   onSave = () => {
-      var entry = this.props.jqlEntry;
+    var entry = this.props.jqlEntry;
 
-      this.props.onSave(Object.assign({}, entry, {name: this.state.nameValue, query: this.state.inputValue}));
+    this.props.onSave(Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onOpenComplete = () => {
-    this.setState({openComplete: true});
+    this.setState({ openComplete: true });
   }
 
   render() {
-    const actions = [
-      { text: "Cancel", onClick: this.props.onCancel },
-      { text: "Save", onClick: this.onSave }
-    ];
 
     return (
-        <ModalTransition>
-          <Modal
-            actions={actions}
-            onClose={this.props.onCancel}
-            heading="Edit JQL"
-            onOpenComplete={this.onOpenComplete}
-            shouldCloseOnEscapePress={false}
-          >
-            {/* <TextField
-              style={{ width: "100%"}}
-              type="text"
-              label="Name"
-              id="jql-name-input"
-              value={this.state.nameValue}
-              onChange={this.onNameChange}
-              required
-            />
-            {this.state.openComplete &&
+      <ModalTransition>
+        <Modal
+          onClose={this.props.onCancel}
+          heading="Edit JQL"
+          onOpenComplete={this.onOpenComplete}
+          shouldCloseOnEscapePress={false}
+        >
+          <Field label='Name'
+            isRequired={true}
+            id='jql-name-input'
+            name='jql-name-input'
+            defaultValue={this.state.nameValue}
+            validate={FieldValidators.validateString}>
+            {
+              (fieldArgs: any) => {
+                let errDiv = <span />;
+                if (fieldArgs.error === 'EMPTY') {
+                  errDiv = <ErrorMessage>Name is required</ErrorMessage>;
+                }
+                return (
+                  <div>
+                    <input {...fieldArgs.fieldProps}
+                      style={{ width: '100%', display: 'block' }}
+                      className='ak-inputField'
+                      onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
+                    {errDiv}
+                  </div>
+                );
+              }
+            }
+          </Field>
+
+          {this.state.jqlError && !this.state.isEditing &&
+            <div style={{ marginTop: '24px' }}>
+              <SectionMessage appearance="error" title="JQL Error">
+                <div>{this.state.jqlError}</div>
+              </SectionMessage>
+            </div>
+          }
+
+
+          {this.state.openComplete &&
             <JQLAutocompleteInput
               getAutocompleteDataRequest={this.getAutocompleteDataRequest}
               getSuggestionsRequest={this.getSuggestionsRequest}
@@ -106,11 +148,36 @@ export default class EditJQL extends PureComponent<{
               inputId={"jql-automplete-input"}
               label={"Query"}
               onChange={this.onJQLChange}
+              onEditorOpenChange={this.onJQLOpenChange}
               validationRequest={this.validationRequest}
-            /> */}
-            }
-          </Modal>
-        </ModalTransition>
+              jqlError={this.state.jqlError}
+            />
+          }
+          <div style={{
+            marginTop: '24px',
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}>
+            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+              <Button
+                className='ak-button'
+                isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
+                onClick={this.onSave}
+              >
+                Save
+            </Button>
+            </div>
+            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+              <Button
+                className='ak-button'
+                onClick={this.props.onCancel}
+              >
+                Cancel
+            </Button>
+            </div>
+          </div>
+        </Modal>
+      </ModalTransition>
     );
   }
 }

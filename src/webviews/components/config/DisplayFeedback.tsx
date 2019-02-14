@@ -16,27 +16,6 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
     this.state = { isOpen: false, description: '' };
   }
 
-  getActions() {
-
-    const isDisabled = (this.state.description.trim().length < 1);
-    console.log('getting actions', isDisabled);
-    console.log('getting actions desc', this.state.description);
-
-    return [
-      {
-        text: 'Send feedback',
-        isDisabled,
-        onClick: this.handleFeedback,
-        className: 'ak-button'
-      },
-      {
-        text: 'Cancel',
-        onClick: this.handleClose,
-        className: 'ak-button'
-      },
-    ];
-  }
-
   handleOpen = () => this.setState({ isOpen: true });
   handleClose = () => this.setState({ isOpen: false, description: '' });
 
@@ -46,9 +25,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
       description: formData.description,
       type: formData.type.value,
       canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0)
-    }
-
-    console.log('feedback', feedback);
+    };
 
     if (this.props.onFeedback) {
       this.props.onFeedback(feedback);
@@ -74,7 +51,6 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
         {isOpen && (
           <ModalTransition>
             <Modal
-              // actions={this.getActions()}
               onClose={this.handleClose}
               heading="Send Feedback"
               shouldCloseOnEscapePress={false}
