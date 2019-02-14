@@ -68,7 +68,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
         </CheckboxField>
         <div className="refreshInterval">
           <span>Refresh explorer every: </span>
-          <input className='ak-inputField-inline' style={{ width: '60px' }} name="pipelines-refresh-interval"
+          <input className='ac-inputField-inline' style={{ width: '60px' }} name="pipelines-refresh-interval"
             type="number" min="0"
             value={this.props.configData.config.bitbucket.pipelines.refreshInterval}
             onChange={(e: any) => this.handleNumberChange(e, "bitbucket.pipelines.refreshInterval")}

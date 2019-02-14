@@ -33,7 +33,7 @@ export default class BuildStatus extends React.Component<{ buildStatuses?: Bitbu
                 ? <Tooltip content={`${successes.length} of ${this.props.buildStatuses.length} ${buildString} passed`} position='top'>{successIcon}</Tooltip>
                 : <Tooltip content={`${this.props.buildStatuses.length - successes.length} of ${this.props.buildStatuses.length} ${buildString} unsuccessful`} position='top'>{errorIcon}</Tooltip>;
 
-        return <div className='ak-inline-dialog'>
+        return <div className='ac-inline-dialog'>
             <InlineDialog
                 content={this.props.buildStatuses.map(status =>
                     <Button

@@ -6,7 +6,6 @@ import Panel from '@atlaskit/panel';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import { InlineFlex, VerticalPadding } from '../styles';
 import Select from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
 import Commits from './Commits';
@@ -18,7 +17,7 @@ import CreatePRTitleSummary from './CreatePRTitleSummary';
 type Emit = CreatePullRequest | FetchDetails;
 type Receive = CreatePRData | CommitsResult;
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: []};
+const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: [] };
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (
@@ -36,9 +35,9 @@ const formatOptionLabel = (option: any, { context }: any) => {
                             fontStyle: 'italic'
                         }}
                     >
-                        <InlineFlex>
+                        <div className='ac-flex-space-between'>
                             {`tracking upstream ${option.value.upstream.remote}/${option.value.upstream.name}`}
-                        </InlineFlex>
+                        </div>
                     </div>
                 ) : null}
             </div>
@@ -65,11 +64,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 }> {
     constructor(props: any) {
         super(props);
-        this.state = { data: {type: 'createPullRequest', repositories: []}, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: false, commits: [], isCreateButtonLoading: false };
+        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: false, commits: [], isCreateButtonLoading: false };
     }
 
     handleTitleChange = (e: any) => {
-        this.setState({ title: e.target.value , titleManuallyEdited: true });
+        this.setState({ title: e.target.value, titleManuallyEdited: true });
     }
 
     handleSummaryChange = (e: any) => {
@@ -144,11 +143,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handlePushLocalChangesChange = (e: any) => {
-        this.setState({pushLocalChanges: e.target.checked});
+        this.setState({ pushLocalChanges: e.target.checked });
     }
 
     handleCreatePR = () => {
-        this.setState({isCreateButtonLoading: true});
+        this.setState({ isCreateButtonLoading: true });
         this.postMessage({
             action: 'createPullRequest',
             repoUri: this.state.repo!.value.uri,
@@ -186,16 +185,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     render() {
 
-        const repo = this.state.repo || {label:'', value: emptyRepoData};
+        const repo = this.state.repo || { label: '', value: emptyRepoData };
 
         const actionsContent = (
-            <InlineFlex>
-                <Button className='ak-button' href={
+            <div className='ac-flex-space-between'>
+                <Button className='ac-button' href={
                     repo && repo.value.href
                         ? `${repo.value.href}/pull-requests/new`
                         : `https://bitbucket.org/dashboard/overview`
                 }>Create on bitbucket.org...</Button>
-            </InlineFlex>
+            </div>
         );
 
         return (
@@ -209,15 +208,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </GridColumn>
 
                         <GridColumn medium={6}>
-                            <VerticalPadding>
+                            <div className='ac-vpadding'>
                                 <label>Repository</label>
                                 <Select
                                     options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                                     onChange={this.handleRepoChange}
                                     placeholder='Loading...'
                                     value={repo}
-                                    className="ak-select-container"
-                                    classNamePrefix="ak-select"/>
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select" />
 
                                 {repo.value.remotes.length > 1 &&
                                     <React.Fragment>
@@ -226,11 +225,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
                                             onChange={this.handleRemoteChange}
                                             value={this.state.remote}
-                                            className="ak-select-container"
-                                            classNamePrefix="ak-select"/>
+                                            className="ac-select-container"
+                                            classNamePrefix="ac-select" />
                                     </React.Fragment>
                                 }
-                            </VerticalPadding>
+                            </div>
                         </GridColumn>
                         <GridColumn medium={12} />
 
@@ -241,8 +240,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                                 onChange={this.handleSourceBranchChange}
                                 value={this.state.sourceBranch}
-                                className="ak-select-container"
-                                classNamePrefix="ak-select" />
+                                className="ac-select-container"
+                                classNamePrefix="ac-select" />
                         </GridColumn>
                         <GridColumn medium={4}>
                             <label>Source branch (remote)</label>
@@ -255,10 +254,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 onChange={this.handlePushLocalChangesChange}
                                 name="push-local-branch-enabled" />
 
-                            <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches}/>
+                            <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} />
                         </GridColumn>
                         <GridColumn medium={6}>
-                            <VerticalPadding>
+                            <div className='ac-vpadding'>
                                 <label>Destination branch</label>
                                 <Select
                                     options={this.state.remote
@@ -267,9 +266,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         : []}
                                     onChange={this.handleDestinationBranchChange}
                                     value={this.state.destinationBranch}
-                                    className="ak-select-container"
-                                    classNamePrefix="ak-select"/>
-                            </VerticalPadding>
+                                    className="ac-select-container"
+                                    classNamePrefix="ac-select" />
+                            </div>
                         </GridColumn>
 
                         <GridColumn medium={12}>
@@ -277,12 +276,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </GridColumn>
 
                         <GridColumn medium={12}>
-                            <Button className='ak-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
+                            <Button className='ac-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
                         </GridColumn>
 
                         <GridColumn medium={12}>
                             {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
-                                <Panel isDefaultExpanded header={<InlineFlex><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></InlineFlex>}>
+                                <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
                                     <Commits type={''} currentBranch={''} commits={this.state.commits} />
                                 </Panel>
                             }

@@ -19,13 +19,12 @@ import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
 import { Issue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
-import { Spacer, BlockCentered, InlineFlex } from '../styles';
 import BuildStatus from './BuildStatus';
 
 type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
 
-export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading:boolean, isCheckoutButtonLoading:boolean, branchError?: string }> {
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading: boolean, isCheckoutButtonLoading: boolean, branchError?: string }> {
     constructor(props: any) {
         super(props);
         this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false };
@@ -61,7 +60,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     }
 
     handleCheckout = (branchName: string) => {
-        this.setState({ isCheckoutButtonLoading:true });
+        this.setState({ isCheckoutButtonLoading: true });
         this.postMessage({
             action: 'checkout',
             branch: branchName,
@@ -76,7 +75,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         else if (isCheckoutError(e)) {
             this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch }, isCheckoutButtonLoading: false });
         } else {
-            this.setState({isCheckoutButtonLoading: false });
+            this.setState({ isCheckoutButtonLoading: false });
         }
     }
 
@@ -90,19 +89,19 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
 
         const actionsContent = (
-            <InlineFlex>
+            <div className='ac-flex-space-between'>
                 <Reviewers {...this.state.pr} />
-                <Spacer>
+                <div className='ac-hmargin'>
                     <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
-                        <Button className='ak-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                        <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
                             isDisabled={currentUserApproved}
                             isLoading={this.state.isApproveButtonLoading}
                             onClick={this.handleApprove}>
                             Approve
                         </Button>
                     </Tooltip>
-                </Spacer>
-                <Button className='ak-button'
+                </div>
+                <Button className='ac-button'
                     isDisabled={!isPrOpen}
                     isLoading={this.state.isMergeButtonLoading}
                     onClick={this.handleMerge}>
@@ -111,7 +110,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
-            </InlineFlex>
+            </div>
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
@@ -129,27 +128,27 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
-                                >
+                            >
                                 <p>{pr.title}</p>
                             </PageHeader>
-                            <InlineFlex>
+                            <div className='ac-flex-space-between'>
                                 <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
                                 <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
-                            </InlineFlex>
-                            <div style={{ display: 'flex', alignItems: 'center', marginTop:'10px'}}>
-                                <Spacer>
-                                    <Button className='ak-button' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout source branch</Button>
-                                </Spacer>
-                                <Spacer>
-                                    <Button className='ak-button' href={pr.links!.html!.href}>Open on bitbucket.org</Button>
-                                </Spacer>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+                                <div className='ac-hmargin'>
+                                    <Button className='ac-button' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout source branch</Button>
+                                </div>
+                                <div className='ac-hmargin'>
+                                    <Button className='ac-button' href={pr.links!.html!.href}>Open on bitbucket.org</Button>
+                                </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>
                             {
                                 !this.state.pr.commits && !this.state.pr.comments && !this.state.pr.relatedJiraIssues
-                                    ? <BlockCentered><Spinner size="large" /></BlockCentered>
+                                    ? <div className='ac-block-centered'><Spinner size="large" /></div>
                                     : <React.Fragment>
                                         {
                                             this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&

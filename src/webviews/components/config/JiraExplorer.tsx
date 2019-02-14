@@ -4,7 +4,6 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { Field, CheckboxField } from '@atlaskit/form';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { chain } from '../fieldValidators';
-import { InlineFlex } from '../styles';
 import { WorkingSite } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
@@ -175,7 +174,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
-                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.jira.explorer.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "jira.explorer.refreshInterval")}
@@ -184,7 +183,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <div className="refreshInterval">
                     <span>Notify of new Jira issues: </span>
-                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="jira-issue-monitor-refresh-interval"
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-issue-monitor-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.jira.issueMonitor.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "jira.issueMonitor.refreshInterval")}
@@ -193,7 +192,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 </div>
                 <hr />
 
-                <InlineFlex>
+                <div className='ac-flex-space-between'>
                     <Field label='Default Site'
                         id='defaultSite'
                         name='defaultSite'
@@ -204,8 +203,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                 return (
                                     <Select
                                         {...fieldArgs.fieldProps}
-                                        className="ak-select-container"
-                                        classNamePrefix="ak-select"
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
                                         getOptionLabel={(option: any) => option.name}
                                         getOptionValue={(option: any) => option.id}
                                         options={this.state.sites}
@@ -227,8 +226,8 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                 return (
                                     <AsyncSelect
                                         {...fieldArgs.fieldProps}
-                                        className="ak-select-container"
-                                        classNamePrefix="ak-select"
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
                                         getOptionLabel={(option: any) => {
                                             return option.name;
                                         }}
@@ -245,7 +244,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             }
                         }
                     </Field>
-                </InlineFlex>
+                </div>
 
             </div>
 

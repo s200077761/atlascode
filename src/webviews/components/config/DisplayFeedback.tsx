@@ -46,7 +46,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
 
     return (
       <div>
-        <Button className='ak-button' onClick={this.handleOpen}>Send Feedback</Button>
+        <Button className='ac-button' onClick={this.handleOpen}>Send Feedback</Button>
 
         {isOpen && (
           <ModalTransition>
@@ -77,8 +77,8 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                             <div>
                               <Select
                                 {...fieldArgs.fieldProps}
-                                className="ak-select-container"
-                                classNamePrefix="ak-select"
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
                                 options={selectOptions}
                                 placeholder="Select Issue Type"
                                 getOptionLabel={(option: any) => option.label}
@@ -109,7 +109,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                             <div>
                               <textarea {...fieldArgs.fieldProps}
                                 style={{ width: '100%', display: 'block' }}
-                                className='ak-textarea'
+                                className='ac-textarea'
                                 rows={3}
                                 onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { console.log('ta', item.target.value); this.setState({ description: item.target.value }); })}
                               />
@@ -138,7 +138,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                     <FormFooter actions={{}}>
                       <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
                         <Button type="submit"
-                          className='ak-button'
+                          className='ac-button'
                           isDisabled={(this.state.description.trim().length < 1)}
                         >
                           Submit
@@ -146,7 +146,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                       </div>
                       <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
                         <Button
-                          className='ak-button'
+                          className='ac-button'
                           onClick={this.handleClose}
                         >
                           Cancel

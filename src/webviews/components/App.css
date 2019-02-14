@@ -41,24 +41,47 @@ div.icon-text img {
   margin-right: 5pt
 }
 
-.ak-button {
+.ac-flex-space-between {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.ac-hmargin {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.ac-vpadding {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.ac-block-centered {
+  display: block;
+  text-align: center;
+  margin: 20px;
+}
+
+.ac-button {
   background: var(--vscode-button-background)!important
 }
 
-.ak-button span {
+.ac-button span {
   color: var(--vscode-button-foreground)!important
 }
 
-.ak-button:hover {
+.ac-button:hover {
   background: var(--vscode-button-hoverBackground)!important
 }
 
-.ak-button:active {
+.ac-button:active {
   background: var(--vscode-button-background--darken-05)!important;
   color: var(--vscode-button-foreground)!important
 }
 
-.ak-button:disabled {
+.ac-button:disabled {
   background: var(--vscode-button-background--50)!important
 }
 
@@ -151,7 +174,7 @@ div#jql-row {
 }
 /* END JQL AUTOCOMPLETE INPUT */
 
-.ak-inputField,.ak-inputField-inline,.ak-textarea {
+.ac-inputField,.ac-inputField-inline,.ac-textarea {
   background: var(--vscode-input-background)!important;
   color: var(--vscode-input-foreground)!important;
   font: inherit;
@@ -163,40 +186,40 @@ div#jql-row {
   outline: 0!important
 }
 
-.ak-textarea:focus {
+.ac-textarea:focus {
   outline-color: var(--vscode-focusBorder);
   outline-width: 2px
 }
 
-.ak-inputField {
+.ac-inputField {
   display: block;
 }
 
-.ak-inputField-inline {
+.ac-inputField-inline {
   display: inline-block;
 }
 
-.ak-inputField::-webkit-input-placeholder,.ak-inputField-inline::-webkit-input-placeholder,.ak-textarea::-webkit-input-placeholder {
+.ac-inputField::-webkit-input-placeholder,.ac-inputField-inline::-webkit-input-placeholder,.ac-textarea::-webkit-input-placeholder {
   color: var(--vscode-input-placeholderForeground)!important
 }
 
-.ak-inputField::-ms-input-placeholder,.ak-inputField-inline::-ms-input-placeholder,.ak-textarea::-ms-input-placeholder {
+.ac-inputField::-ms-input-placeholder,.ac-inputField-inline::-ms-input-placeholder,.ac-textarea::-ms-input-placeholder {
   color: var(--vscode-input-placeholderForeground)!important
 }
 
-.ak-inputField::placeholder,.ak-inputField-inline::placeholder,.ak-textarea::placeholder {
+.ac-inputField::placeholder,.ac-inputField-inline::placeholder,.ac-textarea::placeholder {
   color: var(--vscode-input-placeholderForeground)!important
 }
 
-.ak-dropdown-item,[class^=Droplist__Content] {
+.ac-dropdown-item,[class^=Droplist__Content] {
   background: var(--vscode-sideBar-background)!important
 }
 
-.ak-dropdown-item,.ak-dropdown-item:hover {
+.ac-dropdown-item,.ac-dropdown-item:hover {
   color: var(--vscode-list-focusForeground)!important
 }
 
-.ak-dropdown-item:hover {
+.ac-dropdown-item:hover {
   background: var(--vscode-list-hoverBackground)!important
 }
 
@@ -341,32 +364,32 @@ hr {
   margin-bottom: 1em
 }
 
-.vscode-light .ak-link-button:hover,.vscode-light .ak-link-button>span {
+.vscode-light .ac-link-button:hover,.vscode-light .ac-link-button>span {
   color: var(--vscode-textlink-foreground)!important
 }
 
-.vscode-light .ak-link-button:hover {
+.vscode-light .ac-link-button:hover {
   text-decoration: none
 }
 
-.vscode-dark .ak-link-button:hover,.vscode-dark .ak-link-button>span {
+.vscode-dark .ac-link-button:hover,.vscode-dark .ac-link-button>span {
   color: var(--vscode-button-foreground)!important
 }
 
-.vscode-dark .ak-link-button:hover {
+.vscode-dark .ac-link-button:hover {
   text-decoration: none
 }
 
-.ak-link-button>button {
+.ac-link-button>button {
   padding: 0!important
 }
 
-.ak-inline-dialog [class^=styled__Container] {
+.ac-inline-dialog [class^=styled__Container] {
   color: var(--vscode-dropdown-color)!important;
   background-color: var(--vscode-dropdown-background)!important
 }
 
-.ak-inline-dialog [class^=styled__Container] a {
+.ac-inline-dialog [class^=styled__Container] a {
   color: var(--vscode-dropdown-color)!important
 }
 
@@ -378,49 +401,49 @@ hr {
   width:100%;
 }
 
-.ak-select-container {
+.ac-select-container {
   margin-right: 20px;
 }
 
-.ak-select__control {
+.ac-select__control {
   background: var(--vscode-dropdown-background)!important;
   color: var(--vscode-dropdown-foreground)!important;
   border: 1px solid var(--vscode-dropdown-border)!important
 }
 
-.ak-select__control--is-focused,.ak-select__control:hover {
+.ac-select__control--is-focused,.ac-select__control:hover {
   border-color: var(--vscode-focusBorder)!important
 }
 
-.ak-select__indicator,.ak-select__input,.ak-select__menu,.ak-select__menu-list,.ak-select__single-value {
+.ac-select__indicator,.ac-select__input,.ac-select__menu,.ac-select__menu-list,.ac-select__single-value {
   background: var(--vscode-dropdown-background)!important;
   color: var(--vscode-dropdown-foreground)!important
 }
 
-.ak-select__option {
+.ac-select__option {
   cursor: pointer!important
 }
 
-.ak-select__placeholder {
+.ac-select__placeholder {
   color: var(--vscode-input-placeholderForeground)!important
 }
 
-.ak-select__option--is-focused {
+.ac-select__option--is-focused {
   background: var(--vscode-list-focusBackground)!important;
   color: var(--vscode-list-focusForeground)!important
 }
 
-.ak-select__option--is-selected {
+.ac-select__option--is-selected {
   background: var(--vscode-list-activeSelectionBackground)!important;
   color: var(--vscode-list-activeSelectionForeground)!important
 }
 
-.ak-select__menu {
+.ac-select__menu {
   border: 1px solid var(--vscode-focusBorder)!important;
   border-radius: 2px!important
 }
 
-.ak-select__value-container {
+.ac-select__value-container {
   padding: 0!important
 }
 

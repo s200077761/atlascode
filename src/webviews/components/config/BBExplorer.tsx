@@ -109,7 +109,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                 </div>
                 <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
-                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="pr-explorer-refresh-interval"
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="pr-explorer-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.bitbucket.explorer.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "bitbucket.explorer.refreshInterval")}
@@ -118,7 +118,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                 </div>
                 <div className="refreshInterval">
                     <span>Notify of new pull requests: </span>
-                    <input className='ak-inputField-inline' style={{ width: '60px' }} name="pr-notifications-refresh-interval"
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="pr-notifications-refresh-interval"
                         type="number" min="0"
                         value={this.props.configData.config.bitbucket.explorer.notifications.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "bitbucket.explorer.notifications.refreshInterval")}

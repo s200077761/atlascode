@@ -129,17 +129,17 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const buttonText = this.state.isJiraAuthenticated ? 'Authenticate with another site' : 'Authenticate';
 
         return (<ButtonGroup>
-            <Button className='ak-button' onClick={this.handleJiraLogin}>{buttonText}</Button>
-            <Button className='ak-button' onClick={this.handleJiraLogout}>Logout</Button>
+            <Button className='ac-button' onClick={this.handleJiraLogin}>{buttonText}</Button>
+            <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
         </ButtonGroup>);
     }
 
     private bitBucketButton(): any {
         if (this.state.isBitbucketAuthenticated) {
-            return (<Button className='ak-button'
+            return (<Button className='ac-button'
                 onClick={this.handleBBLogout}>Logout</Button>);
         } else {
-            return (<Button className='ak-button'
+            return (<Button className='ac-button'
                 onClick={this.handleBBLogin}>Authenticate</Button>);
         }
     }
@@ -219,7 +219,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                     <GridColumn medium={3}>
                         <DisplayFeedback onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
-                            <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                         </div>
                     </GridColumn>
                 </Grid>

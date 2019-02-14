@@ -122,7 +122,7 @@ export default class EditJQL extends PureComponent<{
                   <div>
                     <input {...fieldArgs.fieldProps}
                       style={{ width: '100%', display: 'block' }}
-                      className='ak-inputField'
+                      className='ac-inputField'
                       onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
@@ -160,7 +160,7 @@ export default class EditJQL extends PureComponent<{
           }}>
             <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
               <Button
-                className='ak-button'
+                className='ac-button'
                 isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
                 onClick={this.onSave}
               >
@@ -169,7 +169,7 @@ export default class EditJQL extends PureComponent<{
             </div>
             <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
               <Button
-                className='ak-button'
+                className='ac-button'
                 onClick={this.props.onCancel}
               >
                 Cancel

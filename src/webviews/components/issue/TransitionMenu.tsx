@@ -14,22 +14,22 @@ const colorToLozengeAppearanceMap = {
 
 const { Option } = components;
 
-const StatusOption = (props:any) => (
-    <Option {...props}>
-      <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-        {props.data.to.name}
-      </Lozenge>
-    </Option>
+const StatusOption = (props: any) => (
+  <Option {...props}>
+    <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
+      {props.data.to.name}
+    </Lozenge>
+  </Option>
 );
 
-const StatusValue = (props:any) => (
-      <components.SingleValue {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-        {props.data.to.name}
-      </Lozenge>
-      </components.SingleValue>
+const StatusValue = (props: any) => (
+  <components.SingleValue {...props}>
+    <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
+      {props.data.to.name}
+    </Lozenge>
+  </components.SingleValue>
 
-  );
+);
 
 export class TransitionMenu extends React.Component<{
   issue: Issue;
@@ -52,17 +52,17 @@ export class TransitionMenu extends React.Component<{
       <Select
         name="status"
         id="status"
-        className="ak-select-container"
-        classNamePrefix="ak-select"
+        className="ac-select-container"
+        classNamePrefix="ac-select"
         options={issue.transitions}
         value={selectedTransition}
-        components={{ Option: StatusOption, SingleValue:StatusValue }}
-        getOptionLabel={(option:any) => option.to.name}
-        getOptionValue={(option:any) => option.id}
+        components={{ Option: StatusOption, SingleValue: StatusValue }}
+        getOptionLabel={(option: any) => option.to.name}
+        getOptionValue={(option: any) => option.id}
         isDisabled={this.props.isStatusButtonLoading}
         isLoading={this.props.isStatusButtonLoading}
         onChange={this.handleStatusChange}
-        />
+      />
     );
   }
 }

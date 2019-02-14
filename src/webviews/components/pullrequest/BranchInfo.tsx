@@ -1,28 +1,14 @@
 import * as React from 'react';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-// import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
-// import Lozenge from "@atlaskit/lozenge";
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Avatar from '@atlaskit/avatar';
-// import DropdownMenu, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
 import Tag from '@atlaskit/tag';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
-import { Spacer } from '../styles';
-// import styled from 'styled-components';
 
-// const FixedWidth = styled.div`
-//   max-width: 250px;
-// `;
-
-// const VerticalAlignCenter = styled.div`
-// display: 'flex';
-// align-items: 'center';
-// font-weight:'bold';
-// `;
 
 export default class BranchInfo extends React.Component<{ prData: PRData, error?: string, postMessage: (e: Checkout) => void }> {
     constructor(props: any) {
@@ -44,29 +30,29 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
         return (
             <React.Fragment>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Spacer>
+                    <div className='ac-hmargin'>
                         <Avatar
                             appearance="circle"
                             name={pr.author!.display_name}
                             src={pr.author!.links!.avatar!.href}
                             size="small"
                         />
-                    </Spacer>
+                    </div>
                     <div className='ac-branch-lozenge'>
                         <BitbucketBranchesIcon label='branch' size='small' />
                         <span className='ac-branch-lozenge__Text'>{sourceBranch}</span>
                     </div>
-                    
-                    <Spacer>
+
+                    <div className='ac-hmargin'>
                         <Arrow label="" size="small" />
-                    </Spacer>
+                    </div>
 
                     <div className='ac-branch-lozenge'>
                         <BitbucketBranchesIcon label='branch' size='small' />
                         <span className='ac-branch-lozenge__Text'>{targetBranch}</span>
                     </div>
                 </div>
-                <div style={{marginLeft: '45px'}}>
+                <div style={{ marginLeft: '45px' }}>
                     {this.props.prData.currentBranch === pr.source!.branch!.name && <Tag text="✔ Checked out" color="blueLight" />}
                     {
                         this.props.error &&

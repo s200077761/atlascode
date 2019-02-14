@@ -14,7 +14,7 @@
     "preview": true,
     "enableProposedApi": true,
     "galleryBanner": {
-        "color": "#8647ae",
+        "color": "#0053cb",
         "theme": "dark"
     },
     "keywords": [
@@ -664,7 +664,7 @@
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^10.1.0",
-        "handlebars": "^4.0.12",
+        "handlebars": "4.0.12",
         "jquery": "^3.3.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
@@ -689,7 +689,7 @@
         "@types/atlaskit__button": "^6.4.1",
         "@types/escape-string-regexp": "^1.0.0",
         "@types/git-url-parse": "^9.0.0",
-        "@types/handlebars": "^4.0.39",
+        "@types/handlebars": "4.0.39",
         "@types/jquery": "^3.3.23",
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
