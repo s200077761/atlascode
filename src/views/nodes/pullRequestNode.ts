@@ -224,15 +224,15 @@ class PullRequestFilesNode extends BaseNode {
                 break;
         }
 
-        // TODO: create a command wrapper so we can send analytics when they view the diff screen.
+        const diffArgs = [
+            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
+            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
+            fileDisplayName
+        ];
         item.command = {
-            command: 'vscode.diff',
+            command: Commands.ViewDiff,
             title: 'Diff file',
-            arguments: [
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
-                fileDisplayName
-            ]
+            arguments: diffArgs
         };
 
         item.contextValue = PullRequestContextValue;

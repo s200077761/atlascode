@@ -11,6 +11,7 @@ import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
 import { BaseNode } from './views/nodes/baseNode';
 import { BranchNode } from './views/pipelines/PipelinesTree';
+import { viewScreenEvent, Registry } from './analytics';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -38,7 +39,8 @@ export enum Commands {
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
     StartPipeline = 'atlascode.bb.startPipeline',
-    RefreshPipelines = 'atlascode.bb.refreshPipelines'
+    RefreshPipelines = 'atlascode.bb.refreshPipelines',
+    ViewDiff = 'atlascode.viewDiff'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
@@ -62,6 +64,10 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNode: IssueNode) => Container.startWorkOnIssueViewManager.createOrShow(issueNode.issue)),
-        vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node))
+        vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
+        vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: any[]) => {
+            viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            vscode.commands.executeCommand('vscode.diff', ...diffArgs);
+        })
     );
 }
