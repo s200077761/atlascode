@@ -53,13 +53,13 @@ const emptyState: ViewState = {
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <span><img src={props.data.iconUrl} width="16" height="16" />{props.label}</span>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
     </Option>
 );
 
 const IconValue = (props: any) => (
     <components.SingleValue {...props}>
-        <span><img src={props.data.iconUrl} width="16" height="16" />{props.data.name}</span>
+        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
     </components.SingleValue>
 
 );

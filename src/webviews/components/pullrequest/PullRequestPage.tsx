@@ -135,7 +135,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
                                 <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginTop: '30px' }}>
                                 <div className='ac-hmargin'>
                                     <Button className='ac-button' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout source branch</Button>
                                 </div>
