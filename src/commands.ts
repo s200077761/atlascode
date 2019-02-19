@@ -51,7 +51,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
-        vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', prNode.getTreeItem().resourceUri)),
+        vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, async (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
