@@ -18,7 +18,6 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult,Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
-    private _currentUserId?:string;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -82,7 +81,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             const issue = this._state;
                             const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                             await repo.createBranch(e.branchName, true, e.sourceBranchName);
-                            await assignIssue(issue, this._currentUserId);
+
+                            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+                            const currentUserId = authInfo!.user.id;
+                            await assignIssue(issue, currentUserId);
                             await transitionIssue(issue, e.transition);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
@@ -90,13 +92,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             });
                         }
                         catch(e) {
-                            vscode.window.showErrorMessage(`something went wrong: ${e}`);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 error: JSON.stringify(e)
                             });
                         }
-
                     }
                 }
             }
@@ -109,10 +109,6 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
         this._state = issue;
         if(!isEmptySite(issue.workingSite)) {
             this.tenantId = issue.workingSite.id;
-        }
-        if (!this._currentUserId ) {
-            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-            this._currentUserId = authInfo ? authInfo.user.id : undefined;
         }
 
         if(this._panel) {
