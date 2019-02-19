@@ -431,3 +431,15 @@ hr {
 .bitbucket-page h3 {
   margin: 5px;
 }
+
+.jira-issue-copy-icon {
+  margin-left: 10px;
+  display: none;
+}
+.jira-issue-copy-icon:hover {
+  display: block;
+  cursor: pointer;
+}
+.jira-issue-key:hover .jira-issue-copy-icon {
+  display: block;
+}

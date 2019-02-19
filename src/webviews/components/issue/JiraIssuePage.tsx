@@ -4,6 +4,7 @@ import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Tag from "@atlaskit/tag";
 import TagGroup from "@atlaskit/tag-group";
+import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
 import {
@@ -17,16 +18,19 @@ import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
   IssueCommentAction,
-  IssueAssignAction
+  IssueAssignAction,
+  CopyJiraIssueLinkAction
 } from "../../../ipc/issueActions";
 import {TransitionMenu} from "./TransitionMenu";
 import {Comments} from "./Comments";
 import Button from "@atlaskit/button";
+import CopyIcon from '@atlaskit/icon/glyph/copy';
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
+import { FlexCentered } from "../styles";
 
-type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction;
+type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
@@ -126,12 +130,25 @@ export default class JiraIssuePage extends WebviewComponent<
     }
   }
 
+  handleCopyIssueLink = () => {
+    this.postMessage({
+      action: 'copyJiraIssueLink'
+    });
+  }
+
   header(issue: any): any {
     return (
       <div>
         <div className="icon-text" style={{ marginTop: 10 }}>
           <img src={issue.issueType.iconUrl} />
-          {issue.key}
+          <FlexCentered className='jira-issue-key'>
+            <a href={`https://${this.state.data.workingSite.name}.atlassian.net/browse/${this.state.data.key}`}>
+              {issue.key}
+            </a>
+            <div className='jira-issue-copy-icon'>
+              <Tooltip content='Copy the link to this issue'><CopyIcon label='copy issue link' size='small' onClick={this.handleCopyIssueLink} /></Tooltip>
+            </div>
+          </FlexCentered>
         </div>
         <h2>{issue.summary}</h2>
         <p>{issue.description}</p>
