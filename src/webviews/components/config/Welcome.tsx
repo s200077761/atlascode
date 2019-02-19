@@ -9,7 +9,6 @@ import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import JiraIcon from '@atlaskit/logo/dist/esm/JiraLogo/Icon';
-import StrideIcon from '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 import IssuesIcon from '@atlaskit/icon/glyph/issues';
 import ArrowUpCircleIcon from '@atlaskit/icon/glyph/arrow-up-circle';
@@ -33,24 +32,18 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {},{}> {
         this.postMessage({action:'sourceLink'});
     }
 
-    handleHelpLink = () => {
-        this.postMessage({action:'helpLink'});
-    }
-
     handleFeedback = (feedback:FeedbackData) => {
         this.postMessage({action:'submitFeedback', feedback:feedback});
     }
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
-        const strideicon = <StrideIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         const actionsContent =
             <InlineFlex>
                 <Button className='ak-button' onClick={this.handleConfigure}>Configure Atlascode</Button>
                 <Spacer><DisplayFeedback onFeedback={this.handleFeedback} /></Spacer>
                 <Button className='ak-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                <Button className='ak-link-button' appearance="link" iconBefore={strideicon} onClick={this.handleHelpLink}>Need Help?</Button>
             </InlineFlex>;
 
         return (

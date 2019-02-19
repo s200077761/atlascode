@@ -33,7 +33,6 @@ declare module '@atlaskit/textfield';
 declare module '@atlaskit/section-message';
 declare module '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 declare module '@atlaskit/logo/dist/esm/JiraLogo/Icon';
-declare module '@atlaskit/logo/dist/esm/StrideLogo/Icon';
 declare module '@atlaskit/form';
 declare module '@atlaskit/datetime-picker';
 declare module '@atlaskit/field-radio-group';
