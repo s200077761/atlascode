@@ -9,7 +9,7 @@ import { JiraExplorer } from './views/jira/jiraExplorer';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
-import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
+import { AnalyticsClient } from './analytics-node-client/src/index';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
