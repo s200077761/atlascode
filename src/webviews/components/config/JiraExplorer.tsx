@@ -215,7 +215,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                             }
                         }
                     </Field>
-
+                    <div className='ac-hmargin' />
                     <Field defaultValue={this.state.config.jira.workingProject}
                         label='Project'
                         id='project'

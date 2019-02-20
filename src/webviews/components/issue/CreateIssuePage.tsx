@@ -179,7 +179,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: '', summary: '' } } });
                     setTimeout(() => {
                         this.setState({ isCreateBannerOpen: false });
-                    }, 6000);
+                    }, 7000);
                 }
                 break;
             }
@@ -352,12 +352,12 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     <GridColumn medium={8}>
                         <div>
                             <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
-                                Issue <Button appearance='link' onClick={() => this.postMessage({ action: 'openJiraIssueByKey', key: this.state.createdIssue.key })}>{this.state.createdIssue.key}</Button> has been created.
+                                Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssueByKey', key: this.state.createdIssue.key })}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
                             <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
                                 Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
 
-                                <div><Button appearance='link' onClick={() => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}>close</Button></div>
+                                <div><Button className='ac-banner-link-button' appearance="link" onClick={() => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}>close</Button></div>
                             </Banner>
                             <h2>Create Issue</h2>
                             <Form

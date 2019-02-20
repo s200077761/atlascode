@@ -13,6 +13,8 @@ import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
 import BranchWarning from './BranchWarning';
 import CreatePRTitleSummary from './CreatePRTitleSummary';
+import Avatar from "@atlaskit/avatar";
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 
 type Emit = CreatePullRequest | FetchDetails;
 type Receive = CreatePRData | CommitsResult;
@@ -185,6 +187,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     render() {
 
+        if (!this.state.repo) {
+            return (<div>waiting for data...</div>);
+        }
+
         const repo = this.state.repo || { label: '', value: emptyRepoData };
 
         const actionsContent = (
@@ -205,49 +211,75 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             <PageHeader actions={actionsContent}>
                                 <p>Create pull request</p>
                             </PageHeader>
-                        </GridColumn>
+                            <GridColumn medium={6}>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label>Repository</label>
+                                    <Select
+                                        options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                                        onChange={this.handleRepoChange}
+                                        placeholder='Loading...'
+                                        value={repo}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select" />
 
-                        <GridColumn medium={6}>
-                            <div className='ac-vpadding'>
-                                <label>Repository</label>
-                                <Select
-                                    options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
-                                    onChange={this.handleRepoChange}
-                                    placeholder='Loading...'
-                                    value={repo}
-                                    className="ac-select-container"
-                                    classNamePrefix="ac-select" />
+                                    {repo.value.remotes.length > 1 &&
+                                        <React.Fragment>
+                                            <label>Remote</label>
+                                            <Select
+                                                options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
+                                                onChange={this.handleRemoteChange}
+                                                value={this.state.remote}
+                                                className="ac-select-container"
+                                                classNamePrefix="ac-select" />
+                                        </React.Fragment>
+                                    }
+                                </div>
+                            </GridColumn>
 
-                                {repo.value.remotes.length > 1 &&
-                                    <React.Fragment>
-                                        <label>Remote</label>
-                                        <Select
-                                            options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
-                                            onChange={this.handleRemoteChange}
-                                            value={this.state.remote}
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select" />
-                                    </React.Fragment>
-                                }
+                            <div className='ac-compare-widget-container'>
+                                <div className='ac-compare-widget'>
+                                    <div className='ac-compare-widget-item'>
+                                        <div className='ac-flex'>
+                                            <Avatar src={repo.value.avatarUrl} />
+                                            <p style={{ marginLeft: '8px' }}>Source branch (local)</p>
+                                        </div>
+                                        <div className='ac-compare-widget-break' />
+                                        <div className='ac-flex-space-between'>
+                                            <BitbucketBranchesIcon label='branch' size='medium' />
+                                            <Select
+                                                formatOptionLabel={formatOptionLabel}
+                                                options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
+                                                onChange={this.handleSourceBranchChange}
+                                                value={this.state.sourceBranch}
+                                                className="ac-compare-widget-select-container"
+                                                classNamePrefix="ac-select" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <Arrow label="" size="medium" />
+                                <div className='ac-compare-widget'>
+                                    <div className='ac-compare-widget-item'>
+                                        <div className='ac-flex'>
+                                            <Avatar src={repo.value.avatarUrl} />
+                                            <p style={{ marginLeft: '8px' }}>{repo.value.owner} / {repo.value.name}</p>
+                                        </div>
+                                        <div className='ac-compare-widget-break' />
+                                        <div className='ac-flex-space-between'>
+                                            <BitbucketBranchesIcon label='branch' size='medium' />
+                                            <Select
+                                                options={this.state.remote
+                                                    ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name)
+                                                        .map(branch => ({ label: branch.name, value: branch }))
+                                                    : []}
+                                                onChange={this.handleDestinationBranchChange}
+                                                value={this.state.destinationBranch}
+                                                className="ac-compare-widget-select-container"
+                                                classNamePrefix="ac-select" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </GridColumn>
-                        <GridColumn medium={12} />
 
-                        <GridColumn medium={4}>
-                            <label>Source branch (local)</label>
-                            <Select
-                                formatOptionLabel={formatOptionLabel}
-                                options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
-                                onChange={this.handleSourceBranchChange}
-                                value={this.state.sourceBranch}
-                                className="ac-select-container"
-                                classNamePrefix="ac-select" />
-                        </GridColumn>
-                        <GridColumn medium={4}>
-                            <label>Source branch (remote)</label>
-                            <p>{this.state.sourceRemoteBranchName || 'Select source branch'}</p>
-                        </GridColumn>
-                        <GridColumn medium={12}>
                             <Checkbox
                                 label={'Push latest changes from local to remote branch'}
                                 isChecked={this.state.pushLocalChanges}
@@ -255,31 +287,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 name="push-local-branch-enabled" />
 
                             <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} />
-                        </GridColumn>
-                        <GridColumn medium={6}>
-                            <div className='ac-vpadding'>
-                                <label>Destination branch</label>
-                                <Select
-                                    options={this.state.remote
-                                        ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name)
-                                            .map(branch => ({ label: branch.name, value: branch }))
-                                        : []}
-                                    onChange={this.handleDestinationBranchChange}
-                                    value={this.state.destinationBranch}
-                                    className="ac-select-container"
-                                    classNamePrefix="ac-select" />
-                            </div>
-                        </GridColumn>
-
-                        <GridColumn medium={12}>
                             <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
-                        </GridColumn>
-
-                        <GridColumn medium={12}>
                             <Button className='ac-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
-                        </GridColumn>
 
-                        <GridColumn medium={12}>
                             {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                 <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
                                     <Commits type={''} currentBranch={''} commits={this.state.commits} />

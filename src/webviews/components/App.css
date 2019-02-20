@@ -4,10 +4,24 @@ p {
   color: var(--vscode-foreground);
 }
 
+hr {
+  height: 1px;
+  border: 0;
+  background-color: var(--color--50);
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 .ac-flex-space-between {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+}
+
+.ac-flex {
+  display: inline-flex;
+  align-items: center;
 }
 
 .ac-hmargin {
@@ -26,7 +40,11 @@ p {
   margin: 20px;
 }
 
-/* used to display svg images with labels liek Jira priority */
+/* [class^=GridColumnElement__GridColumn] {
+  margin: 0px!important;
+} */
+
+/* used to display svg images with labels like Jira priority */
 
 .ac-icon-with-text {
   height: 2em;
@@ -35,6 +53,18 @@ p {
 }
 
 /*-------------------- END - general containers --------------------*/
+
+/*-------------------- BEGIN - page header --------------------*/
+
+[class^=styled__StyledTitle-] p {
+  margin: 0px;
+}
+
+[class^=styled__StyledTitle-] {
+  margin: 0px;
+}
+
+/*-------------------- END - page header --------------------*/
 
 /*-------------------- BEGIN - panels --------------------*/
 
@@ -51,11 +81,11 @@ p {
 }
 
 .vscode-light [class^=styledPanel__PanelHeader] {
-  background: var(---vscode-editor-background--darken-05)
+  background: var(--vscode-editor-background--darken-05)
 }
 
 .vscode-light [class^=styledPanel__PanelHeader]:hover {
-  background: var(---vscode-editor-background--darken-05)
+  background: var(--vscode-editor-background--darken-05)
 }
 
 [class^=styledPanel__ButtonWrapper] [class^=Icon__IconWrapper] {
@@ -107,7 +137,8 @@ div#jql-row {
   flex-direction: row;
   -ms-flex-align: center;
   align-items: center;
-  background-color: var(--vscode-input-background)
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-settings-textInputBorder)!important;
 }
 
 div#jql-row-drop-overlay {
@@ -156,8 +187,9 @@ div#empty-jql-row {
 
 /*-------------------- BEGIN - section messages --------------------*/
 
-section[class^=styled__Container-], section[class^=styled__Container-] h1 {
+section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
   color: #4c4c4c!important;
+  margin: 6px;
 }
 
 /*-------------------- END - section messages --------------------*/
@@ -209,30 +241,28 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
   color: var(--vscode-textlink-foreground)!important
 }
 
-.vscode-light .ac-link-button:hover {
-  text-decoration: none
-}
-
 .vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
   color: var(--vscode-foreground)!important
-}
-
-.vscode-dark .ac-link-button:hover {
-  text-decoration: none
 }
 
 .ac-link-button>button {
   padding: 0!important
 }
 
+/* links inside of banners with colored backgrounds */
+
+.ac-banner-link-button:hover, .ac-banner-link-button>span {
+  color: var(--vscode-button-foreground)!important;
+  text-decoration: underline;
+}
+
+.ac-banner-link-button>button {
+  padding: 0!important
+}
+
 /*-------------------- END - links --------------------*/
 
 /*-------------------- BEGIN - form input/text --------------------*/
-
-.ac-textarea:focus {
-  outline-color: var(--vscode-focusBorder);
-  outline-width: 2px
-}
 
 .ac-inputField {
   display: block;
@@ -249,13 +279,12 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
   width: inherit;
   padding: 6px;
   box-sizing: border-box;
-  border: 1px solid var(--vscode-input-border)!important;
+  border: 1px solid var(--vscode-settings-textInputBorder)!important;
   outline: 0!important
 }
 
 .ac-inputField:focus, .ac-inputField-inline:focus, .ac-textarea:focus {
-  outline-color: var(--vscode-focusBorder)!important;
-  outline-width: 2px
+  border-color: var(--vscode-focusBorder)!important;
 }
 
 .ac-inputField::-webkit-input-placeholder, .ac-inputField-inline::-webkit-input-placeholder, .ac-textarea::-webkit-input-placeholder {
@@ -282,7 +311,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 .ac-select__control {
   background: var(--vscode-dropdown-background)!important;
   color: var(--vscode-dropdown-foreground)!important;
-  border: 1px solid var(--vscode-dropdown-border)!important
+  border: 1px solid var(--vscode-settings-textInputBorder)!important
 }
 
 .ac-select__control--is-focused, .ac-select__control:hover {
@@ -291,7 +320,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 
 .ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
   background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-dropdown-foreground)!important
+  color: var(--vscode-input-foreground)!important
 }
 
 .ac-select__option {
@@ -366,7 +395,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 
 [class^=DateTimePicker__Flex-] {
   background: var(--vscode-dropdown-background)!important;
-  border: 1px solid var(--vscode-dropdown-border)!important
+  border: 1px solid var(--vscode-settings-textInputBorder)!important
 }
 
 /*-------------------- END - calendar controls --------------------*/
@@ -390,13 +419,13 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 .vscode-dark .ac-branch-lozenge {
   background-color: var(--vscode-button-background--50);
   color: var(--vscode-button-foreground);
-  border: 1px solid var(--vscode-input-border)
+  border: 1px solid var(--vscode-settings-textInputBorder)
 }
 
 .vscode-light .ac-branch-lozenge {
   background-color: var(--vscode-button-background--75);
   color: var(--vscode-button-foreground);
-  border: 1px solid var(--vscode-input-border)
+  border: 1px solid var(--vscode-settings-textInputBorder)
 }
 
 .ac-branch-lozenge, .ac-branch-lozenge__Text {
@@ -416,6 +445,47 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 
 /*-------------------- END - PR branch lozenges --------------------*/
 
+/*-------------------- BEGIN - Create PR branch boxes --------------------*/
+
+.ac-compare-widget-container {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ac-compare-widget-container .ac-flex-space-between {
+  width: 100%;
+}
+
+.ac-compare-widget {
+  width: 100%;
+}
+
+.ac-compare-widget+.ac-compare-widget {
+  margin-left: 40px;
+}
+
+.ac-compare-widget-break {
+  flex-basis: 100%;
+  width: 0px;
+  height: 0px;
+  overflow: hidden;
+}
+
+.ac-compare-widget-item {
+  position: relative;
+  border: 1px solid var(--vscode-settings-textInputBorder);
+  border-radius: 5px;
+  padding: 10px 10px 10px 10px
+}
+
+.ac-compare-widget-select-container {
+  width: 100%;
+}
+
+/*-------------------- END - Create PR branch boxes --------------------*/
+
 /*-------------------- BEGIN - Avatars --------------------*/
 
 [class^="styledCache__StyledSpan"] {
@@ -429,6 +499,18 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1 {
 
 /*-------------------- END - Avatars --------------------*/
 
+/*-------------------- BEGIN - Jira Comments --------------------*/
+
+.jira-comment {
+  color: var(--vscode-editor-foreground)
+}
+
+.jira-comment-author {
+  color: var(--vscode-editor-foreground)
+}
+
+/*-------------------- END - Jira Comments --------------------*/
+
 /* 
   This is a specific fix for auth issues when trying to load images that are attached to bitbucket PR comments.
 img::after is triggered only if img loading fails */
@@ -436,3 +518,13 @@ img::after is triggered only if img loading fails */
 .bitbucket-page img::after {
   content: 'âš ï¸ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
 }
+
+/* uncomment these to see borders on grid layouts */
+
+/* [class^=GridElement__Grid] {
+  border: 3px solid red
+}
+
+[class^=GridColumnElement__GridColumn] {
+  border: 2px solid blue;
+} */

@@ -39,7 +39,7 @@ interface ViewState extends ConfigData {
     isProjectsLoading: boolean;
 }
 
-const emptyState: ViewState = { ...emptyConfigData, isProjectsLoading: false }
+const emptyState: ViewState = { ...emptyConfigData, isProjectsLoading: false };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private newProjects: WorkingProject[] = [];
