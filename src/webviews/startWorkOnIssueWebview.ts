@@ -16,7 +16,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult,Action> implements InitializingWebview<issueOrKey> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
 
     constructor(extensionPath: string) {
@@ -31,8 +31,13 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
         return "startWorkOnIssueScreen";
     }
 
+    createOrShowIssue(data: issueOrKey) {
+        super.createOrShow();
+        this.initialize(data);
+    }
+
     initialize(data: issueOrKey) {
-        if(isIssue(data)) {
+        if (isIssue(data)) {
             if (this._state.key !== data.key) {
                 this.postMessage({
                     type: 'update',
@@ -60,7 +65,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     protected async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
 
-        if(!handled) {
+        if (!handled) {
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
@@ -91,7 +96,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                                 successMessage: '✅ Created the branch and assigned the issue to you.'
                             });
                         }
-                        catch(e) {
+                        catch (e) {
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 error: JSON.stringify(e)
@@ -107,11 +112,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
-        if(!isEmptySite(issue.workingSite)) {
+        if (!isEmptySite(issue.workingSite)) {
             this.tenantId = issue.workingSite.id;
         }
 
-        if(this._panel) {
+        if (this._panel) {
             this._panel.title = `Start work on Jira issue ${issue.key}`;
         }
 
@@ -148,7 +153,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     }
 
     private async forceUpdateIssue() {
-        if(this._state.key !== ""){
+        if (this._state.key !== "") {
             fetchIssue(this._state.key, this._state.workingSite)
                 .then((issue: Issue) => {
                     this.updateIssue(issue);

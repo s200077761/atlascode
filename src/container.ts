@@ -16,10 +16,10 @@ import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview'
 import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
-import { StartWorkOnIssueViewManager } from './webviews/startWorkOnIssueViewManager';
+import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 export class Container {
-    static initialize(context: ExtensionContext, config: IConfig, version:string) {
+    static initialize(context: ExtensionContext, config: IConfig, version: string) {
         this._context = context;
         this._config = config;
 
@@ -33,16 +33,16 @@ export class Container {
         context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
-        context.subscriptions.push(this._startWorkOnIssueViewManager = new StartWorkOnIssueViewManager(context.extensionPath));
+        context.subscriptions.push(this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        let analyticsEnv:string = configuration.isDebugging ? 'staging' : 'prod';
+        let analyticsEnv: string = configuration.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = new AnalyticsClient({
-            origin:'desktop',
-            env:analyticsEnv,
-            product:'externalProductIntegrations',
+            origin: 'desktop',
+            env: analyticsEnv,
+            product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version
         });
@@ -56,7 +56,7 @@ export class Container {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
                 }
-           });
+            });
         }
     }
 
@@ -71,7 +71,7 @@ export class Container {
 
     private static _config: IConfig | undefined;
     static get config() {
-        return  this._config || configuration.get<IConfig>();
+        return this._config || configuration.get<IConfig>();
     }
 
     private static _context: ExtensionContext;
@@ -99,9 +99,9 @@ export class Container {
         return this._createIssueWebview;
     }
 
-    private static _startWorkOnIssueViewManager: StartWorkOnIssueViewManager;
-    static get startWorkOnIssueViewManager() {
-        return this._startWorkOnIssueViewManager;
+    private static _startWorkOnIssueWebview: StartWorkOnIssueWebview;
+    static get startWorkOnIssueWebview() {
+        return this._startWorkOnIssueWebview;
     }
 
     private static _pullRequestViewManager: PullRequestViewManager;
@@ -149,16 +149,16 @@ export class Container {
         return this._jiraSiteManager;
     }
 
-    private static _analyticsClient:AnalyticsClient;
+    private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
     }
 
-    private static _newIssueMonitor:NewIssueMonitor;
+    private static _newIssueMonitor: NewIssueMonitor;
     static get newIssueMonitor() {
         return this._newIssueMonitor;
     }
-    
+
     static resetConfig() {
         this._config = undefined;
     }
