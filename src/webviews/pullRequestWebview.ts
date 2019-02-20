@@ -43,7 +43,9 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     public invalidate() {
-        this.forceUpdatePullRequest();
+        if (this._state.repository && this._state.remote && this._state.prData.pr) {
+            this.forceUpdatePullRequest();
+        }
     }
 
     private validatePRState(s: PRState): boolean {
