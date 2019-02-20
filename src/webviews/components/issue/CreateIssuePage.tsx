@@ -14,6 +14,7 @@ import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import SectionMessage from '@atlaskit/section-message';
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
 
@@ -354,11 +355,14 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
                                 Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssueByKey', key: this.state.createdIssue.key })}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
-                            <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
-                                Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
-
-                                <div><Button className='ac-banner-link-button' appearance="link" onClick={() => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}>close</Button></div>
-                            </Banner>
+                            {this.state.isErrorBannerOpen &&
+                                <SectionMessage
+                                    appearance="warning"
+                                    title="Something went wrong"
+                                    actions={[{text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}]}>
+                                    Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
+                                </SectionMessage>
+                            }
                             <h2>Create Issue</h2>
                             <Form
                                 name="create-issue"
