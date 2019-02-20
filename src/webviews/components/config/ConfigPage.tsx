@@ -99,10 +99,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'sourceLink' });
     }
 
-    handleHelpLink = () => {
-        this.postMessage({ action: 'helpLink' });
-    }
-
     handleFeedback = (feedback: FeedbackData) => {
         console.log('submitting feedback', feedback);
         this.postMessage({ action: 'submitFeedback', feedback: feedback });

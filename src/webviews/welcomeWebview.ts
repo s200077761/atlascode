@@ -39,11 +39,6 @@ export class WelcomeWebview extends AbstractReactWebview<{},Action> {
                     commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
                     break;
                 }
-                case 'helpLink': {
-                    handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://applink.atlassian.com/stride/a436116f-02ce-4520-8fbb-7301462a1674/chat/20317f63-2ed0-40d2-86b2-7611fa9b0035`));
-                    break;
-                }
                 case 'submitFeedback': {
                     handled = true;
                     if(isSubmitFeedbackAction(e)){
