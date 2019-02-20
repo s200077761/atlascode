@@ -35,6 +35,7 @@ export enum Commands {
     ShowWelcomePage = 'atlascode.showWelcomePage',
     TransitionIssue = 'atlascode.jira.transitionIssue',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
+    StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
     StartPipeline = 'atlascode.bb.startPipeline',
     RefreshPipelines = 'atlascode.bb.refreshPipelines'
@@ -55,11 +56,12 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
-            Logger.debug('args',issue);
+            Logger.debug('args', issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
+        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNode: IssueNode) => Container.startWorkOnIssueWebview.createOrShowIssue(issueNode.issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node))
     );
 }

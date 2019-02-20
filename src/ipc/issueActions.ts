@@ -24,6 +24,10 @@ export interface OpenJiraIssueAction extends Action {
     issue: Issue;
 }
 
+export interface CopyJiraIssueLinkAction extends Action {
+    action: 'copyJiraIssueLink';
+}
+
 export interface OpenIssueByKeyAction extends Action {
     action: 'openIssueByKey';
     key: string;
@@ -48,6 +52,14 @@ export interface CreateSomethingAction extends Action {
 
 export interface CreateIssueAction extends Action {
     issueData: any;
+}
+
+export interface StartWorkAction extends Action {
+    action: 'startWork';
+    transition: Transition;
+    repoUri: string;
+    sourceBranchName: string;
+    branchName: string;
 }
 
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
@@ -90,3 +102,6 @@ export function isCreateIssue(a: Action): a is  CreateIssueAction {
     return (<CreateIssueAction>a).issueData !== undefined;
 }
 
+export function isStartWork(a: Action): a is  StartWorkAction {
+    return (<StartWorkAction>a).transition !== undefined;
+}

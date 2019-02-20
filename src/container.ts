@@ -9,16 +9,17 @@ import { JiraExplorer } from './views/jira/jiraExplorer';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
-import { AnalyticsClient } from '@atlassiansox/analytics-node-client';
+import { AnalyticsClient } from './analytics-node-client/src/index';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
+import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 
 export class Container {
-    static initialize(context: ExtensionContext, config: IConfig, version:string) {
+    static initialize(context: ExtensionContext, config: IConfig, version: string) {
         this._context = context;
         this._config = config;
 
@@ -30,17 +31,18 @@ export class Container {
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
         context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
-	context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
+        context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
+        context.subscriptions.push(this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        let analyticsEnv:string = configuration.isDebugging ? 'staging' : 'prod';
+        let analyticsEnv: string = configuration.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = new AnalyticsClient({
-            origin:'desktop',
-            env:analyticsEnv,
-            product:'externalProductIntegrations',
+            origin: 'desktop',
+            env: analyticsEnv,
+            product: 'externalProductIntegrations',
             subproduct: 'atlascode',
             version: version
         });
@@ -54,7 +56,7 @@ export class Container {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
                 }
-           });
+            });
         }
     }
 
@@ -69,7 +71,7 @@ export class Container {
 
     private static _config: IConfig | undefined;
     static get config() {
-        return  this._config || configuration.get<IConfig>();
+        return this._config || configuration.get<IConfig>();
     }
 
     private static _context: ExtensionContext;
@@ -95,6 +97,11 @@ export class Container {
     private static _createIssueWebview: CreateIssueWebview;
     static get createIssueWebview() {
         return this._createIssueWebview;
+    }
+
+    private static _startWorkOnIssueWebview: StartWorkOnIssueWebview;
+    static get startWorkOnIssueWebview() {
+        return this._startWorkOnIssueWebview;
     }
 
     private static _pullRequestViewManager: PullRequestViewManager;
@@ -142,16 +149,16 @@ export class Container {
         return this._jiraSiteManager;
     }
 
-    private static _analyticsClient:AnalyticsClient;
+    private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
     }
 
-    private static _newIssueMonitor:NewIssueMonitor;
+    private static _newIssueMonitor: NewIssueMonitor;
     static get newIssueMonitor() {
         return this._newIssueMonitor;
     }
-    
+
     static resetConfig() {
         this._config = undefined;
     }

@@ -114,6 +114,11 @@
                 "category": "AtlasCode"
             },
             {
+                "command": "atlascode.jira.startWorkOnIssue",
+                "title": "Start work on Jira issue",
+                "category": "AtlasCode"
+            },
+            {
                 "command": "atlascode.bb.refreshPullRequests",
                 "title": "Refresh Bitbucket pull requests",
                 "icon": {
@@ -304,6 +309,11 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.jira.startWorkOnIssue",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
@@ -324,6 +334,10 @@
                 },
                 {
                     "command": "atlascode.bb.startPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.startWorkOnIssue",
                     "when": "false"
                 },
                 {
@@ -656,10 +670,10 @@
         "@atlaskit/tooltip": "^12.1.9",
         "@atlaskit/util-shared-styles": "^3.0.0",
         "@atlassian/jira": "^0.1.0",
-        "@atlassiansox/analytics-node-client": "^1.0.103",
         "@deviniti/jql-autocomplete": "^1.0.2",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
+        "analytics-node": "^3.3.0",
         "bitbucket": "^1.8.0",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
@@ -686,6 +700,7 @@
         "uuid": "^3.3.2"
     },
     "devDependencies": {
+        "@types/analytics-node": "^3.1.1",
         "@types/atlaskit__button": "^6.4.1",
         "@types/escape-string-regexp": "^1.0.0",
         "@types/git-url-parse": "^9.0.0",

@@ -511,6 +511,29 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - Jira Comments --------------------*/
 
+/*-------------------- BEGIN - Start Work On Issue Styles --------------------*/
+
+.jira-issue-copy-icon {
+  margin-left: 10px;
+  display: none;
+}
+
+.jira-issue-copy-icon:hover {
+  display: block;
+  cursor: pointer;
+}
+
+.jira-issue-key {
+  display: inline-flex;
+  align-items: center;
+}
+
+.jira-issue-key:hover .jira-issue-copy-icon {
+  display: block;
+}
+
+/*-------------------- END - Start Work On Issue Styles --------------------*/
+
 /* 
   This is a specific fix for auth issues when trying to load images that are attached to bitbucket PR comments.
 img::after is triggered only if img loading fails */
