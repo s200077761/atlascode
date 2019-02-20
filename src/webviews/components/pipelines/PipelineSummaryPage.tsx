@@ -10,7 +10,7 @@ import {
   Status
 } from "../../../pipelines/model";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import Collapsible from "react-collapsible";
+import Panel from '@atlaskit/panel';
 import { PipelineData, StepData } from "../../../ipc/pipelinesMessaging";
 import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
 import RecentIcon from "@atlaskit/icon/glyph/recent";
@@ -84,6 +84,12 @@ const emptyPipeline: PipelineData = {
   state: { name: "", type: "pipeline_state_in_progress", result: { name: "", type: "" } },
   target: { ref_name: "" }
 };
+
+const panelHeader = (heading: string, subheading: string) =>
+  <div>
+    <h3 className='inlinePanelHeader'>{heading}</h3>
+    <p className='inlinePanelSubheading'>{subheading}</p>
+  </div>;
 
 export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline, Properties, State> {
   constructor(props: any) {
@@ -184,38 +190,23 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
   commands(step: PipelineStep) {
     return (
       <div>
-        <Collapsible
-          transitionTime={30}
-          trigger={Trigger("Setup", `${step.setup_commands.length} Commands`)}
-          open={false}
-        >
+        <Panel isDefaultExpanded={false} header={panelHeader('Setup', `${step.setup_commands.length} Commands`)}>
           {step.setup_commands.map(c => {
             return <div className="pipeline-command">{c.name}</div>;
           })}
-        </Collapsible>
+        </Panel>
 
-        <Collapsible
-          transitionTime={30}
-          trigger={Trigger("Build", `${step.script_commands.length} Commands`)}
-          open={true}
-        >
+        <Panel isDefaultExpanded={true} header={panelHeader("Build", `${step.script_commands.length} Commands`)}>
           {step.script_commands.map(c => {
             return <div className="pipeline-command">{c.name}</div>;
           })}
-        </Collapsible>
+        </Panel>
 
-        <Collapsible
-          transitionTime={30}
-          trigger={Trigger(
-            "Teardown",
-            `${step.teardown_commands.length} Commands`
-          )}
-          open={false}
-        >
+        <Panel isDefaultExpanded={false} header={panelHeader("Teardown", `${step.teardown_commands.length} Commands`)}>
           {step.teardown_commands.map(c => {
             return <div className="pipeline-command">{c.name}</div>;
           })}
-        </Collapsible>
+        </Panel>
       </div>
     );
   }
