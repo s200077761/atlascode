@@ -10,6 +10,10 @@
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
     },
+    "bugs": {
+        "url": "https://jira.atlassian.com/issues/?filter=90934",
+        "email": "atlascode@atlassian.com"
+    },
     "icon": "images/atlascode-icon.png",
     "preview": true,
     "enableProposedApi": true,
@@ -21,7 +25,8 @@
         "bitbucket",
         "jira",
         "atlassian",
-        "multi-root ready"
+        "issues",
+        "builds"
     ],
     "engines": {
         "vscode": "^1.31.1"
