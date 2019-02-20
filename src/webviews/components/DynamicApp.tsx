@@ -43,6 +43,11 @@ const LoadableConfigView = Loadable({
     loading: Loading,
   });
 
+  const LoadablePipelineSummaryView = Loadable({
+    loader: () => import(/* webpackChunkName: "pipelineSummaryScreen" */ './pipelines/PipelineSummaryPage'),
+    loading: Loading,
+  });
+
 function Loading(props:Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! { props.error }</div>;
@@ -109,6 +114,13 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 return (
                     <div>
                         <LoadableStartWorkOnIssueView />
+                    </div>
+                );
+            }
+            case 'pipelineSummaryScreen': {
+                return(
+                    <div>
+                        <LoadablePipelineSummaryView />
                     </div>
                 );
             }

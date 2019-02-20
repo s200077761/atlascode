@@ -1,11 +1,12 @@
 import { Disposable, window, commands } from "vscode";
-import { PipelineApi } from "../../bitbucket/pipelines";
+import { PipelineApi } from "../../pipelines/pipelines";
+import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 
 
 export class PipelinesMonitor extends Disposable {
-  private _previousResults: Map<string, Bitbucket.Schema.Pipeline[]> = new Map();
+  private _previousResults: Map<string, Pipeline[]> = new Map();
 
   constructor(private _repositories: Repository[]) {
     super(() => this.dispose());
@@ -30,20 +31,20 @@ export class PipelinesMonitor extends Disposable {
               commands.executeCommand("workbench.view.extension.atlascode-drawer");
             }
           });
- 
+
         }
         this._previousResults[repo.rootUri.path] = newResults;
       });
     }
   }
 
-  private diffResults(oldResults: Bitbucket.Schema.Pipeline[],
-    newResults: Bitbucket.Schema.Pipeline[]
-  ): Bitbucket.Schema.Pipeline[] {
+  private diffResults(oldResults: Pipeline[],
+    newResults: Pipeline[]
+  ): Pipeline[] {
     if (!oldResults) {
       return [];
     }
-    const changes: Bitbucket.Schema.Pipeline[] = [];
+    const changes: Pipeline[] = [];
     const previousLength = oldResults.length;
     const newLength = newResults.length;
     var i = 0;
@@ -67,7 +68,7 @@ export class PipelinesMonitor extends Disposable {
     }
   }
 
-  private composeMessage(newResults: Bitbucket.Schema.Pipeline[]): string {
+  private composeMessage(newResults: Pipeline[]): string {
     if (newResults.length === 1) {
       const result = newResults[0];
       return `${this.descriptionForState(result)}.`;
@@ -76,32 +77,32 @@ export class PipelinesMonitor extends Disposable {
     } else if (newResults.length === 3) {
       return `New build statuses for ${newResults[0].target!.ref_name}, ${
         newResults[1].target!.ref_name
-      }, and ${newResults[2].target!.ref_name}.`;
+        }, and ${newResults[2].target!.ref_name}.`;
     } else if (newResults.length === 4) {
       return `New build statuses for ${newResults[0].target!.ref_name}, ${
         newResults[1].target!.ref_name
-      }, ${newResults[2].target!.ref_name} and 1 other build.`;
+        }, ${newResults[2].target!.ref_name} and 1 other build.`;
     } else if (newResults.length > 4) {
       return `New build statuses for ${newResults[0].target!.ref_name}, ${
         newResults[1].target!.ref_name}, ${newResults[2].target!.ref_name} and ${
-          newResults.length - 3} other builds.`;
+        newResults.length - 3} other builds.`;
     }
     return "";
   }
 
-  private descriptionForState(result: Bitbucket.Schema.Pipeline): string {
+  private descriptionForState(result: Pipeline): string {
     const descriptionForResult = {
       pipeline_state_completed_successful: "was successful",
       pipeline_state_completed_failed: "has failed",
       pipeline_state_completed_error: "has failed",
       pipeline_state_completed_stopped: "has been stopped"
     };
-    
+
     var words = "has done something";
     switch (result.state!.type) {
       case "pipeline_state_completed":
-        words = descriptionForResult[result.state!.result.type];
-         break;
+        words = descriptionForResult[result.state!.result!.type];
+        break;
       case "pipeline_state_in_progress":
         words = "is building";
         break;

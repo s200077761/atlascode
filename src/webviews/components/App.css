@@ -534,6 +534,62 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - Start Work On Issue Styles --------------------*/
 
+/*-------------------- BEGIN - Pipelines --------------------*/
+
+.pipeline-head {
+  border-radius: 5px;
+  font-size: 2em;
+  font-weight: bold;
+  color: white;
+  padding: 0.5em;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.pipeline-head-item {
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
+
+.pipeline-head div {
+  float: right;
+  box-sizing: border-box;
+}
+
+.pipeline-step-title {
+  padding: 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.pipeline-step-head {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.pipeline-step-subhead {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-left: 0.2em;
+  margin-right: 0.2em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.pipeline-command {
+  font-family: Monaco, "Courier New", Courier, monospace;
+  font-size: 1.2em;
+  margin-left: 1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/*-------------------- END - Pipelines --------------------*/
+
 /* 
   This is a specific fix for auth issues when trying to load images that are attached to bitbucket PR comments.
 img::after is triggered only if img loading fails */
