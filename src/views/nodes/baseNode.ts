@@ -5,7 +5,7 @@ import { Disposable, TreeItem } from 'vscode';
 export abstract class BaseNode implements Disposable {
     public readonly disposables: Disposable[] = [];
 
-    abstract getTreeItem(): TreeItem;
+    abstract getTreeItem(): Promise<TreeItem> | TreeItem ;
     abstract async getChildren(element?: BaseNode): Promise<BaseNode[]>;
 
     dispose() {
