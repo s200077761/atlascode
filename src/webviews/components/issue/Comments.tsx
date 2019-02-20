@@ -10,7 +10,7 @@ export class Comments extends React.Component<
     onSave: (issue: Issue, comment: string) => void;
   },
   { commentInput: string }
-> {
+  > {
   constructor(props: any) {
     super(props);
     this.state = { commentInput: "" };
@@ -24,7 +24,7 @@ export class Comments extends React.Component<
   handleCancel = (e: any) => {
     this.setState({ commentInput: "" });
   }
-  
+
   handleChange = (e: any) => {
     this.setState({ commentInput: e.target.value });
   }
@@ -54,16 +54,16 @@ export class Comments extends React.Component<
 
   commentForm(): any {
     return (
-      <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box'}}>
+      <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
         <textarea
-          className='ak-textarea'
+          className='ac-textarea'
           rows={3}
           placeholder='Add a comment'
           value={this.state.commentInput}
           onChange={this.handleChange}
         />
         <ButtonGroup>
-          <Button className='ak-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
+          <Button className='ac-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
           <Button appearance="default" onClick={this.handleCancel}>Cancel</Button>
         </ButtonGroup>
       </div>

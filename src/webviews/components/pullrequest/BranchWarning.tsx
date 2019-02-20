@@ -2,7 +2,6 @@ import * as React from "react";
 import { Branch } from "../../../typings/git";
 import SectionMessage from '@atlaskit/section-message';
 import styled from "styled-components";
-import { VerticalPadding } from "../styles";
 
 const Padding = styled.div`
   padding: 8px;
@@ -23,9 +22,9 @@ export default class BranchWarning extends React.Component<{ sourceBranch: Branc
             return (
                 <Padding>
                     <SectionMessage appearance="warning" title="No upstream branch">
-                        <VerticalPadding>
+                        <div className='ac-vpadding'>
                             <div style={{ color: 'black' }}>Upstream branch ({this.props.sourceRemoteBranchName}) not found.</div>
-                        </VerticalPadding>
+                        </div>
                         <div style={{ color: 'black' }}>Check the box above to push the local changes to remote while creating the pull request.</div>
                     </SectionMessage>
                 </Padding>
@@ -36,9 +35,9 @@ export default class BranchWarning extends React.Component<{ sourceBranch: Branc
             return (
                 <Padding>
                     <SectionMessage appearance="warning" title="Upstream branch not up to date">
-                        <VerticalPadding>
+                        <div className='ac-vpadding'>
                             <p>Upstream branch ({this.props.sourceRemoteBranchName}) commit hash does not match with local branch ({this.props.sourceBranch.name}).</p>
-                        </VerticalPadding>
+                        </div>
                         <p>Check the box above to push the local changes to remote while creating the pull request.</p>
                     </SectionMessage>
                 </Padding>

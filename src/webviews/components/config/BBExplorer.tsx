@@ -1,84 +1,131 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
+import { CheckboxField } from '@atlaskit/form';
 import { ConfigData } from '../../../ipc/configMessaging';
+import { chain } from '../fieldValidators';
 
-type changeObject = {[key: string]:any};
+type changeObject = { [key: string]: any };
 
-export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes:changeObject, removes?:string[]) => void }, {}> {
+export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
 
-    onCheckboxChange = (e:any) => {
+    onCheckboxChange = (e: any) => {
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 
-        if(this.props.onConfigChange) {
+        if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
     }
 
-    handleInputChange = (e:any, configKey:string) => {
+    handleNumberChange = (e: any, configKey: string) => {
         const changes = Object.create(null);
-        changes[configKey] = e.target.value;
+        changes[configKey] = +e.target.value;
 
-        if(this.props.onConfigChange) {
+        if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
     }
 
-    checklabel = (label:string) => <span className='checkboxLabel'>{label}</span>;
+    getIsExplorerIndeterminate = (): boolean => {
+        if (!this.props.configData.config.bitbucket.explorer.enabled) {
+            return false;
+        }
+
+        let count = 0;
+        if (this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+            count++;
+        }
+        if (this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated) {
+            count++;
+        }
+
+        return (count < 2);
+    }
 
     render() {
         return (
             <div>
-                <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            paddingLeft: '24px',
-                        }}>
-
-                    <Checkbox
-                        value="bitbucket.explorer.enabled"
-                        label={this.checklabel("Enable Bitbucket Pull Request Explorer")}
-                        isChecked={this.props.configData.config.bitbucket.explorer.enabled}
-                        onChange={this.onCheckboxChange}
-                        name="pr-explorer-enabled"/>
-
-                    <div className="refreshInterval"  style={{ marginLeft: '3em' }}>
-                        <span>refresh every: </span>
-                        <input style={{ width: '40px' }} name="pr-explorer-refresh-interval"
-                            type="number" min="0"
-                            value={this.props.configData.config.bitbucket.explorer.refreshInterval}
-                            onChange={(e: any) => this.handleInputChange(e, "bitbucket.explorer.refreshInterval")} />
-                        <span> minutes (setting to 0 disables auto-refresh)</span>
-                    </div>
-
-                    <Checkbox
-                        value="bitbucket.explorer.relatedJiraIssues.enabled"
-                        label={this.checklabel("Show related Jira issues for Bitbucket pull requests")}
-                        isChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}
-                        onChange={this.onCheckboxChange}
-                        name="pr-explorer-relatedjiraissues-enabled"/>
-
-                    <Checkbox
-                        value="bitbucket.explorer.notifications.pullRequestCreated"
-                        label={this.checklabel("Periodically check for newly created pull reqeuests and show an information message if there are any")}
-                        isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
-                        onChange={this.onCheckboxChange}
-                        name="pr-explorer-notifications-prcreated"/>
-
-                    <div className="refreshInterval" style={{ marginLeft: '3em' }}>
-                        <span>check every: </span>
-                        <input style={{width: '40px'}} name="pr-notifications-refresh-interval"
-                            type="number" min="1"
-                            value={this.props.configData.config.bitbucket.explorer.notifications.refreshInterval}
-                            onChange={(e:any) => this.handleInputChange(e, "bitbucket.explorer.notifications.refreshInterval")} />
-                        <span> minutes</span>
-                    </div>
+                <CheckboxField
+                    name='pr-explorer-enabled'
+                    id='pr-explorer-enabled'
+                    value='bitbucket.explorer.enabled'
+                    defaultIsChecked={this.props.configData.config.bitbucket.explorer.enabled}>
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <Checkbox {...fieldArgs.fieldProps}
+                                    label='Enable Bitbucket Pull Request Explorer'
+                                    isIndeterminate={this.getIsExplorerIndeterminate()}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                />
+                            );
+                        }
+                    }
+                </CheckboxField>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        paddingLeft: '24px',
+                    }}
+                >
+                    <CheckboxField
+                        name='pr-explorer-relatedjiraissues-enabled'
+                        id='pr-explorer-relatedjiraissues-enabled'
+                        value='bitbucket.explorer.relatedJiraIssues.enabled'
+                        defaultIsChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Show related Jira issues for Bitbucket pull requests'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                    <CheckboxField
+                        name='pr-explorer-notifications-prcreated'
+                        id='pr-explorer-notifications-prcreated'
+                        value='bitbucket.explorer.notifications.pullRequestCreated'
+                        defaultIsChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Periodically check for newly created pull reqeuests and show a notification if there are any'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                </div>
+                <div className="refreshInterval">
+                    <span>Refresh explorer every: </span>
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="pr-explorer-refresh-interval"
+                        type="number" min="0"
+                        value={this.props.configData.config.bitbucket.explorer.refreshInterval}
+                        onChange={(e: any) => this.handleNumberChange(e, "bitbucket.explorer.refreshInterval")}
+                        disabled={!this.props.configData.config.bitbucket.explorer.enabled} />
+                    <span> minutes (setting to 0 disables auto-refresh)</span>
+                </div>
+                <div className="refreshInterval">
+                    <span>Notify of new pull requests: </span>
+                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="pr-notifications-refresh-interval"
+                        type="number" min="0"
+                        value={this.props.configData.config.bitbucket.explorer.notifications.refreshInterval}
+                        onChange={(e: any) => this.handleNumberChange(e, "bitbucket.explorer.notifications.refreshInterval")}
+                        disabled={!this.props.configData.config.bitbucket.explorer.enabled} />
+                    <span> minutes (setting to 0 disables notification)</span>
                 </div>
             </div>
-            
         );
     }
 }

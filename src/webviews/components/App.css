@@ -1,301 +1,7 @@
-.App {
-  text-align: center;
-}
-
-.sticky {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--background-color);
-}
+/*-------------------- BEGIN - general containers --------------------*/
 
 p {
-  color: var(--vscode-editor-foreground) !important;
-}
-
-h1 {
-  color: var(--vscode-editor-foreground) !important;
-}
-
-a {
-  color: var(--vscode-textLink-foreground) !important;
-}
-
-a:hover {
-  color: var(--vscode-textLink-activeForeground) !important;
-}
-
-input {
-  color: var(--vscode-input-foreground);
-  background-color: var(--vscode-input-background);
-}
-
-div.icon-text {
-  height: 2em;
-  display: flex;
-  align-items: center;
-}
-
-div.icon-text img {
-  height: 1.5em;
-  width: 1.5em;
-  margin-right: 5pt;
-}
-
-/* ak-button should be the className on all atlaskit button components */
-.ak-button {
-  background: var(--vscode-button-background) !important;
-}
-
-.ak-button span {
-  color: var(--vscode-button-foreground) !important;
-}
-
-.ak-button:hover {
-  background: var(--vscode-button-hoverBackground) !important;
-}
-
-.ak-button:active {
-  background: var(--vscode-button-background--darken-05) !important;
-  color: var(--vscode-button-foreground) !important;
-}
-
-.ak-button:disabled {
-  background: var(--vscode-button-background--50) !important;
-}
-
-.no-tags {
-  color: var(--vscode-input-placeholderForeground);
-  padding-left: 5pt;
-}
-
-div#jql-row-container {
-  margin-top: 2pt;
-  margin-bottom: 2pt;
-  padding-top: 3pt;
-  padding-bottom: 3pt;
-  align-items: center;
-  height: 3em;
-  background-color: transparent
-}
-
-div#jql-row-drop-overlay {
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-div#empty-jql-row {
-  background-color: transparent;
-  height: 100%;
-  border: 1pt;
-  border-style: solid;
-  border-color: var(--vscode-button-hoverBackground);
-}
-
-div#jql-row {
-  color: var(--vscode-editor-foreground);
-  height: 100%;
-  padding-left: 3pt;
-  padding-right: 3pt;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background-color: var(--vscode-input-background)
-}
-
-/* Content__ActionItem is the class given to the buttons in the feedback collector */
-[class^="Content__ActionItem"] {
-  background: var(--vscode-button-background) !important;
-}
-
-[class^="Content__ActionItem"] span {
-  color: var(--vscode-button-foreground) !important;
-}
-
-[class^="Content__ActionItem"]:hover {
-  background: var(--vscode-button-hoverBackground) !important;
-}
-
-[class^="Content__ActionItem"]:active {
-  background: var(--vscode-button-background--darken-05) !important;
-  color: var(--vscode-button-foreground) !important;
-}
-
-[class^="Content__ActionItem"]:disabled {
-  background: var(--vscode-button-background--50) !important;
-}
-
-/* ak-textarea and ak-textfield should be the classNames on atlaskit input components */
-.ak-textarea, .ak-inputField {
-  background: var(--vscode-input-background)!important;
-  color: var(--vscode-input-foreground)!important;
-  font: inherit;
-  width: inherit;
-  padding: 6px;
-  box-sizing: border-box;
-  border: 1px solid var(--vscode-input-border)!important;
-  outline: 0px!important;
-}
-
-.ak-textarea:focus {
-  outline-color: var(--vscode-focusBorder);
-  outline-width: 2px;
-}
-
-.ak-inputField {
-  display: block;
-}
-
-.ak-textarea::placeholder, .ak-inputField::placeholder {
-  color: var(--vscode-input-placeholderForeground) !important;
-}
-
-
-[class^="Droplist__Content"] {
-  background: var(--vscode-sideBar-background) !important;
-}
-
-.ak-dropdown-item {
-  background: var(--vscode-sideBar-background) !important;
-  color: var(--vscode-list-focusForeground) !important;
-}
-
-.ak-dropdown-item:hover {
-  background: var(--vscode-list-hoverBackground) !important;
-  color: var(--vscode-list-focusForeground) !important;
-}
-
-.jira-comment {
-  color: var(--vscode-editor-foreground)
-}
-
-.jira-comment-author {
-  color: var(--vscode-editor-foreground)
-}
-
-[class^="Modal__Dialog"] {
-  background: var(--background-color) !important;
-  color: var(--vscode-input-foreground) !important; 
-}
-
-/* Sketchy way of coloring the background of the drop-down menu in the feedback collector */
-/*[class^="Modal__Dialog"] div[class^="css-"] div[class^="css-"] {
-  background: var(--background-color) !important;
-  color: var(--vscode-input-foreground) !important; 
-} */
-
-[class^="Checkbox__Label"],[class^="Radio__Label"],[class^="Field__Label"] {
-  color: var(--vscode-input-foreground) !important; 
-}
-
-[class^="styledCache__StyledSpan"] {
-  background: var(--background-color) !important;
-  color: var(--vscode-editor-foreground) !important;
-}
-
-[class^="AvatarItem__"] {
-  color: var(--vscode-editor-foreground) !important;
-}
-
-[class^="FieldTextArea"] [class^="Content-"] {
-  background: var(--vscode-input-background) !important;
-  border-width: 2px;
-  border-color: var(--vscode-focusBorder) !important;
-}
-
-[class^="TextArea-"] {
-  background: var(--vscode-input-background) !important;
-  color: var(--vscode-input-foreground) !important;
-  outline-color: var(--vscode-input-placeholderForeground) !important;
-}
-
-[class^="TextArea-"]::placeholder {
-  color: var(--vscode-input-placeholderForeground) !important;
-}
-
-[class^="styled__TitleWrapper"] {
-  margin-bottom: 0px !important;
-  align-items: center !important;
-}
-
-[class^="styled__StyledTitle"] {
-  margin: 0px !important;
-}
-
-[class^="styled__Title"] {
-  margin: 0px !important;
-  color: black;
-}
-
-[class^="LayoutStyles__Container"] {
-  padding: inherit !important;
-}
-
-[class^="styled__Cell"] {
-  padding-top: inherit !important;
-  padding-bottom: inherit !important;
-}
-
-.vscode-dark [class^="styledPanel__PanelHeader"]:hover {
-  background: var(--background-color--lighten-05);
-}
-
-.vscode-light [class^="styledPanel__PanelHeader"]:hover {
-  background: var(--background-color--darken-05);
-}
-
-.Collapsible {
-  border-radius: 5px;
-  margin-bottom: 1em;
-  padding: 1rem;
-}
-.vscode-dark .Collapsible {
-  background: var(--background-color--lighten-05);
-}
-
-.vscode-light .Collapsible {
-  background: var(--background-color--darken-05)
-}
-
-.Collapsible__trigger {
-  cursor: pointer;
-}
-
-.Collapsible__trigger h2 {
-  -webkit-margin-before: 0em;
-  -webkit-margin-after: 0em;
-}
-
-.Collapsible__trigger p {
-  color: var(--color--50);
-  -webkit-margin-before: 0.3em;
-}
-
-.checkboxLabel {
-  color: var(--color--75);
-}
-
-[class^="Checkbox__IconWrapper-"], [class^="Radio__IconWrapper-"] {
-  color: var(--vscode-button-background) !important;
-}
-
-[class^="Checkbox__IconWrapper-"] rect, [class^="Radio__IconWrapper-"] circle {
-  stroke: var(--vscode-button-background) !important;
-}
-.labelAndSelect {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.labelAndSelect > span {
-  color: var(--color--75);
-  padding-right: 1rem;
-}
-
-.refreshInterval > span {
-  color: var(--color--75);
+  color: var(--vscode-foreground);
 }
 
 hr {
@@ -306,128 +12,542 @@ hr {
   margin-bottom: 1em;
 }
 
-.vscode-light .ak-link-button>span {
-  color: var(--vscode-textlink-foreground) !important;
+.ac-flex-space-between {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.vscode-light .ak-link-button:hover {
-  color: var(--vscode-textlink-foreground) !important;
-  text-decoration: none;
+.ac-flex {
+  display: inline-flex;
+  align-items: center;
 }
 
-.vscode-dark .ak-link-button>span {
-  color: var(--vscode-button-foreground) !important;
+.ac-hmargin {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
-.vscode-dark .ak-link-button:hover {
-  color: var(--vscode-button-foreground) !important;
-  text-decoration: none;
+.ac-vpadding {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-.ak-link-button > button {
-  padding: 0px !important;
+.ac-block-centered {
+  display: block;
+  text-align: center;
+  margin: 20px;
 }
 
-.ak-inline-dialog [class^="styled__Container"] {
-  color: var(--vscode-dropdown-color) !important;
-  background-color: var(--vscode-dropdown-background) !important;
+/* [class^=GridColumnElement__GridColumn] {
+  margin: 0px!important;
+} */
+
+/* used to display svg images with labels like Jira priority */
+
+.ac-icon-with-text {
+  height: 2em;
+  display: flex;
+  align-items: center;
 }
 
-.ak-inline-dialog [class^="styled__Container"] a {
-  color: var(--vscode-dropdown-color) !important;
+/*-------------------- END - general containers --------------------*/
+
+/*-------------------- BEGIN - page header --------------------*/
+
+[class^=styled__StyledTitle-] p {
+  margin: 0px;
 }
 
-/* img::after is triggered only if img loading fails */
-.bitbucket-page img::after {
-  content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+[class^=styled__StyledTitle-] {
+  margin: 0px;
 }
 
-/* ak-select is the classNamePrefix that should be applied to atlaskit select components */
-.ak-select__control {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-dropdown-foreground) !important;
-  border: 1px solid var(--vscode-dropdown-border)!important;
-}
+/*-------------------- END - page header --------------------*/
 
-.ak-select__control:hover {
-  border-color: var(--vscode-focusBorder) !important;
-}
+/*-------------------- BEGIN - panels --------------------*/
 
-.ak-select__control--is-focused {
-  border-color: var(--vscode-focusBorder) !important;
-}
-
-.ak-select__menu, .ak-select__menu-list, .ak-select__single-value, .ak-select__indicator, .ak-select__input {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-dropdown-foreground) !important;
-}
-
-.ak-select__option {
-  cursor: pointer !important;
-}
-
-.ak-select__placeholder {
-  color: var(--vscode-input-placeholderForeground) !important;
-}
-
-.ak-select__option--is-focused {
-  background: var(--vscode-list-focusBackground) !important;
-  color: var(--vscode-list-focusForeground) !important;
-}
-
-.ak-select__option--is-selected {
-  background: var(--vscode-list-activeSelectionBackground) !important;
-  color: var(--vscode-list-activeSelectionForeground) !important;
-}
-
-.ak-select__menu {
-  border: 1px solid var(--vscode-focusBorder)!important;
-  border-radius: 2px!important;
-}
-
-.ak-select__value-container {
-  padding: 0px!important;
-}
-
-/* Calendar__Wrapper is the only way to style the calendar popup */
-[class^="Calendar__Wrapper"] {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-dropdown-foreground) !important;
-  border: 1px solid var(--vscode-focusBorder)!important;
-}
-
-[class^="Heading__MonthAndYear"] {
-  color: var(--vscode-dropdown-foreground) !important;
-}
-
-[class^="Calendar__CalendarTh"] {
-  color: var(--vscode-dropdown-foreground) !important;
-}
-
-[class^="Date__DateDiv"] {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-dropdown-foreground) !important;
-}
-
-[class^="Date__DateDiv"]:hover {
-  background: var(--vscode-list-focusBackground) !important;
-  color: var(--vscode-list-focusForeground) !important;
-}
-
-[class^="Date__DateDiv"]:disabled {
-  background: var(--vscode-list-focusBackground) !important;
-  color: red !important;
-}
-
-[class^="Calendar__Wrapper"] > [class^="Icon__IconWrapper"]{
-  color: var(--vscode-dropdown-foreground) !important;
-}
-
-[class^="DateTimePicker__Flex-"] {
-  background: var(--vscode-dropdown-background) !important;
-  border: 1px solid var(--vscode-dropdown-border)!important;
-}
-
-.bitbucket-page h3 {
+[class^=styledPanel__PanelHeader] h3 {
   margin: 5px;
 }
+
+.vscode-dark [class^=styledPanel__PanelHeader] {
+  background: var(--vscode-editor-background--lighten-05);
+}
+
+.vscode-dark [class^=styledPanel__PanelHeader]:hover {
+  background: var(--vscode-editor-background--lighten-05);
+}
+
+.vscode-light [class^=styledPanel__PanelHeader] {
+  background: var(--vscode-editor-background--darken-05)
+}
+
+.vscode-light [class^=styledPanel__PanelHeader]:hover {
+  background: var(--vscode-editor-background--darken-05)
+}
+
+[class^=styledPanel__ButtonWrapper] [class^=Icon__IconWrapper] {
+  color: var(--vscode-foreground)!important;
+}
+
+.inlinePanelHeader {
+  display: inline-block;
+}
+
+.inlinePanelSubheading {
+  display: inline-block;
+  margin-left: 15px;
+  color: var(--vscode-input-placeholderForeground)!important;
+  font-style: italic;
+}
+
+/*-------------------- END - panels --------------------*/
+
+/*-------------------- BEGIN - modal dialogs --------------------*/
+
+[class^=Modal__Dialog] {
+  background: var(--background-color)!important
+}
+
+/*-------------------- END - modal dialogs --------------------*/
+
+/*-------------------- BEGIN - JQL configuration list --------------------*/
+
+div#jql-row-container {
+  margin-top: 2pt;
+  margin-bottom: 2pt;
+  padding-top: 3pt;
+  padding-bottom: 3pt;
+  -ms-flex-align: center;
+  align-items: center;
+  height: 3em;
+  background-color: transparent
+}
+
+div#jql-row {
+  color: var(--vscode-input-foreground);
+  height: 100%;
+  padding-left: 3pt;
+  padding-right: 3pt;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -ms-flex-align: center;
+  align-items: center;
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-settings-textInputBorder)!important;
+}
+
+div#jql-row-drop-overlay {
+  width: 100%;
+  height: 100%;
+  z-index: 1
+}
+
+div#empty-jql-row {
+  background-color: transparent;
+  height: 100%;
+  border: 1pt;
+  border-style: solid;
+  border-color: var(--vscode-button-hoverBackground)
+}
+
+/*-------------------- END - JQL configuration list --------------------*/
+
+/*-------------------- BEGIN - JQL Editor --------------------*/
+
+[class^=Content-] {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-dropdown-foreground)!important;
+  border: 1px solid var(--vscode-dropdown-border)!important;
+}
+
+[class^=SingleLineTextInput] {
+  outline: 0px!important;
+}
+
+[class^=Droplist__Content] {
+  background: var(--vscode-sideBar-background)!important
+}
+
+[class^=Item__Span] {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-dropdown-foreground)!important
+}
+
+[class^=Item__Span]:hover {
+  background: var(--vscode-list-focusBackground)!important;
+  color: var(--vscode-dropdown-foreground)!important;
+}
+
+/*-------------------- END - JQL Editor --------------------*/
+
+/*-------------------- BEGIN - section messages --------------------*/
+
+section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
+  color: #4c4c4c!important;
+  margin: 6px;
+}
+
+/*-------------------- END - section messages --------------------*/
+
+/*-------------------- BEGIN - general form fields --------------------*/
+
+[class^=Field__FieldWrapper-] {
+  width: 100%;
+}
+
+/*-------------------- END - general form fields --------------------*/
+
+/*-------------------- BEGIN - form field labels --------------------*/
+
+[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], [class^=Modal__Dialog], [class^=Radio__Label] {
+  color: var(--vscode-foreground)!important
+}
+
+/*-------------------- END - form field labels --------------------*/
+
+/*-------------------- BEGIN - buttons --------------------*/
+
+.ac-button {
+  background: var(--vscode-button-background)!important
+}
+
+.ac-button span {
+  color: var(--vscode-button-foreground)!important
+}
+
+.ac-button:hover {
+  background: var(--vscode-button-hoverBackground)!important
+}
+
+.ac-button:active {
+  background: var(--vscode-button-background--darken-05)!important;
+  color: var(--vscode-button-foreground)!important
+}
+
+.ac-button:disabled {
+  background: var(--vscode-button-background--50)!important
+}
+
+/*-------------------- END - buttons --------------------*/
+
+/*-------------------- BEGIN - links --------------------*/
+
+.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button>span {
+  color: var(--vscode-textlink-foreground)!important
+}
+
+.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
+  color: var(--vscode-foreground)!important
+}
+
+.ac-link-button>button {
+  padding: 0!important
+}
+
+/* links inside of banners with colored backgrounds */
+
+.ac-banner-link-button:hover, .ac-banner-link-button>span {
+  color: var(--vscode-button-foreground)!important;
+  text-decoration: underline;
+}
+
+.ac-banner-link-button>button {
+  padding: 0!important
+}
+
+/*-------------------- END - links --------------------*/
+
+/*-------------------- BEGIN - form input/text --------------------*/
+
+.ac-inputField {
+  display: block;
+}
+
+.ac-inputField-inline {
+  display: inline-block;
+}
+
+.ac-inputField, .ac-inputField-inline, .ac-textarea {
+  background: var(--vscode-input-background)!important;
+  color: var(--vscode-input-foreground)!important;
+  font: inherit;
+  width: inherit;
+  padding: 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--vscode-settings-textInputBorder)!important;
+  outline: 0!important
+}
+
+.ac-inputField:focus, .ac-inputField-inline:focus, .ac-textarea:focus {
+  border-color: var(--vscode-focusBorder)!important;
+}
+
+.ac-inputField::-webkit-input-placeholder, .ac-inputField-inline::-webkit-input-placeholder, .ac-textarea::-webkit-input-placeholder {
+  color: var(--vscode-input-placeholderForeground)!important
+}
+
+.ac-inputField::-ms-input-placeholder, .ac-inputField-inline::-ms-input-placeholder, .ac-textarea::-ms-input-placeholder {
+  color: var(--vscode-input-placeholderForeground)!important
+}
+
+.ac-inputField::placeholder, .ac-inputField-inline::placeholder, .ac-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground)!important
+}
+
+.refreshInterval {
+  margin-top: 10px;
+  color: var(--vscode-foreground) !important;
+}
+
+/*-------------------- END - form input/text --------------------*/
+
+/*-------------------- BEGIN - select boxes --------------------*/
+
+.ac-select__control {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-dropdown-foreground)!important;
+  border: 1px solid var(--vscode-settings-textInputBorder)!important
+}
+
+.ac-select__control--is-focused, .ac-select__control:hover {
+  border-color: var(--vscode-focusBorder)!important
+}
+
+.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-input-foreground)!important
+}
+
+.ac-select__option {
+  cursor: pointer!important
+}
+
+.ac-select__placeholder {
+  color: var(--vscode-input-placeholderForeground)!important
+}
+
+.ac-select__option--is-focused {
+  background: var(--vscode-list-focusBackground)!important;
+  color: var(--vscode-list-focusForeground)!important
+}
+
+.ac-select__option--is-selected {
+  background: var(--vscode-list-activeSelectionBackground)!important;
+  color: var(--vscode-list-activeSelectionForeground)!important
+}
+
+.ac-select__menu {
+  border: 1px solid var(--vscode-focusBorder)!important;
+  border-radius: 2px!important
+}
+
+.ac-select__value-container {
+  padding: 0!important
+}
+
+/*-------------------- END - select boxes --------------------*/
+
+/*-------------------- BEGIN - checkboxes/radios --------------------*/
+
+[class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
+  color: var(--vscode-button-background)!important
+}
+
+[class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
+  stroke: var(--vscode-button-background)!important
+}
+
+/*-------------------- END - checkboxes/radios --------------------*/
+
+/*-------------------- BEGIN - calendar controls --------------------*/
+
+[class^=Calendar__Wrapper] {
+  background: var(--vscode-dropdown-background)!important;
+  border: 1px solid var(--vscode-focusBorder)!important
+}
+
+[class^=Calendar__CalendarTh], [class^=Calendar__Wrapper], [class^=Date__DateDiv], [class^=Heading__MonthAndYear] {
+  color: var(--vscode-dropdown-foreground)!important
+}
+
+[class^=Date__DateDiv] {
+  background: var(--vscode-dropdown-background)!important
+}
+
+[class^=Date__DateDiv]:hover {
+  background: var(--vscode-list-focusBackground)!important;
+  color: var(--vscode-list-focusForeground)!important
+}
+
+[class^=Date__DateDiv]:disabled {
+  background: var(--vscode-list-focusBackground)!important;
+  color: red!important
+}
+
+[class^=Calendar__Wrapper]>[class^=Icon__IconWrapper] {
+  color: var(--vscode-dropdown-foreground)!important
+}
+
+[class^=DateTimePicker__Flex-] {
+  background: var(--vscode-dropdown-background)!important;
+  border: 1px solid var(--vscode-settings-textInputBorder)!important
+}
+
+/*-------------------- END - calendar controls --------------------*/
+
+/*-------------------- BEGIN - PR branch lozenges --------------------*/
+
+.ac-branch-lozenge {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  max-width: 100%;
+  vertical-align: baseline;
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.vscode-dark .ac-branch-lozenge {
+  background-color: var(--vscode-button-background--50);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-settings-textInputBorder)
+}
+
+.vscode-light .ac-branch-lozenge {
+  background-color: var(--vscode-button-background--75);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-settings-textInputBorder)
+}
+
+.ac-branch-lozenge, .ac-branch-lozenge__Text {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box
+}
+
+.ac-branch-lozenge__Text {
+  display: inline-block;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+  width: 100%;
+  overflow: hidden;
+}
+
+/*-------------------- END - PR branch lozenges --------------------*/
+
+/*-------------------- BEGIN - Create PR branch boxes --------------------*/
+
+.ac-compare-widget-container {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ac-compare-widget-container .ac-flex-space-between {
+  width: 100%;
+}
+
+.ac-compare-widget {
+  width: 100%;
+}
+
+.ac-compare-widget+.ac-compare-widget {
+  margin-left: 40px;
+}
+
+.ac-compare-widget-break {
+  flex-basis: 100%;
+  width: 0px;
+  height: 0px;
+  overflow: hidden;
+}
+
+.ac-compare-widget-item {
+  position: relative;
+  border: 1px solid var(--vscode-settings-textInputBorder);
+  border-radius: 5px;
+  padding: 10px 10px 10px 10px
+}
+
+.ac-compare-widget-select-container {
+  width: 100%;
+}
+
+/*-------------------- END - Create PR branch boxes --------------------*/
+
+/*-------------------- BEGIN - Avatars --------------------*/
+
+[class^="styledCache__StyledSpan"] {
+  background: var(--background-color) !important;
+  color: var(--vscode-editor-foreground) !important;
+}
+
+[class^="AvatarItem__"] {
+  color: var(--vscode-editor-foreground) !important;
+}
+
+/*-------------------- END - Avatars --------------------*/
+
+/*-------------------- BEGIN - Jira Comments --------------------*/
+
+.jira-comment {
+  color: var(--vscode-editor-foreground)
+}
+
+.jira-comment-author {
+  color: var(--vscode-editor-foreground)
+}
+
+/*-------------------- END - Jira Comments --------------------*/
+
+/*-------------------- BEGIN - Start Work On Issue Styles --------------------*/
+
+.jira-issue-copy-icon {
+  margin-left: 10px;
+  display: none;
+}
+
+.jira-issue-copy-icon:hover {
+  display: block;
+  cursor: pointer;
+}
+
+.jira-issue-key {
+  display: inline-flex;
+  align-items: center;
+}
+
+.jira-issue-key:hover .jira-issue-copy-icon {
+  display: block;
+}
+
+/*-------------------- END - Start Work On Issue Styles --------------------*/
+
+/* 
+  This is a specific fix for auth issues when trying to load images that are attached to bitbucket PR comments.
+img::after is triggered only if img loading fails */
+
+.bitbucket-page img::after {
+  content: 'âš ï¸ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+}
+
+/* uncomment these to see borders on grid layouts */
+
+/* [class^=GridElement__Grid] {
+  border: 3px solid red
+}
+
+[class^=GridColumnElement__GridColumn] {
+  border: 2px solid blue;
+} */

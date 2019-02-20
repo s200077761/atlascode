@@ -56,7 +56,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         this.refresh();
     }
 
-    getTreeItem(element: BaseNode): TreeItem {
+    async getTreeItem(element: BaseNode): Promise<TreeItem> {
         return element.getTreeItem();
     }
 

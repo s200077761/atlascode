@@ -1,4 +1,4 @@
-import { TrackEvent, ScreenEvent, UIEvent } from '@atlassiansox/analytics-node-client';
+import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider, AuthInfo } from './atlclients/authInfo';

@@ -4,6 +4,7 @@ import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Tag from "@atlaskit/tag";
 import TagGroup from "@atlaskit/tag-group";
+import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
 import {
@@ -17,16 +18,18 @@ import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
   IssueCommentAction,
-  IssueAssignAction
+  IssueAssignAction,
+  CopyJiraIssueLinkAction
 } from "../../../ipc/issueActions";
-import {TransitionMenu} from "./TransitionMenu";
-import {Comments} from "./Comments";
+import { TransitionMenu } from "./TransitionMenu";
+import { Comments } from "./Comments";
 import Button from "@atlaskit/button";
+import CopyIcon from '@atlaskit/icon/glyph/copy';
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 
-type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction;
+type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
@@ -67,7 +70,7 @@ export default class JiraIssuePage extends WebviewComponent<
   IssueData,
   {},
   MyState
-> {
+  > {
   constructor(props: any) {
     super(props);
     this.state = {
@@ -77,12 +80,12 @@ export default class JiraIssuePage extends WebviewComponent<
     };
   }
 
-  componentUpdater = (data: IssueData) => {};
+  componentUpdater = (data: IssueData) => { };
 
-  public onMessageReceived(e:any) {
+  public onMessageReceived(e: any) {
     console.log("got message from vscode", e);
-    
-    if(e.type && e.type === 'update') {
+
+    if (e.type && e.type === 'update') {
       console.log("got issue data");
       this.setState({ data: e, isStatusButtonLoading: false });
     }
@@ -90,7 +93,7 @@ export default class JiraIssuePage extends WebviewComponent<
 
   componentWillMount() {
     this.componentUpdater = data => {
-      this.setState({data: data});
+      this.setState({ data: data });
     };
   }
 
@@ -111,27 +114,33 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
   onHandleStatusChange = (item: any) => {
-    const transition = this.state.data.transitions.find(
-      trans =>
-        trans.id === item.target.parentNode.parentNode.dataset.transitionId
-    );
+    this.setState({ isStatusButtonLoading: true });
+    this.postMessage({
+      action: "transitionIssue",
+      transition: item,
+      issue: this.state.data
+    });
+  }
 
-    if (transition) {
-      this.setState({ isStatusButtonLoading: true });
-      this.postMessage({
-        action: "transitionIssue",
-        transition: transition,
-        issue: this.state.data
-      });
-    }
+  handleCopyIssueLink = () => {
+    this.postMessage({
+      action: 'copyJiraIssueLink'
+    });
   }
 
   header(issue: any): any {
     return (
       <div>
-        <div className="icon-text" style={{ marginTop: 10 }}>
+        <div className="ac-icon-with-text" style={{ marginTop: 10 }}>
           <img src={issue.issueType.iconUrl} />
-          {issue.key}
+          <div className='jira-issue-key'>
+            <a href={`https://${this.state.data.workingSite.name}.atlassian.net/browse/${this.state.data.key}`}>
+              {issue.key}
+            </a>
+            <div className='jira-issue-copy-icon'>
+              <Tooltip content='Copy the link to this issue'><CopyIcon label='copy issue link' size='small' onClick={this.handleCopyIssueLink} /></Tooltip>
+            </div>
+          </div>
         </div>
         <h2>{issue.summary}</h2>
         <p>{issue.description}</p>
@@ -146,7 +155,7 @@ export default class JiraIssuePage extends WebviewComponent<
         <h3>Status</h3>
         <TransitionMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={this.onHandleStatusChange} />
         <h3>Priority</h3>
-        <div className="icon-text">
+        <div className="ac-icon-with-text">
           <img src={issue.priority.iconUrl} />
           <span>{issue.priority.name}</span>
         </div>
@@ -171,9 +180,9 @@ export default class JiraIssuePage extends WebviewComponent<
       return <span className="no-tags">None</span>;
     }
     return (
-    <TagGroup>
-      {items.map(i => <Tag text={i} />)}
-    </TagGroup>);
+      <TagGroup>
+        {items.map(i => <Tag text={i} />)}
+      </TagGroup>);
   }
 
   render() {
@@ -182,9 +191,9 @@ export default class JiraIssuePage extends WebviewComponent<
     const childIssues = this.state.data.childIssues.length === 0
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
-          <h3>Child issues</h3>
-          <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
-        </React.Fragment>;
+        <h3>Child issues</h3>
+        <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+      </React.Fragment>;
 
     return (
       <Page>

@@ -39,14 +39,14 @@ export default class CommentForm extends React.Component<{
                     />
                     <div style={{ width: '100%', marginLeft: 8 }}>
                         <textarea
-                            className='ak-textarea'
+                            className='ac-textarea'
                             rows={3}
                             placeholder='Add a comment'
                             value={this.state.commentInput}
                             onChange={this.handleChange}
                         />
                         <ButtonGroup>
-                            <Button className='ak-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
+                            <Button className='ac-button' onClick={this.handleSave} isDisabled={!this.state.commentInput.trim()}>Save</Button>
                             <Button appearance="default" onClick={this.handleCancel}>Cancel</Button>
                         </ButtonGroup>
                     </div>

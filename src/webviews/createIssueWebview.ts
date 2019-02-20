@@ -54,7 +54,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit,Action> {
 
         
         Logger.debug('posting...');
-        Logger.debug('posting create data to webview',createData);
+        Logger.debug('posting create data to webview',createData.issueTypeScreens);
         this.postMessage(createData);
             
     }

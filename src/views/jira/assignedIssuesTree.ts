@@ -17,7 +17,7 @@ export class AssignedIssuesTree extends AbstractIssueTree {
         const initializing = configuration.initializing(e);
         Logger.debug("AssignedIssuesTree got config change",configuration.changed(e, 'jira.workingProject'));
         if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
-            const project = Container.config.jira.workingProject;
+            const project = await Container.jiraSiteManager.getEffectiveProject();
 
             this.setJql(this.jqlForProject(project.id));
         }

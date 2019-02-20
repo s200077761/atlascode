@@ -16,9 +16,8 @@ import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult,Action> implements InitializingWebview<issueOrKey> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
-    private _currentUserId?:string;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -32,8 +31,13 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
         return "startWorkOnIssueScreen";
     }
 
+    createOrShowIssue(data: issueOrKey) {
+        super.createOrShow();
+        this.initialize(data);
+    }
+
     initialize(data: issueOrKey) {
-        if(isIssue(data)) {
+        if (isIssue(data)) {
             if (this._state.key !== data.key) {
                 this.postMessage({
                     type: 'update',
@@ -61,7 +65,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     protected async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
 
-        if(!handled) {
+        if (!handled) {
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
@@ -82,21 +86,22 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             const issue = this._state;
                             const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                             await repo.createBranch(e.branchName, true, e.sourceBranchName);
-                            await assignIssue(issue, this._currentUserId);
+
+                            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+                            const currentUserId = authInfo!.user.id;
+                            await assignIssue(issue, currentUserId);
                             await transitionIssue(issue, e.transition);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: '✅ Created the branch and assigned the issue to you.'
                             });
                         }
-                        catch(e) {
-                            vscode.window.showErrorMessage(`something went wrong: ${e}`);
+                        catch (e) {
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 error: JSON.stringify(e)
                             });
                         }
-
                     }
                 }
             }
@@ -107,15 +112,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
-        if(!isEmptySite(issue.workingSite)) {
+        if (!isEmptySite(issue.workingSite)) {
             this.tenantId = issue.workingSite.id;
         }
-        if (!this._currentUserId ) {
-            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-            this._currentUserId = authInfo ? authInfo.user.id : undefined;
-        }
 
-        if(this._panel) {
+        if (this._panel) {
             this._panel.title = `Start work on Jira issue ${issue.key}`;
         }
 
@@ -152,7 +153,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     }
 
     private async forceUpdateIssue() {
-        if(this._state.key !== ""){
+        if (this._state.key !== "") {
             fetchIssue(this._state.key, this._state.workingSite)
                 .then((issue: Issue) => {
                     this.updateIssue(issue);
