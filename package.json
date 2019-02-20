@@ -1,7 +1,14 @@
 {
     "name": "atlascode",
     "displayName": "Atlassian for VSCode (Official)",
-    "description": "VSCode Atlassian Extensions",
+    "description": "Official Atlassian Jira and Bitbucket integrations for VSCode",
+    "keywords": [
+        "bitbucket",
+        "jira",
+        "atlassian",
+        "issues",
+        "builds"
+    ],
     "version": "0.0.0",
     "publisher": "atlassianlabs",
     "license": "SEE LICENSE IN LICENSE",
@@ -21,13 +28,6 @@
         "color": "#0053cb",
         "theme": "dark"
     },
-    "keywords": [
-        "bitbucket",
-        "jira",
-        "atlassian",
-        "issues",
-        "builds"
-    ],
     "engines": {
         "vscode": "^1.31.1"
     },
