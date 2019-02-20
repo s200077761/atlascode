@@ -41,34 +41,34 @@
             {
                 "command": "atlascode.bb.authenticate",
                 "title": "Authenticate With Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.clearAuth",
                 "title": "Logout From Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.me",
                 "title": "Get Current Bitbucket User",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.me",
                 "title": "Get Current Jira User",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.selectProject",
                 "title": "Select Working Jira Project",
                 "icon": "resources/atlassian-icon.svg",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.selectSite",
                 "title": "Select Working Jira Site",
                 "icon": "resources/atlassian-icon.svg",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.createIssue",
@@ -77,7 +77,7 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
@@ -86,37 +86,37 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.clearAuth",
                 "title": "Logout from Jira",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.showIssue",
                 "title": "Show Jira Issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Issue to Me",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.startWorkOnIssue",
                 "title": "Start work on Jira issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.refreshPullRequests",
@@ -125,37 +125,37 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.viewInWebBrowser",
                 "title": "View on bitbucket.org",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.showPullRequest",
                 "title": "Show Pull Request",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openChangeset",
                 "title": "Open Changeset",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.createPullRequest",
@@ -164,22 +164,22 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.viewPullRequest",
                 "title": "View Pull Request",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.copyPullRequest",
                 "title": "Copy Pull Request Url to Clipboard",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.startPipeline",
                 "title": "Start Pipeline",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.refreshPipelines",
@@ -188,14 +188,14 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
             "activitybar": [
                 {
                     "id": "atlascode-drawer",
-                    "title": "Atlascode",
+                    "title": "Atlassian",
                     "icon": "resources/atlassian-icon.svg"
                 }
             ]
@@ -368,7 +368,7 @@
         },
         "configuration": {
             "type": "object",
-            "title": "AtlasCode",
+            "title": "Atlassian",
             "properties": {
                 "atlascode.outputLevel": {
                     "type": "string",
@@ -379,7 +379,7 @@
                         "info",
                         "debug"
                     ],
-                    "description": "Specifies how much (if any) output will be sent to the AtlasCode output channel",
+                    "description": "Specifies how much (if any) output will be sent to the Atlassian output channel",
                     "scope": "window"
                 },
                 "atlascode.enableCharles": {
