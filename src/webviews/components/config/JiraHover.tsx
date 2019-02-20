@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
+import { CheckboxField } from '@atlaskit/form';
 import { ConfigData } from '../../../ipc/configMessaging';
+import { chain } from '../fieldValidators';
 
 type changeObject = { [key: string]: any };
 
@@ -18,16 +20,24 @@ export default class JiraHover extends React.Component<{ configData: ConfigData,
         }
     }
 
-    checklabel = (label: string) => <span className='checkboxLabel'>{label}</span>;
-
     render() {
         return (
-            <Checkbox
-                value={"jira.hover.enabled"}
-                label={this.checklabel("Enable Jira hover provider")}
-                isChecked={this.props.configData.config.jira.hover.enabled}
-                onChange={this.onCheckboxChange}
-                name="jira-hover-enabled" />
+            <CheckboxField
+                name='jira-hover-enabled'
+                id='jira-hover-enabled'
+                value='jira.hover.enabled'
+                defaultIsChecked={this.props.configData.config.jira.hover.enabled}>
+                {
+                    (fieldArgs: any) => {
+                        return (
+                            <Checkbox {...fieldArgs.fieldProps}
+                                label='Show details when hovering over issue keys in the editor'
+                                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                            />
+                        );
+                    }
+                }
+            </CheckboxField>
         );
     }
 }

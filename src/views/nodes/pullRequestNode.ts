@@ -149,7 +149,7 @@ class PullRequestFilesNode extends BaseNode {
         super();
     }
 
-    getTreeItem(): vscode.TreeItem {
+    async getTreeItem(): Promise<vscode.TreeItem> {
         let fileDisplayName = '';
         switch (this.fileChange.status) {
             case 'removed':
@@ -186,6 +186,9 @@ class PullRequestFilesNode extends BaseNode {
             }
         });
 
+        // Use merge base to diff from common ancestor of source and destination.
+        // This will help ignore any unrelated changes in destination branch.
+        const mergeBase = await this.pr.repository.getMergeBase(this.pr.data.destination!.branch!.name!, this.pr.data.source!.branch!.name!);
         let lhsQueryParam = {
             query: JSON.stringify({
                 lhs: true,
@@ -193,7 +196,7 @@ class PullRequestFilesNode extends BaseNode {
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branch!.name!,
-                commitHash: this.pr.data.destination!.commit!.hash!,
+                commitHash: mergeBase,
                 path: this.fileChange.old ? this.fileChange.old.path! : undefined,
                 commentThreads: lhsCommentThreads
             } as FileDiffQueryParams)
@@ -224,15 +227,15 @@ class PullRequestFilesNode extends BaseNode {
                 break;
         }
 
-        // TODO: create a command wrapper so we can send analytics when they view the diff screen.
+        const diffArgs = [
+            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
+            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
+            fileDisplayName
+        ];
         item.command = {
-            command: 'vscode.diff',
+            command: Commands.ViewDiff,
             title: 'Diff file',
-            arguments: [
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
-                vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
-                fileDisplayName
-            ]
+            arguments: diffArgs
         };
 
         item.contextValue = PullRequestContextValue;

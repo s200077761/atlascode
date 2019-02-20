@@ -10,7 +10,7 @@ import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 
-export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult,Action> {
+export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult, Action> {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -37,6 +37,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             await state.push({
                 uri: r.rootUri.toString(),
                 href: repo.links!.html!.href,
+                avatarUrl: repo.links!.avatar!.href,
+                name: repo.name,
+                owner: repo.owner!.username,
                 remotes: r.state.remotes,
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: await Promise.all(
@@ -48,7 +51,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             });
         }
 
-        this.postMessage({type: 'createPullRequestData', repositories: state});
+        this.postMessage({ type: 'createPullRequestData', repositories: state });
     }
 
     async createOrShow(): Promise<void> {
@@ -59,7 +62,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
     protected async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
 
-        if(!handled) {
+        if (!handled) {
             switch (e.action) {
                 case 'fetchDetails': {
                     if (isFetchDetails(e)) {
@@ -88,7 +91,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
     }
 
     private async fetchDetails(fetchDetailsAction: FetchDetails) {
-        const {remote, sourceBranch, destinationBranch} = fetchDetailsAction;
+        const { remote, sourceBranch, destinationBranch } = fetchDetailsAction;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
@@ -100,7 +103,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const {repoUri, remote, title, summary, sourceBranch, destinationBranch, pushLocalChanges} = createPullRequestAction;
+        const { repoUri, remote, title, summary, sourceBranch, destinationBranch, pushLocalChanges } = createPullRequestAction;
         const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
@@ -128,7 +131,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             }
         };
 
-        const result = await PullRequestApi.create({repository: repo, remote: remote, data: pr});
+        const result = await PullRequestApi.create({ repository: repo, remote: remote, data: pr });
         this.hide();
         commands.executeCommand(Commands.BitbucketShowPullRequestDetails, result);
     }

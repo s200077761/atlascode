@@ -37,7 +37,7 @@ export class NewIssueMonitor implements Disposable {
       configuration.changed(e, "jira.issueMonitor.refreshInterval") ||
       configuration.changed(e, "jira.workingProject")
     ) {
-      this._workingProject = Container.config.jira.workingProject;
+      this._workingProject = await Container.jiraSiteManager.getEffectiveProject();
       this._timestamp = new Date();
       this._refreshInterval =
         Container.config.jira.issueMonitor.refreshInterval * Time.MINUTES;

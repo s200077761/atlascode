@@ -1,7 +1,6 @@
 import * as React from "react";
-import Textfield from '@atlaskit/textfield';
-import TextArea from '@atlaskit/textarea';
-import { VerticalPadding, TextFieldStyles, TextAreaStyles } from "../styles";
+import { Field, ErrorMessage } from '@atlaskit/form';
+import { FieldValidators, chain } from '../fieldValidators';
 
 export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, {}> {
 
@@ -11,29 +10,50 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
 
     render() {
         return (
-            <VerticalPadding>
-                <label htmlFor="title">Title *</label>
-                <Textfield name="title"
-                    value={this.props.title}
-                    onChange={this.props.onTitleChange}
-                    isInvalid={!this.props.title || this.props.title.trim().length === 0}
-                    theme={(theme: any, props: any) => ({
-                        ...theme(props),
-                        ...TextFieldStyles()
-                    })
+            <div className='ac-vpadding'>
+                <Field label='Title'
+                    isRequired={true}
+                    id='title'
+                    name='title'
+                    validate={FieldValidators.validateString}
+                    defaultValue={this.props.title}
+                >
+                    {
+                        (fieldArgs: any) => {
+                            let errDiv = <span />;
+                            if (fieldArgs.error === 'EMPTY') {
+                                errDiv = <ErrorMessage>Title is required</ErrorMessage>;
+                            }
+                            return (
+                                <div>
+                                    <input {...fieldArgs.fieldProps}
+                                        style={{ width: '100%', display: 'block' }}
+                                        className='ac-inputField'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.props.onTitleChange)} />
+                                    {errDiv}
+                                </div>
+                            );
+                        }
                     }
-                />
-
-                <label>Summary</label>
-                <TextArea resize='auto' minimumRows={3}
-                    value={this.props.summary}
-                    onChange={this.props.onSummaryChange}
-                    theme={(theme: any, props: any) => ({
-                        ...theme(props),
-                        ...TextAreaStyles()
-                    })
-                    } />
-            </VerticalPadding>
+                </Field>
+                <Field label='Summary'
+                    isRequired={false}
+                    id='summary'
+                    name='summary'
+                    defaultValue={this.props.summary}
+                >
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <textarea {...fieldArgs.fieldProps}
+                                    className='ac-textarea'
+                                    rows={3}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.props.onSummaryChange)} />
+                            );
+                        }
+                    }
+                </Field>
+            </div>
         );
     }
 }

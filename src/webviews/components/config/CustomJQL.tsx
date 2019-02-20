@@ -25,7 +25,7 @@ export default class CustomJQL extends React.Component<
     dragTargetIndex: number | undefined;
     dragSourceIndex: number | undefined;
   }
-> {
+  > {
   constructor(props: any) {
     super(props);
 
@@ -189,12 +189,12 @@ export default class CustomJQL extends React.Component<
     if (this.state.dragSourceIndex !== undefined &&
       this.state.dragTargetIndex !== undefined &&
       this.state.dragSourceIndex !== this.state.dragTargetIndex) {
-        var jql = this.readJqlListFromProps();
-        const temp = jql[this.state.dragSourceIndex];
-        jql.splice(this.state.dragSourceIndex, 1);
-        jql.splice(this.state.dragTargetIndex, 0, temp);
-        this.publishChanges(jql);
-      }
+      var jql = this.readJqlListFromProps();
+      const temp = jql[this.state.dragSourceIndex];
+      jql.splice(this.state.dragSourceIndex, 1);
+      jql.splice(this.state.dragTargetIndex, 0, temp);
+      this.publishChanges(jql);
+    }
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
   }
 
@@ -221,7 +221,7 @@ export default class CustomJQL extends React.Component<
         <ButtonGroup>
           <Tooltip content="Edit">
             <Button
-              className="ak-button"
+              className="ac-button"
               iconBefore={<EditFilledIcon label="edit" />}
               onClick={() => {
                 this.onEditQuery(element.id);
@@ -230,7 +230,7 @@ export default class CustomJQL extends React.Component<
           </Tooltip>
           <Tooltip content="Delete">
             <Button
-              className="ak-button"
+              className="ac-button"
               iconBefore={<TrashIcon label="delete" />}
               onClick={() => {
                 this.deleteQuery(element.id);
@@ -247,9 +247,9 @@ export default class CustomJQL extends React.Component<
 
     if (this.state.dragSourceIndex !== undefined && this.state.dragTargetIndex !== undefined) {
       if (index === this.state.dragTargetIndex) {
-        element = <div id="empty-jql-row" data-index={index}/>;
+        element = <div id="empty-jql-row" data-index={index} />;
       } else if ((index < this.state.dragSourceIndex && index < this.state.dragTargetIndex) ||
-      (index > this.state.dragSourceIndex && index > this.state.dragTargetIndex)) {
+        (index > this.state.dragSourceIndex && index > this.state.dragTargetIndex)) {
         element = this.htmlForJQLEntry(jql[index], index);
       } else if (this.state.dragSourceIndex < this.state.dragTargetIndex) {
         element = this.htmlForJQLEntry(jql[index + 1], index + 1);
@@ -298,7 +298,7 @@ export default class CustomJQL extends React.Component<
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
-        <Button className="ak-button" onClick={this.onNewQuery}>
+        <Button className="ac-button" onClick={this.onNewQuery}>
           Add Query
         </Button>
       </React.Fragment>

@@ -4,6 +4,12 @@ import { FeedbackData } from './ipc/configActions';
 import { AuthProvider, AuthInfo } from './atlclients/authInfo';
 import { ProductJira, ProductBitbucket } from './constants';
 
+export const Registry = {
+    screen: {
+        pullRequestDiffScreen: 'pullRequestDiffScreen'
+    }
+};
+
 export async function installedEvent(version:string):Promise<TrackEvent> {
 
     const e = {

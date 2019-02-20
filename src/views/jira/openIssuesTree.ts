@@ -19,7 +19,7 @@ export class OpenIssuesTree extends AbstractIssueTree {
         Logger.debug("OpenIssuesTree got config change",configuration.changed(e, 'jira.workingProject'));
         
         if(!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
-            const project = Container.config.jira.workingProject;
+            const project = await Container.jiraSiteManager.getEffectiveProject();
             Logger.debug("OpenIssuesTree jira.workingProject change",Container.config);
             this.setJql(this.jqlForProject(project.id));
         }

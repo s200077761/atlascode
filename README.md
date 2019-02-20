@@ -101,7 +101,3 @@ OK, finally, to actually install the thing, open the Extensions drawer in VSCode
 This is a preview release. Some features may not work properly...
 
 Please use the in-app feedback form to send us feedback.
-
-If you're really stuck, you can ping us in the [Atlascode Help Stride room](https://applink.atlassian.com/stride/a436116f-02ce-4520-8fbb-7301462a1674/chat/20317f63-2ed0-40d2-86b2-7611fa9b0035).
-
-
