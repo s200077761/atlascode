@@ -17,6 +17,7 @@ import { BitbucketContext } from './bitbucket/context';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
+import { PipelineViewManager } from './webviews/pipelineViewManager';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
@@ -63,6 +64,7 @@ export class Container {
     static initializeBitbucket(bbCtx: BitbucketContext) {
         this._bitbucketContext = bbCtx;
         this._pipelinesExplorer = new PipelinesExplorer(bbCtx);
+        this._context.subscriptions.push((this._pipelineViewManager = new PipelineViewManager(this._context.extensionPath)));
     }
 
     static get machineId() {
@@ -127,6 +129,11 @@ export class Container {
     private static _jiraIssueViewManager: JiraIssueViewManager;
     static get jiraIssueViewManager() {
         return this._jiraIssueViewManager;
+    }
+
+    private static _pipelineViewManager: PipelineViewManager;
+    static get pipelineViewManager() {
+        return this._pipelineViewManager;
     }
 
     private static _clientManager: ClientManager;
