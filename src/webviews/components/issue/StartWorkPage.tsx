@@ -12,9 +12,8 @@ import {
 import {
   StartWorkAction
 } from "../../../ipc/issueActions";
-import {TransitionMenu} from "./TransitionMenu";
+import { TransitionMenu } from "./TransitionMenu";
 import Button from "@atlaskit/button";
-import { VerticalPadding, FlexCentered, BlockCentered } from '../styles';
 import Select from '@atlaskit/select';
 import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
@@ -46,16 +45,16 @@ export default class StartWorkPage extends WebviewComponent<
   StartWorkOnIssueData,
   {},
   State
-> {
+  > {
   constructor(props: any) {
     super(props);
     this.state = emptyState;
   }
 
-  public onMessageReceived(e:any) {
+  public onMessageReceived(e: any) {
     console.log("got message from vscode", e);
 
-    if(e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
+    if (e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
       console.log("got issue data");
       if (e.issue.key.length > 0) {
         const repo = this.state.repo.value === emptyRepoData && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
@@ -91,8 +90,9 @@ export default class StartWorkPage extends WebviewComponent<
     if (transition) {
       this.setState({
         // there must be a better way to update the transition dropdown!!
-        data: {...this.state.data, issue: {...this.state.data.issue, status: {...this.state.data.issue.status, id: transition.to.id, name: transition.to.name}}},
-        transition: transition });
+        data: { ...this.state.data, issue: { ...this.state.data.issue, status: { ...this.state.data.issue.status, id: transition.to.id, name: transition.to.name } } },
+        transition: transition
+      });
     }
   }
 
@@ -110,7 +110,7 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   handleStart = () => {
-    this.setState({isStartButtonLoading: true});
+    this.setState({ isStartButtonLoading: true });
 
     this.postMessage({
       action: 'startWork',
@@ -125,14 +125,14 @@ export default class StartWorkPage extends WebviewComponent<
     return (
       <div>
         <h3>
-          <FlexCentered>
+          <div className='ac-flex'>
             <em><p>Start work on - </p></em>
             <div className="icon-text" style={{ margin: 10 }}>
               <img src={issue.issueType.iconUrl} />
               {issue.key}
             </div>
             <p>{issue.summary}</p>
-          </FlexCentered>
+          </div>
         </h3>
         <p>{issue.description}</p>
       </div>
@@ -144,7 +144,7 @@ export default class StartWorkPage extends WebviewComponent<
     const repo = this.state.repo;
 
     if (issue.key === '') {
-      return <BlockCentered><Spinner size="large" /></BlockCentered>;
+      return <div className='ac-block-centered'><Spinner size="large" /></div>;
     }
 
     return (
@@ -167,7 +167,7 @@ export default class StartWorkPage extends WebviewComponent<
             <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
               <div style={{ margin: 10 }}>
                 {this.state.data.repoData.length > 1 &&
-                  <VerticalPadding>
+                  <div className='ac-vpadding'>
                     <label>Repository</label>
                     <Select
                       className="ak-select-container"
@@ -176,7 +176,7 @@ export default class StartWorkPage extends WebviewComponent<
                       onChange={this.handleRepoChange}
                       placeholder='Loading...'
                       value={repo} />
-                  </VerticalPadding>
+                  </div>
                 }
                 <label>Source branch (this will be the start point for the new branch)</label>
                 <Select
@@ -185,27 +185,27 @@ export default class StartWorkPage extends WebviewComponent<
                   options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                   onChange={this.handleSourceBranchChange}
                   value={this.state.sourceBranch} />
-                <VerticalPadding>
+                <div className='ac-vpadding'>
                   <label>Name of the new branch to be created</label>
                   <input style={{ width: '100%', display: 'block' }} className='ak-inputField' value={this.state.branchName} onChange={this.handleBranchNameChange} />
-                </VerticalPadding>
+                </div>
               </div>
             </div>
           </GridColumn>
           <GridColumn medium={12}>
-            <VerticalPadding>
+            <div className='ac-vpadding'>
               {this.state.result.successMessage
                 ? <p>{this.state.result.successMessage}</p>
                 : <Button className='ak-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>
               }
-            </VerticalPadding>
+            </div>
           </GridColumn>
           <GridColumn medium={12}>
             {this.state.result.error &&
               <SectionMessage appearance="warning" title="Something went wrong">
-                <VerticalPadding>
+                <div className='ac-vpadding'>
                   <div style={{ color: 'black' }}>{this.state.result.error}</div>
-                </VerticalPadding>
+                </div>
               </SectionMessage>
             }
           </GridColumn>

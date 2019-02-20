@@ -64,6 +64,9 @@ export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Com
 
             color = computedStyle.getPropertyValue('--vscode-button-background').trim();
             bodyStyle.setProperty('--vscode-button-background--lighten-05', lighten(color, 5));
+            bodyStyle.setProperty('--vscode-button-background--lighten-50', lighten(color, 50));
+            bodyStyle.setProperty('--vscode-button-background--lighten-75', lighten(color, 75));
+            bodyStyle.setProperty('--vscode-button-background--lighten-80', lighten(color, 80));
             bodyStyle.setProperty('--vscode-button-background--darken-05', darken(color, 5));
             bodyStyle.setProperty('--vscode-button-background--50', opacity(color, 50));
             bodyStyle.setProperty('--vscode-button-background--75', opacity(color, 75));

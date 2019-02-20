@@ -21,6 +21,9 @@ export function isPRData(a: Message): a is PRData {
 export interface RepoData {
     uri: string;
     href?: string;
+    avatarUrl?: string;
+    name?: string;
+    owner?: string;
     remotes: Remote[];
     localBranches: Branch[];
     remoteBranches: Branch[];
