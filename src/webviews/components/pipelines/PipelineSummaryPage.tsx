@@ -29,6 +29,13 @@ const inprogressIcon = (
 const errorIcon = (
   <ErrorIcon primaryColor={colors.R400} label="build failure" />
 );
+
+const panelHeader = (heading: string, subheading: string) =>
+  <div>
+    <h3 className='inlinePanelHeader'>{heading}</h3>
+    <p className='inlinePanelSubheading'>{subheading}</p>
+  </div>;
+
 const headerSuccessIcon = (
   <CheckCircleIcon
     primaryColor={colors.N0}
@@ -58,13 +65,6 @@ const builtTimeIcon = (
   <RecentIcon primaryColor={colors.N0} label="build in progress" />
 );
 
-const Trigger = (heading: string, subheading: string) => (
-  <div>
-    <span className="pipeline-step-head">{heading}</span>
-    <span className="pipeline-step-subhead">{subheading}</span>
-  </div>
-);
-
 type Emit = Action;
 
 type Properties = {
@@ -84,12 +84,6 @@ const emptyPipeline: PipelineData = {
   state: { name: "", type: "pipeline_state_in_progress", result: { name: "", type: "" } },
   target: { ref_name: "" }
 };
-
-const panelHeader = (heading: string, subheading: string) =>
-  <div>
-    <h3 className='inlinePanelHeader'>{heading}</h3>
-    <p className='inlinePanelSubheading'>{subheading}</p>
-  </div>;
 
 export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline, Properties, State> {
   constructor(props: any) {
