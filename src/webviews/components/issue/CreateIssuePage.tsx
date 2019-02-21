@@ -14,6 +14,7 @@ import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import SectionMessage from '@atlaskit/section-message';
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
 
@@ -149,7 +150,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'screenRefresh': {
                 const issueData = e as CreateIssueData;
-                console.log('issue data', issueData);
                 this.issueTypes = Object.entries(issueData.issueTypeScreens).map(([key, value]) => { return { id: value.id, name: value.name, iconUrl: value.iconUrl }; });
 
                 const selectedType = this.issueTypes.find(it => it.id === issueData.selectedIssueTypeId);
@@ -351,11 +351,14 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
                                 Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openIssueByKey', key: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
-                            <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
-                                Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
-
-                                <div><Button className='ac-banner-link-button' appearance="link" onClick={() => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}>close</Button></div>
-                            </Banner>
+                            {this.state.isErrorBannerOpen &&
+                                <SectionMessage
+                                    appearance="warning"
+                                    title="Something went wrong"
+                                    actions={[{text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}]}>
+                                    Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
+                                </SectionMessage>
+                            }
                             <h2>Create Issue</h2>
                             <Form
                                 name="create-issue"

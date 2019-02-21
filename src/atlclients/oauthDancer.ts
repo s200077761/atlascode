@@ -16,8 +16,8 @@ const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file'
 export class OAuthDancer {
     private _srv: http.Server | undefined;
     public _authInfo: authinfo.AuthInfo | undefined;
-    private _timer:any;
-    private _browserTimeout =  5 * Time.MINUTES;
+    private _timer: any;
+    private _browserTimeout = 5 * Time.MINUTES;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "3hasX42a7Ugka2FJja",
@@ -62,7 +62,6 @@ export class OAuthDancer {
         let resources: authinfo.AccessibleResource[] = [];
 
         if (profile.accessibleResources) {
-            Logger.debug("got resources");
             profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
                 resources.push(resource);
             });
@@ -84,14 +83,10 @@ export class OAuthDancer {
             accessibleResources: resources
         };
 
-        Logger.debug("profile:\n" + JSON.stringify(profile, null, 2));
-        Logger.debug("authInfo:\n" + JSON.stringify(this._authInfo, null, 2));
-
         return done(null, profile.id);
     }
 
     public async doDance(provider: string): Promise<authinfo.AuthInfo> {
-        Logger.debug("doing dance...");
 
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
             let _app = express();
@@ -110,7 +105,7 @@ export class OAuthDancer {
                 function (req, res) {
                     // The request will be redirected to Bitbucket for authentication, so this
                     // function will not be called.
-            });
+                });
 
             _app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
                 passport.authenticate(authinfo.AuthProvider.JiraCloud),
@@ -120,7 +115,6 @@ export class OAuthDancer {
                 });
 
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
-                Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket,
                     vscodeurl: vscodeurl
@@ -130,7 +124,6 @@ export class OAuthDancer {
             });
 
             _app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
-                Logger.debug("got bb callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket,
                     vscodeurl: vscodeurl
@@ -140,7 +133,6 @@ export class OAuthDancer {
             });
 
             _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
-                Logger.debug("got jira callback");
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductJira,
                     vscodeurl: vscodeurl
@@ -171,11 +163,9 @@ export class OAuthDancer {
                 reject("authentication timed out");
             });
 
-            Logger.debug("building callback server");
 
             this._srv = _app.listen(9090, () => console.log('server started on port 9090'));
 
-            Logger.debug("authenticating...");
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/auth/${provider}`));
             this.startTimer();
         });
@@ -196,11 +186,11 @@ export class OAuthDancer {
 
     private startTimer() {
         //make sure we clear the old one in case they click multiple times
-        if(this._timer) {
+        if (this._timer) {
             clearInterval(this._timer);
             this._timer = undefined;
         }
-        
+
         this._timer = setInterval(() => {
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/timeout`));
         }, this._browserTimeout);

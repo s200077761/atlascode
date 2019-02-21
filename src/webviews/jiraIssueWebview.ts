@@ -5,7 +5,7 @@ import { IssueData } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue } from '../ipc/issueActions';
+import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
@@ -14,10 +14,11 @@ import { AuthProvider } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
+import { issueUrlCopiedEvent } from '../analytics';
 
-export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> implements InitializingWebview<issueOrKey> {
+export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
-    private _currentUserId?:string;
+    private _currentUserId?: string;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -32,7 +33,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
     }
 
     initialize(data: issueOrKey) {
-        if(isIssue(data)) {
+        if (isIssue(data)) {
             this.updateIssue(data);
             return;
         }
@@ -53,7 +54,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
     protected async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
 
-        if(!handled) {
+        if (!handled) {
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
@@ -64,7 +65,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
                 case 'transitionIssue': {
                     if (isTransitionIssue(e)) {
                         handled = true;
-                        transitionIssue(e.issue,e.transition).catch((e: any) => {
+                        transitionIssue(e.issue, e.transition).catch((e: any) => {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
                             vscode.window.showErrorMessage('Issue could not be transitioned', e);
                         });
@@ -107,7 +108,15 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
                     const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     break;
+                }
+                case 'openStartWorkPage': {
+                    if (isOpenStartWorkPageAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.StartWorkOnIssue, e.issue);
+                        break;
+                    }
                 }
             }
         }
@@ -117,15 +126,15 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
-        if(!isEmptySite(issue.workingSite)) {
+        if (!isEmptySite(issue.workingSite)) {
             this.tenantId = issue.workingSite.id;
         }
-        if (!this._currentUserId ) {
+        if (!this._currentUserId) {
             const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
             this._currentUserId = authInfo ? authInfo.user.id : undefined;
         }
 
-        if(this._panel){ this._panel.title = `Jira Issue ${issue.key}`; }
+        if (this._panel) { this._panel.title = `Jira Issue ${issue.key}`; }
 
         let msg = issue as IssueData;
         msg.type = 'update';
@@ -135,7 +144,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
     }
 
     private async forceUpdateIssue() {
-        if(this._state.key !== ""){
+        if (this._state.key !== "") {
             fetchIssue(this._state.key, this._state.workingSite)
                 .then((issue: Issue) => {
                     this.updateIssue(issue);

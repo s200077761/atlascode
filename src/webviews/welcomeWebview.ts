@@ -2,7 +2,6 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
 import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
-import { Logger } from '../logger';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
 import { submitFeedback } from './feedbackSubmitter';
 
@@ -29,7 +28,6 @@ export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
         if (!handled) {
             switch (e.action) {
                 case 'showConfigPage': {
-                    Logger.debug('got showConfig request from webview', e);
                     handled = true;
                     commands.executeCommand(Commands.ShowConfigPage);
                     break;

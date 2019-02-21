@@ -1,6 +1,5 @@
 import { Container } from "../container";
 import { Issue, issueExpand, issueFields, issueFromJsonObject } from "./jiraModel";
-import { Logger } from "../logger";
 
 export async function issuesForJQL(jql: string): Promise<Issue[]> {
   let client = await Container.clientManager.jirarequest();
@@ -22,7 +21,6 @@ export async function issuesForJQL(jql: string): Promise<Issue[]> {
         return [];
       });
   } else {
-    Logger.debug("issuesForJQL: client undefined");
   }
 
   return Promise.reject();

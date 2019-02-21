@@ -5,13 +5,13 @@ import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
-import { Logger } from './logger';
 import { assignIssue } from './commands/jira/assignIssue';
 import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
 import { BaseNode } from './views/nodes/baseNode';
 import { BranchNode } from './views/pipelines/PipelinesTree';
 import { viewScreenEvent, Registry } from './analytics';
+import { Issue, isIssue } from './jira/jiraIssue';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -59,12 +59,11 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
-            Logger.debug('args', issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
-        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNode: IssueNode) => Container.startWorkOnIssueWebview.createOrShowIssue(issueNode.issue)),
+        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrIssue: IssueNode | Issue) => Container.startWorkOnIssueWebview.createOrShowIssue(isIssue(issueNodeOrIssue) ? issueNodeOrIssue : issueNodeOrIssue.issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: any[]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });

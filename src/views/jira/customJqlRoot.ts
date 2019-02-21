@@ -11,6 +11,9 @@ import { CustomJQLTreeId } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { RefreshableTree } from "./abstractIssueTree";
 import { JQLEntry } from "src/config/model";
+import { Container } from '../../container';
+import { AuthProvider } from '../../atlclients/authInfo';
+import { viewScreenEvent } from '../../analytics';
 
 export class CustomJQLRoot
   implements TreeDataProvider<BaseNode | CustomJQLTree>, RefreshableTree {
@@ -67,6 +70,9 @@ export class CustomJQLRoot
   }
 
   async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+    if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+      viewScreenEvent(CustomJQLTreeId, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+    }
     this._children.forEach((child: CustomJQLTree) => {
       child.setVisibility(event.visible);
     });

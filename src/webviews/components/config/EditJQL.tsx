@@ -38,7 +38,6 @@ export default class EditJQL extends PureComponent<{
         "Content-Type": "application/json"
       }
     });
-    console.log(`Fetch ${fullUrl}`);
     return fetch(r).then((res: Response) => {
       return res.json();
     });

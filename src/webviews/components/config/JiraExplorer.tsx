@@ -31,7 +31,6 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
     }
 
     componentWillReceiveProps = (nextProps: any) => {
-        console.log('new state', nextProps.configData);
 
         if (nextProps.configData.config.jira.workingSite && !nextProps.configData.config.jira.workingSite.id) {
             nextProps.configData.config.jira.workingSite = '';
@@ -53,7 +52,6 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
     }
 
     handleSiteChange = (item: WorkingSite) => {
-        console.log('site change', item);
         if (item) {
             const changes = Object.create(null);
             const removes = [];

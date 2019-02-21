@@ -1,10 +1,6 @@
 import { window, Disposable, TreeDataProvider, TreeView, EventEmitter, Event, TreeViewVisibilityChangeEvent, ConfigurationChangeEvent, Command } from 'vscode';
-import { Logger } from '../../logger';
 import { IssueNode } from '../nodes/issueNode';
 import { configuration } from '../../config/configuration';
-import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
-import { viewScreenEvent } from '../../analytics';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
 export interface RefreshableTree extends Disposable {
@@ -12,7 +8,7 @@ export interface RefreshableTree extends Disposable {
 }
 
 export interface IssueTree extends RefreshableTree, TreeDataProvider<IssueNode> {
-    setJql(jql: string | undefined):void;
+    setJql(jql: string | undefined): void;
 }
 
 export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements IssueTree {
@@ -25,7 +21,7 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
     private _isVisible = false;
     private _tree: TreeView<IssueNode> | undefined;
 
-    constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
+    constructor(id: string, jql?: string, emptyState?: string, emptyStateCommand?: Command) {
         super(id, jql, emptyState, emptyStateCommand);
 
         this._disposables.push(Disposable.from(
@@ -57,7 +53,6 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
 
     refresh() {
         if (this._isVisible) {
-	        Logger.debug(`Refreshing issue tree: ${this._id}`);
             this._issues = undefined;
             this._onDidChangeTreeData.fire();
         }
@@ -69,9 +64,6 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
     }
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            viewScreenEvent(this.id, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-        }
         this.setVisibility(event.visible);
     }
 }

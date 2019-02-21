@@ -60,6 +60,14 @@ export interface StartWorkAction extends Action {
     repoUri: string;
     sourceBranchName: string;
     branchName: string;
+    remote: string;
+    setupJira: boolean;
+    setupBitbucket: boolean;
+}
+
+export interface OpenStartWorkPageAction extends Action {
+    action: 'openStartWorkPage';
+    issue: Issue;
 }
 
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
@@ -104,4 +112,8 @@ export function isCreateIssue(a: Action): a is  CreateIssueAction {
 
 export function isStartWork(a: Action): a is  StartWorkAction {
     return (<StartWorkAction>a).transition !== undefined;
+}
+
+export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
+    return (<OpenStartWorkPageAction>a).issue !== undefined;
 }

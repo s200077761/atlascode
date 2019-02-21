@@ -50,7 +50,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public onMessageReceived(e: Accept) {
-        console.log("got message from vscode", e);
         switch (e.type) {
             case 'update': {
                 this.setState(e as ConfigData);
@@ -65,7 +64,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
-        console.log('ConfigPage got change', change);
 
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
     }
@@ -79,7 +77,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleJiraLogout = () => {
-        console.log('handle jira logout');
         this.handleLogout(AuthProvider.JiraCloud);
     }
 
@@ -100,7 +97,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleFeedback = (feedback: FeedbackData) => {
-        console.log('submitting feedback', feedback);
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
 
@@ -163,7 +159,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                     <GridColumn medium={9}>
                         <Form
                             name="jira-explorer-form"
-                            onSubmit={(e: any) => { console.log('base submit'); }}
+                            onSubmit={(e: any) => { }}
                         >
                             {(frmArgs: any) => {
                                 return (<form {...frmArgs.formProps}>

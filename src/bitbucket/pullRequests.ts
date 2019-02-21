@@ -2,7 +2,7 @@ import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
 import { Container } from "../container";
-import { Logger } from '../logger';
+import { prCommentEvent } from '../analytics';
 
 export const bitbucketHosts = new Map()
     .set("bitbucket.org", async () => {
@@ -34,10 +34,8 @@ export function GitUrlParse(url: string): gup.GitUrl {
 export namespace PullRequestApi {
 
     export async function getList(repository: Repository): Promise<PaginatedPullRequests> {
-        Logger.debug('PullRequestApi.getList...');
         let remotes = getBitbucketRemotes(repository);
 
-        Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
@@ -47,12 +45,10 @@ export namespace PullRequestApi {
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
-                Logger.debug(`PullRequestApi.getList: got ${prs.length} PRs for remote: ${remote.name}`);
                 return { repository: repository, remote: remote, data: prs, next: next };
             }
         }
 
-        Logger.debug('PullRequestApi.getList: no PRs found');
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
@@ -66,10 +62,8 @@ export namespace PullRequestApi {
     }
 
     export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
-        Logger.debug('PullRequestApi.getLatest...');
         let remotes = getBitbucketRemotes(repository);
 
-        Logger.debug(`got remotes: [${remotes.map(r => r.name)}]`);
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
@@ -79,12 +73,10 @@ export namespace PullRequestApi {
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
-                Logger.debug(`PullRequestApi.getLatest: got ${prs.length} PRs for remote: ${remote.name}`);
                 return { repository: repository, remote: remote, data: prs, next: next };
             }
         }
 
-        Logger.debug('PullRequestApi.getLatest: no PRs found');
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
@@ -151,7 +143,7 @@ export namespace PullRequestApi {
     export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
-        const bb:Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
         const { data } = await bb.pullrequests.listStatuses({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -187,7 +179,7 @@ export namespace PullRequestApi {
             }
         });
 
-        return {...pr, ...{data: data}};
+        return { ...pr, ...{ data: data } };
     }
 
     export async function approve(pr: PullRequest) {
@@ -221,6 +213,7 @@ export namespace PullRequestApi {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb = await bitbucketHosts.get(parsed.source)();
+        prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         //@ts-ignore
         return await bb.pullrequests.createComment({
             pull_request_id: prId,

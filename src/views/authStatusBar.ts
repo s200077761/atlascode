@@ -1,5 +1,4 @@
 import { AuthInfo, AuthProvider } from "../atlclients/authInfo";
-import { Logger } from "../logger";
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
@@ -27,12 +26,10 @@ export class AuthStatusBar extends Disposable {
   }
 
   async onDidAuthChange(e: AuthInfoEvent) {
-    Logger.debug('statusBar got auth change', e);
     this.updateAuthenticationStatusBar(e.provider, e.authInfo);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
-    Logger.debug('statusBar got config change', e);
     const initializing = configuration.initializing(e);
     if (initializing || configuration.changed(e, 'jira.statusbar')) {
       const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
@@ -80,7 +77,6 @@ export class AuthStatusBar extends Disposable {
     provider: string,
     info: AuthInfo | undefined
   ): Promise<void> {
-    Logger.debug("updating auth status item", provider);
     const statusBarItem = this.ensureStatusItem(provider);
     await this.updateStatusBarItem(statusBarItem, provider, info);
   }
@@ -108,7 +104,6 @@ export class AuthStatusBar extends Disposable {
             let data = { product: product, user: info.user.displayName, site: site, project: project };
             let ctx = { ...Container.config.jira.statusbar, ...data };
             command = Commands.ShowConfigPage;
-            Logger.debug('jira status context', ctx);
             text = tmpl(ctx);
           }
 
@@ -154,7 +149,6 @@ export class AuthStatusBar extends Disposable {
       }
     }
 
-    Logger.debug(`${product} status tect is`, text);
     statusBarItem.text = text;
     statusBarItem.command = command;
     statusBarItem.tooltip = `${product}`;

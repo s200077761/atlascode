@@ -14,6 +14,7 @@ import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { installedEvent, upgradedEvent } from './analytics';
 
+
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
     const atlascode = extensions.getExtension('atlassianlabs.atlascode')!;
@@ -47,13 +48,12 @@ export async function activate(context: ExtensionContext) {
     context.globalState.update(GlobalStateVersionKey, atlascodeVersion);
 
     const duration = process.hrtime(start);
-    Logger.debug(`Atlascode(v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
+    Logger.debug(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
 async function runInstallationRoutines(version: string, previousVersion: string | undefined) {
 
     if (previousVersion === undefined) {
-        Logger.debug('first time install');
         installedEvent(version).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         if (Container.config.showWelcomeOnInstall) {
@@ -64,7 +64,7 @@ async function runInstallationRoutines(version: string, previousVersion: string 
     }
 
     if (semver.gt(version, previousVersion)) {
-        Logger.debug(`Atlascode upgraded from v${previousVersion} to v${version}`);
+        Logger.debug(`Atlassian for VSCode upgraded from v${previousVersion} to v${version}`);
 
         upgradedEvent(version, previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 

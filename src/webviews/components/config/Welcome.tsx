@@ -2,7 +2,7 @@ import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import Button from '@atlaskit/button';
+import Button, { ButtonGroup } from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
@@ -39,11 +39,11 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         const actionsContent =
-            <div className='ac-flex-space-between'>
+            <ButtonGroup>
                 <Button className='ac-button' onClick={this.handleConfigure}>Configure Atlascode</Button>
-                <div className='ac-hmargin'><DisplayFeedback onFeedback={this.handleFeedback} /></div>
+                <DisplayFeedback onFeedback={this.handleFeedback} />
                 <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-            </div>;
+            </ButtonGroup>;
 
         return (
             <Page>

@@ -10,7 +10,6 @@ import { AuthProvider, AuthInfo } from "./authInfo";
 import { Container } from "../container";
 import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
-import { Logger } from "../logger";
 var tunnel = require("tunnel");
 import * as fs from "fs";
 import { configuration, WorkingSite, isEmptySite } from "../config/configuration";
@@ -85,14 +84,13 @@ export class ClientManager implements Disposable {
     );
   }
 
-  public async jirarequest(workingSite?: WorkingSite, promptForAuth: boolean = true, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
+  public async jirarequest(workingSite?: WorkingSite, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
     // if workingSite is passed in and is different from the one in config, 
     // it is for a one-off request (eg. a request from webview from previously configured workingSite)
     const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
 
     return this.getClient<JiraKit>(AuthProvider.JiraCloud, info => {
       let cloudId: string = "";
-      Logger.debug("jirarequest", workingSite);
       if (!workingSite || isEmptySite(workingSite)) {
         workingSite = Container.config.jira.workingSite;
       }
@@ -120,7 +118,7 @@ export class ClientManager implements Disposable {
       jraclient.authenticate({ type: "token", token: info.access });
 
       return jraclient;
-    }, promptForAuth, doNotUpdateCache, reauthenticate);
+    }, false, doNotUpdateCache, reauthenticate);
   }
 
   public async removeClient(provider: string) {
@@ -152,7 +150,6 @@ export class ClientManager implements Disposable {
         return await this.getInClientLine<T>(provider);
       }
 
-      Logger.debug('no client found', provider);
       let info = await Container.authManager.getAuthInfo(provider);
 
       if (!info || reauthenticate) {
@@ -289,8 +286,7 @@ export class ClientManager implements Disposable {
 
     switch (provider) {
       case AuthProvider.JiraCloud: {
-        Logger.debug('client manager is calling jirarequest');
-        await this.jirarequest(undefined, false, true);
+        await this.jirarequest(undefined, true);
         break;
       }
       case AuthProvider.BitbucketCloud: {
@@ -321,10 +317,7 @@ export class ClientManager implements Disposable {
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
     const section = "enableCharles";
     this._optionsDirty = true;
-    Logger.debug(
-      "client manager got config change, charles? " +
-      configuration.get<boolean>(section)
-    );
+
     if (configuration.isDebugging && configuration.get<boolean>(section)) {
       this._agent = tunnel.httpsOverHttp({
         ca: [fs.readFileSync(Resources.charlesCert)],

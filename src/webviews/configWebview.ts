@@ -12,7 +12,7 @@ import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
 import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
-import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent } from '../analytics';
+import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
 
@@ -43,7 +43,6 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         if (!authInfo) {
             authInfo = emptyAuthInfo;
         }
-        Logger.debug('updating config for webview', config);
         this.updateConfig({
             type: 'update',
             config: config,
@@ -56,17 +55,14 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        Logger.debug('configWebview got config', e);
         this.invalidate();
     }
 
     private onDidAuthChange(e: AuthInfoEvent) {
-        Logger.debug('configWebview got auth change', e.authInfo);
         this.invalidate();
     }
 
     private onDidSiteChange(e: JiraSiteUpdateEvent) {
-        Logger.debug('configWebview got site change', e);
         this.invalidate();
     }
 
@@ -85,7 +81,6 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         if (!handled) {
             switch (e.action) {
                 case 'login': {
-                    Logger.debug('got login request from webview', e);
                     handled = true;
                     if (isAuthAction(e)) {
                         switch (e.provider) {
@@ -104,16 +99,13 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'logout': {
                     handled = true;
-                    Logger.debug('got logout request from webview', e);
                     if (isAuthAction(e)) {
                         switch (e.provider) {
                             case AuthProvider.JiraCloud: {
-                                Logger.debug('logging out of jira');
                                 commands.executeCommand(Commands.ClearJiraAuth);
                                 break;
                             }
                             case AuthProvider.BitbucketCloud: {
-                                Logger.debug('logging out of bitbucket');
                                 commands.executeCommand(Commands.ClearBitbucketAuth);
                                 break;
                             }
@@ -134,6 +126,10 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
                             if (typeof value === "boolean") {
                                 featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
+                            }
+
+                            if (key === 'jira.customJql') {
+                                customJQLCreatedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             }
                         }
 

@@ -15,6 +15,7 @@ import { RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
+import { issueWorkStartedEvent } from '../analytics';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -84,17 +85,21 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                     if (isStartWork(e)) {
                         try {
                             const issue = this._state;
-                            const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
-                            await repo.createBranch(e.branchName, true, e.sourceBranchName);
-
+                            if (e.setupBitbucket) {
+                                const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
+                                await repo.createBranch(e.branchName, true, e.sourceBranchName);
+                            }
                             const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
                             const currentUserId = authInfo!.user.id;
                             await assignIssue(issue, currentUserId);
-                            await transitionIssue(issue, e.transition);
+                            if (e.setupJira) {
+                                await transitionIssue(issue, e.transition);
+                            }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: '✅ Created the branch and assigned the issue to you.'
+                                successMessage: `Assigned the issue to you${e.setupJira ? ` and transitioned status to "${e.transition.to.name}"` : ''}  ${e.setupBitbucket ? `, and switched to "${e.branchName}" branch with upstream set to "${e.remote}"` : ''}.`
                             });
+                            issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
                             this.postMessage({
@@ -135,13 +140,20 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                 href: repo.links!.html!.href,
                 remotes: r.state.remotes,
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                remoteBranches: await Promise.all(
-                    r.state.refs
-                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
-                ),
+                remoteBranches: [],
                 mainbranch: mainbranch
             });
+        }
+
+        // best effort to set issue to in-progress
+        if (!issue.status.name.toLowerCase().includes('progress')) {
+            const inProgressTransition = issue.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
+            if (inProgressTransition) {
+                issue.status = inProgressTransition.to;
+            } else {
+                const firstNonInitialTransition = issue.transitions.find(t => !t.isInitial);
+                issue.status = firstNonInitialTransition ? firstNonInitialTransition.to : issue.status;
+            }
         }
 
         const msg: StartWorkOnIssueData = {

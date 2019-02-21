@@ -26,11 +26,9 @@ export class AuthManager implements Disposable {
         this._onDidAuthChange.dispose();
     }
 
-    public async isAuthenticated(provider:string): Promise<boolean> {
-        const info:AuthInfo|undefined = await this.getAuthInfo(provider);
-        const isAuthed:boolean = (info !== undefined && info !== emptyAuthInfo);
-        Logger.debug("auth man checkfor for auth",info);
-        Logger.debug("auth man returning",isAuthed);
+    public async isAuthenticated(provider: string): Promise<boolean> {
+        const info: AuthInfo | undefined = await this.getAuthInfo(provider);
+        const isAuthed: boolean = (info !== undefined && info !== emptyAuthInfo);
         return isAuthed;
     }
     public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
@@ -58,7 +56,7 @@ export class AuthManager implements Disposable {
 
         const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
 
-        if(hasNewInfo) {
+        if (hasNewInfo) {
             const cmdctx = this.commandContextFor(provider);
             if (cmdctx !== undefined) {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
@@ -99,7 +97,7 @@ export class AuthManager implements Disposable {
             wasKeyDeleted = await keychain.deletePassword(keychainServiceName, provider);
         }
 
-        if(wasMemDeleted || wasKeyDeleted) {
+        if (wasMemDeleted || wasKeyDeleted) {
             const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
             setCommandContext(cmdctx, false);
             this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });

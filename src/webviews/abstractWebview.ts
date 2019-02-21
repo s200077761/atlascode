@@ -12,7 +12,6 @@ import {
 } from 'vscode';
 import { Resources } from '../resources';
 import { Action, isAlertable } from '../ipc/messaging';
-import { Logger } from '../logger';
 import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
 
@@ -22,17 +21,17 @@ export interface ReactWebview extends Disposable {
     createOrShow(): Promise<void>;
     onDidPanelDispose(): Event<void>;
     invalidate(): void;
- }
+}
 
- // InitializingWebview is an interface that exposes an initialize method that may be called to initialize the veiw object with data.
- // Type T is the type of the data that's passed to the initialize method.
- // This interface is called in AbstractMultiViewManager
- export interface InitializingWebview<T> {
-    initialize(data:T): void;
- }
+// InitializingWebview is an interface that exposes an initialize method that may be called to initialize the veiw object with data.
+// Type T is the type of the data that's passed to the initialize method.
+// This interface is called in AbstractMultiViewManager
+export interface InitializingWebview<T> {
+    initialize(data: T): void;
+}
 
- // isInitializable tests to see if a webview is an InitializingWebview and casts it if it is.
- export function isInitializable(object: any): object is InitializingWebview<any> {
+// isInitializable tests to see if a webview is an InitializingWebview and casts it if it is.
+export function isInitializable(object: any): object is InitializingWebview<any> {
     return (<InitializingWebview<any>>object).initialize !== undefined;
 }
 
@@ -41,13 +40,13 @@ export interface ReactWebview extends Disposable {
 // Generic Types:
 // S = the type of ipc.Message to send to react
 // R = the type of ipc.Action to receive from react
-export abstract class AbstractReactWebview<S,R extends Action> implements ReactWebview {
+export abstract class AbstractReactWebview<S, R extends Action> implements ReactWebview {
     private _disposablePanel: Disposable | undefined;
     protected _panel: WebviewPanel | undefined;
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
-    protected tenantId:string | undefined;
+    protected tenantId: string | undefined;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -85,14 +84,14 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
                     localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))]
                 }
             );
-            
+
             this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this)
             );
-            
+
             this._panel.webview.html = this._getHtmlForWebview(this.id);
         }
         else {
@@ -104,17 +103,16 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
-        Logger.debug('AbstractReactWebview.onViewStateChanged', e.webviewPanel.visible);
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
             this.invalidate();
         }
     }
 
-    protected async onMessageReceived(a: R):Promise<boolean> {
+    protected async onMessageReceived(a: R): Promise<boolean> {
         switch (a.action) {
             case 'alertError': {
-                if(isAlertable(a)) {
+                if (isAlertable(a)) {
                     window.showErrorMessage(a.message);
                 }
                 return true;
@@ -123,8 +121,8 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
         return false;
     }
 
-    protected postMessage(message:S) {
-        if (this._panel === undefined){ return false; }
+    protected postMessage(message: S) {
+        if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);
 
@@ -132,22 +130,20 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
     }
 
     private onPanelDisposed() {
-        Logger.debug("webview panel disposed");
-        if (this._disposablePanel){ this._disposablePanel.dispose();}
+        if (this._disposablePanel) { this._disposablePanel.dispose(); }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
     }
 
     public dispose() {
-        Logger.debug("vscode webview disposed");
-        if(this._disposablePanel) {
+        if (this._disposablePanel) {
             this._disposablePanel.dispose();
         }
 
         this._onDidPanelDispose.dispose();
     }
 
-    private _getHtmlForWebview(viewName:string) {
+    private _getHtmlForWebview(viewName: string) {
         const manifest = JSON.parse(fs.readFileSync(path.join(this._extensionPath, 'build', 'asset-manifest.json')).toString());
         const mainScript = manifest['main.js'];
         const mainStyle = manifest['main.css'];
@@ -158,14 +154,14 @@ export abstract class AbstractReactWebview<S,R extends Action> implements ReactW
 
         if (tmpl) {
             return tmpl({
-                view:viewName,
+                view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
                 baseUri: Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' })
             });
         } else {
-            return Resources.htmlNotFound({resource: 'reactHtml'});
+            return Resources.htmlNotFound({ resource: 'reactHtml' });
         }
-        
+
     }
 }
