@@ -177,9 +177,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             case 'issueCreated': {
                 if (isIssueCreated(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: '', summary: '' } } });
-                    setTimeout(() => {
-                        this.setState({ isCreateBannerOpen: false });
-                    }, 7000);
                 }
                 break;
             }
@@ -352,7 +349,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     <GridColumn medium={8}>
                         <div>
                             <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
-                                Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssueByKey', key: this.state.createdIssue.key })}>{this.state.createdIssue.key}</Button> has been created.
+                                Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openIssueByKey', key: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
                             </Banner>
                             <Banner isOpen={this.state.isErrorBannerOpen} appearance="error">
                                 Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
@@ -452,7 +449,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                         </div>
                     </GridColumn>
                 </Grid>
-            </Page>
+            </Page >
         );
     }
 
@@ -461,7 +458,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             case UIType.Textarea: {
                 let validateFunc = field.required ? FieldValidators.validateString : undefined;
                 return (
-                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    <Field defaultValue={this.state.fieldValues[field.key]} label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;
@@ -516,7 +513,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 }
 
                 return (
-                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    <Field defaultValue={this.state.fieldValues[field.key]} label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;
