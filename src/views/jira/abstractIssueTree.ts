@@ -1,9 +1,6 @@
 import { window, Disposable, TreeDataProvider, TreeView, EventEmitter, Event, TreeViewVisibilityChangeEvent, ConfigurationChangeEvent, Command } from 'vscode';
 import { IssueNode } from '../nodes/issueNode';
 import { configuration } from '../../config/configuration';
-import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
-import { viewScreenEvent } from '../../analytics';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
 
 export interface RefreshableTree extends Disposable {
@@ -67,9 +64,6 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
     }
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            viewScreenEvent(this.id, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-        }
         this.setVisibility(event.visible);
     }
 }
