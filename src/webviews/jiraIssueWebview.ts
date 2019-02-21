@@ -5,7 +5,7 @@ import { IssueData } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue } from '../ipc/issueActions';
+import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
@@ -108,6 +108,13 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData,Action> imp
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     break;
+                }
+                case 'openStartWorkPage': {
+                    if (isOpenStartWorkPageAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.StartWorkOnIssue, e.issue);
+                        break;
+                    }
                 }
             }
         }

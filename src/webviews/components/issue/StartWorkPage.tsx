@@ -44,7 +44,7 @@ const emptyState: State = {
   jiraSetupEnabled: true,
   bitbucketSetupEnabled: true,
   transition: emptyTransition,
-  repo: { label: 'No repo found', value: emptyRepoData },
+  repo: { label: 'No repositories found...', value: emptyRepoData },
   localBranch: undefined,
   branchOptions: [],
   isStartButtonLoading: false,
@@ -62,6 +62,8 @@ export default class StartWorkPage extends WebviewComponent<
     this.state = emptyState;
   }
 
+  isEmptyRepo = (r: RepoData): boolean =>  r === emptyRepoData;
+
   createLocalBranchOption = (branchName: string): BranchNameOption => {
     return {
       label: branchName,
@@ -75,7 +77,7 @@ export default class StartWorkPage extends WebviewComponent<
     if (e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
       console.log("got issue data");
       if (e.issue.key.length > 0) {
-        const repo = this.state.repo.value === emptyRepoData && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
+        const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
         const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
         const branchOptions = this.state.branchOptions.length > 0
           ? this.state.branchOptions
@@ -91,7 +93,7 @@ export default class StartWorkPage extends WebviewComponent<
         }
         const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
         const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
-        const remote = this.state.remote ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
+        const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
 
         this.setState({
           data: e,
@@ -100,7 +102,8 @@ export default class StartWorkPage extends WebviewComponent<
           transition: transition,
           branchOptions: branchOptions,
           localBranch: localBranch,
-          remote: remote
+          remote: remote,
+          bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled
         });
       }
       else { // empty issue
@@ -172,27 +175,27 @@ export default class StartWorkPage extends WebviewComponent<
       action: 'startWork',
       repoUri: this.state.repo.value.uri,
       branchName: this.state.localBranch ? this.state.localBranch.value : '',
-      sourceBranchName: this.state.sourceBranch!.value.name!,
-      remote: this.state.remote!.value,
+      sourceBranchName: this.state.sourceBranch ? this.state.sourceBranch.value.name! : '',
+      remote: this.state.remote ? this.state.remote!.value : '',
       transition: this.state.transition,
       setupJira: this.state.jiraSetupEnabled,
-      setupBitbucket: this.state.bitbucketSetupEnabled
+      setupBitbucket: this.isEmptyRepo(this.state.repo.value) ? false : this.state.bitbucketSetupEnabled
     });
   }
 
   header(issue: any): any {
     return (
-      <div className='ac-flex'>
-        <em><p>Start work on - </p></em>
-        <h3>
+      <div>
           <div className='ac-flex'>
+            <em><p>Start work on - </p></em>
             <div className="ac-icon-with-text" style={{ marginLeft: 10 }}>
               <img src={issue.issueType.iconUrl} />
-              <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>
+              <div className='jira-issue-key'>
+                <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>
+              </div>
             </div>
-            <p>{issue.summary}</p>
+            <h3>{issue.summary}</h3>
           </div>
-        </h3>
         <p>{issue.description}</p>
       </div>
     );
@@ -219,7 +222,7 @@ export default class StartWorkPage extends WebviewComponent<
           </GridColumn>
           <GridColumn medium={6}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox defaultChecked onChange={this.toggleJiraSetupEnabled} name='setup-jira-checkbox' />
+              <Checkbox isChecked={this.state.jiraSetupEnabled} onChange={this.toggleJiraSetupEnabled} name='setup-jira-checkbox' />
               <h4>Transition issue</h4>
             </div>
             {this.state.jiraSetupEnabled &&
@@ -234,10 +237,24 @@ export default class StartWorkPage extends WebviewComponent<
           <GridColumn medium={12} />
           <GridColumn medium={6}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox defaultChecked onChange={this.toggleBitbucketSetupEnabled} name='setup-bitbucket-checkbox' />
+              <Checkbox isChecked={this.state.bitbucketSetupEnabled} onChange={this.toggleBitbucketSetupEnabled} name='setup-bitbucket-checkbox' />
               <h4>Set up git branch</h4>
             </div>
-            {this.state.bitbucketSetupEnabled &&
+            {this.isEmptyRepo(this.state.repo.value) &&
+              <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                <div style={{ margin: 10 }}>
+                  <div className='ac-vpadding'>
+                    <label>Repository</label>
+                    <Select
+                      className="ac-select-container"
+                      classNamePrefix="ac-select"
+                      placeholder='No repositories found...'
+                      value={repo} />
+                  </div>
+                </div>
+              </div>
+            }
+            {this.state.bitbucketSetupEnabled && !this.isEmptyRepo(this.state.repo.value) &&
               <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                 <div style={{ margin: 10 }}>
                   {this.state.data.repoData.length > 1 &&

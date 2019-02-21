@@ -65,6 +65,11 @@ export interface StartWorkAction extends Action {
     setupBitbucket: boolean;
 }
 
+export interface OpenStartWorkPageAction extends Action {
+    action: 'openStartWorkPage';
+    issue: Issue;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -107,4 +112,8 @@ export function isCreateIssue(a: Action): a is  CreateIssueAction {
 
 export function isStartWork(a: Action): a is  StartWorkAction {
     return (<StartWorkAction>a).transition !== undefined;
+}
+
+export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
+    return (<OpenStartWorkPageAction>a).issue !== undefined;
 }
