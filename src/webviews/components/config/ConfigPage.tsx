@@ -148,7 +148,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
-                        <h1>AtlasCode</h1>
+                        <h1>Atlassian for VSCode</h1>
                     </GridColumn>
                 </Grid>
 

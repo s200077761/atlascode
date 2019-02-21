@@ -31,7 +31,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     public get title(): string {
-        return "AtlasCode Settings";
+        return "Atlassian Settings";
     }
     public get id(): string {
         return "atlascodeSettings";

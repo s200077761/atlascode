@@ -49,7 +49,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
-                        <PageHeader actions={actionsContent}><p>Welcome To AtlasCode!</p></PageHeader>
+                        <PageHeader actions={actionsContent}><p>Welcome To Atlassian for VSCode!</p></PageHeader>
                     </GridColumn>
                 </Grid>
 

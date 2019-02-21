@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <base href="{{baseUri}}/">
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
     <meta id="reactView" name="reactView" content="{{view}}" />
-    <title>AtlasCode Webview</title>
+    <title>Atlassian Webview</title>
     <link rel="stylesheet" type="text/css" href="{{styleUri}}">
 
-    <meta http-equiv="Content-Security-Policy" content="default-src https://api.atlassian.com ; img-src data: vscode-resource: https:; script-src vscode-resource:;style-src vscode-resource: 'unsafe-inline' blob: http: https: data:;">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src https://api.atlassian.com ; img-src data: vscode-resource: https:; script-src vscode-resource:;style-src vscode-resource: 'unsafe-inline' blob: http: https: data:;">
 
 </head>
 
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    
+
     <div id="root"></div>
     <script src="{{scriptUri}}"></script>
 
 </body>
+
 </html>

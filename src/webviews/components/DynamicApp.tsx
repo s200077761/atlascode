@@ -11,46 +11,46 @@ import * as Loadable from 'react-loadable';
 const LoadableConfigView = Loadable({
     loader: () => import(/* webpackChunkName: "atlascodeSettings" */ './config/ConfigPage'),
     loading: Loading,
-  });
+});
 
-  const LoadableWelcomeView = Loadable({
+const LoadableWelcomeView = Loadable({
     loader: () => import(/* webpackChunkName: "atlascodeWelcomeScreen" */ './config/Welcome'),
     loading: Loading,
-  });
+});
 
-  const LoadablePullRequestView = Loadable({
+const LoadablePullRequestView = Loadable({
     loader: () => import(/* webpackChunkName: "pullRequestDetailsScreen" */ './pullrequest/PullRequestPage'),
     loading: Loading,
-  });
+});
 
-  const LoadableCreatePullRequestView = Loadable({
+const LoadableCreatePullRequestView = Loadable({
     loader: () => import(/* webpackChunkName: "createPullRequestScreen" */ './pullrequest/CreatePullRequestPage'),
     loading: Loading,
-  });
+});
 
-  const LoadableIssuewView = Loadable({
+const LoadableIssuewView = Loadable({
     loader: () => import(/* webpackChunkName: "viewIssueScreen" */ './issue/JiraIssuePage'),
     loading: Loading,
-  });
+});
 
-  const LoadableCreateIssueView = Loadable({
+const LoadableCreateIssueView = Loadable({
     loader: () => import(/* webpackChunkName: "atlascodeCreateIssueScreen" */ './issue/CreateIssuePage'),
     loading: Loading,
-  });
+});
 
-  const LoadableStartWorkOnIssueView = Loadable({
+const LoadableStartWorkOnIssueView = Loadable({
     loader: () => import(/* webpackChunkName: "startWorkOnIssueScreen" */ './issue/StartWorkPage'),
     loading: Loading,
-  });
+});
 
-  const LoadablePipelineSummaryView = Loadable({
+const LoadablePipelineSummaryView = Loadable({
     loader: () => import(/* webpackChunkName: "pipelineSummaryScreen" */ './pipelines/PipelineSummaryPage'),
     loading: Loading,
-  });
+});
 
-function Loading(props:Loadable.LoadingComponentProps) {
+function Loading(props: Loadable.LoadingComponentProps) {
     if (props.error) {
-        return <div>Error! { props.error }</div>;
+        return <div>Error! {props.error}</div>;
     } else {
         return <div>Loading...</div>;
     }
@@ -59,7 +59,7 @@ function Loading(props:Loadable.LoadingComponentProps) {
 // DynamicApp is the entry point for ALL webviews.
 // Each React component should be dynamically loaded above and then called within this component's render method.
 // As we create new webviews, they need to be added here.
-class DynamicApp extends React.Component<{view:string|null}>  {
+class DynamicApp extends React.Component<{ view: string | null }>  {
     constructor(props: any) {
         super(props);
 
@@ -67,44 +67,44 @@ class DynamicApp extends React.Component<{view:string|null}>  {
 
     public render() {
         // props.view must match the webChunkName above AND the id() returned by the vscode webview component.
-        switch(this.props.view) {
+        switch (this.props.view) {
             case 'atlascodeSettings': {
-                return(
+                return (
                     <div>
                         <LoadableConfigView />
                     </div>
                 );
             }
             case 'atlascodeWelcomeScreen': {
-                return(
+                return (
                     <div>
                         <LoadableWelcomeView />
                     </div>
                 );
             }
             case 'pullRequestDetailsScreen': {
-                return(
+                return (
                     <div>
                         <LoadablePullRequestView />
                     </div>
                 );
             }
             case 'createPullRequestScreen': {
-                return(
+                return (
                     <div>
                         <LoadableCreatePullRequestView />
                     </div>
                 );
             }
             case 'viewIssueScreen': {
-                return(
+                return (
                     <div>
                         <LoadableIssuewView />
                     </div>
                 );
             }
             case 'atlascodeCreateIssueScreen': {
-                return(
+                return (
                     <div>
                         <LoadableCreateIssueView />
                     </div>
@@ -118,7 +118,7 @@ class DynamicApp extends React.Component<{view:string|null}>  {
                 );
             }
             case 'pipelineSummaryScreen': {
-                return(
+                return (
                     <div>
                         <LoadablePipelineSummaryView />
                     </div>
@@ -126,7 +126,7 @@ class DynamicApp extends React.Component<{view:string|null}>  {
             }
             default: {
                 return (
-                    <div>Unknown AtlasCode View</div>
+                    <div>Unknown Atlassian View</div>
                 );
             }
         }
