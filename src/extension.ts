@@ -9,7 +9,7 @@ import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
 import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
-import { extensions, ExtensionContext, commands, window, Uri } from 'vscode';
+import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { installedEvent, upgradedEvent } from './analytics';
