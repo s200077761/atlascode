@@ -5,6 +5,7 @@ import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { IssueNode } from "../../views/nodes/issueNode";
+import { issueTransitionedEvent } from "../../analytics";
 
 export async function transitionIssue(param: Issue | IssueNode, transition?: Transition) {
   let issue: Issue = emptyIssue;
@@ -60,6 +61,7 @@ async function performTranstion(issue: Issue, transition: Transition) {
       vscode.commands.executeCommand(Commands.RefreshJiraExplorer).then(b => {
         Container.jiraIssueViewManager.refreshAll();
       });
+      issueTransitionedEvent(issue.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }).catch((err: any) => {
       Logger.error(err);
     });
