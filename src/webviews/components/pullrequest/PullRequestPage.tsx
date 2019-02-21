@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Button from '@atlaskit/button';
+import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
@@ -8,6 +8,7 @@ import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
+import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -89,28 +90,29 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
 
         const actionsContent = (
-            <div className='ac-flex-space-between'>
+            <ButtonGroup>
                 <Reviewers {...this.state.pr} />
-                <div className='ac-hmargin'>
-                    <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
-                        <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
-                            isDisabled={currentUserApproved}
-                            isLoading={this.state.isApproveButtonLoading}
-                            onClick={this.handleApprove}>
-                            Approve
+                <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
+                    <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                        isDisabled={currentUserApproved}
+                        isLoading={this.state.isApproveButtonLoading}
+                        onClick={this.handleApprove}>
+                        Approve
                         </Button>
-                    </Tooltip>
-                </div>
+                </Tooltip>
                 <Button className='ac-button'
                     isDisabled={!isPrOpen}
                     isLoading={this.state.isMergeButtonLoading}
                     onClick={this.handleMerge}>
                     {isPrOpen ? 'Merge' : pr.state}
                 </Button>
+                <Tooltip content='Open pull request on bitbucket.org'>
+                    <Button className='ac-button' href={pr.links!.html!.href} iconBefore={<BitbucketIcon />} />
+                </Tooltip>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
-            </div>
+            </ButtonGroup>
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
@@ -133,14 +135,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             </PageHeader>
                             <div className='ac-flex-space-between'>
                                 <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
-                                <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', marginTop: '30px' }}>
-                                <div className='ac-hmargin'>
-                                    <Button className='ac-button' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>Checkout source branch</Button>
-                                </div>
-                                <div className='ac-hmargin'>
-                                    <Button className='ac-button' href={pr.links!.html!.href}>Open on bitbucket.org</Button>
+                                <div className='ac-flex'>
+                                    <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>
+                                        {pr.source!.branch!.name! === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
+                                    </Button>
+                                    <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
                                 </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>

@@ -184,9 +184,9 @@ export default class StartWorkPage extends WebviewComponent<
   header(issue: any): any {
     return (
       <div>
+          <em><p>Start work on:</p></em>
           <div className='ac-flex'>
-            <em><p>Start work on - </p></em>
-            <div className="ac-icon-with-text" style={{ marginLeft: 10 }}>
+            <div className="ac-icon-with-text">
               <img src={issue.issueType.iconUrl} />
               <div className='jira-issue-key'>
                 <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>

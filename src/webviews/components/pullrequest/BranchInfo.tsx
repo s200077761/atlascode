@@ -5,7 +5,6 @@ import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
-import Tag from '@atlaskit/tag';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
 
@@ -53,7 +52,6 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                     </div>
                 </div>
                 <div style={{ marginLeft: '45px' }}>
-                    {this.props.prData.currentBranch === pr.source!.branch!.name && <Tag text="✔ Checked out" color="blueLight" />}
                     {
                         this.props.error &&
                         <Tooltip content={this.props.error} type="warning">
