@@ -70,17 +70,17 @@ export class NewIssueMonitor implements Disposable {
           var message = "";
           if (newIssues.length === 1) {
             message = `Issue ${issueKeys[0]} added to ${this._workingProject!.name}`;
-          } else if (newIssues.length <= 3) { 
+          } else if (newIssues.length <= 3) {
             message = `Issues ${issueKeys.slice(0, -1).join(', ')} and ${issueKeys.slice(-1)} added to ${this._workingProject!.name}`;
           } else {
             message = `${issueKeys.slice(0, 2).join(', ')} and ${newIssues.length - 2} other new issues added to ${this._workingProject!.name}.`;
           }
-          window.showInformationMessage(message, "View Atlascode Explorer")
-          .then((selection) => {
-            if (selection) {
-              commands.executeCommand("workbench.view.extension.atlascode-drawer");
-            }
-          });
+          window.showInformationMessage(message, "View Atlassian Explorer")
+            .then((selection) => {
+              if (selection) {
+                commands.executeCommand("workbench.view.extension.atlascode-drawer");
+              }
+            });
           newIssues.forEach(issue => {
             if (issue.created > this._timestamp) {
               this._timestamp = issue.created;
@@ -92,7 +92,7 @@ export class NewIssueMonitor implements Disposable {
         Logger.error(new Error(`Error checking for new issues ${e}`));
       });
   }
-     
+
   private startTimer() {
     if (this._refreshInterval > 0 && !this._timer) {
       this._timer = setInterval(() => {

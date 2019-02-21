@@ -1,7 +1,7 @@
 import { commands } from "vscode";
 
 export const extensionId = 'atlascode';
-export const extensionOutputChannelName = 'Atlascode';
+export const extensionOutputChannelName = 'Atlassian';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
 export const CustomJQLKey = "jira.customJql";
