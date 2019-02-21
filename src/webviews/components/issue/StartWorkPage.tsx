@@ -34,7 +34,7 @@ type State = {
   localBranch?: BranchNameOption;
   branchOptions: { label: string, options: BranchNameOption[] }[],
   repo: { label: string, value: RepoData };
-  remote?: {label: string, value: string};
+  remote?: { label: string, value: string };
   isStartButtonLoading: boolean;
   result: StartWorkOnIssueResult;
 };
@@ -79,7 +79,7 @@ export default class StartWorkPage extends WebviewComponent<
         const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
         const branchOptions = this.state.branchOptions.length > 0
           ? this.state.branchOptions
-          : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b =>  b.name!.toLowerCase().includes(e.issue.key.toLowerCase())).map(b => this.createLocalBranchOption(b.name!))}];
+          : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(e.issue.key.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
         let generatedBranchNameOption = undefined;
         const localBranch = this.state.localBranch
           ? this.state.localBranch
@@ -87,11 +87,11 @@ export default class StartWorkPage extends WebviewComponent<
             ? this.createLocalBranchOption(branchOptions[0].options[0].value)
             : generatedBranchNameOption = this.createLocalBranchOption(`${e.issue.key}-${e.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
         if (generatedBranchNameOption) {
-          branchOptions.push({label: 'Create a new branch', options: [generatedBranchNameOption]});
+          branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
         }
         const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
         const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
-        const remote = this.state.remote ? this.state.remote : {label: repo.value.remotes[0].name, value: repo.value.remotes[0].name};
+        const remote = this.state.remote ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
 
         this.setState({
           data: e,
@@ -142,9 +142,9 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   handleCreateBranchOption = (e: any) => {
-    const newOption = {label: e, value: e.trim()};
+    const newOption = { label: e, value: e.trim() };
     this.setState({
-      branchOptions: [...this.state.branchOptions, {label: 'Create new branch', options: [newOption]} ],
+      branchOptions: [...this.state.branchOptions, { label: 'Create new branch', options: [newOption] }],
       localBranch: newOption
     });
   }
@@ -208,7 +208,7 @@ export default class StartWorkPage extends WebviewComponent<
 
     return (
       <Page>
-        <Grid layout="fluid">
+        <Grid>
           <GridColumn medium={8}>
             <Banner isOpen={this.state.result.successMessage} appearance="announcement">
               ✅ {this.state.result.successMessage}
@@ -222,7 +222,7 @@ export default class StartWorkPage extends WebviewComponent<
               <Checkbox defaultChecked onChange={this.toggleJiraSetupEnabled} name='setup-jira-checkbox' />
               <h4>Transition issue</h4>
             </div>
-            {this.state.jiraSetupEnabled && 
+            {this.state.jiraSetupEnabled &&
               <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                 <div style={{ margin: 10 }}>
                   <label>Select new status</label>
@@ -231,21 +231,21 @@ export default class StartWorkPage extends WebviewComponent<
               </div>
             }
           </GridColumn>
-          <GridColumn medium={12}/>
+          <GridColumn medium={12} />
           <GridColumn medium={6}>
-            <div style={{display: 'flex', alignItems: 'center'}}>
-              <Checkbox defaultChecked onChange={this.toggleBitbucketSetupEnabled} name='setup-bitbucket-checkbox'/>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Checkbox defaultChecked onChange={this.toggleBitbucketSetupEnabled} name='setup-bitbucket-checkbox' />
               <h4>Set up git branch</h4>
             </div>
-            {this.state.bitbucketSetupEnabled && 
+            {this.state.bitbucketSetupEnabled &&
               <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                 <div style={{ margin: 10 }}>
                   {this.state.data.repoData.length > 1 &&
                     <div className='ac-vpadding'>
                       <label>Repository</label>
                       <Select
-                        className="ak-select-container"
-                        classNamePrefix="ak-select"
+                        className="ac-select-container"
+                        classNamePrefix="ac-select"
                         options={this.state.data.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                         onChange={this.handleRepoChange}
                         placeholder='Loading...'
@@ -254,8 +254,8 @@ export default class StartWorkPage extends WebviewComponent<
                   }
                   <label>Source branch (this will be the start point for the new branch)</label>
                   <Select
-                    className="ak-select-container"
-                    classNamePrefix="ak-select"
+                    className="ac-select-container"
+                    classNamePrefix="ac-select"
                     options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
                     onChange={this.handleSourceBranchChange}
                     value={this.state.sourceBranch} />
@@ -263,8 +263,8 @@ export default class StartWorkPage extends WebviewComponent<
                     <label>Local branch</label>
                     <CreatableSelect
                       isClearable
-                      className="ak-select-container"
-                      classNamePrefix="ak-select"
+                      className="ac-select-container"
+                      classNamePrefix="ac-select"
                       onCreateOption={this.handleCreateBranchOption}
                       options={this.state.branchOptions}
                       isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -280,8 +280,8 @@ export default class StartWorkPage extends WebviewComponent<
                     <div>
                       <label>Set upstream to</label>
                       <Select
-                        className="ak-select-container"
-                        classNamePrefix="ak-select"
+                        className="ac-select-container"
+                        classNamePrefix="ac-select"
                         options={repo.value.remotes.map(remote => ({ label: remote.name, value: remote.name }))}
                         onChange={this.handleRemoteChange}
                         value={this.state.remote} />
@@ -293,7 +293,7 @@ export default class StartWorkPage extends WebviewComponent<
           </GridColumn>
           <GridColumn medium={12}>
             <div className='ac-vpadding'>
-              {!this.state.result.successMessage && <Button className='ak-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>}
+              {!this.state.result.successMessage && <Button className='ac-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>}
             </div>
           </GridColumn>
           <GridColumn medium={12}>
