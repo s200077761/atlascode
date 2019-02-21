@@ -8,7 +8,6 @@ import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration, SiteJQL, JQLEntry } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
-import { Logger } from "../../logger";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { Time } from '../../util/time';
 
@@ -16,8 +15,8 @@ const defaultRefreshInterval = 5 * Time.MINUTES;
 
 export class JiraExplorer extends Disposable {
 
-    private _trees:RefreshableTree[] = [];
-    private _disposable:Disposable;
+    private _trees: RefreshableTree[] = [];
+    private _disposable: Disposable;
     private _timer: any | undefined;
     private _refreshInterval = defaultRefreshInterval;
 
@@ -25,16 +24,16 @@ export class JiraExplorer extends Disposable {
         super(() => this.dispose());
 
         commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
-        
+
         this._disposable = Disposable.from(
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
         );
-        
+
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
-        
+
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -44,7 +43,7 @@ export class JiraExplorer extends Disposable {
             configuration.changed(e, 'jira.explorer.enabled') ||
             configuration.changed(e, 'jira.customJql')
         ) {
-            if(!Container.config.jira.explorer.enabled) {
+            if (!Container.config.jira.explorer.enabled) {
                 this.dispose();
             } else {
                 this._trees.push(new OpenIssuesTree());
@@ -57,20 +56,20 @@ export class JiraExplorer extends Disposable {
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
 
-        if(initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
+        if (initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
             setCommandContext(CommandContext.OpenIssuesTree, Container.config.jira.explorer.showOpenIssues);
         }
 
-        if(initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
+        if (initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
         if (initializing ||
-             configuration.changed(e, 'jira.explorer.refreshInterval') ||
-             configuration.changed(e, 'jira.explorer.enabled')) {
+            configuration.changed(e, 'jira.explorer.refreshInterval') ||
+            configuration.changed(e, 'jira.explorer.enabled')) {
             this._refreshInterval = Container.config.jira.explorer.refreshInterval * Time.MINUTES;
             const enabled = Container.config.jira.explorer.enabled;
-            
+
             if (this._refreshInterval <= 0) {
                 this._refreshInterval = 0;
             }
@@ -80,12 +79,12 @@ export class JiraExplorer extends Disposable {
             } else {
                 this.stopTimer();
                 this.startTimer();
-            }            
+            }
         }
 
-        if(initializing) {
+        if (initializing) {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
-            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
+            setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
         }
     }
 
@@ -93,7 +92,7 @@ export class JiraExplorer extends Disposable {
         const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => {
             return item.siteId === Container.config.jira.workingSite.id;
         });
-        
+
         if (siteJql) {
             return siteJql.jql.filter((jql: JQLEntry) => {
                 return jql.enabled;
@@ -115,12 +114,11 @@ export class JiraExplorer extends Disposable {
         });
     }
 
-    async onDidAuthChange(e:AuthInfoEvent) {
-        if(e.provider === AuthProvider.JiraCloud) {
-            
+    async onDidAuthChange(e: AuthInfoEvent) {
+        if (e.provider === AuthProvider.JiraCloud) {
+
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
-            Logger.debug('setting login tree', !isLoggedIn);
-            setCommandContext(CommandContext.JiraLoginTree,!isLoggedIn);
+            setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }
     }

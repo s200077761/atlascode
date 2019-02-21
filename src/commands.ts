@@ -5,7 +5,6 @@ import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { transitionIssue } from './commands/jira/transitionIssue';
-import { Logger } from './logger';
 import { assignIssue } from './commands/jira/assignIssue';
 import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
@@ -59,7 +58,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
         vscode.commands.registerCommand(Commands.ShowIssue, (issue: any) => {
-            Logger.debug('args', issue);
             Container.jiraIssueViewManager.createOrShow(issue);
         }),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
