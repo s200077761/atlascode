@@ -12,7 +12,7 @@ import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
 import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
-import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent } from '../analytics';
+import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
 
@@ -126,6 +126,10 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
                             if (typeof value === "boolean") {
                                 featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
+                            }
+
+                            if (key === 'jira.customJql') {
+                                customJQLCreatedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             }
                         }
 

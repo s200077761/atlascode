@@ -14,6 +14,8 @@ import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
 import { Issue } from '../jira/jiraModel';
 import { extractIssueKeys } from '../bitbucket/issueKeysExtractor';
+import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
+import { Container } from '../container';
 
 interface PRState {
     prData: PRData;
@@ -190,11 +192,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
 
     private async approve() {
         await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+        prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }
 
     private async merge() {
         await PullRequestApi.merge({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+        prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }
 
@@ -213,10 +217,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
         }
         await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
-            .then(() => this.postMessage({
-                type: 'checkout',
-                currentBranch: this._state.repository!.state.HEAD!.name!
-            }))
+            .then(() => {
+                this.postMessage({
+                    type: 'checkout',
+                    currentBranch: this._state.repository!.state.HEAD!.name!
+                });
+                prCheckoutEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+            })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
                 vscode.window.showErrorMessage('Pull request branch could not be checked out');

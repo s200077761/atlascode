@@ -9,6 +9,8 @@ import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } 
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
+import { PullRequest } from '../bitbucket/model';
+import { prCreatedEvent } from '../analytics';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult, Action> {
 
@@ -131,8 +133,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
             }
         };
 
-        const result = await PullRequestApi.create({ repository: repo, remote: remote, data: pr });
+        await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
+            .then((pr: PullRequest) => {
+                commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
+                prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+            });
         this.hide();
-        commands.executeCommand(Commands.BitbucketShowPullRequestDetails, result);
     }
 }

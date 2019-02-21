@@ -224,6 +224,176 @@ export async function issueTransitionedEvent(issueKey: string, tenantId: string)
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
+export async function issueUrlCopiedEvent(tenantId: string): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: 'cloudId',
+        tenantId: tenantId,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'copied',
+            actionSubject: 'issueUrl',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function issueCommentEvent(tenantId: string): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: 'cloudId',
+        tenantId: tenantId,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'created',
+            actionSubject: 'issueComment',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function issueWorkStartedEvent(tenantId: string): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: 'cloudId',
+        tenantId: tenantId,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'workStarted',
+            actionSubject: 'issue',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function customJQLCreatedEvent(tenantId: string): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: 'cloudId',
+        tenantId: tenantId,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'created',
+            actionSubject: 'customJql',
+            source: 'atlascodeSettings'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prCreatedEvent(): Promise<TrackEvent> {
+
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'created',
+            actionSubject: 'pullRequest',
+            source: 'vscode',
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prCommentEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'created',
+            actionSubject: 'pullRequestComment',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prCheckoutEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'checkedOut',
+            actionSubject: 'pullRequestBranch',
+            source: 'pullRequestDetailsScreen'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prApproveEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'approved',
+            actionSubject: 'pullRequest',
+            source: 'pullRequestDetailsScreen'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prMergeEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'merged',
+            actionSubject: 'pullRequest',
+            source: 'pullRequestDetailsScreen'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prUrlCopiedEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'copied',
+            actionSubject: 'pullRequestUrl',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function pipelineStartEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: process.platform,
+            action: 'start',
+            actionSubject: 'pipeline',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
 async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
