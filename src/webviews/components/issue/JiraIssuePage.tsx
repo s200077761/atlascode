@@ -19,7 +19,8 @@ import {
   TransitionIssueAction,
   IssueCommentAction,
   IssueAssignAction,
-  CopyJiraIssueLinkAction
+  CopyJiraIssueLinkAction,
+  OpenStartWorkPageAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import { Comments } from "./Comments";
@@ -29,7 +30,7 @@ import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 
-type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
+type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
@@ -130,20 +131,23 @@ export default class JiraIssuePage extends WebviewComponent<
 
   header(issue: any): any {
     return (
-      <div>
-        <div className="ac-icon-with-text" style={{ marginTop: 10 }}>
-          <img src={issue.issueType.iconUrl} />
-          <div className='jira-issue-key'>
-            <a href={`https://${this.state.data.workingSite.name}.atlassian.net/browse/${this.state.data.key}`}>
-              {issue.key}
-            </a>
-            <div className='jira-issue-copy-icon'>
-              <Tooltip content='Copy the link to this issue'><CopyIcon label='copy issue link' size='small' onClick={this.handleCopyIssueLink} /></Tooltip>
+      <div className='ac-flex-space-between'>
+        <div>
+          <div className="ac-icon-with-text" style={{ marginTop: 10 }}>
+            <img src={issue.issueType.iconUrl} />
+            <div className='jira-issue-key'>
+              <Button className='ac-link-button' appearance="link" href={`https://${this.state.data.workingSite.name}.atlassian.net/browse/${this.state.data.key}`}>{issue.key}</Button>
+              <div className='jira-issue-copy-icon'>
+                <Tooltip content='Copy the link to this issue'><CopyIcon label='copy issue link' size='small' onClick={this.handleCopyIssueLink} /></Tooltip>
+              </div>
             </div>
           </div>
+          <h2>{issue.summary}</h2>
+          <p>{issue.description}</p>
         </div>
-        <h2>{issue.summary}</h2>
-        <p>{issue.description}</p>
+        <div style={{margin: 10}}>
+          <Button className='ac-button' onClick={() => this.postMessage({action: 'openStartWorkPage', issue: this.state.data})}>Start work on issue...</Button>
+        </div>
       </div>
     );
   }
