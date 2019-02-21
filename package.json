@@ -49,16 +49,6 @@
                 "category": "AtlasCode"
             },
             {
-                "command": "atlascode.bb.me",
-                "title": "Get Current Bitbucket User",
-                "category": "AtlasCode"
-            },
-            {
-                "command": "atlascode.jira.me",
-                "title": "Get Current Jira User",
-                "category": "AtlasCode"
-            },
-            {
                 "command": "atlascode.jira.selectProject",
                 "title": "Select Working Jira Project",
                 "icon": "resources/atlassian-icon.svg",
@@ -140,11 +130,6 @@
             {
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
-                "category": "AtlasCode"
-            },
-            {
-                "command": "atlascode.bb.showPullRequest",
-                "title": "Show Pull Request",
                 "category": "AtlasCode"
             },
             {
@@ -333,7 +318,19 @@
                     "when": "false"
                 },
                 {
+                    "command": "atlascode.bb.viewPullRequest",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.copyPullRequest",
+                    "when": "false"
+                },
+                {
                     "command": "atlascode.bb.startPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.assignIssueToMe",
                     "when": "false"
                 },
                 {
