@@ -84,7 +84,7 @@ export class ClientManager implements Disposable {
     );
   }
 
-  public async jirarequest(workingSite?: WorkingSite, promptForAuth: boolean = true, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
+  public async jirarequest(workingSite?: WorkingSite, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
     // if workingSite is passed in and is different from the one in config, 
     // it is for a one-off request (eg. a request from webview from previously configured workingSite)
     const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
@@ -118,7 +118,7 @@ export class ClientManager implements Disposable {
       jraclient.authenticate({ type: "token", token: info.access });
 
       return jraclient;
-    }, promptForAuth, doNotUpdateCache, reauthenticate);
+    }, false, doNotUpdateCache, reauthenticate);
   }
 
   public async removeClient(provider: string) {
@@ -286,7 +286,7 @@ export class ClientManager implements Disposable {
 
     switch (provider) {
       case AuthProvider.JiraCloud: {
-        await this.jirarequest(undefined, false, true);
+        await this.jirarequest(undefined, true);
         break;
       }
       case AuthProvider.BitbucketCloud: {
