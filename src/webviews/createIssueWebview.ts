@@ -9,6 +9,7 @@ import { commands } from 'vscode';
 import { Commands } from '../commands';
 import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
 import { IssueTypeIdScreens } from '../jira/createIssueMeta';
+import { issueCreatedEvent } from '../analytics';
 
 type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
@@ -195,6 +196,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                             client.issue.createIssue({ body: { fields: e.issueData } })
                                 .then(resp => {
                                     this.postMessage({ type: 'issueCreated', issueData: resp.data });
+                                    issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 })
                                 .catch(reason => {
                                     this.postMessage({ type: 'error', reason: reason });

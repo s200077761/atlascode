@@ -2,6 +2,7 @@ import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
 import { Container } from "../container";
+import { prCommentEvent } from '../analytics';
 
 export const bitbucketHosts = new Map()
     .set("bitbucket.org", async () => {
@@ -212,6 +213,7 @@ export namespace PullRequestApi {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb = await bitbucketHosts.get(parsed.source)();
+        prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         //@ts-ignore
         return await bb.pullrequests.createComment({
             pull_request_id: prId,

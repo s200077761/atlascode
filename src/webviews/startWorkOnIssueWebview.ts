@@ -15,6 +15,7 @@ import { RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
+import { issueWorkStartedEvent } from '../analytics';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -98,6 +99,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `Assigned the issue to you${e.setupJira ? ` and transitioned status to "${e.transition.to.name}"` : ''}  ${e.setupBitbucket ? `, and switched to "${e.branchName}" branch with upstream set to "${e.remote}"` : ''}.`
                             });
+                            issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
                             this.postMessage({
