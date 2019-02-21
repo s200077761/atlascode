@@ -111,7 +111,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                                 style={{ width: '100%', display: 'block' }}
                                 className='ac-textarea'
                                 rows={3}
-                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { console.log('ta', item.target.value); this.setState({ description: item.target.value }); })}
+                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { this.setState({ description: item.target.value }); })}
                               />
                               {errDiv}
                             </div>

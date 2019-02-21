@@ -52,10 +52,8 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   public onMessageReceived(e: any) {
-    console.log("got message from vscode", e);
 
     if (e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
-      console.log("got issue data");
       if (e.issue.key.length > 0) {
         const repo = this.state.repo.value === emptyRepoData && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
         const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
