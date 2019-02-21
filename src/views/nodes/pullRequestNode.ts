@@ -188,7 +188,9 @@ class PullRequestFilesNode extends BaseNode {
 
         // Use merge base to diff from common ancestor of source and destination.
         // This will help ignore any unrelated changes in destination branch.
-        const mergeBase = await this.pr.repository.getMergeBase(this.pr.data.destination!.branch!.name!, this.pr.data.source!.branch!.name!);
+        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
+        const source = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
+        const mergeBase = await this.pr.repository.getMergeBase(destination, source);
         let lhsQueryParam = {
             query: JSON.stringify({
                 lhs: true,
