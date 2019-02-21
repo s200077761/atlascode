@@ -7,10 +7,11 @@
         "jira",
         "atlassian",
         "issues",
-        "builds"
+        "builds",
+        "pull requests"
     ],
     "version": "0.0.0",
-    "publisher": "atlassianlabs",
+    "publisher": "atlassian",
     "license": "SEE LICENSE IN LICENSE",
     "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
     "repository": {
@@ -25,10 +26,9 @@
     "preview": true,
     "enableProposedApi": true,
     "galleryBanner": {
-        "color": "#0053cb",
-        "theme": "dark"
+        "color": "#c5ddff",
+        "theme": "light"
     },
-
     "engines": {
         "vscode": "^1.31.1"
     },
