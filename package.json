@@ -28,6 +28,7 @@
         "color": "#0053cb",
         "theme": "dark"
     },
+
     "engines": {
         "vscode": "^1.31.1"
     },
@@ -51,16 +52,6 @@
             {
                 "command": "atlascode.bb.clearAuth",
                 "title": "Logout From Bitbucket",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.me",
-                "title": "Get Current Bitbucket User",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.me",
-                "title": "Get Current Jira User",
                 "category": "Atlassian"
             },
             {
@@ -145,11 +136,6 @@
             {
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.showPullRequest",
-                "title": "Show Pull Request",
                 "category": "Atlassian"
             },
             {
@@ -338,7 +324,19 @@
                     "when": "false"
                 },
                 {
+                    "command": "atlascode.bb.viewPullRequest",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.copyPullRequest",
+                    "when": "false"
+                },
+                {
                     "command": "atlascode.bb.startPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.assignIssueToMe",
                     "when": "false"
                 },
                 {
