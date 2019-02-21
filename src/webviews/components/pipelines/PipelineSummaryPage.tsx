@@ -95,14 +95,11 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
   }
 
   public onMessageReceived(e: any) {
-    console.log("got message from vscode", e);
 
     if (e.type && e.type === "updatePipeline") {
-      console.log(`got pipeline data ${JSON.stringify(e)}`);
       this.setState({ pipeline: e });
     }
     if (e.type && e.type === "updateSteps") {
-      console.log(`got pipeline steps ${JSON.stringify(e)}`);
       this.setState({ steps: e.steps });
     }
   }

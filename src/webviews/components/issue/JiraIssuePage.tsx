@@ -84,10 +84,8 @@ export default class JiraIssuePage extends WebviewComponent<
   componentUpdater = (data: IssueData) => { };
 
   public onMessageReceived(e: any) {
-    console.log("got message from vscode", e);
 
     if (e.type && e.type === 'update') {
-      console.log("got issue data");
       this.setState({ data: e, isStatusButtonLoading: false });
     }
   }

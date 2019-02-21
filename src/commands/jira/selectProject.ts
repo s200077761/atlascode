@@ -23,7 +23,7 @@ export async function showProjectSelectionDialog() {
   quickPick.onDidChangeSelection((items: ProjectQuickPickItem[]) => {
     if (items.length > 0) {
       saveWorkingProject(items[0].project)
-      .then(() => {quickPick.hide();});
+        .then(() => { quickPick.hide(); });
     }
   });
 
@@ -65,7 +65,6 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
 }
 
 async function saveWorkingProject(project: Project) {
-  Logger.debug("saving project to config", project.id);
   await configuration
     .updateEffective(JiraWorkingProjectConfigurationKey, {
       id: project.id,
