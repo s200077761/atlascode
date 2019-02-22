@@ -118,12 +118,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     private jiraButton(): any {
-        const buttonText = this.state.isJiraAuthenticated ? 'Authenticate with another site' : 'Authenticate';
-
-        return (<ButtonGroup>
-            <Button className='ac-button' onClick={this.handleJiraLogin}>{buttonText}</Button>
+        return this.state.isJiraAuthenticated
+         ? <ButtonGroup>
+            <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate with another site</Button>
             <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
-        </ButtonGroup>);
+           </ButtonGroup>
+        : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
     }
 
     private bitBucketButton(): any {
