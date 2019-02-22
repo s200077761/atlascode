@@ -137,7 +137,12 @@ export namespace PullRequestApi {
             pagelen: maxItemsSupported.comments
         });
 
-        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
+
+        const comments = (data.values as Bitbucket.Schema.PullrequestComment[]).filter(c => !c.deleted && c.content && c.content.raw && c.content.raw.trim().length > 0);
+        return { data: comments, next: data.next };
     }
 
     export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
