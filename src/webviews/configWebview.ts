@@ -155,6 +155,11 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                     commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
                     break;
                 }
+                case 'issueLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
+                    break;
+                }
                 case 'submitFeedback': {
                     handled = true;
                     if (isSubmitFeedbackAction(e)) {

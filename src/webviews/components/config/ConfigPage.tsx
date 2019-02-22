@@ -96,6 +96,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'sourceLink' });
     }
 
+    handleIssueLink = () => {
+        this.postMessage({ action: 'issueLink' });
+    }
+
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
@@ -119,11 +123,11 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     private jiraButton(): any {
         return this.state.isJiraAuthenticated
-         ? <ButtonGroup>
-            <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate with another site</Button>
-            <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
-           </ButtonGroup>
-        : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
+            ? <ButtonGroup>
+                <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate with another site</Button>
+                <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
+            </ButtonGroup>
+            : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
     }
 
     private bitBucketButton(): any {
@@ -212,6 +216,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         <DisplayFeedback onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
                         </div>
                     </GridColumn>
                 </Grid>
