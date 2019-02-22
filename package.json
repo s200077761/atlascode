@@ -19,7 +19,7 @@
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
     },
     "bugs": {
-        "url": "https://jira.atlassian.com/issues/?filter=90934",
+        "url": "https://bitbucket.org/atlassianlabs/atlascode/issues",
         "email": "atlascode@atlassian.com"
     },
     "icon": "images/atlascode-icon.png",
