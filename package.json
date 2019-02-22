@@ -23,7 +23,7 @@
         "email": "atlascode@atlassian.com"
     },
     "icon": "images/atlascode-icon.png",
-    "preview": true,
+    "preview": false,
     "enableProposedApi": true,
     "galleryBanner": {
         "color": "#c5ddff",

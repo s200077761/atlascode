@@ -17,7 +17,7 @@ import { installedEvent, upgradedEvent } from './analytics';
 
 export async function activate(context: ExtensionContext) {
     const start = process.hrtime();
-    const atlascode = extensions.getExtension('atlassianlabs.atlascode')!;
+    const atlascode = extensions.getExtension('atlassian.atlascode')!;
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
