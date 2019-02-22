@@ -33,7 +33,7 @@ export namespace RepositoriesApi {
     export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
         let parsed = GitUrlParse(urlForRemote(remote));
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
-        const { data } = await bb.repositories.getPullrequestsForCommit({
+        const { data } = await bb.repositories.listPullrequestsForCommit({
             repo_slug: parsed.name,
             username: parsed.owner,
             commit: commitHash

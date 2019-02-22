@@ -2388,10 +2388,8 @@ binary-extensions@^1.0.0:
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.0.tgz#9523e001306a32444b907423f1de2164222f6ab1"
   integrity sha512-EgmjVLMn22z7eGGv3kcnHwSnJXmFHjISTY9E/S5lIcTD3Oxw05QTcBLNkJFzcb3cNueUdF/IN4U+d78V0zO8Hw==
 
-bitbucket@^1.8.0:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/bitbucket/-/bitbucket-1.8.1.tgz#b32f17a87ce18a9e5097f9e30b86fb95b85e0341"
-  integrity sha512-2cCdoQo++aCUlXp2feT3zmN22v/BRnRSz6y+6PC+OqOcIb2DsaWqnQM+sxCSWaj67dcWZpK5qVMCzJE5mMQjww==
+"bitbucket@file:../node-bitbucket":
+  version "1.10.0"
   dependencies:
     before-after-hook "^1.1.0"
     btoa-lite "^1.0.0"

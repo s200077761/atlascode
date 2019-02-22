@@ -21,15 +21,26 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
 
     }
 
-    initialize(data: string) {
+    initialize(pipelineUuid: string) {
         const repos = Container.bitbucketContext.getBitbucketRepositores();
-        PipelineApi.getPipeline(repos[0], data)
+        PipelineApi.getPipeline(repos[0], pipelineUuid)
             .then(pipeline => {
                 this.updatePipeline(pipeline);
             });
-        PipelineApi.getSteps(repos[0], data)
+        PipelineApi.getSteps(repos[0], pipelineUuid)
             .then(steps => {
                 this.updateSteps(steps);
+                steps.map(step => {
+                    PipelineApi.getStepLog(repos[0], pipelineUuid, step.uuid).then((logs) => {
+                        const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
+                        logs.map((log, ix) => {
+                            if (ix < commands.length) {
+                                commands[ix].logs = log;
+                                this.updateSteps(steps);
+                            }
+                        });
+                    });
+                });
             });
     }
 

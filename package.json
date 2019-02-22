@@ -43,8 +43,7 @@
     ],
     "main": "./build/extension/extension",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "atlascode.bb.authenticate",
                 "title": "Authenticate With Bitbucket",
                 "category": "Atlassian"
@@ -192,17 +191,14 @@
             }
         ],
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "atlascode-drawer",
-                    "title": "Atlassian",
-                    "icon": "resources/atlassian-icon.svg"
-                }
-            ]
+            "activitybar": [{
+                "id": "atlascode-drawer",
+                "title": "Atlassian",
+                "icon": "resources/atlassian-icon.svg"
+            }]
         },
         "views": {
-            "atlascode-drawer": [
-                {
+            "atlascode-drawer": [{
                     "id": "atlascode.views.jira.assignedIssues",
                     "name": "Your Issues",
                     "when": "atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
@@ -235,8 +231,7 @@
             ]
         },
         "menus": {
-            "editor/context": [
-                {
+            "editor/context": [{
                     "command": "atlascode.bb.createPullRequest",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
@@ -267,8 +262,7 @@
                     "when": "config.atlascode.bitbucket.pipelines.explorerEnabled"
                 }
             ],
-            "view/title": [
-                {
+            "view/title": [{
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -307,8 +301,7 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": [
-                {
+            "view/item/context": [{
                     "command": "atlascode.jira.transitionIssue",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -337,8 +330,7 @@
                     "when": "viewItem == pipelineBranch"
                 }
             ],
-            "commandPalette": [
-                {
+            "commandPalette": [{
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "false"
                 },
@@ -723,7 +715,7 @@
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
-        "bitbucket": "^1.8.0",
+        "bitbucket": "file:../node-bitbucket",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^11.1.2",

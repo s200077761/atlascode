@@ -4,6 +4,7 @@ import { Container } from "../container";
 import fetch from 'node-fetch';
 import { AuthProvider } from "../atlclients/authInfo";
 import { Logger } from "../logger";
+import { LogAccumulator } from "./logAccumulator";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 
 export namespace PipelineApi {
@@ -81,6 +82,16 @@ export namespace PipelineApi {
     return Promise.reject();
   }
 
+  export async function getStepLog(repository: Repository, pipelineUuid: string, stepUuid: string): Promise<string[]> {
+    const remotes = PullRequestApi.getBitbucketRemotes(repository);
+    if (remotes.length > 0) {
+      const remote = remotes[0];
+      const token = await getAccessToken();
+      return getPipelineLog(remote, token, pipelineUuid, stepUuid);
+    }
+    return Promise.reject();
+  }
+
   async function getAccessToken(): Promise<string> {
     return Container.authManager.getAuthInfo(
       AuthProvider.BitbucketCloud
@@ -130,6 +141,57 @@ export namespace PipelineApi {
   }
 }
 
+async function getPipelineLogB(remote: Remote,
+  pipelineUuid: string,
+  stepUuid: string) {
+  const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+  const bb = await bitbucketHosts.get(parsed.source)();
+  bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
+    const s: string = r.data.toString();
+    console.log(s);
+  }).catch((err: any) => {
+    console.log(err);
+  });
+}
+
+// While the public API for pipelines is documented as supporting range queries and does in fact support them it's 
+// not clear that this should be considered a stable feature.
+async function getPipelineLog(
+  remote: Remote,
+  accessToken: string,
+  pipelineUuid: string,
+  stepUuid: string,
+  firstByte?: number,
+  lastByte?: number,
+): Promise<string[]> {
+  getPipelineLogB(remote, pipelineUuid, stepUuid);
+
+  const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+  const bbBase = "https://api.bitbucket.org/";
+  const logPath = `2.0/repositories/${parsed.owner}/${parsed.name}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`;
+  const headers = {
+    Authorization: `Bearer ${accessToken}`
+  };
+  if (firstByte && lastByte) {
+    headers["Range"] = `bytes=${firstByte}-${lastByte}`;
+  }
+
+  return fetch(`${bbBase}${logPath}`, {
+    method: "GET",
+    headers: headers
+  }).then(response => {
+    return splitLogs(response);
+  });
+}
+
+async function splitLogs(response: any): Promise<string[]> {
+  if (response.body) {
+    const accumulator = new LogAccumulator(response.body);
+    return accumulator.logs();
+  }
+  return [];
+}
+
 function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   var name = undefined;
   var avatar = undefined;
@@ -146,7 +208,6 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
     creator_name: name,
     creator_avatar: avatar,
     completed_on: pipeline.completed_on,
-    //              repository: pipeline.repository!, 
     state: {
       name: pipeline.state!.name,
       type: pipeline.state!.type,
