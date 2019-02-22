@@ -144,7 +144,7 @@ export class AuthStatusBar extends Disposable {
         break;
       }
       default: {
-        text = `$(person) Unknown Atlascode auth provider ${provider}`;
+        text = `$(person) Unknown Atlassian auth provider ${provider}`;
         command = undefined;
       }
     }

@@ -12,7 +12,7 @@ export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
     }
 
     public get title(): string {
-        return "AtlasCode Welcome";
+        return "Atlassian Welcome";
     }
     public get id(): string {
         return "atlascodeWelcomeScreen";
@@ -35,6 +35,11 @@ export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
                 case 'sourceLink': {
                     handled = true;
                     commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    break;
+                }
+                case 'issueLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
                     break;
                 }
                 case 'submitFeedback': {

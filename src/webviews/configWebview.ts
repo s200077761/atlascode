@@ -31,7 +31,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     public get title(): string {
-        return "AtlasCode Settings";
+        return "Atlassian Settings";
     }
     public get id(): string {
         return "atlascodeSettings";
@@ -153,6 +153,11 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 case 'sourceLink': {
                     handled = true;
                     commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    break;
+                }
+                case 'issueLink': {
+                    handled = true;
+                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
                     break;
                 }
                 case 'submitFeedback': {

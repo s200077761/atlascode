@@ -1,103 +1,63 @@
-# Atlascode 0.2.0
-### Atlassian integrations for VSCode
-Atlascode brings the functionality of multiple Atlassian products to your favorite IDE!
+# Atlassian for VSCode
+Atlassian for VSCode brings the functionality of Atlassian products to your favorite IDE!
 
-## What's New In 0.2.0
-### Bug
-* [VSCODE-179](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-179) - Make JQL edit dialog less frustrating
+This extension combines the power of Jira Cloud and Bitbucket Cloud to streamline the developer workflow within VSCode.
 
-### Task
-* [VSCODE-122](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-122) - Quick pick dropdown for selecting Jira project does not show all available projects in a site
-* [VSCODE-135](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-135) - add webview for creating PRs
-* [VSCODE-136](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-136) - update create PR context menu to show new webview
-* [VSCODE-138](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-138) - add custom JQL to jira explorer
-* [VSCODE-142](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-142) - add ability to configure jira auto-refresh time
-* [VSCODE-143](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-143) - add ability to configure BB auto-refresh time
-* [VSCODE-145](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-145) - add info message popup when new PRs are detected
-* [VSCODE-153](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-153) - show related issues for epics on issue view screen
-* [VSCODE-165](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-165) - Use the VS Code clipboard API instead of the library we're using for copy link to PR.
-* [VSCODE-168](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-168) - update 0.1.1 release notes
-* [VSCODE-169](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-169) - Allow multiple JQL queries
-* [VSCODE-170](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-170) - Update SiteJql representation to handle names and enabled/disabled
-* [VSCODE-174](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-174) - Show related Jira issues in pull request webview
-* [VSCODE-177](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-177) - Allow reordering of custom JQL queries
-* [VSCODE-178](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-178) - Update Jira explorer when custom JQL is updated
-* [VSCODE-182](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-182) - Validate source branch by comparing local changes to remote
-* [VSCODE-183](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-183) - Option to push local changes before submitting pull request
-* [VSCODE-185](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-185) - Fix styles on pull request creation webview
-* [VSCODE-186](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-186) - Link to PR tree view after creating pull request
+With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
+## Getting Started
+* Make sure you have VSCode version 1.31.1
+* Download the extension from the marketplace
+* Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
+* From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
-## What's New In 0.1.1
-### Bug
-* [VSCODE-108](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-108) - Webviews don't work properly in split view.
+## Features at a Glance
 
-### Task
-* [VSCODE-48](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-48) - Handle pagination in all Bitbucket apis
-* [VSCODE-131](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-131) - issues in BB explorer
-* [VSCODE-141](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-141) - map BB staging clone urls to BB client base url
-* [VSCODE-161](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-161) - Use diffstat instead of patch to get files changed in a PR
-* [VSCODE-163](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-163) - Integrate JQL autocomplete input
-* [VSCODE-164](https://pi-dev-sandbox.atlassian.net/browse/VSCODE-164) - Persist custom JQL for each site
+Here's a quick peek at a developer's workflow:
 
-## Installation
-Currently Atlascode uses some features from VSCode's "Proposed API" and cannot be installed directly into VSCode without a bit of tweaking.
-This will be fixed before GTM, but for now you have two options:
+![dev workflow](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/dev-workflow.gif)
 
-### Option 1 (recommended) - whitelist Atlascode
-This option requires tweaking vscode's product.json file to whitelist the atlascode extension to use the proposed API within the stable release of VSCode.
+Reviewing with Bitbucket pull request features is a snap:
 
-You only need to do this once and Atlascode will work from then on. Here's how:
+![review pr](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/review-pr.gif)
 
-**LINUX**:
-the product.json can be found here: `/usr/share/code/resources/app/product.json`.
+Got a burning issue you'd like to work on?
 
-**MAC**:
-the product.json can be found by going to the Applications folder, finding VSCode, right click, and choose "Open Contents".
+![start work](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/issue-start-work.gif)
 
-From there, the file can be found in `Resources/app/product.json`
+Kick off your builds:
 
-Edit the file and look for the entry array `"extensionAllowedProposedApi"`
+![builds](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/start-pipeline.gif)
 
-Add this entry to the bottom of the array: `"atlassianlabs.atlascode"`
+...and lots more
 
-The full thing should look something like:
-```
-"extensionAllowedProposedApi": [
-    "ms-vscode.references-view",
-    "ms-vsliveshare.vsliveshare",
-    "atlassianlabs.atlascode"
-],
-```
+## Everyone Has Issues...
+Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter and issue yourself.
 
-Save the file and restart VSCode. You're now ready to install.
+### Questions? Comments? Kudos?
+Please use the in-app feedback form to tell us what you think!  It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
-### Option 2 (NOT recommended) - use VSCode Insiders
-You can install Atlascode within [VSCode Insiders](https://code.visualstudio.com/insiders) without any modifications. **However**, the Insiders builds are extremely volitale and buggy so we don't reccomend this.
+## Contributors
 
-OK, finally, to actually install the thing, open the Extensions drawer in VSCode and use the "meatball" menu in the top right corner to select "Install from VSIX".  Then find the atlascode vsix and install it.
+Pull requests, issues and comments welcome. 
 
-## Features
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-`Issue Explorer`: shows a treeview of Jira Issues which open the issue view when clicked
+For pull requests:
 
-`Issue View`: shows the details of an issue and allows you to submit new comments and transition the issue
+* Follow the existing style
+* Separate unrelated changes into multiple pull requests
 
-`Issue Hovers`: hover over something that looks like an issue key in your source code to get the details
+Atlassian requires contributors to sign a Contributor License Agreement,
+known as a CLA. This serves as a record stating that the contributor is
+entitled to contribute the code/documentation/translation to the project
+and is willing to have it used in distributions and derivative works
+(or is willing to transfer ownership).
 
-`Pull Request Explorer`: shows a treeview of PRs for the Bitbucket cloud repos in the workspace which will open detail views when clicked
+Prior to accepting your contributions we ask that you please follow the appropriate
+link below to digitally sign the CLA. The Corporate CLA is for those who are
+contributing as a member of an organization and the individual CLA is for
+those contributing as an individual.
 
-`PR Details View`: allows you to see the PR summary, checkout the PR branch, add comments, and approve the PR
-
-`PR Diff View`: click on any file in the PR Explorer to get a diff view of the file as well as read and add comments
-
-`Bitbucket Context Menus`: right-click to get context menus that let you quickly navigate to specific code in Bitbucket or copy the url to the clipboard
-
-`Configuration`: a custom config screen is provider to authenticate with the Atlassian products as well as customize almost everything about the extension. You can get to it by looking for `Atlascode: Open Settings` in the command palette.
-
-
-## Be Kind
-
-This is a preview release. Some features may not work properly...
-
-Please use the in-app feedback form to send us feedback.
+* [CLA for corporate contributors](https://na2.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=e1c17c66-ca4d-4aab-a953-2c231af4a20b)
+* [CLA for individuals](https://na2.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=3f94fbdc-2fbe-46ac-b14c-5d152700ae5d)

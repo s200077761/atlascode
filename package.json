@@ -1,30 +1,36 @@
 {
     "name": "atlascode",
-    "displayName": "Atlassian VSCode Extensions",
-    "description": "VSCode Atlassian Extensions",
+    "displayName": "Atlassian for VSCode (Official)",
+    "description": "Bringing the power of Jira Cloud and Bitbucket Cloud to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
+    "keywords": [
+        "bitbucket",
+        "jira",
+        "atlassian",
+        "issues",
+        "builds",
+        "pull requests"
+    ],
     "version": "0.0.0",
-    "publisher": "atlassianlabs",
+    "publisher": "atlassian",
     "license": "SEE LICENSE IN LICENSE",
     "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
     "repository": {
         "type": "git",
         "url": "https://bitbucket.org/atlassianlabs/atlascode.git"
     },
+    "bugs": {
+        "url": "https://bitbucket.org/atlassianlabs/atlascode/issues",
+        "email": "atlascode@atlassian.com"
+    },
     "icon": "images/atlascode-icon.png",
-    "preview": true,
+    "preview": false,
     "enableProposedApi": true,
     "galleryBanner": {
-        "color": "#0053cb",
-        "theme": "dark"
+        "color": "#c5ddff",
+        "theme": "light"
     },
-    "keywords": [
-        "bitbucket",
-        "jira",
-        "atlassian",
-        "multi-root ready"
-    ],
     "engines": {
-        "vscode": "^1.31.1"
+        "vscode": "1.31.1"
     },
     "categories": [
         "Other"
@@ -41,24 +47,24 @@
             {
                 "command": "atlascode.bb.authenticate",
                 "title": "Authenticate With Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.clearAuth",
                 "title": "Logout From Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.selectProject",
                 "title": "Select Working Jira Project",
                 "icon": "resources/atlassian-icon.svg",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.selectSite",
                 "title": "Select Working Jira Site",
                 "icon": "resources/atlassian-icon.svg",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.createIssue",
@@ -67,7 +73,7 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
@@ -76,37 +82,37 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.authenticate",
                 "title": "Authenticate With Jira",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.clearAuth",
                 "title": "Logout from Jira",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.showIssue",
                 "title": "Show Jira Issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.transitionIssue",
                 "title": "Transition Issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Issue to Me",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.startWorkOnIssue",
                 "title": "Start work on Jira issue",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.refreshPullRequests",
@@ -115,32 +121,32 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.viewInWebBrowser",
                 "title": "View on bitbucket.org",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.showConfigPage",
                 "title": "Open Settings",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.openChangeset",
                 "title": "Open Changeset",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.createPullRequest",
@@ -149,22 +155,22 @@
                     "dark": "resources/dark/add.svg",
                     "light": "resources/light/add.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.viewPullRequest",
                 "title": "View Pull Request",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.copyPullRequest",
                 "title": "Copy Pull Request Url to Clipboard",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.startPipeline",
                 "title": "Start Pipeline",
-                "category": "AtlasCode"
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.bb.refreshPipelines",
@@ -173,14 +179,14 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "AtlasCode"
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
             "activitybar": [
                 {
                     "id": "atlascode-drawer",
-                    "title": "Atlascode",
+                    "title": "Atlassian",
                     "icon": "resources/atlassian-icon.svg"
                 }
             ]
@@ -365,7 +371,7 @@
         },
         "configuration": {
             "type": "object",
-            "title": "AtlasCode",
+            "title": "Atlassian",
             "properties": {
                 "atlascode.outputLevel": {
                     "type": "string",
@@ -376,7 +382,7 @@
                         "info",
                         "debug"
                     ],
-                    "description": "Specifies how much (if any) output will be sent to the AtlasCode output channel",
+                    "description": "Specifies how much (if any) output will be sent to the Atlassian output channel",
                     "scope": "window"
                 },
                 "atlascode.enableCharles": {

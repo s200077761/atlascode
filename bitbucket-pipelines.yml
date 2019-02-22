@@ -7,9 +7,6 @@ pipelines:
           - node
         script:
           - apt-get update && apt-get install -y libsecret-1-dev
-          - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
-          - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-          - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
           - yarn
           - npm run vscode:prepublish
   tags:
@@ -20,9 +17,6 @@ pipelines:
           script:
             - apt-get update && apt-get install -y libsecret-1-dev
             - npm install -g vsce
-            - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
-            - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-            - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
             - yarn
             - vsce package
@@ -35,9 +29,6 @@ pipelines:
           script:
             - apt-get update && apt-get install -y libsecret-1-dev
             - npm install -g vsce
-            - curl -u $NPM_LOGIN:$NPM_TOKEN https://packages.atlassian.com/api/npm/atlassian-npm/auth/atlassian > ~/.npmrc
-            - echo "@atlassiansox:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
-            - echo "@atlassian:registry=https://packages.atlassian.com/api/npm/atlassian-npm/" >> .npmrc
             - export NIGHTLY_VERSION="$(./nightlyver.sh ${BITBUCKET_COMMIT})"
             - npm -no-git-tag-version -f version ${NIGHTLY_VERSION}
             - yarn

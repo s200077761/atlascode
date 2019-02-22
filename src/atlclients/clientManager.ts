@@ -256,7 +256,7 @@ export class ClientManager implements Disposable {
 
     if (promptUser) {
       usersChoice = await window.showInformationMessage(
-        `In order to use some Atlascode functionality, you need to sign in to ${product}`,
+        `In order to use some Atlassian functionality, you need to sign in to ${product}`,
         SIGNIN_COMMAND
       );
     } else {
