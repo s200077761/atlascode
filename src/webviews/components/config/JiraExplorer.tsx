@@ -227,7 +227,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                         className="ac-select-container"
                                         classNamePrefix="ac-select"
                                         getOptionLabel={(option: any) => {
-                                            return option.name;
+                                            return `${option.name} (${option.key})`;
                                         }}
                                         getOptionValue={(option: any) => {
                                             return option.key;

@@ -85,8 +85,10 @@ async function saveWorkingProject(project: Project) {
 
 class ProjectQuickPickItem implements vscode.QuickPickItem {
   public label: string;
+  public description: string;
 
   constructor(public project: Project) {
     this.label = this.project.name;
+    this.description = this.project.key;
   }
 }
