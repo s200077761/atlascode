@@ -6,6 +6,7 @@ import { Logger } from "../logger";
 import { configuration, WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
 import * as moment from "moment";
+import { AuthProvider } from "../atlclients/authInfo";
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -51,10 +52,14 @@ export class NewIssueMonitor implements Disposable {
     }
   }
 
-  checkForNewIssues() {
+  async checkForNewIssues() {
     const ts = moment(this._timestamp).format("YYYY-MM-DD HH:mm");
 
     if (!this._workingProject) {
+      return;
+    }
+
+    if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
       return;
     }
 

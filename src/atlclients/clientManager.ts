@@ -17,7 +17,7 @@ import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { ProductJira, ProductBitbucket } from "../constants";
 
-const SIGNIN_COMMAND = "Sign in";
+// const SIGNIN_COMMAND = "Sign in";
 
 interface EmptyClient {
   isEmpty: boolean;
@@ -27,7 +27,7 @@ function isEmptyClient(a: any): a is EmptyClient {
   return a && (<EmptyClient>a).isEmpty !== undefined;
 }
 
-const emptyClient: EmptyClient = { isEmpty: true };
+// const emptyClient: EmptyClient = { isEmpty: true };
 
 // TODO: VSCODE-29 if user bails in oauth or an error happens, we need to return undefined
 export class ClientManager implements Disposable {
@@ -35,8 +35,8 @@ export class ClientManager implements Disposable {
   private _dancer: OAuthDancer = new OAuthDancer();
   private _agent: any | undefined;
   private _optionsDirty: boolean = false;
-  private _isAuthenticating: boolean = false;
-  private _isGettingClient: Map<string, boolean> = new Map<string, boolean>();
+  // private _isAuthenticating: boolean = false;
+  // private _isGettingClient: Map<string, boolean> = new Map<string, boolean>();
 
   constructor(context: ExtensionContext) {
     context.subscriptions.push(
@@ -50,7 +50,7 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async bbrequest(promptForAuth: boolean = true, reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
+  public async bbrequest(reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
     return this.getClient<BitbucketKit>(
       AuthProvider.BitbucketCloud,
       info => {
@@ -63,11 +63,11 @@ export class ClientManager implements Disposable {
         bbclient.authenticate({ type: "token", token: info.access });
 
         return bbclient;
-      }, promptForAuth, false, reauthenticate
+      }, false, reauthenticate
     );
   }
 
-  public async bbrequestStaging(promptForAuth: boolean = true, reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
+  public async bbrequestStaging(reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
     return this.getClient<BitbucketKit>(
       AuthProvider.BitbucketCloudStaging,
       info => {
@@ -80,7 +80,7 @@ export class ClientManager implements Disposable {
         bbclient.authenticate({ type: "token", token: info.access });
 
         return bbclient;
-      }, promptForAuth, false, reauthenticate
+      }, false, reauthenticate
     );
   }
 
@@ -118,7 +118,7 @@ export class ClientManager implements Disposable {
       jraclient.authenticate({ type: "token", token: info.access });
 
       return jraclient;
-    }, false, doNotUpdateCache, reauthenticate);
+    }, doNotUpdateCache, reauthenticate);
   }
 
   public async removeClient(provider: string) {
@@ -128,7 +128,6 @@ export class ClientManager implements Disposable {
   private async getClient<T>(
     provider: string,
     factory: (info: AuthInfo) => any,
-    promptUser: boolean = true,
     doNotUpdateCache: boolean = true,
     reauthenticate: boolean = false
   ): Promise<T | undefined> {
@@ -144,16 +143,16 @@ export class ClientManager implements Disposable {
 
     if (!client || reauthenticate) {
 
-      if (!this.isLocked(provider)) {
-        this.lockClient(provider);
-      } else {
-        return await this.getInClientLine<T>(provider);
-      }
+      // if (!this.isLocked(provider)) {
+      //   this.lockClient(provider);
+      // } else {
+      //   return await this.getInClientLine<T>(provider);
+      // }
 
       let info = await Container.authManager.getAuthInfo(provider);
 
       if (!info || reauthenticate) {
-        info = await this.danceWithUser(provider, promptUser);
+        info = await this.danceWithUser(provider);
 
         if (info) {
           await Container.authManager.saveAuthInfo(provider, info);
@@ -162,7 +161,7 @@ export class ClientManager implements Disposable {
           window.showInformationMessage(`You are now authenticated with ${product}`);
           authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         } else {
-          this.unlockClient(provider);
+          // this.unlockClient(provider);
           return undefined;
         }
       } else {
@@ -178,10 +177,10 @@ export class ClientManager implements Disposable {
 
             if (info) {
               await Container.authManager.saveAuthInfo(provider, info);
-              this.unlockClient(provider);
+              // this.unlockClient(provider);
               return info;
             } else {
-              this.unlockClient(provider);
+              // this.unlockClient(provider);
               return undefined;
             }
           });
@@ -212,71 +211,70 @@ export class ClientManager implements Disposable {
       this._optionsDirty = false;
     }
 
-    this.unlockClient(provider);
+    // this.unlockClient(provider);
     return client;
   }
 
-  private isLocked(provider: string): boolean {
-    let locked = this._isGettingClient.get(provider);
-    if (locked === undefined) { locked = false; }
+  // private isLocked(provider: string): boolean {
+  //   let locked = this._isGettingClient.get(provider);
+  //   if (locked === undefined) { locked = false; }
 
-    return locked;
-  }
+  //   return locked;
+  // }
 
-  private lockClient(provider: string) {
-    this._isGettingClient.set(provider, true);
-  }
+  // private lockClient(provider: string) {
+  //   this._isGettingClient.set(provider, true);
+  // }
 
-  private unlockClient(provider: string) {
-    this._isGettingClient.set(provider, false);
-  }
+  // private unlockClient(provider: string) {
+  //   this._isGettingClient.set(provider, false);
+  // }
 
-  private async getInClientLine<T>(provider: string): Promise<T | undefined> {
-    while (this.isLocked(provider)) {
-      await this.delay(1000);
-    }
+  // private async getInClientLine<T>(provider: string): Promise<T | undefined> {
+  //   while (this.isLocked(provider)) {
+  //     await this.delay(1000);
+  //   }
 
-    return await this._clients.getItem<T>(provider);
-  }
+  //   return await this._clients.getItem<T>(provider);
+  // }
 
   private async danceWithUser(
-    provider: string,
-    promptUser: boolean = true
+    provider: string
   ): Promise<AuthInfo | undefined> {
     const product =
       provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
 
-    if (!this._isAuthenticating) {
-      this._isAuthenticating = true;
-    } else {
-      return await this.getInAuthLine(provider);
-    }
+    // if (!this._isAuthenticating) {
+    //   this._isAuthenticating = true;
+    // } else {
+    //   return await this.getInAuthLine(provider);
+    // }
 
-    let usersChoice = undefined;
+    // let usersChoice = undefined;
 
-    if (promptUser) {
-      usersChoice = await window.showInformationMessage(
-        `In order to use some Atlassian functionality, you need to sign in to ${product}`,
-        SIGNIN_COMMAND
-      );
-    } else {
-      usersChoice = SIGNIN_COMMAND;
-    }
+    // if (promptUser) {
+    //   usersChoice = await window.showInformationMessage(
+    //     `In order to use some Atlassian functionality, you need to sign in to ${product}`,
+    //     SIGNIN_COMMAND
+    //   );
+    // } else {
+    //   usersChoice = SIGNIN_COMMAND;
+    // }
 
-    if (usersChoice === SIGNIN_COMMAND) {
-      let info = await this._dancer.doDance(provider).catch(reason => {
-        window.showErrorMessage(`Error logging into ${product}`, reason);
-        this._isAuthenticating = false;
-        return undefined;
-      });
-      this._isAuthenticating = false;
-      return info;
-    } else {
-      // user cancelled sign in, remember that and don't ask again until it expires
-      await this._clients.setItem(provider, emptyClient, 45 * Interval.MINUTE);
-      this._isAuthenticating = false;
+    // if (usersChoice === SIGNIN_COMMAND) {
+    let info = await this._dancer.doDance(provider).catch(reason => {
+      window.showErrorMessage(`Error logging into ${product}`, reason);
+      // this._isAuthenticating = false;
       return undefined;
-    }
+    });
+    // this._isAuthenticating = false;
+    return info;
+    // } else {
+    //   // user cancelled sign in, remember that and don't ask again until it expires
+    //   await this._clients.setItem(provider, emptyClient, 45 * Interval.MINUTE);
+    //   this._isAuthenticating = false;
+    //   return undefined;
+    // }
   }
 
   public async authenticate(provider: string): Promise<void> {
@@ -290,29 +288,29 @@ export class ClientManager implements Disposable {
         break;
       }
       case AuthProvider.BitbucketCloud: {
-        await this.bbrequest(false, true);
+        await this.bbrequest(true);
         break;
       }
       case AuthProvider.BitbucketCloudStaging: {
-        await this.bbrequestStaging(false, true);
+        await this.bbrequestStaging(true);
         break;
       }
     }
   }
 
-  private async getInAuthLine(provider: string): Promise<AuthInfo | undefined> {
-    while (this._isAuthenticating) {
-      await this.delay(1000);
-    }
+  // private async getInAuthLine(provider: string): Promise<AuthInfo | undefined> {
+  //   while (this._isAuthenticating) {
+  //     await this.delay(1000);
+  //   }
 
-    return await Container.authManager.getAuthInfo(provider);
-  }
+  //   return await Container.authManager.getAuthInfo(provider);
+  // }
 
 
 
-  private delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  // private delay(ms: number) {
+  //   return new Promise(resolve => setTimeout(resolve, ms));
+  // }
 
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
     const section = "enableCharles";

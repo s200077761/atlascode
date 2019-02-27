@@ -174,7 +174,7 @@ export class OAuthDancer {
     private shutdown() {
 
         if (this._timer) {
-            clearInterval(this._timer);
+            clearTimeout(this._timer);
             this._timer = undefined;
         }
 
@@ -187,11 +187,11 @@ export class OAuthDancer {
     private startTimer() {
         //make sure we clear the old one in case they click multiple times
         if (this._timer) {
-            clearInterval(this._timer);
+            clearTimeout(this._timer);
             this._timer = undefined;
         }
 
-        this._timer = setInterval(() => {
+        this._timer = setTimeout(() => {
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/timeout`));
         }, this._browserTimeout);
     }
