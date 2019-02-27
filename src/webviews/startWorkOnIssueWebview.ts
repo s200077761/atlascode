@@ -11,6 +11,7 @@ import { isEmptySite } from '../config/model';
 import { AuthProvider } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { RepositoriesApi } from '../bitbucket/repositories';
+import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
@@ -133,11 +134,18 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                 break;
             }
 
-            const [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(r.state.remotes[0])]);
-            const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
+            let repo: Bitbucket.Schema.Repository | undefined = undefined;
+            let mainbranch = undefined;
+            let href = undefined;
+            if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0])]);
+                mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
+                href = repo.links!.html!.href;
+            }
+
             await repoData.push({
                 uri: r.rootUri.toString(),
-                href: repo.links!.html!.href,
+                href: href,
                 remotes: r.state.remotes,
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],

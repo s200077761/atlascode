@@ -22,7 +22,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
     }
 
     initialize(data: string) {
-        const repos = Container.bitbucketContext.getAllRepositores();
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
         PipelineApi.getPipeline(repos[0], data)
             .then(pipeline => {
                 this.updatePipeline(pipeline);

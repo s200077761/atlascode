@@ -40,7 +40,7 @@ export class PipelinesExplorer extends Disposable {
             if (!Container.config.bitbucket.pipelines.explorerEnabled) {
                 this._tree = undefined;
             } else {
-                const repos = this._ctx.getAllRepositores();
+                const repos = this._ctx.getBitbucketRepositores();
                 if (repos.length > 0) {
                     this._tree = new PipelinesTree(repos);
                     const treeView = window.createTreeView(PipelinesTreeViewId, { treeDataProvider: this._tree! });
@@ -51,7 +51,7 @@ export class PipelinesExplorer extends Disposable {
         }
 
         if (initializing || configuration.changed(e, "bitbucket.pipelines.monitorEnabled")) {
-            const repos = this._ctx.getAllRepositores();
+            const repos = this._ctx.getBitbucketRepositores();
             if (Container.config.bitbucket.pipelines.monitorEnabled) {
                 this._monitor = new PipelinesMonitor(repos);
             } else {

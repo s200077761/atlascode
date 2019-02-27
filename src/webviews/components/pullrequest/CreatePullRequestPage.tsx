@@ -328,7 +328,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 </form>);
                             }
                             }
-                        </Form>;
+                        </Form>
                     </Grid>
                 </Page>
             </div>
