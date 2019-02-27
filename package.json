@@ -279,7 +279,7 @@
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {

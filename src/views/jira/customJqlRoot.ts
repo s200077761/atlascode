@@ -4,7 +4,9 @@ import {
   TreeView,
   window,
   TreeItemCollapsibleState,
-  TreeViewVisibilityChangeEvent
+  TreeViewVisibilityChangeEvent,
+  Event,
+  EventEmitter
 } from "vscode";
 import { BaseNode } from "../nodes/baseNode";
 import { CustomJQLTreeId } from "../../constants";
@@ -19,6 +21,10 @@ export class CustomJQLRoot
   implements TreeDataProvider<BaseNode | CustomJQLTree>, RefreshableTree {
   private _tree: TreeView<BaseNode | CustomJQLTree> | undefined;
   private _children: CustomJQLTree[];
+  private _onDidChangeTreeData = new EventEmitter<BaseNode>();
+  public get onDidChangeTreeData(): Event<BaseNode> {
+      return this._onDidChangeTreeData.event;
+  }
 
   constructor(private _jqlList: JQLEntry[]) {
     this._children = [];
@@ -55,9 +61,7 @@ export class CustomJQLRoot
   }
 
   refresh() {
-    this._children.forEach((child: CustomJQLTree) => {
-      child.refresh();
-    });
+    this._onDidChangeTreeData.fire();
   }
 
   dispose() {
