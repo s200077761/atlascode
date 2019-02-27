@@ -27,7 +27,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
 
     public async invalidate() {
         const state: RepoData[] = [];
-        const repos = Container.bitbucketContext.getAllRepositores();
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
         for (let i = 0; i < repos.length; i++) {
             const r = repos[i];
             if (r.state.remotes.length === 0) {
@@ -81,7 +81,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                         this.createPullRequest(e)
                             .catch((e: any) => {
                                 Logger.error(new Error(`error creating pull request: ${e}`));
-                                window.showErrorMessage('Pull request creation failed');
+                                window.showErrorMessage(`Pull request creation failed: ${e}`);
                             });
                     }
                     break;

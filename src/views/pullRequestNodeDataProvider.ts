@@ -36,7 +36,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
             this._childrenMap = new Map();
         }
         this._childrenMap.clear();
-        const repos = this.ctx.getAllRepositores();
+        const repos = this.ctx.getBitbucketRepositores();
         const expand = repos.length === 1;
         repos.forEach(repo => {
             this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo, expand));
@@ -70,7 +70,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         if (!this._childrenMap) {
             this.updateChildren();
         }
-        if (this.ctx.getAllRepositores()
+        if (this.ctx.getBitbucketRepositores()
             .find(repo =>
                 !!PullRequestApi.getBitbucketRemotes(repo)
                     .find(remote => (remote.fetchUrl! || remote.pushUrl!)

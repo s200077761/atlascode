@@ -70,7 +70,7 @@ export class BitbucketContext extends Disposable {
 
     private refreshRepos() {
         this._repoMap.clear();
-        this._gitApi.repositories.forEach(repo => this._repoMap.set(repo.rootUri.toString(), repo));
+        this.getAllRepositores().forEach(repo => this._repoMap.set(repo.rootUri.toString(), repo));
         this._onDidChangeBitbucketContext.fire();
     }
 
@@ -114,6 +114,7 @@ export class BitbucketContext extends Disposable {
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            this.refreshRepos();
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             this.startTimer();
         } else {
@@ -124,6 +125,15 @@ export class BitbucketContext extends Disposable {
     public getAllRepositores(): Repository[] {
         return this._gitApi.repositories;
     }
+
+    public isBitbucketRepo(repo: Repository): boolean {
+        return PullRequestApi.getBitbucketRemotes(repo).length > 0;
+    }
+
+    public getBitbucketRepositores(): Repository[] {
+        return this.getAllRepositores().filter(this.isBitbucketRepo);
+    }
+
     public getRepository(repoUri: Uri): Repository | undefined {
         return this._repoMap.get(repoUri.toString());
     }

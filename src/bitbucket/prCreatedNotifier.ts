@@ -18,7 +18,7 @@ export class PullRequestCreatedNotifier implements Disposable {
 
     constructor(private _bbCtx: BitbucketContext) {
         this._disposable = configuration.onDidChange(this.onConfigurationChanged, this);
-        this._bbCtx.getAllRepositores().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
+        this._bbCtx.getBitbucketRepositores().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
@@ -51,7 +51,7 @@ export class PullRequestCreatedNotifier implements Disposable {
                 return;
             }
 
-            const promises = this._bbCtx.getAllRepositores().map(repo => {
+            const promises = this._bbCtx.getBitbucketRepositores().map(repo => {
                 return PullRequestApi.getLatest(repo).then(prList => {
                     const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
                         ? this._lastCheckedTime.get(repo.rootUri.toString())!
