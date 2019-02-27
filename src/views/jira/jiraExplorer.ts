@@ -108,7 +108,10 @@ export class JiraExplorer extends Disposable {
         });
     }
 
-    refresh() {
+    async refresh() {
+        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            return;
+        }
         this._trees.forEach(tree => {
             tree.refresh();
         });

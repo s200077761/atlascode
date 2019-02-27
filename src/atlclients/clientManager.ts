@@ -239,8 +239,7 @@ export class ClientManager implements Disposable {
   // }
 
   private async danceWithUser(
-    provider: string,
-    promptUser: boolean = true
+    provider: string
   ): Promise<AuthInfo | undefined> {
     const product =
       provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
@@ -251,7 +250,7 @@ export class ClientManager implements Disposable {
     //   return await this.getInAuthLine(provider);
     // }
 
-    let usersChoice = undefined;
+    // let usersChoice = undefined;
 
     // if (promptUser) {
     //   usersChoice = await window.showInformationMessage(
