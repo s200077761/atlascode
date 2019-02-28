@@ -10,7 +10,7 @@ import { RelatedIssuesNode } from './relatedIssuesNode';
 import { EmptyStateNode } from './emptyStateNode';
 import { Logger } from '../../logger';
 
-const PullRequestContextValue = 'pullrequest';
+export const PullRequestContextValue = 'pullrequest';
 
 interface NestedComment {
     data: Bitbucket.Schema.Comment;

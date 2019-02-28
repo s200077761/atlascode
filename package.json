@@ -680,7 +680,7 @@
         "bitbucket": "^1.8.0",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
-        "git-url-parse": "^10.1.0",
+        "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
         "jquery": "^3.3.1",
         "keytar": "^4.3.0",

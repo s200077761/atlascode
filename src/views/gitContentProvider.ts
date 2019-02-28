@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as pathlib from 'path';
 import { BitbucketContext } from '../bitbucket/context';
 import { FileDiffQueryParams } from './nodes/pullRequestNode';
-import * as gup from 'git-url-parse';
+import { GitUrlParse } from '../bitbucket/pullRequests';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
@@ -29,7 +29,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                 content = await repo.show(commitHash, absolutePath);
             } catch (err) {
                 try {
-                    await repo.addRemote(remote.name, gup(remote.fetchUrl!).toString("ssh"));
+                    await repo.addRemote(remote.name, GitUrlParse(remote.fetchUrl!).toString("ssh"));
                     await repo.fetch(remote.name, branchName);
                     content = await repo.show(commitHash, absolutePath);
                 } catch (err) {

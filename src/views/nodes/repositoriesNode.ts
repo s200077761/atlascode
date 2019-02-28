@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { BaseNode } from "./baseNode";
-import { PullRequestApi } from "../../bitbucket/pullRequests";
+import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
 import { EmptyStateNode } from './emptyStateNode';
-import { PullRequestTitlesNode, NextPageNode } from './pullRequestNode';
+import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests } from '../../bitbucket/model';
 
 export class RepositoriesNode extends BaseNode {
@@ -28,7 +28,11 @@ export class RepositoriesNode extends BaseNode {
         const directory = this.repository.rootUri.path.split('/').pop();
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = this.repository.rootUri.path;
-        item.contextValue = 'pullrequest';
+        item.contextValue = PullRequestContextValue;
+        const remote = PullRequestApi.getBitbucketRemotes(this.repository)[0];
+        const repoName = GitUrlParse(remote.fetchUrl! || remote.pushUrl!).full_name;
+        const prUrl = `https://bitbucket.org/${repoName}/pull-requests`;
+        item.resourceUri = vscode.Uri.parse(prUrl);
 
         return item;
     }
