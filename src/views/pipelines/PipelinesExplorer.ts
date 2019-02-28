@@ -41,11 +41,9 @@ export class PipelinesExplorer extends Disposable {
                 this._tree = undefined;
             } else {
                 const repos = this._ctx.getBitbucketRepositores();
-                if (repos.length > 0) {
-                    this._tree = new PipelinesTree(repos);
-                    const treeView = window.createTreeView(PipelinesTreeViewId, { treeDataProvider: this._tree! });
-                    treeView.onDidChangeVisibility(e => this.onTreeDidChangeVisibility(e));
-                }
+                this._tree = new PipelinesTree(repos);
+                const treeView = window.createTreeView(PipelinesTreeViewId, { treeDataProvider: this._tree! });
+                treeView.onDidChangeVisibility(e => this.onTreeDidChangeVisibility(e));
             }
             setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled);
         }
@@ -98,6 +96,7 @@ export class PipelinesExplorer extends Disposable {
 
     async onTreeDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            this.refresh();
             viewScreenEvent(PipelinesTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         }
     }
