@@ -75,6 +75,24 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>We can only make this extension better with your help!</p>
                             <p>Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.</p>
                         </section>
+                        <h2>🎉 What's New in 1.0.1 🎉</h2>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Extension occasionally opens up a browser window to auth until the user authenticates</li>
+                                <li>General authentication fixes</li>
+                                <li>Start work on issue hangs with non-Bitbucket repos</li>
+                                <li>Custom JQL tree not refreshing when refresh button clicked</li>
+                                <li>Length check causing View Issue page to dissappear</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Add Project key to project selector list to dedupe project names</li>
+                                <li>Add refresh button to custom JQL tree</li>
+                            </ul>
+                        </section>
                     </GridColumn>
                 </Grid>
             </Page>
