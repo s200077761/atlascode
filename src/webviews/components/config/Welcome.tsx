@@ -65,10 +65,26 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.0.1 🎉</h2>
                         <section>
-                            <h2>What's New</h2>
-                            <p>In future releases, you'll find out what's new and hot here.</p>
-                            <p>For this initial release, *everything* is new! (and 🔥) </p>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Extension occasionally opens up a browser window to auth until the user authenticates</li>
+                                <li>General authentication fixes</li>
+                                <li>Start work on issue hangs with non-Bitbucket repos</li>
+                                <li>Custom JQL tree not refreshing when refresh button clicked</li>
+                                <li>Length check causing View Issue page to dissappear</li>
+                                <li>Pipelines explorer not initializing properly</li>
+                                <li>Open in bitbucket context menu item not working on repository nodes</li>
+                                <li>Create Pull Request hangs with non-Bitbucket Cloud repos</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Add Project key to project selector list to dedupe project names</li>
+                                <li>Add refresh button to custom JQL tree</li>
+                            </ul>
                         </section>
                         <section>
                             <h2>Feedback</h2>
