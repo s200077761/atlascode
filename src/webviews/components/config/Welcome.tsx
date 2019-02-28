@@ -65,16 +65,6 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
-                        <section>
-                            <h2>What's New</h2>
-                            <p>In future releases, you'll find out what's new and hot here.</p>
-                            <p>For this initial release, *everything* is new! (and 🔥) </p>
-                        </section>
-                        <section>
-                            <h2>Feedback</h2>
-                            <p>We can only make this extension better with your help!</p>
-                            <p>Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.</p>
-                        </section>
                         <h2>🎉 What's New in 1.0.1 🎉</h2>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
@@ -95,6 +85,11 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Add Project key to project selector list to dedupe project names</li>
                                 <li>Add refresh button to custom JQL tree</li>
                             </ul>
+                        </section>
+                        <section>
+                            <h2>Feedback</h2>
+                            <p>We can only make this extension better with your help!</p>
+                            <p>Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.</p>
                         </section>
                     </GridColumn>
                 </Grid>
