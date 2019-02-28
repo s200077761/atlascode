@@ -84,6 +84,9 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Start work on issue hangs with non-Bitbucket repos</li>
                                 <li>Custom JQL tree not refreshing when refresh button clicked</li>
                                 <li>Length check causing View Issue page to dissappear</li>
+                                <li>Pipelines explorer not initializing properly</li>
+                                <li>Open in bitbucket context menu item not working on repository nodes</li>
+                                <li>Create Pull Request hangs with non-Bitbucket Cloud repos</li>
                             </ul>
                         </section>
                         <section>
