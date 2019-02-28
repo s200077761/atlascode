@@ -98,6 +98,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
     public refresh() {
         this._branches = undefined;
         this._pipelines.clear();
+        this._repositories = Container.bitbucketContext.getBitbucketRepositores();
         this._onDidChangeTreeData.fire();
     }
 }
