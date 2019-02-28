@@ -143,8 +143,8 @@ export default class JiraIssuePage extends WebviewComponent<
           <h2>{issue.summary}</h2>
           <p>{issue.description}</p>
         </div>
-        <div style={{margin: 10}}>
-          <Button className='ac-button' onClick={() => this.postMessage({action: 'openStartWorkPage', issue: this.state.data})}>Start work on issue...</Button>
+        <div style={{ margin: 10 }}>
+          <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: this.state.data })}>Start work on issue...</Button>
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
   tags(items: string[]) {
-    if (items.length === 0) {
+    if (Array.isArray(items) && items.length === 0) {
       return <span className="no-tags">None</span>;
     }
     return (
@@ -190,7 +190,7 @@ export default class JiraIssuePage extends WebviewComponent<
   render() {
     const issue = this.state.data;
 
-    const childIssues = this.state.data.childIssues.length === 0
+    const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
         <h3>Child issues</h3>
