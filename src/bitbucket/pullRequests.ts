@@ -23,12 +23,8 @@ export const maxItemsSupported = {
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
 
-// had to do this as the library introduced a bug with latest update
 export function GitUrlParse(url: string): gup.GitUrl {
-    let parsed = gup(url);
-    parsed.owner = parsed.owner.replace(':', '');
-    parsed.name = parsed.name.replace(':', '');
-    return parsed;
+    return gup(url);
 }
 
 export namespace PullRequestApi {
