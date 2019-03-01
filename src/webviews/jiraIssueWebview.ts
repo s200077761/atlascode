@@ -136,10 +136,17 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
 
         if (this._panel) { this._panel.title = `Jira Issue ${issue.key}`; }
 
+        const currentBranches = Container.bitbucketContext.getAllRepositores()
+            .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
+            .map(repo => repo.state.HEAD!.name!);
+
         let msg = issue as IssueData;
         msg.type = 'update';
         msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
         msg.childIssues = await issuesForJQL(`"Parent link"=${issue.key}`);
+        msg.workInProgress = msg.isAssignedToMe &&
+            issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
+            currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
         this.postMessage(msg);
     }
 

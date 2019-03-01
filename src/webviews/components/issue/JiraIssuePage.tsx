@@ -52,7 +52,8 @@ const emptyIssueData: IssueData = {
   fixVersions: [],
   workingSite: emptyWorkingSite,
   isAssignedToMe: false,
-  childIssues: []
+  childIssues: [],
+  workInProgress: true
 };
 
 type MyState = {
@@ -143,9 +144,11 @@ export default class JiraIssuePage extends WebviewComponent<
           <h2>{issue.summary}</h2>
           <p>{issue.description}</p>
         </div>
-        <div style={{ margin: 10 }}>
-          <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: this.state.data })}>Start work on issue...</Button>
-        </div>
+        {!this.state.data.workInProgress &&
+          <div style={{ margin: 10 }}>
+            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: this.state.data })}>Start work on issue...</Button>
+          </div>
+        }
       </div>
     );
   }
