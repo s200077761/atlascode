@@ -28,6 +28,7 @@ export interface RepoData {
     localBranches: Branch[];
     remoteBranches: Branch[];
     mainbranch?: string;
+    hasLocalChanges?: boolean;
 }
 
 export interface CreatePRData extends Message {
