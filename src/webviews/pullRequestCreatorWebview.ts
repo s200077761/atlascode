@@ -30,11 +30,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
         const repos = Container.bitbucketContext.getBitbucketRepositores();
         for (let i = 0; i < repos.length; i++) {
             const r = repos[i];
-            if (r.state.remotes.length === 0) {
-                break;
+            const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
+            if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
+                continue;
             }
 
-            const [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(r.state.remotes[0])]);
+            const [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0])]);
             const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
             await state.push({
                 uri: r.rootUri.toString(),
@@ -49,7 +50,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                         .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
                         .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
                 ),
-                mainbranch: mainbranch
+                mainbranch: mainbranch,
+                hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
             });
         }
 

@@ -68,7 +68,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 }> {
     constructor(props: any) {
         super(props);
-        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: false, commits: [], isCreateButtonLoading: false };
+        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: true, commits: [], isCreateButtonLoading: false };
     }
 
     handleTitleChange = (e: any) => {
@@ -294,7 +294,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             onChange={this.handlePushLocalChangesChange}
                                             name="push-local-branch-enabled" />
 
-                                        <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} />
+                                        <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
                                         <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
