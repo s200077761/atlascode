@@ -11,6 +11,7 @@ export interface IssueData extends Message {}
 export interface IssueData extends Issue {
     isAssignedToMe: boolean;
     childIssues: Issue[];
+    workInProgress: boolean;
 }
 
 export interface CreateIssueData extends Message {
