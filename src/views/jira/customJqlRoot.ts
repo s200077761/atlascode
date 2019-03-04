@@ -16,6 +16,8 @@ import { JQLEntry } from "src/config/model";
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { viewScreenEvent } from '../../analytics';
+import { EmptyStateNode } from "../nodes/emptyStateNode";
+import { Commands } from "../../commands";
 
 export class CustomJQLRoot
   implements TreeDataProvider<BaseNode | CustomJQLTree>, RefreshableTree {
@@ -46,18 +48,20 @@ export class CustomJQLRoot
     }
   }
 
-  getChildren(element: BaseNode | CustomJQLTree | undefined) {
-    if (!element) {
-      return this._jqlList.map((jql: JQLEntry) => {
-        const childTree = new CustomJQLTree(jql);
-        this._children.push(childTree);
-        return childTree;
-      });
-    } else if (element instanceof CustomJQLTree) {
-      return element.getChildren(undefined);
-    } else {
-      return [];
+  async getChildren(element: BaseNode | CustomJQLTree | undefined) {
+    if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+      return Promise.resolve([new EmptyStateNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
     }
+
+    if (element) {
+      return element.getChildren();
+    }
+
+    return this._jqlList.map((jql: JQLEntry) => {
+      const childTree = new CustomJQLTree(jql);
+      this._children.push(childTree);
+      return childTree;
+    });
   }
 
   refresh() {

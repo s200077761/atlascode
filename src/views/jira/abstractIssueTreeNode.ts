@@ -6,7 +6,7 @@ import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
-
+import { fetchIssue } from '../../jira/fetchIssue';
 
 export abstract class AbstractIssueTreeNode extends Disposable {
     protected _disposables: Disposable[] = [];
@@ -48,7 +48,10 @@ export abstract class AbstractIssueTreeNode extends Disposable {
         if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
             return Promise.resolve([new EmptyStateNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
         }
-        if (parent || !this._jql) {
+        if (parent) {
+            return parent.getChildren();
+        }
+        if (!this._jql) {
             return Promise.resolve([new EmptyStateNode(this._emptyState, this._emptyStateCommand)]);
         } else if (this._issues) {
             return Promise.resolve(this.nodesForIssues());
@@ -66,11 +69,26 @@ export abstract class AbstractIssueTreeNode extends Disposable {
             return Promise.resolve([]);
         }
 
-        return issuesForJQL(this._jql)
-        .then(newIssues => {
-            this._issues = newIssues;
-            return this.nodesForIssues();
+        const newIssues = await issuesForJQL(this._jql);
+        newIssues.push(...await this.fetchParentIssues(newIssues));
+        const subissueKeys = newIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
+        this._issues = newIssues.filter(issue => !subissueKeys.includes(issue.key));
+        return this.nodesForIssues();
+    }
+
+    private async fetchParentIssues(issues: Issue[]): Promise<Issue[]> {
+        const fetchedIssuesKeys = issues.map(issue => issue.key);
+        const allIssueKeys: string[] = [];
+        issues.forEach(issue => {
+            if (!allIssueKeys.includes(issue.key)) {
+                allIssueKeys.push(issue.key);
+            }
+            if (issue.parentKey && !allIssueKeys.includes(issue.parentKey)) {
+                allIssueKeys.push(issue.parentKey);
+            }
         });
+
+        return await Promise.all(allIssueKeys.filter(issueKey => !fetchedIssuesKeys.includes(issueKey)).map(async issueKey => await fetchIssue(issueKey)));
     }
 
     private nodesForIssues(): IssueNode[] {

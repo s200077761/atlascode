@@ -143,7 +143,8 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
         let msg = issue as IssueData;
         msg.type = 'update';
         msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
-        msg.childIssues = await issuesForJQL(`"Parent link"=${issue.key}`);
+        const childIssues = await issuesForJQL(`"Parent link"=${issue.key}`);
+        msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
         msg.workInProgress = msg.isAssignedToMe &&
             issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
             currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;

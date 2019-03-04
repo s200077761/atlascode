@@ -66,6 +66,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         issueType: emptyIssueType,
         reporter: emptyUser,
         assignee: emptyUser,
+        subtasks: [],
         comments: [],
         labels: [],
         attachments: [],
@@ -77,7 +78,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
 
     export type issueOrKey = Issue | string;
 
-    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
+    export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
     export const issueExpand = "transitions";
 
     export function isIssue(a:any): a is Issue {
@@ -140,6 +141,10 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             });
         }
 
+        let labels: string[] = [];
+        if (issueJson.fields.labels && Array.isArray(issueJson.fields.labels)) {
+            labels = issueJson.fields.labels;
+        }
         let components: IdName[] = [];
         if (issueJson.fields.components) {
             components = issueJson.fields.components.map((componentJson: any) => {return {id: componentJson.id, name: componentJson.name};});
@@ -149,8 +154,18 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         if (issueJson.fields.fixVersions) {
             fixVersions = issueJson.fields.fixVersions.map((fixVersion: any) => {return {id: fixVersion.id, name: fixVersion.name};});
         }
-        
-        return {
+
+        let subtasks: Issue[] = [];
+        if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
+            subtasks = issueJson.fields.subtasks.map((subtaskJson:any) => {
+                const subtaskIssue = issueFromJsonObject(subtaskJson, workingSite);
+                // subtask creation data is not returned in the api response
+                subtaskIssue.created = new Date(Date.parse(issueJson.fields.created));
+                return subtaskIssue;
+            });
+        }
+
+        const thisIssue = {
             key: issueJson.key,
             id: issueJson.id,
             self: issueJson.self,
@@ -162,14 +177,18 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             issueType: isIssueType(issueJson.fields.issuetype) ? issueJson.fields.issuetype : emptyIssueType,
             reporter: isUser(issueJson.fields.reporter) ? issueJson.fields.reporter : emptyUser,
             assignee: isUser(issueJson.fields.assignee) ? issueJson.fields.assignee : emptyUser,
+            parentKey: issueJson.fields.parent ? issueJson.fields.parent.key : undefined,
+            subtasks: subtasks,
             comments: comments,
-            labels: issueJson.fields.labels,
+            labels: labels,
             attachments: attachments,
             transitions: transitions,
             components: components,
             fixVersions: fixVersions,
             workingSite: workingSite
         };
+
+        return thisIssue;
     }
 
 
@@ -183,8 +202,10 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         status: Status;
         priority: Priority;
         issueType: IssueType;
+        parentKey?: string;
         reporter: User;
         assignee: User;
+        subtasks: Issue[];
         comments: Comment[];
         labels: string[];
         attachments: Attachment[];
