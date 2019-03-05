@@ -1,5 +1,7 @@
 import * as React from "react";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import PageHeader from '@atlaskit/page-header';
+import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -12,15 +14,16 @@ import {
   emptyTransition
 } from "../../../jira/jiraModel";
 import {
-  StartWorkAction, OpenJiraIssueAction
+  StartWorkAction, OpenJiraIssueAction, OpenIssueByKeyAction, CopyJiraIssueLinkAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import Button from "@atlaskit/button";
 import Select from '@atlaskit/select';
 import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
+import NavItem from "./NavItem";
 
-type Emit = StartWorkAction | OpenJiraIssueAction;
+type Emit = StartWorkAction | OpenJiraIssueAction | OpenIssueByKeyAction | CopyJiraIssueLinkAction;;
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 
 type BranchNameOption = { label: string, value: string };
@@ -180,24 +183,6 @@ export default class StartWorkPage extends WebviewComponent<
     });
   }
 
-  header(issue: any): any {
-    return (
-      <div>
-        <em><p>Start work on:</p></em>
-        <div className='ac-flex'>
-          <div className="ac-icon-with-text">
-            <img src={issue.issueType.iconUrl} />
-            <div className='jira-issue-key'>
-              <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>
-            </div>
-          </div>
-          <h3>{issue.summary}</h3>
-        </div>
-        <p>{issue.description}</p>
-      </div>
-    );
-  }
-
   render() {
     const issue = this.state.data.issue;
     const repo = this.state.repo;
@@ -217,7 +202,23 @@ export default class StartWorkPage extends WebviewComponent<
                 <div><p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} /></div>
               </SectionMessage>
             }
-            {this.header(issue)}
+          </GridColumn>
+          <GridColumn medium={8}>
+            <em><p>Start work on:</p></em>
+            <PageHeader
+              actions={undefined}
+              breadcrumbs={
+                <BreadcrumbsStateless onExpand={() => { }}>
+                  {issue.parentKey &&
+                    <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openIssueByKey', key: issue.parentKey! })} />} />
+                  }
+                  <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+                </BreadcrumbsStateless>
+              }
+            >
+              <p>{issue.summary}</p>
+            </PageHeader>
+            <p>{issue.description}</p>
           </GridColumn>
           <GridColumn medium={6}>
             <div style={{ display: 'flex', alignItems: 'center' }}>

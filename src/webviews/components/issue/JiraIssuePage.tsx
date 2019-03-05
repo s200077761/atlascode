@@ -2,9 +2,10 @@ import * as React from "react";
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
 import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
+import PageHeader from '@atlaskit/page-header';
+import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Tag from "@atlaskit/tag";
 import TagGroup from "@atlaskit/tag-group";
-import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
 import {
@@ -24,11 +25,11 @@ import {
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import { Comments } from "./Comments";
-import Button from "@atlaskit/button";
-import CopyIcon from '@atlaskit/icon/glyph/copy';
+import Button, { ButtonGroup } from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
+import NavItem from "./NavItem";
 
 type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
 const emptyIssueData: IssueData = {
@@ -133,25 +134,22 @@ export default class JiraIssuePage extends WebviewComponent<
 
   header(issue: any): any {
     return (
-      <div className='ac-flex-space-between'>
-        <div>
-          <div className="ac-icon-with-text" style={{ marginTop: 10 }}>
-            <img src={issue.issueType.iconUrl} />
-            <div className='jira-issue-key'>
-              <Button className='ac-link-button' appearance="link" href={`https://${this.state.data.workingSite.name}.atlassian.net/browse/${this.state.data.key}`}>{issue.key}</Button>
-              <div className='jira-issue-copy-icon'>
-                <Tooltip content='Copy the link to this issue'><CopyIcon label='copy issue link' size='small' onClick={this.handleCopyIssueLink} /></Tooltip>
-              </div>
-            </div>
-          </div>
-          <h2>{issue.summary}</h2>
-          <p dangerouslySetInnerHTML={{__html: issue.descriptionHtml}} />
-        </div>
-        {!this.state.data.workInProgress &&
-          <div style={{ margin: 10 }}>
-            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: this.state.data })}>Start work on issue...</Button>
-          </div>
-        }
+      <div>
+        <PageHeader
+          actions={<ButtonGroup>
+            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
+          </ButtonGroup>}
+          breadcrumbs={
+            <BreadcrumbsStateless onExpand={() => { }}>
+              {issue.parentKey &&
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} href={`https://${issue.workingSite.name}.atlassian.net/browse/${issue.parentKey}`} />} />
+              }
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.atlassian.net/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
+            </BreadcrumbsStateless>
+          }>
+          <p>{issue.summary}</p>
+        </PageHeader>
+        <p>{issue.description}</p>
       </div>
     );
   }
@@ -205,7 +203,7 @@ export default class JiraIssuePage extends WebviewComponent<
         <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
       </React.Fragment>;
 
-      const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
+    const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
         <h3>Child issues</h3>

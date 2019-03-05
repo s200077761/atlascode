@@ -5,7 +5,7 @@ import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessag
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
+import { isOpenJiraIssue, isStartWork, isOpenIssueByKey } from '../ipc/issueActions';
 import { Container } from '../container';
 import { isEmptySite } from '../config/model';
 import { AuthProvider } from '../atlclients/authInfo';
@@ -16,7 +16,7 @@ import { Repository, RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
-import { issueWorkStartedEvent } from '../analytics';
+import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -81,6 +81,21 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                         vscode.commands.executeCommand(Commands.ShowIssue, e.issue);
                         break;
                     }
+                }
+                case 'openIssueByKey': {
+                    if (isOpenIssueByKey(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.key);
+                        break;
+                    }
+                }
+                case 'copyJiraIssueLink': {
+                    handled = true;
+                    const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
+                    await vscode.env.clipboard.writeText(linkUrl);
+                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    break;
                 }
                 case 'startWork': {
                     if (isStartWork(e)) {
