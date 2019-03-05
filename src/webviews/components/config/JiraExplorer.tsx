@@ -3,28 +3,15 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
-import JiraSiteProject from './JiraSiteProject';
 
 type changeObject = { [key: string]: any };
 
-export default class JiraExplorer extends React.Component<{ configData: ConfigData, isLoading: boolean, loadProjectOptions: (input: string) => Promise<any>, onConfigChange: (changes: changeObject, removes?: string[]) => void }, ConfigData> {
+export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, ConfigData> {
 
     constructor(props: any) {
         super(props);
 
         this.state = emptyConfigData;
-    }
-
-    componentWillReceiveProps = (nextProps: any) => {
-
-        if (nextProps.configData.config.jira.workingSite && !nextProps.configData.config.jira.workingSite.id) {
-            nextProps.configData.config.jira.workingSite = '';
-        }
-
-        if (nextProps.configData.config.jira.workingProject && !nextProps.configData.config.jira.workingProject.id) {
-            nextProps.configData.config.jira.workingProject = '';
-        }
-        this.setState(nextProps.configData);
     }
 
     onCheckboxChange = (e: any) => {
@@ -143,9 +130,6 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                         disabled={!this.props.configData.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables notification)</span>
                 </div>
-
-                <JiraSiteProject configData={this.state} isLoading={this.props.isLoading} onConfigChange={this.props.onConfigChange} loadProjectOptions={this.props.loadProjectOptions}/>
-
             </div>
 
         );
