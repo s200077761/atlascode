@@ -20,7 +20,7 @@ const colorToLozengeAppearanceMap = {
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issue: data.issue })}>
+        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
             {data.issue.key}
         </Button>
     </div>;

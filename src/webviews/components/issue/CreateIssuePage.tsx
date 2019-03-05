@@ -3,7 +3,7 @@ import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
-import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenIssueByKeyAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
+import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
 import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
@@ -17,7 +17,7 @@ import SectionMessage from '@atlaskit/section-message';
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
 
-type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenIssueByKeyAction | Action;
+type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
 type IssueType = { id: string, name: string, iconUrl: string };
 
@@ -351,7 +351,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                 <SectionMessage
                                     appearance="confirmation"
                                     title="Issue Created">
-                                    Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openIssueByKey', key: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                    Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
                                 </SectionMessage>
                             }
                             {this.state.isErrorBannerOpen &&

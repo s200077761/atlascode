@@ -57,7 +57,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleIssueClicked = (issue: Issue) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issue: issue
+            issueOrKey: issue
         });
     }
 

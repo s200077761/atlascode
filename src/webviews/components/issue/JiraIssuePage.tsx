@@ -149,7 +149,7 @@ export default class JiraIssuePage extends WebviewComponent<
           }>
           <p>{issue.summary}</p>
         </PageHeader>
-        <p>{issue.description}</p>
+        <p dangerouslySetInnerHTML={{__html: issue.descriptionHtml}} />
       </div>
     );
   }

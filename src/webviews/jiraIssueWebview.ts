@@ -99,7 +99,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
                         break;
                     }
                 }

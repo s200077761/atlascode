@@ -14,7 +14,7 @@ import {
   emptyTransition
 } from "../../../jira/jiraModel";
 import {
-  StartWorkAction, OpenJiraIssueAction, OpenIssueByKeyAction, CopyJiraIssueLinkAction
+  StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import Button from "@atlaskit/button";
@@ -23,7 +23,7 @@ import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
 import NavItem from "./NavItem";
 
-type Emit = StartWorkAction | OpenJiraIssueAction | OpenIssueByKeyAction | CopyJiraIssueLinkAction;;
+type Emit = StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 
 type BranchNameOption = { label: string, value: string };
@@ -210,15 +210,15 @@ export default class StartWorkPage extends WebviewComponent<
               breadcrumbs={
                 <BreadcrumbsStateless onExpand={() => { }}>
                   {issue.parentKey &&
-                    <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openIssueByKey', key: issue.parentKey! })} />} />
+                    <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
                   }
-                  <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+                  <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
                 </BreadcrumbsStateless>
               }
             >
               <p>{issue.summary}</p>
             </PageHeader>
-            <p>{issue.description}</p>
+            <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
           </GridColumn>
           <GridColumn medium={6}>
             <div style={{ display: 'flex', alignItems: 'center' }}>

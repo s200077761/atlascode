@@ -5,7 +5,7 @@ import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessag
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isOpenJiraIssue, isStartWork, isOpenIssueByKey } from '../ipc/issueActions';
+import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { isEmptySite } from '../config/model';
 import { AuthProvider } from '../atlclients/authInfo';
@@ -78,14 +78,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issue);
-                        break;
-                    }
-                }
-                case 'openIssueByKey': {
-                    if (isOpenIssueByKey(e)) {
-                        handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.key);
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
                         break;
                     }
                 }
