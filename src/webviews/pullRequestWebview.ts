@@ -112,6 +112,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         break;
                     }
                 }
+                case 'copyPullRequestLink': {
+                    handled = true;
+                    const linkUrl = this._state.prData.pr!.links!.html!.href!;
+                    await vscode.env.clipboard.writeText(linkUrl);
+                    vscode.window.showInformationMessage(`Copied pull request link to clipboard - ${linkUrl}`);
+                    break;
+                }
             }
         }
 
