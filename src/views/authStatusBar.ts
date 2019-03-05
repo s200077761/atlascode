@@ -31,15 +31,13 @@ export class AuthStatusBar extends Disposable {
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
-    if (initializing || configuration.changed(e, 'jira.statusbar')) {
+    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, 'jira.workingSite') || configuration.changed(e, 'jira.workingProject')) {
       const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
       const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
       this.updateAuthenticationStatusBar(AuthProvider.JiraCloud, jiraInfo);
 
-      if (configuration.changed(e, 'jira.statusbar.enabled')) {
-        if (!Container.config.jira.statusbar.enabled) {
-          jiraItem.hide();
-        }
+      if (!Container.config.jira.statusbar.enabled) {
+        jiraItem.hide();
       }
     }
 
@@ -48,10 +46,8 @@ export class AuthStatusBar extends Disposable {
       const bitbucketInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
       this.updateAuthenticationStatusBar(AuthProvider.BitbucketCloud, bitbucketInfo);
 
-      if (configuration.changed(e, 'bitbucket.statusbar.enabled')) {
-        if (!Container.config.bitbucket.statusbar.enabled) {
-          bitbucketItem.hide();
-        }
+      if (!Container.config.bitbucket.statusbar.enabled) {
+        bitbucketItem.hide();
       }
     }
   }
