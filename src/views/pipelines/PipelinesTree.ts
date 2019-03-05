@@ -7,6 +7,7 @@ import { Container } from "../../container";
 import * as moment from "moment";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
+import { AuthProvider } from '../../atlclients/authInfo';
 
 export class PipelinesTree implements TreeDataProvider<Node> {
     _branches: [string, Repository][] | undefined;
@@ -23,16 +24,15 @@ export class PipelinesTree implements TreeDataProvider<Node> {
         return element.treeItem();
     }
 
-    getChildren(element?: Node): Node[] | Promise<Node[]> {
+    async getChildren(element?: Node): Promise<Node[]> {
+        if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            return Promise.resolve([new EmptyNode()]);
+        }
         if (!element) {
-            if (this._branches) {
-                return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
-            } else {
-                return this.fetchBranches()
-                    .then(branches => {
-                        return branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
-                    });
+            if (!this._branches) {
+                this._branches = await this.fetchBranches();
             }
+            return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
         } else if (element instanceof BranchNode) {
             const branchPipelines = this._pipelines[element.branchName];
             if (branchPipelines) {
@@ -50,7 +50,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
     }
 
     async fetchBranches(): Promise<[string, Repository][]> {
-        this._branches = [];
+        var branches: [string, Repository][] = [];
         for (var i = 0; i < this._repositories.length; i++) {
             const repo = this._repositories[i];
             const remotes = await PullRequestApi.getBitbucketRemotes(repo);
@@ -60,18 +60,18 @@ export class PipelinesTree implements TreeDataProvider<Node> {
                 const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
                 const branchesResponse = await bb.refs.listBranches({ repo_slug: parsed.name, username: parsed.owner });
                 branchesResponse.data.values!.forEach(v => {
-                    this._branches = this._branches!.concat([[v.name!, repo]]);
+                    branches = branches!.concat([[v.name!, repo]]);
                 });
-                this.getAllTheThings(this._branches);
-                return Promise.resolve(this._branches);
+                branches = await this.fetchPipelinesForBranches(branches);
+                return Promise.resolve(branches);
             }
         }
         return Promise.resolve([]);
     }
 
-    async getAllTheThings(branches: [string, Repository][]) {
+    async fetchPipelinesForBranches(branches: [string, Repository][]): Promise<[string, Repository][]> {
         await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
-        this._branches!.sort(([a]: [string, any], [b]: [string, any]) => {
+        branches.sort(([a]: [string, any], [b]: [string, any]) => {
             const pa: Pipeline[] = this._pipelines[a];
             const pb: Pipeline[] = this._pipelines[b];
             if (!pa || pa.length === 0) {
@@ -85,7 +85,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
             }
             return -1;
         });
-        this._onDidChangeTreeData.fire();
+        return branches;
     }
 
     async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Pipeline[]> {
@@ -171,5 +171,15 @@ export class BranchNode extends Node {
             }
         }
         return undefined;
+    }
+}
+
+class EmptyNode extends Node {
+    treeItem() {
+        const text = "Please login to Bitbucket";
+        const treeItem = new TreeItem(text, TreeItemCollapsibleState.None);
+        treeItem.tooltip = text;
+        treeItem.command = { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" };
+        return treeItem;
     }
 }

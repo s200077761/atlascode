@@ -1,19 +1,19 @@
-import { Disposable, window, commands } from "vscode";
+import { window, commands } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
+import { AuthProvider } from '../../atlclients/authInfo';
 
-
-export class PipelinesMonitor extends Disposable {
+export class PipelinesMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
 
   constructor(private _repositories: Repository[]) {
-    super(() => this.dispose());
   }
 
   async checkForNewResults() {
-    if (!Container.config.bitbucket.pipelines.monitorEnabled) {
+    if (!Container.config.bitbucket.pipelines.monitorEnabled ||
+      !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
       return;
     }
     await Container.clientManager.bbrequest();
@@ -31,7 +31,6 @@ export class PipelinesMonitor extends Disposable {
               commands.executeCommand("workbench.view.extension.atlascode-drawer");
             }
           });
-
         }
         this._previousResults[repo.rootUri.path] = newResults;
       });
