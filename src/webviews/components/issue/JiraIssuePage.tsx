@@ -38,6 +38,7 @@ const emptyIssueData: IssueData = {
   self: "",
   created: new Date(0),
   description: "",
+  descriptionHtml: "",
   summary: "",
   status: emptyStatus,
   priority: emptyPriority,
@@ -144,7 +145,7 @@ export default class JiraIssuePage extends WebviewComponent<
             </div>
           </div>
           <h2>{issue.summary}</h2>
-          <p>{issue.description}</p>
+          <p dangerouslySetInnerHTML={{__html: issue.descriptionHtml}} />
         </div>
         {!this.state.data.workInProgress &&
           <div style={{ margin: 10 }}>
