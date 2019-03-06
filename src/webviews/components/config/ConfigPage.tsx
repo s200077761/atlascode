@@ -23,6 +23,7 @@ import { WorkingProject } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
+import JiraSiteProject from './JiraSiteProject';
 
 type changeObject = { [key: string]: any };
 
@@ -170,12 +171,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
+                                        <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                                        <hr />
                                         <h3>Bitbucket</h3>
                                         {this.bitBucketButton()}
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Issue Explorer', 'configure the Jira issue explorer')}>
-                                        <JiraExplorer configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                                        <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
