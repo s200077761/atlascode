@@ -44,6 +44,8 @@ const emptyIssueData: IssueData = {
   issueType: emptyIssueType,
   reporter: emptyUser,
   assignee: emptyUser,
+  parentKey: undefined,
+  subtasks: [],
   comments: [],
   labels: [],
   attachments: [],
@@ -193,7 +195,14 @@ export default class JiraIssuePage extends WebviewComponent<
   render() {
     const issue = this.state.data;
 
-    const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
+    const subtasks = (Array.isArray(this.state.data.subtasks) && this.state.data.subtasks.length === 0)
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+        <h3>Subtasks</h3>
+        <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+      </React.Fragment>;
+
+      const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
         <h3>Child issues</h3>
@@ -209,6 +218,7 @@ export default class JiraIssuePage extends WebviewComponent<
                 <div>
                   {this.header(issue)}
                   {this.details(issue)}
+                  {subtasks}
                   {childIssues}
                   <h3>Comments</h3>
                   <Comments issue={issue} onSave={this.handleSave} />
@@ -220,6 +230,7 @@ export default class JiraIssuePage extends WebviewComponent<
                 <Grid layout="fluid">
                   <GridColumn medium={8}>
                     {this.header(issue)}
+                    {subtasks}
                     {childIssues}
                     <h3>Comments</h3>
                     <Comments issue={issue} onSave={this.handleSave} />
