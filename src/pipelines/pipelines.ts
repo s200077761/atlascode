@@ -150,7 +150,8 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
     state: {
       name: pipeline.state!.name,
       type: pipeline.state!.type,
-      result: resultForResult(pipeline.state!.result)
+      result: resultForResult(pipeline.state!.result),
+      stage: resultForResult(pipeline.state!.stage)
     },
     target: {
       ref_name: pipeline.target!.ref_name
@@ -176,13 +177,13 @@ function pipelineStepForPipelineStep(step: any): PipelineStep {
     run_number: step.run_number,
     uuid: step.uuid,
     name: step.name,
-    started_on: step.started_on,
     completed_on: step.completed_on,
     duration_in_seconds: step.duration_in_seconds,
     state: {
       name: step.state!.name,
       type: step.state!.type,
-      result: resultForResult(step.state!.result)
+      result: resultForResult(step.state!.result),
+      stage: resultForResult(step.state!.stage)
     },
     setup_commands: pipelineCommandsForPipelineCommands(step.setup_commands),
     teardown_commands: pipelineCommandsForPipelineCommands(step.teardown_commands),

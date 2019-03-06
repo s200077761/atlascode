@@ -6,7 +6,7 @@ import * as Handlebars from 'handlebars';
 export class Resources {
     static icons: Map<string, vscode.Uri> = new Map();
     static charlesCert: string;
-    static html: Map<string,Handlebars.TemplateDelegate> = new Map();
+    static html: Map<string, Handlebars.TemplateDelegate> = new Map();
     static htmlNotFound: Handlebars.TemplateDelegate = Handlebars.compile(`<!DOCTYPE html>
     <html lang="en">
     <body>
@@ -28,6 +28,7 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.icons.set('success', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-success.svg'))));
     Resources.icons.set('failed', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-failed.svg'))));
     Resources.icons.set('stopped', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-stopped.svg'))));
+    Resources.icons.set('paused', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'pipelines', 'icon-paused.svg'))));
 
     Resources.charlesCert = vscodeContext.asAbsolutePath('charles-ssl-proxying-certificate.pem');
 

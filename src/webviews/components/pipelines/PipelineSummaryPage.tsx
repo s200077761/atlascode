@@ -5,6 +5,7 @@ import {
   Pipeline,
   PipelineState,
   PipelineStep,
+  PipelineStage,
   PipelineResult,
   statusForState,
   Status
@@ -29,6 +30,12 @@ const inprogressIcon = (
 const errorIcon = (
   <ErrorIcon primaryColor={colors.R400} label="build failure" />
 );
+const pausedPath = (<path d="M8,16 C3.581722,16 0,12.418278 0,8 C0,3.581722 3.581722,0 8,0 C12.418278,0 16,3.581722 16,8 C16,12.418278 12.418278,16 8,16 Z M8,14 C11.3137085,14 14,11.3137085 14,8 C14,4.6862915 11.3137085,2 8,2 C4.6862915,2 2,4.6862915 2,8 C2,11.3137085 4.6862915,14 8,14 Z M8,12 C5.790861,12 4,10.209139 4,8 C4,5.790861 5.790861,4 8,4 C10.209139,4 12,5.790861 12,8 C12,10.209139 10.209139,12 8,12 Z" fill="currentColor" fill-rule="evenodd"></path>);
+const pausedIcon = (
+  <svg width="24" height="24" viewBox="0 0 16 16" focusable="false" role="presentation" color={colors.G400}>
+    {pausedPath}
+  </svg>
+);
 
 const panelHeader = (heading: string, subheading: string) =>
   <div>
@@ -51,6 +58,11 @@ const headerInprogressIcon = (
     size="large"
     label="build in progress"
   />
+);
+const headerPausedIcon = (
+  <svg width="24" height="24" viewBox="0 0 16 16" focusable="false" role="presentation">
+    {pausedPath}
+  </svg>
 );
 const headerErrorIcon = (
   <ErrorIcon
@@ -81,7 +93,12 @@ const emptyPipeline: PipelineData = {
   build_number: 0,
   uuid: "",
   created_on: "",
-  state: { name: "", type: "pipeline_state_in_progress", result: { name: "", type: "" } },
+  state: {
+    name: "",
+    type: "pipeline_state_in_progress",
+    result: { name: "", type: "" },
+    stage: { name: "PENDING", type: "pipeline_step_state_pending_pending" }
+  },
   target: { ref_name: "" }
 };
 
@@ -108,6 +125,8 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     switch (statusForState(state)) {
       case Status.Successful:
         return successIcon;
+      case Status.Paused:
+        return pausedIcon;
       case Status.Pending:
       case Status.InProgress:
         return inprogressIcon;
@@ -121,8 +140,10 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
   }
 
   colorForState(state: PipelineState): string {
+    console.log(`colorForState: ${JSON.stringify(state)}`);
     switch (statusForState(state)) {
       case Status.Successful:
+      case Status.Paused:
         return colors.G400;
       case Status.Pending:
       case Status.InProgress:
@@ -152,12 +173,28 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     }
   }
 
+  headerIconForStage(stage: PipelineStage): any {
+    switch (stage.type) {
+      case "pipeline_step_in_progress_pending":
+      case "pipeline_step_state_pending_pending":
+        return headerInprogressIcon;
+      case "pipeline_state_in_progress_paused":
+      case "pipeline_step_state_pending_paused":
+        return headerPausedIcon;
+      case "pipeline_step_state_pending_halted":
+      case "pipeline_state_in_progress_halted":
+        return headerErrorIcon;
+      default:
+        return headerErrorIcon;
+    }
+  }
+
   headerIconForState(state: PipelineState): any {
     switch (state.type) {
       case "pipeline_state_completed":
         return this.headerIconForResult(state.result!);
       case "pipeline_state_in_progress":
-      // fall through
+        return this.headerIconForStage(state.stage!);
       case "pipeline_state_pending":
         return headerInprogressIcon;
       default:
@@ -261,7 +298,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
               </span>
               <span className="pipeline-head-item">
                 {calendarIcon}
-                {moment(this.state.pipeline.completed_on).fromNow()}
+                {moment(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on).fromNow()}
               </span>
               <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} />
             </div>

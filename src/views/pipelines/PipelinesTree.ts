@@ -1,6 +1,6 @@
 import { TreeDataProvider, TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Command } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
-import { Pipeline } from "../../pipelines/model";
+import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
@@ -151,27 +151,24 @@ export class BranchNode extends Node {
     }
 
     private iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
-        const iconUriForResult = {
-            "pipeline_state_completed_successful": Resources.icons.get('success'),
-            "pipeline_state_completed_failed": Resources.icons.get('failed'),
-            "pipeline_state_completed_error": Resources.icons.get('failed'),
-            "pipeline_state_completed_stopped": Resources.icons.get('stopped')
-        };
-
-        if (pipeline && pipeline.state) {
-            switch (pipeline.state.type) {
-                case "pipeline_state_completed":
-                    return iconUriForResult[pipeline.state!.result!.type];
-                    break;
-                case "pipeline_state_in_progress":
-                    return Resources.icons.get('building');
-                    break;
-                case "pipeline_state_pending":
-                    return Resources.icons.get('pending');
-                    break;
-            }
+        switch (statusForState(pipeline.state)) {
+            case Status.Pending:
+                return Resources.icons.get('pending');
+            case Status.InProgress:
+                return Resources.icons.get('building');
+            case Status.Paused:
+                return Resources.icons.get('paused');
+            case Status.Stopped:
+                return Resources.icons.get('stopped');
+            case Status.Successful:
+                return Resources.icons.get('success');
+            case Status.Error:
+                return Resources.icons.get('failed');
+            case Status.Failed:
+                return Resources.icons.get('failed');
+            default:
+                return undefined;
         }
-        return undefined;
     }
 }
 
