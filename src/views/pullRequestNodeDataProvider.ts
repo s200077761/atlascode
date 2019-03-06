@@ -1,4 +1,4 @@
-import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem} from 'vscode';
+import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/context';
 import { GitContentProvider } from './gitContentProvider';
@@ -10,6 +10,8 @@ import { Container } from '../container';
 import { AuthProvider } from '../atlclients/authInfo';
 import { EmptyStateNode } from './nodes/emptyStateNode';
 import { PullRequestApi } from '../bitbucket/pullRequests';
+import { RepositoriesApi } from '../bitbucket/repositories';
+import { Repository } from '../typings/git';
 
 export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -23,7 +25,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()),
-            getPRDocumentCommentProvider().onDidChangeCommentThreads(this.refresh,this),
+            getPRDocumentCommentProvider().onDidChangeCommentThreads(this.refresh, this),
             ctx.onDidChangeBitbucketContext(() => {
                 this.updateChildren();
                 this.refresh();
@@ -62,7 +64,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
 
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return Promise.resolve([new EmptyStateNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
+            return [new EmptyStateNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
         }
         if (element) {
             return element.getChildren();
@@ -70,13 +72,12 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         if (!this._childrenMap) {
             this.updateChildren();
         }
-        if (this.ctx.getBitbucketRepositores()
-            .find(repo =>
-                !!PullRequestApi.getBitbucketRemotes(repo)
-                    .find(remote => (remote.fetchUrl! || remote.pushUrl!)
-                        .indexOf("bb-inf.net") !== -1))
+        if (this.repoHasStagingRemotes()
             && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
-            return Promise.resolve([new EmptyStateNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })]);
+            return [new EmptyStateNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
+        }
+        if (this.ctx.getBitbucketRepositores().length === 0) {
+            return [new EmptyStateNode("No Bitbucket repositories found")];
         }
         return Array.from(this._childrenMap!.values());
     }
@@ -84,5 +85,15 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     dispose() {
         this._disposable.dispose();
         this._onDidChangeTreeData.dispose();
+    }
+
+    private repoHasStagingRemotes(): boolean {
+        return !!this.ctx.getBitbucketRepositores()
+            .find(repo => this.isStagingRepo(repo));
+    }
+
+    private isStagingRepo(repo: Repository): boolean {
+        return !!PullRequestApi.getBitbucketRemotes(repo)
+            .find(remote => RepositoriesApi.isStagingUrl(RepositoriesApi.urlForRemote(remote)));
     }
 }

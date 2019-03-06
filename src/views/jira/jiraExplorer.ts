@@ -52,6 +52,7 @@ export class JiraExplorer extends Disposable {
                 if (customJql.length > 0) {
                     this._trees.push(new CustomJQLRoot(customJql) as any);
                 }
+                setCommandContext(CommandContext.CustomJQLExplorer, (customJql.length > 0));
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
