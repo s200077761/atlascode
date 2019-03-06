@@ -28,6 +28,12 @@ export class PipelinesExplorer extends Disposable {
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
+        this._disposable = Disposable.from(
+            this._ctx.onDidChangeBitbucketContext(() => {
+                this.updateMonitor();
+                this.refresh();
+            }),
+        );
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -48,13 +54,10 @@ export class PipelinesExplorer extends Disposable {
             setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled);
         }
 
-        if (initializing || configuration.changed(e, "bitbucket.pipelines.monitorEnabled")) {
-            const repos = this._ctx.getBitbucketRepositores();
-            if (Container.config.bitbucket.pipelines.monitorEnabled) {
-                this._monitor = new PipelinesMonitor(repos);
-            } else {
-                this._monitor = undefined;
-            }
+        if (initializing ||
+            configuration.changed(e, 'bitbucket.pipelines.monitorEnabled') ||
+            configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
+            this.updateMonitor();
         }
 
         if (!Container.config.bitbucket.pipelines.explorerEnabled &&
@@ -63,6 +66,16 @@ export class PipelinesExplorer extends Disposable {
         } else {
             this.stopTimer();
             this.startTimer();
+        }
+    }
+
+    updateMonitor() {
+        if (Container.config.bitbucket.pipelines.explorerEnabled &&
+            Container.config.bitbucket.pipelines.monitorEnabled) {
+            const repos = this._ctx.getBitbucketRepositores();
+            this._monitor = new PipelinesMonitor(repos);
+        } else {
+            this._monitor = undefined;
         }
     }
 
