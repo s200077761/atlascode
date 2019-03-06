@@ -156,6 +156,8 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
   details(issue: Issue): any {
+    let components = Array.isArray(issue.components) ? issue.components.map(c => c.name) : [];
+    let fixVersions = Array.isArray(issue.fixVersions) ? issue.fixVersions.map(v => v.name) : [];
 
     return (
       <div>
@@ -175,9 +177,9 @@ export default class JiraIssuePage extends WebviewComponent<
         <h3>Labels</h3>
         {this.tags(issue.labels)}
         <h3>Components</h3>
-        {this.tags(issue.components.map(c => c.name))}
+        {this.tags(components)}
         <h3>Fix Versions</h3>
-        {this.tags(issue.fixVersions.map(v => v.name))}
+        {this.tags(fixVersions)}
       </div>
     );
   }
