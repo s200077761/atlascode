@@ -8,6 +8,7 @@ export interface AnalyticsClientInit {
     flushAt?: any;
     flushInterval?: any;
     baseUrl?: any;
+    deviceId?: any;
 }
 
 export interface BaseEvent {
