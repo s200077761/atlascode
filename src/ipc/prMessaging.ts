@@ -25,6 +25,7 @@ export interface RepoData {
     name?: string;
     owner?: string;
     remotes: Remote[];
+    defaultReviewers: Bitbucket.Schema.User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
     mainbranch?: string;

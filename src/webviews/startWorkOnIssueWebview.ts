@@ -147,6 +147,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                 uri: r.rootUri.toString(),
                 href: href,
                 remotes: r.state.remotes,
+                defaultReviewers: [],
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],
                 mainbranch: mainbranch

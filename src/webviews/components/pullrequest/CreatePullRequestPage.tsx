@@ -7,7 +7,7 @@ import { Field } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import Select from '@atlaskit/select';
+import Select, { components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
@@ -21,7 +21,7 @@ import Form from '@atlaskit/form';
 type Emit = CreatePullRequest | FetchDetails;
 type Receive = CreatePRData | CommitsResult;
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: [] };
+const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (
@@ -50,6 +50,22 @@ const formatOptionLabel = (option: any, { context }: any) => {
     return option.label;
 };
 
+const UserOption = (props: any) => {
+    return (
+        <components.Option {...props}>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+        </components.Option>
+    );
+};
+
+const UserValue = (props: any) => {
+    return (
+        <components.MultiValueLabel {...props}>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+        </components.MultiValueLabel>
+    );
+};
+
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, {
     data: CreatePRData,
     title: string,
@@ -58,6 +74,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     summaryManuallyEdited: boolean,
     repo?: { label: string, value: RepoData },
     remote?: { label: string, value: Remote },
+    reviewers: Bitbucket.Schema.User[],
     sourceBranch?: { label: string, value: Branch },
     sourceRemoteBranchName?: string,
     destinationBranch?: { label: string, value: Ref },
@@ -68,7 +85,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 }> {
     constructor(props: any) {
         super(props);
-        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: true, commits: [], isCreateButtonLoading: false };
+        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: true, reviewers: [], commits: [], isCreateButtonLoading: false };
     }
 
     handleTitleChange = (e: any) => {
@@ -100,6 +117,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({
             repo: { label: repo.uri.split('/').pop()!, value: repo },
             remote: { label: remote.name, value: remote },
+            reviewers: repo.defaultReviewers,
             sourceBranch: { label: sourceBranch.name!, value: sourceBranch },
             destinationBranch: { label: destinationBranch.name!, value: destinationBranch }
         }, this.handleBranchChange);
@@ -150,17 +168,18 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({ pushLocalChanges: e.target.checked });
     }
 
-    handleCreatePR = () => {
+    handleCreatePR = (e: any) => {
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
             action: 'createPullRequest',
             repoUri: this.state.repo!.value.uri,
             remote: this.state.remote!.value,
+            reviewers: e.reviewers,
             title: this.state.title,
             summary: this.state.summary,
             sourceBranch: this.state.sourceBranch!.value,
             destinationBranch: this.state.destinationBranch!.value,
-            pushLocalChanges: this.state.pushLocalChanges
+            pushLocalChanges: this.state.pushLocalChanges,
         });
     }
 
@@ -211,7 +230,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     <Grid>
                         <Form
                             name="bitbucket-pullrequest-form"
-                            onSubmit={(e: any) => { }}
+                            onSubmit={(e: any) => this.handleCreatePR(e)}
                         >
                             {(frmArgs: any) => {
                                 return (<form {...frmArgs.formProps}>
@@ -300,16 +319,23 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             <Field label='Reviewers'
                                                 id='reviewers'
                                                 name='reviewers'
-                                                defaultValue='Adding reviewers from VS Code is not supported yet.'
+                                                defaultValue={repo.value.defaultReviewers}
                                             >
                                                 {
                                                     (fieldArgs: any) => {
                                                         return (
                                                             <div>
-                                                                <input {...fieldArgs.fieldProps}
-                                                                    style={{ width: '100%', display: 'block' }}
-                                                                    className='ac-inputField'
-                                                                    disabled />
+                                                                <Select
+                                                                    {...fieldArgs.fieldProps}
+                                                                    className="ac-select-container"
+                                                                    classNamePrefix="ac-select"
+                                                                    getOptionLabel={(option: any) => option.display_name}
+                                                                    getOptionValue={(option: any) => option.uuid}
+                                                                    placeholder="This extension only supports selecting from default reviewers"
+                                                                    noOptionsMessage={() => "No options (This extension only supports selecting from default reviewers)"}
+                                                                    isMulti
+                                                                    options={repo.value.defaultReviewers}
+                                                                    components={{ Option: UserOption, MultiValueLabel: UserValue }} />
                                                             </div>
                                                         );
                                                     }
@@ -317,7 +343,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             </Field>
                                         </div>
 
-                                        <Button className='ac-button' isLoading={this.state.isCreateButtonLoading} onClick={this.handleCreatePR}>Create pull request</Button>
+                                        <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>
 
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>

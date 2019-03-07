@@ -320,7 +320,12 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
   background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-input-foreground)!important
+  color: var(--vscode-input-foreground)!important;
+}
+
+.ac-select__multi-value__label {
+  background: var(--vscode-dropdown-foreground) !important;
+  font-size: 100% !important;
 }
 
 .ac-select__option {

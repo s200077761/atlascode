@@ -18,7 +18,8 @@ export const bitbucketHosts = new Map()
 export const maxItemsSupported = {
     commits: 100,
     comments: 100,
-    fileChanges: 100
+    fileChanges: 100,
+    reviewers: 100
 };
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
@@ -156,6 +157,20 @@ export namespace PullRequestApi {
         return statuses.filter(status => status.type === 'build');
     }
 
+    export async function getDefaultReviewers(remote: Remote): Promise<Bitbucket.Schema.User[]> {
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.pullrequests.listDefaultReviewers({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: maxItemsSupported.reviewers
+        });
+
+        const reviewers = data.values || [];
+        return reviewers;
+    }
+
     export function getBitbucketRemotes(repository: Repository): Remote[] {
         return repository.state.remotes.filter(remote => {
             const remoteUrl = remote.fetchUrl || remote.pushUrl;
@@ -176,7 +191,8 @@ export namespace PullRequestApi {
                 title: pr.data.title,
                 summary: pr.data.summary,
                 source: pr.data.source,
-                destination: pr.data.destination
+                destination: pr.data.destination,
+                reviewers: pr.data.reviewers
             }
         });
 

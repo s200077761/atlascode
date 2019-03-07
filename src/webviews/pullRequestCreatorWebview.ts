@@ -11,6 +11,7 @@ import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { PullRequest } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
+import { getCurrentUser } from '../bitbucket/user';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult, Action> {
 
@@ -28,6 +29,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
     public async invalidate() {
         const state: RepoData[] = [];
         const repos = Container.bitbucketContext.getBitbucketRepositores();
+        const currentUser = await getCurrentUser();
         for (let i = 0; i < repos.length; i++) {
             const r = repos[i];
             const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
@@ -35,7 +37,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                 continue;
             }
 
-            const [, repo] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0])]);
+            const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]),  PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
             const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
             await state.push({
                 uri: r.rootUri.toString(),
@@ -44,6 +46,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                 name: repo.name,
                 owner: repo.owner!.username,
                 remotes: r.state.remotes,
+                defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: await Promise.all(
                     r.state.refs
@@ -107,7 +110,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const { repoUri, remote, title, summary, sourceBranch, destinationBranch, pushLocalChanges } = createPullRequestAction;
+        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges } = createPullRequestAction;
         const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
@@ -132,7 +135,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                 branch: {
                     name: destinationBranchName
                 }
-            }
+            },
+            reviewers: reviewers
         };
 
         await PullRequestApi.create({ repository: repo, remote: remote, data: pr })

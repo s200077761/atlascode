@@ -32,6 +32,7 @@ export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     repoUri: string;
     remote: Remote;
+    reviewers: Bitbucket.Schema.User[];
     title: string;
     summary: string;
     sourceBranch: Branch;
