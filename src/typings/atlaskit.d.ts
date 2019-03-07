@@ -5,7 +5,6 @@ declare module '@atlaskit/avatar';
 declare module '@atlaskit/avatar-group';
 declare module '@atlaskit/checkbox';
 declare module '@atlaskit/comment';
-declare module '@atlaskit/banner';
 declare module '@atlaskit/breadcrumbs';
 declare module '@atlaskit/lozenge';
 declare module '@atlaskit/tag';
