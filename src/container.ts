@@ -45,7 +45,8 @@ export class Container {
             env: analyticsEnv,
             product: 'externalProductIntegrations',
             subproduct: 'atlascode',
-            version: version
+            version: version,
+            deviceId: env.machineId
         });
 
         if (config.jira.explorer.enabled) {

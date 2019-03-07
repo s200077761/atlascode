@@ -32,6 +32,7 @@ function useDefault(value: any, defaultValue: any) {
 class AnalyticsClient {
     config: { env: any; product: any; subproduct: any; datacenter: any; origin: any; version: any; };
     analyticsClient: any;
+    deviceId: any;
     static _buildProperties(
         { userIdType, tenantIdType, tenantId, trackEvent, subproduct, product, env, datacenter, version }
             : { userIdType: string, tenantIdType: string, tenantId: string, trackEvent: TrackEventData, subproduct: string, product: string, env: string, datacenter: string, version: string }) {
@@ -49,7 +50,7 @@ class AnalyticsClient {
     }
 
     static _buildUIProperties(
-        {userIdType, tenantIdType, tenantId, uiEvent, subproduct, product, env, datacenter, version}
+        { userIdType, tenantIdType, tenantId, uiEvent, subproduct, product, env, datacenter, version }
             : { userIdType: string, tenantIdType: string, tenantId: string, uiEvent: UIEventData, subproduct: string, product: string, env: string, datacenter: string, version: string }) {
         return Object.assign({}, uiEvent, {
             product,
@@ -65,7 +66,7 @@ class AnalyticsClient {
     }
 
     static _buildScreenProperties(
-        {userIdType, tenantIdType, tenantId, screenEvent, subproduct, product, env, datacenter, version}
+        { userIdType, tenantIdType, tenantId, screenEvent, subproduct, product, env, datacenter, version }
             : { userIdType: string, tenantIdType: string, tenantId: string, screenEvent: ScreenEventData, subproduct: string, product: string, env: string, datacenter: string, version: string }) {
         return Object.assign({}, screenEvent, {
             product,
@@ -82,7 +83,7 @@ class AnalyticsClient {
 
 
 
-    constructor({env, product, subproduct, datacenter, version, origin, flushAt, flushInterval, baseUrl}: AnalyticsClientInit) {
+    constructor({ env, product, subproduct, datacenter, version, origin, flushAt, flushInterval, baseUrl, deviceId }: AnalyticsClientInit) {
         requireValue(env, 'env');
         requireValue(product, 'product');
 
@@ -100,10 +101,12 @@ class AnalyticsClient {
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
             host: baseUrl || getUrlFromEnvironment(env)
         });
+
+        this.deviceId = deviceId;
     }
 
-    sendTrackEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, trackEvent, subproduct, product}: TrackEvent) {
-        return validateTrackEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, trackEvent})
+    sendTrackEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, trackEvent, subproduct, product }: TrackEvent) {
+        return validateTrackEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, trackEvent })
             .then(() =>
                 new Promise((resolve, reject) => {
                     this.analyticsClient.track({
@@ -120,7 +123,12 @@ class AnalyticsClient {
                             env: this.config.env,
                             datacenter: this.config.datacenter,
                             version: this.config.version
-                        })
+                        }),
+                        context: {
+                            device: {
+                                id: this.deviceId
+                            }
+                        }
                     }, (error: any, data: any) => {
                         if (error) {
                             reject(error);
@@ -132,8 +140,8 @@ class AnalyticsClient {
             );
     }
 
-    sendUIEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, uiEvent, subproduct, product}: UIEvent) {
-        return validateUIEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, uiEvent})
+    sendUIEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, uiEvent, subproduct, product }: UIEvent) {
+        return validateUIEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, uiEvent })
             .then(() =>
                 new Promise((resolve, reject) => {
                     this.analyticsClient.track({
@@ -150,7 +158,12 @@ class AnalyticsClient {
                             env: this.config.env,
                             datacenter: this.config.datacenter,
                             version: this.config.version
-                        })
+                        }),
+                        context: {
+                            device: {
+                                id: this.deviceId
+                            }
+                        }
                     }, (error: any, data: any) => {
                         if (error) {
                             reject(error);
@@ -162,8 +175,8 @@ class AnalyticsClient {
             );
     }
 
-    sendScreenEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent, subproduct, product}: ScreenEvent) {
-        return validateScreenEvent({userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent})
+    sendScreenEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent, subproduct, product }: ScreenEvent) {
+        return validateScreenEvent({ userIdType, userId, anonymousId, tenantIdType, tenantId, name, screenEvent })
             .then(() =>
                 new Promise((resolve, reject) => {
                     this.analyticsClient.page({
@@ -180,7 +193,12 @@ class AnalyticsClient {
                             env: this.config.env,
                             datacenter: this.config.datacenter,
                             version: this.config.version
-                        })
+                        }),
+                        context: {
+                            device: {
+                                id: this.deviceId
+                            }
+                        }
                     }, (error: any, data: any) => {
                         if (error) {
                             reject(error);
