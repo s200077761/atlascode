@@ -252,7 +252,6 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 /* links inside of banners with colored backgrounds */
 
 .ac-banner-link-button:hover, .ac-banner-link-button>span {
-  color: var(--vscode-button-foreground)!important;
   text-decoration: underline;
 }
 

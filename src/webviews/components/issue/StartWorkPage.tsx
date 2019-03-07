@@ -4,7 +4,6 @@ import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CreatableSelect } from '@atlaskit/select';
-// import Banner from '@atlaskit/banner';
 import { WebviewComponent } from "../WebviewComponent";
 import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import {
@@ -210,12 +209,6 @@ export default class StartWorkPage extends WebviewComponent<
     return (
       <Page>
         <Grid>
-          {/* <GridColumn medium={8}>
-
-            <Banner isOpen={this.state.result.successMessage} appearance="announcement">
-              ✅ {this.state.result.successMessage}
-            </Banner>
-          </GridColumn> */}
           <GridColumn medium={8}>
             {this.state.result.successMessage &&
               <SectionMessage

@@ -9,7 +9,6 @@ import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components 
 import { RadioGroup } from '@atlaskit/radio';
 import { Checkbox } from '@atlaskit/checkbox';
 import Button from '@atlaskit/button';
-import Banner from '@atlaskit/banner';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
@@ -348,14 +347,18 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 <Grid>
                     <GridColumn medium={8}>
                         <div>
-                            <Banner isOpen={this.state.isCreateBannerOpen} appearance="announcement">
-                                Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openIssueByKey', key: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
-                            </Banner>
+                            {this.state.isCreateBannerOpen &&
+                                <SectionMessage
+                                    appearance="confirmation"
+                                    title="Issue Created">
+                                    Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openIssueByKey', key: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                </SectionMessage>
+                            }
                             {this.state.isErrorBannerOpen &&
                                 <SectionMessage
                                     appearance="warning"
                                     title="Something went wrong"
-                                    actions={[{text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined })}]}>
+                                    actions={[{ text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined }) }]}>
                                     Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
                                 </SectionMessage>
                             }
