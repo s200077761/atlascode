@@ -51,8 +51,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                 <CheckboxField
                     name='pr-explorer-enabled'
                     id='pr-explorer-enabled'
-                    value='bitbucket.explorer.enabled'
-                    defaultIsChecked={this.props.configData.config.bitbucket.explorer.enabled}>
+                    value='bitbucket.explorer.enabled'>
                     {
                         (fieldArgs: any) => {
                             return (
@@ -60,6 +59,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                     label='Enable Bitbucket Pull Request Explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.configData.config.bitbucket.explorer.enabled}
                                 />
                             );
                         }
@@ -75,8 +75,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                     <CheckboxField
                         name='pr-explorer-relatedjiraissues-enabled'
                         id='pr-explorer-relatedjiraissues-enabled'
-                        value='bitbucket.explorer.relatedJiraIssues.enabled'
-                        defaultIsChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}>
+                        value='bitbucket.explorer.relatedJiraIssues.enabled'>
                         {
                             (fieldArgs: any) => {
                                 return (
@@ -84,6 +83,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                         label='Show related Jira issues for Bitbucket pull requests'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}
                                     />
                                 );
                             }
@@ -92,8 +92,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                     <CheckboxField
                         name='pr-explorer-notifications-prcreated'
                         id='pr-explorer-notifications-prcreated'
-                        value='bitbucket.explorer.notifications.pullRequestCreated'
-                        defaultIsChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}>
+                        value='bitbucket.explorer.notifications.pullRequestCreated'>
                         {
                             (fieldArgs: any) => {
                                 return (
@@ -101,6 +100,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                         label='Periodically check for newly created pull reqeuests and show a notification if there are any'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
                                     />
                                 );
                             }
