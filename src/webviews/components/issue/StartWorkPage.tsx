@@ -4,7 +4,7 @@ import SectionMessage from '@atlaskit/section-message';
 import Spinner from '@atlaskit/spinner';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CreatableSelect } from '@atlaskit/select';
-import Banner from '@atlaskit/banner';
+// import Banner from '@atlaskit/banner';
 import { WebviewComponent } from "../WebviewComponent";
 import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import {
@@ -62,7 +62,7 @@ export default class StartWorkPage extends WebviewComponent<
     this.state = emptyState;
   }
 
-  isEmptyRepo = (r: RepoData): boolean =>  r === emptyRepoData;
+  isEmptyRepo = (r: RepoData): boolean => r === emptyRepoData;
 
   createLocalBranchOption = (branchName: string): BranchNameOption => {
     return {
@@ -184,16 +184,16 @@ export default class StartWorkPage extends WebviewComponent<
   header(issue: any): any {
     return (
       <div>
-          <em><p>Start work on:</p></em>
-          <div className='ac-flex'>
-            <div className="ac-icon-with-text">
-              <img src={issue.issueType.iconUrl} />
-              <div className='jira-issue-key'>
-                <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>
-              </div>
+        <em><p>Start work on:</p></em>
+        <div className='ac-flex'>
+          <div className="ac-icon-with-text">
+            <img src={issue.issueType.iconUrl} />
+            <div className='jira-issue-key'>
+              <Button className='ac-link-button' appearance="link" onClick={() => this.postMessage({ action: 'openJiraIssue', issue: issue })}>{issue.key}</Button>
             </div>
-            <h3>{issue.summary}</h3>
           </div>
+          <h3>{issue.summary}</h3>
+        </div>
         <p>{issue.description}</p>
       </div>
     );
@@ -210,12 +210,20 @@ export default class StartWorkPage extends WebviewComponent<
     return (
       <Page>
         <Grid>
-          <GridColumn medium={8}>
+          {/* <GridColumn medium={8}>
+
             <Banner isOpen={this.state.result.successMessage} appearance="announcement">
               ✅ {this.state.result.successMessage}
             </Banner>
-          </GridColumn>
+          </GridColumn> */}
           <GridColumn medium={8}>
+            {this.state.result.successMessage &&
+              <SectionMessage
+                appearance="confirmation"
+                title="Work Started">
+                <div><p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} /></div>
+              </SectionMessage>
+            }
             {this.header(issue)}
           </GridColumn>
           <GridColumn medium={6}>

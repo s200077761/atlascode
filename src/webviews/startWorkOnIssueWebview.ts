@@ -12,7 +12,7 @@ import { AuthProvider } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RefType } from '../typings/git';
+import { Repository, RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -88,7 +88,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             const issue = this._state;
                             if (e.setupBitbucket) {
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
-                                await repo.createBranch(e.branchName, true, e.sourceBranchName);
+                                await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
                             const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
                             const currentUserId = authInfo!.user.id;
@@ -98,7 +98,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `Assigned the issue to you${e.setupJira ? ` and transitioned status to "${e.transition.to.name}"` : ''}  ${e.setupBitbucket ? `, and switched to "${e.branchName}" branch with upstream set to "${e.remote}"` : ''}.`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to "${e.transition.to.name}"</li>` : ''}  ${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}"</li>` : ''}</ul>`
                             });
                             issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
@@ -114,6 +114,16 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
         }
 
         return handled;
+    }
+
+    async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
+        repo.getBranch(destBranch).then(foundBranch => {
+            repo.checkout(destBranch).then(() => { repo.setBranchUpstream(destBranch, remote); });
+
+        })
+            .catch(reason => {
+                repo.createBranch(destBranch, true, sourceBranch).then(() => { repo.setBranchUpstream(destBranch, remote); });
+            });
     }
 
     public async updateIssue(issue: Issue) {
