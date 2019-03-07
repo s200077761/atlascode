@@ -60,6 +60,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         self: '',
         created: new Date(0),
         description: '',
+        descriptionHtml: '',
         summary: '',
         status: emptyStatus,
         priority: emptyPriority,
@@ -79,7 +80,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
     export type issueOrKey = Issue | string;
 
     export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
-    export const issueExpand = "transitions";
+    export const issueExpand = "transitions,renderedFields";
 
     export function isIssue(a:any): a is Issue {
         return a && (<Issue>a).key !== undefined && (<Issue>a).summary !== undefined;
@@ -155,6 +156,10 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             fixVersions = issueJson.fields.fixVersions.map((fixVersion: any) => {return {id: fixVersion.id, name: fixVersion.name};});
         }
 
+        let descriptionHtml = issueJson.fields.description;
+        if (issueJson.renderedFields && issueJson.renderedFields.description) {
+            descriptionHtml = issueJson.renderedFields.description;
+        }
         let subtasks: Issue[] = [];
         if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
             subtasks = issueJson.fields.subtasks.map((subtaskJson:any) => {
@@ -171,6 +176,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
             self: issueJson.self,
             created: new Date(Date.parse(issueJson.fields.created)),
             description: issueJson.fields.description,
+            descriptionHtml: descriptionHtml,
             summary: issueJson.fields.summary,
             status: isStatus(issueJson.fields.status) ? issueJson.fields.status : emptyStatus,
             priority: isPriority(issueJson.fields.priority) ? issueJson.fields.priority : emptyPriority,
@@ -198,6 +204,7 @@ import { WorkingSite, emptyWorkingSite } from "../config/model";
         self: string;
         created: Date;
         description: string;
+        descriptionHtml: string;
         summary: string;
         status: Status;
         priority: Priority;
