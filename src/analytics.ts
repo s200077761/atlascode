@@ -10,13 +10,31 @@ export const Registry = {
     }
 };
 
+class AnalyticsPlatform {
+    private static nodeJsPlatformMapping = {
+        'aix': 'desktop',
+        'android': 'android',
+        'darwin': 'mac',
+        'freebsd': 'desktop',
+        'linux': 'linux',
+        'openbsd': 'desktop',
+        'sunos': 'desktop',
+        'win32': 'windows',
+        'cygwin': 'windows'
+    };
+
+    static for(p: string): string {
+        return this.nodeJsPlatformMapping[p] || 'unknown';
+    }
+}
+
 export async function installedEvent(version: string): Promise<TrackEvent> {
 
     const e = {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'installed',
             actionSubject: 'atlascode',
             source: 'vscode',
@@ -32,7 +50,7 @@ export async function upgradedEvent(version: string, previousVersion: string): P
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'upgraded',
             actionSubject: 'atlascode',
             source: 'vscode',
@@ -48,7 +66,7 @@ export async function feedbackEvent(feedback: FeedbackData, source: string): Pro
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'submitted',
             actionSubject: 'atlascodeFeedback',
             source: source,
@@ -65,7 +83,7 @@ export async function featureChangeEvent(featureId: string, enabled: boolean): P
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: action,
             actionSubject: 'feature',
             actionSubjectId: featureId,
@@ -81,7 +99,7 @@ export async function authenticateButtonEvent(source: string): Promise<UIEvent> 
         tenantIdType: null,
         uiEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'authenticateButton',
@@ -97,7 +115,7 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
         tenantIdType: null,
         uiEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'logoutButton',
@@ -114,7 +132,7 @@ export async function authenticatedEvent(hostProduct: string): Promise<TrackEven
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'authenticated',
             actionSubject: 'atlascode',
             source: 'vscode',
@@ -131,7 +149,7 @@ export async function loggedOutEvent(hostProduct: string): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'unauthenticated',
             actionSubject: 'atlascode',
             source: 'vscode',
@@ -148,7 +166,7 @@ export async function viewScreenEvent(screenName: string, tenantId?: string): Pr
         name: screenName,
         screenEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
         }
     };
 
@@ -162,7 +180,7 @@ export async function siteSelectedEvent(siteId: string): Promise<TrackEvent> {
         tenantId: siteId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'selected',
             actionSubject: 'defaultJiraSite',
             actionSubjectId: siteId,
@@ -179,7 +197,7 @@ export async function projectSelectedEvent(projectId: string, tenantId: string):
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'selected',
             actionSubject: 'defaultJiraProject',
             actionSubjectId: projectId,
@@ -196,7 +214,7 @@ export async function issueCreatedEvent(issueKey: string, tenantId: string): Pro
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'created',
             actionSubject: 'issue',
             actionSubjectId: issueKey,
@@ -213,7 +231,7 @@ export async function issueTransitionedEvent(issueKey: string, tenantId: string)
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'transitioned',
             actionSubject: 'issue',
             actionSubjectId: issueKey,
@@ -230,7 +248,7 @@ export async function issueUrlCopiedEvent(tenantId: string): Promise<TrackEvent>
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'copied',
             actionSubject: 'issueUrl',
             source: 'vscode'
@@ -246,7 +264,7 @@ export async function issueCommentEvent(tenantId: string): Promise<TrackEvent> {
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'created',
             actionSubject: 'issueComment',
             source: 'vscode'
@@ -262,7 +280,7 @@ export async function issueWorkStartedEvent(tenantId: string): Promise<TrackEven
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'workStarted',
             actionSubject: 'issue',
             source: 'vscode'
@@ -278,7 +296,7 @@ export async function customJQLCreatedEvent(tenantId: string): Promise<TrackEven
         tenantId: tenantId,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'created',
             actionSubject: 'customJql',
             source: 'atlascodeSettings'
@@ -294,7 +312,7 @@ export async function prCreatedEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'created',
             actionSubject: 'pullRequest',
             source: 'vscode',
@@ -309,7 +327,7 @@ export async function prCommentEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'created',
             actionSubject: 'pullRequestComment',
             source: 'vscode'
@@ -324,7 +342,7 @@ export async function prCheckoutEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'checkedOut',
             actionSubject: 'pullRequestBranch',
             source: 'pullRequestDetailsScreen'
@@ -339,7 +357,7 @@ export async function prApproveEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'approved',
             actionSubject: 'pullRequest',
             source: 'pullRequestDetailsScreen'
@@ -354,7 +372,7 @@ export async function prMergeEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'merged',
             actionSubject: 'pullRequest',
             source: 'pullRequestDetailsScreen'
@@ -369,7 +387,7 @@ export async function prUrlCopiedEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'copied',
             actionSubject: 'pullRequestUrl',
             source: 'vscode'
@@ -384,7 +402,7 @@ export async function pipelineStartEvent(): Promise<TrackEvent> {
         tenantIdType: null,
         trackEvent: {
             origin: 'desktop',
-            platform: process.platform,
+            platform: AnalyticsPlatform.for(process.platform),
             action: 'start',
             actionSubject: 'pipeline',
             source: 'vscode'
