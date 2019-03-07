@@ -65,7 +65,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
-
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
     }
 

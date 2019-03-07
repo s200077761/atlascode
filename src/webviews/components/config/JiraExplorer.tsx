@@ -56,8 +56,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                 <CheckboxField
                     name='issue-explorer-enabled'
                     id='issue-explorer-enabled'
-                    value='jira.explorer.enabled'
-                    defaultIsChecked={this.props.configData.config.jira.explorer.enabled}>
+                    value='jira.explorer.enabled'>
                     {
                         (fieldArgs: any) => {
                             return (
@@ -65,6 +64,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                     label='Enable Jira Issue Explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.configData.config.jira.explorer.enabled}
                                 />
                             );
                         }
@@ -80,8 +80,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                     <CheckboxField
                         name='explorer-openissues'
                         id='explorer-openissues'
-                        value='jira.explorer.showOpenIssues'
-                        defaultIsChecked={this.props.configData.config.jira.explorer.showOpenIssues}>
+                        value='jira.explorer.showOpenIssues'>
                         {
                             (fieldArgs: any) => {
                                 return (
@@ -89,6 +88,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                         label='Show My Open Issues'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.jira.explorer.enabled}
+                                        isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
                                     />
                                 );
                             }
@@ -97,8 +97,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                     <CheckboxField
                         name='explorer-assigned-issues'
                         id='explorer-assigned-issues'
-                        value='jira.explorer.showAssignedIssues'
-                        defaultIsChecked={this.props.configData.config.jira.explorer.showAssignedIssues}>
+                        value='jira.explorer.showAssignedIssues'>
                         {
                             (fieldArgs: any) => {
                                 return (
@@ -106,6 +105,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                                         label='Show My Assigned Issues'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.jira.explorer.enabled}
+                                        isChecked={this.props.configData.config.jira.explorer.showAssignedIssues}
                                     />
                                 );
                             }

@@ -26,14 +26,14 @@ export default class BitbucketContextMenus extends React.Component<{ configData:
             <CheckboxField
                 name='bitbucket-contextmenus-enabled'
                 id='bitbucket-contextmenus-enabled'
-                value='bitbucket.contextMenus.enabled'
-                defaultIsChecked={this.props.configData.config.bitbucket.contextMenus.enabled}>
+                value='bitbucket.contextMenus.enabled'>
                 {
                     (fieldArgs: any) => {
                         return (
                             <Checkbox {...fieldArgs.fieldProps}
                                 label='Enable Bitbucket context menus in editor'
                                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                isChecked={this.props.configData.config.bitbucket.contextMenus.enabled}
                             />
                         );
                     }

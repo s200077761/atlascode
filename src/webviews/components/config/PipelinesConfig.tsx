@@ -36,7 +36,6 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           name="pipelines-explorer-enabled"
           id="pipelines-explorer-enabled"
           value="bitbucket.pipelines.explorerEnabled"
-          defaultIsChecked={this.props.configData.config.bitbucket.pipelines.explorerEnabled}
         >
           {(fieldArgs: any) => {
             return (
@@ -44,6 +43,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                 {...fieldArgs.fieldProps}
                 label="Enable Bitbucket Pipelines Explorer"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                isChecked={this.props.configData.config.bitbucket.pipelines.explorerEnabled}
               />
             );
           }}
@@ -53,7 +53,6 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           name="pipelines-monitor-enabled"
           id="pipelines-monitor-enabled"
           value="bitbucket.pipelines.monitorEnabled"
-          defaultIsChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
         >
           {(fieldArgs: any) => {
             return (
@@ -62,6 +61,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                 label="Enable Pipelines Build Status Monitor"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                 isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
+                isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
               />
             );
           }}

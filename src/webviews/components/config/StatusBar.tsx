@@ -28,14 +28,14 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                     <CheckboxField
                         name='jira-status-enabled'
                         id='jira-status-enabled'
-                        value='jira.statusbar.enabled'
-                        defaultIsChecked={this.props.configData.config.jira.statusbar.enabled}>
+                        value='jira.statusbar.enabled'>
                         {
                             (fieldArgs: any) => {
                                 return (
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Enable Jira Status Bar'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isChecked={this.props.configData.config.jira.statusbar.enabled}
                                     />
                                 );
                             }
@@ -51,8 +51,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='jira-status-product'
                             id='jira-status-product'
-                            value='jira.statusbar.showProduct'
-                            defaultIsChecked={this.props.configData.config.jira.statusbar.showProduct}>
+                            value='jira.statusbar.showProduct'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -60,6 +59,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show product name'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.jira.statusbar.enabled}
+                                            isChecked={this.props.configData.config.jira.statusbar.showProduct}
                                         />
                                     );
                                 }
@@ -69,8 +69,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='jira-status-user'
                             id='jira-status-user'
-                            value='jira.statusbar.showUser'
-                            defaultIsChecked={this.props.configData.config.jira.statusbar.showUser}>
+                            value='jira.statusbar.showUser'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -78,6 +77,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label="Show user's name"
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.jira.statusbar.enabled}
+                                            isChecked={this.props.configData.config.jira.statusbar.showUser}
                                         />
                                     );
                                 }
@@ -87,8 +87,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='jira-status-site'
                             id='jira-status-site'
-                            value='jira.statusbar.showSite'
-                            defaultIsChecked={this.props.configData.config.jira.statusbar.showSite}>
+                            value='jira.statusbar.showSite'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -96,6 +95,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show default site'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.jira.statusbar.enabled}
+                                            isChecked={this.props.configData.config.jira.statusbar.showSite}
                                         />
                                     );
                                 }
@@ -105,8 +105,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='jira-status-project'
                             id='jira-status-project'
-                            value='jira.statusbar.showProject'
-                            defaultIsChecked={this.props.configData.config.jira.statusbar.showProject}>
+                            value='jira.statusbar.showProject'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -114,6 +113,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show default project'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.jira.statusbar.enabled}
+                                            isChecked={this.props.configData.config.jira.statusbar.showProject}
                                         />
                                     );
                                 }
@@ -123,8 +123,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='jira-status-login'
                             id='jira-status-login'
-                            value='jira.statusbar.showLogin'
-                            defaultIsChecked={this.props.configData.config.jira.statusbar.showLogin}>
+                            value='jira.statusbar.showLogin'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -132,6 +131,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show login button when not authenticated'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.jira.statusbar.enabled}
+                                            isChecked={this.props.configData.config.jira.statusbar.showLogin}
                                         />
                                     );
                                 }
@@ -144,14 +144,14 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                     <CheckboxField
                         name='bitbucket-status-enabled'
                         id='bitbucket-status-enabled'
-                        value='bitbucket.statusbar.enabled'
-                        defaultIsChecked={this.props.configData.config.bitbucket.statusbar.enabled}>
+                        value='bitbucket.statusbar.enabled'>
                         {
                             (fieldArgs: any) => {
                                 return (
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Enable Bitbucket Status Bar'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isChecked={this.props.configData.config.bitbucket.statusbar.enabled}
                                     />
                                 );
                             }
@@ -167,8 +167,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='bitbucket-status-product'
                             id='bitbucket-status-product'
-                            value='bitbucket.statusbar.showProduct'
-                            defaultIsChecked={this.props.configData.config.bitbucket.statusbar.showProduct}>
+                            value='bitbucket.statusbar.showProduct'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -176,6 +175,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show product name'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
+                                            isChecked={this.props.configData.config.bitbucket.statusbar.showProduct}
                                         />
                                     );
                                 }
@@ -185,8 +185,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='bitbucket-status-user'
                             id='bitbucket-status-user'
-                            value='bitbucket.statusbar.showUser'
-                            defaultIsChecked={this.props.configData.config.bitbucket.statusbar.showUser}>
+                            value='bitbucket.statusbar.showUser' t>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -194,6 +193,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label="Show user's name"
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
+                                            isChecked={this.props.configData.config.bitbucket.statusbar.showUser}
                                         />
                                     );
                                 }
@@ -203,8 +203,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                         <CheckboxField
                             name='bitbucket-status-login'
                             id='bitbucket-status-login'
-                            value='bitbucket.statusbar.showLogin'
-                            defaultIsChecked={this.props.configData.config.bitbucket.statusbar.showLogin}>
+                            value='bitbucket.statusbar.showLogin'>
                             {
                                 (fieldArgs: any) => {
                                     return (
@@ -212,6 +211,7 @@ export default class StatusBar extends React.Component<{ configData: ConfigData,
                                             label='Show login button when not authenticated'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                             isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
+                                            isChecked={this.props.configData.config.bitbucket.statusbar.showLogin}
                                         />
                                     );
                                 }

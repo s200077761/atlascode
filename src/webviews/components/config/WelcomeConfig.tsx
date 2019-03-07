@@ -26,14 +26,14 @@ export default class WelcomeConfig extends React.Component<{ configData: ConfigD
             <CheckboxField
                 name='show-welcome-enabled'
                 id='show-welcome-enabled'
-                value='showWelcomeOnInstall'
-                defaultIsChecked={this.props.configData.config.showWelcomeOnInstall}>
+                value='showWelcomeOnInstall'>
                 {
                     (fieldArgs: any) => {
                         return (
                             <Checkbox {...fieldArgs.fieldProps}
                                 label='Show welcome screen when extension is updated'
                                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                isChecked={this.props.configData.config.showWelcomeOnInstall}
                             />
                         );
                     }
