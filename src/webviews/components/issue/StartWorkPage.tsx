@@ -22,7 +22,7 @@ import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
 
 type Emit = StartWorkAction | OpenJiraIssueAction;
-const emptyRepoData: RepoData = { uri: '', remotes: [], localBranches: [], remoteBranches: [] };
+const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 
 type BranchNameOption = { label: string, value: string };
 type State = {
