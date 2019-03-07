@@ -31,8 +31,7 @@ export namespace RepositoriesApi {
     }
 
     export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
+        let parsed = GitUrlParse(urlForRemote(remote));
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
         const { data } = await bb.repositories.getPullrequestsForCommit({
             repo_slug: parsed.name,
@@ -41,5 +40,13 @@ export namespace RepositoriesApi {
         });
 
         return data.values || [];
+    }
+
+    export function urlForRemote(remote: Remote): string {
+        return remote.fetchUrl! || remote.pushUrl!;
+    }
+
+    export function isStagingUrl(url: string): boolean {
+        return url.indexOf('bb-inf.net') !== -1;
     }
 }

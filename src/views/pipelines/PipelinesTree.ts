@@ -1,4 +1,4 @@
-import { TreeDataProvider, TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri } from "vscode";
+import { TreeDataProvider, TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Command } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
@@ -10,8 +10,8 @@ import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
 
 export class PipelinesTree implements TreeDataProvider<Node> {
-    _branches: [string, Repository][] | undefined;
-    _pipelines: Map<string, Pipeline[]> = new Map();
+    private _branches: [string, Repository][] | undefined;
+    private _pipelines: Map<string, Pipeline[]> = new Map();
     private _onDidChangeTreeData = new EventEmitter<Node>();
     public get onDidChangeTreeData(): Event<Node> {
         return this._onDidChangeTreeData.event;
@@ -26,11 +26,14 @@ export class PipelinesTree implements TreeDataProvider<Node> {
 
     async getChildren(element?: Node): Promise<Node[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return Promise.resolve([new EmptyNode()]);
+            return Promise.resolve([new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
         if (!element) {
             if (!this._branches) {
                 this._branches = await this.fetchBranches();
+            }
+            if ([...this._pipelines.values()].every(results => results.length === 0)) {
+                return [new EmptyNode("No Pipelines results for this repository")];
             }
             return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
         } else if (element instanceof BranchNode) {
@@ -175,11 +178,15 @@ export class BranchNode extends Node {
 }
 
 class EmptyNode extends Node {
+    constructor(readonly _message: string, readonly _command?: Command) {
+        super();
+    }
+
     treeItem() {
-        const text = "Please login to Bitbucket";
+        const text = this._message;
         const treeItem = new TreeItem(text, TreeItemCollapsibleState.None);
         treeItem.tooltip = text;
-        treeItem.command = { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" };
+        treeItem.command = this._command;
         return treeItem;
     }
 }

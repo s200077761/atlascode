@@ -15,6 +15,7 @@ import { Issue } from '../jira/jiraModel';
 import { extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
+import { RepositoriesApi } from '../bitbucket/repositories';
 
 interface PRState {
     prData: PRData;
@@ -132,7 +133,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
     }
 
     private async postInitialState(pr: PullRequest) {
-        const isStagingRepo = pr.remote && pr.remote.fetchUrl!.indexOf('bb-inf.net') !== -1;
+        const isStagingRepo = pr.remote && RepositoriesApi.isStagingUrl(pr.remote.fetchUrl!);
         const currentUser = this._state.prData.currentUser || await getCurrentUser(isStagingRepo);
         this._state = {
             repository: pr.repository,
