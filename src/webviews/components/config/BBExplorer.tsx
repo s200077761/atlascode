@@ -97,7 +97,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                             (fieldArgs: any) => {
                                 return (
                                     <Checkbox {...fieldArgs.fieldProps}
-                                        label='Periodically check for newly created pull reqeuests and show a notification if there are any'
+                                        label='Periodically check for newly created pull requests and show a notification if there are any'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
                                         isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
