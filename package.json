@@ -206,7 +206,7 @@
                 {
                     "id": "atlascode.views.jira.customJql",
                     "name": "Custom JQL",
-                    "when": "atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",

@@ -3,17 +3,34 @@ import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import { JQLEntry } from "src/config/model";
 import { Field, ErrorMessage } from '@atlaskit/form';
+import Select, { components } from '@atlaskit/select';
 import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
+import { AccessibleResource } from "../../../atlclients/authInfo";
+
+const IconOption = (props: any) => (
+  <components.Option {...props}>
+    <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+  </components.Option>
+);
+
+const IconValue = (props: any) => (
+  <components.SingleValue {...props}>
+    <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+  </components.SingleValue>
+
+);
 
 export default class EditJQL extends PureComponent<{
-  cloudId: string;
   jiraAccessToken: string;
+  workingSite: AccessibleResource;
+  sites: AccessibleResource[];
   jqlEntry: JQLEntry;
   onCancel: () => void;
-  onSave: (jqlEntry: JQLEntry) => void;
+  onSave: (site: AccessibleResource, jqlEntry: JQLEntry) => void;
 }, {
+  selectedSite: AccessibleResource;
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
@@ -21,6 +38,7 @@ export default class EditJQL extends PureComponent<{
   isEditing: boolean;
 }> {
   state = {
+    selectedSite: this.props.workingSite,
     nameValue: this.props.jqlEntry.name,
     inputValue: this.props.jqlEntry.query,
     openComplete: false,
@@ -30,7 +48,7 @@ export default class EditJQL extends PureComponent<{
 
   async fetchEndpoint(endpoint: string): Promise<any> {
     const fullUrl = `https://api.atlassian.com/ex/jira/${
-      this.props.cloudId
+      this.state.selectedSite.id
       }/rest/api/2/${endpoint}`;
     const r = new Request(fullUrl, {
       headers: {
@@ -51,7 +69,7 @@ export default class EditJQL extends PureComponent<{
 
   validationRequest = async (jql: string) => {
     this.fetchEndpoint(
-      `/search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -64,7 +82,13 @@ export default class EditJQL extends PureComponent<{
   }
 
   getAutocompleteDataRequest = () => {
-    return this.fetchEndpoint("/jql/autocompletedata");
+    return this.fetchEndpoint("jql/autocompletedata");
+  }
+
+  handleSiteChange = (e: AccessibleResource) => {
+    this.setState({
+      selectedSite: e
+    });
   }
 
   onJQLChange = (e: any) => {
@@ -88,7 +112,7 @@ export default class EditJQL extends PureComponent<{
   onSave = () => {
     var entry = this.props.jqlEntry;
 
-    this.props.onSave(Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
+    this.props.onSave(this.state.selectedSite, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onOpenComplete = () => {
@@ -125,6 +149,29 @@ export default class EditJQL extends PureComponent<{
                       onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
+                );
+              }
+            }
+          </Field>
+
+          <Field label='Select Site'
+            id='site'
+            name='site'
+            defaultValue={this.props.workingSite}
+          >
+            {
+              (fieldArgs: any) => {
+                return (
+                  <Select
+                    {...fieldArgs.fieldProps}
+                    className="ac-select-container"
+                    classNamePrefix="ac-select"
+                    getOptionLabel={(option: any) => option.name}
+                    getOptionValue={(option: any) => option.id}
+                    options={this.props.sites}
+                    components={{ Option: IconOption, SingleValue: IconValue }}
+                    onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                  />
                 );
               }
             }

@@ -5,7 +5,7 @@ import { Commands } from "../../commands";
 import { RefreshableTree } from "./abstractIssueTree";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
-import { configuration, SiteJQL, JQLEntry } from "../../config/configuration";
+import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
@@ -38,21 +38,16 @@ export class JiraExplorer extends Disposable {
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
-        if (
-            initializing ||
-            configuration.changed(e, 'jira.explorer.enabled') ||
-            configuration.changed(e, 'jira.customJql')
-        ) {
+
+        if (initializing || configuration.changed(e, 'jira.explorer.enabled')) {
             if (!Container.config.jira.explorer.enabled) {
                 this.dispose();
             } else {
-                this._trees.push(new OpenIssuesTree());
-                this._trees.push(new AssignedIssuesTree());
-                const customJql = this.customJqlForWorkingSite();
-                if (customJql.length > 0) {
-                    this._trees.push(new CustomJQLRoot(customJql) as any);
+                if (initializing || this._trees.length === 0) {
+                    this._trees.push(new OpenIssuesTree());
+                    this._trees.push(new AssignedIssuesTree());
+                    this._trees.push(new CustomJQLRoot());
                 }
-                setCommandContext(CommandContext.CustomJQLExplorer, (customJql.length > 0));
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
@@ -89,24 +84,12 @@ export class JiraExplorer extends Disposable {
         }
     }
 
-    private customJqlForWorkingSite(): JQLEntry[] {
-        const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => {
-            return item.siteId === Container.config.jira.workingSite.id;
-        });
-
-        if (siteJql) {
-            return siteJql.jql.filter((jql: JQLEntry) => {
-                return jql.enabled;
-            });
-        }
-        return [];
-    }
-
     dispose() {
         this._disposable.dispose();
         this._trees.forEach(tree => {
             tree.dispose();
         });
+        this._trees = [];
     }
 
     async refresh() {

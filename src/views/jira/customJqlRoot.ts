@@ -6,35 +6,48 @@ import {
   TreeItemCollapsibleState,
   TreeViewVisibilityChangeEvent,
   Event,
-  EventEmitter
+  EventEmitter,
+  Disposable,
+  ConfigurationChangeEvent
 } from "vscode";
 import { BaseNode } from "../nodes/baseNode";
-import { CustomJQLTreeId } from "../../constants";
+import { CustomJQLTreeId, setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { RefreshableTree } from "./abstractIssueTree";
-import { JQLEntry } from "src/config/model";
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { viewScreenEvent } from '../../analytics';
 import { EmptyStateNode } from "../nodes/emptyStateNode";
 import { Commands } from "../../commands";
+import { JQLEntry, SiteJQL, configuration } from "../../config/configuration";
 
 export class CustomJQLRoot
   implements TreeDataProvider<BaseNode | CustomJQLTree>, RefreshableTree {
+
+  private _disposable: Disposable;
+  private _jqlList: JQLEntry[];
   private _tree: TreeView<BaseNode | CustomJQLTree> | undefined;
   private _children: CustomJQLTree[];
   private _onDidChangeTreeData = new EventEmitter<BaseNode>();
   public get onDidChangeTreeData(): Event<BaseNode> {
-      return this._onDidChangeTreeData.event;
+    return this._onDidChangeTreeData.event;
   }
 
-  constructor(private _jqlList: JQLEntry[]) {
+  constructor() {
+    this._jqlList = this.customJqlForWorkingSite();
+    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
+
     this._children = [];
 
     this._tree = window.createTreeView(CustomJQLTreeId, {
       treeDataProvider: this
     });
-    this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
+
+    this._disposable = Disposable.from(
+      this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e)),
+      Container.jiraSiteManager.onDidSiteChange(this.refresh, this),
+      configuration.onDidChange(this.handleConfigurationChange, this)
+    );
   }
 
   getTreeItem(element: BaseNode | CustomJQLTree) {
@@ -65,10 +78,31 @@ export class CustomJQLRoot
   }
 
   refresh() {
+    this._jqlList = this.customJqlForWorkingSite();
+    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
+
     this._onDidChangeTreeData.fire();
   }
 
+  handleConfigurationChange(e: ConfigurationChangeEvent) {
+    if (configuration.changed(e, 'jira.workingSite') || configuration.changed(e, 'jira.customJql')) {
+      this.refresh();
+    }
+  }
+
+  customJqlForWorkingSite(): JQLEntry[] {
+    const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => item.siteId === Container.jiraSiteManager.effectiveSite.id);
+
+    if (siteJql) {
+      return siteJql.jql.filter((jql: JQLEntry) => {
+        return jql.enabled;
+      });
+    }
+    return [];
+  }
+
   dispose() {
+    this._disposable.dispose();
     if (this._tree) {
       this._tree.dispose();
     }

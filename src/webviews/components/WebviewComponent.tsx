@@ -10,7 +10,7 @@ interface VsCodeApi {
 
 declare function acquireVsCodeApi(): VsCodeApi;
 
-export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends React.Component<P,S> { }
+export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends React.Component<P, S> { }
 // WebviewComponent is the base React component for creating a webview in vscode.
 // This handles comms between vscode and react.
 // Generic Types:
@@ -18,7 +18,7 @@ export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends R
 // R = the type of ipc.Message(s) we can recieve
 // P = the type of react properties
 // S = the type of react state
-export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Component<P,S> {
+export abstract class WebviewComponent<A extends Action, R, P, S> extends React.Component<P, S> {
     private readonly _api: VsCodeApi;
 
     constructor(props: Readonly<P>) {
@@ -36,15 +36,15 @@ export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Com
             const computedStyle = getComputedStyle(body);
 
             const bodyStyle = body.style;
-            let color = computedStyle.getPropertyValue('--background-color').trim();
-            bodyStyle.setProperty('--background-color--lighten-05', lighten(color, 5));
-            bodyStyle.setProperty('--background-color--darken-05', darken(color, 5));
-            bodyStyle.setProperty('--background-color--lighten-075', lighten(color, 7.5));
-            bodyStyle.setProperty('--background-color--darken-075', darken(color, 7.5));
-            bodyStyle.setProperty('--background-color--lighten-15', lighten(color, 15));
-            bodyStyle.setProperty('--background-color--darken-15', darken(color, 15));
-            bodyStyle.setProperty('--background-color--lighten-30', lighten(color, 30));
-            bodyStyle.setProperty('--background-color--darken-30', darken(color, 30));
+            let color = computedStyle.getPropertyValue('--vscode-editor-background').trim();
+            bodyStyle.setProperty('--vscode-editor-background--lighten-05', lighten(color, 5));
+            bodyStyle.setProperty('--vscode-editor-background--darken-05', darken(color, 5));
+            bodyStyle.setProperty('--vscode-editor-background--lighten-075', lighten(color, 7.5));
+            bodyStyle.setProperty('--vscode-editor-background--darken-075', darken(color, 7.5));
+            bodyStyle.setProperty('--vscode-editor-background--lighten-15', lighten(color, 15));
+            bodyStyle.setProperty('--vscode-editor-background--darken-15', darken(color, 15));
+            bodyStyle.setProperty('--vscode-editor-background--lighten-30', lighten(color, 30));
+            bodyStyle.setProperty('--vscode-editor-background--darken-30', darken(color, 30));
 
             color = computedStyle.getPropertyValue('--color').trim();
             bodyStyle.setProperty('--color--75', opacity(color, 75));
@@ -78,12 +78,12 @@ export abstract class WebviewComponent<A extends Action,R,P,S> extends React.Com
         onColorThemeChanged();
     }
 
-    private onMessageEvent(e:MessageEvent) {
+    private onMessageEvent(e: MessageEvent) {
         const msg = e.data as R;
         this.onMessageReceived(msg);
     }
 
-    abstract onMessageReceived(e: R):void;
+    abstract onMessageReceived(e: R): void;
 
     protected postMessage(e: A) {
         this._api.postMessage(e);
