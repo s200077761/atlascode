@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Button from '@atlaskit/button';
+import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
@@ -215,13 +215,13 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         const repo = this.state.repo || { label: '', value: emptyRepoData };
 
         const actionsContent = (
-            <div className='ac-flex-space-between'>
+            <ButtonGroup>
                 <Button className='ac-button' href={
                     repo && repo.value.href
                         ? `${repo.value.href}/pull-requests/new`
                         : `https://bitbucket.org/dashboard/overview`
                 }>Create on bitbucket.org...</Button>
-            </div>
+            </ButtonGroup>
         );
 
         return (
@@ -238,31 +238,32 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <PageHeader actions={actionsContent}>
                                             <p>Create pull request</p>
                                         </PageHeader>
-                                        <GridColumn medium={6}>
-                                            <div style={{ marginBottom: '20px' }}>
-                                                <label>Repository</label>
-                                                <Select
-                                                    options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
-                                                    onChange={this.handleRepoChange}
-                                                    placeholder='Loading...'
-                                                    value={repo}
-                                                    className="ac-select-container"
-                                                    classNamePrefix="ac-select" />
+                                    </GridColumn>
+                                    <GridColumn medium={6}>
+                                        <div style={{ marginBottom: '20px' }}>
+                                            <label>Repository</label>
+                                            <Select
+                                                options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                                                onChange={this.handleRepoChange}
+                                                placeholder='Loading...'
+                                                value={repo}
+                                                className="ac-select-container"
+                                                classNamePrefix="ac-select" />
 
-                                                {repo.value.remotes.length > 1 &&
-                                                    <React.Fragment>
-                                                        <label>Remote</label>
-                                                        <Select
-                                                            options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
-                                                            onChange={this.handleRemoteChange}
-                                                            value={this.state.remote}
-                                                            className="ac-select-container"
-                                                            classNamePrefix="ac-select" />
-                                                    </React.Fragment>
-                                                }
-                                            </div>
-                                        </GridColumn>
-
+                                            {repo.value.remotes.length > 1 &&
+                                                <React.Fragment>
+                                                    <label>Remote</label>
+                                                    <Select
+                                                        options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
+                                                        onChange={this.handleRemoteChange}
+                                                        value={this.state.remote}
+                                                        className="ac-select-container"
+                                                        classNamePrefix="ac-select" />
+                                                </React.Fragment>
+                                            }
+                                        </div>
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
                                         <div className='ac-compare-widget-container'>
                                             <div className='ac-compare-widget'>
                                                 <div className='ac-compare-widget-item'>

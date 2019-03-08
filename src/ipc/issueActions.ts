@@ -21,16 +21,11 @@ export interface IssueAssignAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issue: Issue;
+    issueOrKey: Issue | string;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
     action: 'copyJiraIssueLink';
-}
-
-export interface OpenIssueByKeyAction extends Action {
-    action: 'openIssueByKey';
-    key: string;
 }
 
 export interface FetchQueryAction extends Action {
@@ -82,11 +77,7 @@ export function isIssueAssign(a: Action): a is  IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
 }
 export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
-    return (<OpenJiraIssueAction>a).issue !== undefined;
-}
-
-export function isOpenIssueByKey(a: Action): a is OpenIssueByKeyAction {
-    return (<OpenIssueByKeyAction>a).key !== undefined;
+    return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
 export function isFetchQuery(a: Action): a is  FetchQueryAction {

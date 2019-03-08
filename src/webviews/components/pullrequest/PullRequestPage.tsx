@@ -14,15 +14,16 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
-import { Approve, Merge, Checkout, PostComment } from '../../../ipc/prActions';
+import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
 import { Issue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
+import NavItem from '../issue/NavItem';
 
-type Emit = Approve | Merge | Checkout | PostComment | OpenJiraIssueAction;
+type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction;
 type Receive = PRData | CheckoutResult;
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading: boolean, isCheckoutButtonLoading: boolean, branchError?: string }> {
@@ -56,7 +57,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleIssueClicked = (issue: Issue) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issue: issue
+            issueOrKey: issue
         });
     }
 
@@ -66,6 +67,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             action: 'checkout',
             branch: branchName,
             isSourceBranch: true
+        });
+    }
+
+    handleCopyLink = () => {
+        this.postMessage({
+            action: 'copyPullRequestLink'
         });
     }
 
@@ -116,9 +123,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
-                <BreadcrumbsItem text={this.state.pr.pr!.destination!.repository!.name} key={this.state.pr.pr!.destination!.repository!.name} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />
-                <BreadcrumbsItem text="Pull requests" key="Pull requests" href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />
-                <BreadcrumbsItem text={pr.id} key={pr.id} href={pr.links!.html!.href} />
+                <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repository!.name!} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />} />
+                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`}/>} />
+                <BreadcrumbsItem component={() => <NavItem text={`${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink}/>} />
             </BreadcrumbsStateless>
         );
 

@@ -16,7 +16,7 @@ import { Repository, RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
-import { issueWorkStartedEvent } from '../analytics';
+import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
@@ -78,9 +78,17 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
                         break;
                     }
+                }
+                case 'copyJiraIssueLink': {
+                    handled = true;
+                    const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
+                    await vscode.env.clipboard.writeText(linkUrl);
+                    vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    break;
                 }
                 case 'startWork': {
                     if (isStartWork(e)) {

@@ -58,6 +58,7 @@ hr {
 
 [class^=styled__StyledTitle-] p {
   margin: 0px;
+  color: var(--vscode-editor-foreground);
 }
 
 [class^=styled__StyledTitle-] {

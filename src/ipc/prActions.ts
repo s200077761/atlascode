@@ -18,6 +18,10 @@ export interface Merge extends Action {
     action: 'merge';
 }
 
+export interface CopyPullRequestLink extends Action {
+    action: 'copyPullRequestLink';
+}
+
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;
