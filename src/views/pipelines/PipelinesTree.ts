@@ -35,9 +35,9 @@ export class PipelinesTree implements TreeDataProvider<Node> {
             if ([...this._pipelines.values()].every(results => results.length === 0)) {
                 return [new EmptyNode("No Pipelines results for this repository")];
             }
-            return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines[b]));
+            return this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines.get(b)));
         } else if (element instanceof BranchNode) {
-            const branchPipelines = this._pipelines[element.branchName];
+            const branchPipelines = this._pipelines.get(element.branchName);
             if (branchPipelines) {
                 return branchPipelines.map((p: any) => new PipelineNode(p));
             } else {
@@ -75,8 +75,8 @@ export class PipelinesTree implements TreeDataProvider<Node> {
     async fetchPipelinesForBranches(branches: [string, Repository][]): Promise<[string, Repository][]> {
         await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
         branches.sort(([a]: [string, any], [b]: [string, any]) => {
-            const pa: Pipeline[] = this._pipelines[a];
-            const pb: Pipeline[] = this._pipelines[b];
+            const pa = this._pipelines.get(a);
+            const pb = this._pipelines.get(b);
             if (!pa || pa.length === 0) {
                 return -1;
             }
@@ -94,7 +94,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
     async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Pipeline[]> {
         await Container.clientManager.bbrequest();
         const pipelines = await PipelineApi.getList(repo, branchName);
-        this._pipelines[branchName] = pipelines;
+        this._pipelines.set(branchName, pipelines);
         return pipelines;
     }
 
