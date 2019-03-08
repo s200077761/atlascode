@@ -40,15 +40,6 @@
     "@atlaskit/tooltip" "^12.1.15"
     "@babel/runtime" "^7.0.0"
 
-"@atlaskit/banner@^7.0.12":
-  version "7.0.13"
-  resolved "https://registry.yarnpkg.com/@atlaskit/banner/-/banner-7.0.13.tgz#fa90a5005bfd33dc71af65198f27849264655f3a"
-  integrity sha512-TawHnocu17wk9UAGE85ACGHM+Fyf2tvOzMK7yTbRZrkX8wEN43rRxWY0PNVgVGaW9Z5bbQNBLD6i5rNQ+Vru7Q==
-  dependencies:
-    "@atlaskit/theme" "^7.0.1"
-    "@babel/runtime" "^7.0.0"
-    babel-runtime "^6.26.0"
-
 "@atlaskit/blanket@^7.0.12":
   version "7.0.12"
   resolved "https://registry.yarnpkg.com/@atlaskit/blanket/-/blanket-7.0.12.tgz#1f48f74310463e785774dada9f8c8c07150e4b89"
