@@ -63,12 +63,11 @@ export class PipelinesTree implements TreeDataProvider<Node> {
                 const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
                 const branchesResponse = await bb.refs.listBranches({ repo_slug: parsed.name, username: parsed.owner });
                 branchesResponse.data.values!.forEach(v => {
-                    branches = branches!.concat([[v.name!, repo]]);
+                    branches = branches!.concat([[`${parsed.name}/${v.name!}`, repo]]);
                 });
-                branches = await this.fetchPipelinesForBranches(branches);
             }
         }
-        return Promise.resolve(branches);
+        return this.fetchPipelinesForBranches(branches);
     }
 
     async fetchPipelinesForBranches(branches: [string, Repository][]): Promise<[string, Repository][]> {
@@ -92,7 +91,7 @@ export class PipelinesTree implements TreeDataProvider<Node> {
 
     async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Pipeline[]> {
         await Container.clientManager.bbrequest();
-        const pipelines = await PipelineApi.getList(repo, branchName);
+        const pipelines = await PipelineApi.getList(repo, branchName.split('/')[1]);
         this._pipelines.set(branchName, pipelines);
         return pipelines;
     }
