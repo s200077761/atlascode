@@ -181,7 +181,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
-                                        <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} cloudId={this.state.config.jira.workingSite.id} jiraAccessToken={this.state.jiraAccessToken} />
+                                        <CustomJQL siteJqlList={this.state.config.jira.customJql} onConfigChange={this.onConfigChange} jiraAccessToken={this.state.jiraAccessToken}
+                                            workingSite={this.state.config.jira.workingSite} sites={this.state.sites} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>

@@ -108,7 +108,7 @@ hr {
 /*-------------------- BEGIN - modal dialogs --------------------*/
 
 [class^=Modal__Dialog] {
-  background: var(--background-color)!important
+  background: var(--vscode-editor-background)!important
 }
 
 /*-------------------- END - modal dialogs --------------------*/
@@ -493,7 +493,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 /*-------------------- BEGIN - Avatars --------------------*/
 
 [class^="styledCache__StyledSpan"] {
-  background: var(--background-color) !important;
+  background: var(--vscode-editor-background) !important;
   color: var(--vscode-editor-foreground) !important;
 }
 
