@@ -66,10 +66,9 @@ export class PipelinesTree implements TreeDataProvider<Node> {
                     branches = branches!.concat([[v.name!, repo]]);
                 });
                 branches = await this.fetchPipelinesForBranches(branches);
-                return Promise.resolve(branches);
             }
         }
-        return Promise.resolve([]);
+        return Promise.resolve(branches);
     }
 
     async fetchPipelinesForBranches(branches: [string, Repository][]): Promise<[string, Repository][]> {
