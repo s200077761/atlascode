@@ -16,6 +16,7 @@ import { configuration, WorkingSite, isEmptySite } from "../config/configuration
 import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { ProductJira, ProductBitbucket } from "../constants";
+import { Logger } from "../logger";
 
 // const SIGNIN_COMMAND = "Sign in";
 
@@ -171,18 +172,20 @@ export class ClientManager implements Disposable {
             info = newInfo;
             await Container.authManager.saveAuthInfo(provider, info);
           })
-          .catch(async () => {
-            await Container.authManager.removeAuthInfo(provider);
-            info = await this.danceWithUser(provider);
+          .catch(async (e) => {
+            // await Container.authManager.removeAuthInfo(provider);
+            // info = await this.danceWithUser(provider);
 
-            if (info) {
-              await Container.authManager.saveAuthInfo(provider, info);
-              // this.unlockClient(provider);
-              return info;
-            } else {
-              // this.unlockClient(provider);
-              return undefined;
-            }
+            //if (info) {
+            //  await Container.authManager.saveAuthInfo(provider, info);
+            //  // this.unlockClient(provider);
+            //  return info;
+            //} else {
+            //  // this.unlockClient(provider);
+            //  return undefined;
+            //}
+            Logger.debug(`error refreshing token ${e}`);
+            return undefined;
           });
       }
 
