@@ -174,6 +174,8 @@ class PullRequestFilesNode extends BaseNode {
         }
 
         let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
+        item.tooltip = fileDisplayName;
+
         let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
         let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
 
@@ -258,6 +260,7 @@ class DescriptionNode extends BaseNode {
 
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem('Details', vscode.TreeItemCollapsibleState.None);
+        item.tooltip = 'Open pull request details';
         item.iconPath = Resources.icons.get('detail');
 
         item.command = {
