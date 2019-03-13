@@ -5,6 +5,7 @@ import { Logger } from '../logger';
 import { setCommandContext, CommandContext, ProductJira, ProductBitbucket } from '../constants';
 import { loggedOutEvent } from '../analytics';
 import { Container } from '../container';
+import debounce from 'lodash.debounce';
 
 const keychainServiceName = "atlascode-authinfo";
 
@@ -15,6 +16,7 @@ export type AuthInfoEvent = {
 
 export class AuthManager implements Disposable {
     private _memStore: Map<string, AuthInfo> = new Map<string, AuthInfo>();
+    private _debouncedKeychain = new Object();
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
     public get onDidAuthChange(): Event<AuthInfoEvent> {
@@ -24,6 +26,13 @@ export class AuthManager implements Disposable {
     dispose() {
         this._memStore.clear();
         this._onDidAuthChange.dispose();
+    }
+
+    private async getPassword(provider: string): Promise<string | null> {
+        if (!this._debouncedKeychain[provider]) {
+            this._debouncedKeychain[provider] = debounce(async () => await keychain!.getPassword(keychainServiceName, provider), 500, { leading: true });
+        }
+        return await this._debouncedKeychain[provider]();
     }
 
     public async isAuthenticated(provider: string): Promise<boolean> {
@@ -38,13 +47,15 @@ export class AuthManager implements Disposable {
 
         if (keychain) {
             try {
-                let infoEntry = await keychain.getPassword(keychainServiceName, provider) || undefined;
+                let infoEntry = await this.getPassword(provider) || undefined;
                 if (infoEntry) {
                     let info: AuthInfo = JSON.parse(infoEntry);
                     this._memStore.set(provider, info);
                     return info;
                 }
-            } catch { }
+            } catch (e) {
+                Logger.info(`keychain error ${e}`);
+            }
         }
 
         return undefined;
