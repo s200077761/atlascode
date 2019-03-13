@@ -1,3 +1,7 @@
+## What's New In 1.0.3
+### Bug
+* Fixed another case causing extension to open an authentication browser tab occasionally without user interaction
+
 ## What's New In 1.0.2
 ### Bug
 * Extension opens an authentication browser tab occasionally without user interaction
