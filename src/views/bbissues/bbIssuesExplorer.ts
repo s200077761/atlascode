@@ -9,6 +9,7 @@ import { AuthProvider } from "../../atlclients/authInfo";
 import { viewScreenEvent } from "../../analytics";
 import { BitbucketIssuesDataProvider } from "../bitbucketIssuesDataProvider";
 import { BaseNode } from "../nodes/baseNode";
+import { BitbucketIssuesMonitor } from "./bbIssuesMonitor";
 
 const defaultRefreshInterval = 15 * Time.MINUTES;
 
@@ -18,6 +19,7 @@ export class BitbucketIssuesExplorer extends Disposable {
     private _refreshInterval = defaultRefreshInterval;
     private _tree: TreeView<BaseNode> | undefined;
     private _bitbucketIssuesDataProvider: BitbucketIssuesDataProvider;
+    private _monitor: BitbucketIssuesMonitor | undefined;
 
     constructor(private _ctx: BitbucketContext) {
         super(() => this.dispose());
@@ -31,6 +33,7 @@ export class BitbucketIssuesExplorer extends Disposable {
         );
         this._disposable = Disposable.from(
             this._ctx.onDidChangeBitbucketContext(() => {
+                this.updateMonitor();
                 this.refresh();
             })
         );
@@ -59,11 +62,28 @@ export class BitbucketIssuesExplorer extends Disposable {
             setCommandContext(CommandContext.BitbucketIssuesExplorer, Container.config.bitbucket.issues.explorerEnabled);
         }
 
-        if (!Container.config.bitbucket.issues.explorerEnabled) {
+        if (initializing ||
+            configuration.changed(e, 'bitbucket.issues.explorerEnabled') ||
+            configuration.changed(e, 'bitbucket.issues.monitorEnabled')) {
+            this.updateMonitor();
+        }
+
+        if (!Container.config.bitbucket.issues.explorerEnabled &&
+            !Container.config.bitbucket.issues.monitorEnabled) {
             this.stopTimer();
         } else {
             this.stopTimer();
             this.startTimer();
+        }
+    }
+
+    updateMonitor() {
+        if (Container.config.bitbucket.issues.explorerEnabled &&
+            Container.config.bitbucket.issues.monitorEnabled) {
+            const repos = this._ctx.getBitbucketRepositores();
+            this._monitor = new BitbucketIssuesMonitor(repos);
+        } else {
+            this._monitor = undefined;
         }
     }
 
@@ -80,6 +100,9 @@ export class BitbucketIssuesExplorer extends Disposable {
     refresh() {
         if (this._tree && this._bitbucketIssuesDataProvider) {
             this._bitbucketIssuesDataProvider.refresh();
+        }
+        if (this._monitor) {
+            this._monitor.checkForNewBitbucketIssues();
         }
     }
 

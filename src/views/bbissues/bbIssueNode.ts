@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { BaseNode } from "./baseNode";
+import { BaseNode } from "../nodes/baseNode";
 import { Repository } from '../../typings/git';
-import { EmptyStateNode } from './emptyStateNode';
+import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
 import { PaginatedBitbucketIssues } from '../../bitbucket/model';
 import { Resources } from '../../resources';

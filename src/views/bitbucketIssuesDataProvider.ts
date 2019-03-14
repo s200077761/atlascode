@@ -9,7 +9,7 @@ import { EmptyStateNode } from './nodes/emptyStateNode';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
-import { BitbucketIssuesRepositoryNode } from './nodes/bbIssueNode';
+import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 
 export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, Disposable {
@@ -26,7 +26,6 @@ export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, 
                 this.addItems(result);
             }),
             ctx.onDidChangeBitbucketContext(() => {
-                this.updateChildren();
                 this.refresh();
             }),
         );
@@ -45,6 +44,7 @@ export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, 
     }
 
     refresh(): void {
+        this.updateChildren();
         this._onDidChangeTreeData.fire();
     }
 
@@ -54,7 +54,7 @@ export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, 
         }
 
         this._childrenMap.get(issues.repository.rootUri.toString())!.addItems(issues);
-        this.refresh();
+        this._onDidChangeTreeData.fire();
     }
 
     async getTreeItem(element: BaseNode): Promise<TreeItem> {
