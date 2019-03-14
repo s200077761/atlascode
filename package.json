@@ -180,6 +180,15 @@
                     "light": "resources/light/refresh.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.refreshIssues",
+                "title": "Refresh Bitbucket Issues",
+                "icon": {
+                    "dark": "resources/dark/refresh.svg",
+                    "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -217,6 +226,11 @@
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
                     "when": "atlascode:pipelineExplorerEnabled"
+                },
+                {
+                    "id": "atlascode.views.bb.issuesTreeView",
+                    "name": "Bitbucket issues",
+                    "when": "atlascode:bitbucketIssuesExplorerEnabled"
                 }
             ]
         },
@@ -286,6 +300,11 @@
                     "command": "atlascode.bb.refreshPipelines",
                     "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/ && atlascode:isBBAuthenticated",
                     "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.refreshIssues",
+                    "when": "view == atlascode.views.bb.issuesTreeView && atlascode:isBBAuthenticated",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
@@ -333,6 +352,10 @@
                 },
                 {
                     "command": "atlascode.bb.startPipeline",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.refreshIssues",
                     "when": "false"
                 },
                 {
@@ -572,6 +595,24 @@
                     "type": "integer",
                     "default": 5,
                     "description": "Time (in minutes) to wait before refreshing the Pipelines status",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.issues.explorerEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the Bitbucket Issues Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.issues.monitorEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Watch for new Bitbucket Issues",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.issues.refreshInterval": {
+                    "type": "integer",
+                    "default": 15,
+                    "description": "Time (in minutes) to wait before refreshing the Bitbucket Issues",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.refreshInterval": {

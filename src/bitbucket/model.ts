@@ -31,3 +31,10 @@ export interface PaginatedFileChanges {
     data: Bitbucket.Schema.Diffstat[];
     next?: string;
 }
+
+export interface PaginatedBitbucketIssues {
+    repository: Repository;
+    remote: Remote;
+    data: Bitbucket.Schema.Issue[];
+    next?: string;
+}

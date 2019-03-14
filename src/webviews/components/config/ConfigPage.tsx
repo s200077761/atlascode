@@ -24,6 +24,7 @@ import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
 import JiraSiteProject from './JiraSiteProject';
+import BitbucketIssuesConfig from './BBIssuesConfig';
 
 type changeObject = { [key: string]: any };
 
@@ -195,6 +196,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
                                         <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
+
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer')}>
+                                        <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
