@@ -96,7 +96,7 @@
             },
             {
                 "command": "atlascode.jira.showIssue",
-                "title": "Show Jira Issue",
+                "title": "Open Jira Issue",
                 "category": "Atlassian"
             },
             {
@@ -342,6 +342,10 @@
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.showIssue",
+                    "when": "atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
