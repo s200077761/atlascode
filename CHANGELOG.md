@@ -1,3 +1,7 @@
+## What's New In 1.0.4
+### Bug
+* Fixed a bug where upstream branch was not being set properly when starting work on Jira issue
+
 ## What's New In 1.0.3
 ### Bug
 * Fixed another case causing extension to open an authentication browser tab occasionally without user interaction

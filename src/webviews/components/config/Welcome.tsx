@@ -65,6 +65,13 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.0.4 🎉</h2>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed a bug where upstream branch was not being set properly when starting work on Jira issue</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.0.3 🎉</h2>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
