@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
+import { Action, HostErrorMessage } from '../ipc/messaging';
 import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
@@ -18,7 +18,8 @@ import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIssueData | StartWorkOnIssueResult, Action> implements InitializingWebview<issueOrKey> {
+type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
+export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
 
     constructor(extensionPath: string) {
@@ -111,10 +112,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
-                            this.postMessage({
-                                type: 'startWorkOnIssueResult',
-                                error: JSON.stringify(e)
-                            });
+                            this.postMessage({ type: 'error', reason: e });
                         }
                     }
                 }
@@ -125,14 +123,18 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     }
 
     async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
-        repo.fetch(remote, sourceBranch).then(() => {
-            repo.getBranch(destBranch).then(foundBranch => {
-                repo.checkout(destBranch);
+        await repo.fetch(remote, sourceBranch);
 
-            }).catch(reason => {
-                repo.createBranch(destBranch, true, sourceBranch).then(() => { repo.push(remote, destBranch, true); });
-            });
-        });
+        try {
+            await repo.getBranch(destBranch);
+        }
+        catch (reason) {
+            await repo.createBranch(destBranch, true, sourceBranch);
+            await repo.push(remote, destBranch, true);
+            return;
+        }
+
+        await repo.checkout(destBranch);
     }
 
     public async updateIssue(issue: Issue) {
