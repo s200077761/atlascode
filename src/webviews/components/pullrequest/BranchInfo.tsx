@@ -1,10 +1,10 @@
 import * as React from 'react';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-import WarningIcon from '@atlaskit/icon/glyph/warning';
+// import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Avatar from '@atlaskit/avatar';
-import Button from '@atlaskit/button';
-import Tooltip from '@atlaskit/tooltip';
+// import Button from '@atlaskit/button';
+// import Tooltip from '@atlaskit/tooltip';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
 
@@ -51,14 +51,15 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                         <span className='ac-branch-lozenge__Text'>{targetBranch}</span>
                     </div>
                 </div>
-                <div style={{ marginLeft: '45px' }}>
+                {/* TODO: remove this and replace with error section message on main page when fixing up error handling tasks */}
+                {/* <div style={{ marginLeft: '45px' }}>
                     {
                         this.props.error &&
                         <Tooltip content={this.props.error} type="warning">
                             <Button appearance="subtle-link" spacing="none" iconBefore={<WarningIcon label="" size="small" />}>Checkout error</Button>
                         </Tooltip>
                     }
-                </div>
+                </div> */}
 
             </React.Fragment >
         );

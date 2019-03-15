@@ -16,6 +16,7 @@ import { extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
 import { RepositoriesApi } from '../bitbucket/repositories';
+import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
 
 interface PRState {
     prData: PRData;
@@ -109,6 +110,13 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     if (isOpenJiraIssue(e)) {
                         handled = true;
                         vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        break;
+                    }
+                }
+                case 'openPipelineBuild': {
+                    if (isOpenPipelineBuild(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.ShowPipeline, e.pipelineUUID);
                         break;
                     }
                 }
