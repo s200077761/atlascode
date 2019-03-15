@@ -106,7 +106,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to "${e.transition.to.name}"</li>` : ''}  ${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}"</li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to "${e.transition.to.name}"</li>` : ''}  ${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
                             });
                             issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
@@ -125,13 +125,14 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<StartWorkOnIss
     }
 
     async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
-        repo.getBranch(destBranch).then(foundBranch => {
-            repo.checkout(destBranch).then(() => { repo.setBranchUpstream(destBranch, remote); });
+        repo.fetch(remote, sourceBranch).then(() => {
+            repo.getBranch(destBranch).then(foundBranch => {
+                repo.checkout(destBranch);
 
-        })
-            .catch(reason => {
-                repo.createBranch(destBranch, true, sourceBranch).then(() => { repo.setBranchUpstream(destBranch, remote); });
+            }).catch(reason => {
+                repo.createBranch(destBranch, true, sourceBranch).then(() => { repo.push(remote, destBranch, true); });
             });
+        });
     }
 
     public async updateIssue(issue: Issue) {
