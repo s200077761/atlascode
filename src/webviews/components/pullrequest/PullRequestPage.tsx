@@ -22,8 +22,9 @@ import { Issue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
+import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
 
-type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction;
+type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenPipelineBuildAction;
 type Receive = PRData | CheckoutResult;
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading: boolean, isCheckoutButtonLoading: boolean, branchError?: string }> {
@@ -124,8 +125,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
                 <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repository!.name!} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />} />
-                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`}/>} />
-                <BreadcrumbsItem component={() => <NavItem text={`${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink}/>} />
+                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink} />} />
             </BreadcrumbsStateless>
         );
 
@@ -146,7 +147,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>
                                         {pr.source!.branch!.name! === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
                                     </Button>
-                                    <BuildStatus buildStatuses={this.state.pr.buildStatuses} />
+                                    <BuildStatus buildStatuses={this.state.pr.buildStatuses} postMessage={(e: OpenPipelineBuildAction) => this.postMessage(e)} />
                                 </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
