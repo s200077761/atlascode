@@ -1,10 +1,7 @@
 import * as React from 'react';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-// import WarningIcon from '@atlaskit/icon/glyph/warning';
 import Avatar from '@atlaskit/avatar';
-// import Button from '@atlaskit/button';
-// import Tooltip from '@atlaskit/tooltip';
 import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
 
