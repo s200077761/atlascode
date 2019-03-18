@@ -13,6 +13,7 @@ export interface Pipeline {
 export enum Status {
     Pending,
     InProgress,
+    Paused,
     Stopped,
     Successful,
     Error,
@@ -24,9 +25,15 @@ export interface PipelineState {
     name: string;
     type: string;
     result?: PipelineResult;
+    stage?: PipelineStage;
 }
 
 export interface PipelineResult {
+    name: string;
+    type: string;
+}
+
+export interface PipelineStage {
     name: string;
     type: string;
 }
@@ -39,7 +46,6 @@ export interface PipelineStep {
     run_number: number;
     uuid: string;
     name?: string;
-    started_on?: string;
     completed_on?: string;
     setup_commands: PipelineCommand[];
     script_commands: PipelineCommand[];
@@ -55,6 +61,9 @@ export interface PipelineCommand {
 }
 
 export function statusForState(state: PipelineState): Status {
+    if (!state) {
+        return Status.Unknown;
+    }
     switch (state.type) {
         case "pipeline_state_completed":
         // fall through
@@ -63,11 +72,11 @@ export function statusForState(state: PipelineState): Status {
         case "pipeline_state_in_progress":
         // fall through
         case "pipeline_step_state_in_progress":
-            return Status.InProgress;
+            return statusForStage(state.stage!);
         case "pipeline_state_pending":
-        // fall through
-        case "pipeline_step_state_pending":
             return Status.Pending;
+        case "pipeline_step_state_pending":
+            return statusForStage(state.stage!);
         default:
             return Status.Unknown;
     }
@@ -90,6 +99,22 @@ function statusForResult(result: PipelineResult): Status {
         case "pipeline_state_completed_stopped":
         // fall through
         case "pipeline_step_state_completed_stopped":
+            return Status.Stopped;
+        default:
+            return Status.Unknown;
+    }
+}
+
+function statusForStage(stage: PipelineStage): Status {
+    switch (stage.type) {
+        case "pipeline_step_state_pending_pending":
+        case "pipeline_step_state_in_progress_pending":
+            return Status.Pending;
+        case "pipeline_step_state_pending_paused":
+        case "pipeline_state_in_progress_paused":
+            return Status.Paused;
+        case "pipeline_step_state_pending_halted":
+        case "pipeline_state_in_progress_halted":
             return Status.Stopped;
         default:
             return Status.Unknown;
