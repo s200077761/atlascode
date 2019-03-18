@@ -44,6 +44,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
             })
             .catch((reason: any) => {
                 Logger.error(reason);
+                vscode.window.showErrorMessage(`error fetching issue "${data}": ${reason}`);
             });
     }
 

@@ -13,6 +13,7 @@ import { AuthProvider } from '../atlclients/authInfo';
 import { viewScreenEvent } from '../analytics';
 import { Time } from '../util/time';
 import { PullRequestCreatedNotifier } from './prCreatedNotifier';
+import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -24,18 +25,20 @@ export class BitbucketContext extends Disposable {
 
     private _gitApi: GitApi;
     private _repoMap: Map<string, Repository> = new Map();
-    private _tree:TreeView<BaseNode> | undefined;
-    private _dataProvider:PullRequestNodeDataProvider;
+    private _pullRequestsTree: TreeView<BaseNode> | undefined;
+    private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
+    private _pullRequestsDataProvider: PullRequestNodeDataProvider;
     private _prCreatedNotifier: PullRequestCreatedNotifier;
-    private _disposable:Disposable;
+    private _disposable: Disposable;
     private _timer: any | undefined;
     private _refreshInterval = defaultRefreshInterval;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
         this._gitApi = gitApi;
-        this._dataProvider = new PullRequestNodeDataProvider(this);
+        this._pullRequestsDataProvider = new PullRequestNodeDataProvider(this);
         this._prCreatedNotifier = new PullRequestCreatedNotifier(this);
+        this._bitbucketIssuesExplorer = new BitbucketIssuesExplorer(this);
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
@@ -48,20 +51,22 @@ export class BitbucketContext extends Disposable {
 
             commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this._onDidChangeBitbucketContext.fire(), this),
-            
+
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const result = await PullRequestApi.nextPage(prs);
-                this.addTreeItems(result);
-            },this),
+                if (this._pullRequestsDataProvider) { this._pullRequestsDataProvider.addItems(result); }
+            }, this),
+
             commands.registerCommand(Commands.CreatePullRequest, Container.pullRequestCreatorView.createOrShow, Container.pullRequestCreatorView)
         );
 
         this._disposable = Disposable.from(
             this._gitApi.onDidOpenRepository(this.refreshRepos, this),
             this._gitApi.onDidCloseRepository(this.refreshRepos, this),
+            this._bitbucketIssuesExplorer,
             this._prCreatedNotifier
         );
 
@@ -74,25 +79,18 @@ export class BitbucketContext extends Disposable {
         this._onDidChangeBitbucketContext.fire();
     }
 
-    addTreeItems(page:PaginatedPullRequests) {
-        if(this._dataProvider) {
-            this._dataProvider.addItems(page);
-        }
-    }
-
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled')) {
-            if(!Container.config.bitbucket.explorer.enabled) {
+            if (!Container.config.bitbucket.explorer.enabled) {
                 this.disposeForNow();
             } else {
-                this._tree = window.createTreeView(PullRequestTreeViewId, {
-                    treeDataProvider: this._dataProvider
+                this._pullRequestsTree = window.createTreeView(PullRequestTreeViewId, {
+                    treeDataProvider: this._pullRequestsDataProvider
                 });
 
-                this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-
+                this._pullRequestsTree.onDidChangeVisibility(e => this.onDidChangeVisibility(e, PullRequestTreeViewId));
                 this.refreshRepos();
             }
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
@@ -112,7 +110,7 @@ export class BitbucketContext extends Disposable {
         }
     }
 
-    async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+    async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent, viewName: string) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
             this.refreshRepos();
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
@@ -141,7 +139,7 @@ export class BitbucketContext extends Disposable {
     private startTimer() {
         if (!this._timer && this._refreshInterval > 0) {
             this._timer = setInterval(() => {
-                if (this._tree && this._dataProvider) {
+                if (this._pullRequestsTree && this._pullRequestsDataProvider) {
                     this._onDidChangeBitbucketContext.fire();
                 }
             }, this._refreshInterval);
@@ -161,9 +159,12 @@ export class BitbucketContext extends Disposable {
     }
 
     disposeForNow() {
-        if(this._tree) {
-            this._tree.dispose();
-            this._tree = undefined;
+        if (this._pullRequestsTree) {
+            this._pullRequestsTree.dispose();
+            this._pullRequestsTree = undefined;
+        }
+        if (this._bitbucketIssuesExplorer) {
+            this._bitbucketIssuesExplorer.dispose();
         }
 
         this._onDidChangeBitbucketContext.dispose();
