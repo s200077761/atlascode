@@ -16,6 +16,7 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SectionMessage from '@atlaskit/section-message';
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
+import ErrorBanner from '../ErrorBanner';
 
 type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
@@ -323,6 +324,10 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         return undefined;
     }
 
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    }
+
     public render() {
         let renderableFields: any[] = [];
         let advancedFields: any[] = [];
@@ -355,12 +360,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                 </SectionMessage>
                             }
                             {this.state.isErrorBannerOpen &&
-                                <SectionMessage
-                                    appearance="warning"
-                                    title="Something went wrong"
-                                    actions={[{ text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined }) }]}>
-                                    Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
-                                </SectionMessage>
+                                <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
                             <h2>Create Issue</h2>
                             <Form

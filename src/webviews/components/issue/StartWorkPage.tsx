@@ -23,6 +23,7 @@ import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
 import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
+import ErrorBanner from "../ErrorBanner";
 
 type Emit = StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
 type Accept = StartWorkOnIssueData | HostErrorMessage;
@@ -202,6 +203,10 @@ export default class StartWorkPage extends WebviewComponent<
     });
   }
 
+  handleDismissError = () => {
+    this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+  }
+
   render() {
     const issue = this.state.data.issue;
     const repo = this.state.repo;
@@ -222,12 +227,7 @@ export default class StartWorkPage extends WebviewComponent<
               </SectionMessage>
             }
             {this.state.isErrorBannerOpen &&
-              <SectionMessage
-                appearance="warning"
-                title="Something went wrong"
-                actions={[{ text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined }) }]}>
-                Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
-              </SectionMessage>
+              <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
             }
           </GridColumn>
           <GridColumn medium={8}>

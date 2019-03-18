@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
+import { Action, HostErrorMessage } from '../ipc/messaging';
 import { IssueData } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
@@ -16,7 +16,8 @@ import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { issueUrlCopiedEvent } from '../analytics';
 
-export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> implements InitializingWebview<issueOrKey> {
+type Emit = IssueData | HostErrorMessage;
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
     private _currentUserId?: string;
 
@@ -44,7 +45,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
             })
             .catch((reason: any) => {
                 Logger.error(reason);
-                vscode.window.showErrorMessage(`error fetching issue "${data}": ${reason}`);
+                this.postMessage({ type: 'error', reason: reason });
             });
     }
 
@@ -68,7 +69,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
                         handled = true;
                         transitionIssue(e.issue, e.transition).catch((e: any) => {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
-                            vscode.window.showErrorMessage('Issue could not be transitioned', e);
+                            this.postMessage({ type: 'error', reason: e });
                         });
                     }
                     break;
@@ -76,12 +77,14 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
                 case 'comment': {
                     if (isIssueComment(e)) {
                         handled = true;
-                        postComment(e.issue, e.comment).catch((e: any) => {
-                            Logger.error(new Error(`error posting comment: ${e}`));
-                            vscode.window.showErrorMessage('Comment could not be posted', e);
-                        }).then(() => {
+                        try {
+                            await postComment(e.issue, e.comment);
                             this.forceUpdateIssue();
-                        });
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error posting comment: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }
@@ -90,7 +93,7 @@ export class JiraIssueWebview extends AbstractReactWebview<IssueData, Action> im
                         handled = true;
                         assignIssue(e.issue, this._currentUserId).catch((e: any) => {
                             Logger.error(new Error(`error posting comment: ${e}`));
-                            vscode.window.showErrorMessage('Comment could not be posted', e);
+                            this.postMessage({ type: 'error', reason: e });
                         }).then(() => {
                             this.forceUpdateIssue();
                         });

@@ -45,10 +45,6 @@ export interface CheckoutResult extends Message {
     currentBranch: string;
 }
 
-export function isCheckoutError(a: Message): a is CheckoutResult {
-    return (<CheckoutResult>a).type === 'checkout';
-}
-
 export interface CommitsResult extends Message {
     type: 'commitsResult';
     error?: string;

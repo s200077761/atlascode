@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
-import { window, Uri, commands } from 'vscode';
+import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
@@ -13,7 +13,8 @@ import { PullRequest } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { getCurrentUser } from '../bitbucket/user';
 
-export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData | CommitsResult, Action> {
+type Emit = CreatePRData | CommitsResult | HostErrorMessage;
+export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -37,7 +38,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                 continue;
             }
 
-            const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]),  PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
+            const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]), PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
             const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
             await state.push({
                 uri: r.rootUri.toString(),
@@ -86,7 +87,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<CreatePRData
                         this.createPullRequest(e)
                             .catch((e: any) => {
                                 Logger.error(new Error(`error creating pull request: ${e}`));
-                                window.showErrorMessage(`Pull request creation failed: ${e}`);
+                                this.postMessage({ type: 'error', reason: e });
                             });
                     }
                     break;
