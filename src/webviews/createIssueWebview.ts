@@ -208,7 +208,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     }
                     break;
                 }
-                case 'openIssueByKey': {
+                case 'openJiraIssue': {
                     handled = true;
                     if (isOpenJiraIssue(e)) {
                         commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
