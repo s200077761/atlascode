@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
-import { BaseNode } from './baseNode';
+import { BaseNode } from '../nodes/baseNode';
 import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
-import { RelatedIssuesNode } from './relatedIssuesNode';
-import { EmptyStateNode } from './emptyStateNode';
+import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
+import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { Logger } from '../../logger';
 
 export const PullRequestContextValue = 'pullrequest';

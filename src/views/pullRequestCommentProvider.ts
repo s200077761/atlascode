@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PullRequestNodeDataProvider } from './pullRequestNodeDataProvider';
 import { PullRequestApi } from '../bitbucket/pullRequests';
-import { FileDiffQueryParams } from './nodes/pullRequestNode';
+import { FileDiffQueryParams } from './pullrequest/pullRequestNode';
 
 export class PullRequestCommentProvider implements vscode.DocumentCommentProvider, vscode.Disposable {
     private _onDidChangeCommentThreads: vscode.EventEmitter<vscode.CommentThreadChangedEvent> = new vscode.EventEmitter<vscode.CommentThreadChangedEvent>();

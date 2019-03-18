@@ -5,7 +5,7 @@ import { Backend } from '../backend/backend-base';
 import { GitBackend } from '../backend/backend-git';
 import { Shell } from '../../util/shell';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { FileDiffQueryParams } from '../../views/nodes/pullRequestNode';
+import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 
 export abstract class CommandBase {
 

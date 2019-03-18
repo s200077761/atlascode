@@ -3,7 +3,7 @@ import { Time } from '../../util/time';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext, BitbucketIssuesTreeViewId } from "../../constants";
-import { BitbucketContext } from "../../bitbucket/context";
+import { BitbucketContext } from "../../bitbucket/bbContext";
 import { Commands } from "../../commands";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { viewScreenEvent } from "../../analytics";

@@ -4,7 +4,7 @@ import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { PipelinesTree } from "./PipelinesTree";
 import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../constants";
-import { BitbucketContext } from "../../bitbucket/context";
+import { BitbucketContext } from "../../bitbucket/bbContext";
 import { PipelinesMonitor } from "./PipelinesMonitor";
 import { Commands } from "../../commands";
 import { AuthProvider } from "../../atlclients/authInfo";

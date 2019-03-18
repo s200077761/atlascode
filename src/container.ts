@@ -13,7 +13,7 @@ import { AnalyticsClient } from './analytics-node-client/src/index';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
-import { BitbucketContext } from './bitbucket/context';
+import { BitbucketContext } from './bitbucket/bbContext';
 import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';

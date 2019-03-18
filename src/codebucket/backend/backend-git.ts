@@ -1,7 +1,7 @@
 import { Uri } from 'vscode';
 import { Backend } from './backend-base';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { FileDiffQueryParams } from '../../views/nodes/pullRequestNode';
+import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import { CommandBase } from '../command/command-base';
 import { Container } from '../../container';
 import { RepositoriesApi } from '../../bitbucket/repositories';

@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
-import { Time } from "../util/time";
-import { BitbucketContext } from "./context";
-import { PullRequestApi } from "./pullRequests";
+import { Time } from "../../util/time";
+import { BitbucketContext } from "../../bitbucket/bbContext";
+import { PullRequestApi } from "../../bitbucket/pullRequests";
 import { Disposable, ConfigurationChangeEvent } from "vscode";
-import { configuration } from "../config/configuration";
-import { Container } from "../container";
-import { Commands } from "../commands";
-import { AuthProvider } from "../atlclients/authInfo";
+import { configuration } from "../../config/configuration";
+import { Container } from "../../container";
+import { Commands } from "../../commands";
+import { AuthProvider } from "../../atlclients/authInfo";
 
 const defaultRefreshInterval = 10 * Time.MINUTES;
 
