@@ -21,7 +21,7 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
         if (this._children.length > 0 && this._children[this._children.length - 1] instanceof NextPageNode) {
             this._children.pop();
         }
-        this._children!.push(...issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: 'vscode.open', title: 'Open issue on website', arguments: [vscode.Uri.parse(i.links!.html!.href!)] })));
+        this._children!.push(...issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] })));
         if (issues.next) { this._children!.push(new NextPageNode(issues)); }
     }
 
@@ -42,7 +42,7 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
             if (issues.data.length === 0) {
                 return [new EmptyStateNode('No open issues for this repository')];
             }
-            this._children = issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: 'vscode.open', title: 'Open issue on website', arguments: [vscode.Uri.parse(i.links!.html!.href!)] }));
+            this._children = issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
             if (issues.next) { this._children!.push(new NextPageNode(issues)); }
         }
         return this._children;

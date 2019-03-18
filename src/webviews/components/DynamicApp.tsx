@@ -48,6 +48,11 @@ const LoadablePipelineSummaryView = Loadable({
     loading: Loading,
 });
 
+const LoadableBitbucketIssueView = Loadable({
+    loader: () => import(/* webpackChunkName: "bitbucketIssueScreen" */ './bbissue/BitbucketIssuePage'),
+    loading: Loading,
+});
+
 function Loading(props: Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! {props.error}</div>;
@@ -121,6 +126,13 @@ class DynamicApp extends React.Component<{ view: string | null }>  {
                 return (
                     <div>
                         <LoadablePipelineSummaryView />
+                    </div>
+                );
+            }
+            case 'bitbucketIssueScreen': {
+                return (
+                    <div>
+                        <LoadableBitbucketIssueView />
                     </div>
                 );
             }
