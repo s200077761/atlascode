@@ -114,7 +114,8 @@ export class ClientManager implements Disposable {
 
       let jraclient = new JiraKit({
         baseUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest/`,
-        options: extraOptions
+        options: extraOptions,
+        headers: { "x-atlassian-force-account-id": "true" }
       });
       jraclient.authenticate({ type: "token", token: info.access });
 
