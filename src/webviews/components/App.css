@@ -24,6 +24,13 @@ hr {
   align-items: center;
 }
 
+.ac-inline-flex-hpad {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+}
+
 .ac-hmargin {
   margin-left: 10px;
   margin-right: 10px;
@@ -595,12 +602,20 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - Pipelines --------------------*/
 
+/*-------------------- BEGIN - Comments --------------------*/
+
+.ac-comments [class^="LayoutStyles__Container"] {
+  padding-top: 0px !important;
+}
+
+/*-------------------- END - Comments --------------------*/
+
 /* 
   This is a specific fix for auth issues when trying to load images that are attached to bitbucket PR comments.
 img::after is triggered only if img loading fails */
 
 .bitbucket-page img::after {
-  content: 'âš ï¸ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+  content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
 }
 
 /* uncomment these to see borders on grid layouts */

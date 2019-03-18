@@ -44,6 +44,7 @@ export enum Commands {
     ShowPipeline = 'atlascode.bb.showPipeline',
     BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
     BitbucketIssuesRefresh = 'atlascode.bb.refreshIssues',
+    ShowBitbucketIssue = 'atlascode.bb.showIssue',
     ViewDiff = 'atlascode.viewDiff'
 }
 
@@ -72,6 +73,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         }),
         vscode.commands.registerCommand(Commands.ShowPipeline, (pipeline_uuid: any) => {
             Container.pipelineViewManager.createOrShow(pipeline_uuid);
-        })
+        }),
+        vscode.commands.registerCommand(Commands.ShowBitbucketIssue, (issue: Bitbucket.Schema.Issue) => Container.bitbucketIssueViewManager.createOrShow(issue))
     );
 }

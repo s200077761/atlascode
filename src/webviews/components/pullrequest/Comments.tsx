@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAuthor, CommentTime, CommentAction } from '@atlaskit/comment';
-import { PRData } from '../../../ipc/prMessaging';
 import * as Bitbucket from 'bitbucket';
 import CommentForm from './CommentForm';
 
@@ -25,7 +24,7 @@ function toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
     return globalCommentsMap;
 }
 
-class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, onSave: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { showCommentForm: false };
@@ -36,8 +35,10 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
     }
 
     handleSave = (content: string, parentCommentId?: number) => {
-        this.props.onSave(content, parentCommentId);
-        this.setState({ showCommentForm: false });
+        if (this.props.onSave) {
+            this.props.onSave(content, parentCommentId);
+            this.setState({ showCommentForm: false });
+        }
     }
 
     handleCancel = () => {
@@ -47,7 +48,7 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
     render(): any {
         const { node, currentUser } = this.props;
 
-        return <Comment
+        return <Comment className='ac-comment'
             avatar={<Avatar src={node.data.user!.links!.avatar!.href} size="medium" />}
             author={<CommentAuthor>{node.data.user!.display_name}</CommentAuthor>}
             time={<CommentTime>{new Date(node.data.created_on!).toDateString()}</CommentTime>}
@@ -62,7 +63,7 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
                 </React.Fragment>
             }
             actions={[
-                !this.state.showCommentForm && <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>
+                this.props.onSave && !this.state.showCommentForm && <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>
             ]}
         >
             {node.children && node.children.map(child => <NestedComment node={child} currentUser={currentUser} onSave={this.props.onSave} />)}
@@ -70,19 +71,22 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
     }
 }
 
-export default class Comments extends React.Component<{ prData: PRData, onComment: (content: string, parentCommentId?: number) => void }, {}> {
+export default class Comments extends React.Component<{ comments: Bitbucket.Schema.Comment[], currentUser: Bitbucket.Schema.User, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
 
     render() {
-        const nestedGlobalComments = toNestedList(this.props.prData.comments!);
+        if (!this.props.comments || !this.props.currentUser) {
+            return null;
+        }
+        const nestedGlobalComments = toNestedList(this.props.comments!);
         let result: any[] = [];
         nestedGlobalComments.forEach((commentNode) => {
             if (!commentNode.data.parent) {
-                result.push(<NestedComment node={commentNode} currentUser={this.props.prData.currentUser!} onSave={this.props.onComment} />);
+                result.push(<NestedComment node={commentNode} currentUser={this.props.currentUser!} onSave={this.props.onComment} />);
             }
         });
-        return result;
+        return <div className='ac-comments'>{result}</div>;
     }
 }

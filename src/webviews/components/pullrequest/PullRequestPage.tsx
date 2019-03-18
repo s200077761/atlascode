@@ -167,7 +167,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                            <Comments prData={this.state.pr} onComment={this.handlePostComment} />
+                                            <Comments comments={this.state.pr.comments!} currentUser={this.state.pr.currentUser!} onComment={this.handlePostComment} />
                                             <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
                                         </Panel>
                                     </React.Fragment>
