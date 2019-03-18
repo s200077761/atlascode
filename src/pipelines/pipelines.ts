@@ -4,7 +4,6 @@ import { Container } from "../container";
 import fetch from 'node-fetch';
 import { AuthProvider } from "../atlclients/authInfo";
 import { Logger } from "../logger";
-import { LogAccumulator } from "./logAccumulator";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 
 export namespace PipelineApi {
@@ -86,8 +85,7 @@ export namespace PipelineApi {
     const remotes = PullRequestApi.getBitbucketRemotes(repository);
     if (remotes.length > 0) {
       const remote = remotes[0];
-      const token = await getAccessToken();
-      return getPipelineLog(remote, token, pipelineUuid, stepUuid);
+      return getPipelineLog(remote, pipelineUuid, stepUuid);
     }
     return Promise.reject();
   }
@@ -141,55 +139,43 @@ export namespace PipelineApi {
   }
 }
 
-async function getPipelineLogB(remote: Remote,
+async function getPipelineLog(remote: Remote,
   pipelineUuid: string,
-  stepUuid: string) {
+  stepUuid: string): Promise<string[]> {
   const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
   const bb = await bitbucketHosts.get(parsed.source)();
-  bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
-    const s: string = r.data.toString();
-    console.log(s);
+  return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
+    return splitLogs(r.data.toString());
   }).catch((err: any) => {
-    console.log(err);
+    Logger.error(new Error(`Error fetching pipeline logs: ${err}`));
   });
 }
 
-// While the public API for pipelines is documented as supporting range queries and does in fact support them it's 
-// not clear that this should be considered a stable feature.
-async function getPipelineLog(
-  remote: Remote,
-  accessToken: string,
-  pipelineUuid: string,
-  stepUuid: string,
-  firstByte?: number,
-  lastByte?: number,
-): Promise<string[]> {
-  getPipelineLogB(remote, pipelineUuid, stepUuid);
+function splitLogs(logText: string): string[] {
+  const lines = logText.split('\n');
+  var commandAccumulator = "";
+  var lineIndex = 0;
+  const splitLogs: string[] = [];
 
-  const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-  const bbBase = "https://api.bitbucket.org/";
-  const logPath = `2.0/repositories/${parsed.owner}/${parsed.name}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`;
-  const headers = {
-    Authorization: `Bearer ${accessToken}`
-  };
-  if (firstByte && lastByte) {
-    headers["Range"] = `bytes=${firstByte}-${lastByte}`;
+  // Trim any log output preceding the first command
+  while (!lines[lineIndex].startsWith("+ ") && lineIndex < lines.length) {
+    lineIndex++;
   }
 
-  return fetch(`${bbBase}${logPath}`, {
-    method: "GET",
-    headers: headers
-  }).then(response => {
-    return splitLogs(response);
-  });
-}
-
-async function splitLogs(response: any): Promise<string[]> {
-  if (response.body) {
-    const accumulator = new LogAccumulator(response.body);
-    return accumulator.logs();
+  for (; lineIndex < lines.length; lineIndex++) {
+    if (lines[lineIndex].startsWith("+ ")) {
+      if (commandAccumulator.length > 0) {
+        splitLogs.push(commandAccumulator);
+      }
+      commandAccumulator = lines[lineIndex] + '\n';
+    } else {
+      commandAccumulator += lines[lineIndex] + '\n';
+    }
   }
-  return [];
+  if (commandAccumulator.length > 0) {
+    splitLogs.push(commandAccumulator);
+  }
+  return splitLogs;
 }
 
 function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
