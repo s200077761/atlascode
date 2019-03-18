@@ -17,9 +17,47 @@ import CreatePRTitleSummary from './CreatePRTitleSummary';
 import Avatar from "@atlaskit/avatar";
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Form from '@atlaskit/form';
+import ErrorBanner from '../ErrorBanner';
 
 type Emit = CreatePullRequest | FetchDetails;
 type Receive = CreatePRData | CommitsResult;
+
+interface MyState {
+    data: CreatePRData;
+    title: string;
+    titleManuallyEdited: boolean;
+    summary: string;
+    summaryManuallyEdited: boolean;
+    repo?: { label: string; value: RepoData; };
+    remote?: { label: string; value: Remote; };
+    reviewers: Bitbucket.Schema.User[];
+    sourceBranch?: { label: string; value: Branch };
+    sourceRemoteBranchName?: string;
+    destinationBranch?: { label: string; value: Ref };
+    pushLocalChanges: boolean;
+    commits: Bitbucket.Schema.Commit[];
+    isCreateButtonLoading: boolean;
+    result?: string;
+    isErrorBannerOpen: boolean;
+    errorDetails: any;
+}
+
+const emptyState = {
+    data: {
+        type: 'createPullRequest',
+        repositories: []
+    },
+    title: 'Pull request title',
+    titleManuallyEdited: false,
+    summary: '',
+    summaryManuallyEdited: false,
+    pushLocalChanges: true,
+    reviewers: [],
+    commits: [],
+    isCreateButtonLoading: false,
+    isErrorBannerOpen: false,
+    errorDetails: undefined
+};
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 const formatOptionLabel = (option: any, { context }: any) => {
@@ -66,26 +104,10 @@ const UserValue = (props: any) => {
     );
 };
 
-export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, {
-    data: CreatePRData,
-    title: string,
-    titleManuallyEdited: boolean,
-    summary: string,
-    summaryManuallyEdited: boolean,
-    repo?: { label: string, value: RepoData },
-    remote?: { label: string, value: Remote },
-    reviewers: Bitbucket.Schema.User[],
-    sourceBranch?: { label: string, value: Branch },
-    sourceRemoteBranchName?: string,
-    destinationBranch?: { label: string, value: Ref },
-    pushLocalChanges: boolean,
-    commits: Bitbucket.Schema.Commit[],
-    isCreateButtonLoading: boolean,
-    result?: string
-}> {
+export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, MyState> {
     constructor(props: any) {
         super(props);
-        this.state = { data: { type: 'createPullRequest', repositories: [] }, title: 'Pull request title', titleManuallyEdited: false, summary: '', summaryManuallyEdited: false, pushLocalChanges: true, reviewers: [], commits: [], isCreateButtonLoading: false };
+        this.state = emptyState;
     }
 
     handleTitleChange = (e: any) => {
@@ -183,27 +205,44 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         });
     }
 
-    onMessageReceived(e: Receive): void {
-        if (isCommitsResult(e)) {
-            this.setState({
-                commits: e.commits,
-                title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                    ? e.commits[0].message!
-                    : this.state.title,
-                summary: e.commits.length > 1 && this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                    ? e.commits.map(c => `- ${c.message}`).join('\n')
-                    : this.state.summary
-            });
-        }
-        if (isCreatePRData(e)) {
-            this.setState({ data: e });
+    onMessageReceived(e: any): void {
+        switch (e.type) {
+            case 'error': {
+                this.setState({ isCreateButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                break;
+            }
+            case 'createPullRequestData': {
+                if (isCreatePRData(e)) {
+                    this.setState({ data: e, isCreateButtonLoading: false });
 
-            if (this.state.repo === undefined && e.repositories.length > 0) {
-                const firstRepo = e.repositories[0];
-                const firstRemote = firstRepo.remotes[0];
-                this.resetRepoAndRemoteState(firstRepo, firstRemote);
+                    if (this.state.repo === undefined && e.repositories.length > 0) {
+                        const firstRepo = e.repositories[0];
+                        const firstRemote = firstRepo.remotes[0];
+                        this.resetRepoAndRemoteState(firstRepo, firstRemote);
+                    }
+                }
+                break;
+            }
+            case 'commitsResult': {
+                if (isCommitsResult(e)) {
+                    this.setState({
+                        isCreateButtonLoading: false,
+                        commits: e.commits,
+                        title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
+                            ? e.commits[0].message!
+                            : this.state.title,
+                        summary: e.commits.length > 1 && this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
+                            ? e.commits.map(c => `- ${c.message}`).join('\n')
+                            : this.state.summary
+                    });
+                }
+                break;
             }
         }
+    }
+
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
     render() {
@@ -228,6 +267,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             <div className='bitbucket-page'>
                 <Page>
                     <Grid>
+                        {this.state.isErrorBannerOpen &&
+                            <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                        }
                         <Form
                             name="bitbucket-pullrequest-form"
                             onSubmit={(e: any) => this.handleCreatePR(e)}

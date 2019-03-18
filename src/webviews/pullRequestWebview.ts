@@ -4,7 +4,7 @@ import { PullRequest, PaginatedComments } from '../bitbucket/model';
 import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action } from '../ipc/messaging';
+import { Action, HostErrorMessage } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout } from '../ipc/prActions';
@@ -26,8 +26,8 @@ interface PRState {
 }
 
 const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
-
-export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutResult, Action> implements InitializingWebview<PullRequest> {
+type Emit = PRData | CheckoutResult | HostErrorMessage;
+export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
 
     constructor(extensionPath: string) {
@@ -69,7 +69,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     handled = true;
                     this.approve().catch((e: any) => {
                         Logger.error(new Error(`error approving pull request: ${e}`));
-                        vscode.window.showErrorMessage('Pull reqeust could not be approved');
+                        this.postMessage({ type: 'error', reason: e });
                     });
                     break;
                 }
@@ -77,7 +77,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                     handled = true;
                     this.merge().catch((e: any) => {
                         Logger.error(new Error(`error merging pull request: ${e}`));
-                        vscode.window.showErrorMessage('Pull reqeust could not be merged');
+                        this.postMessage({ type: 'error', reason: e });
                     });
                     break;
                 }
@@ -86,7 +86,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         handled = true;
                         this.postComment(e.content, e.parentCommentId).catch((e: any) => {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
-                            vscode.window.showErrorMessage('Pull reqeust comment could not be posted');
+                            this.postMessage({ type: 'error', reason: e });
                         });
                     }
                     break;
@@ -96,7 +96,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
                         handled = true;
                         this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
-                            vscode.window.showErrorMessage('Branch could not be checked out');
+                            this.postMessage({ type: 'error', reason: e });
                         });
                     }
                     break;
@@ -241,12 +241,7 @@ export class PullRequestWebview extends AbstractReactWebview<PRData | CheckoutRe
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                vscode.window.showErrorMessage('Pull request branch could not be checked out');
-                this.postMessage({
-                    type: 'checkout',
-                    error: e.stderr || e,
-                    currentBranch: this._state.repository!.state.HEAD!.name!
-                });
+                this.postMessage({ type: 'error', reason: e });
             });
     }
 

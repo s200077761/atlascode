@@ -13,7 +13,7 @@ import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRData, CheckoutResult, isPRData, isCheckoutError } from '../../../ipc/prMessaging';
+import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
 import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
@@ -23,14 +23,38 @@ import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
 import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
+import { HostErrorMessage } from '../../../ipc/messaging';
+import ErrorBanner from '../ErrorBanner';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenPipelineBuildAction;
-type Receive = PRData | CheckoutResult;
+type Receive = PRData | CheckoutResult | HostErrorMessage;
 
-export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, { pr: PRData, isApproveButtonLoading: boolean, isMergeButtonLoading: boolean, isCheckoutButtonLoading: boolean, branchError?: string }> {
+interface ViewState {
+    pr: PRData;
+    isApproveButtonLoading: boolean;
+    isMergeButtonLoading: boolean;
+    isCheckoutButtonLoading: boolean;
+    isErrorBannerOpen: boolean;
+    errorDetails: any;
+}
+const emptyState: ViewState = {
+    pr: {
+        type: '',
+        currentBranch: '',
+        relatedJiraIssues: []
+    },
+    isApproveButtonLoading: false,
+    isMergeButtonLoading: false,
+    isCheckoutButtonLoading: false,
+    isErrorBannerOpen: false,
+    errorDetails: undefined
+
+};
+
+export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, ViewState> {
     constructor(props: any) {
         super(props);
-        this.state = { pr: { type: '', currentBranch: '', relatedJiraIssues: [] }, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false };
+        this.state = emptyState;
     }
 
     handleApprove = () => {
@@ -77,15 +101,27 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    onMessageReceived(e: Receive): void {
-        if (isPRData(e)) {
-            this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+    onMessageReceived(e: any): void {
+        switch (e.type) {
+            case 'error': {
+                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                break;
+            }
+            case 'checkout': {
+                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+                break;
+            }
+            case 'update': {
+                if (isPRData(e)) {
+                    this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+                }
+                break;
+            }
         }
-        else if (isCheckoutError(e)) {
-            this.setState({ branchError: e.error, pr: { ...this.state.pr, currentBranch: e.currentBranch }, isCheckoutButtonLoading: false });
-        } else {
-            this.setState({ isCheckoutButtonLoading: false });
-        }
+    }
+
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
     render() {
@@ -135,6 +171,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 <Page>
                     <Grid>
                         <GridColumn>
+                            {this.state.isErrorBannerOpen &&
+                                <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                            }
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
@@ -142,7 +181,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <p>{pr.title}</p>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
-                                <BranchInfo prData={this.state.pr} error={this.state.branchError} postMessage={(e: Emit) => this.postMessage(e)} />
+                                <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
                                 <div className='ac-flex'>
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>
                                         {pr.source!.branch!.name! === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}

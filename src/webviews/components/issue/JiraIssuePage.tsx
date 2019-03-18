@@ -30,8 +30,12 @@ import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
+import { HostErrorMessage } from "../../../ipc/messaging";
+import ErrorBanner from "../ErrorBanner";
 
 type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
+type Accept = IssueData | HostErrorMessage;
+
 const emptyIssueData: IssueData = {
   type: "",
   key: "",
@@ -64,6 +68,8 @@ type MyState = {
   data: IssueData;
   isStatusButtonLoading: boolean;
   commentInput: string;
+  isErrorBannerOpen: boolean;
+  errorDetails: any;
 };
 
 type SizeMetrics = {
@@ -73,7 +79,7 @@ type SizeMetrics = {
 
 export default class JiraIssuePage extends WebviewComponent<
   Emit,
-  IssueData,
+  Accept,
   {},
   MyState
   > {
@@ -82,16 +88,25 @@ export default class JiraIssuePage extends WebviewComponent<
     this.state = {
       data: emptyIssueData,
       isStatusButtonLoading: false,
-      commentInput: ""
+      commentInput: "",
+      isErrorBannerOpen: false,
+      errorDetails: undefined
     };
   }
 
   componentUpdater = (data: IssueData) => { };
 
   public onMessageReceived(e: any) {
+    switch (e.type) {
+      case 'error': {
+        this.setState({ isStatusButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
 
-    if (e.type && e.type === 'update') {
-      this.setState({ data: e, isStatusButtonLoading: false });
+        break;
+      }
+      case 'update': {
+        this.setState({ data: e, isStatusButtonLoading: false, isErrorBannerOpen: false, errorDetails: undefined });
+        break;
+      }
     }
   }
 
@@ -132,9 +147,16 @@ export default class JiraIssuePage extends WebviewComponent<
     });
   }
 
+  handleDismissError = () => {
+    this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+  }
+
   header(issue: any): any {
     return (
       <div>
+        {this.state.isErrorBannerOpen &&
+          <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+        }
         <PageHeader
           actions={<ButtonGroup>
             <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
@@ -149,7 +171,7 @@ export default class JiraIssuePage extends WebviewComponent<
           }>
           <p>{issue.summary}</p>
         </PageHeader>
-        <p dangerouslySetInnerHTML={{__html: issue.descriptionHtml}} />
+        <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
       </div>
     );
   }

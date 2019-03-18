@@ -6,7 +6,7 @@ import { PRData } from '../../../ipc/prMessaging';
 import { Checkout } from '../../../ipc/prActions';
 
 
-export default class BranchInfo extends React.Component<{ prData: PRData, error?: string, postMessage: (e: Checkout) => void }> {
+export default class BranchInfo extends React.Component<{ prData: PRData, postMessage: (e: Checkout) => void }> {
     constructor(props: any) {
         super(props);
     }
@@ -48,16 +48,6 @@ export default class BranchInfo extends React.Component<{ prData: PRData, error?
                         <span className='ac-branch-lozenge__Text'>{targetBranch}</span>
                     </div>
                 </div>
-                {/* TODO: remove this and replace with error section message on main page when fixing up error handling tasks */}
-                {/* <div style={{ marginLeft: '45px' }}>
-                    {
-                        this.props.error &&
-                        <Tooltip content={this.props.error} type="warning">
-                            <Button appearance="subtle-link" spacing="none" iconBefore={<WarningIcon label="" size="small" />}>Checkout error</Button>
-                        </Tooltip>
-                    }
-                </div> */}
-
             </React.Fragment >
         );
     }
