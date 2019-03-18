@@ -1,6 +1,6 @@
 import { TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
-import { BitbucketContext } from '../bitbucket/context';
+import { BitbucketContext } from '../bitbucket/bbContext';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';

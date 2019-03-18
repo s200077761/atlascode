@@ -1,9 +1,9 @@
-import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem } from 'vscode';
+import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem, commands } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
-import { BitbucketContext } from '../bitbucket/context';
+import { BitbucketContext } from '../bitbucket/bbContext';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
-import { RepositoriesNode } from './nodes/repositoriesNode';
+import { RepositoriesNode } from './pullrequest/repositoriesNode';
 import { getPRDocumentCommentProvider } from './pullRequestCommentProvider';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -26,10 +26,11 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()),
             getPRDocumentCommentProvider().onDidChangeCommentThreads(this.refresh, this),
-            ctx.onDidChangeBitbucketContext(() => {
-                this.updateChildren();
-                this.refresh();
+            commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
+                const result = await PullRequestApi.nextPage(prs);
+                this.addItems(result);
             }),
+            ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
     }
 
@@ -46,6 +47,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     }
 
     refresh(): void {
+        this.updateChildren();
         this._onDidChangeTreeData.fire();
     }
 
@@ -55,7 +57,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         }
 
         this._childrenMap.get(prs.repository.rootUri.toString())!.addItems(prs);
-        this.refresh();
+        this._onDidChangeTreeData.fire();
     }
 
     async getTreeItem(element: BaseNode): Promise<TreeItem> {

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { BaseNode } from "./baseNode";
+import { BaseNode } from "../nodes/baseNode";
 import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
-import { EmptyStateNode } from './emptyStateNode';
+import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests } from '../../bitbucket/model';
 

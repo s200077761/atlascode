@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as pathlib from 'path';
-import { BitbucketContext } from '../bitbucket/context';
-import { FileDiffQueryParams } from './nodes/pullRequestNode';
+import { BitbucketContext } from '../bitbucket/bbContext';
+import { FileDiffQueryParams } from './pullrequest/pullRequestNode';
 import { GitUrlParse } from '../bitbucket/pullRequests';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {

@@ -1,6 +1,6 @@
 "use strict";
 
-import { BitbucketContext } from './bitbucket/context';
+import { BitbucketContext } from './bitbucket/bbContext';
 import { registerCommands, Commands } from './commands';
 import { registerResources } from './resources';
 import { configuration, Configuration, IConfig } from './config/configuration';
