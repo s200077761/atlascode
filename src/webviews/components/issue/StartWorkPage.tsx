@@ -22,8 +22,11 @@ import Select from '@atlaskit/select';
 import { RepoData } from "../../../ipc/prMessaging";
 import { Branch } from "../../../typings/git";
 import NavItem from "./NavItem";
+import { HostErrorMessage } from "../../../ipc/messaging";
 
 type Emit = StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
+type Accept = StartWorkOnIssueData | HostErrorMessage;
+
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 
 type BranchNameOption = { label: string, value: string };
@@ -39,6 +42,8 @@ type State = {
   remote?: { label: string, value: string };
   isStartButtonLoading: boolean;
   result: StartWorkOnIssueResult;
+  isErrorBannerOpen: boolean;
+  errorDetails: any;
 };
 
 const emptyState: State = {
@@ -50,12 +55,14 @@ const emptyState: State = {
   localBranch: undefined,
   branchOptions: [],
   isStartButtonLoading: false,
-  result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined }
+  result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined },
+  isErrorBannerOpen: false,
+  errorDetails: undefined,
 };
 
 export default class StartWorkPage extends WebviewComponent<
   Emit,
-  StartWorkOnIssueData,
+  Accept,
   {},
   State
   > {
@@ -74,46 +81,58 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   public onMessageReceived(e: any) {
+    switch (e.type) {
+      case 'error': {
+        this.setState({ isStartButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+        break;
+      }
+      case 'update': {
+        if (isStartWorkOnIssueData(e) && e.issue.key.length > 0) {
+          const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
+          const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
+          const branchOptions = this.state.branchOptions.length > 0
+            ? this.state.branchOptions
+            : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(e.issue.key.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
+          let generatedBranchNameOption = undefined;
+          const localBranch = this.state.localBranch
+            ? this.state.localBranch
+            : branchOptions.length > 0 && branchOptions[0].options.length > 0
+              ? this.createLocalBranchOption(branchOptions[0].options[0].value)
+              : generatedBranchNameOption = this.createLocalBranchOption(`${e.issue.key}-${e.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
+          if (generatedBranchNameOption) {
+            branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
+          }
+          const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
+          const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
+          const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
 
-    if (e.type && e.type === 'update' && isStartWorkOnIssueData(e)) {
-      if (e.issue.key.length > 0) {
-        const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
-        const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
-        const branchOptions = this.state.branchOptions.length > 0
-          ? this.state.branchOptions
-          : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(e.issue.key.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
-        let generatedBranchNameOption = undefined;
-        const localBranch = this.state.localBranch
-          ? this.state.localBranch
-          : branchOptions.length > 0 && branchOptions[0].options.length > 0
-            ? this.createLocalBranchOption(branchOptions[0].options[0].value)
-            : generatedBranchNameOption = this.createLocalBranchOption(`${e.issue.key}-${e.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
-        if (generatedBranchNameOption) {
-          branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
+          this.setState({
+            data: e,
+            repo: repo,
+            sourceBranch: sourceBranch,
+            transition: transition,
+            branchOptions: branchOptions,
+            localBranch: localBranch,
+            remote: remote,
+            bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled,
+            isErrorBannerOpen: false, errorDetails: undefined
+          });
         }
-        const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
-        const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
-        const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
-
-        this.setState({
-          data: e,
-          repo: repo,
-          sourceBranch: sourceBranch,
-          transition: transition,
-          branchOptions: branchOptions,
-          localBranch: localBranch,
-          remote: remote,
-          bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled
-        });
+        else { // empty issue
+          this.setState(emptyState);
+        }
+        break;
       }
-      else { // empty issue
-        this.setState(emptyState);
+
+      case 'startWorkOnIssueResult': {
+        if (isStartWorkOnIssueResult(e)) {
+          this.setState({ isStartButtonLoading: false, result: e, isErrorBannerOpen: false, errorDetails: undefined });
+        }
+        break;
       }
 
     }
-    else if (isStartWorkOnIssueResult(e)) {
-      this.setState({ isStartButtonLoading: false, result: e });
-    }
+
   }
 
   onHandleStatusChange = (item: any) => {
@@ -200,6 +219,14 @@ export default class StartWorkPage extends WebviewComponent<
                 appearance="confirmation"
                 title="Work Started">
                 <div><p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} /></div>
+              </SectionMessage>
+            }
+            {this.state.isErrorBannerOpen &&
+              <SectionMessage
+                appearance="warning"
+                title="Something went wrong"
+                actions={[{ text: 'Dismiss', onClick: () => this.setState({ isErrorBannerOpen: false, errorDetails: undefined }) }]}>
+                Error: <div><pre>{JSON.stringify(this.state.errorDetails, undefined, 4)}</pre></div>
               </SectionMessage>
             }
           </GridColumn>
@@ -312,15 +339,6 @@ export default class StartWorkPage extends WebviewComponent<
             <div className='ac-vpadding'>
               {!this.state.result.successMessage && <Button className='ac-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>}
             </div>
-          </GridColumn>
-          <GridColumn medium={12}>
-            {this.state.result.error &&
-              <SectionMessage appearance="warning" title="Something went wrong">
-                <div className='ac-vpadding'>
-                  <div style={{ color: 'black' }}>{this.state.result.error}</div>
-                </div>
-              </SectionMessage>
-            }
           </GridColumn>
         </Grid>
       </Page>
