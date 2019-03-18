@@ -29,6 +29,19 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
     }
   }
 
+  getIsExplorerIndeterminate = (): boolean => {
+    if (!this.props.configData.config.bitbucket.pipelines.explorerEnabled) {
+      return false;
+    }
+
+    let count = 0;
+    if (this.props.configData.config.bitbucket.pipelines.monitorEnabled) {
+      count++;
+    }
+
+    return (count < 1);
+  }
+
   render() {
     return (
       <div>
@@ -44,28 +57,36 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                 label="Enable Bitbucket Pipelines Explorer"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                 isChecked={this.props.configData.config.bitbucket.pipelines.explorerEnabled}
+                isIndeterminate={this.getIsExplorerIndeterminate()}
               />
             );
           }}
         </CheckboxField>
-
-        <CheckboxField
-          name="pipelines-monitor-enabled"
-          id="pipelines-monitor-enabled"
-          value="bitbucket.pipelines.monitorEnabled"
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            paddingLeft: '24px',
+          }}
         >
-          {(fieldArgs: any) => {
-            return (
-              <Checkbox
-                {...fieldArgs.fieldProps}
-                label="Enable Pipelines Build Status Monitor"
-                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
-                isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
-              />
-            );
-          }}
-        </CheckboxField>
+          <CheckboxField
+            name="pipelines-monitor-enabled"
+            id="pipelines-monitor-enabled"
+            value="bitbucket.pipelines.monitorEnabled"
+          >
+            {(fieldArgs: any) => {
+              return (
+                <Checkbox
+                  {...fieldArgs.fieldProps}
+                  label="Enable Pipelines Build Status Monitor"
+                  onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                  isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
+                  isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
+                />
+              );
+            }}
+          </CheckboxField>
+        </div>
         <div className="refreshInterval">
           <span>Refresh explorer every: </span>
           <input className='ac-inputField-inline' style={{ width: '60px' }} name="pipelines-refresh-interval"
