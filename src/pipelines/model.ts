@@ -61,7 +61,6 @@ export interface PipelineCommand {
 }
 
 export function statusForState(state: PipelineState): Status {
-    console.log(`statusForState: ${state.type}`);
     if (!state) {
         return Status.Unknown;
     }
@@ -84,7 +83,6 @@ export function statusForState(state: PipelineState): Status {
 }
 
 function statusForResult(result: PipelineResult): Status {
-    console.log(`statusForResult: ${result.type}`);
     switch (result.type) {
         case "pipeline_state_completed_successful":
         // fall through
@@ -108,7 +106,6 @@ function statusForResult(result: PipelineResult): Status {
 }
 
 function statusForStage(stage: PipelineStage): Status {
-    console.log(`statusForStage: ${stage.type}`);
     switch (stage.type) {
         case "pipeline_step_state_pending_pending":
         case "pipeline_step_state_in_progress_pending":

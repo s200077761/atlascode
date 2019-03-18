@@ -140,7 +140,6 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
   }
 
   colorForState(state: PipelineState): string {
-    console.log(`colorForState: ${JSON.stringify(state)}`);
     switch (statusForState(state)) {
       case Status.Successful:
       case Status.Paused:

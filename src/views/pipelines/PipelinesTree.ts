@@ -106,6 +106,48 @@ export class PipelinesTree implements TreeDataProvider<Node> {
 
 const PipelineBranchContextValue = 'pipelineBranch';
 
+function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
+    switch (statusForState(pipeline.state)) {
+        case Status.Pending:
+            return Resources.icons.get('pending');
+        case Status.InProgress:
+            return Resources.icons.get('building');
+        case Status.Paused:
+            return Resources.icons.get('paused');
+        case Status.Stopped:
+            return Resources.icons.get('stopped');
+        case Status.Successful:
+            return Resources.icons.get('success');
+        case Status.Error:
+            return Resources.icons.get('failed');
+        case Status.Failed:
+            return Resources.icons.get('failed');
+        default:
+            return undefined;
+    }
+}
+
+function statusForPipeline(pipeline: Pipeline): string {
+    switch (statusForState(pipeline.state)) {
+        case Status.Pending:
+            return 'Pending';
+        case Status.InProgress:
+            return 'Building';
+        case Status.Paused:
+            return 'Success';
+        case Status.Stopped:
+            return 'Stopped';
+        case Status.Successful:
+            return 'Success';
+        case Status.Error:
+            return 'Error';
+        case Status.Failed:
+            return 'Failed';
+        default:
+            return 'Error';
+    }
+}
+
 export abstract class Node {
     abstract treeItem(): TreeItem;
 }
@@ -120,14 +162,10 @@ export class PipelineNode extends Node {
         if (this._pipeline.created_on) {
             label = moment(this._pipeline.created_on).fromNow();
         }
-        if (this._pipeline.state) {
-            label += ` ${this._pipeline.state.name}`;
-            if (this._pipeline.state.result) {
-                label += ` - ${this._pipeline.state.result.name}`;
-            }
-        }
+        label += ` ${statusForPipeline(this._pipeline)}`;
         const item = new TreeItem(label);
         item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [this._pipeline.uuid] };
+        item.iconPath = iconUriForPipeline(this._pipeline);
         return item;
     }
 }
@@ -142,33 +180,12 @@ export class BranchNode extends Node {
         treeItem.collapsibleState = TreeItemCollapsibleState.Collapsed;
         treeItem.contextValue = PipelineBranchContextValue;
         if (this.pipelines && this.pipelines.length > 0) {
-            const iconPath = this.iconUriForPipeline(this.pipelines[0]);
+            const iconPath = iconUriForPipeline(this.pipelines[0]);
             if (iconPath) {
                 treeItem.iconPath = iconPath;
             }
         }
         return treeItem;
-    }
-
-    private iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
-        switch (statusForState(pipeline.state)) {
-            case Status.Pending:
-                return Resources.icons.get('pending');
-            case Status.InProgress:
-                return Resources.icons.get('building');
-            case Status.Paused:
-                return Resources.icons.get('paused');
-            case Status.Stopped:
-                return Resources.icons.get('stopped');
-            case Status.Successful:
-                return Resources.icons.get('success');
-            case Status.Error:
-                return Resources.icons.get('failed');
-            case Status.Failed:
-                return Resources.icons.get('failed');
-            default:
-                return undefined;
-        }
     }
 }
 
