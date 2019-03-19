@@ -71,8 +71,8 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             vscode.commands.executeCommand('vscode.diff', ...diffArgs);
         }),
-        vscode.commands.registerCommand(Commands.ShowPipeline, (pipeline_uuid: any) => {
-            Container.pipelineViewManager.createOrShow(pipeline_uuid);
+        vscode.commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
+            Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssue, (issue: Bitbucket.Schema.Issue) => Container.bitbucketIssueViewManager.createOrShow(issue))
     );

@@ -81,6 +81,15 @@ export namespace PipelineApi {
     return Promise.reject();
   }
 
+  export async function getStepLog(repository: Repository, pipelineUuid: string, stepUuid: string): Promise<string[]> {
+    const remotes = PullRequestApi.getBitbucketRemotes(repository);
+    if (remotes.length > 0) {
+      const remote = remotes[0];
+      return getPipelineLog(remote, pipelineUuid, stepUuid);
+    }
+    return Promise.reject();
+  }
+
   async function getAccessToken(): Promise<string> {
     return Container.authManager.getAuthInfo(
       AuthProvider.BitbucketCloud
@@ -130,6 +139,45 @@ export namespace PipelineApi {
   }
 }
 
+async function getPipelineLog(remote: Remote,
+  pipelineUuid: string,
+  stepUuid: string): Promise<string[]> {
+  const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+  const bb = await bitbucketHosts.get(parsed.source)();
+  return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
+    return splitLogs(r.data.toString());
+  }).catch((err: any) => {
+    Logger.error(new Error(`Error fetching pipeline logs: ${err}`));
+  });
+}
+
+function splitLogs(logText: string): string[] {
+  const lines = logText.split('\n');
+  var commandAccumulator = "";
+  var lineIndex = 0;
+  const splitLogs: string[] = [];
+
+  // Trim any log output preceding the first command
+  while (!lines[lineIndex].startsWith("+ ") && lineIndex < lines.length) {
+    lineIndex++;
+  }
+
+  for (; lineIndex < lines.length; lineIndex++) {
+    if (lines[lineIndex].startsWith("+ ")) {
+      if (commandAccumulator.length > 0) {
+        splitLogs.push(commandAccumulator);
+      }
+      commandAccumulator = lines[lineIndex] + '\n';
+    } else {
+      commandAccumulator += lines[lineIndex] + '\n';
+    }
+  }
+  if (commandAccumulator.length > 0) {
+    splitLogs.push(commandAccumulator);
+  }
+  return splitLogs;
+}
+
 function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   var name = undefined;
   var avatar = undefined;
@@ -146,7 +194,6 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
     creator_name: name,
     creator_avatar: avatar,
     completed_on: pipeline.completed_on,
-    //              repository: pipeline.repository!, 
     state: {
       name: pipeline.state!.name,
       type: pipeline.state!.type,

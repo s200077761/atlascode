@@ -97,7 +97,7 @@ hr {
 }
 
 [class^=styledPanel__ButtonWrapper] [class^=Icon__IconWrapper] {
-  color: var(--vscode-foreground)!important;
+  color: var(--vscode-foreground) !important;
 }
 
 .inlinePanelHeader {
@@ -107,7 +107,7 @@ hr {
 .inlinePanelSubheading {
   display: inline-block;
   margin-left: 15px;
-  color: var(--vscode-input-placeholderForeground)!important;
+  color: var(--vscode-input-placeholderForeground) !important;
   font-style: italic;
 }
 
@@ -116,7 +116,7 @@ hr {
 /*-------------------- BEGIN - modal dialogs --------------------*/
 
 [class^=Modal__Dialog] {
-  background: var(--vscode-editor-background)!important
+  background: var(--vscode-editor-background) !important
 }
 
 /*-------------------- END - modal dialogs --------------------*/
@@ -146,7 +146,7 @@ div#jql-row {
   -ms-flex-align: center;
   align-items: center;
   background-color: var(--vscode-input-background);
-  border: 1px solid var(--vscode-settings-textInputBorder)!important;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
 }
 
 div#jql-row-drop-overlay {
@@ -168,35 +168,37 @@ div#empty-jql-row {
 /*-------------------- BEGIN - JQL Editor --------------------*/
 
 [class^=Content-] {
-  background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-dropdown-foreground)!important;
-  border: 1px solid var(--vscode-dropdown-border)!important;
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: 1px solid var(--vscode-dropdown-border) !important;
 }
 
 [class^=SingleLineTextInput] {
-  outline: 0px!important;
+  outline: 0px !important;
 }
 
 [class^=Droplist__Content] {
-  background: var(--vscode-sideBar-background)!important
+  background: var(--vscode-sideBar-background) !important
 }
 
 [class^=Item__Span] {
-  background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-dropdown-foreground)!important
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important
 }
 
 [class^=Item__Span]:hover {
-  background: var(--vscode-list-focusBackground)!important;
-  color: var(--vscode-dropdown-foreground)!important;
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-dropdown-foreground) !important;
 }
 
 /*-------------------- END - JQL Editor --------------------*/
 
 /*-------------------- BEGIN - section messages --------------------*/
 
-section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
-  color: #4c4c4c!important;
+section[class^=styled__Container-],
+section[class^=styled__Container-] h1,
+section[class^=styled__Container-] p {
+  color: #4c4c4c !important;
   margin: 6px;
 }
 
@@ -212,8 +214,13 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], [class^=Modal__Dialog], [class^=Radio__Label] {
-  color: var(--vscode-foreground)!important
+[class^=Checkbox__Label],
+[class^=Field__Label],
+[class^=Label__LabelWrapper-],
+[class^=Label__LabelInner-],
+[class^=Modal__Dialog],
+[class^=Radio__Label] {
+  color: var(--vscode-foreground) !important
 }
 
 /*-------------------- END - form field labels --------------------*/
@@ -221,50 +228,53 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 /*-------------------- BEGIN - buttons --------------------*/
 
 .ac-button {
-  background: var(--vscode-button-background)!important
+  background: var(--vscode-button-background) !important
 }
 
 .ac-button span {
-  color: var(--vscode-button-foreground)!important
+  color: var(--vscode-button-foreground) !important
 }
 
 .ac-button:hover {
-  background: var(--vscode-button-hoverBackground)!important
+  background: var(--vscode-button-hoverBackground) !important
 }
 
 .ac-button:active {
-  background: var(--vscode-button-background--darken-05)!important;
-  color: var(--vscode-button-foreground)!important
+  background: var(--vscode-button-background--darken-05) !important;
+  color: var(--vscode-button-foreground) !important
 }
 
 .ac-button:disabled {
-  background: var(--vscode-button-background--50)!important
+  background: var(--vscode-button-background--50) !important
 }
 
 /*-------------------- END - buttons --------------------*/
 
 /*-------------------- BEGIN - links --------------------*/
 
-.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button>span {
-  color: var(--vscode-textlink-foreground)!important
+.vscode-light .ac-link-button:hover,
+.vscode-light .ac-link-button>span {
+  color: var(--vscode-textlink-foreground) !important
 }
 
-.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
-  color: var(--vscode-foreground)!important
+.vscode-dark .ac-link-button:hover,
+.vscode-dark .ac-link-button>span {
+  color: var(--vscode-foreground) !important
 }
 
 .ac-link-button>button {
-  padding: 0!important
+  padding: 0 !important
 }
 
 /* links inside of banners with colored backgrounds */
 
-.ac-banner-link-button:hover, .ac-banner-link-button>span {
+.ac-banner-link-button:hover,
+.ac-banner-link-button>span {
   text-decoration: underline;
 }
 
 .ac-banner-link-button>button {
-  padding: 0!important
+  padding: 0 !important
 }
 
 /*-------------------- END - links --------------------*/
@@ -279,31 +289,41 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   display: inline-block;
 }
 
-.ac-inputField, .ac-inputField-inline, .ac-textarea {
-  background: var(--vscode-input-background)!important;
-  color: var(--vscode-input-foreground)!important;
+.ac-inputField,
+.ac-inputField-inline,
+.ac-textarea {
+  background: var(--vscode-input-background) !important;
+  color: var(--vscode-input-foreground) !important;
   font: inherit;
   width: inherit;
   padding: 6px;
   box-sizing: border-box;
-  border: 1px solid var(--vscode-settings-textInputBorder)!important;
-  outline: 0!important
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+  outline: 0 !important
 }
 
-.ac-inputField:focus, .ac-inputField-inline:focus, .ac-textarea:focus {
-  border-color: var(--vscode-focusBorder)!important;
+.ac-inputField:focus,
+.ac-inputField-inline:focus,
+.ac-textarea:focus {
+  border-color: var(--vscode-focusBorder) !important;
 }
 
-.ac-inputField::-webkit-input-placeholder, .ac-inputField-inline::-webkit-input-placeholder, .ac-textarea::-webkit-input-placeholder {
-  color: var(--vscode-input-placeholderForeground)!important
+.ac-inputField::-webkit-input-placeholder,
+.ac-inputField-inline::-webkit-input-placeholder,
+.ac-textarea::-webkit-input-placeholder {
+  color: var(--vscode-input-placeholderForeground) !important
 }
 
-.ac-inputField::-ms-input-placeholder, .ac-inputField-inline::-ms-input-placeholder, .ac-textarea::-ms-input-placeholder {
-  color: var(--vscode-input-placeholderForeground)!important
+.ac-inputField::-ms-input-placeholder,
+.ac-inputField-inline::-ms-input-placeholder,
+.ac-textarea::-ms-input-placeholder {
+  color: var(--vscode-input-placeholderForeground) !important
 }
 
-.ac-inputField::placeholder, .ac-inputField-inline::placeholder, .ac-textarea::placeholder {
-  color: var(--vscode-input-placeholderForeground)!important
+.ac-inputField::placeholder,
+.ac-inputField-inline::placeholder,
+.ac-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground) !important
 }
 
 .refreshInterval {
@@ -316,18 +336,23 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 /*-------------------- BEGIN - select boxes --------------------*/
 
 .ac-select__control {
-  background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-dropdown-foreground)!important;
-  border: 1px solid var(--vscode-settings-textInputBorder)!important
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-dropdown-foreground) !important;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important
 }
 
-.ac-select__control--is-focused, .ac-select__control:hover {
-  border-color: var(--vscode-focusBorder)!important
+.ac-select__control--is-focused,
+.ac-select__control:hover {
+  border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
-  background: var(--vscode-dropdown-background)!important;
-  color: var(--vscode-input-foreground)!important;
+.ac-select__indicator,
+.ac-select__input,
+.ac-select__menu,
+.ac-select__menu-list,
+.ac-select__single-value {
+  background: var(--vscode-dropdown-background) !important;
+  color: var(--vscode-input-foreground) !important;
 }
 
 .ac-select__multi-value__label {
@@ -336,42 +361,44 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 }
 
 .ac-select__option {
-  cursor: pointer!important
+  cursor: pointer !important
 }
 
 .ac-select__placeholder {
-  color: var(--vscode-input-placeholderForeground)!important
+  color: var(--vscode-input-placeholderForeground) !important
 }
 
 .ac-select__option--is-focused {
-  background: var(--vscode-list-focusBackground)!important;
-  color: var(--vscode-list-focusForeground)!important
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important
 }
 
 .ac-select__option--is-selected {
-  background: var(--vscode-list-activeSelectionBackground)!important;
-  color: var(--vscode-list-activeSelectionForeground)!important
+  background: var(--vscode-list-activeSelectionBackground) !important;
+  color: var(--vscode-list-activeSelectionForeground) !important
 }
 
 .ac-select__menu {
-  border: 1px solid var(--vscode-focusBorder)!important;
-  border-radius: 2px!important
+  border: 1px solid var(--vscode-focusBorder) !important;
+  border-radius: 2px !important
 }
 
 .ac-select__value-container {
-  padding: 0!important
+  padding: 0 !important
 }
 
 /*-------------------- END - select boxes --------------------*/
 
 /*-------------------- BEGIN - checkboxes/radios --------------------*/
 
-[class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
-  color: var(--vscode-button-background)!important
+[class^=Checkbox__IconWrapper-],
+[class^=Radio__IconWrapper-] {
+  color: var(--vscode-button-background) !important
 }
 
-[class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
-  stroke: var(--vscode-button-background)!important
+[class^=Checkbox__IconWrapper-] rect,
+[class^=Radio__IconWrapper-] circle {
+  stroke: var(--vscode-button-background) !important
 }
 
 /*-------------------- END - checkboxes/radios --------------------*/
@@ -379,35 +406,38 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 /*-------------------- BEGIN - calendar controls --------------------*/
 
 [class^=Calendar__Wrapper] {
-  background: var(--vscode-dropdown-background)!important;
-  border: 1px solid var(--vscode-focusBorder)!important
+  background: var(--vscode-dropdown-background) !important;
+  border: 1px solid var(--vscode-focusBorder) !important
 }
 
-[class^=Calendar__CalendarTh], [class^=Calendar__Wrapper], [class^=Date__DateDiv], [class^=Heading__MonthAndYear] {
-  color: var(--vscode-dropdown-foreground)!important
+[class^=Calendar__CalendarTh],
+[class^=Calendar__Wrapper],
+[class^=Date__DateDiv],
+[class^=Heading__MonthAndYear] {
+  color: var(--vscode-dropdown-foreground) !important
 }
 
 [class^=Date__DateDiv] {
-  background: var(--vscode-dropdown-background)!important
+  background: var(--vscode-dropdown-background) !important
 }
 
 [class^=Date__DateDiv]:hover {
-  background: var(--vscode-list-focusBackground)!important;
-  color: var(--vscode-list-focusForeground)!important
+  background: var(--vscode-list-focusBackground) !important;
+  color: var(--vscode-list-focusForeground) !important
 }
 
 [class^=Date__DateDiv]:disabled {
-  background: var(--vscode-list-focusBackground)!important;
-  color: red!important
+  background: var(--vscode-list-focusBackground) !important;
+  color: red !important
 }
 
 [class^=Calendar__Wrapper]>[class^=Icon__IconWrapper] {
-  color: var(--vscode-dropdown-foreground)!important
+  color: var(--vscode-dropdown-foreground) !important
 }
 
 [class^=DateTimePicker__Flex-] {
-  background: var(--vscode-dropdown-background)!important;
-  border: 1px solid var(--vscode-settings-textInputBorder)!important
+  background: var(--vscode-dropdown-background) !important;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important
 }
 
 /*-------------------- END - calendar controls --------------------*/
@@ -440,7 +470,8 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   border: 1px solid var(--vscode-settings-textInputBorder)
 }
 
-.ac-branch-lozenge, .ac-branch-lozenge__Text {
+.ac-branch-lozenge,
+.ac-branch-lozenge__Text {
   -webkit-box-sizing: border-box;
   box-sizing: border-box
 }
@@ -598,6 +629,18 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   margin-left: 1em;
   margin-top: 0.5em;
   margin-bottom: 0.5em;
+}
+
+pre.pipeline-logs {
+  white-space: pre-wrap;
+}
+
+.pipeline-command-panels {
+  margin-left: 24px;
+}
+
+.pipeline-step-panel {
+  margin-left: 24px;
 }
 
 /*-------------------- END - Pipelines --------------------*/

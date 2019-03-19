@@ -9,6 +9,10 @@ import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
 
+export interface PipelineInfo {
+    pipelineUuid: string;
+    repo: Repository;
+}
 export class PipelinesTree implements TreeDataProvider<Node> {
     private _branches: [string, Repository][] | undefined;
     private _pipelines: Map<string, Pipeline[]> = new Map();
@@ -39,11 +43,11 @@ export class PipelinesTree implements TreeDataProvider<Node> {
         } else if (element instanceof BranchNode) {
             const branchPipelines = this._pipelines.get(element.branchName);
             if (branchPipelines) {
-                return branchPipelines.map((p: any) => new PipelineNode(p));
+                return branchPipelines.map((p: any) => new PipelineNode(p, element.repo));
             } else {
                 return this.fetchPipelinesForBranch([element.branchName, element.repo])
                     .then(pipelines => {
-                        return pipelines.map(p => new PipelineNode(p));
+                        return pipelines.map(p => new PipelineNode(p, element.repo));
                     });
             }
         } else if (element instanceof PipelineNode) {
@@ -153,7 +157,7 @@ export abstract class Node {
 }
 
 export class PipelineNode extends Node {
-    constructor(private _pipeline: Pipeline) {
+    constructor(private _pipeline: Pipeline, private _repo: Repository) {
         super();
     }
 
@@ -164,7 +168,7 @@ export class PipelineNode extends Node {
         }
         label += ` ${statusForPipeline(this._pipeline)}`;
         const item = new TreeItem(label);
-        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [this._pipeline.uuid] };
+        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this._pipeline.uuid, repo: this._repo }] };
         item.iconPath = iconUriForPipeline(this._pipeline);
         return item;
     }
