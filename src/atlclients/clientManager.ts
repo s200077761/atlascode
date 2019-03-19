@@ -320,15 +320,22 @@ export class ClientManager implements Disposable {
     const section = "enableCharles";
     this._optionsDirty = true;
 
-    if (configuration.isDebugging && configuration.get<boolean>(section)) {
-      this._agent = tunnel.httpsOverHttp({
-        ca: [fs.readFileSync(Resources.charlesCert)],
-        proxy: {
-          host: "127.0.0.1",
-          port: 8888
-        }
-      });
-    } else {
+    try {
+      let pemFile = fs.readFileSync(Resources.charlesCert);
+
+      if (configuration.isDebugging && configuration.get<boolean>(section)) {
+        this._agent = tunnel.httpsOverHttp({
+          ca: [pemFile],
+          proxy: {
+            host: "127.0.0.1",
+            port: 8888
+          }
+        });
+      } else {
+        this._agent = undefined;
+      }
+
+    } catch (err) {
       this._agent = undefined;
     }
   }

@@ -6,3 +6,5 @@ node_modules
 .yo-*
 yarn-error.log
 .vscode/
+charles-ssl-proxying-certificate.pem
+*.pem
