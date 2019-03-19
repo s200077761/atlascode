@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
@@ -34,6 +34,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     }
 
     initialize(data: issueOrKey) {
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         if (isIssue(data)) {
             this.updateIssue(data);
             return;

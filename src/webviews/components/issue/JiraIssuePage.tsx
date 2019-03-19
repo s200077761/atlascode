@@ -32,6 +32,7 @@ import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
+import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 
 type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
 type Accept = IssueData | HostErrorMessage;
@@ -69,6 +70,7 @@ type MyState = {
   isStatusButtonLoading: boolean;
   commentInput: string;
   isErrorBannerOpen: boolean;
+  isOnline: boolean;
   errorDetails: any;
 };
 
@@ -90,6 +92,7 @@ export default class JiraIssuePage extends WebviewComponent<
       isStatusButtonLoading: false,
       commentInput: "",
       isErrorBannerOpen: false,
+      isOnline: true,
       errorDetails: undefined
     };
   }
@@ -105,6 +108,10 @@ export default class JiraIssuePage extends WebviewComponent<
       }
       case 'update': {
         this.setState({ data: e, isStatusButtonLoading: false, isErrorBannerOpen: false, errorDetails: undefined });
+        break;
+      }
+      case 'onlineStatus': {
+        this.setState({ isOnline: e.isOnline });
         break;
       }
     }
@@ -234,6 +241,20 @@ export default class JiraIssuePage extends WebviewComponent<
 
     return (
       <Page>
+        {
+          !this.state.isOnline && (
+            <ModalTransition>
+              <Modal
+
+                heading="Offline"
+                shouldCloseOnEscapePress={false}
+                shouldCloseOnOverlayClick={false}
+              >
+                <h1>Looks like you've gone offline.</h1>
+              </Modal>
+            </ModalTransition>
+          )
+        }
         <SizeDetector>
           {(size: SizeMetrics) => {
             if (size.width < 800) {

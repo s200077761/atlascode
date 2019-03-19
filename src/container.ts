@@ -19,6 +19,7 @@ import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 import { PipelineViewManager } from './webviews/pipelineViewManager';
 import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
+import { OnlineDetector } from './util/online';
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
@@ -27,6 +28,7 @@ export class Container {
 
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
+        context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
@@ -152,6 +154,11 @@ export class Container {
     private static _authManager: AuthManager;
     static get authManager() {
         return this._authManager;
+    }
+
+    private static _onlineDetector: OnlineDetector;
+    static get onlineDetector() {
+        return this._onlineDetector;
     }
 
     private static _authStatusBar: AuthStatusBar;
