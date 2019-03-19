@@ -3,11 +3,11 @@ import { Action } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
 import { PipelineApi } from "../pipelines/pipelines";
 import { Pipeline, PipelineStep } from "../pipelines/model";
-import { Container } from "../container";
+import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 
 type Emit = PipelineData | StepMessageData;
 
-export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
+export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PipelineInfo> {
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -21,17 +21,16 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
 
     }
 
-    initialize(pipelineUuid: string) {
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
-        PipelineApi.getPipeline(repos[0], pipelineUuid)
+    initialize(pipelineInfo: PipelineInfo) {
+        PipelineApi.getPipeline(pipelineInfo.repo, pipelineInfo.pipelineUuid)
             .then(pipeline => {
                 this.updatePipeline(pipeline);
             });
-        PipelineApi.getSteps(repos[0], pipelineUuid)
+        PipelineApi.getSteps(pipelineInfo.repo, pipelineInfo.pipelineUuid)
             .then(steps => {
                 this.updateSteps(steps);
                 steps.map(step => {
-                    PipelineApi.getStepLog(repos[0], pipelineUuid, step.uuid).then((logs) => {
+                    PipelineApi.getStepLog(pipelineInfo.repo, pipelineInfo.pipelineUuid, step.uuid).then((logs) => {
                         const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
                         logs.map((log, ix) => {
                             if (ix < commands.length) {
