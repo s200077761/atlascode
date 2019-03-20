@@ -4,7 +4,7 @@ import { PullRequest, PaginatedComments } from '../bitbucket/model';
 import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout } from '../ipc/prActions';
@@ -29,6 +29,7 @@ const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJira
 type Emit = PRData | CheckoutResult | HostErrorMessage;
 export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
+    private _pr: PullRequest | undefined = undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -42,12 +43,22 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     initialize(data: PullRequest) {
+        this._pr = data;
+
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         this.updatePullRequest(data);
     }
 
-    public invalidate() {
+    public async invalidate() {
         if (this._state.repository && this._state.remote && this._state.prData.pr) {
             this.forceUpdatePullRequest();
+        } else if (this._pr !== undefined) {
+            await this.postInitialState(this._pr);
+            await this.postAugmentedState(this._pr);
         }
     }
 
@@ -103,7 +114,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 }
                 case 'refreshPR': {
                     handled = true;
-                    this.forceUpdatePullRequest();
+                    this.invalidate();
                     break;
                 }
                 case 'openJiraIssue': {
