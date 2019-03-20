@@ -1,13 +1,16 @@
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action } from '../ipc/messaging';
+import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
 import { PipelineApi } from "../pipelines/pipelines";
 import { Pipeline, PipelineStep } from "../pipelines/model";
 import { Container } from "../container";
+import { Logger } from "../logger";
 
-type Emit = PipelineData | StepMessageData;
+type Emit = PipelineData | StepMessageData | HostErrorMessage;
 
 export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
+    private _pipelineId: string = "";
+
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -21,20 +24,40 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
 
     }
 
-    initialize(data: string) {
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
-        PipelineApi.getPipeline(repos[0], data)
-            .then(pipeline => {
-                this.updatePipeline(pipeline);
-            });
-        PipelineApi.getSteps(repos[0], data)
-            .then(steps => {
-                this.updateSteps(steps);
-            });
+    async initialize(data: string) {
+        this._pipelineId = data;
+        this.invalidate();
     }
 
-    public invalidate() {
+    public async invalidate() {
+        if (this._pipelineId === "") {
+            return;
+        }
 
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
+
+        try {
+            let pipeline = await PipelineApi.getPipeline(repos[0], this._pipelineId);
+            this.updatePipeline(pipeline);
+        } catch (e) {
+            Logger.error(e);
+            this.postMessage({ type: 'error', reason: e });
+            return;
+        }
+
+        try {
+            let steps = await PipelineApi.getSteps(repos[0], this._pipelineId);
+            this.updateSteps(steps);
+        } catch (e) {
+            Logger.error(e);
+            this.postMessage({ type: 'error', reason: e });
+            return;
+        }
     }
 
     public async updatePipeline(pipeline: Pipeline) {
@@ -52,6 +75,16 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(e);
+
+        if (!handled) {
+            switch (e.action) {
+                case 'refresh': {
+                    handled = true;
+                    this.invalidate();
+                    break;
+                }
+            }
+        }
         return handled;
     }
 }

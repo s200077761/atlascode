@@ -186,7 +186,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             case 'onlineStatus': {
                 this.setState({ isOnline: e.isOnline });
 
-                if (e.isOnline && (!this.state.selectedIssueTypeId || this.state.selectedIssueTypeId !== '')) {
+                if (e.isOnline && (!this.state.selectedIssueTypeId || this.state.selectedIssueTypeId === '')) {
                     this.postMessage({ action: 'refresh' });
                 }
 

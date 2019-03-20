@@ -20,6 +20,8 @@ import CalendarIcon from "@atlaskit/icon/glyph/calendar";
 import Avatar from "@atlaskit/avatar";
 import { colors } from "@atlaskit/theme";
 import * as moment from "moment";
+import Offline from "../Offline";
+import ErrorBanner from "../ErrorBanner";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -86,6 +88,9 @@ type Properties = {
 type State = {
   pipeline: PipelineData;
   steps: StepData[];
+  isErrorBannerOpen: boolean;
+  isOnline: boolean;
+  errorDetails: any;
 };
 
 const emptyPipeline: PipelineData = {
@@ -107,18 +112,42 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     super(props);
     this.state = {
       pipeline: emptyPipeline,
-      steps: []
+      steps: [],
+      isErrorBannerOpen: false,
+      isOnline: true,
+      errorDetails: undefined
     };
   }
 
   public onMessageReceived(e: any) {
+    switch (e.type) {
+      case 'error': {
+        this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
 
-    if (e.type && e.type === "updatePipeline") {
-      this.setState({ pipeline: e });
+        break;
+      }
+      case 'updatePipeline': {
+        this.setState({ pipeline: e });
+        break;
+      }
+      case 'updateSteps': {
+        this.setState({ steps: e.steps });
+        break;
+      }
+      case 'onlineStatus': {
+        this.setState({ isOnline: e.isOnline });
+
+        if (e.isOnline && this.state.pipeline.uuid === '') {
+          this.postMessage({ action: 'refresh' });
+        }
+
+        break;
+      }
     }
-    if (e.type && e.type === "updateSteps") {
-      this.setState({ steps: e.steps });
-    }
+  }
+
+  handleDismissError = () => {
+    this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
   }
 
   iconForState(state: PipelineState): any {
@@ -275,36 +304,48 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
   }
 
   render() {
+    if (this.state.pipeline.uuid === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      return (<div>waiting for data...</div>);
+    }
+
     return (
-      <Page>
-        <Grid spacing="comfortable" layout="fixed">
-          <GridColumn medium={12}>
-            <div
-              className="pipeline-head"
-              style={{
-                backgroundColor: this.colorForState(this.state.pipeline.state)
-              }}
-            >
-              <span className="pipeline-head-item">
-                {this.headerIconForState(this.state.pipeline.state)}
-              </span>
-              <span className="pipeline-head-item">
-                #{this.state.pipeline.build_number}
-              </span>
-              <span className="pipeline-head-item">
-                {builtTimeIcon}
-                {this.stringForSeconds(this.state.pipeline.duration_in_seconds)}
-              </span>
-              <span className="pipeline-head-item">
-                {calendarIcon}
-                {moment(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on).fromNow()}
-              </span>
-              <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} />
-            </div>
-            {this.steps()}
-          </GridColumn>
-        </Grid>
-      </Page>
+      <div>
+        {(!this.state.isOnline && this.state.pipeline.uuid === '') &&
+          <Offline />
+        }
+        {this.state.isErrorBannerOpen &&
+          <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+        }
+        <Page>
+          <Grid spacing="comfortable" layout="fixed">
+            <GridColumn medium={12}>
+              <div
+                className="pipeline-head"
+                style={{
+                  backgroundColor: this.colorForState(this.state.pipeline.state)
+                }}
+              >
+                <span className="pipeline-head-item">
+                  {this.headerIconForState(this.state.pipeline.state)}
+                </span>
+                <span className="pipeline-head-item">
+                  #{this.state.pipeline.build_number}
+                </span>
+                <span className="pipeline-head-item">
+                  {builtTimeIcon}
+                  {this.stringForSeconds(this.state.pipeline.duration_in_seconds)}
+                </span>
+                <span className="pipeline-head-item">
+                  {calendarIcon}
+                  {moment(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on).fromNow()}
+                </span>
+                <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} />
+              </div>
+              {this.steps()}
+            </GridColumn>
+          </Grid>
+        </Page>
+      </div>
     );
   }
 }

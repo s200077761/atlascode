@@ -75,7 +75,6 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
-                    Logger.debug('controller got refresh action');
                     this.forceUpdateIssue();
                     break;
                 }
