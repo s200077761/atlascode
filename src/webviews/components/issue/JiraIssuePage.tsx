@@ -21,7 +21,8 @@ import {
   IssueCommentAction,
   IssueAssignAction,
   CopyJiraIssueLinkAction,
-  OpenStartWorkPageAction
+  OpenStartWorkPageAction,
+  RefreshIssueAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import { Comments } from "./Comments";
@@ -32,9 +33,9 @@ import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
-import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
+import Offline from "../Offline";
 
-type Emit = TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
+type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
 type Accept = IssueData | HostErrorMessage;
 
 const emptyIssueData: IssueData = {
@@ -111,7 +112,13 @@ export default class JiraIssuePage extends WebviewComponent<
         break;
       }
       case 'onlineStatus': {
-        this.setState({ isOnline: e.isOnline });
+        let data = e.isOnline ? emptyIssueData : this.state.data;
+        this.setState({ isOnline: e.isOnline, data: data });
+
+        if (e.isOnline) {
+          this.postMessage({ action: 'refreshIssue' });
+        }
+
         break;
       }
     }
@@ -161,6 +168,9 @@ export default class JiraIssuePage extends WebviewComponent<
   header(issue: any): any {
     return (
       <div>
+        {!this.state.isOnline &&
+          <Offline />
+        }
         {this.state.isErrorBannerOpen &&
           <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
         }
@@ -225,6 +235,10 @@ export default class JiraIssuePage extends WebviewComponent<
   render() {
     const issue = this.state.data;
 
+    if (issue.type === "" && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      return (<div>waiting for data...</div>);
+    }
+
     const subtasks = (Array.isArray(this.state.data.subtasks) && this.state.data.subtasks.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
@@ -241,20 +255,7 @@ export default class JiraIssuePage extends WebviewComponent<
 
     return (
       <Page>
-        {
-          !this.state.isOnline && (
-            <ModalTransition>
-              <Modal
 
-                heading="Offline"
-                shouldCloseOnEscapePress={false}
-                shouldCloseOnOverlayClick={false}
-              >
-                <h1>Looks like you've gone offline.</h1>
-              </Modal>
-            </ModalTransition>
-          )
-        }
         <SizeDetector>
           {(size: SizeMetrics) => {
             if (size.width < 800) {

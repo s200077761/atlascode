@@ -20,6 +20,7 @@ type Emit = IssueData | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
     private _currentUserId?: string;
+    private _issueKey: string = "";
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -33,7 +34,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    initialize(data: issueOrKey) {
+    async initialize(data: issueOrKey) {
+
+        if (isIssue(data)) {
+            this._issueKey = data.key;
+        } else {
+            this._issueKey = data;
+        }
+
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
@@ -44,18 +52,20 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             return;
         }
 
-        fetchIssue(data)
-            .then((issue: Issue) => {
-                this.updateIssue(issue);
-            })
-            .catch((reason: any) => {
-                Logger.error(reason);
-                this.postMessage({ type: 'error', reason: reason });
-            });
+        try {
+            let issue = await fetchIssue(data);
+            this.updateIssue(issue);
+        }
+        catch (e) {
+            Logger.error(e);
+            this.postMessage({ type: 'error', reason: e });
+        }
     }
 
     public invalidate() {
-        this.forceUpdateIssue();
+        if (Container.onlineDetector.isOnline()) {
+            this.forceUpdateIssue();
+        }
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
@@ -65,17 +75,20 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
-                    // TODO: re-fetch the issue
-                    this.updateIssue(this._state);
+                    Logger.debug('controller got refresh action');
+                    this.forceUpdateIssue();
                     break;
                 }
                 case 'transitionIssue': {
                     if (isTransitionIssue(e)) {
                         handled = true;
-                        transitionIssue(e.issue, e.transition).catch((e: any) => {
+                        try {
+                            await transitionIssue(e.issue, e.transition);
+                        }
+                        catch (e) {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        });
+                        }
                     }
                     break;
                 }
@@ -96,12 +109,15 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 case 'assign': {
                     if (isIssueAssign(e)) {
                         handled = true;
-                        assignIssue(e.issue, this._currentUserId).catch((e: any) => {
+
+                        try {
+                            await assignIssue(e.issue, this._currentUserId);
+                            this.forceUpdateIssue();
+                        }
+                        catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        }).then(() => {
-                            this.forceUpdateIssue();
-                        });
+                        }
                     }
                     break;
                 }
@@ -160,15 +176,18 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         this.postMessage(msg);
     }
 
-    private async forceUpdateIssue() {
-        if (this._state.key !== "") {
-            fetchIssue(this._state.key, this._state.workingSite)
-                .then((issue: Issue) => {
-                    this.updateIssue(issue);
-                })
-                .catch((reason: any) => {
-                    Logger.error(reason);
-                });
+    private async forceUpdateIssue(issue?: Issue) {
+        let key = issue !== undefined ? issue.key : this._issueKey;
+        Logger.debug('forceUpdate key', key);
+        if (key !== "") {
+            try {
+                let issue = await fetchIssue(key, this._state.workingSite);
+                this.updateIssue(issue);
+            }
+            catch (e) {
+                Logger.error(e);
+                this.postMessage({ type: 'error', reason: e });
+            }
         }
     }
 }

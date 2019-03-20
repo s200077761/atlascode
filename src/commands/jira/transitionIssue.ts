@@ -16,13 +16,18 @@ export async function transitionIssue(param: Issue | IssueNode, transition?: Tra
     issue = param.issue;
   }
   if (!issue.transitions) {
-    vscode.window.showInformationMessage(`${issue.key} - There are no valid states into which this issue can be transitioned.`);
-    return;
+    throw new Error(`${issue.key} - There are no valid states into which this issue can be transitioned.`);
   }
 
   if (transition) {
-    performTranstion(issue, transition);
-    return;
+    try {
+      await performTranstion(issue, transition);
+      return;
+    }
+    catch (e) {
+      Logger.error(e);
+      throw e;
+    }
   }
 
   const names = issue.transitions
@@ -33,11 +38,13 @@ export async function transitionIssue(param: Issue | IssueNode, transition?: Tra
       placeHolder: "Transition to status"
     })
     .then(result => {
-      const selected = issue.transitions!.find(
-        transition => transition.name === result
-      );
+      const selected = issue.transitions!.find(transition => transition.name === result);
       if (selected) {
-        performTranstion(issue, selected);
+        performTranstion(issue, selected)
+          .catch(reason => {
+            Logger.error(reason);
+            throw reason;
+          });
       }
     });
 }
@@ -54,16 +61,19 @@ async function performTranstion(issue: Issue, transition: Transition) {
   let client = await Container.clientManager.jirarequest(issue.workingSite);
 
   if (client) {
-    client.issue.transitionIssue({
-      issueIdOrKey: issue.key,
-      body: { transition: { id: transition.id } }
-    }).then(() => {
-      vscode.commands.executeCommand(Commands.RefreshJiraExplorer).then(b => {
-        Container.jiraIssueViewManager.refreshAll();
-      });
+    try {
+      await client.issue.transitionIssue({ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } });
+
+      vscode.commands.executeCommand(Commands.RefreshJiraExplorer)
+        .then(b => {
+          Container.jiraIssueViewManager.refreshAll();
+        });
+
       issueTransitionedEvent(issue.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-    }).catch((err: any) => {
+    }
+    catch (err) {
       Logger.error(err);
-    });
+      throw err;
+    }
   }
 }
