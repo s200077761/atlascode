@@ -1,5 +1,5 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList } from '../ipc/issueMessaging';
@@ -30,7 +30,11 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     public async invalidate() {
-        await this.updateFields();
+        if (Container.onlineDetector.isOnline()) {
+            await this.updateFields();
+        } else {
+            this.postMessage(onlineStatus(false));
+        }
     }
 
     async updateFields(project?: WorkingProject) {
