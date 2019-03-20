@@ -21,6 +21,7 @@ export const maxItemsSupported = {
     fileChanges: 100,
     reviewers: 100
 };
+export const defaultPagelen = 25;
 const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -37,7 +38,10 @@ export namespace PullRequestApi {
             let remote = remotes[i];
             let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
             const bb = await bitbucketHosts.get(parsed.source)();
-            const { data } = await bb.repositories.listPullRequests({ username: parsed.owner, repo_slug: parsed.name });
+            const { data } = await bb.repositories.listPullRequests({
+                username: parsed.owner, repo_slug: parsed.name,
+                pagelen: defaultPagelen
+            });
             const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.

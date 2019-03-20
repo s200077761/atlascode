@@ -34,7 +34,7 @@ export interface ScreenEvent extends BaseEvent {
     screenEvent: ScreenEventData;
 }
 
-export interface TrackEventData {
+export interface TrackEventData extends Context {
     platform: any;
     origin: any;
     source: any;
@@ -44,7 +44,7 @@ export interface TrackEventData {
     attributes?: any;
 }
 
-export interface UIEventData {
+export interface UIEventData extends Context {
     platform: any;
     origin: any;
     source: any;
@@ -58,4 +58,11 @@ export interface ScreenEventData {
     origin: any;
     platform: any;
     attributes?: any;
+}
+
+interface Context {
+    containerType?: string;
+    containerId?: string;
+    objectType?: string;
+    objectId?: string;
 }
