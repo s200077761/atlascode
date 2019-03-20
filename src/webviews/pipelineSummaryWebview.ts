@@ -3,14 +3,14 @@ import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
 import { PipelineApi } from "../pipelines/pipelines";
 import { Pipeline, PipelineStep } from "../pipelines/model";
+import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
 type Emit = PipelineData | StepMessageData | HostErrorMessage;
 
-export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
-    private _pipelineId: string = "";
-
+export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PipelineInfo> {
+    private _pipelineInfo: PipelineInfo | undefined = undefined;
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -24,13 +24,13 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
 
     }
 
-    async initialize(data: string) {
-        this._pipelineId = data;
+    initialize(pipelineInfo: PipelineInfo) {
+        this._pipelineInfo = pipelineInfo;
         this.invalidate();
     }
 
     public async invalidate() {
-        if (this._pipelineId === "") {
+        if (this._pipelineInfo === undefined || this._pipelineInfo.pipelineUuid === "") {
             return;
         }
 
@@ -39,10 +39,8 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
             return;
         }
 
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
-
         try {
-            let pipeline = await PipelineApi.getPipeline(repos[0], this._pipelineId);
+            let pipeline = await PipelineApi.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
@@ -51,8 +49,20 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
         }
 
         try {
-            let steps = await PipelineApi.getSteps(repos[0], this._pipelineId);
+            let steps = await PipelineApi.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updateSteps(steps);
+
+            steps.map(step => {
+                PipelineApi.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
+                    const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
+                    logs.map((log, ix) => {
+                        if (ix < commands.length) {
+                            commands[ix].logs = log;
+                            this.updateSteps(steps);
+                        }
+                    });
+                });
+            });
         } catch (e) {
             Logger.error(e);
             this.postMessage({ type: 'error', reason: e });

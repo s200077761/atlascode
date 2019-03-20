@@ -8,7 +8,8 @@ import {
   PipelineStage,
   PipelineResult,
   statusForState,
-  Status
+  Status,
+  PipelineCommand
 } from "../../../pipelines/model";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Panel from '@atlaskit/panel';
@@ -243,26 +244,25 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     return `${seconds} sec`;
   }
 
+  commandSection(commands: PipelineCommand[], title: string, expanded: boolean) {
+    return (<Panel isDefaultExpanded={expanded} header={panelHeader(title, `${commands.length} Commands`)}>
+      {commands.map(c => {
+        return <div className="pipeline-step-panel">
+          <Panel isDefaultExpanded={false} header={<div className="pipeline-command">{c.name}</div>}>
+            <pre className="pipeline-logs">{c.logs}</pre>
+          </Panel>
+        </div>;
+      })}
+    </Panel>
+    );
+  }
+
   commands(step: PipelineStep) {
     return (
-      <div>
-        <Panel isDefaultExpanded={false} header={panelHeader('Setup', `${step.setup_commands.length} Commands`)}>
-          {step.setup_commands.map(c => {
-            return <div className="pipeline-command">{c.name}</div>;
-          })}
-        </Panel>
-
-        <Panel isDefaultExpanded={true} header={panelHeader("Build", `${step.script_commands.length} Commands`)}>
-          {step.script_commands.map(c => {
-            return <div className="pipeline-command">{c.name}</div>;
-          })}
-        </Panel>
-
-        <Panel isDefaultExpanded={false} header={panelHeader("Teardown", `${step.teardown_commands.length} Commands`)}>
-          {step.teardown_commands.map(c => {
-            return <div className="pipeline-command">{c.name}</div>;
-          })}
-        </Panel>
+      <div className="pipeline-command-panels">
+        {this.commandSection(step.setup_commands, 'Setup', false)}
+        {this.commandSection(step.script_commands, 'Build', true)}
+        {this.commandSection(step.teardown_commands, 'Teardown', false)}
       </div>
     );
   }

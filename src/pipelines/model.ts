@@ -58,6 +58,7 @@ export interface PipelineCommand {
     action?: string;
     command: string;
     name: string;
+    logs?: string;
 }
 
 export function statusForState(state: PipelineState): Status {
