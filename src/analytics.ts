@@ -2,7 +2,7 @@ import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/in
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
 import { AuthProvider, AuthInfo } from './atlclients/authInfo';
-import { ProductJira, ProductBitbucket } from './constants';
+import { ProductJira, ProductBitbucket, PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 export const Registry = {
     screen: {
@@ -395,6 +395,44 @@ export async function prUrlCopiedEvent(): Promise<TrackEvent> {
     };
 
     return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function prPaginationEvent(): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            source: 'vscode',
+            containerType: 'treeview',
+            containerId: PullRequestTreeViewId,
+            objectType: 'treenode',
+            objectId: 'paginationNode'
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            source: 'vscode',
+            containerType: 'treeview',
+            containerId: BitbucketIssuesTreeViewId,
+            objectType: 'treenode',
+            objectId: 'paginationNode'
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
 }
 
 export async function pipelineStartEvent(): Promise<TrackEvent> {

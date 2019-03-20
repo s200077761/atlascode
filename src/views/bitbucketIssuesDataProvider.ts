@@ -11,6 +11,7 @@ import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
+import { bbIssuesPaginationEvent } from '../analytics';
 
 export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -24,6 +25,7 @@ export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, 
             commands.registerCommand(Commands.BitbucketIssuesNextPage, async (issues: PaginatedBitbucketIssues) => {
                 const result = await BitbucketIssuesApi.nextPage(issues);
                 this.addItems(result);
+                bbIssuesPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             ctx.onDidChangeBitbucketContext(() => {
                 this.refresh();

@@ -3,7 +3,7 @@ import { RepositoriesApi } from "./repositories";
 import { GitUrlParse, bitbucketHosts, PullRequestApi } from "./pullRequests";
 import { PaginatedBitbucketIssues } from "./model";
 
-const defaultPageLength = 10;
+const defaultPageLength = 25;
 export const maxItemsSupported = {
     comments: 100,
     changes: 100
@@ -20,14 +20,23 @@ export namespace BitbucketIssuesApi {
 
         let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
-        const { data } = await bb.repositories.listIssues({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            pagelen: defaultPageLength,
-            q: 'state="new" OR state="open" OR state="on hold"'
-        });
 
-        return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
+        try {
+
+
+            const { data } = await bb.repositories.listIssues({
+                repo_slug: parsed.name,
+                username: parsed.owner,
+                pagelen: defaultPageLength,
+                q: 'state="new" OR state="open" OR state="on hold"'
+            });
+
+            return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
+        } catch (e) {
+            // this will most likely happen when issue tracker is not enabled for a repo
+            return { repository: repository, remote: remotes[0], data: [], next: undefined };
+
+        }
     }
 
     export async function getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {

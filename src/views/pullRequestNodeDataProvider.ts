@@ -12,6 +12,7 @@ import { EmptyStateNode } from './nodes/emptyStateNode';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
+import { prPaginationEvent } from '../analytics';
 
 export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -29,6 +30,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addItems(result);
+                prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
@@ -38,9 +40,18 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         if (!this._childrenMap) {
             this._childrenMap = new Map();
         }
-        this._childrenMap.clear();
         const repos = this.ctx.getBitbucketRepositores();
         const expand = repos.length === 1;
+
+        // dispose any removed repos
+        this._childrenMap.forEach((val, key) => {
+            if (!repos.find(repo => repo.rootUri.toString() === key)) {
+                val.dispose();
+            }
+        });
+
+        this._childrenMap.clear();
+        // add nodes for newly added repos
         repos.forEach(repo => {
             this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo, expand));
         });

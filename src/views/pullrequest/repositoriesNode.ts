@@ -13,6 +13,12 @@ export class RepositoriesNode extends BaseNode {
         super();
     }
 
+    async refresh() {
+        let prs = await PullRequestApi.getList(this.repository);
+        this._children = prs.data.map(pr => new PullRequestTitlesNode(pr));
+        if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+    }
+
     addItems(prs: PaginatedPullRequests): void {
         if (!this._children) {
             this._children = [];
@@ -42,13 +48,11 @@ export class RepositoriesNode extends BaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            let prs = await PullRequestApi.getList(this.repository);
-            if (prs.data.length === 0) {
-                return [new EmptyStateNode('No pull requests found for this repository')];
-            }
-            this._children = prs.data.map(pr => new PullRequestTitlesNode(pr));
-            if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+            await this.refresh();
         }
-        return this._children;
+        if (this._children!.length === 0) {
+            return [new EmptyStateNode('No pull requests found for this repository')];
+        }
+        return this._children!;
     }
 }
