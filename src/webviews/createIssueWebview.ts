@@ -2,7 +2,7 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action, HostErrorMessage } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchUsersQuery, isOpenJiraIssue } from '../ipc/issueActions';
 import { commands } from 'vscode';
@@ -11,7 +11,12 @@ import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
 import { IssueTypeIdScreens } from '../jira/createIssueMeta';
 import { issueCreatedEvent } from '../analytics';
 
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList;
+export interface PartialIssue {
+    summary?: string;
+    description?: string;
+}
+
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
     constructor(extensionPath: string) {
@@ -25,8 +30,12 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         return "atlascodeCreateIssueScreen";
     }
 
-    async createOrShow(): Promise<void> {
+    async createOrShow(data?: PartialIssue): Promise<void> {
         await super.createOrShow();
+        if (data) {
+            const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
+            this.postMessage(pd);
+        }
     }
 
     public async invalidate() {
