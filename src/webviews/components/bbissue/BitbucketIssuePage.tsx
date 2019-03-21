@@ -26,6 +26,7 @@ import { PostComment, CopyBitbucketIssueLink, PostChange, AssignToMe } from "../
 import { StatusMenu } from "./StatusMenu";
 import Button from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import OpenIcon from '@atlaskit/icon/glyph/open';
 
 type SizeMetrics = {
     width: number;
@@ -132,6 +133,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                 {width <= 800 && this.renderDetails(issue)}
 
                                 <Panel isDefaultExpanded header={<h3>Comments</h3>} >
+                                    {this.state.data!.hasMore &&
+                                        <div className='ac-vpadding' style={{ textAlign: 'center' }}>
+                                            <Button appearance='subtle' href={issue.links!.html!.href} iconAfter={<OpenIcon label='open-previous' />}>See previous comments</Button>
+                                        </div>
+                                    }
                                     <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} onComment={undefined} />
                                     <CommentForm currentUser={this.state.data!.currentUser!} visible={true} onSave={this.handlePostComment} />
                                 </Panel>

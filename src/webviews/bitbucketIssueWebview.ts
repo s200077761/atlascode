@@ -44,7 +44,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
 
         const [issueLatest, comments, changes] = await Promise.all([BitbucketIssuesApi.refetch(issue), BitbucketIssuesApi.getComments(issue), BitbucketIssuesApi.getChanges(issue)]);
-        const updatedChanges = changes
+        const updatedChanges = changes.data
             .map(change => {
                 let content = '';
                 if (change.changes!.state) {
@@ -80,13 +80,17 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
         //@ts-ignore
         // replace comment with change data which contains additional details
-        const updatedComments = comments.map(comment => updatedChanges.find(change => change.id! === comment.id!) || comment);
+        const updatedComments = comments.data.map(comment => updatedChanges.find(
+            change =>
+                //@ts-ignore
+                change.id! === comment.id!) || comment);
         const msg = {
             type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
             issue: issueLatest,
             currentUser: this._currentUser,
-            comments: updatedComments
-        };
+            comments: updatedComments,
+            hasMore: !!comments.next || !!changes.next
+        } as BitbucketIssueData;
 
         this.postMessage(msg);
     }

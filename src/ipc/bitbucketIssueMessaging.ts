@@ -5,6 +5,7 @@ export interface BitbucketIssueData extends Message {
     issue: Bitbucket.Schema.Issue;
     currentUser: Bitbucket.Schema.User;
     comments: Bitbucket.Schema.Comment[];
+    hasMore: boolean;
 }
 
 export interface CreateBitbucketIssueData extends Message {
