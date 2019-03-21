@@ -3,6 +3,8 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import SizeDetector from "@atlaskit/size-detector";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
+import Spinner from '@atlaskit/spinner';
+import Tooltip from '@atlaskit/tooltip';
 import Panel from '@atlaskit/panel';
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
 import Tag from "@atlaskit/tag";
@@ -90,7 +92,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
 
     render() {
         if (!this.state.data) {
-            return null;
+            return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
         }
 
         const issue = this.state.data.issue as Bitbucket.Schema.Issue;

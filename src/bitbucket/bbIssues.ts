@@ -133,6 +133,28 @@ export namespace BitbucketIssuesApi {
         });
     }
 
+    export async function create(href: string, title: string, description: string, kind: string, priority: string): Promise<Bitbucket.Schema.Issue> {
+        let parsed = GitUrlParse(href);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+
+        const { data } = await bb.repositories.createIssue({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            _body: {
+                type: 'issue',
+                title: title,
+                content: {
+                    raw: description
+                },
+                //@ts-ignore
+                kind: kind, priority: priority
+            }
+        });
+
+        // refetching here as the response from `createIssue` doesn't include all the fields
+        return refetch(data);
+    }
+
     export async function nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
         let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remote));
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
