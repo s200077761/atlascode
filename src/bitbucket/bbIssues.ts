@@ -133,6 +133,25 @@ export namespace BitbucketIssuesApi {
         });
     }
 
+    export async function assign(issue: Bitbucket.Schema.Issue, account_id: string): Promise<Bitbucket.Schema.IssueChange[]> {
+        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const { data } = await bb.repositories.updateIssue({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            issue_id: issue.id!.toString(),
+            _body: {
+                type: 'issue',
+                assignee: {
+                    type: 'user',
+                    account_id: account_id
+                }
+            }
+        });
+
+        return data.values || [];
+    }
+
     export async function create(href: string, title: string, description: string, kind: string, priority: string): Promise<Bitbucket.Schema.Issue> {
         let parsed = GitUrlParse(href);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
@@ -151,8 +170,7 @@ export namespace BitbucketIssuesApi {
             }
         });
 
-        // refetching here as the response from `createIssue` doesn't include all the fields
-        return refetch(data);
+        return data;
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
