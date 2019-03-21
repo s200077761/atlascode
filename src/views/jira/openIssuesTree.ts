@@ -6,7 +6,7 @@ import { configuration } from "../../config/configuration";
 
 export class OpenIssuesTree extends AbstractIssueTree {
     constructor() {
-        super(OpenIssuesTreeId, undefined, "There are no open issues");
+        super(OpenIssuesTreeId, undefined, `There are no open issues for '${Container.config.jira.workingProject.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
 
         const project = Container.config.jira.workingProject;
         this.setJql(this.jqlForProject(project.id));
@@ -18,6 +18,7 @@ export class OpenIssuesTree extends AbstractIssueTree {
 
         if (!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
             const project = await Container.jiraSiteManager.getEffectiveProject();
+            this.setEmptyState(`There are no open issues for '${project.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
             this.setJql(this.jqlForProject(project.id));
         }
 
