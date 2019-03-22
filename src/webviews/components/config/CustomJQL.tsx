@@ -299,7 +299,7 @@ export default class CustomJQL extends React.Component<
             onSave={this.handleSaveEdit}
           />
         )}
-        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.workingSite.name}</strong> (default site can be changed in the authentication section above)</em></p>
+        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.workingSite ? this.props.workingSite.name : '<default site not set>'}</strong> (default site can be changed in the authentication section above)</em></p>
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
