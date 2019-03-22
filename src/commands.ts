@@ -44,6 +44,7 @@ export enum Commands {
     ShowPipeline = 'atlascode.bb.showPipeline',
     BitbucketIssuesNextPage = 'atlascode.bb.issuesNextPage',
     BitbucketIssuesRefresh = 'atlascode.bb.refreshIssues',
+    CreateBitbucketIssue = 'atlascode.bb.createIssue',
     ShowBitbucketIssue = 'atlascode.bb.showIssue',
     ViewDiff = 'atlascode.viewDiff'
 }
