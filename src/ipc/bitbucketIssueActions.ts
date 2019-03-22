@@ -4,6 +4,10 @@ export interface CopyBitbucketIssueLink extends Action {
     action: 'copyBitbucketIssueLink';
 }
 
+export interface AssignToMe extends Action {
+    action: 'assign';
+}
+
 export interface PostComment extends Action {
     action: 'comment';
     content: string;

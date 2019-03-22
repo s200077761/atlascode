@@ -38,3 +38,8 @@ export interface PaginatedBitbucketIssues {
     data: Bitbucket.Schema.Issue[];
     next?: string;
 }
+
+export interface PaginatedIssueChange {
+    data: Bitbucket.Schema.IssueChange[];
+    next?: string;
+}

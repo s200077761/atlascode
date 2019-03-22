@@ -22,8 +22,11 @@ import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
 import Comments from "../pullrequest/Comments";
 import CommentForm from "../pullrequest/CommentForm";
-import { PostComment, CopyBitbucketIssueLink, PostChange } from "../../../ipc/bitbucketIssueActions";
+import { PostComment, CopyBitbucketIssueLink, PostChange, AssignToMe } from "../../../ipc/bitbucketIssueActions";
 import { StatusMenu } from "./StatusMenu";
+import Button from "@atlaskit/button";
+import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import OpenIcon from '@atlaskit/icon/glyph/open';
 
 type SizeMetrics = {
     width: number;
@@ -45,7 +48,7 @@ const typeIcon = {
     task: <TaskIcon label='task' primaryColor='0x2684FF' />
 };
 
-type Emit = PostComment | PostChange | CopyBitbucketIssueLink;
+type Emit = PostComment | PostChange | CopyBitbucketIssueLink | AssignToMe;
 type Receive = BitbucketIssueData;
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, { data?: BitbucketIssueData, isStatusButtonLoading: boolean }> {
@@ -64,6 +67,8 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
 
     handleCopyLink = () => this.postMessage({ action: 'copyBitbucketIssueLink' });
 
+    handleAssign = () => this.postMessage({ action: 'assign' });
+
     handleStatusChange = (newStatus: string, content?: string) => {
         this.setState({ isStatusButtonLoading: true });
         this.postMessage({ action: 'change', newStatus: newStatus, content: content });
@@ -79,10 +84,21 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
             <h3>Priority</h3>
             <div className='ac-inline-flex-hpad'>{priorityIcon[issue.priority!]}<span style={{ paddingLeft: '1em' }}>{issue.priority}</span></div>
             <h3>Assignee</h3>
-            <AvatarItem
-                avatar={<Avatar size='small' src={issue.assignee ? issue.assignee.links!.avatar!.href! : null} />}
-                primaryText={issue.assignee ? issue.assignee.displayName : 'Unassigned'}
-            />
+            <Tooltip content={issue.assignee ? issue.assignee.display_name : 'Unassigned'}>
+                <AvatarItem
+                    avatar={<Avatar size='small' src={issue.assignee ? issue.assignee.links!.avatar!.href! : null} />}
+                    primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
+                />
+            </Tooltip>
+            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.account_id) &&
+                <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+            <h3>Reporter</h3>
+            <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>
+                <AvatarItem
+                    avatar={<Avatar size='small' src={issue.reporter ? issue.reporter.links!.avatar!.href! : null} />}
+                    primaryText={issue.reporter ? issue.reporter.display_name : 'Unknown'}
+                />
+            </Tooltip>
             <h3>Votes</h3>
             <Tag text={issue.votes} />
             <h3>Watchers</h3>
@@ -117,6 +133,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                 {width <= 800 && this.renderDetails(issue)}
 
                                 <Panel isDefaultExpanded header={<h3>Comments</h3>} >
+                                    {this.state.data!.hasMore &&
+                                        <div className='ac-vpadding' style={{ textAlign: 'center' }}>
+                                            <Button appearance='subtle' href={issue.links!.html!.href} iconAfter={<OpenIcon label='open-previous' />}>See previous comments</Button>
+                                        </div>
+                                    }
                                     <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} onComment={undefined} />
                                     <CommentForm currentUser={this.state.data!.currentUser!} visible={true} onSave={this.handlePostComment} />
                                 </Panel>
