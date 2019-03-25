@@ -1,33 +1,66 @@
-import { window, workspace } from 'vscode';
+import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn } from 'vscode';
 import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { PullRequestApi, GitUrlParse } from '../../bitbucket/pullRequests';
 
-export function createIssue(data?: any) {
-    if (data && data['scheme'] === 'file') {
-        const fullPath = data['fsPath'];
+export interface TodoIssueData {
+    summary: string;
+    uri: Uri;
+    insertionPoint: Position;
+}
 
-        const linesText = getLineRange();
+export function createIssue(data: Uri | TodoIssueData | undefined) {
+    if (isTodoIssueData(data)) {
+        const partialIssue = {
+            summary: data.summary,
+            description: descriptionForUri(data.uri),
+            uri: data.uri,
+            position: data.insertionPoint,
+            onCreated: annotateComment,
+        };
+        Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
+        return;
+    } else if (isUri(data) && data.scheme === 'file') {
+        Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
+        return;
+    }
+    Container.createIssueWebview.createOrShow();
+}
 
-        const repos = Container.bitbucketContext.getAllRepositores();
+function isTodoIssueData(a: any): a is TodoIssueData {
+    return a && (<TodoIssueData>a).insertionPoint !== undefined;
+}
 
-        const urlArrays = repos.map((repo) => {
-            return bitbucketUrlsInRepo(repo, fullPath, linesText);
-        });
-        const urls = urlArrays.reduce((p, c) => {
-            return p.concat(c);
-        }, []);
-        if (urls.length === 0) {
-            Container.createIssueWebview.createOrShow({ description: `${workspace.asRelativePath(fullPath)}${linesText}` });
-        } else if (urls.length === 1) {
-            const description = urls[0];
-            Container.createIssueWebview.createOrShow({ description: description });
-        } else {
-            const description = urls.join('\r');
-            Container.createIssueWebview.createOrShow({ description: description });
-        }
+function isUri(a: any): a is Uri {
+    return a && (<Uri>a).fsPath !== undefined;
+}
+
+function annotateComment(file: Uri, position: Position, issueKey: string) {
+    const we = new WorkspaceEdit();
+
+    we.insert(file, position, ` [${issueKey}]`);
+    workspace.applyEdit(we);
+}
+
+function descriptionForUri(uri: Uri) {
+    var fullPath = uri.fsPath;
+
+    const linesText = getLineRange();
+
+    const repos = Container.bitbucketContext.getAllRepositores();
+
+    const urlArrays = repos.map((repo) => {
+        return bitbucketUrlsInRepo(repo, fullPath, linesText);
+    });
+    const urls = urlArrays.reduce((p, c) => {
+        return p.concat(c);
+    }, []);
+    if (urls.length === 0) {
+        return `${workspace.asRelativePath(fullPath)}${linesText}`;
+    } else if (urls.length === 1) {
+        return urls[0];
     } else {
-        Container.createIssueWebview.createOrShow();
+        return urls.join('\r');
     }
 }
 

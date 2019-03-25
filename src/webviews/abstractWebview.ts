@@ -79,12 +79,12 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         this._panel.dispose();
     }
 
-    async createOrShow(): Promise<void> {
+    async createOrShow(column?: ViewColumn): Promise<void> {
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(
                 AbstractReactWebview.viewType,
                 this.title,
-                ViewColumn.Active, // { viewColumn: ViewColumn.Active, preserveFocus: false }
+                column ? column : ViewColumn.Active,
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,

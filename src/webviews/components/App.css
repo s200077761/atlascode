@@ -151,6 +151,28 @@ hr {
 
 /*-------------------- END - modal dialogs --------------------*/
 
+/*-------------------- BEGIN - Issue creation trigger list --------------------*/
+
+div#trigger-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8pt;
+  margin-bottom: 8pt;
+  padding-right: 3pt;
+  height: 3em;
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+}
+
+input#jira-todoTrigger-input {
+  flex-grow: 100;
+  margin-right: 3pt;
+  margin-left: 3pt;
+  border: none !important;
+}
+
+/*-------------------- END - Issue creation trigger list --------------------*/
+
 /*-------------------- BEGIN - JQL configuration list --------------------*/
 
 div#jql-row-container {
