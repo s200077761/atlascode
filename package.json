@@ -245,6 +245,11 @@
         },
         "menus": {
             "editor/context": [
+		{
+                    "command": "atlascode.jira.createIssue",
+                    "group": "atlascode",
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                },
                 {
                     "command": "atlascode.bb.createPullRequest",
                     "group": "atlascode",

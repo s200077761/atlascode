@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList } from '../../../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList, PreliminaryIssueData } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
 import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
 import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
@@ -169,6 +169,11 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'userList': {
                 this.userSuggestions = (e as UserList).users;
+                break;
+            }
+            case 'preliminaryIssueData': {
+                const data = e as PreliminaryIssueData;
+                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ description: data.description, summary: data.summary } } });
                 break;
             }
             case 'optionCreated': {

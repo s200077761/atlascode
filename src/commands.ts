@@ -13,6 +13,7 @@ import { BranchNode } from './views/pipelines/PipelinesTree';
 import { viewScreenEvent, Registry } from './analytics';
 import { Issue, isIssue } from './jira/jiraIssue';
 import { showIssue } from './commands/jira/showIssue';
+import { createIssue } from './commands/jira/createIssue';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -63,7 +64,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, async (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
-        vscode.commands.registerCommand(Commands.CreateIssue, Container.createIssueWebview.createOrShow, Container.createIssueWebview),
+        vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
         vscode.commands.registerCommand(Commands.ShowIssue, async (issue: any) => await showIssue(issue)),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),

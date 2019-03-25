@@ -7,7 +7,7 @@ import { RepoData } from "./prMessaging";
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
-export interface IssueData extends Message {}
+export interface IssueData extends Message { }
 export interface IssueData extends Issue {
     isAssignedToMe: boolean;
     childIssues: Issue[];
@@ -15,30 +15,35 @@ export interface IssueData extends Issue {
 }
 
 export interface CreateIssueData extends Message {
-    selectedProject:WorkingProject;
-    selectedIssueTypeId:string | undefined;
-    availableProjects:WorkingProject[];
-    issueTypeScreens:IssueTypeIdScreens;
+    selectedProject: WorkingProject;
+    selectedIssueTypeId: string | undefined;
+    availableProjects: WorkingProject[];
+    issueTypeScreens: IssueTypeIdScreens;
+}
+
+export interface PreliminaryIssueData extends Message {
+    summary?: string;
+    description?: string;
 }
 
 export interface ProjectList extends Message {
-    availableProjects:Project[];
+    availableProjects: Project[];
 }
 
 export interface LabelList extends Message {
-    labels:any[];
+    labels: any[];
 }
 
 export interface UserList extends Message {
-    users:any[];
+    users: any[];
 }
 
 export interface CreatedSomething extends Message {
-    createdData:any;
+    createdData: any;
 }
 
 export interface IssueCreated extends Message {
-    issueData:any;
+    issueData: any;
 }
 
 export interface StartWorkOnIssueData extends Message {
@@ -52,11 +57,11 @@ export interface StartWorkOnIssueResult extends Message {
     error?: string;
 }
 
-export function isCreatedSomething(m: Message): m is  CreatedSomething {
+export function isCreatedSomething(m: Message): m is CreatedSomething {
     return (<CreatedSomething>m).createdData !== undefined;
 }
 
-export function isIssueCreated(m: Message): m is  IssueCreated {
+export function isIssueCreated(m: Message): m is IssueCreated {
     return (<IssueCreated>m).issueData !== undefined;
 }
 
