@@ -98,6 +98,10 @@ export class BitbucketIssuesExplorer extends Disposable {
     }
 
     refresh() {
+        if (!Container.onlineDetector.isOnline()) {
+            return;
+        }
+
         if (this._tree && this._bitbucketIssuesDataProvider) {
             this._bitbucketIssuesDataProvider.refresh();
         }

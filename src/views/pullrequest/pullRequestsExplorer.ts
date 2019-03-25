@@ -79,6 +79,10 @@ export class PullRequestsExplorer extends Disposable {
     }
 
     refresh() {
+        if (!Container.onlineDetector.isOnline()) {
+            return;
+        }
+
         if (this._tree && this._dataProvider) {
             this._dataProvider.refresh();
         }

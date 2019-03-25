@@ -53,15 +53,11 @@ export class NewIssueMonitor implements Disposable {
   }
 
   async checkForNewIssues() {
+    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+      return;
+    }
+
     const ts = moment(this._timestamp).format("YYYY-MM-DD HH:mm");
-
-    if (!this._workingProject) {
-      return;
-    }
-
-    if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-      return;
-    }
 
     issuesForJQL(`project = ${this._workingProject.id} AND created > "${ts}"`)
       .then(newIssues => {
