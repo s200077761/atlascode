@@ -27,6 +27,10 @@ import { StatusMenu } from "./StatusMenu";
 import Button from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import OpenIcon from '@atlaskit/icon/glyph/open';
+import { HostErrorMessage } from "../../../ipc/messaging";
+import { RefreshIssueAction } from "../../../ipc/issueActions";
+import Offline from "../Offline";
+import ErrorBanner from "../ErrorBanner";
 
 type SizeMetrics = {
     width: number;
@@ -48,21 +52,62 @@ const typeIcon = {
     task: <TaskIcon label='task' primaryColor='0x2684FF' />
 };
 
-type Emit = PostComment | PostChange | CopyBitbucketIssueLink | AssignToMe;
-type Receive = BitbucketIssueData;
+type Emit = PostComment | PostChange | CopyBitbucketIssueLink | AssignToMe | RefreshIssueAction;
+type Receive = BitbucketIssueData | HostErrorMessage;
 
-export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, { data?: BitbucketIssueData, isStatusButtonLoading: boolean }> {
+type MyState = {
+    data: BitbucketIssueData;
+    isStatusButtonLoading: boolean;
+    isErrorBannerOpen: boolean;
+    isOnline: boolean;
+    errorDetails: any;
+};
+
+const emptyIssueData = {
+    type: "updateBitbucketIssue",
+    issue: { type: "" },
+    currentUser: { type: "" },
+    comments: [],
+    hasMore: false,
+};
+
+const emptyState = {
+    data: emptyIssueData,
+    isStatusButtonLoading: false,
+    isErrorBannerOpen: false,
+    isOnline: true,
+    errorDetails: undefined
+};
+
+export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
     constructor(props: any) {
         super(props);
-        this.state = {
-            isStatusButtonLoading: false
-        };
+        this.state = emptyState;
     }
 
     public onMessageReceived(e: any) {
-        if (e.type && e.type === 'updateBitbucketIssue') {
-            this.setState({ data: e, isStatusButtonLoading: false });
+        switch (e.type) {
+            case 'error': {
+                this.setState({ isStatusButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+
+                break;
+            }
+            case 'updateBitbucketIssue': {
+                this.setState({ data: e, isStatusButtonLoading: false });
+                break;
+            }
+            case 'onlineStatus': {
+                let data = e.isOnline ? emptyState : this.state;
+                this.setState({ ...data, ...{ isOnline: e.isOnline } });
+
+                if (e.isOnline) {
+                    this.postMessage({ action: 'refreshIssue' });
+                }
+
+                break;
+            }
         }
+
     }
 
     handleCopyLink = () => this.postMessage({ action: 'copyBitbucketIssueLink' });
@@ -74,6 +119,10 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.postMessage({ action: 'change', newStatus: newStatus, content: content });
     }
     handlePostComment = (content: string) => this.postMessage({ action: 'comment', content: content });
+
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    }
 
     renderDetails(issue: Bitbucket.Schema.Issue) {
         return <div style={{ padding: '2em' }}>
@@ -107,17 +156,27 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        if (!this.state.data) {
+        const issue = this.state.data.issue as Bitbucket.Schema.Issue;
+
+        if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
+        } else if (!issue.repository && !this.state.isOnline) {
+            return <div><Offline /></div>;
         }
 
-        const issue = this.state.data.issue as Bitbucket.Schema.Issue;
+
         return (
             <Page>
+                {!this.state.isOnline &&
+                    <Offline />
+                }
                 <SizeDetector>
                     {({ width }: SizeMetrics) => {
                         return <Grid>
                             <GridColumn medium={width > 800 ? 9 : 12}>
+                                {this.state.isErrorBannerOpen &&
+                                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                                }
                                 <PageHeader
                                     actions={null}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>

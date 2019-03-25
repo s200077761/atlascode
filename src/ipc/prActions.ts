@@ -10,6 +10,10 @@ export function isPostComment(a: Action): a is PostComment {
     return (<PostComment>a).content !== undefined;
 }
 
+export interface RefreshPullRequest extends Action {
+    action: 'refreshPR';
+}
+
 export interface Approve extends Action {
     action: 'approve';
 }

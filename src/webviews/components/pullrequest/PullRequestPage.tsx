@@ -14,7 +14,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink } from '../../../ipc/prActions';
+import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -25,8 +25,9 @@ import NavItem from '../issue/NavItem';
 import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
+import Offline from '../Offline';
 
-type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenPipelineBuildAction;
+type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -36,18 +37,23 @@ interface ViewState {
     isCheckoutButtonLoading: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
+    isOnline: boolean;
 }
+
+const emptyPR = {
+    type: '',
+    currentBranch: '',
+    relatedJiraIssues: []
+};
+
 const emptyState: ViewState = {
-    pr: {
-        type: '',
-        currentBranch: '',
-        relatedJiraIssues: []
-    },
+    pr: emptyPR,
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
     isErrorBannerOpen: false,
-    errorDetails: undefined
+    errorDetails: undefined,
+    isOnline: true,
 
 };
 
@@ -117,6 +123,16 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 }
                 break;
             }
+            case 'onlineStatus': {
+                let data = e.isOnline ? emptyPR : this.state.pr;
+                this.setState({ isOnline: e.isOnline, pr: data });
+
+                if (e.isOnline) {
+                    this.postMessage({ action: 'refreshPR' });
+                }
+
+                break;
+            }
         }
     }
 
@@ -126,7 +142,17 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     render() {
         const pr = this.state.pr.pr!;
-        if (!pr) { return <div></div>; }
+
+        if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            return (<div>waiting for data...</div>);
+        } else if (!pr && !this.state.isOnline) {
+            return (
+                <div className='bitbucket-page'>
+                    <Offline />
+                </div>
+            );
+        }
+
         const isPrOpen = pr.state === "OPEN";
 
         let currentUserApproved = pr.participants!
@@ -168,6 +194,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         return (
             <div className='bitbucket-page'>
+                {!this.state.isOnline &&
+                    <Offline />
+                }
                 <Page>
                     <Grid>
                         <GridColumn>

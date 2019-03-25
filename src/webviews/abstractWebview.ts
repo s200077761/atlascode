@@ -11,9 +11,10 @@ import {
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable } from '../ipc/messaging';
+import { Action, isAlertable, OnlineStatusMessage } from '../ipc/messaging';
 import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
+import { OnlineInfoEvent } from '../util/online';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -51,6 +52,14 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
 
+
+        Container.context.subscriptions.push(
+            Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this),
+        );
+    }
+
+    private onDidOnlineChange(e: OnlineInfoEvent) {
+        this.postMessage({ type: 'onlineStatus', isOnline: e.isOnline });
     }
 
     onDidPanelDispose(): Event<void> {
@@ -105,6 +114,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
+            this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
             this.invalidate();
         }
     }
@@ -121,7 +131,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         return false;
     }
 
-    protected postMessage(message: S) {
+    protected postMessage(message: S | OnlineStatusMessage) {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);

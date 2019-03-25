@@ -4,7 +4,7 @@ import { PullRequest, PaginatedComments } from '../bitbucket/model';
 import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
 import { getCurrentUser } from '../bitbucket/user';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout } from '../ipc/prActions';
@@ -29,12 +29,17 @@ const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJira
 type Emit = PRData | CheckoutResult | HostErrorMessage;
 export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
+    private _pr: PullRequest | undefined = undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
     }
 
     public get title(): string {
+        if (this._pr && this._pr.data) {
+            return `Pull Request #${this._pr.data.id}`;
+        }
+
         return "Pull Request";
     }
     public get id(): string {
@@ -42,12 +47,27 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     initialize(data: PullRequest) {
+        this._pr = data;
+
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         this.updatePullRequest(data);
     }
 
-    public invalidate() {
+    public async invalidate() {
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         if (this._state.repository && this._state.remote && this._state.prData.pr) {
             this.forceUpdatePullRequest();
+        } else if (this._pr !== undefined) {
+            await this.postInitialState(this._pr);
+            await this.postAugmentedState(this._pr);
         }
     }
 
@@ -67,43 +87,51 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             switch (e.action) {
                 case 'approve': {
                     handled = true;
-                    this.approve().catch((e: any) => {
-                        Logger.error(new Error(`error approving pull request: ${e}`));
+                    try {
+                        await this.approve();
+                    } catch (e) {
+                        Logger.error(new Error(`error approving PR: ${e}`));
                         this.postMessage({ type: 'error', reason: e });
-                    });
+                    }
                     break;
                 }
                 case 'merge': {
                     handled = true;
-                    this.merge().catch((e: any) => {
+                    try {
+                        await this.merge();
+                    } catch (e) {
                         Logger.error(new Error(`error merging pull request: ${e}`));
                         this.postMessage({ type: 'error', reason: e });
-                    });
+                    }
                     break;
                 }
                 case 'comment': {
                     if (isPostComment(e)) {
                         handled = true;
-                        this.postComment(e.content, e.parentCommentId).catch((e: any) => {
+                        try {
+                            await this.postComment(e.content, e.parentCommentId);
+                        } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        });
+                        }
                     }
                     break;
                 }
                 case 'checkout': {
                     if (isCheckout(e)) {
                         handled = true;
-                        this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
+                        try {
+                            await this.checkout(e.branch, e.isSourceBranch);
+                        } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        });
+                        }
                     }
                     break;
                 }
                 case 'refreshPR': {
                     handled = true;
-                    this.forceUpdatePullRequest();
+                    this.invalidate();
                     break;
                 }
                 case 'openJiraIssue': {

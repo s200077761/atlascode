@@ -17,6 +17,7 @@ import SectionMessage from '@atlaskit/section-message';
 import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
+import Offline from '../Offline';
 
 type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
@@ -32,6 +33,7 @@ interface ViewState extends CreateIssueData {
     createdIssue: any;
     defaultIssueType: any;
     fieldValues: { [k: string]: any };
+    isOnline: boolean;
 }
 const emptyState: ViewState = {
     type: '',
@@ -47,6 +49,7 @@ const emptyState: ViewState = {
     isCreateBannerOpen: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
+    isOnline: true,
     createdIssue: {}
 };
 
@@ -178,6 +181,15 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 if (isIssueCreated(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: '', summary: '' } } });
                 }
+                break;
+            }
+            case 'onlineStatus': {
+                this.setState({ isOnline: e.isOnline });
+
+                if (e.isOnline && (!this.state.selectedIssueTypeId || this.state.selectedIssueTypeId === '')) {
+                    this.postMessage({ action: 'refresh' });
+                }
+
                 break;
             }
             default: {
@@ -343,7 +355,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
 
                 });
             }
-        } else {
+        } else if (!this.state.isErrorBannerOpen && this.state.isOnline) {
             return (<div>waiting for data...</div>);
         }
 
@@ -352,6 +364,9 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 <Grid>
                     <GridColumn medium={8}>
                         <div>
+                            {!this.state.isOnline &&
+                                <Offline />
+                            }
                             {this.state.isCreateBannerOpen &&
                                 <SectionMessage
                                     appearance="confirmation"

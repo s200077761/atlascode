@@ -14,7 +14,7 @@ import {
   emptyTransition
 } from "../../../jira/jiraModel";
 import {
-  StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction
+  StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction, RefreshIssueAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import Button from "@atlaskit/button";
@@ -24,8 +24,9 @@ import { Branch } from "../../../typings/git";
 import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
+import Offline from "../Offline";
 
-type Emit = StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
+type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
 type Accept = StartWorkOnIssueData | HostErrorMessage;
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
@@ -45,6 +46,7 @@ type State = {
   result: StartWorkOnIssueResult;
   isErrorBannerOpen: boolean;
   errorDetails: any;
+  isOnline: boolean;
 };
 
 const emptyState: State = {
@@ -59,6 +61,7 @@ const emptyState: State = {
   result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined },
   isErrorBannerOpen: false,
   errorDetails: undefined,
+  isOnline: true
 };
 
 export default class StartWorkPage extends WebviewComponent<
@@ -129,6 +132,17 @@ export default class StartWorkPage extends WebviewComponent<
         if (isStartWorkOnIssueResult(e)) {
           this.setState({ isStartButtonLoading: false, result: e, isErrorBannerOpen: false, errorDetails: undefined });
         }
+        break;
+      }
+
+      case 'onlineStatus': {
+        let data = e.isOnline ? emptyState : this.state;
+        this.setState({ ...data, ...{ isOnline: e.isOnline } });
+
+        if (e.isOnline) {
+          this.postMessage({ action: 'refreshIssue' });
+        }
+
         break;
       }
 
@@ -211,14 +225,18 @@ export default class StartWorkPage extends WebviewComponent<
     const issue = this.state.data.issue;
     const repo = this.state.repo;
 
-    if (issue.key === '') {
-      return <div className='ac-block-centered'><Spinner size="large" /></div>;
+    if (issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      return <div className='ac-block-centered'>waiting for data... <Spinner size="large" /></div>;
     }
 
     return (
       <Page>
         <Grid>
           <GridColumn medium={8}>
+            {!this.state.isOnline &&
+              <Offline />
+            }
+
             {this.state.result.successMessage &&
               <SectionMessage
                 appearance="confirmation"

@@ -2,6 +2,10 @@ import { Action } from "./messaging";
 import { Transition, Issue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 
+export interface RefreshIssueAction extends Action {
+    action: 'refreshIssue';
+}
+
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
     issue: Issue;
@@ -69,39 +73,39 @@ export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
 
-export function isIssueComment(a: Action): a is  IssueCommentAction {
-    return (<IssueCommentAction>a).comment !== undefined &&  (<IssueCommentAction>a).issue !== undefined;
+export function isIssueComment(a: Action): a is IssueCommentAction {
+    return (<IssueCommentAction>a).comment !== undefined && (<IssueCommentAction>a).issue !== undefined;
 }
 
-export function isIssueAssign(a: Action): a is  IssueAssignAction {
+export function isIssueAssign(a: Action): a is IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
 }
 export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
     return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
-export function isFetchQuery(a: Action): a is  FetchQueryAction {
+export function isFetchQuery(a: Action): a is FetchQueryAction {
     return (<FetchQueryAction>a).query !== undefined;
 }
 
-export function isFetchUsersQuery(a: Action): a is  FetchUsersQueryAction {
+export function isFetchUsersQuery(a: Action): a is FetchUsersQueryAction {
     return (<FetchUsersQueryAction>a).query !== undefined
-            && (<FetchUsersQueryAction>a).project !== undefined;
+        && (<FetchUsersQueryAction>a).project !== undefined;
 }
 
-export function isScreensForProjects(a: Action): a is  ScreensForProjectsAction {
+export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
 }
 
-export function isCreateSomething(a: Action): a is  CreateSomethingAction {
+export function isCreateSomething(a: Action): a is CreateSomethingAction {
     return (<CreateSomethingAction>a).createData !== undefined;
 }
 
-export function isCreateIssue(a: Action): a is  CreateIssueAction {
+export function isCreateIssue(a: Action): a is CreateIssueAction {
     return (<CreateIssueAction>a).issueData !== undefined;
 }
 
-export function isStartWork(a: Action): a is  StartWorkAction {
+export function isStartWork(a: Action): a is StartWorkAction {
     return (<StartWorkAction>a).transition !== undefined;
 }
 

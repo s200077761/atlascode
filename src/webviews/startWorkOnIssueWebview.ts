@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
@@ -21,6 +21,7 @@ import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
     private _state: Issue = emptyIssue;
+    private _issueKey: string = "";
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -34,12 +35,23 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         return "startWorkOnIssueScreen";
     }
 
-    createOrShowIssue(data: issueOrKey) {
-        super.createOrShow();
+    async createOrShowIssue(data: issueOrKey) {
+        await super.createOrShow();
         this.initialize(data);
     }
 
     initialize(data: issueOrKey) {
+        if (isIssue(data)) {
+            this._issueKey = data.key;
+        } else {
+            this._issueKey = data;
+        }
+
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         if (isIssue(data)) {
             if (this._state.key !== data.key) {
                 this.postMessage({
@@ -72,8 +84,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
             switch (e.action) {
                 case 'refreshIssue': {
                     handled = true;
-                    // TODO: re-fetch the issue
-                    this.updateIssue(this._state);
+                    this.forceUpdateIssue();
                     break;
                 }
                 case 'openJiraIssue': {
@@ -194,15 +205,17 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         this.postMessage(msg);
     }
 
-    private async forceUpdateIssue() {
-        if (this._state.key !== "") {
-            fetchIssue(this._state.key, this._state.workingSite)
-                .then((issue: Issue) => {
-                    this.updateIssue(issue);
-                })
-                .catch((reason: any) => {
-                    Logger.error(reason);
-                });
+    private async forceUpdateIssue(issue?: Issue) {
+        let key = issue !== undefined ? issue.key : this._issueKey;
+        if (key !== "") {
+            try {
+                let issue = await fetchIssue(key, this._state.workingSite);
+                this.updateIssue(issue);
+            }
+            catch (e) {
+                Logger.error(e);
+                this.postMessage({ type: 'error', reason: e });
+            }
         }
     }
 }
