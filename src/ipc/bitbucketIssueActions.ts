@@ -39,3 +39,12 @@ export interface CreateBitbucketIssueAction extends Action {
 export function isCreateBitbucketIssueAction(a: Action): a is CreateBitbucketIssueAction {
     return (<CreateBitbucketIssueAction>a).action === 'create';
 }
+
+export interface OpenBitbucketIssueAction extends Action {
+    action: 'openBitbucketIssue';
+    issue: Bitbucket.Schema.Issue;
+}
+
+export function isOpenBitbucketIssueAction(a: Action): a is OpenBitbucketIssueAction {
+    return (<OpenBitbucketIssueAction>a).issue !== undefined;
+}

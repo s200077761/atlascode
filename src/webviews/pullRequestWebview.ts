@@ -12,11 +12,13 @@ import { isOpenJiraIssue } from '../ipc/issueActions';
 import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
 import { Issue } from '../jira/jiraModel';
-import { extractIssueKeys } from '../bitbucket/issueKeysExtractor';
+import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
+import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
+import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 
 interface PRState {
     prData: PRData;
@@ -141,6 +143,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                         break;
                     }
                 }
+                case 'openBitbucketIssue': {
+                    if (isOpenBitbucketIssueAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, e.issue);
+                    }
+                    break;
+                }
                 case 'openPipelineBuild': {
                     if (isOpenPipelineBuild(e)) {
                         handled = true;
@@ -190,6 +199,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 commits: undefined,
                 comments: undefined,
                 relatedJiraIssues: undefined,
+                relatedBitbucketIssues: undefined,
                 errors: undefined
             }
         };
@@ -204,14 +214,16 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             PullRequestApi.getBuildStatuses(pr)
         ]);
         const [commits, comments, buildStatuses] = await promises;
-        const issues = await this.fetchRelatedIssues(pr, comments);
+        const relatedJiraIssues = await this.fetchRelatedJiraIssues(pr, comments);
+        const relatedBitbucketIssues = await this.fetchRelatedBitbucketIssues(pr, comments);
         this._state.prData = {
             ...this._state.prData,
             ...{
                 type: 'update',
                 commits: commits.data,
                 comments: comments.data,
-                relatedJiraIssues: issues,
+                relatedJiraIssues: relatedJiraIssues,
+                relatedBitbucketIssues: relatedBitbucketIssues,
                 buildStatuses: buildStatuses,
                 errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
             }
@@ -220,7 +232,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         this.postMessage(this._state.prData);
     }
 
-    private async fetchRelatedIssues(pr: PullRequest, comments: PaginatedComments): Promise<Issue[]> {
+    private async fetchRelatedJiraIssues(pr: PullRequest, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
             const issueKeys = await extractIssueKeys(pr, comments.data);
@@ -228,7 +240,20 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
         catch (e) {
             result = [];
-            Logger.debug('error fetching related pull requests: ', e);
+            Logger.debug('error fetching related jira issues: ', e);
+        }
+        return result;
+    }
+
+    private async fetchRelatedBitbucketIssues(pr: PullRequest, comments: PaginatedComments): Promise<Bitbucket.Schema.Issue[]> {
+        let result: Bitbucket.Schema.Issue[] = [];
+        try {
+            const issueKeys = await extractBitbucketIssueKeys(pr, comments.data);
+            result = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, issueKeys);
+        }
+        catch (e) {
+            result = [];
+            Logger.debug('error fetching related bitbucket issues: ', e);
         }
         return result;
     }

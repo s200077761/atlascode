@@ -651,6 +651,12 @@
                     "description": "Show related Jira issues for Bitbucket pull requests",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.relatedBitbucketIssues.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show related Bitbucket issues for Bitbucket pull requests",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
                     "type": "boolean",
                     "default": true,

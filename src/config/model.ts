@@ -100,10 +100,15 @@ export interface BitbucketExplorer {
     enabled: boolean;
     refreshInterval: number;
     relatedJiraIssues: BitbucketRelatedJiraIssues;
+    relatedBitbucketIssues: BitbucketRelatedBitbucketIssues;
     notifications: BitbucketNotifications;
 }
 
 export interface BitbucketRelatedJiraIssues {
+    enabled: boolean;
+}
+
+export interface BitbucketRelatedBitbucketIssues {
     enabled: boolean;
 }
 
@@ -199,6 +204,10 @@ export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
     enabled: true
 };
 
+export const emptyRelatedBitbucketIssues: BitbucketRelatedBitbucketIssues = {
+    enabled: true
+};
+
 export const emptyBitbucketNotfications: BitbucketNotifications = {
     refreshInterval: 10,
     pullRequestCreated: true
@@ -208,6 +217,7 @@ export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
+    relatedBitbucketIssues: emptyRelatedBitbucketIssues,
     notifications: emptyBitbucketNotfications
 };
 
