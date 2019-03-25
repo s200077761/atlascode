@@ -18,29 +18,35 @@ export abstract class AbstractIssueTreeNode extends Disposable {
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
 
-    constructor(id:string, jql?:string, emptyState?:string, emptyStateCommand?:Command) {
+    constructor(id: string, jql?: string, emptyState?: string, emptyStateCommand?: Command) {
         super(() => this.dispose());
 
         this._id = id;
         this._jql = jql;
-        if(emptyState && emptyState !== "") {
+        if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
         }
 
-        if(emptyStateCommand) {
+        if (emptyStateCommand) {
             this._emptyStateCommand = emptyStateCommand;
         }
     }
 
-    public get id():string {
+    public get id(): string {
         return this._id;
+    }
+
+    setEmptyState(text: string) {
+        this._emptyState = text.trim() === ''
+            ? 'No issues'
+            : text;
     }
 
     dispose() {
         this._disposables.forEach(d => {
             d.dispose();
         });
-        
+
         this._disposables = [];
     }
 
@@ -63,9 +69,9 @@ export abstract class AbstractIssueTreeNode extends Disposable {
     getTreeItem(node: IssueNode): TreeItem {
         return node.getTreeItem();
     }
-    
+
     private async fetchIssues(): Promise<IssueNode[]> {
-        if(!this._jql) {
+        if (!this._jql) {
             return Promise.resolve([]);
         }
 

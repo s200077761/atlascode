@@ -26,8 +26,6 @@ export class BitbucketIssuesExplorer extends Disposable {
 
         this._bitbucketIssuesDataProvider = new BitbucketIssuesDataProvider(_ctx);
 
-        commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this);
-
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
@@ -35,7 +33,9 @@ export class BitbucketIssuesExplorer extends Disposable {
             this._ctx.onDidChangeBitbucketContext(() => {
                 this.updateMonitor();
                 this.refresh();
-            })
+            }),
+            commands.registerCommand(Commands.BitbucketIssuesRefresh, this.refresh, this),
+            commands.registerCommand(Commands.CreateBitbucketIssue, Container.createBitbucketIssueWebview.createOrShow, Container.createBitbucketIssueWebview)
         );
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);

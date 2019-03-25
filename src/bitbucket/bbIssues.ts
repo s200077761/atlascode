@@ -1,9 +1,9 @@
 import { Repository } from "../typings/git";
 import { RepositoriesApi } from "./repositories";
 import { GitUrlParse, bitbucketHosts, PullRequestApi } from "./pullRequests";
-import { PaginatedBitbucketIssues } from "./model";
+import { PaginatedBitbucketIssues, PaginatedComments, PaginatedIssueChange } from "./model";
 
-const defaultPageLength = 10;
+const defaultPageLength = 25;
 export const maxItemsSupported = {
     comments: 100,
     changes: 100
@@ -20,14 +20,23 @@ export namespace BitbucketIssuesApi {
 
         let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
-        const { data } = await bb.repositories.listIssues({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            pagelen: defaultPageLength,
-            q: 'state="new" OR state="open" OR state="on hold"'
-        });
 
-        return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
+        try {
+
+
+            const { data } = await bb.repositories.listIssues({
+                repo_slug: parsed.name,
+                username: parsed.owner,
+                pagelen: defaultPageLength,
+                q: 'state="new" OR state="open" OR state="on hold"'
+            });
+
+            return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
+        } catch (e) {
+            // this will most likely happen when issue tracker is not enabled for a repo
+            return { repository: repository, remote: remotes[0], data: [], next: undefined };
+
+        }
     }
 
     export async function getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {
@@ -61,30 +70,32 @@ export namespace BitbucketIssuesApi {
         return data;
     }
 
-    export async function getComments(issue: Bitbucket.Schema.Issue): Promise<Bitbucket.Schema.Comment[]> {
+    export async function getComments(issue: Bitbucket.Schema.Issue): Promise<PaginatedComments> {
         let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
         const { data } = await bb.repositories.listIssueComments({
             repo_slug: parsed.name,
             username: parsed.owner,
+            issue_id: issue.id!.toString(),
             pagelen: maxItemsSupported.comments,
-            issue_id: issue.id!.toString()
+            sort: '-created_on'
         });
 
-        return data.values || [];
+        return { data: (data.values || []).reverse(), next: data.next };
     }
 
-    export async function getChanges(issue: Bitbucket.Schema.Issue): Promise<Bitbucket.Schema.IssueChange[]> {
+    export async function getChanges(issue: Bitbucket.Schema.Issue): Promise<PaginatedIssueChange> {
         let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
         const { data } = await bb.repositories.listIssueChanges({
             repo_slug: parsed.name,
             username: parsed.owner,
+            issue_id: issue.id!.toString(),
             pagelen: maxItemsSupported.changes,
-            issue_id: issue.id!.toString()
+            sort: '-created_on'
         });
 
-        return data.values || [];
+        return { data: (data.values || []).reverse(), next: data.next };
     }
 
     export async function postChange(issue: Bitbucket.Schema.Issue, newStatus: string, content?: string): Promise<void> {
@@ -122,6 +133,44 @@ export namespace BitbucketIssuesApi {
                 }
             }
         });
+    }
+
+    export async function assign(issue: Bitbucket.Schema.Issue, account_id: string): Promise<void> {
+        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        await bb.repositories.updateIssue({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            issue_id: issue.id!.toString(),
+            _body: {
+                type: 'issue',
+                assignee: {
+                    type: 'user',
+                    account_id: account_id
+                }
+            }
+        });
+    }
+
+    export async function create(href: string, title: string, description: string, kind: string, priority: string): Promise<Bitbucket.Schema.Issue> {
+        let parsed = GitUrlParse(href);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+
+        const { data } = await bb.repositories.createIssue({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            _body: {
+                type: 'issue',
+                title: title,
+                content: {
+                    raw: description
+                },
+                //@ts-ignore
+                kind: kind, priority: priority
+            }
+        });
+
+        return data;
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {

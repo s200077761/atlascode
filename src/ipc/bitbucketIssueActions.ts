@@ -4,6 +4,10 @@ export interface CopyBitbucketIssueLink extends Action {
     action: 'copyBitbucketIssueLink';
 }
 
+export interface AssignToMe extends Action {
+    action: 'assign';
+}
+
 export interface PostComment extends Action {
     action: 'comment';
     content: string;
@@ -21,4 +25,17 @@ export interface PostChange extends Action {
 
 export function isPostChange(a: Action): a is PostChange {
     return (<PostChange>a).newStatus !== undefined;
+}
+
+export interface CreateBitbucketIssueAction extends Action {
+    action: 'create';
+    href: string;
+    title: string;
+    description: string;
+    kind: string;
+    priority: string;
+}
+
+export function isCreateBitbucketIssueAction(a: Action): a is CreateBitbucketIssueAction {
+    return (<CreateBitbucketIssueAction>a).action === 'create';
 }

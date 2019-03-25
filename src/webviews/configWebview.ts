@@ -39,6 +39,8 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
     public async invalidate() {
         const config: IConfig = await configuration.get<IConfig>();
+        config.jira.workingSite = Container.jiraSiteManager.effectiveSite;
+
         var authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
         if (!authInfo) {
             authInfo = emptyAuthInfo;
