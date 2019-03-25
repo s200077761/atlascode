@@ -1,5 +1,5 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
@@ -25,28 +25,42 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     }
 
     public async invalidate() {
-        const repoData: RepoData[] = [];
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
-        for (let i = 0; i < repos.length; i++) {
-            const r = repos[i];
-            const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
-            if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
-                continue;
+        if (Container.onlineDetector.isOnline()) {
+            await this.updateFields();
+        } else {
+            this.postMessage(onlineStatus(false));
+        }
+    }
+
+    async updateFields() {
+        try {
+            const repoData: RepoData[] = [];
+            const repos = Container.bitbucketContext.getBitbucketRepositores();
+            for (let i = 0; i < repos.length; i++) {
+                const r = repos[i];
+                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
+                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
+                    continue;
+                }
+
+                const repo = await RepositoriesApi.get(bbRemotes[0]);
+                if (!repo.has_issues) {
+                    continue;
+                }
+
+                repoData.push({
+                    uri: r.rootUri.toString(),
+                    href: repo.links!.html!.href!,
+                    avatarUrl: repo.links!.avatar!.href!
+                });
             }
 
-            const repo = await RepositoriesApi.get(bbRemotes[0]);
-            if (!repo.has_issues) {
-                continue;
-            }
-
-            repoData.push({
-                uri: r.rootUri.toString(),
-                href: repo.links!.html!.href!,
-                avatarUrl: repo.links!.avatar!.href!
-            });
+            this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
+        } catch (e) {
+            Logger.error(new Error(`error updating issue fields: ${e}`));
+            this.postMessage({ type: 'error', reason: e });
         }
 
-        this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
     }
 
     async createOrShow(): Promise<void> {
@@ -62,12 +76,18 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                 case 'create': {
                     if (isCreateBitbucketIssueAction(e)) {
                         handled = true;
-                        this.createIssue(e)
-                            .catch((e: any) => {
-                                Logger.error(new Error(`error creating bitbucket issue: ${e}`));
-                                this.postMessage({ type: 'error', reason: e });
-                            });
+                        try {
+                            await this.createIssue(e);
+                        } catch (e) {
+                            Logger.error(new Error(`error creating bitbucket issue: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
+                    break;
+                }
+                case 'refresh': {
+                    handled = true;
+                    await this.invalidate();
                     break;
                 }
             }
@@ -79,11 +99,8 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
         const { href, title, description, kind, priority } = createIssueAction;
 
-        await BitbucketIssuesApi.create(href, title, description, kind, priority)
-            .then((issue: Bitbucket.Schema.Issue) => {
-                commands.executeCommand(Commands.ShowBitbucketIssue, issue);
-                //prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
-            });
+        let issue = await BitbucketIssuesApi.create(href, title, description, kind, priority);
+        commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         this.hide();
     }
 }

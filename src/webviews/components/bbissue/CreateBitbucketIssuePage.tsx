@@ -4,7 +4,7 @@ import PageHeader from '@atlaskit/page-header';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import { CreateBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
-import { HostErrorMessage } from "../../../ipc/messaging";
+import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreateBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
 import { ButtonGroup } from "@atlaskit/button";
@@ -13,23 +13,29 @@ import Form, { FormFooter, Field, ErrorMessage } from '@atlaskit/form';
 import Select from '@atlaskit/select';
 import ErrorBanner from "../ErrorBanner";
 import { FieldValidators } from "../fieldValidators";
+import Offline from "../Offline";
 
-type Emit = CreateBitbucketIssueAction;
+type Emit = CreateBitbucketIssueAction | Action;
 type Receive = CreateBitbucketIssueData | HostErrorMessage;
-
-export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, {
-    data?: CreateBitbucketIssueData,
-    isSubmitButtonLoading: boolean,
+interface MyState extends CreateBitbucketIssueData {
+    isSubmitButtonLoading: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
-}> {
+    isOnline: boolean;
+}
+
+const emptyState: MyState = {
+    type: 'createBitbucketIssueData',
+    repoData: [],
+    isSubmitButtonLoading: false,
+    isErrorBannerOpen: false,
+    errorDetails: undefined,
+    isOnline: true,
+};
+export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
     constructor(props: any) {
         super(props);
-        this.state = {
-            isSubmitButtonLoading: false,
-            isErrorBannerOpen: false,
-            errorDetails: undefined
-        };
+        this.state = emptyState;
     }
 
     public onMessageReceived(e: any) {
@@ -39,7 +45,17 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                 break;
             }
             case 'createBitbucketIssueData': {
-                this.setState({ data: e, isSubmitButtonLoading: false });
+                const issueData = e as CreateBitbucketIssueData;
+                this.setState({ ...issueData, ...{ isSubmitButtonLoading: false } });
+                break;
+            }
+            case 'onlineStatus': {
+                this.setState({ isOnline: e.isOnline });
+
+                if (e.isOnline && (!Array.isArray(this.state.repoData) || this.state.repoData.length < 1)) {
+                    this.postMessage({ action: 'refresh' });
+                }
+
                 break;
             }
         }
@@ -63,8 +79,10 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
     }
 
     render() {
-        if (!this.state.data || !Array.isArray(this.state.data.repoData) || this.state.data.repoData.length === 0) {
+        if ((!Array.isArray(this.state.repoData) || this.state.repoData.length === 0) && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
+        } else if ((!Array.isArray(this.state.repoData) || this.state.repoData.length === 0) && !this.state.isOnline) {
+            return <div><Offline /></div>;
         }
 
         return (
@@ -77,12 +95,15 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                         return (<form {...frmArgs.formProps}>
                             <Grid>
                                 <GridColumn medium={9}>
+                                    {!this.state.isOnline &&
+                                        <Offline />
+                                    }
                                     {this.state.isErrorBannerOpen &&
                                         <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                     }
                                     <PageHeader
                                         actions={<ButtonGroup>
-                                            <Button className='ac-button' href={`${this.state.data!.repoData[0].href}/issues`}>Create on bitbucket.org...</Button>
+                                            <Button className='ac-button' href={`${this.state.repoData[0].href}/issues`}>Create on bitbucket.org...</Button>
                                         </ButtonGroup>}
                                     >
                                         <p>Create Issue</p>
@@ -128,7 +149,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     </Field>
                                 </GridColumn>
                                 <GridColumn medium={6}>
-                                    <Field defaultValue={{ label: this.state.data!.repoData[0].uri.split('/').pop(), value: this.state.data!.repoData[0] }}
+                                    <Field defaultValue={{ label: this.state.repoData[0].uri.split('/').pop(), value: this.state.repoData[0] }}
                                         label='Repository'
                                         isRequired
                                         id='repo'
@@ -140,7 +161,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select"
-                                                        options={this.state.data!.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                                                        options={this.state.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
                                                     />
                                                     {fieldArgs.error && <ErrorMessage>Issue type is required</ErrorMessage>}
                                                 </React.Fragment>
