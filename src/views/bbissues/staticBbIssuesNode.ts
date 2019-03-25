@@ -1,0 +1,35 @@
+import * as vscode from 'vscode';
+import { BaseNode } from "../nodes/baseNode";
+import { Resources } from '../../resources';
+import { Repository } from '../../typings/git';
+import { EmptyStateNode } from '../nodes/emptyStateNode';
+import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
+import { Commands } from '../../commands';
+
+export class StaticBitbucketIssuesNode extends BaseNode {
+    private _children: BaseNode[] | undefined = undefined;
+
+    constructor(private repository: Repository, private issueKeys: string[]) {
+        super();
+    }
+
+    getTreeItem(): vscode.TreeItem {
+        const item = new vscode.TreeItem('Related Bitbucket Issues', vscode.TreeItemCollapsibleState.Collapsed);
+        item.iconPath = Resources.icons.get('issues');
+        return item;
+    }
+
+    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+        if (element) {
+            return element.getChildren();
+        }
+        if (!this._children) {
+            let issues = await BitbucketIssuesApi.getIssuesForKeys(this.repository, this.issueKeys);
+            if (issues.length === 0) {
+                return [new EmptyStateNode('No issues found')];
+            }
+            this._children = issues.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
+        }
+        return this._children;
+    }
+}

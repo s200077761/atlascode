@@ -9,6 +9,7 @@ import { Remote } from '../../typings/git';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { Logger } from '../../logger';
+import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -60,6 +61,7 @@ export class PullRequestTitlesNode extends BaseNode {
 
                     const children: BaseNode[] = [new DescriptionNode(this.pr)];
                     children.push(...await this.createRelatedJiraIssueNode(allComments));
+                    children.push(...await this.createRelatedBitbucketIssueNode(allComments));
                     children.push(...await this.createFileChangesNodes(allComments, fileChanges));
                     return children;
                 },
@@ -81,6 +83,15 @@ export class PullRequestTitlesNode extends BaseNode {
     private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
         const result: BaseNode[] = [];
         const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
+        if (relatedIssuesNode) {
+            result.push(relatedIssuesNode);
+        }
+        return result;
+    }
+
+    private async createRelatedBitbucketIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
+        const result: BaseNode[] = [];
+        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
         }

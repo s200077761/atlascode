@@ -22,8 +22,6 @@ export namespace BitbucketIssuesApi {
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
 
         try {
-
-
             const { data } = await bb.repositories.listIssues({
                 repo_slug: parsed.name,
                 username: parsed.owner,
@@ -36,6 +34,28 @@ export namespace BitbucketIssuesApi {
             // this will most likely happen when issue tracker is not enabled for a repo
             return { repository: repository, remote: remotes[0], data: [], next: undefined };
 
+        }
+    }
+
+    export async function getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<Bitbucket.Schema.Issue[]> {
+        let remotes = PullRequestApi.getBitbucketRemotes(repository);
+        if (remotes.length === 0) {
+            return [];
+        }
+
+        let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+
+        const keyNumbers = issueKeys.map(key => key.replace('#', ''));
+        try {
+            const results = await Promise.all(keyNumbers.map(key => bb.repositories.getIssue({
+                repo_slug: parsed.name,
+                username: parsed.owner,
+                issue_id: key
+            })));
+            return results.map(result => result.data || []);
+        } catch (e) {
+            return [];
         }
     }
 

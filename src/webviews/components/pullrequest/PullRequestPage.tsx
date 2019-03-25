@@ -26,8 +26,10 @@ import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
 import { HostErrorMessage } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
+import BitbucketIssueList from '../bbissue/BitbucketIssueList';
+import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 
-type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
+type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -43,7 +45,8 @@ interface ViewState {
 const emptyPR = {
     type: '',
     currentBranch: '',
-    relatedJiraIssues: []
+    relatedJiraIssues: [],
+    relatedBitbucketIssues: []
 };
 
 const emptyState: ViewState = {
@@ -222,13 +225,19 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
                             </Panel>
                             {
-                                !this.state.pr.commits && !this.state.pr.comments && !this.state.pr.relatedJiraIssues
+                                !this.state.pr.commits && !this.state.pr.comments
                                     ? <div className='ac-block-centered'><Spinner size="large" /></div>
                                     : <React.Fragment>
                                         {
                                             this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
                                                 <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+                                            </Panel>
+                                        }
+                                        {
+                                            this.state.pr.relatedBitbucketIssues && this.state.pr.relatedBitbucketIssues.length > 0 &&
+                                            <Panel isDefaultExpanded header={<h3>Related Bitbucket Issues</h3>}>
+                                                <BitbucketIssueList issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>

@@ -2,7 +2,7 @@ import * as React from "react";
 import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
 
-const stateRenderer = {
+export const StateRenderer = {
   new: <Lozenge appearance='new'>new</Lozenge>,
   open: <Lozenge appearance='inprogress'>open</Lozenge>,
   resolved: <Lozenge appearance='success'>resolved</Lozenge>,
@@ -15,13 +15,13 @@ const stateRenderer = {
 
 const StatusOption = (props: any) => (
   <components.Option {...props}>
-    {stateRenderer[props.data]}
+    {StateRenderer[props.data]}
   </components.Option>
 );
 
 const StatusValue = (props: any) => (
   <components.SingleValue {...props}>
-    {stateRenderer[props.data.value]}
+    {StateRenderer[props.data.value]}
   </components.SingleValue>
 
 );

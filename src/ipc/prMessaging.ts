@@ -10,6 +10,7 @@ export interface PRData extends Message {
     commits?: Bitbucket.Schema.Commit[];
     comments?: Bitbucket.Schema.Comment[];
     relatedJiraIssues?: Issue[];
+    relatedBitbucketIssues?: Bitbucket.Schema.Issue[];
     buildStatuses?: Bitbucket.Schema.Commitstatus[];
     errors?: string;
 }

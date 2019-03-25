@@ -38,11 +38,14 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
         if (this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             count++;
         }
+        if (this.props.configData.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
+            count++;
+        }
         if (this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated) {
             count++;
         }
 
-        return (count < 2);
+        return (count < 3);
     }
 
     render() {
@@ -84,6 +87,23 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
                                         isChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                    <CheckboxField
+                        name='pr-explorer-relatedbbissues-enabled'
+                        id='pr-explorer-relatedbbissues-enabled'
+                        value='bitbucket.explorer.relatedBitbucketIssues.enabled'>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Show related Jira issues for Bitbucket pull requests'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.configData.config.bitbucket.explorer.relatedBitbucketIssues.enabled}
                                     />
                                 );
                             }
