@@ -84,6 +84,10 @@ export class PipelinesExplorer extends Disposable {
     }
 
     refresh() {
+        if (!Container.onlineDetector.isOnline()) {
+            return;
+        }
+
         if (this._tree) {
             this._tree.refresh();
         }

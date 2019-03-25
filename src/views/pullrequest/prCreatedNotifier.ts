@@ -47,7 +47,7 @@ export class PullRequestCreatedNotifier implements Disposable {
         this.disable();
 
         this._newPrNotificationTimer = setInterval(async () => {
-            if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
                 return;
             }
 

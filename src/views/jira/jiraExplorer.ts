@@ -93,7 +93,7 @@ export class JiraExplorer extends Disposable {
     }
 
     async refresh() {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
             return;
         }
         this._trees.forEach(tree => {
