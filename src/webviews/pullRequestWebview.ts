@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments } from '../bitbucket/model';
 import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
-import { getCurrentUser } from '../bitbucket/user';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -186,7 +185,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async postInitialState(pr: PullRequest) {
         const isStagingRepo = pr.remote && RepositoriesApi.isStagingUrl(pr.remote.fetchUrl!);
-        const currentUser = this._state.prData.currentUser || await getCurrentUser(isStagingRepo);
+        const currentUser = await Container.bitbucketContext.currentUser(isStagingRepo);
         this._state = {
             repository: pr.repository,
             remote: pr.remote,

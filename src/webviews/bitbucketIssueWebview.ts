@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
-import { currentUserBitbucket } from "../commands/bitbucket/currentUser";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
 import { isPostComment, isPostChange } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
@@ -13,7 +12,6 @@ type Emit = BitbucketIssueData | HostErrorMessage;
 export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
 
     private _issue?: Bitbucket.Schema.Issue;
-    private _currentUser?: Bitbucket.Schema.User;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -52,11 +50,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
             return;
         }
 
-        if (!this._currentUser) {
-            this._currentUser = await currentUserBitbucket();
-        }
-
-        const [issueLatest, comments, changes] = await Promise.all([BitbucketIssuesApi.refetch(issue), BitbucketIssuesApi.getComments(issue), BitbucketIssuesApi.getChanges(issue)]);
+        const [currentUser, issueLatest, comments, changes] = await Promise.all([
+            Container.bitbucketContext.currentUser(),
+            BitbucketIssuesApi.refetch(issue),
+            BitbucketIssuesApi.getComments(issue),
+            BitbucketIssuesApi.getChanges(issue)]
+        );
         const updatedChanges = changes.data
             .map(change => {
                 let content = '';
@@ -100,7 +99,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         const msg = {
             type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
             issue: issueLatest,
-            currentUser: this._currentUser,
+            currentUser: currentUser,
             comments: updatedComments,
             hasMore: !!comments.next || !!changes.next
         } as BitbucketIssueData;
@@ -128,7 +127,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, this._currentUser!.account_id!);
+                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser()).account_id!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));

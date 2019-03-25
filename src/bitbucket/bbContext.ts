@@ -7,6 +7,7 @@ import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { AuthProvider } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
+import { getCurrentUser } from './user';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -19,6 +20,8 @@ export class BitbucketContext extends Disposable {
     private _pullRequestsExplorer: PullRequestsExplorer;
     private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
     private _disposable: Disposable;
+    private _currentUser?: Bitbucket.Schema.User;
+    private _currentUserStaging?: Bitbucket.Schema.User;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -28,7 +31,9 @@ export class BitbucketContext extends Disposable {
 
         Container.context.subscriptions.push(
             Container.authManager.onDidAuthChange((e) => {
-                if (e.provider === AuthProvider.BitbucketCloud) {
+                if (e.provider === AuthProvider.BitbucketCloud || e.provider === AuthProvider.BitbucketCloudStaging) {
+                    this._currentUser = undefined;
+                    this._currentUserStaging = undefined;
                     this._onDidChangeBitbucketContext.fire();
                 }
             }),
@@ -41,6 +46,16 @@ export class BitbucketContext extends Disposable {
             this._pullRequestsExplorer,
             this._bitbucketIssuesExplorer
         );
+    }
+
+    public async currentUser(stagingUser: boolean = false): Promise<Bitbucket.Schema.User> {
+        if (stagingUser) {
+            this._currentUserStaging = this._currentUserStaging || await getCurrentUser(stagingUser);
+            return this._currentUserStaging!;
+        }
+
+        this._currentUser = this._currentUser || await getCurrentUser();
+        return this._currentUser!;
     }
 
     public refreshRepos() {

@@ -11,7 +11,6 @@ import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { PullRequest } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
-import { getCurrentUser } from '../bitbucket/user';
 
 type Emit = CreatePRData | CommitsResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -39,7 +38,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         try {
             const state: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositores();
-            const currentUser = await getCurrentUser();
+            const currentUser = await Container.bitbucketContext.currentUser();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
                 const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
