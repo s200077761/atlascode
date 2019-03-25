@@ -87,37 +87,45 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             switch (e.action) {
                 case 'approve': {
                     handled = true;
-                    this.approve().catch((e: any) => {
-                        Logger.error(new Error(`error approving pull request: ${e}`));
+                    try {
+                        await this.approve();
+                    } catch (e) {
+                        Logger.error(new Error(`error approving PR: ${e}`));
                         this.postMessage({ type: 'error', reason: e });
-                    });
+                    }
                     break;
                 }
                 case 'merge': {
                     handled = true;
-                    this.merge().catch((e: any) => {
+                    try {
+                        await this.merge();
+                    } catch (e) {
                         Logger.error(new Error(`error merging pull request: ${e}`));
                         this.postMessage({ type: 'error', reason: e });
-                    });
+                    }
                     break;
                 }
                 case 'comment': {
                     if (isPostComment(e)) {
                         handled = true;
-                        this.postComment(e.content, e.parentCommentId).catch((e: any) => {
+                        try {
+                            await this.postComment(e.content, e.parentCommentId);
+                        } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        });
+                        }
                     }
                     break;
                 }
                 case 'checkout': {
                     if (isCheckout(e)) {
                         handled = true;
-                        this.checkout(e.branch, e.isSourceBranch).catch((e: any) => {
+                        try {
+                            await this.checkout(e.branch, e.isSourceBranch);
+                        } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
-                        });
+                        }
                     }
                     break;
                 }

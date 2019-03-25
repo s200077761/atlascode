@@ -1,5 +1,5 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
@@ -28,38 +28,51 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     public async invalidate() {
-        const state: RepoData[] = [];
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
-        const currentUser = await getCurrentUser();
-        for (let i = 0; i < repos.length; i++) {
-            const r = repos[i];
-            const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
-            if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
-                continue;
-            }
+        if (Container.onlineDetector.isOnline()) {
+            await this.updateFields();
+        } else {
+            this.postMessage(onlineStatus(false));
+        }
+    }
 
-            const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]), PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
-            const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
-            await state.push({
-                uri: r.rootUri.toString(),
-                href: repo.links!.html!.href,
-                avatarUrl: repo.links!.avatar!.href,
-                name: repo.name,
-                owner: repo.owner!.username,
-                remotes: r.state.remotes,
-                defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
-                localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                remoteBranches: await Promise.all(
-                    r.state.refs
-                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
-                ),
-                mainbranch: mainbranch,
-                hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
-            });
+    async updateFields() {
+        try {
+            const state: RepoData[] = [];
+            const repos = Container.bitbucketContext.getBitbucketRepositores();
+            const currentUser = await getCurrentUser();
+            for (let i = 0; i < repos.length; i++) {
+                const r = repos[i];
+                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
+                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
+                    continue;
+                }
+
+                const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]), PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
+                const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
+                await state.push({
+                    uri: r.rootUri.toString(),
+                    href: repo.links!.html!.href,
+                    avatarUrl: repo.links!.avatar!.href,
+                    name: repo.name,
+                    owner: repo.owner!.username,
+                    remotes: r.state.remotes,
+                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
+                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
+                    remoteBranches: await Promise.all(
+                        r.state.refs
+                            .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
+                            .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
+                    ),
+                    mainbranch: mainbranch,
+                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
+                });
+            }
+            this.postMessage({ type: 'createPullRequestData', repositories: state });
+        } catch (e) {
+            Logger.error(new Error(`error fetching PR form: ${e}`));
+            this.postMessage({ type: 'error', reason: e });
         }
 
-        this.postMessage({ type: 'createPullRequestData', repositories: state });
     }
 
     async createOrShow(): Promise<void> {
@@ -72,23 +85,32 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
         if (!handled) {
             switch (e.action) {
+                case 'refreshPR': {
+                    handled = true;
+                    this.invalidate();
+                    break;
+                }
                 case 'fetchDetails': {
                     if (isFetchDetails(e)) {
                         handled = true;
-                        this.fetchDetails(e).catch((e: any) => {
+                        try {
+                            await this.fetchDetails(e);
+                        } catch (e) {
                             Logger.error(new Error(`error fetching details: ${e}`));
-                        });
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
-                        this.createPullRequest(e)
-                            .catch((e: any) => {
-                                Logger.error(new Error(`error creating pull request: ${e}`));
-                                this.postMessage({ type: 'error', reason: e });
-                            });
+                        try {
+                            await this.createPullRequest(e);
+                        } catch (e) {
+                            Logger.error(new Error(`error creating pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }

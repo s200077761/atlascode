@@ -38,26 +38,32 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     async updateFields(project?: WorkingProject) {
-        const availableProjects = await Container.jiraSiteManager.getProjects();
+        try {
+            const availableProjects = await Container.jiraSiteManager.getProjects();
 
-        let effProject = project;
-        if (!effProject) {
-            effProject = await Container.jiraSiteManager.getEffectiveProject();
+            let effProject = project;
+            if (!effProject) {
+                effProject = await Container.jiraSiteManager.getEffectiveProject();
+            }
+
+            const screenData = await this.getScreenFields(effProject);
+
+            const foundProject = (project !== undefined) ? project : effProject;
+            const createData: CreateIssueData = {
+                type: 'screenRefresh',
+                selectedProject: foundProject,
+                selectedIssueTypeId: screenData.selectedIssueType.id,
+                availableProjects: availableProjects,
+                issueTypeScreens: screenData.screens
+            };
+
+
+            this.postMessage(createData);
+        } catch (e) {
+            Logger.error(new Error(`error updating issue fields issue: ${e}`));
+            this.postMessage({ type: 'error', reason: e });
         }
 
-        const screenData = await this.getScreenFields(effProject);
-
-        const foundProject = (project !== undefined) ? project : effProject;
-        const createData: CreateIssueData = {
-            type: 'screenRefresh',
-            selectedProject: foundProject,
-            selectedIssueTypeId: screenData.selectedIssueType.id,
-            availableProjects: availableProjects,
-            issueTypeScreens: screenData.screens
-        };
-
-
-        this.postMessage(createData);
 
     }
 
@@ -67,14 +73,11 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         if (client) {
             const projects: string[] = [project.key];
 
-            return client.issue
-                .getCreateIssueMetadata({ projectKeys: projects, expand: 'projects.issuetypes.fields' })
-                .then((res: JIRA.Response<JIRA.Schema.CreateMetaBean>) => {
-                    let transformation = transformIssueScreens(res.data.projects![0], undefined, false);
-                    return transformation;
-                });
+            let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: projects, expand: 'projects.issuetypes.fields' });
+            let transformation = transformIssueScreens(res.data.projects![0], undefined, false);
+            return transformation;
         }
-        return Promise.reject("oops getScreenFields");
+        return Promise.reject("unable to get a jira client");
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
@@ -91,41 +94,49 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'fetchProjects': {
                     handled = true;
                     if (isFetchQuery(e)) {
-                        Container.jiraSiteManager.getProjects('name', e.query).then(projects => {
+                        try {
+                            let projects = await Container.jiraSiteManager.getProjects('name', e.query);
                             this.postMessage({ type: 'projectList', availableProjects: projects });
-                        });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching projects: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+
                     }
                     break;
                 }
                 case 'fetchLabels': {
                     handled = true;
                     if (isFetchQuery(e)) {
-                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                        try {
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
 
-                        if (client) {
-                            client.jql.getFieldAutoCompleteSuggestions({
-                                fieldName: 'labels',
-                                fieldValue: `${e.query}`
-                            })
-                                .then((res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper>) => {
-                                    const suggestions = res.data.results;
-                                    let options: any[] = [];
-
-                                    if (suggestions && suggestions.length > 0) {
-                                        options = suggestions.map((suggestion: any) => {
-                                            return suggestion.value;
-                                        });
-                                    }
-
-                                    this.postMessage({ type: 'labelList', labels: options });
-
-                                }).catch(reason => {
-                                    Logger.debug('error getting labels', reason);
-                                    this.postMessage({ type: 'error', reason: reason });
+                            if (client) {
+                                let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
+                                    fieldName: 'labels',
+                                    fieldValue: `${e.query}`
                                 });
-                        } else {
-                            this.postMessage({ type: 'error', reason: "jira client undefined" });
+
+                                const suggestions = res.data.results;
+                                let options: any[] = [];
+
+                                if (suggestions && suggestions.length > 0) {
+                                    options = suggestions.map((suggestion: any) => {
+                                        return suggestion.value;
+                                    });
+                                }
+
+                                this.postMessage({ type: 'labelList', labels: options });
+
+
+                            } else {
+                                this.postMessage({ type: 'error', reason: "jira client undefined" });
+                            }
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching labels: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
                         }
+
                     }
 
                     break;
@@ -133,17 +144,19 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'fetchUsers': {
                     handled = true;
                     if (isFetchUsersQuery(e)) {
-                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-                        if (client) {
-                            client.user.findUsersAssignableToIssues({ project: `${e.project}`, query: `${e.query}` })
-                                .then((res: JIRA.Response<JIRA.Schema.User[]>) => {
-                                    this.postMessage({ type: 'userList', users: res.data });
-                                }).catch(reason => {
-                                    Logger.debug('error getting users', reason);
-                                    this.postMessage({ type: 'error', reason: reason });
-                                });
-                        } else {
-                            this.postMessage({ type: 'error', reason: "jira client undefined" });
+                        try {
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                let res: JIRA.Response<JIRA.Schema.User[]> = await client.user.findUsersAssignableToIssues({ project: `${e.project}`, query: `${e.query}` });
+
+                                this.postMessage({ type: 'userList', users: res.data });
+
+                            } else {
+                                this.postMessage({ type: 'error', reason: "jira client undefined" });
+                            }
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching users: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
                         }
                     }
                     break;
@@ -151,64 +164,59 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'getScreensForProject': {
                     handled = true;
                     if (isScreensForProjects(e)) {
-                        this.updateFields(e.project);
+                        await this.updateFields(e.project);
                     }
                     break;
                 }
                 case 'createOption': {
                     handled = true;
                     if (isCreateSomething(e)) {
-                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-                        if (client) {
-                            switch (e.createData.fieldKey) {
-                                case 'fixVersions':
-                                case 'versions': {
-                                    client.version.createVersion({ body: { name: e.createData.name, project: e.createData.project } })
-                                        .then(resp => {
-                                            this.postMessage({ type: 'optionCreated', createdData: resp.data });
-                                        })
-                                        .catch(reason => {
-                                            Logger.debug('error creating version', reason);
-                                            this.postMessage({ type: 'error', reason: reason });
-                                        });
-                                    break;
-                                }
-                                case 'components': {
-                                    client.component.createComponent({ body: { name: e.createData.name, project: e.createData.project } })
-                                        .then(resp => {
-                                            this.postMessage({ type: 'optionCreated', createdData: resp.data });
-                                        })
-                                        .catch(reason => {
-                                            Logger.debug('error creating component', reason);
-                                            this.postMessage({ type: 'error', reason: reason });
-                                        });
-                                    break;
+                        try {
+
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                switch (e.createData.fieldKey) {
+                                    case 'fixVersions':
+                                    case 'versions': {
+                                        let resp = await client.version.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+
+                                        break;
+                                    }
+                                    case 'components': {
+                                        let resp = await client.component.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+
+                                        break;
+                                    }
                                 }
                             }
-
-                        } else {
-                            this.postMessage({ type: 'error', reason: "jira client undefined" });
+                        } catch (e) {
+                            Logger.error(new Error(`error creating option: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
                         }
                     }
                     break;
                 }
+
                 case 'createIssue': {
                     handled = true;
                     if (isCreateIssue(e)) {
-                        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-                        if (client) {
-                            client.issue.createIssue({ body: { fields: e.issueData } })
-                                .then(resp => {
-                                    this.postMessage({ type: 'issueCreated', issueData: resp.data });
-                                    issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                                })
-                                .catch(reason => {
-                                    this.postMessage({ type: 'error', reason: reason });
-                                    Logger.debug('error creating issue', reason);
-                                });
-                        } else {
-                            this.postMessage({ type: 'error', reason: "jira client undefined" });
+                        try {
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
+                                this.postMessage({ type: 'issueCreated', issueData: resp.data });
+                                issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+                            } else {
+                                this.postMessage({ type: 'error', reason: "jira client undefined" });
+                            }
+                        } catch (e) {
+                            Logger.error(new Error(`error creating issue: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
                         }
+
                     }
                     break;
                 }

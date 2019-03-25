@@ -8,7 +8,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
 import Select, { components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails, RefreshPullRequest } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
@@ -18,8 +18,9 @@ import Avatar from "@atlaskit/avatar";
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
+import Offline from '../Offline';
 
-type Emit = CreatePullRequest | FetchDetails;
+type Emit = CreatePullRequest | FetchDetails | RefreshPullRequest;
 type Receive = CreatePRData | CommitsResult;
 
 interface MyState {
@@ -40,6 +41,7 @@ interface MyState {
     result?: string;
     isErrorBannerOpen: boolean;
     errorDetails: any;
+    isOnline: boolean;
 }
 
 const emptyState = {
@@ -56,7 +58,8 @@ const emptyState = {
     commits: [],
     isCreateButtonLoading: false,
     isErrorBannerOpen: false,
-    errorDetails: undefined
+    errorDetails: undefined,
+    isOnline: true,
 };
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
@@ -238,6 +241,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 }
                 break;
             }
+            case 'onlineStatus': {
+                this.setState({ isOnline: e.isOnline });
+
+                if (e.isOnline && !this.state.repo) {
+                    this.postMessage({ action: 'refreshPR' });
+                }
+
+                break;
+            }
         }
     }
 
@@ -247,7 +259,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     render() {
 
-        if (!this.state.repo) {
+        if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return (<div>waiting for data...</div>);
         }
 
@@ -267,6 +279,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             <div className='bitbucket-page'>
                 <Page>
                     <Grid>
+                        {!this.state.isOnline &&
+                            <Offline />
+                        }
                         {this.state.isErrorBannerOpen &&
                             <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                         }
