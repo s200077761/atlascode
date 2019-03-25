@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action } from '../ipc/messaging';
+import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
 import { currentUserBitbucket } from "../commands/bitbucket/currentUser";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
 import { isPostComment, isPostChange } from "../ipc/bitbucketIssueActions";
+import { Container } from "../container";
+import { Logger } from "../logger";
 
-type Emit = BitbucketIssueData;
+type Emit = BitbucketIssueData | HostErrorMessage;
 
 export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
 
@@ -27,6 +29,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
     initialize(data: Bitbucket.Schema.Issue) {
         this._issue = data;
+
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         this.invalidate();
     }
 
@@ -38,6 +46,11 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
     private async update(issue: Bitbucket.Schema.Issue) {
         if (this._panel) { this._panel.title = `Bitbucket issue #${issue.id}`; }
+
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
 
         if (!this._currentUser) {
             this._currentUser = await currentUserBitbucket();
@@ -99,6 +112,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         let handled = await super.onMessageReceived(e);
         if (!handled) {
             switch (e.action) {
+                case 'refreshIssue': {
+                    handled = true;
+                    this.invalidate();
+                    break;
+                }
+
                 case 'copyBitbucketIssueLink': {
                     handled = true;
                     const linkUrl = this._issue!.links!.html!.href!;
@@ -108,24 +127,42 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 }
                 case 'assign': {
                     handled = true;
-                    await BitbucketIssuesApi.assign(this._issue!, this._currentUser!.account_id!);
-                    this.update(this._issue!);
+                    try {
+                        await BitbucketIssuesApi.assign(this._issue!, this._currentUser!.account_id!);
+                        await this.update(this._issue!);
+                    } catch (e) {
+                        Logger.error(new Error(`error updating issue: ${e}`));
+                        this.postMessage({ type: 'error', reason: e });
+                    }
+
                     break;
                 }
                 case 'comment': {
                     if (isPostComment(e)) {
                         handled = true;
-                        await BitbucketIssuesApi.postComment(this._issue!, e.content);
-                        this.update(this._issue!);
+                        try {
+                            await BitbucketIssuesApi.postComment(this._issue!, e.content);
+                            await this.update(this._issue!);
+                        } catch (e) {
+                            Logger.error(new Error(`error posting comment: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+
                     }
                     break;
                 }
                 case 'change': {
                     if (isPostChange(e)) {
                         handled = true;
-                        await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
-                        this._issue = await BitbucketIssuesApi.refetch(this._issue!);
-                        this.update(this._issue!);
+                        try {
+                            await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
+                            this._issue = await BitbucketIssuesApi.refetch(this._issue!);
+                            await this.update(this._issue!);
+                        } catch (e) {
+                            Logger.error(new Error(`error posting change: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+
                     }
                     break;
                 }
