@@ -36,6 +36,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     public get title(): string {
+        if (this._pr && this._pr.data) {
+            return `Pull Request #${this._pr.data.id}`;
+        }
+
         return "Pull Request";
     }
     public get id(): string {
@@ -54,6 +58,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     public async invalidate() {
+        if (!Container.onlineDetector.isOnline()) {
+            this.postMessage(onlineStatus(false));
+            return;
+        }
+
         if (this._state.repository && this._state.remote && this._state.prData.pr) {
             this.forceUpdatePullRequest();
         } else if (this._pr !== undefined) {

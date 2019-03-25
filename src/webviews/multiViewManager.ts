@@ -9,43 +9,43 @@ import { ReactWebview, isInitializable } from './abstractWebview';
 // T = the type of data used to determine which view to display.
 export abstract class AbstractMultiViewManager<T> implements Disposable {
 
-    private _viewMap:Map<string,ReactWebview> = new Map<string,ReactWebview>();
-    private _extensionPath:string;
-    private _listeners:Map<string,Disposable> = new Map<string,Disposable>();
+    private _viewMap: Map<string, ReactWebview> = new Map<string, ReactWebview>();
+    private _extensionPath: string;
+    private _listeners: Map<string, Disposable> = new Map<string, Disposable>();
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
     }
 
     // Children need to implement this to return a unique key for the view based on the data passed to it.
-    abstract dataKey(data:T): string;
+    abstract dataKey(data: T): string;
 
     // Children need to implement this to create a ReactWebview of a specific type.
-    abstract createView(extensionPath: string):ReactWebview;
+    abstract createView(extensionPath: string): ReactWebview;
 
     // This is called to create or show a webview based on the data passed to it.
     // e.g. create or show a webview for this PR.
-    public createOrShow(data:T) {
+    public async createOrShow(data: T) {
         const key = this.dataKey(data);
         const view = this._viewMap.get(key) || this.createView(this._extensionPath);
 
         // We listen for panel dispose events from the webview so we can dispose of them and remove them from this manager
         // as their displayable panels come and go.
-        this._listeners.set(key,view.onDidPanelDispose()(() => {
+        this._listeners.set(key, view.onDidPanelDispose()(() => {
             let view = this._viewMap.get(key);
 
-            if(view){
+            if (view) {
                 view.dispose();
                 this._viewMap.delete(key);
             }
 
             this._listeners.delete(key);
         }, this));
-        this._viewMap.set(key,view);
+        this._viewMap.set(key, view);
 
-        view.createOrShow();
+        await view.createOrShow();
 
-        if(isInitializable(view)) {
+        if (isInitializable(view)) {
             view.initialize(data);
         }
 

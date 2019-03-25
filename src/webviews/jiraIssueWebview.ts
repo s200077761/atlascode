@@ -177,7 +177,6 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
     private async forceUpdateIssue(issue?: Issue) {
         let key = issue !== undefined ? issue.key : this._issueKey;
-        Logger.debug('forceUpdate key', key);
         if (key !== "") {
             try {
                 let issue = await fetchIssue(key, this._state.workingSite);
