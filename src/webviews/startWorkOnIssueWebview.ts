@@ -159,7 +159,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         }
 
         const repoData: RepoData[] = [];
-        const repos = Container.bitbucketContext.getAllRepositores();
+        const repos = Container.bitbucketContext
+            ? Container.bitbucketContext.getAllRepositores()
+            : [];
         for (let i = 0; i < repos.length; i++) {
             const r = repos[i];
             if (r.state.remotes.length === 0) {
