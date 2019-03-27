@@ -113,7 +113,6 @@ export class PipelinesExplorer extends Disposable {
 
     async onTreeDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            this.refresh();
             viewScreenEvent(PipelinesTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         }
     }

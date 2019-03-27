@@ -46,6 +46,8 @@ export class BitbucketContext extends Disposable {
             this._pullRequestsExplorer,
             this._bitbucketIssuesExplorer
         );
+
+        this.refreshRepos();
     }
 
     public async currentUser(stagingUser: boolean = false): Promise<Bitbucket.Schema.User> {
@@ -58,9 +60,16 @@ export class BitbucketContext extends Disposable {
         return this._currentUser!;
     }
 
-    public refreshRepos() {
+    private async refreshRepos() {
         this._repoMap.clear();
-        this.getAllRepositores().forEach(repo => this._repoMap.set(repo.rootUri.toString(), repo));
+        await Promise.all(this.getAllRepositores().map(async repo => {
+            // sometimes the remote info is not populated during initialization
+            // this is a workaround to wait for that information to be available
+            if (repo.state.remotes.length === 0) {
+                await repo.status();
+            }
+            this._repoMap.set(repo.rootUri.toString(), repo);
+        }));
         this._onDidChangeBitbucketContext.fire();
     }
 
