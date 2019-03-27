@@ -59,13 +59,12 @@ export class PullRequestsExplorer extends Disposable {
                 });
 
                 this._tree.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-                this._ctx.refreshRepos();
             }
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
         }
 
-        if (initializing || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
-            if (Container.config.bitbucket.explorer.refreshInterval === 0) {
+        if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled') || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
+            if (!Container.config.bitbucket.explorer.enabled || Container.config.bitbucket.explorer.refreshInterval === 0) {
                 this._refreshInterval = 0;
                 this.stopTimer();
             } else {
@@ -90,11 +89,7 @@ export class PullRequestsExplorer extends Disposable {
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            this._ctx.refreshRepos();
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-            this.startTimer();
-        } else {
-            this.stopTimer();
         }
     }
 
