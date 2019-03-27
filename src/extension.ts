@@ -13,7 +13,7 @@ import { extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { installedEvent, upgradedEvent } from './analytics';
-import { Memento } from "vscode";
+import { window, Memento } from "vscode";
 
 const AnalyticDelay = 5000;
 
@@ -58,7 +58,8 @@ export async function activate(context: ExtensionContext) {
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if ((previousVersion === undefined || semver.gt(version, previousVersion)) &&
-        Container.config.showWelcomeOnInstall) {
+        Container.config.showWelcomeOnInstall &&
+        window.state.focused) {
         await commands.executeCommand(Commands.ShowWelcomePage);
     }
 }
