@@ -23,6 +23,7 @@ export interface WorkingProject {
 export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles: boolean;
+    enableStaging: boolean;
     offlineMode: boolean;
     showWelcomeOnInstall: boolean;
     jira: JiraConfig;
@@ -255,6 +256,7 @@ export const emptyBitbucketConfig: BitbucketConfig = {
 export const emptyConfig: IConfig = {
     outputLevel: OutputLevel.Silent,
     enableCharles: false,
+    enableStaging: false,
     offlineMode: false,
     showWelcomeOnInstall: true,
     jira: emptyJiraConfig,

@@ -1,4 +1,4 @@
-import { ExtensionContext, Disposable, env } from 'vscode';
+import { ExtensionContext, Disposable, env, UriHandler, window, Uri } from 'vscode';
 import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
@@ -22,11 +22,34 @@ import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager'
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { OnlineDetector } from './util/online';
 
+export class AtlascodeUriHandler extends Disposable implements UriHandler {
+    private disposables: Disposable;
+
+    constructor() {
+        super(() => this.dispose());
+        this.disposables = window.registerUriHandler(this);
+    }
+
+    handleUri(uri: Uri): void {
+        switch (uri.path) {
+            case '/clone': this.clone(uri);
+        }
+    }
+
+    private clone(uri: Uri): void {
+        console.log('Atlascode got /clone!!!', uri);
+    }
+
+    dispose(): void {
+        this.disposables.dispose();
+    }
+}
+
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
         this._context = context;
         this._config = config;
-
+        context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
@@ -76,6 +99,11 @@ export class Container {
 
     static get machineId() {
         return env.machineId;
+    }
+
+    private static _uriHandler: UriHandler;
+    static get uriHandler() {
+        return this._uriHandler;
     }
 
     private static _config: IConfig | undefined;

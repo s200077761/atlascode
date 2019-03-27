@@ -15,6 +15,11 @@ export async function authenticateJira() {
     authenticate(AuthProvider.JiraCloud);
 }
 
+export async function authenticateJiraStaging() {
+    console.log('command auth jira staging');
+    authenticate(AuthProvider.JiraCloudStaging);
+}
+
 export async function clearBitbucketAuth() {
     clearAuth(AuthProvider.BitbucketCloud);
     clearAuth(AuthProvider.BitbucketCloudStaging);
@@ -22,14 +27,15 @@ export async function clearBitbucketAuth() {
 
 export async function clearJiraAuth() {
     clearAuth(AuthProvider.JiraCloud);
+    clearAuth(AuthProvider.JiraCloudStaging);
     await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
 }
 
-async function authenticate(provider:string) {
+async function authenticate(provider: string) {
     await Container.clientManager.authenticate(provider);
 }
 
-async function clearAuth(provider:string) {
+async function clearAuth(provider: string) {
     await Container.clientManager.removeClient(provider);
     await Container.authManager.removeAuthInfo(provider);
 }

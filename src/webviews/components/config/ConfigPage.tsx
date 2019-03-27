@@ -73,6 +73,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.handleLogin(AuthProvider.JiraCloud);
     }
 
+    handleJiraLoginStaging = () => {
+        this.handleLogin(AuthProvider.JiraCloudStaging);
+    }
+
     handleBBLogin = () => {
         this.handleLogin(AuthProvider.BitbucketCloud);
     }
@@ -131,6 +135,19 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
     }
 
+    private jiraButtonStaging(): any {
+        if (!this.state.isStagingEnabled) {
+            return;
+        }
+
+        return this.state.isJiraStagingAuthenticated
+            ? <ButtonGroup>
+                <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
+                <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
+            </ButtonGroup>
+            : <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate</Button>;
+    }
+
     private bitBucketButton(): any {
         if (this.state.isBitbucketAuthenticated) {
             return (<Button className='ac-button'
@@ -172,6 +189,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                                        <hr />
+                                        <h3>Jira (staging)</h3>
+                                        {this.jiraButtonStaging()}
                                         <hr />
                                         <h3>Bitbucket</h3>
                                         {this.bitBucketButton()}

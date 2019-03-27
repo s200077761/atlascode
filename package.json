@@ -245,7 +245,7 @@
         },
         "menus": {
             "editor/context": [
-		{
+                {
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
@@ -435,6 +435,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
+                    "scope": "window"
+                },
+                "atlascode.enableStaging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables authenticating with Atlassian staging servers",
                     "scope": "window"
                 },
                 "atlascode.offlineMode": {

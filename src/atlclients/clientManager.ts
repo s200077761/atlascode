@@ -123,6 +123,44 @@ export class ClientManager implements Disposable {
     }, doNotUpdateCache, reauthenticate);
   }
 
+  public async jirarequestStaging(workingSite?: WorkingSite, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
+    // if workingSite is passed in and is different from the one in config, 
+    // it is for a one-off request (eg. a request from webview from previously configured workingSite)
+    const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
+
+    return this.getClient<JiraKit>(AuthProvider.JiraCloudStaging, info => {
+      let cloudId: string = "";
+      if (!workingSite || isEmptySite(workingSite)) {
+        workingSite = Container.config.jira.workingSite;
+      }
+      if (info.accessibleResources) {
+        if (workingSite && !isEmptySite(workingSite)) {
+          const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
+          if (foundSite) {
+            cloudId = foundSite.id;
+          }
+        }
+        if (cloudId === "") {
+          cloudId = info.accessibleResources[0].id;
+        }
+      }
+
+      let extraOptions = {};
+      if (this._agent) {
+        extraOptions = { agent: this._agent };
+      }
+
+      let jraclient = new JiraKit({
+        baseUrl: `https://api.stg.atlassian.com/ex/jira/${cloudId}/rest/`,
+        options: extraOptions,
+        headers: { "x-atlassian-force-account-id": "true" }
+      });
+      jraclient.authenticate({ type: "token", token: info.access });
+
+      return jraclient;
+    }, doNotUpdateCache, reauthenticate);
+  }
+
   public async removeClient(provider: string) {
     this._clients.deleteItem(provider);
   }
@@ -282,6 +320,7 @@ export class ClientManager implements Disposable {
   }
 
   public async authenticate(provider: string): Promise<void> {
+    console.log('client man auth', provider);
     if (isEmptyClient(this._clients.getItem(provider))) {
       this._clients.deleteItem(provider);
     }
@@ -289,6 +328,10 @@ export class ClientManager implements Disposable {
     switch (provider) {
       case AuthProvider.JiraCloud: {
         await this.jirarequest(undefined, true);
+        break;
+      }
+      case AuthProvider.JiraCloudStaging: {
+        await this.jirarequestStaging(undefined, true);
         break;
       }
       case AuthProvider.BitbucketCloud: {
