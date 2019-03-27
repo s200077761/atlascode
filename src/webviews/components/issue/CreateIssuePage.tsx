@@ -336,6 +336,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             return errs;
         }
 
+        this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });
         this.postMessage({ action: 'createIssue', issueData: e });
 
         return undefined;
@@ -373,11 +374,13 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                 <Offline />
                             }
                             {this.state.isCreateBannerOpen &&
-                                <SectionMessage
-                                    appearance="confirmation"
-                                    title="Issue Created">
-                                    Issue <Button className='ac-banner-link-button' appearance="link" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
-                                </SectionMessage>
+                                <div className='fade-in'>
+                                    <SectionMessage
+                                        appearance="confirmation"
+                                        title="Issue Created">
+                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                    </SectionMessage>
+                                </div>
                             }
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
