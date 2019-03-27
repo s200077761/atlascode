@@ -28,6 +28,20 @@ hr {
   hyphens: auto;
 }
 
+.fade-in {
+  animation-duration: 1s;
+  animation-name: fadein;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .ac-flex-space-between {
   display: inline-flex;
   align-items: center;
@@ -211,9 +225,7 @@ div#empty-jql-row {
 
 /*-------------------- BEGIN - section messages --------------------*/
 
-section[class^=styled__Container-],
-section[class^=styled__Container-] h1,
-section[class^=styled__Container-] p {
+section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
   color: #4c4c4c !important;
   margin: 6px;
 }
@@ -230,12 +242,7 @@ section[class^=styled__Container-] p {
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[class^=Checkbox__Label],
-[class^=Field__Label],
-[class^=Label__LabelWrapper-],
-[class^=Label__LabelInner-],
-[class^=Modal__Dialog],
-[class^=Radio__Label] {
+[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], [class^=Modal__Dialog], [class^=Radio__Label] {
   color: var(--vscode-foreground) !important
 }
 
@@ -268,13 +275,11 @@ section[class^=styled__Container-] p {
 
 /*-------------------- BEGIN - links --------------------*/
 
-.vscode-light .ac-link-button:hover,
-.vscode-light .ac-link-button>span {
+.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button>span {
   color: var(--vscode-textlink-foreground) !important
 }
 
-.vscode-dark .ac-link-button:hover,
-.vscode-dark .ac-link-button>span {
+.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
   color: var(--vscode-foreground) !important
 }
 
@@ -284,8 +289,7 @@ section[class^=styled__Container-] p {
 
 /* links inside of banners with colored backgrounds */
 
-.ac-banner-link-button:hover,
-.ac-banner-link-button>span {
+.ac-banner-link-button:hover, .ac-banner-link-button>span {
   text-decoration: underline;
 }
 
@@ -305,9 +309,7 @@ section[class^=styled__Container-] p {
   display: inline-block;
 }
 
-.ac-inputField,
-.ac-inputField-inline,
-.ac-textarea {
+.ac-inputField, .ac-inputField-inline, .ac-textarea {
   background: var(--vscode-input-background) !important;
   color: var(--vscode-input-foreground) !important;
   font: inherit;
@@ -318,27 +320,19 @@ section[class^=styled__Container-] p {
   outline: 0 !important
 }
 
-.ac-inputField:focus,
-.ac-inputField-inline:focus,
-.ac-textarea:focus {
+.ac-inputField:focus, .ac-inputField-inline:focus, .ac-textarea:focus {
   border-color: var(--vscode-focusBorder) !important;
 }
 
-.ac-inputField::-webkit-input-placeholder,
-.ac-inputField-inline::-webkit-input-placeholder,
-.ac-textarea::-webkit-input-placeholder {
+.ac-inputField::-webkit-input-placeholder, .ac-inputField-inline::-webkit-input-placeholder, .ac-textarea::-webkit-input-placeholder {
   color: var(--vscode-input-placeholderForeground) !important
 }
 
-.ac-inputField::-ms-input-placeholder,
-.ac-inputField-inline::-ms-input-placeholder,
-.ac-textarea::-ms-input-placeholder {
+.ac-inputField::-ms-input-placeholder, .ac-inputField-inline::-ms-input-placeholder, .ac-textarea::-ms-input-placeholder {
   color: var(--vscode-input-placeholderForeground) !important
 }
 
-.ac-inputField::placeholder,
-.ac-inputField-inline::placeholder,
-.ac-textarea::placeholder {
+.ac-inputField::placeholder, .ac-inputField-inline::placeholder, .ac-textarea::placeholder {
   color: var(--vscode-input-placeholderForeground) !important
 }
 
@@ -357,16 +351,11 @@ section[class^=styled__Container-] p {
   border: 1px solid var(--vscode-settings-textInputBorder) !important
 }
 
-.ac-select__control--is-focused,
-.ac-select__control:hover {
+.ac-select__control--is-focused, .ac-select__control:hover {
   border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator,
-.ac-select__input,
-.ac-select__menu,
-.ac-select__menu-list,
-.ac-select__single-value {
+.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
   background: var(--vscode-dropdown-background) !important;
   color: var(--vscode-input-foreground) !important;
 }
@@ -407,13 +396,11 @@ section[class^=styled__Container-] p {
 
 /*-------------------- BEGIN - checkboxes/radios --------------------*/
 
-[class^=Checkbox__IconWrapper-],
-[class^=Radio__IconWrapper-] {
+[class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
   color: var(--vscode-button-background) !important
 }
 
-[class^=Checkbox__IconWrapper-] rect,
-[class^=Radio__IconWrapper-] circle {
+[class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
   stroke: var(--vscode-button-background) !important
 }
 
@@ -426,10 +413,7 @@ section[class^=styled__Container-] p {
   border: 1px solid var(--vscode-focusBorder) !important
 }
 
-[class^=Calendar__CalendarTh],
-[class^=Calendar__Wrapper],
-[class^=Date__DateDiv],
-[class^=Heading__MonthAndYear] {
+[class^=Calendar__CalendarTh], [class^=Calendar__Wrapper], [class^=Date__DateDiv], [class^=Heading__MonthAndYear] {
   color: var(--vscode-dropdown-foreground) !important
 }
 
@@ -486,8 +470,7 @@ section[class^=styled__Container-] p {
   border: 1px solid var(--vscode-settings-textInputBorder)
 }
 
-.ac-branch-lozenge,
-.ac-branch-lozenge__Text {
+.ac-branch-lozenge, .ac-branch-lozenge__Text {
   -webkit-box-sizing: border-box;
   box-sizing: border-box
 }
