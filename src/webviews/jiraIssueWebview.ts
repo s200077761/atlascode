@@ -160,9 +160,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
         if (this._panel) { this._panel.title = `Jira Issue ${issue.key}`; }
 
-        const currentBranches = Container.bitbucketContext.getAllRepositores()
-            .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
-            .map(repo => repo.state.HEAD!.name!);
+        const currentBranches = Container.bitbucketContext ?
+            Container.bitbucketContext.getAllRepositores()
+                .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
+                .map(repo => repo.state.HEAD!.name!)
+            : [];
 
         let msg = issue as IssueData;
         msg.type = 'update';
