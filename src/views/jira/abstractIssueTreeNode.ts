@@ -75,26 +75,38 @@ export abstract class AbstractIssueTreeNode extends Disposable {
             return Promise.resolve([]);
         }
 
+        // fetch issues matching the jql
         const newIssues = await issuesForJQL(this._jql);
-        newIssues.push(...await this.fetchParentIssues(newIssues));
-        const subissueKeys = newIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
-        this._issues = newIssues.filter(issue => !subissueKeys.includes(issue.key));
+        const newIssuesKeys = newIssues.map(i => i.key);
+
+        const subIssuesWithoutParents = newIssues.filter(i => i.parentKey && !newIssuesKeys.includes(i.parentKey));
+        const remainingIssues = newIssues.filter(i => subIssuesWithoutParents.find(subIssue => subIssue.key === i.key) === undefined);
+
+        // fetch parent issues for subtasks whose parents are not covered by the jql
+        const parentIssues = await this.fetchParentIssues(subIssuesWithoutParents);
+
+        const allIssues = [...remainingIssues, ...parentIssues];
+        const allSubIssueKeys = allIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
+        // show subtasks under parent if parent is available
+        this._issues = allIssues.filter(issue => !allSubIssueKeys.includes(issue.key));
         return this.nodesForIssues();
     }
 
-    private async fetchParentIssues(issues: Issue[]): Promise<Issue[]> {
-        const fetchedIssuesKeys = issues.map(issue => issue.key);
-        const allIssueKeys: string[] = [];
-        issues.forEach(issue => {
-            if (!allIssueKeys.includes(issue.key)) {
-                allIssueKeys.push(issue.key);
-            }
-            if (issue.parentKey && !allIssueKeys.includes(issue.parentKey)) {
-                allIssueKeys.push(issue.parentKey);
-            }
-        });
+    private async fetchParentIssues(subIssues: Issue[]): Promise<Issue[]> {
+        const parentKeys: string[] = Array.from(new Set(subIssues.map(i => i.parentKey!)));
 
-        return await Promise.all(allIssueKeys.filter(issueKey => !fetchedIssuesKeys.includes(issueKey)).map(async issueKey => await fetchIssue(issueKey)));
+        const parentIssues = await Promise.all(
+            parentKeys
+                .map(async issueKey => {
+                    const parent = await fetchIssue(issueKey);
+                    // we only need the parent information here, we already have all the subtasks that satisfy the jql query
+                    parent.subtasks = [];
+                    return parent;
+                }));
+
+        subIssues.forEach(i => parentIssues.find(parentIssue => parentIssue.key === i.parentKey)!.subtasks.push(i));
+
+        return parentIssues;
     }
 
     private nodesForIssues(): IssueNode[] {
