@@ -46,8 +46,7 @@ export class PipelinesExplorer extends Disposable {
             if (!Container.config.bitbucket.pipelines.explorerEnabled) {
                 this._tree = undefined;
             } else {
-                const repos = this._ctx.getBitbucketRepositores();
-                this._tree = new PipelinesTree(repos);
+                this._tree = new PipelinesTree();
                 const treeView = window.createTreeView(PipelinesTreeViewId, { treeDataProvider: this._tree! });
                 treeView.onDidChangeVisibility(e => this.onTreeDidChangeVisibility(e));
             }
