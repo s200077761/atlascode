@@ -26,19 +26,21 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
 
 function findTodos(document: TextDocument) {
     const triggers = Container.config.jira.todoIssues.triggers;
+    var reString = triggers.map(t => t.replace(/(\W)/g, '\\$1')).join("|");
+    reString = `(${reString})\\s`;
+    const masterRegex = new RegExp(reString);
     const matches: LensMatch[] = [];
     for (let i = 0; i < document.lineCount; i++) {
         const line = document.lineAt(i).text;
-        for (var j = 0; j < triggers.length; j++) {
-            const word = triggers[j];
-            const index = line.indexOf(word);
-            if (index >= 0) {
-                const issueKeys = parseJiraIssueKeys(line);
-                if (issueKeys.length === 0) {
-                    const range = new Range(new Position(i, index), new Position(i, index + word.length - 1));
-                    const ersatzSummary = line.substr(index + word.length).trim();
-                    matches.push({ document: document, text: ersatzSummary, range: range });
-                }
+        const reMatches = masterRegex.exec(line);
+        if (reMatches) {
+            const issueKeys = parseJiraIssueKeys(line);
+            if (issueKeys.length === 0) {
+                const index = reMatches.index;
+                const word = reMatches[0];
+                const range = new Range(new Position(i, index), new Position(i, index + word.length - 2));
+                const ersatzSummary = line.substr(index + word.length).trim();
+                matches.push({ document: document, text: ersatzSummary, range: range });
             }
         }
     }
