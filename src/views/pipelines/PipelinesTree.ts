@@ -16,30 +16,85 @@ export interface PipelineInfo {
 }
 export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
     private _disposable: Disposable;
-    private _branches: [string, Repository][] | undefined;
-    private _page = 1;
-    private _morePages = true;
-    private _pipelines: Map<string, Pipeline[]> = new Map();
+    private _childrenMap = new Map<string, PipelinesRepoNode>();
     private _onDidChangeTreeData = new EventEmitter<Node>();
     public get onDidChangeTreeData(): Event<Node> {
         return this._onDidChangeTreeData.event;
     }
 
-    constructor(private _repositories: Repository[]) {
+    constructor() {
         this._disposable = Disposable.from(
-            commands.registerCommand(Commands.PipelinesNextPage, () => { this.fetchNextPages(); })
+            this._onDidChangeTreeData,
+            commands.registerCommand(Commands.PipelinesNextPage, (repo) => { this.fetchNextPage(repo); })
         );
     }
 
-    dispose() {
-        this._disposable.dispose();
+    async fetchNextPage(repo: Repository) {
+        const node = this._childrenMap.get(repo.rootUri.toString());
+        if (node) {
+            await node.fetchNextPage();
+        }
+        this._onDidChangeTreeData.fire();
     }
 
     getTreeItem(element: Node): TreeItem {
         return element.treeItem();
     }
 
-    async fetchNextPages() {
+    async getChildren(element?: Node): Promise<Node[]> {
+        if (element) {
+            return element.getChildren(element);
+        }
+
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        const expand = repos.length === 1;
+
+        if (this._childrenMap.size === 0) {
+            repos.forEach(repo => {
+                this._childrenMap.set(repo.rootUri.toString(), new PipelinesRepoNode(repo, expand));
+            });
+        }
+
+        return this._childrenMap.size === 0
+            ? [new EmptyNode("No Bitbucket repositories found")]
+            : Array.from(this._childrenMap.values());
+    }
+
+    public refresh() {
+        this._childrenMap.clear();
+        this._onDidChangeTreeData.fire();
+    }
+
+    async dispose() {
+        this._disposable.dispose();
+    }
+}
+
+export abstract class Node {
+    abstract treeItem(): TreeItem;
+    async getChildren(element?: Node): Promise<Node[]> {
+        return [];
+    }
+}
+
+export class PipelinesRepoNode extends Node {
+    private _branches: string[];
+    private _page = 1;
+    private _morePages = true;
+    private _pipelines: Map<string, Pipeline[]> = new Map();
+
+    constructor(private _repo: Repository, private expand?: boolean) {
+        super();
+    }
+
+    treeItem(): TreeItem {
+        const directory = this._repo.rootUri.path.split('/').pop();
+        const item = new TreeItem(`${directory}`, this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed);
+        item.tooltip = this._repo.rootUri.path;
+        return item;
+    }
+
+    async fetchNextPage() {
         if (this._page) {
             this._page++;
         }
@@ -48,33 +103,32 @@ export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
         }
         const newBranches = await this.fetchBranches();
         this._branches = this._branches.concat(newBranches);
-        this._onDidChangeTreeData.fire();
     }
 
     async getChildren(element?: Node): Promise<Node[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
             return Promise.resolve([new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
-        if (!element) {
+        if (!element || element instanceof PipelinesRepoNode) {
             if (!this._branches) {
                 this._branches = await this.fetchBranches();
             }
             if ([...this._pipelines.values()].every(results => results.length === 0)) {
                 return [new EmptyNode("No Pipelines results for this repository")];
             }
-            const nodes: Node[] = this._branches.map(([b, r]) => new BranchNode(b, r, this._pipelines.get(b)));
+            const nodes: Node[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
             if (this._morePages) {
-                nodes.push(new NextPageNode());
+                nodes.push(new NextPageNode(this._repo));
             }
             return nodes;
         } else if (element instanceof BranchNode) {
             const branchPipelines = this._pipelines.get(element.branchName);
             if (branchPipelines) {
-                return branchPipelines.map((p: any) => new PipelineNode(p, element.repo));
+                return branchPipelines.map((p: any) => new PipelineNode(this, p, element.repo));
             } else {
-                return this.fetchPipelinesForBranch([element.branchName, element.repo])
+                return this.fetchPipelinesForBranch(element.branchName)
                     .then(pipelines => {
-                        return pipelines.map(p => new PipelineNode(p, element.repo));
+                        return pipelines.map(p => new PipelineNode(this, p, element.repo));
                     });
             }
         } else if (element instanceof PipelineNode) {
@@ -83,38 +137,35 @@ export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
         return Promise.resolve([]);
     }
 
-    async fetchBranches(): Promise<[string, Repository][]> {
-        var branches: [string, Repository][] = [];
+    async fetchBranches(): Promise<string[]> {
+        var branches: string[] = [];
         var morePages = false;
-        for (var i = 0; i < this._repositories.length; i++) {
-            const repo = this._repositories[i];
-            const remotes = await PullRequestApi.getBitbucketRemotes(repo);
-            if (remotes.length > 0) {
-                const remote = remotes[0];
-                const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-                const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
-                const branchesResponse = await bb.refs.listBranches({
-                    repo_slug: parsed.name,
-                    username: parsed.owner,
-                    page: `${this._page}`,
-                    pagelen: defaultPageLength,
-                    sort: '-target.date'
-                });
-                branchesResponse.data.values!.forEach(v => {
-                    branches = branches.concat([[`${parsed.name}/${v.name!}`, repo]]);
-                });
-                if (branchesResponse.data.next) {
-                    morePages = true;
-                }
+        const remotes = await PullRequestApi.getBitbucketRemotes(this._repo);
+        if (remotes.length > 0) {
+            const remote = remotes[0];
+            const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+            const branchesResponse = await bb.refs.listBranches({
+                repo_slug: parsed.name,
+                username: parsed.owner,
+                page: `${this._page}`,
+                pagelen: defaultPageLength,
+                sort: '-target.date'
+            });
+            branchesResponse.data.values!.forEach(v => {
+                branches.push(v.name!);
+            });
+            if (branchesResponse.data.next) {
+                morePages = true;
             }
         }
         this._morePages = morePages;
         return this.fetchPipelinesForBranches(branches);
     }
 
-    async fetchPipelinesForBranches(branches: [string, Repository][]): Promise<[string, Repository][]> {
+    async fetchPipelinesForBranches(branches: string[]): Promise<string[]> {
         await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
-        branches.sort(([a]: [string, any], [b]: [string, any]) => {
+        branches.sort((a, b) => {
             const pa = this._pipelines.get(a);
             const pb = this._pipelines.get(b);
             if (!pa || pa.length === 0) {
@@ -131,19 +182,17 @@ export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
         return branches;
     }
 
-    async fetchPipelinesForBranch([branchName, repo]: [string, Repository]): Promise<Pipeline[]> {
+    async fetchPipelinesForBranch(branchName: string): Promise<Pipeline[]> {
         await Container.clientManager.bbrequest();
-        const pipelines = await PipelineApi.getList(repo, branchName.split('/')[1]);
+        const pipelines = await PipelineApi.getList(this._repo, branchName);
         this._pipelines.set(branchName, pipelines);
         return pipelines;
     }
 
     public refresh() {
-        this._branches = undefined;
+        this._branches = [];
         this._page = 1;
         this._pipelines.clear();
-        this._repositories = Container.bitbucketContext.getBitbucketRepositores();
-        this._onDidChangeTreeData.fire();
     }
 }
 
@@ -191,12 +240,8 @@ function statusForPipeline(pipeline: Pipeline): string {
     }
 }
 
-export abstract class Node {
-    abstract treeItem(): TreeItem;
-}
-
 export class PipelineNode extends Node {
-    constructor(private _pipeline: Pipeline, private _repo: Repository) {
+    constructor(private _repoNode: PipelinesRepoNode, private _pipeline: Pipeline, private _repo: Repository) {
         super();
     }
 
@@ -211,10 +256,14 @@ export class PipelineNode extends Node {
         item.iconPath = iconUriForPipeline(this._pipeline);
         return item;
     }
+
+    getChildren(element: Node): Promise<Node[]> {
+        return this._repoNode.getChildren(element);
+    }
 }
 
 export class BranchNode extends Node {
-    constructor(readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
+    constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
         super();
     }
 
@@ -230,15 +279,24 @@ export class BranchNode extends Node {
         }
         return treeItem;
     }
+
+    getChildren(element: Node): Promise<Node[]> {
+        return this._repoNode.getChildren(element);
+    }
 }
 
 class NextPageNode extends Node {
+    constructor(private _repo: Repository) {
+        super();
+    }
+
     treeItem() {
         const treeItem = new TreeItem('Load next page', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
             command: Commands.PipelinesNextPage,
-            title: 'Load more branches'
+            title: 'Load more branches',
+            arguments: [this._repo]
         };
         return treeItem;
     }
