@@ -25,6 +25,7 @@ import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
 import JiraSiteProject from './JiraSiteProject';
 import BitbucketIssuesConfig from './BBIssuesConfig';
+import CreateIssueTriggers from './CreateIssueTriggers';
 
 type changeObject = { [key: string]: any };
 
@@ -188,6 +189,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
                                         <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
+                                    </Panel>
+
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
+                                        <CreateIssueTriggers configData={this.state} onConfigChange={this.onConfigChange} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>

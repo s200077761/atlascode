@@ -5,19 +5,23 @@ import { Container } from '../container';
 import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchUsersQuery, isOpenJiraIssue } from '../ipc/issueActions';
-import { commands } from 'vscode';
+import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
 import { IssueTypeIdScreens } from '../jira/createIssueMeta';
 import { issueCreatedEvent } from '../analytics';
 
 export interface PartialIssue {
+    uri?: Uri;
+    position?: Position;
+    onCreated?: (uri: Uri, position: Position, issueKey: string) => void;
     summary?: string;
     description?: string;
 }
 
 type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
+    private _partialIssue: PartialIssue | undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -30,8 +34,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         return "atlascodeCreateIssueScreen";
     }
 
-    async createOrShow(data?: PartialIssue): Promise<void> {
-        await super.createOrShow();
+    async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
+        await super.createOrShow(column);
+        this._partialIssue = data;
         if (data) {
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
             this.postMessage(pd);
@@ -87,6 +92,13 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
             return transformation;
         }
         return Promise.reject("unable to get a jira client");
+    }
+
+    finalizeTodoIssueCreation(issueKey: string) {
+        if (this._partialIssue && this._partialIssue.uri && this._partialIssue.position && this._partialIssue.onCreated) {
+            this._partialIssue.onCreated(this._partialIssue.uri, this._partialIssue.position, issueKey);
+            this.hide();
+        }
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
@@ -217,7 +229,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
                                 issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
+                                this.finalizeTodoIssueCreation(resp.data.key);
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
                             }
