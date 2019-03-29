@@ -64,22 +64,24 @@ export class BitbucketIssuesExplorer extends Disposable {
 
         if (initializing ||
             configuration.changed(e, 'bitbucket.issues.explorerEnabled') ||
-            configuration.changed(e, 'bitbucket.issues.monitorEnabled')) {
-            this.updateMonitor();
-        }
+            configuration.changed(e, 'bitbucket.issues.monitorEnabled') ||
+            configuration.changed(e, 'bitbucket.issues.refreshInterval')) {
 
-        if (!Container.config.bitbucket.issues.explorerEnabled &&
-            !Container.config.bitbucket.issues.monitorEnabled) {
+            this.updateMonitor();
+
             this.stopTimer();
-        } else {
-            this.stopTimer();
-            this.startTimer();
+            if (Container.config.bitbucket.issues.explorerEnabled &&
+                Container.config.bitbucket.issues.monitorEnabled &&
+                this._refreshInterval > 0) {
+                this.startTimer();
+            }
         }
     }
 
     updateMonitor() {
         if (Container.config.bitbucket.issues.explorerEnabled &&
-            Container.config.bitbucket.issues.monitorEnabled) {
+            Container.config.bitbucket.issues.monitorEnabled &&
+            this._refreshInterval > 0) {
             const repos = this._ctx.getBitbucketRepositores();
             this._monitor = new BitbucketIssuesMonitor(repos);
         } else {
