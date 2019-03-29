@@ -101,6 +101,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
 
         let issue = await BitbucketIssuesApi.create(href, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
+        commands.executeCommand(Commands.BitbucketIssuesRefresh);
         this.hide();
     }
 }

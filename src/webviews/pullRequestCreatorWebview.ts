@@ -164,6 +164,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
             .then((pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
+                commands.executeCommand(Commands.BitbucketRefreshPullRequests);
                 prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
             });
         this.hide();
