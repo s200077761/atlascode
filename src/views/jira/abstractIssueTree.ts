@@ -2,6 +2,9 @@ import { window, Disposable, TreeDataProvider, TreeView, EventEmitter, Event, Tr
 import { IssueNode } from '../nodes/issueNode';
 import { configuration } from '../../config/configuration';
 import { AbstractIssueTreeNode } from './abstractIssueTreeNode';
+import { Container } from '../../container';
+import { AuthProvider } from '../../atlclients/authInfo';
+import { viewScreenEvent } from '../../analytics';
 
 export interface RefreshableTree extends Disposable {
     refresh(): void;
@@ -31,8 +34,11 @@ export abstract class AbstractIssueTree extends AbstractIssueTreeNode implements
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
-    public setVisibility(isVisible: boolean) {
+    public async setVisibility(isVisible: boolean) {
         this._isVisible = isVisible;
+        if (this.id && isVisible && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            viewScreenEvent(this.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+        }
     }
 
     protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
