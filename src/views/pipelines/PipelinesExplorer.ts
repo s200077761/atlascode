@@ -44,6 +44,9 @@ export class PipelinesExplorer extends Disposable {
 
         if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
             if (!Container.config.bitbucket.pipelines.explorerEnabled) {
+                if (this._tree) {
+                    this._tree.dispose();
+                }
                 this._tree = undefined;
             } else {
                 this._tree = new PipelinesTree();
@@ -55,22 +58,24 @@ export class PipelinesExplorer extends Disposable {
 
         if (initializing ||
             configuration.changed(e, 'bitbucket.pipelines.monitorEnabled') ||
-            configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
-            this.updateMonitor();
-        }
+            configuration.changed(e, 'bitbucket.pipelines.explorerEnabled') ||
+            configuration.changed(e, 'bitbucket.pipelines.refreshInterval')) {
 
-        if (!Container.config.bitbucket.pipelines.explorerEnabled &&
-            !Container.config.bitbucket.pipelines.monitorEnabled) {
+            this.updateMonitor();
+
             this.stopTimer();
-        } else {
-            this.stopTimer();
-            this.startTimer();
+            if (Container.config.bitbucket.pipelines.explorerEnabled &&
+                Container.config.bitbucket.pipelines.monitorEnabled &&
+                this._refreshInterval > 0) {
+                this.startTimer();
+            }
         }
     }
 
     updateMonitor() {
         if (Container.config.bitbucket.pipelines.explorerEnabled &&
-            Container.config.bitbucket.pipelines.monitorEnabled) {
+            Container.config.bitbucket.pipelines.monitorEnabled &&
+            this._refreshInterval > 0) {
             const repos = this._ctx.getBitbucketRepositores();
             this._monitor = new PipelinesMonitor(repos);
         } else {
