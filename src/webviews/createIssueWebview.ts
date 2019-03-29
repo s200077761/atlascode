@@ -229,6 +229,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
                                 issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                commands.executeCommand(Commands.RefreshJiraExplorer);
                                 this.finalizeTodoIssueCreation(resp.data.key);
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
