@@ -26,6 +26,11 @@ export interface CopyPullRequestLink extends Action {
     action: 'copyPullRequestLink';
 }
 
+export interface OpenPullRequest extends Action {
+    action: 'openPullRequest';
+    prHref: string;
+}
+
 export interface Checkout extends Action {
     action: 'checkout';
     branch: string;
@@ -62,4 +67,8 @@ export interface FetchDetails extends Action {
 
 export function isFetchDetails(a: Action): a is FetchDetails {
     return (<FetchDetails>a).action === 'fetchDetails';
+}
+
+export function isOpenPullRequest(a: Action): a is OpenPullRequest {
+    return (<OpenPullRequest>a).action === 'openPullRequest';
 }

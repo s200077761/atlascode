@@ -15,6 +15,9 @@ import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { issueUrlCopiedEvent } from '../analytics';
+import { isOpenPullRequest } from '../ipc/prActions';
+import { PullRequestApi } from '../bitbucket/pullRequests';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 
 type Emit = IssueData | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<issueOrKey> {
@@ -142,6 +145,19 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         break;
                     }
                 }
+                case 'openPullRequest': {
+                    if (isOpenPullRequest(e)) {
+                        handled = true;
+                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.links!.self!.href === e.prHref);
+                        if (pr) {
+                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestApi.get(pr));
+                        } else {
+                            Logger.error(new Error(`error opening pullrequest: ${e.prHref}`));
+                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${e.prHref}` });
+                        }
+                        break;
+                    }
+                }
             }
         }
 
@@ -174,7 +190,15 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         msg.workInProgress = msg.isAssignedToMe &&
             issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
             currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
+
+        msg.recentPullRequests = [];
         this.postMessage(msg);
+
+        const relatedPrs = await this.recentPullRequests();
+        if (relatedPrs.length > 0) {
+            msg.recentPullRequests = await this.recentPullRequests();
+            this.postMessage(msg);
+        }
     }
 
     private async forceUpdateIssue(issue?: Issue) {
@@ -189,5 +213,21 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 this.postMessage({ type: 'error', reason: e });
             }
         }
+    }
+
+    private async recentPullRequests(): Promise<Bitbucket.Schema.Pullrequest[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
+        const relatedPrs = await Promise.all(prs.map(async pr => {
+            const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.summary!.raw!)];
+            return issueKeys.find(key => key.toLowerCase() === this._issueKey.toLowerCase()) !== undefined
+                ? pr
+                : undefined;
+        }));
+
+        return relatedPrs.filter(pr => pr !== undefined).map(p => p!.data);
     }
 }
