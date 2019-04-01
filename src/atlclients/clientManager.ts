@@ -6,16 +6,15 @@ import {
 } from "vscode";
 import * as BitbucketKit from "bitbucket";
 import * as JiraKit from "@atlassian/jira";
-import { AuthProvider, AuthInfo } from "./authInfo";
+import { AuthProvider, AuthInfo, productForProvider, AccessibleResource } from "./authInfo";
 import { Container } from "../container";
 import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
 var tunnel = require("tunnel");
 import * as fs from "fs";
-import { configuration, WorkingSite, isEmptySite } from "../config/configuration";
+import { configuration, isEmptySite, isStagingSite } from "../config/configuration";
 import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
-import { ProductJira, ProductBitbucket } from "../constants";
 import { Logger } from "../logger";
 
 // const SIGNIN_COMMAND = "Sign in";
@@ -85,16 +84,21 @@ export class ClientManager implements Disposable {
     );
   }
 
-  public async jirarequest(workingSite?: WorkingSite, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
+  public async jirarequest(workingSite?: AccessibleResource, reauthenticate: boolean = false, forceStaging: boolean = false): Promise<JiraKit | undefined> {
     // if workingSite is passed in and is different from the one in config, 
     // it is for a one-off request (eg. a request from webview from previously configured workingSite)
     const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
 
-    return this.getClient<JiraKit>(AuthProvider.JiraCloud, info => {
+    if (!workingSite || isEmptySite(workingSite)) {
+      workingSite = Container.config.jira.workingSite;
+    }
+
+    let provider = (forceStaging || (workingSite && isStagingSite(workingSite))) ? AuthProvider.JiraCloudStaging : AuthProvider.JiraCloud;
+    let apiUri = (forceStaging || (workingSite && isStagingSite(workingSite))) ? "api.stg.atlassian.com" : "api.atlassian.com";
+
+    return this.getClient<JiraKit>(provider, info => {
       let cloudId: string = "";
-      if (!workingSite || isEmptySite(workingSite)) {
-        workingSite = Container.config.jira.workingSite;
-      }
+
       if (info.accessibleResources) {
         if (workingSite && !isEmptySite(workingSite)) {
           const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
@@ -113,45 +117,7 @@ export class ClientManager implements Disposable {
       }
 
       let jraclient = new JiraKit({
-        baseUrl: `https://api.atlassian.com/ex/jira/${cloudId}/rest/`,
-        options: extraOptions,
-        headers: { "x-atlassian-force-account-id": "true" }
-      });
-      jraclient.authenticate({ type: "token", token: info.access });
-
-      return jraclient;
-    }, doNotUpdateCache, reauthenticate);
-  }
-
-  public async jirarequestStaging(workingSite?: WorkingSite, reauthenticate: boolean = false): Promise<JiraKit | undefined> {
-    // if workingSite is passed in and is different from the one in config, 
-    // it is for a one-off request (eg. a request from webview from previously configured workingSite)
-    const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
-
-    return this.getClient<JiraKit>(AuthProvider.JiraCloudStaging, info => {
-      let cloudId: string = "";
-      if (!workingSite || isEmptySite(workingSite)) {
-        workingSite = Container.config.jira.workingSite;
-      }
-      if (info.accessibleResources) {
-        if (workingSite && !isEmptySite(workingSite)) {
-          const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
-          if (foundSite) {
-            cloudId = foundSite.id;
-          }
-        }
-        if (cloudId === "") {
-          cloudId = info.accessibleResources[0].id;
-        }
-      }
-
-      let extraOptions = {};
-      if (this._agent) {
-        extraOptions = { agent: this._agent };
-      }
-
-      let jraclient = new JiraKit({
-        baseUrl: `https://api.stg.atlassian.com/ex/jira/${cloudId}/rest/`,
+        baseUrl: `https://${apiUri}/ex/jira/${cloudId}/rest/`,
         options: extraOptions,
         headers: { "x-atlassian-force-account-id": "true" }
       });
@@ -176,6 +142,7 @@ export class ClientManager implements Disposable {
     const clientOrEmpty = await this._clients.getItem<TorEmpty>(provider);
 
     if (isEmptyClient(clientOrEmpty)) {
+      console.log('empty client found for provider', provider);
       return undefined;
     }
 
@@ -192,12 +159,19 @@ export class ClientManager implements Disposable {
       let info = await Container.authManager.getAuthInfo(provider);
 
       if (!info || reauthenticate) {
-        info = await this.danceWithUser(provider);
+
+        try {
+          info = await this.danceWithUser(provider);
+        } catch (e) {
+          Logger.error(e);
+          throw e;
+        }
+
 
         if (info) {
           await Container.authManager.saveAuthInfo(provider, info);
 
-          const product = provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
+          const product = productForProvider(provider);
           window.showInformationMessage(`You are now authenticated with ${product}`);
           authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         } else {
@@ -283,8 +257,7 @@ export class ClientManager implements Disposable {
   private async danceWithUser(
     provider: string
   ): Promise<AuthInfo | undefined> {
-    const product =
-      provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
+    //const product = provider === (AuthProvider.JiraCloud || AuthProvider.JiraCloudStaging) ? ProductJira : ProductBitbucket;
 
     // if (!this._isAuthenticating) {
     //   this._isAuthenticating = true;
@@ -304,13 +277,13 @@ export class ClientManager implements Disposable {
     // }
 
     // if (usersChoice === SIGNIN_COMMAND) {
-    let info = await this._dancer.doDance(provider).catch(reason => {
-      window.showErrorMessage(`Error logging into ${product}`, reason);
-      // this._isAuthenticating = false;
-      return undefined;
-    });
-    // this._isAuthenticating = false;
-    return info;
+    try {
+      let info = await this._dancer.doDance(provider);
+      return info;
+    } catch (e) {
+      Logger.error(e);
+      throw e;
+    }
     // } else {
     //   // user cancelled sign in, remember that and don't ask again until it expires
     //   await this._clients.setItem(provider, emptyClient, 45 * Interval.MINUTE);
@@ -320,7 +293,6 @@ export class ClientManager implements Disposable {
   }
 
   public async authenticate(provider: string): Promise<void> {
-    console.log('client man auth', provider);
     if (isEmptyClient(this._clients.getItem(provider))) {
       this._clients.deleteItem(provider);
     }
@@ -331,7 +303,13 @@ export class ClientManager implements Disposable {
         break;
       }
       case AuthProvider.JiraCloudStaging: {
-        await this.jirarequestStaging(undefined, true);
+        try {
+          console.log('trying to auth with staging client');
+          await this.jirarequest(undefined, true, true);
+        } catch (e) {
+          console.log('jira statging authenticate error', e);
+        }
+
         break;
       }
       case AuthProvider.BitbucketCloud: {

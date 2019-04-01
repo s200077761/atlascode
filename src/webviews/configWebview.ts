@@ -51,17 +51,20 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             authInfoStaging = emptyAuthInfo;
         }
 
+        const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
+        const stagingEnabled = sitesAvailable.find(site => site.name === 'hello') !== undefined;
+
         this.updateConfig({
             type: 'update',
             config: config,
-            sites: await Container.jiraSiteManager.getSitesAvailable(),
+            sites: sitesAvailable,
             projects: await Container.jiraSiteManager.getProjects(),
             isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud),
             isJiraStagingAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging),
             isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud),
             jiraAccessToken: authInfo!.access,
             jiraStagingAccessToken: authInfoStaging!.access,
-            isStagingEnabled: config.enableStaging
+            isStagingEnabled: stagingEnabled
         });
     }
 
@@ -104,7 +107,6 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                                 break;
                             }
                             case AuthProvider.JiraCloudStaging: {
-                                console.log('auth jira staging');
                                 commands.executeCommand(Commands.AuthenticateJiraStaging);
                                 break;
                             }

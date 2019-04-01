@@ -31,13 +31,6 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
     }
 
     handleUri(uri: Uri): void {
-        switch (uri.path) {
-            case '/clone': this.clone(uri);
-        }
-    }
-
-    private clone(uri: Uri): void {
-        console.log('Atlascode got /clone!!!', uri);
     }
 
     dispose(): void {

@@ -294,20 +294,20 @@
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "navigation"
                 },
                 {
@@ -329,22 +329,22 @@
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
@@ -387,19 +387,19 @@
                 },
                 {
                     "command": "atlascode.jira.showIssue",
-                    "when": "atlascode:isJiraAuthenticated"
+                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "atlascode:isJiraAuthenticated"
+                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "atlascode:isJiraAuthenticated"
+                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.jira.authenticate",
-                    "when": "!atlascode:isJiraAuthenticated"
+                    "when": "!atlascode:isJiraAuthenticated && !atlascode:isJiraStagingAuthenticated"
                 },
                 {
                     "command": "atlascode.bb.authenticate",
@@ -407,7 +407,7 @@
                 },
                 {
                     "command": "atlascode.jira.clearAuth",
-                    "when": "atlascode:isJiraAuthenticated"
+                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
                 },
                 {
                     "command": "atlascode.bb.clearAuth",
@@ -435,12 +435,6 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
-                    "scope": "window"
-                },
-                "atlascode.enableStaging": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables authenticating with Atlassian staging servers",
                     "scope": "window"
                 },
                 "atlascode.offlineMode": {
@@ -561,6 +555,10 @@
                         "avatarUrl": {
                             "type": "string",
                             "default": ""
+                        },
+                        "baseUrlSuffix": {
+                            "type": "string",
+                            "default": "atlassian.net"
                         }
                     },
                     "description": "Jira site for workspace",

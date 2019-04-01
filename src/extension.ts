@@ -31,7 +31,8 @@ export async function activate(context: ExtensionContext) {
 
     Container.initialize(context, cfg, atlascodeVersion);
 
-    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud));
+    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false));
+    setCommandContext(CommandContext.IsJiraStagingAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false));
     setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud));
 
     registerCommands(context);

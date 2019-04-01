@@ -16,7 +16,6 @@ export async function authenticateJira() {
 }
 
 export async function authenticateJiraStaging() {
-    console.log('command auth jira staging');
     authenticate(AuthProvider.JiraCloudStaging);
 }
 

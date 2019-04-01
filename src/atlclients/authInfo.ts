@@ -1,4 +1,10 @@
 'use strict';
+
+export const ProductJira = 'Jira';
+export const ProductJiraStaging = 'Jira Staging';
+export const ProductBitbucket = 'Bitbucket';
+export const ProductBitbucketStaging = 'Bitbucket Staging';
+
 export enum AuthProvider {
     BitbucketCloud = 'bbcloud',
     BitbucketCloudStaging = 'bbcloudstaging',
@@ -23,6 +29,7 @@ export interface AccessibleResource {
     name: string;
     scopes: Array<string>;
     avatarUrl: string;
+    baseUrlSuffix: string;
 }
 
 export const emptyUserInfo: UserInfo = {
@@ -37,3 +44,22 @@ export const emptyAuthInfo: AuthInfo = {
     user: emptyUserInfo,
     accessibleResources: []
 };
+
+export function productForProvider(provider: string): string {
+    switch (provider) {
+        case AuthProvider.JiraCloud: {
+            return ProductJira;
+        }
+        case AuthProvider.JiraCloudStaging: {
+            return ProductJiraStaging;
+        }
+        case AuthProvider.BitbucketCloud: {
+            return ProductBitbucket;
+        }
+        case AuthProvider.BitbucketCloudStaging: {
+            return ProductBitbucketStaging;
+        }
+    }
+
+    return "unknown product";
+}

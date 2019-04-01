@@ -141,11 +141,20 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         }
 
         return this.state.isJiraStagingAuthenticated
-            ? <ButtonGroup>
-                <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
-                <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
-            </ButtonGroup>
-            : <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate</Button>;
+            ? <div>
+                <hr />
+                <h3>Jira (staging)</h3>
+                <ButtonGroup>
+                    <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
+                    <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
+                </ButtonGroup>
+            </div>
+
+            : <div>
+                <hr />
+                <h3>Jira (staging)</h3>
+                <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate</Button>
+            </div>;
     }
 
     private bitBucketButton(): any {
@@ -189,8 +198,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
-                                        <hr />
-                                        <h3>Jira (staging)</h3>
                                         {this.jiraButtonStaging()}
                                         <hr />
                                         <h3>Bitbucket</h3>

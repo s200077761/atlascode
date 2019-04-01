@@ -129,7 +129,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
+                    const linkUrl = `https://${this._state.workingSite.name}.${this._state.workingSite.baseUrlSuffix}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
