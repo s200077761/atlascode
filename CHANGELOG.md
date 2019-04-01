@@ -1,3 +1,28 @@
+## What's New In 1.1.0
+### Improvements
+* Code hint to create issue from comment triggers
+* Add right-click create Jira issue in code view
+* Open Jira issue by key from command palette
+* Explorer for Bitbucket issues
+* Webview to create, view and update Bitbucket issues
+* Notifications for new Bitbucket issues
+* Show related Bitbucket issues in pull requests
+* Show recent Bitbucket pull requests for Jira issues
+* Improve issue created message when multiple issues are created one after another
+* Allow user to view logs from pipeline builds
+* Separate pipelines results by repo
+* Improve subtask display in treeviews to respect jql filter
+* Improvement and consistency for error messages in webviews
+
+### Bugs fixed
+* Welcome page opens on every new window
+* Pull request comments are being duplicated when treeview is refreshed
+* Fix auth timeout tab opening randomly sometimes
+* Handle cases when default site is not selected in settings screen
+* Filter out done issues in 'Your Issues' treeview
+* Fix pipelines result display with manual deployments
+* Jira issue details were not loading completely in some cases
+
 ## What's New In 1.0.4
 ### Bug
 * Fixed a bug where upstream branch was not being set properly when starting work on Jira issue
