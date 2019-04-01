@@ -51,7 +51,7 @@ export interface PipelineStep {
     script_commands: PipelineCommand[];
     teardown_commands: PipelineCommand[];
     duration_in_seconds: number;
-    state: PipelineState;
+    state?: PipelineState;
 }
 
 export interface PipelineCommand {
@@ -73,11 +73,11 @@ export function statusForState(state: PipelineState): Status {
         case "pipeline_state_in_progress":
         // fall through
         case "pipeline_step_state_in_progress":
-            return statusForStage(state.stage!);
+            return statusForStage(state.stage);
         case "pipeline_state_pending":
             return Status.Pending;
         case "pipeline_step_state_pending":
-            return statusForStage(state.stage!);
+            return statusForStage(state.stage);
         default:
             return Status.Unknown;
     }
@@ -106,8 +106,13 @@ function statusForResult(result: PipelineResult): Status {
     }
 }
 
-function statusForStage(stage: PipelineStage): Status {
+function statusForStage(stage?: PipelineStage): Status {
+    if (!stage) {
+        return Status.InProgress;
+    }
     switch (stage.type) {
+        case "pipeline_state_in_progress_running":
+            return Status.InProgress;
         case "pipeline_step_state_pending_pending":
         case "pipeline_step_state_in_progress_pending":
             return Status.Pending;
