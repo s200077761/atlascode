@@ -50,7 +50,7 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async bbrequest(reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
+  public async bbrequest(initiatedByUser: boolean = false): Promise<BitbucketKit | undefined> {
     return this.getClient<BitbucketKit>(
       AuthProvider.BitbucketCloud,
       info => {
@@ -63,11 +63,11 @@ export class ClientManager implements Disposable {
         bbclient.authenticate({ type: "token", token: info.access });
 
         return bbclient;
-      }, false, reauthenticate
+      }, false, initiatedByUser
     );
   }
 
-  public async bbrequestStaging(reauthenticate: boolean = false): Promise<BitbucketKit | undefined> {
+  public async bbrequestStaging(initiatedByUser: boolean = false): Promise<BitbucketKit | undefined> {
     return this.getClient<BitbucketKit>(
       AuthProvider.BitbucketCloudStaging,
       info => {
@@ -80,11 +80,11 @@ export class ClientManager implements Disposable {
         bbclient.authenticate({ type: "token", token: info.access });
 
         return bbclient;
-      }, false, reauthenticate
+      }, false, initiatedByUser
     );
   }
 
-  public async jirarequest(workingSite?: AccessibleResource, reauthenticate: boolean = false, forceStaging: boolean = false): Promise<JiraKit | undefined> {
+  public async jirarequest(workingSite?: AccessibleResource, initiatedByUser: boolean = false, forceStaging: boolean = false): Promise<JiraKit | undefined> {
     // if workingSite is passed in and is different from the one in config, 
     // it is for a one-off request (eg. a request from webview from previously configured workingSite)
     const doNotUpdateCache = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
@@ -124,7 +124,7 @@ export class ClientManager implements Disposable {
       jraclient.authenticate({ type: "token", token: info.access });
 
       return jraclient;
-    }, doNotUpdateCache, reauthenticate);
+    }, doNotUpdateCache, initiatedByUser);
   }
 
   public async removeClient(provider: string) {
@@ -135,20 +135,19 @@ export class ClientManager implements Disposable {
     provider: string,
     factory: (info: AuthInfo) => any,
     doNotUpdateCache: boolean = true,
-    reauthenticate: boolean = false
+    initiatedByUser: boolean = false
   ): Promise<T | undefined> {
     type TorEmpty = T | EmptyClient;
 
     const clientOrEmpty = await this._clients.getItem<TorEmpty>(provider);
 
     if (isEmptyClient(clientOrEmpty)) {
-      console.log('empty client found for provider', provider);
       return undefined;
     }
 
     let client: T | undefined = clientOrEmpty;
 
-    if (!client || reauthenticate) {
+    if (!client || initiatedByUser) {
 
       // if (!this.isLocked(provider)) {
       //   this.lockClient(provider);
@@ -158,15 +157,8 @@ export class ClientManager implements Disposable {
 
       let info = await Container.authManager.getAuthInfo(provider);
 
-      if (!info || reauthenticate) {
-
-        try {
-          info = await this.danceWithUser(provider);
-        } catch (e) {
-          Logger.error(e);
-          throw e;
-        }
-
+      if (initiatedByUser) {
+        info = await this.danceWithUser(provider);
 
         if (info) {
           await Container.authManager.saveAuthInfo(provider, info);
@@ -178,7 +170,11 @@ export class ClientManager implements Disposable {
           // this.unlockClient(provider);
           return undefined;
         }
-      } else {
+      }
+      else if (!info) {
+        return undefined;
+      }
+      else {
         await this._dancer
           .refresh(info)
           .then(async newInfo => {

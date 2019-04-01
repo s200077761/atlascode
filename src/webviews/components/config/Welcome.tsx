@@ -65,6 +65,37 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.1.0 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Code hint to create issue from comment triggers</li>
+                                <li>Add right-click create Jira issue in code view</li>
+                                <li>Open Jira issue by key from command palette</li>
+                                <li>Explorer for Bitbucket issues</li>
+                                <li>Webview to create, view and update Bitbucket issues</li>
+                                <li>Notifications for new Bitbucket issues</li>
+                                <li>Show related Bitbucket issues in pull requests</li>
+                                <li>Show recent Bitbucket pull requests for Jira issues</li>
+                                <li>Improve issue created message when multiple issues are created one after another</li>
+                                <li>Allow user to view logs from pipeline builds</li>
+                                <li>Separate pipelines results by repo</li>
+                                <li>Improve subtask display in treeviews to respect jql filter</li>
+                                <li>Improvement and consistency for error messages in webviews</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Welcome page opens on every new window</li>
+                                <li>Pull request comments are being duplicated when treeview is refreshed</li>
+                                <li>Fix auth timeout tab opening randomly sometimes</li>
+                                <li>Handle cases when default site is not selected in settings screen</li>
+                                <li>Filter out done issues in 'Your Issues' treeview</li>
+                                <li>Fix pipelines result display with manual deployments</li>
+                                <li>Jira issue details were not loading completely in some cases</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.0.4 🎉</h2>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>

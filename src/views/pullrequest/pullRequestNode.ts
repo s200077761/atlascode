@@ -180,7 +180,8 @@ class PullRequestFilesNode extends BaseNode {
         if (this.fileChange.old && this.commentsMap.has(this.fileChange.old!.path!)) {
             comments.push(...this.commentsMap.get(this.fileChange.old!.path!)!);
         }
-        if (this.fileChange.new && this.commentsMap.has(this.fileChange.new!.path!)) {
+        if (this.fileChange.new && this.commentsMap.has(this.fileChange.new!.path!) &&
+            !(this.fileChange.old && this.fileChange.old.path === this.fileChange.new.path)) {
             comments.push(...this.commentsMap.get(this.fileChange.new!.path!)!);
         }
 

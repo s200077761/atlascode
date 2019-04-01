@@ -8,6 +8,8 @@ import { AuthProvider } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { getCurrentUser } from './user';
+import { CacheMap, Interval } from '../util/cachemap';
+import { PullRequest } from './model';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -22,6 +24,7 @@ export class BitbucketContext extends Disposable {
     private _disposable: Disposable;
     private _currentUser?: Bitbucket.Schema.User;
     private _currentUserStaging?: Bitbucket.Schema.User;
+    private _pullRequestCache = new CacheMap();
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -46,6 +49,8 @@ export class BitbucketContext extends Disposable {
             this._pullRequestsExplorer,
             this._bitbucketIssuesExplorer
         );
+
+        this.refreshRepos();
     }
 
     public async currentUser(stagingUser: boolean = false): Promise<Bitbucket.Schema.User> {
@@ -58,9 +63,27 @@ export class BitbucketContext extends Disposable {
         return this._currentUser!;
     }
 
-    public refreshRepos() {
+    public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
+        if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
+            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => (await PullRequestApi.getRecentAllStatus(repo)).data));
+            const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
+            this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
+        }
+
+        return this._pullRequestCache.getItem<PullRequest[]>('pullrequests')!;
+    }
+
+    private async refreshRepos() {
+        this._pullRequestCache.clear();
         this._repoMap.clear();
-        this.getAllRepositores().forEach(repo => this._repoMap.set(repo.rootUri.toString(), repo));
+        await Promise.all(this.getAllRepositores().map(async repo => {
+            // sometimes the remote info is not populated during initialization
+            // this is a workaround to wait for that information to be available
+            if (repo.state.remotes.length === 0) {
+                await repo.status();
+            }
+            this._repoMap.set(repo.rootUri.toString(), repo);
+        }));
         this._onDidChangeBitbucketContext.fire();
     }
 

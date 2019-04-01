@@ -245,7 +245,7 @@
         },
         "menus": {
             "editor/context": [
-                {
+		{
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
@@ -604,6 +604,21 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Jira hover provider",
+                    "scope": "window"
+                },
+                "atlascode.jira.todoIssues.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables the create of Jira issues from TODO comments and similar",
+                    "scope": "window"
+                },
+                "atlascode.jira.todoIssues.triggers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": ["TODO:"],
+                    "description": "Strings that will trigger the Jira issue create Code Lens",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.enabled": {

@@ -33,6 +33,7 @@ export interface JiraConfig {
     statusbar: JiraStatusBar;
     hover: JiraHover;
     customJql: SiteJQL[];
+    todoIssues: TodoIssues;
 }
 
 export interface JiraStatusBar {
@@ -62,6 +63,11 @@ export interface JiraHover {
 export interface SiteJQL {
     siteId: string;
     jql: JQLEntry[];
+}
+
+export interface TodoIssues {
+    enabled: boolean;
+    triggers: string[];
 }
 
 export interface JQLEntry {
@@ -190,6 +196,11 @@ export const emptyJQLEntry: JQLEntry = {
     query: ""
 };
 
+export const emptyTodoIssues: TodoIssues = {
+    enabled: true,
+    triggers: []
+};
+
 export const emptyJiraConfig: JiraConfig = {
     workingProject: emptyWorkingProject,
     workingSite: emptyWorkingSite,
@@ -197,7 +208,8 @@ export const emptyJiraConfig: JiraConfig = {
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
-    customJql: []
+    customJql: [],
+    todoIssues: emptyTodoIssues
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {

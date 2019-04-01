@@ -101,7 +101,7 @@ export namespace PipelineApi {
     branchName: string,
     accessToken: string
   ): Promise<Pipeline[]> {
-    return getPipelineResults(remote, accessToken, `target.branch=${branchName}`);
+    return getPipelineResults(remote, accessToken, `target.branch=${encodeURIComponent(branchName)}`);
   }
 
   async function getPipelineResults(

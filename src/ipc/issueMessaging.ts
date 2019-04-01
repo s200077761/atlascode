@@ -12,6 +12,7 @@ export interface IssueData extends Issue {
     isAssignedToMe: boolean;
     childIssues: Issue[];
     workInProgress: boolean;
+    recentPullRequests: Bitbucket.Schema.Pullrequest[];
 }
 
 export interface CreateIssueData extends Message {

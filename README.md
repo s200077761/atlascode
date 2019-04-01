@@ -29,6 +29,10 @@ Kick off your builds:
 
 ![builds](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/start-pipeline.gif)
 
+Create that issue without breaking your stride:
+
+![issue from todo](https://bitbucket.org/atlassianlabs/atlascode/raw/master/.readme/create-from-code-lens.gif)
+
 ...and lots more
 
 ## Everyone Has Issues...

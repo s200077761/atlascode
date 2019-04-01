@@ -9,11 +9,12 @@ import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
 import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
-import { extensions, ExtensionContext, commands } from 'vscode';
+import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
 import { installedEvent, upgradedEvent } from './analytics';
-import { Memento } from "vscode";
+import { window, Memento } from "vscode";
+import { provideCodeLenses } from "./jira/todoObserver";
 
 const AnalyticDelay = 5000;
 
@@ -54,12 +55,14 @@ export async function activate(context: ExtensionContext) {
     }, delay);
 
     const duration = process.hrtime(start);
+    context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
     Logger.debug(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
     if ((previousVersion === undefined || semver.gt(version, previousVersion)) &&
-        Container.config.showWelcomeOnInstall) {
+        Container.config.showWelcomeOnInstall &&
+        window.state.focused) {
         await commands.executeCommand(Commands.ShowWelcomePage);
     }
 }

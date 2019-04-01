@@ -6,6 +6,7 @@ import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Tag from "@atlaskit/tag";
 import TagGroup from "@atlaskit/tag-group";
+import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData } from "../../../ipc/issueMessaging";
 import {
@@ -34,8 +35,9 @@ import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
+import { OpenPullRequest } from "../../../ipc/prActions";
 
-type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction;
+type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
 
 const emptyIssueData: IssueData = {
@@ -63,7 +65,8 @@ const emptyIssueData: IssueData = {
   workingSite: emptyWorkingSite,
   isAssignedToMe: false,
   childIssues: [],
-  workInProgress: true
+  workInProgress: true,
+  recentPullRequests: []
 };
 
 type MyState = {
@@ -218,6 +221,12 @@ export default class JiraIssuePage extends WebviewComponent<
         {this.tags(components)}
         <h3>Fix Versions</h3>
         {this.tags(fixVersions)}
+        {this.state.data.recentPullRequests && this.state.data.recentPullRequests.length > 0 &&
+          <React.Fragment>
+            <Tooltip content='Recent pullrequests from workspace repositories'><h3>Recent pullrequests</h3></Tooltip>
+            {this.state.data.recentPullRequests.map(pr => <Button appearance='link' onClick={() => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })}>{`${pr.destination!.repository!.name} - Pull request #${pr.id}`}</Button>)}
+          </React.Fragment>
+        }
       </div>
     );
   }
