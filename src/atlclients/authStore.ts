@@ -56,6 +56,14 @@ export class AuthManager implements Disposable {
                 let infoEntry = await this.getPassword(provider) || undefined;
                 if (infoEntry) {
                     let info: AuthInfo = JSON.parse(infoEntry);
+                    if (info.accessibleResources) {
+                        info.accessibleResources.forEach(resource => {
+                            if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
+                                resource.baseUrlSuffix = "atlassian.net";
+                            }
+                        });
+                    }
+
                     this._memStore.set(provider, info);
                     return info;
                 }
@@ -69,6 +77,15 @@ export class AuthManager implements Disposable {
 
     public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
         const oldInfo = await this.getAuthInfo(provider);
+
+        if (info.accessibleResources) {
+            info.accessibleResources.forEach(resource => {
+                if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
+                    resource.baseUrlSuffix = "atlassian.net";
+                }
+            });
+        }
+
         this._memStore.set(provider, info);
 
         const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
@@ -95,9 +112,8 @@ export class AuthManager implements Disposable {
     private commandContextFor(provider: string): string | undefined {
         switch (provider) {
             case AuthProvider.JiraCloud:
-                return CommandContext.IsJiraAuthenticated;
             case AuthProvider.JiraCloudStaging:
-                return CommandContext.IsJiraStagingAuthenticated;
+                return CommandContext.IsJiraAuthenticated;
             case AuthProvider.BitbucketCloud:
                 return CommandContext.IsBBAuthenticated;
             case AuthProvider.BitbucketCloudStaging:

@@ -39,8 +39,9 @@ export class AuthStatusBar extends Disposable {
         jiraItem.hide();
       }
 
+      const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
       const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
-      const stagingEnabled = sitesAvailable.find(site => site.name === 'hello') !== undefined;
+      const stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
 
       if (stagingEnabled) {
         const jiraStagingItem = this.ensureStatusItem(AuthProvider.JiraCloudStaging);
@@ -119,7 +120,7 @@ export class AuthStatusBar extends Disposable {
 
         } else {
           if (Container.config.jira.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to Jira`;
+            text = `$(sign-in) Sign in to  ${product}`;
             command = Commands.AuthenticateJira;
             product = ProductJira;
           } else {
@@ -153,7 +154,7 @@ export class AuthStatusBar extends Disposable {
 
         } else {
           if (Container.config.jira.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to Jira`;
+            text = `$(sign-in) Sign in to ${product}`;
             command = Commands.AuthenticateJiraStaging;
             product = ProductJiraStaging;
           } else {
@@ -176,7 +177,7 @@ export class AuthStatusBar extends Disposable {
           }
         } else {
           if (Container.config.bitbucket.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to Bitbucket`;
+            text = `$(sign-in) Sign in to ${product}`;
             command = Commands.AuthenticateBitbucket;
             product = ProductBitbucket;
           } else {

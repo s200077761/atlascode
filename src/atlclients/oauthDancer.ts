@@ -192,7 +192,7 @@ export class OAuthDancer {
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://atlassian.atlascode/clone`));
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
             });
 
             _app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
@@ -202,6 +202,7 @@ export class OAuthDancer {
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
             });
 
             _app.get('/error', (req, res) => {

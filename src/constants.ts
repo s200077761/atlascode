@@ -26,7 +26,6 @@ export enum CommandContext {
     AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
-    IsJiraStagingAuthenticated = 'atlascode:isJiraStagingAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
 }
 

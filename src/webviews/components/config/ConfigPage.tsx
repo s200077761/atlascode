@@ -86,6 +86,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.handleLogout(AuthProvider.JiraCloud);
     }
 
+    handleJiraLogoutStaging = () => {
+        this.handleLogout(AuthProvider.JiraCloudStaging);
+    }
+
     handleBBLogout = () => {
         this.handleLogout(AuthProvider.BitbucketCloud);
     }
@@ -147,7 +151,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 <h3>Jira (staging)</h3>
                 <ButtonGroup>
                     <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
-                    <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
+                    <Button className='ac-button' onClick={this.handleJiraLogoutStaging}>Logout</Button>
                 </ButtonGroup>
             </div>
 

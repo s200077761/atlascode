@@ -245,7 +245,7 @@
         },
         "menus": {
             "editor/context": [
-		{
+                {
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
@@ -294,20 +294,20 @@
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
@@ -329,22 +329,22 @@
             "view/item/context": [
                 {
                     "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
-                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.startWorkOnIssue",
-                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "viewItem == jiraIssue && (atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
@@ -387,15 +387,15 @@
                 },
                 {
                     "command": "atlascode.jira.showIssue",
-                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.authenticate",
@@ -407,7 +407,7 @@
                 },
                 {
                     "command": "atlascode.jira.clearAuth",
-                    "when": "(atlascode:isJiraAuthenticated || atlascode:isJiraStagingAuthenticated)"
+                    "when": "atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.bb.clearAuth",
@@ -617,7 +617,9 @@
                     "items": {
                         "type": "string"
                     },
-                    "default": ["TODO:"],
+                    "default": [
+                        "TODO:"
+                    ],
                     "description": "Strings that will trigger the Jira issue create Code Lens",
                     "scope": "window"
                 },
