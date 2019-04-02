@@ -202,8 +202,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
-                                        <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         {this.jiraButtonStaging()}
+                                        <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         <hr />
                                         <h3>Bitbucket</h3>
                                         {this.bitBucketButton()}
