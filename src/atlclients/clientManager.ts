@@ -316,10 +316,9 @@ export class ClientManager implements Disposable {
       }
       case AuthProvider.JiraCloudStaging: {
         try {
-          console.log('trying to auth with staging client');
           await this.jirarequest(stgAuthSite, true, true);
         } catch (e) {
-          console.log('jira statging authenticate error', e);
+          Logger.error(e);
         }
 
         break;
