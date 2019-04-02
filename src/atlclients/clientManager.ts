@@ -27,6 +27,22 @@ function isEmptyClient(a: any): a is EmptyClient {
   return a && (<EmptyClient>a).isEmpty !== undefined;
 }
 
+const prodAuthSite: AccessibleResource = {
+  name: 'prod',
+  avatarUrl: '',
+  id: '',
+  scopes: [],
+  baseUrlSuffix: 'atlassian.net'
+};
+
+const stgAuthSite: AccessibleResource = {
+  name: 'prod',
+  avatarUrl: '',
+  id: '',
+  scopes: [],
+  baseUrlSuffix: 'atlassian.net'
+};
+
 // const emptyClient: EmptyClient = { isEmpty: true };
 
 // TODO: VSCODE-29 if user bails in oauth or an error happens, we need to return undefined
@@ -295,13 +311,13 @@ export class ClientManager implements Disposable {
 
     switch (provider) {
       case AuthProvider.JiraCloud: {
-        await this.jirarequest(undefined, true);
+        await this.jirarequest(prodAuthSite, true);
         break;
       }
       case AuthProvider.JiraCloudStaging: {
         try {
           console.log('trying to auth with staging client');
-          await this.jirarequest(undefined, true, true);
+          await this.jirarequest(stgAuthSite, true, true);
         } catch (e) {
           console.log('jira statging authenticate error', e);
         }
