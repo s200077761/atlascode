@@ -8,7 +8,7 @@ import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { isEmptySite } from '../config/model';
-import { AuthProvider } from '../atlclients/authInfo';
+import { providerForSite } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { PullRequestApi } from '../bitbucket/pullRequests';
@@ -110,7 +110,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+                            const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
                             const currentUserId = authInfo!.user.id;
                             await assignIssue(issue, currentUserId);
                             if (e.setupJira) {

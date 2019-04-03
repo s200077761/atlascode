@@ -10,7 +10,7 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
 import { isEmptySite } from '../config/model';
-import { AuthProvider } from '../atlclients/authInfo';
+import { providerForSite } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
@@ -170,7 +170,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             this.tenantId = issue.workingSite.id;
         }
         if (!this._currentUserId) {
-            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
             this._currentUserId = authInfo ? authInfo.user.id : undefined;
         }
 

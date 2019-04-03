@@ -63,3 +63,17 @@ export function productForProvider(provider: string): string {
 
     return "unknown product";
 }
+
+export function providerForSite(site: AccessibleResource): string {
+    let suffix = site.baseUrlSuffix;
+
+    if (!suffix || suffix.length < 1) {
+        suffix = 'atlassian.net';
+    }
+
+    if (suffix === 'jira-dev.com') {
+        return AuthProvider.JiraCloudStaging;
+    }
+
+    return AuthProvider.JiraCloud;
+}

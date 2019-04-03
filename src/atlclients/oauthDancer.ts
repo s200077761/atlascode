@@ -42,8 +42,8 @@ export class OAuthDancer {
     }, this.verify.bind(this));
 
     private _jiraCloudStrategyStaging = new AtlassianStrategy({
-        clientID: 'g3GXn3bTbZeAtn5KptcN1WmF281f0qd3',
-        clientSecret: 'H-I5Fp6UQ9FlCfA6IuWzA1lJgRJaekyqB9QF6hc2h_53liCfTNpbcMJIt24MkHw6',
+        clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
+        clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
         authorizationURL: "https://auth.stg.atlassian.com/authorize",
         tokenURL: "https://auth.stg.atlassian.com/oauth/token",
         profileURL: "https://api.stg.atlassian.com/me",
