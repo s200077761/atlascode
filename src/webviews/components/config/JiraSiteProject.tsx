@@ -1,20 +1,20 @@
 import * as React from 'react';
 import { Field } from '@atlaskit/form';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { WorkingSite } from '../../../config/model';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { AccessibleResource } from '../../../atlclients/authInfo';
 
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}.{props.data.baseUrlSuffix}</span></div>
     </Option>
 );
 
 const IconValue = (props: any) => (
     <components.SingleValue {...props}>
-        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}.{props.data.baseUrlSuffix}</span></div>
     </components.SingleValue>
 
 );
@@ -40,7 +40,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
         this.setState(nextProps.configData);
     }
 
-    handleSiteChange = (item: WorkingSite) => {
+    handleSiteChange = (item: AccessibleResource) => {
         if (item) {
             const changes = Object.create(null);
             const removes = [];
@@ -69,60 +69,60 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
             }
         }
     }
-    
+
     render() {
         return <div className='ac-flex-space-between'>
-        <Field label='Default Site'
-            id='defaultSite'
-            name='defaultSite'
-            defaultValue={this.state.config.jira.workingSite}
-        >
-            {
-                (fieldArgs: any) => {
-                    return (
-                        <Select
-                            {...fieldArgs.fieldProps}
-                            className="ac-select-container"
-                            classNamePrefix="ac-select"
-                            getOptionLabel={(option: any) => option.name}
-                            getOptionValue={(option: any) => option.id}
-                            options={this.state.sites}
-                            components={{ Option: IconOption, SingleValue: IconValue }}
-                            onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
-                        />
-                    );
+            <Field label='Default Site'
+                id='defaultSite'
+                name='defaultSite'
+                defaultValue={this.state.config.jira.workingSite}
+            >
+                {
+                    (fieldArgs: any) => {
+                        return (
+                            <Select
+                                {...fieldArgs.fieldProps}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                getOptionLabel={(option: any) => `${option.name}.${option.baseUrlSuffix}`}
+                                getOptionValue={(option: any) => option.id}
+                                options={this.state.sites}
+                                components={{ Option: IconOption, SingleValue: IconValue }}
+                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                            />
+                        );
+                    }
                 }
-            }
-        </Field>
-        <div className='ac-hmargin' />
-        <Field defaultValue={this.state.config.jira.workingProject}
-            label='Project'
-            id='project'
-            name='project'
-        >
-            {
-                (fieldArgs: any) => {
-                    return (
-                        <AsyncSelect
-                            {...fieldArgs.fieldProps}
-                            className="ac-select-container"
-                            classNamePrefix="ac-select"
-                            getOptionLabel={(option: any) => {
-                                return `${option.name} (${option.key})`;
-                            }}
-                            getOptionValue={(option: any) => {
-                                return option.key;
-                            }}
-                            onChange={chain(fieldArgs.fieldProps.onChange, this.handleProjectChange)}
-                            defaultOptions={this.state.projects}
-                            loadOptions={this.props.loadProjectOptions}
-                            placeholder="Choose a Project"
-                            isLoading={this.props.isLoading}
-                        />
-                    );
+            </Field>
+            <div className='ac-hmargin' />
+            <Field defaultValue={this.state.config.jira.workingProject}
+                label='Project'
+                id='project'
+                name='project'
+            >
+                {
+                    (fieldArgs: any) => {
+                        return (
+                            <AsyncSelect
+                                {...fieldArgs.fieldProps}
+                                className="ac-select-container"
+                                classNamePrefix="ac-select"
+                                getOptionLabel={(option: any) => {
+                                    return `${option.name} (${option.key})`;
+                                }}
+                                getOptionValue={(option: any) => {
+                                    return option.key;
+                                }}
+                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleProjectChange)}
+                                defaultOptions={this.state.projects}
+                                loadOptions={this.props.loadProjectOptions}
+                                placeholder="Choose a Project"
+                                isLoading={this.props.isLoading}
+                            />
+                        );
+                    }
                 }
-            }
-        </Field>
-    </div>;
+            </Field>
+        </div>;
     }
 }

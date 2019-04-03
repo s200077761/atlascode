@@ -8,8 +8,8 @@ import * as passport from 'passport';
 import * as http from 'http';
 import * as authinfo from './authInfo';
 import { Resources } from '../resources';
-import { ProductBitbucket, ProductJira } from '../constants';
 import { Time } from '../util/time';
+import { ProductBitbucket, ProductJira } from './authInfo';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file' : 'vscode://file';
 
@@ -41,6 +41,17 @@ export class OAuthDancer {
         scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     }, this.verify.bind(this));
 
+    private _jiraCloudStrategyStaging = new AtlassianStrategy({
+        clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
+        clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
+        authorizationURL: "https://auth.stg.atlassian.com/authorize",
+        tokenURL: "https://auth.stg.atlassian.com/oauth/token",
+        profileURL: "https://api.stg.atlassian.com/me",
+        accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
+        callbackURL: 'http://127.0.0.1:9090/' + authinfo.AuthProvider.JiraCloudStaging,
+        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+    }, this.verifyJiraStaging.bind(this));
+
     public constructor() {
         passport.serializeUser(function (user, done) {
             done(null, user);
@@ -50,16 +61,27 @@ export class OAuthDancer {
             done(null, obj);
         });
 
+        this._jiraCloudStrategyStaging.authorizationParams = () => {
+            return {
+                audience: 'api.stg.atlassian.com',
+                prompt: 'consent',
+            };
+        };
+
         passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
         passport.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
+        passport.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
         refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
         refresh.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
+        refresh.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
     }
 
     private verify(accessToken: string, refreshToken: string, profile: any, done: any): void {
         let resources: authinfo.AccessibleResource[] = [];
+
+        const isBitbucketStaging: boolean = (profile.profileUrl && profile.profileUrl.indexOf('bb-inf.net') !== -1) ? true : false;
 
         if (profile.accessibleResources) {
             profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
@@ -68,7 +90,7 @@ export class OAuthDancer {
         }
 
         let provider = profile.provider === 'atlassian' ? authinfo.AuthProvider.JiraCloud : authinfo.AuthProvider.BitbucketCloud;
-        if (profile.profileUrl && profile.profileUrl.indexOf('bb-inf.net') !== -1) {
+        if (isBitbucketStaging) {
             provider = authinfo.AuthProvider.BitbucketCloudStaging;
         }
 
@@ -79,6 +101,30 @@ export class OAuthDancer {
                 id: profile.id,
                 displayName: profile.displayName,
                 provider: provider
+            },
+            accessibleResources: resources
+        };
+
+        return done(null, profile.id);
+    }
+
+    private verifyJiraStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
+        let resources: authinfo.AccessibleResource[] = [];
+        if (profile.accessibleResources) {
+            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
+                let newresource = resource;
+                newresource.baseUrlSuffix = 'jira-dev.com';
+                resources.push(newresource);
+            });
+        }
+
+        this._authInfo = {
+            access: accessToken,
+            refresh: refreshToken,
+            user: {
+                id: profile.id,
+                displayName: profile.displayName,
+                provider: authinfo.AuthProvider.JiraCloudStaging
             },
             accessibleResources: resources
         };
@@ -114,6 +160,13 @@ export class OAuthDancer {
                     // function will not be called.
                 });
 
+            _app.get('/auth/' + authinfo.AuthProvider.JiraCloudStaging,
+                passport.authenticate(authinfo.AuthProvider.JiraCloudStaging),
+                function (req, res) {
+                    // The request will be redirected to Bitbucket for authentication, so this
+                    // function will not be called.
+                });
+
             _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
                 res.send(Resources.html.get('authSuccessHtml')!({
                     product: ProductBitbucket,
@@ -139,10 +192,21 @@ export class OAuthDancer {
                 }));
                 this.shutdown();
                 resolve(this._authInfo);
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
+            });
+
+            _app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
+                res.send(Resources.html.get('authSuccessHtml')!({
+                    product: ProductJira,
+                    vscodeurl: vscodeurl
+                }));
+                this.shutdown();
+                resolve(this._authInfo);
+                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
             });
 
             _app.get('/error', (req, res) => {
-                Logger.debug("got jira error");
+                Logger.debug("got jira error", req.query);
                 res.send(Resources.html.get('authFailureHtml')!({
                     errMessage: "We weren't able to authorize your account.",
                     actionMessage: 'Give it a moment and try again.',
@@ -163,9 +227,7 @@ export class OAuthDancer {
                 reject("authentication timed out");
             });
 
-
-            this._srv = _app.listen(9090, () => console.log('server started on port 9090'));
-
+            this._srv = http.createServer(_app).listen(9090, () => console.log('server started on port 9090'));
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/auth/${provider}`));
             this.startTimer();
         });

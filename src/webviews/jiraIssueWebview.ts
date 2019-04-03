@@ -10,7 +10,7 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
 import { isEmptySite } from '../config/model';
-import { AuthProvider } from '../atlclients/authInfo';
+import { providerForSite } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
@@ -132,7 +132,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.workingSite.name}.atlassian.net/browse/${this._state.key}`;
+                    const linkUrl = `https://${this._state.workingSite.name}.${this._state.workingSite.baseUrlSuffix}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -170,7 +170,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             this.tenantId = issue.workingSite.id;
         }
         if (!this._currentUserId) {
-            const authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
             this._currentUserId = authInfo ? authInfo.user.id : undefined;
         }
 

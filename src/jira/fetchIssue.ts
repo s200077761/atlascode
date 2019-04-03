@@ -1,10 +1,10 @@
 import { Container } from "../container";
 import { Issue, issueExpand, issueFields, issueFromJsonObject } from "./jiraModel";
-import { WorkingSite } from "../config/model";
+import { AccessibleResource } from "../atlclients/authInfo";
 
 const apiConnectivityError = new Error('cannot connect to Jira API');
 
-export async function fetchIssue(issue: string, workingSite?: WorkingSite): Promise<Issue> {
+export async function fetchIssue(issue: string, workingSite?: AccessibleResource): Promise<Issue> {
   let client = await Container.clientManager.jirarequest(workingSite);
 
   if (client) {

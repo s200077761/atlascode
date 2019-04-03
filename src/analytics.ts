@@ -1,8 +1,8 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
-import { AuthProvider, AuthInfo } from './atlclients/authInfo';
-import { ProductJira, ProductBitbucket, PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
+import { AuthProvider, AuthInfo, ProductJiraStaging, ProductBitbucketStaging, ProductJira, ProductBitbucket } from './atlclients/authInfo';
+import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 export const Registry = {
     screen: {
@@ -464,14 +464,28 @@ async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T
             if (!authInfo) {
                 authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
             }
+            if (!authInfo) {
+                authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
+            }
+            if (!authInfo) {
+                authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloudStaging);
+            }
             break;
         }
         case ProductJira: {
             authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
             break;
         }
+        case ProductJiraStaging: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
+            break;
+        }
         case ProductBitbucket: {
             authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
+            break;
+        }
+        case ProductBitbucketStaging: {
+            authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloudStaging);
             break;
         }
     }

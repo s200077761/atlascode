@@ -1,6 +1,6 @@
 import { AuthProvider } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { configuration } from '../config/configuration';
+import { configuration, isStagingSite } from '../config/configuration';
 import { JiraWorkingProjectConfigurationKey } from '../constants';
 
 export async function authenticateBitbucket() {
@@ -15,6 +15,10 @@ export async function authenticateJira() {
     authenticate(AuthProvider.JiraCloud);
 }
 
+export async function authenticateJiraStaging() {
+    authenticate(AuthProvider.JiraCloudStaging);
+}
+
 export async function clearBitbucketAuth() {
     clearAuth(AuthProvider.BitbucketCloud);
     clearAuth(AuthProvider.BitbucketCloudStaging);
@@ -22,14 +26,23 @@ export async function clearBitbucketAuth() {
 
 export async function clearJiraAuth() {
     clearAuth(AuthProvider.JiraCloud);
-    await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+    if (!isStagingSite(Container.jiraSiteManager.effectiveSite)) {
+        await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+    }
 }
 
-async function authenticate(provider:string) {
+export async function clearJiraAuthStaging() {
+    clearAuth(AuthProvider.JiraCloudStaging);
+    if (isStagingSite(Container.jiraSiteManager.effectiveSite)) {
+        await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+    }
+}
+
+async function authenticate(provider: string) {
     await Container.clientManager.authenticate(provider);
 }
 
-async function clearAuth(provider:string) {
+async function clearAuth(provider: string) {
     await Container.clientManager.removeClient(provider);
     await Container.authManager.removeAuthInfo(provider);
 }

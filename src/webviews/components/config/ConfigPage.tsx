@@ -74,12 +74,20 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.handleLogin(AuthProvider.JiraCloud);
     }
 
+    handleJiraLoginStaging = () => {
+        this.handleLogin(AuthProvider.JiraCloudStaging);
+    }
+
     handleBBLogin = () => {
         this.handleLogin(AuthProvider.BitbucketCloud);
     }
 
     handleJiraLogout = () => {
         this.handleLogout(AuthProvider.JiraCloud);
+    }
+
+    handleJiraLogoutStaging = () => {
+        this.handleLogout(AuthProvider.JiraCloudStaging);
     }
 
     handleBBLogout = () => {
@@ -132,6 +140,28 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
     }
 
+    private jiraButtonStaging(): any {
+        if (!this.state.isStagingEnabled) {
+            return;
+        }
+
+        return this.state.isJiraStagingAuthenticated
+            ? <div>
+                <hr />
+                <h3>Jira (staging)</h3>
+                <ButtonGroup>
+                    <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
+                    <Button className='ac-button' onClick={this.handleJiraLogoutStaging}>Logout</Button>
+                </ButtonGroup>
+            </div>
+
+            : <div>
+                <hr />
+                <h3>Jira (staging)</h3>
+                <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate</Button>
+            </div>;
+    }
+
     private bitBucketButton(): any {
         if (this.state.isBitbucketAuthenticated) {
             return (<Button className='ac-button'
@@ -172,6 +202,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                                         <h3>Jira</h3>
                                         {this.jiraButton()}
+                                        {this.jiraButtonStaging()}
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         <hr />
                                         <h3>Bitbucket</h3>

@@ -184,9 +184,9 @@ export default class JiraIssuePage extends WebviewComponent<
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
               {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} href={`https://${issue.workingSite.name}.atlassian.net/browse/${issue.parentKey}`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.parentKey}`} />} />
               }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.atlassian.net/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
             </BreadcrumbsStateless>
           }>
           <p>{issue.summary}</p>

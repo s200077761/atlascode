@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscode";
 import { Container } from "../container";
-import { configuration, emptyWorkingSite, WorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite } from "../config/configuration";
+import { configuration, emptyWorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
@@ -16,6 +16,8 @@ type OrderBy = "category" | "-category" | "+category" | "key" | "-key" | "+key" 
 export class JiraSiteManager extends Disposable {
     private _disposable: Disposable;
     private _sitesAvailable: AccessibleResource[] = [];
+    private _prodSitesAvailable: AccessibleResource[] = [];
+    private _stagingSitesAvailable: AccessibleResource[] = [];
     private _projectsAvailable: Project[] = [];
 
     private _onDidSiteChange = new EventEmitter<JiraSiteUpdateEvent>();
@@ -46,21 +48,36 @@ export class JiraSiteManager extends Disposable {
         if (initializing || configuration.changed(e, 'jira.workingSite')) {
             this._projectsAvailable = [];
 
-            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-                await this.getProjects().then(projects => {
-                    this._projectsAvailable = projects;
-                });
-            }
+            await this.getProjects().then(projects => {
+                this._projectsAvailable = projects;
+            });
 
             this._onDidSiteChange.fire({ sites: this._sitesAvailable, projects: this._projectsAvailable });
         }
     }
 
     async onDidAuthChange(e: AuthInfoEvent) {
-        this._sitesAvailable = [];
         this._projectsAvailable = [];
-        if (e.provider === AuthProvider.JiraCloud && e.authInfo && e.authInfo.accessibleResources) {
-            this._sitesAvailable = e.authInfo.accessibleResources;
+
+        switch (e.provider) {
+            case AuthProvider.JiraCloud: {
+                this._prodSitesAvailable = [];
+                if (e.authInfo && e.authInfo.accessibleResources) {
+                    this._prodSitesAvailable = e.authInfo.accessibleResources;
+                }
+                break;
+            }
+            case AuthProvider.JiraCloudStaging: {
+                this._stagingSitesAvailable = [];
+                if (e.authInfo && e.authInfo.accessibleResources) {
+                    this._stagingSitesAvailable = e.authInfo.accessibleResources;
+                }
+                break;
+            }
+        }
+
+        if (e.provider === AuthProvider.JiraCloud || e.provider === AuthProvider.JiraCloudStaging) {
+            this._sitesAvailable = this._prodSitesAvailable.concat(this._stagingSitesAvailable);
 
             await this.getProjects().then(projects => {
                 this._projectsAvailable = projects;
@@ -107,17 +124,30 @@ export class JiraSiteManager extends Disposable {
 
     public async getSitesAvailable() {
         if (this._sitesAvailable.length < 1) {
+
+            this._sitesAvailable = [];
+            this._prodSitesAvailable = [];
+            this._stagingSitesAvailable = [];
+
             const ai = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
 
             if (ai && ai.accessibleResources) {
-                this._sitesAvailable = ai.accessibleResources;
+                this._prodSitesAvailable = ai.accessibleResources;
             }
+
+            const ais = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
+
+            if (ais && ais.accessibleResources) {
+                this._stagingSitesAvailable = ais.accessibleResources;
+            }
+
+            this._sitesAvailable = this._prodSitesAvailable.concat(this._stagingSitesAvailable);
         }
 
         return this._sitesAvailable;
     }
 
-    public get effectiveSite(): WorkingSite {
+    public get effectiveSite(): AccessibleResource {
         let workingSite = emptyWorkingSite;
         const configSite = Container.config.jira.workingSite;
 

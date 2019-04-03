@@ -1,8 +1,8 @@
-import { AuthInfo, AuthProvider, emptyAuthInfo } from './authInfo';
+import { AuthInfo, AuthProvider, emptyAuthInfo, productForProvider } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event } from 'vscode';
 import { Logger } from '../logger';
-import { setCommandContext, CommandContext, ProductJira, ProductBitbucket } from '../constants';
+import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
 import { Container } from '../container';
 import debounce from 'lodash.debounce';
@@ -35,11 +35,17 @@ export class AuthManager implements Disposable {
         return await this._debouncedKeychain[provider]();
     }
 
-    public async isAuthenticated(provider: string): Promise<boolean> {
-        const info: AuthInfo | undefined = await this.getAuthInfo(provider);
-        const isAuthed: boolean = (info !== undefined && info !== emptyAuthInfo);
+    public async isAuthenticated(provider: string, anyJira: boolean = true): Promise<boolean> {
+        let info: AuthInfo | undefined = await this.getAuthInfo(provider);
+        let isAuthed: boolean = (info !== undefined && info !== emptyAuthInfo);
+
+        if (!isAuthed && anyJira && provider === AuthProvider.JiraCloud) {
+            info = await this.getAuthInfo(AuthProvider.JiraCloudStaging);
+            isAuthed = (info !== undefined && info !== emptyAuthInfo);
+        }
         return isAuthed;
     }
+
     public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
         if (this._memStore.has(provider)) {
             return this._memStore.get(provider) as AuthInfo;
@@ -50,6 +56,14 @@ export class AuthManager implements Disposable {
                 let infoEntry = await this.getPassword(provider) || undefined;
                 if (infoEntry) {
                     let info: AuthInfo = JSON.parse(infoEntry);
+                    if (info.accessibleResources) {
+                        info.accessibleResources.forEach(resource => {
+                            if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
+                                resource.baseUrlSuffix = "atlassian.net";
+                            }
+                        });
+                    }
+
                     this._memStore.set(provider, info);
                     return info;
                 }
@@ -63,6 +77,15 @@ export class AuthManager implements Disposable {
 
     public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
         const oldInfo = await this.getAuthInfo(provider);
+
+        if (info.accessibleResources) {
+            info.accessibleResources.forEach(resource => {
+                if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
+                    resource.baseUrlSuffix = "atlassian.net";
+                }
+            });
+        }
+
         this._memStore.set(provider, info);
 
         const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
@@ -89,6 +112,7 @@ export class AuthManager implements Disposable {
     private commandContextFor(provider: string): string | undefined {
         switch (provider) {
             case AuthProvider.JiraCloud:
+            case AuthProvider.JiraCloudStaging:
                 return CommandContext.IsJiraAuthenticated;
             case AuthProvider.BitbucketCloud:
                 return CommandContext.IsBBAuthenticated;
@@ -99,7 +123,7 @@ export class AuthManager implements Disposable {
     }
 
     public async removeAuthInfo(provider: string): Promise<boolean> {
-        const product = provider === AuthProvider.JiraCloud ? ProductJira : ProductBitbucket;
+        const product = productForProvider(provider);
 
         let wasMemDeleted = this._memStore.delete(provider);
         let wasKeyDeleted = false;
@@ -109,8 +133,11 @@ export class AuthManager implements Disposable {
         }
 
         if (wasMemDeleted || wasKeyDeleted) {
-            const cmdctx = provider === AuthProvider.JiraCloud ? CommandContext.IsJiraAuthenticated : CommandContext.IsBBAuthenticated;
-            setCommandContext(cmdctx, false);
+            const cmdctx = this.commandContextFor(provider);
+            if (cmdctx) {
+                setCommandContext(cmdctx, false);
+            }
+
             this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
             window.showInformationMessage(`You have been logged out of ${product}`);
 
