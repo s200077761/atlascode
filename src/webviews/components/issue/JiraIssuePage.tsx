@@ -215,6 +215,11 @@ export default class JiraIssuePage extends WebviewComponent<
           primaryText={issue.assignee.displayName || "Unassigned"}
         />
         {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+        <h3>Reporter</h3>
+        <AvatarItem
+          avatar={<Avatar src={issue.reporter.avatarUrls["48x48"]} />}
+          primaryText={issue.reporter.displayName || "Unknown"}
+        />
         <h3>Labels</h3>
         {this.tags(issue.labels)}
         <h3>Components</h3>
