@@ -51,6 +51,7 @@ export interface CreatePullRequest extends Action {
     sourceBranch: Branch;
     destinationBranch: Branch;
     pushLocalChanges: boolean;
+    closeSourceBranch: boolean;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
