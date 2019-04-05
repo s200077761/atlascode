@@ -19,6 +19,8 @@ import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 
+const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
+
 type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
 type IssueType = { id: string, name: string, iconUrl: string };
@@ -42,7 +44,9 @@ const emptyState: ViewState = {
     selectedIssueTypeId: '',
     defaultIssueType: {},
     issueTypeScreens: {},
-    fieldValues: {},
+    fieldValues: {
+        description: createdFromAtlascodeFooter
+    },
     fieldOptions: {},
     isSomethingLoading: false,
     loadingField: '',
@@ -173,7 +177,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'preliminaryIssueData': {
                 const data = e as PreliminaryIssueData;
-                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ description: data.description, summary: data.summary } } });
+                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ description: `${data.description}${createdFromAtlascodeFooter}`, summary: data.summary } } });
                 break;
             }
             case 'optionCreated': {
@@ -184,7 +188,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'issueCreated': {
                 if (isIssueCreated(e)) {
-                    this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: '', summary: '' } } });
+                    this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
                 }
                 break;
             }
@@ -502,7 +506,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                         <textarea {...fieldArgs.fieldProps}
                                             style={{ width: '100%', display: 'block' }}
                                             className='ac-textarea'
-                                            rows={3}
+                                            rows={5}
                                             disabled={this.state.isSomethingLoading}
                                         />
                                         {errDiv}
