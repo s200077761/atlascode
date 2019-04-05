@@ -4,6 +4,10 @@ import { FeedbackData } from './ipc/configActions';
 import { AuthProvider, AuthInfo, ProductJiraStaging, ProductBitbucketStaging, ProductJira, ProductBitbucket } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
+// IMPORTANT
+// Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
+// https://data-portal.us-east-1.prod.public.atl-paas.net/analytics/registry?filter=externalProductIntegrations
+
 export const Registry = {
     screen: {
         pullRequestDiffScreen: 'pullRequestDiffScreen'
@@ -201,26 +205,26 @@ export async function startIssueCreationEvent(source: string): Promise<TrackEven
     return trackEvent('create', 'jiraIssue', { source: source });
 }
 
-async function tenantTrackEvent(tenentId: string, action: string, actionSubject: string, otherStuff: any = {}): Promise<TrackEvent> {
+async function tenantTrackEvent(tenentId: string, action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
     const e = {
         tenantIdType: 'cloudId',
         tenantId: tenentId,
-        trackEvent: event(action, actionSubject, otherStuff)
+        trackEvent: event(action, actionSubject, attributes)
     };
 
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-async function trackEvent(action: string, actionSubject: string, otherStuff: any = {}): Promise<TrackEvent> {
+async function trackEvent(action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
     const e = {
         tenantIdType: null,
-        trackEvent: event(action, actionSubject, otherStuff)
+        trackEvent: event(action, actionSubject, attributes)
     };
 
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-function event(action: string, actionSubject: string, otherStuff: any): any {
+function event(action: string, actionSubject: string, attributes: any): any {
     var event = {
         origin: 'desktop',
         platform: AnalyticsPlatform.for(process.platform),
@@ -228,11 +232,10 @@ function event(action: string, actionSubject: string, otherStuff: any): any {
         actionSubject: actionSubject,
         source: 'vscode'
     };
-    return Object.assign(event, otherStuff);
+    return Object.assign(event, attributes);
 }
 
 async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T> {
-    console.log(JSON.stringify(e));
     let userType = 'anonymousId';
     let userId = Container.machineId;
     let authInfo: AuthInfo | undefined = undefined;
