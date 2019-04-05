@@ -151,7 +151,10 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
   }
 
-  iconForState(state: PipelineState): any {
+  iconForState(state?: PipelineState): any {
+    if (!state) {
+      return Status.Unknown;
+    }
     switch (statusForState(state)) {
       case Status.Successful:
         return successIcon;
@@ -204,6 +207,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
   headerIconForStage(stage: PipelineStage): any {
     switch (stage.type) {
+      case "pipeline_state_in_progress_running":
       case "pipeline_step_in_progress_pending":
       case "pipeline_step_state_pending_pending":
         return headerInprogressIcon;
