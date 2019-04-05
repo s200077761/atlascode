@@ -36,6 +36,7 @@ interface MyState {
     sourceRemoteBranchName?: string;
     destinationBranch?: { label: string; value: Ref };
     pushLocalChanges: boolean;
+    closeSourceBranch: boolean;
     commits: Bitbucket.Schema.Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -54,6 +55,7 @@ const emptyState = {
     summary: '',
     summaryManuallyEdited: false,
     pushLocalChanges: true,
+    closeSourceBranch: false,
     reviewers: [],
     commits: [],
     isCreateButtonLoading: false,
@@ -193,6 +195,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({ pushLocalChanges: e.target.checked });
     }
 
+    handleCloseSourceBranchChange = (e: any) => {
+        this.setState({ closeSourceBranch: e.target.checked });
+    }
+
     handleCreatePR = (e: any) => {
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
@@ -205,6 +211,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             sourceBranch: this.state.sourceBranch!.value,
             destinationBranch: this.state.destinationBranch!.value,
             pushLocalChanges: this.state.pushLocalChanges,
+            closeSourceBranch: this.state.closeSourceBranch
         });
     }
 
@@ -399,6 +406,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                     }
                                                 }
                                             </Field>
+                                        </div>
+
+                                        <div className='ac-vpadding'>
+                                            <Checkbox
+                                                label={'Close source branch after the pull request is merged'}
+                                                isChecked={this.state.closeSourceBranch}
+                                                onChange={this.handleCloseSourceBranchChange}
+                                                name="close-source-branch-enabled" />
                                         </div>
 
                                         <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>

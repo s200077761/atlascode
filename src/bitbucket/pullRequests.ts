@@ -221,7 +221,9 @@ export namespace PullRequestApi {
                 summary: pr.data.summary,
                 source: pr.data.source,
                 destination: pr.data.destination,
-                reviewers: pr.data.reviewers
+                reviewers: pr.data.reviewers,
+                close_source_branch: pr.data.close_source_branch
+
             }
         });
 

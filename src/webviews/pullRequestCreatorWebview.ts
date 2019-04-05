@@ -132,7 +132,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges } = createPullRequestAction;
+        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch } = createPullRequestAction;
         const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
@@ -158,7 +158,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     name: destinationBranchName
                 }
             },
-            reviewers: reviewers
+            reviewers: reviewers,
+            close_source_branch: closeSourceBranch
         };
 
         await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
