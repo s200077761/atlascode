@@ -105,6 +105,9 @@ export class PullRequestTitlesNode extends BaseNode {
         if (fileChanges.next) {
             result.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
         }
+        if (allComments.next) {
+            result.push(new EmptyStateNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
+        }
         return result;
     }
 
