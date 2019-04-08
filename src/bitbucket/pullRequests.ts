@@ -18,7 +18,7 @@ export const bitbucketHosts = new Map()
 export const maxItemsSupported = {
     commits: 100,
     comments: 100,
-    fileChanges: 100,
+    fileChanges: 500,
     reviewers: 100
 };
 export const defaultPagelen = 25;
@@ -132,7 +132,8 @@ export namespace PullRequestApi {
         let { data } = await bb.pullrequests.getDiffStat({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
-            username: parsed.owner
+            username: parsed.owner,
+            pagelen: maxItemsSupported.fileChanges
         });
 
         return data.values ? { data: data.values as Bitbucket.Schema.Diffstat[], next: data.next } : { data: [], next: undefined };
