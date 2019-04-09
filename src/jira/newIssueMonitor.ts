@@ -81,14 +81,14 @@ export class NewIssueMonitor implements Disposable {
   }
 
   private showNotification(newIssues: Issue[]) {
-    const issueNames = newIssues.map(issue => `"${issue.summary}"`);
+    const issueNames = newIssues.map(issue => `[${issue.key}] "${issue.summary}"`);
     commands.executeCommand(Commands.RefreshJiraExplorer);
     var message = "";
     if (newIssues.length === 1) {
       message = `${issueNames[0]} added to ${this._workingProject!.name}`;
     }
     else if (newIssues.length <= 3) {
-      message = `Issues ${issueNames.slice(0, -1).join(', ')} and ${issueNames.slice(-1)} added to ${this._workingProject!.name}`;
+      message = `${issueNames.slice(0, -1).join(', ')} and ${issueNames.slice(-1)} added to ${this._workingProject!.name}`;
     }
     else {
       message = `${issueNames.slice(0, 2).join(', ')} and ${newIssues.length - 2} other new issues added to ${this._workingProject!.name}.`;
