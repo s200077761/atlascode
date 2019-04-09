@@ -11,7 +11,9 @@ import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult,
 import {
   emptyIssue,
   Transition,
-  emptyTransition
+  emptyTransition,
+  Issue,
+  isIssue
 } from "../../../jira/jiraModel";
 import {
   StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction, RefreshIssueAction
@@ -25,15 +27,18 @@ import NavItem from "./NavItem";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
+import { StartWorkOnBitbucketIssueData, isStartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
+import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/bitbucketIssueActions";
 
-type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction;
-type Accept = StartWorkOnIssueData | HostErrorMessage;
+type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
+type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
 
 type BranchNameOption = { label: string, value: string };
 type State = {
-  data: StartWorkOnIssueData;
+  data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData;
+  issueType: 'jiraIssue' | 'bitbucketIssue',
   jiraSetupEnabled: boolean;
   bitbucketSetupEnabled: boolean;
   transition: Transition;
@@ -51,6 +56,7 @@ type State = {
 
 const emptyState: State = {
   data: { type: 'update', issue: emptyIssue, repoData: [] },
+  issueType: 'jiraIssue',
   jiraSetupEnabled: true,
   bitbucketSetupEnabled: true,
   transition: emptyTransition,
@@ -94,33 +100,31 @@ export default class StartWorkPage extends WebviewComponent<
         if (isStartWorkOnIssueData(e) && e.issue.key.length > 0) {
           const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
           const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
-          const branchOptions = this.state.branchOptions.length > 0
-            ? this.state.branchOptions
-            : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(e.issue.key.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
-          let generatedBranchNameOption = undefined;
-          const localBranch = this.state.localBranch
-            ? this.state.localBranch
-            : branchOptions.length > 0 && branchOptions[0].options.length > 0
-              ? this.createLocalBranchOption(branchOptions[0].options[0].value)
-              : generatedBranchNameOption = this.createLocalBranchOption(`${e.issue.key}-${e.issue.summary.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
-          if (generatedBranchNameOption) {
-            branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
-          }
-          const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
-          const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
-          const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
 
-          this.setState({
-            data: e,
-            repo: repo,
-            sourceBranch: sourceBranch,
-            transition: transition,
-            branchOptions: branchOptions,
-            localBranch: localBranch,
-            remote: remote,
-            bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled,
-            isErrorBannerOpen: false, errorDetails: undefined
-          });
+
+          const issueType = 'jiraIssue';
+          const issueId = e.issue.key;
+          const issueTitle = e.issue.summary;
+          this.updateState(e, issueType, repo, issueId, issueTitle, transition);
+        }
+        else { // empty issue
+          this.setState(emptyState);
+        }
+        break;
+      }
+
+      case 'startWorkOnBitbucketIssueData': {
+        if (isStartWorkOnBitbucketIssueData(e)) {
+          let repo = this.state.repo;
+          if (this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0) {
+            const issueRepo = e.repoData.find(r => r.href === e.issue.repository!.links!.html!.href) || e.repoData[0];
+            repo = { label: issueRepo.uri.split('/').pop()!, value: issueRepo };
+          }
+
+          const issueType = 'bitbucketIssue';
+          const issueId = `issue-#${e.issue.id!.toString()}`;
+          const issueTitle = e.issue.title!;
+          this.updateState(e, issueType, repo, issueId, issueTitle, emptyTransition);
         }
         else { // empty issue
           this.setState(emptyState);
@@ -151,17 +155,19 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   onHandleStatusChange = (item: any) => {
-    const transition = this.state.data.issue.transitions.find(
-      trans =>
-        trans.id === item.target.parentNode.parentNode.dataset.transitionId
-    );
+    if (isStartWorkOnIssueData(this.state.data)) {
+      const transition = this.state.data.issue.transitions.find(
+        trans =>
+          trans.id === item.target.parentNode.parentNode.dataset.transitionId
+      );
 
-    if (transition) {
-      this.setState({
-        // there must be a better way to update the transition dropdown!!
-        data: { ...this.state.data, issue: { ...this.state.data.issue, status: { ...this.state.data.issue.status, id: transition.to.id, name: transition.to.name } } },
-        transition: transition
-      });
+      if (transition) {
+        this.setState({
+          // there must be a better way to update the transition dropdown!!
+          data: { ...this.state.data, issue: { ...this.state.data.issue, status: { ...this.state.data.issue.status, id: transition.to.id, name: transition.to.name } } },
+          transition: transition
+        });
+      }
     }
   }
 
@@ -221,12 +227,86 @@ export default class StartWorkPage extends WebviewComponent<
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
   }
 
+  private updateState(data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData, issueType: 'jiraIssue' | 'bitbucketIssue', repo: { label: string; value: RepoData; }, issueId: string, issueTitle: string, transition: Transition) {
+    const branchOptions = this.state.branchOptions.length > 0
+      ? this.state.branchOptions
+      : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
+    let generatedBranchNameOption = undefined;
+    const localBranch = this.state.localBranch
+      ? this.state.localBranch
+      : branchOptions.length > 0 && branchOptions[0].options.length > 0
+        ? this.createLocalBranchOption(branchOptions[0].options[0].value)
+        : generatedBranchNameOption = this.createLocalBranchOption(`${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
+    if (generatedBranchNameOption) {
+      branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
+    }
+    const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
+    const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
+    const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
+    this.setState({
+      data: data,
+      issueType: issueType,
+      repo: repo,
+      sourceBranch: sourceBranch,
+      transition: transition,
+      branchOptions: branchOptions,
+      localBranch: localBranch,
+      remote: remote,
+      bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled,
+      isErrorBannerOpen: false, errorDetails: undefined
+    });
+  }
+
   render() {
+    if (isStartWorkOnIssueData(this.state.data) && this.state.data.issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      return <div className='ac-block-centered'>waiting for data... <Spinner size="large" /></div>;
+    }
+
     const issue = this.state.data.issue;
     const repo = this.state.repo;
 
-    if (issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
-      return <div className='ac-block-centered'>waiting for data... <Spinner size="large" /></div>;
+    let pageHeader =
+      <GridColumn medium={8}>
+        <em><p>Start work on:</p></em>
+      </GridColumn>;
+
+    if (this.state.issueType === 'jiraIssue' && isIssue(issue)) {
+      pageHeader = <GridColumn medium={8}>
+        <em><p>Start work on:</p></em>
+        <PageHeader
+          actions={undefined}
+          breadcrumbs={
+            <BreadcrumbsStateless onExpand={() => { }}>
+              {issue.parentKey &&
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
+              }
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+            </BreadcrumbsStateless>
+          }
+        >
+          <p>{issue.summary}</p>
+        </PageHeader>
+        <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
+      </GridColumn>;
+    }
+    else if (this.state.issueType === 'bitbucketIssue') {
+      const bbIssue = issue as Bitbucket.Schema.Issue;
+      pageHeader = <GridColumn medium={8}>
+        <em><p>Start work on:</p></em>
+        <PageHeader
+          actions={undefined}
+          breadcrumbs={
+            <BreadcrumbsStateless onExpand={() => { }}>
+              <BreadcrumbsItem component={() => <NavItem text={bbIssue.repository!.name!} href={bbIssue.repository!.links!.html!.href} />} />
+              <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${bbIssue.repository!.links!.html!.href}/issues`} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`Issue #${bbIssue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: bbIssue })} onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })} />} />
+            </BreadcrumbsStateless>
+          }
+        >
+          <p>{bbIssue.title}</p>
+        </PageHeader>
+        <p dangerouslySetInnerHTML={{ __html: bbIssue.content!.html! }} />
+      </GridColumn>;
     }
 
     return (
@@ -248,37 +328,23 @@ export default class StartWorkPage extends WebviewComponent<
               <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
             }
           </GridColumn>
-          <GridColumn medium={8}>
-            <em><p>Start work on:</p></em>
-            <PageHeader
-              actions={undefined}
-              breadcrumbs={
-                <BreadcrumbsStateless onExpand={() => { }}>
-                  {issue.parentKey &&
-                    <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
-                  }
-                  <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
-                </BreadcrumbsStateless>
-              }
-            >
-              <p>{issue.summary}</p>
-            </PageHeader>
-            <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
-          </GridColumn>
-          <GridColumn medium={6}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox isChecked={this.state.jiraSetupEnabled} onChange={this.toggleJiraSetupEnabled} name='setup-jira-checkbox' />
-              <h4>Transition issue</h4>
-            </div>
-            {this.state.jiraSetupEnabled &&
-              <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
-                <div style={{ margin: 10 }}>
-                  <label>Select new status</label>
-                  <TransitionMenu issue={issue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
-                </div>
+          {pageHeader}
+          {this.state.issueType === 'jiraIssue' &&
+            <GridColumn medium={6}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Checkbox isChecked={this.state.jiraSetupEnabled} onChange={this.toggleJiraSetupEnabled} name='setup-jira-checkbox' />
+                <h4>Transition issue</h4>
               </div>
-            }
-          </GridColumn>
+              {this.state.jiraSetupEnabled &&
+                <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                  <div style={{ margin: 10 }}>
+                    <label>Select new status</label>
+                    <TransitionMenu issue={issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
+                  </div>
+                </div>
+              }
+            </GridColumn>
+          }
           <GridColumn medium={12} />
           <GridColumn medium={6}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
