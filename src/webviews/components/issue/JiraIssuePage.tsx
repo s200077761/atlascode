@@ -36,6 +36,7 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { OpenPullRequest } from "../../../ipc/prActions";
+import PullRequests from "./PullRequests";
 
 type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -228,8 +229,10 @@ export default class JiraIssuePage extends WebviewComponent<
         {this.tags(fixVersions)}
         {this.state.data.recentPullRequests && this.state.data.recentPullRequests.length > 0 &&
           <React.Fragment>
-            <Tooltip content='Recent pullrequests from workspace repositories'><h3>Recent pullrequests</h3></Tooltip>
-            {this.state.data.recentPullRequests.map(pr => <Button appearance='link' onClick={() => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })}>{`${pr.destination!.repository!.name} - Pull request #${pr.id}`}</Button>)}
+            <Tooltip content='Recent pull requests from workspace repositories'><h3>Recent pull requests</h3></Tooltip>
+            {this.state.data.recentPullRequests.map(pr => {
+              return <PullRequests pullRequests={this.state.data.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })} />;
+            })}
           </React.Fragment>
         }
       </div>
