@@ -23,6 +23,10 @@ import { colors } from "@atlaskit/theme";
 import * as moment from "moment";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
+import PageHeader from '@atlaskit/page-header';
+import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
+import NavItem from "../issue/NavItem";
+import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -50,7 +54,6 @@ const headerSuccessIcon = (
   <CheckCircleIcon
     primaryColor={colors.N0}
     secondaryColor={colors.G400}
-    size="large"
     label="build successful"
   />
 );
@@ -58,7 +61,6 @@ const headerInprogressIcon = (
   <RecentIcon
     primaryColor={colors.N0}
     secondaryColor={colors.B300}
-    size="large"
     label="build in progress"
   />
 );
@@ -71,7 +73,6 @@ const headerErrorIcon = (
   <ErrorIcon
     primaryColor={colors.N0}
     secondaryColor={colors.R400}
-    size="large"
     label="build failure"
   />
 );
@@ -80,7 +81,7 @@ const builtTimeIcon = (
   <RecentIcon primaryColor={colors.N0} label="build in progress" />
 );
 
-type Emit = Action;
+type Emit = Action | CopyPipelineLinkAction;
 
 type Properties = {
   pipeline: Pipeline;
@@ -95,6 +96,9 @@ type State = {
 };
 
 const emptyPipeline: PipelineData = {
+  repository: {
+    type: ''
+  },
   type: "",
   build_number: 0,
   uuid: "",
@@ -323,6 +327,19 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         <Page>
           <Grid spacing="comfortable" layout="fixed">
             <GridColumn medium={12}>
+              <PageHeader
+                breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
+                  <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.links!.html!.href} />} />
+                  <BreadcrumbsItem component={() => <NavItem text='Pipelines' href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home`} />} />
+                  <BreadcrumbsItem component={() => <NavItem
+                    text={`Pipeline #${this.state.pipeline.build_number}`}
+                    href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}`}
+                    onCopy={() => this.postMessage({ action: 'copyPipelineLink', href: `${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}` })} />} />
+                </BreadcrumbsStateless>}
+              >
+                <p>Pipeline #{this.state.pipeline.build_number}</p>
+              </PageHeader>
+
               <div
                 className="pipeline-head"
                 style={{
@@ -331,8 +348,6 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
               >
                 <span className="pipeline-head-item">
                   {this.headerIconForState(this.state.pipeline.state)}
-                </span>
-                <span className="pipeline-head-item">
                   #{this.state.pipeline.build_number}
                 </span>
                 <span className="pipeline-head-item">
@@ -343,7 +358,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
                   {calendarIcon}
                   {moment(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on).fromNow()}
                 </span>
-                <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} />
+                <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} size="small" />
               </div>
               {this.steps()}
             </GridColumn>

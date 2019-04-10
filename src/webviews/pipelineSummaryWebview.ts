@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
@@ -6,6 +7,7 @@ import { Pipeline, PipelineStep } from "../pipelines/model";
 import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
 
 type Emit = PipelineData | StepMessageData | HostErrorMessage;
 
@@ -91,6 +93,14 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
                 case 'refresh': {
                     handled = true;
                     this.invalidate();
+                    break;
+                }
+                case 'copyPipelineLink': {
+                    handled = true;
+                    if (isCopyPipelineLinkAction(e)) {
+                        await vscode.env.clipboard.writeText(e.href!);
+                        vscode.window.showInformationMessage(`Copied pipeline link to clipboard - ${e.href}`);
+                    }
                     break;
                 }
             }
