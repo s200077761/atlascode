@@ -2,6 +2,7 @@ import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn } from 'vsc
 import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { PullRequestApi, GitUrlParse } from '../../bitbucket/pullRequests';
+import { startIssueCreationEvent } from '../../analytics';
 
 export interface TodoIssueData {
     summary: string;
@@ -19,12 +20,15 @@ export function createIssue(data: Uri | TodoIssueData | undefined) {
             onCreated: annotateComment,
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
+        startIssueCreationEvent('todoComment').then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
     } else if (isUri(data) && data.scheme === 'file') {
         Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
+        startIssueCreationEvent('contextMenu').then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
     }
     Container.createIssueWebview.createOrShow();
+    startIssueCreationEvent('explorer').then(e => { Container.analyticsClient.sendTrackEvent(e); });
 }
 
 function isTodoIssueData(a: any): a is TodoIssueData {
