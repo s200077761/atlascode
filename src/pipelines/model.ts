@@ -1,4 +1,5 @@
 export interface Pipeline {
+    repository: Bitbucket.Schema.Repository;
     build_number: number;
     created_on: string;
     creator_name?: string;

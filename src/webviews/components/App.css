@@ -606,7 +606,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .pipeline-head {
   border-radius: 5px;
-  font-size: 2em;
+  font-size: 1.25em;
   font-weight: bold;
   color: white;
   padding: 0.5em;
@@ -617,6 +617,8 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 .pipeline-head-item {
   margin-left: 0.25em;
   margin-right: 0.25em;
+  display: inline-flex;
+  align-items: center;
 }
 
 .pipeline-head div {
@@ -631,7 +633,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 }
 
 .pipeline-step-head {
-  font-size: 1.5em;
+  font-size: 1.25em;
   font-weight: bold;
   margin-left: 0.2em;
   margin-right: 0.2em;
@@ -640,7 +642,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 }
 
 .pipeline-step-subhead {
-  font-size: 1.2em;
+  font-size: 1em;
   font-weight: bold;
   margin-left: 0.2em;
   margin-right: 0.2em;
@@ -650,7 +652,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .pipeline-command {
   font-family: Monaco, "Courier New", Courier, monospace;
-  font-size: 1.2em;
+  font-size: 1em;
   margin-left: 1em;
   margin-top: 0.5em;
   margin-bottom: 0.5em;

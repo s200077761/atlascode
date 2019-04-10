@@ -193,6 +193,7 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   }
 
   return {
+    repository: pipeline.repository!,
     build_number: pipeline.build_number!,
     created_on: pipeline.created_on!,
     creator_name: name,
