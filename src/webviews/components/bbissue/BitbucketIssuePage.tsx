@@ -22,9 +22,9 @@ import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
 import Comments from "../pullrequest/Comments";
 import CommentForm from "../pullrequest/CommentForm";
-import { PostComment, CopyBitbucketIssueLink, PostChange, AssignToMe } from "../../../ipc/bitbucketIssueActions";
+import { PostComment, CopyBitbucketIssueLink, PostChange, AssignToMe, OpenStartWorkPageAction } from "../../../ipc/bitbucketIssueActions";
 import { StatusMenu } from "./StatusMenu";
-import Button from "@atlaskit/button";
+import Button, { ButtonGroup } from "@atlaskit/button";
 import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import OpenIcon from '@atlaskit/icon/glyph/open';
 import { HostErrorMessage } from "../../../ipc/messaging";
@@ -52,7 +52,7 @@ const typeIcon = {
     task: <TaskIcon label='task' primaryColor='0x2684FF' />
 };
 
-type Emit = PostComment | PostChange | CopyBitbucketIssueLink | AssignToMe | RefreshIssueAction;
+type Emit = PostComment | PostChange | CopyBitbucketIssueLink | AssignToMe | RefreshIssueAction | OpenStartWorkPageAction;
 type Receive = BitbucketIssueData | HostErrorMessage;
 
 type MyState = {
@@ -178,7 +178,9 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                 }
                                 <PageHeader
-                                    actions={null}
+                                    actions={<ButtonGroup>
+                                        <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
+                                    </ButtonGroup>}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                                         <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />
                                         <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issue.repository!.links!.html!.href}/issues`} />} />

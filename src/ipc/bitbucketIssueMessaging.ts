@@ -1,4 +1,5 @@
 import { Message } from "./messaging";
+import { RepoData } from "./prMessaging";
 
 export interface BitbucketIssueData extends Message {
     issue: Bitbucket.Schema.Issue;
@@ -12,12 +13,16 @@ export interface CreateBitbucketIssueData extends Message {
     repoData: RepoData[];
 }
 
-export interface RepoData {
-    uri: string;
-    href: string;
-    avatarUrl: string;
+export interface StartWorkOnBitbucketIssueData extends Message {
+    type: 'startWorkOnBitbucketIssueData';
+    issue: Bitbucket.Schema.Issue;
+    repoData: RepoData[];
 }
 
 export function isCreateBitbucketIssueData(a: Message): a is CreateBitbucketIssueData {
     return (<CreateBitbucketIssueData>a).type === 'createBitbucketIssueData';
+}
+
+export function isStartWorkOnBitbucketIssueData(a: Message): a is StartWorkOnBitbucketIssueData {
+    return (<StartWorkOnBitbucketIssueData>a).type === 'startWorkOnBitbucketIssueData';
 }

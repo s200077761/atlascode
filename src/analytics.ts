@@ -197,6 +197,36 @@ export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
     return await anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function bbIssueWorkStartedEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'workStarted',
+            actionSubject: 'bbIssue',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
+export async function bbIssueUrlCopiedEvent(): Promise<TrackEvent> {
+    const e = {
+        tenantIdType: null,
+        trackEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'copied',
+            actionSubject: 'bbIssueUrl',
+            source: 'vscode'
+        }
+    };
+
+    return await anyUserOrAnonymous<TrackEvent>(e);
+}
+
 export async function pipelineStartEvent(): Promise<TrackEvent> {
     return trackEvent('start', 'pipeline');
 }

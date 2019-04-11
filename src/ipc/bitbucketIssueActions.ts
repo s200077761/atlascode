@@ -48,3 +48,12 @@ export interface OpenBitbucketIssueAction extends Action {
 export function isOpenBitbucketIssueAction(a: Action): a is OpenBitbucketIssueAction {
     return (<OpenBitbucketIssueAction>a).issue !== undefined;
 }
+
+export interface OpenStartWorkPageAction extends Action {
+    action: 'openStartWorkPage';
+    issue: Bitbucket.Schema.Issue;
+}
+
+export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
+    return (<OpenStartWorkPageAction>a).issue !== undefined;
+}
