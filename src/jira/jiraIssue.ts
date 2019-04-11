@@ -117,7 +117,7 @@ export function isAttachment(a: any): a is Attachment {
 
 export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource): Issue {
     let jsonComments: any[] = [];
-    if (issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
+    if (issueJson.renderedFields && issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
         jsonComments = issueJson.renderedFields.comment.comments;
     }
     else if (issueJson.fields.comment && issueJson.fields.comment.comments) {
