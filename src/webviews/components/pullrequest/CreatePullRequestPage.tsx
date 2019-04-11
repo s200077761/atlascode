@@ -20,6 +20,8 @@ import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 
+const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
+
 type Emit = CreatePullRequest | FetchDetails | RefreshPullRequest;
 type Receive = CreatePRData | CommitsResult;
 
@@ -52,7 +54,7 @@ const emptyState = {
     },
     title: 'Pull request title',
     titleManuallyEdited: false,
-    summary: '',
+    summary: createdFromAtlascodeFooter,
     summaryManuallyEdited: false,
     pushLocalChanges: true,
     closeSourceBranch: false,
@@ -171,7 +173,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             title: this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)
                 ? this.state.sourceBranch!.label
                 : this.state.title,
-            summary: ''
+            summary: createdFromAtlascodeFooter
         });
 
         if (this.state.repo &&
@@ -242,7 +244,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             ? e.commits[0].message!
                             : this.state.title,
                         summary: e.commits.length > 1 && this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits.map(c => `- ${c.message}`).join('\n')
+                            ? `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
                             : this.state.summary
                     });
                 }

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { FieldValidators, chain } from '../fieldValidators';
 
-export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, {title: string, summary: string}> {
+export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, { title: string, summary: string }> {
 
     constructor(props: any) {
         super(props);
@@ -61,7 +61,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                             return (
                                 <textarea {...fieldArgs.fieldProps}
                                     className='ac-textarea'
-                                    rows={3}
+                                    rows={5}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.props.onSummaryChange)} />
                             );
                         }
