@@ -32,6 +32,8 @@ class AnalyticsPlatform {
     }
 }
 
+// Extension lifecycle events
+
 export async function installedEvent(version: string): Promise<TrackEvent> {
     return trackEvent('installed', 'atlascode', { attributes: { machineId: Container.machineId, version: version } });
 }
@@ -48,6 +50,161 @@ export async function feedbackEvent(feedback: FeedbackData, source: string): Pro
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {
     let action = enabled ? 'enabled' : 'disabled';
     return trackEvent(action, 'feature', { actionSubjectId: featureId, source: 'atlascodeSettings' });
+}
+
+export async function authenticatedEvent(hostProduct: string): Promise<TrackEvent> {
+    return trackEvent('authenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: hostProduct } });
+}
+
+export async function loggedOutEvent(hostProduct: string): Promise<TrackEvent> {
+    return trackEvent('unauthenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: hostProduct } });
+}
+
+export async function siteSelectedEvent(siteId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(siteId, 'selected', 'defaultJiraSite', { actionSubjectId: siteId });
+}
+
+export async function projectSelectedEvent(projectId: string, tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'selected', 'defaultJiraProject', { actionSubjectId: projectId });
+}
+
+// Jira issue events
+
+export async function issueCreatedEvent(issueKey: string, tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'created', 'issue', { actionSubjectId: issueKey });
+}
+
+export async function issueTransitionedEvent(issueKey: string, tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'transitioned', 'issue', { actionSubjectId: issueKey });
+}
+
+export async function issueUrlCopiedEvent(tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'copied', 'issueUrl');
+}
+
+export async function issueCommentEvent(tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'created', 'issueComment');
+}
+
+export async function issueWorkStartedEvent(tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'workStarted', 'issue');
+}
+
+// Bitbucket issue events
+
+export async function bbIssueCreatedEvent(): Promise<TrackEvent> {
+    return trackEvent('created', 'bbIssue');
+}
+
+export async function bbIssueTransitionedEvent(): Promise<TrackEvent> {
+    return trackEvent('transitioned', 'bbIssue');
+}
+
+export async function bbIssueUrlCopiedEvent(): Promise<TrackEvent> {
+    return trackEvent('copied', 'bbIssueUrl');
+}
+
+export async function bbIssueCommentEvent(): Promise<TrackEvent> {
+    return trackEvent('created', 'bbIssueComment');
+}
+
+export async function bbIssueWorkStartedEvent(): Promise<TrackEvent> {
+    return trackEvent('workStarted', 'bbIssue');
+}
+
+// PR events
+
+export async function prCreatedEvent(): Promise<TrackEvent> {
+    return trackEvent('created', 'pullRequest');
+}
+
+export async function prCommentEvent(): Promise<TrackEvent> {
+    return trackEvent('created', 'pullRequestComment');
+}
+
+export async function prCheckoutEvent(): Promise<TrackEvent> {
+    return trackEvent('checkedOut', 'pullRequestBranch', { source: 'pullRequestDetailsScreen' });
+}
+
+export async function prApproveEvent(): Promise<TrackEvent> {
+    return trackEvent('approved', 'pullRequest', { source: 'pullRequestDetailsScreen' });
+}
+
+export async function prMergeEvent(): Promise<TrackEvent> {
+    return trackEvent('merged', 'pullRequest', { source: 'pullRequestDetailsScreen' });
+}
+
+export async function prUrlCopiedEvent(): Promise<TrackEvent> {
+    return trackEvent('copied', 'pullRequestUrl');
+}
+
+// Misc Track Events
+
+export async function customJQLCreatedEvent(tenantId: string): Promise<TrackEvent> {
+    return tenantTrackEvent(tenantId, 'created', 'customJql', { source: 'atlascodeSettings' });
+}
+
+export async function pipelineStartEvent(): Promise<TrackEvent> {
+    return trackEvent('start', 'pipeline');
+}
+
+export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
+    return trackEvent('create', 'jiraIssue', { source: source });
+}
+
+// Screen Events
+
+export async function viewScreenEvent(screenName: string, tenantId?: string): Promise<ScreenEvent> {
+    const e = {
+        tenantIdType: null,
+        name: screenName,
+        screenEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+        }
+    };
+
+    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
+}
+
+// UI Events
+
+export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            source: 'vscode',
+            containerType: 'treeview',
+            containerId: BitbucketIssuesTreeViewId,
+            objectType: 'treenode',
+            objectId: 'paginationNode'
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function prPaginationEvent(): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            source: 'vscode',
+            containerType: 'treeview',
+            containerId: PullRequestTreeViewId,
+            objectType: 'treenode',
+            objectId: 'paginationNode'
+        }
+    };
+
+    return await anyUserOrAnonymous<UIEvent>(e);
 }
 
 export async function authenticateButtonEvent(source: string): Promise<UIEvent> {
@@ -82,172 +239,21 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
     return await anyUserOrAnonymous<UIEvent>(e);
 }
 
-export async function authenticatedEvent(hostProduct: string): Promise<TrackEvent> {
-    return trackEvent('authenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: hostProduct } });
-}
+// Helper methods
 
-export async function loggedOutEvent(hostProduct: string): Promise<TrackEvent> {
-    return trackEvent('unauthenticated', 'atlascode', { attributes: { machineId: Container.machineId, hostProduct: hostProduct } });
-}
-
-export async function viewScreenEvent(screenName: string, tenantId?: string): Promise<ScreenEvent> {
+async function trackEvent(action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
     const e = {
         tenantIdType: null,
-        name: screenName,
-        screenEvent: {
-            origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform),
-        }
-    };
-
-    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
-}
-
-export async function siteSelectedEvent(siteId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(siteId, 'selected', 'defaultJiraSite', { actionSubjectId: siteId });
-}
-
-export async function projectSelectedEvent(projectId: string, tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'selected', 'defaultJiraProject', { actionSubjectId: projectId });
-}
-
-export async function issueCreatedEvent(issueKey: string, tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'created', 'issue', { actionSubjectId: issueKey });
-}
-
-export async function issueTransitionedEvent(issueKey: string, tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'transitioned', 'issue', { actionSubjectId: issueKey });
-}
-
-export async function issueUrlCopiedEvent(tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'copied', 'issueUrl');
-}
-
-export async function issueCommentEvent(tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'created', 'issueComment');
-}
-
-export async function issueWorkStartedEvent(tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'workStarted', 'issue');
-}
-
-export async function customJQLCreatedEvent(tenantId: string): Promise<TrackEvent> {
-    return tenantTrackEvent(tenantId, 'created', 'customJql', { source: 'atlascodeSettings' });
-}
-
-export async function prCreatedEvent(): Promise<TrackEvent> {
-    return trackEvent('created', 'pullRequest');
-}
-
-export async function prCommentEvent(): Promise<TrackEvent> {
-    return trackEvent('created', 'pullRequestComment');
-}
-
-export async function prCheckoutEvent(): Promise<TrackEvent> {
-    return trackEvent('checkedOut', 'pullRequestBranch', { source: 'pullRequestDetailsScreen' });
-}
-
-export async function prApproveEvent(): Promise<TrackEvent> {
-    return trackEvent('approved', 'pullRequest', { source: 'pullRequestDetailsScreen' });
-}
-
-export async function prMergeEvent(): Promise<TrackEvent> {
-    return trackEvent('merged', 'pullRequest', { source: 'pullRequestDetailsScreen' });
-}
-
-export async function prUrlCopiedEvent(): Promise<TrackEvent> {
-    return trackEvent('copied', 'pullRequestUrl');
-}
-
-export async function prPaginationEvent(): Promise<UIEvent> {
-    const e = {
-        tenantIdType: null,
-        uiEvent: {
-            origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform),
-            action: 'clicked',
-            actionSubject: 'button',
-            source: 'vscode',
-            containerType: 'treeview',
-            containerId: PullRequestTreeViewId,
-            objectType: 'treenode',
-            objectId: 'paginationNode'
-        }
-    };
-
-    return await anyUserOrAnonymous<UIEvent>(e);
-}
-
-export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
-    const e = {
-        tenantIdType: null,
-        uiEvent: {
-            origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform),
-            action: 'clicked',
-            actionSubject: 'button',
-            source: 'vscode',
-            containerType: 'treeview',
-            containerId: BitbucketIssuesTreeViewId,
-            objectType: 'treenode',
-            objectId: 'paginationNode'
-        }
-    };
-
-    return await anyUserOrAnonymous<UIEvent>(e);
-}
-
-export async function bbIssueWorkStartedEvent(): Promise<TrackEvent> {
-    const e = {
-        tenantIdType: null,
-        trackEvent: {
-            origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform),
-            action: 'workStarted',
-            actionSubject: 'bbIssue',
-            source: 'vscode'
-        }
-    };
-
-    return await anyUserOrAnonymous<TrackEvent>(e);
-}
-
-export async function bbIssueUrlCopiedEvent(): Promise<TrackEvent> {
-    const e = {
-        tenantIdType: null,
-        trackEvent: {
-            origin: 'desktop',
-            platform: AnalyticsPlatform.for(process.platform),
-            action: 'copied',
-            actionSubject: 'bbIssueUrl',
-            source: 'vscode'
-        }
-    };
-
-    return await anyUserOrAnonymous<TrackEvent>(e);
-}
-
-export async function pipelineStartEvent(): Promise<TrackEvent> {
-    return trackEvent('start', 'pipeline');
-}
-
-export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
-    return trackEvent('create', 'jiraIssue', { source: source });
-}
-
-async function tenantTrackEvent(tenentId: string, action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
-    const e = {
-        tenantIdType: 'cloudId',
-        tenantId: tenentId,
         trackEvent: event(action, actionSubject, attributes)
     };
 
     return await anyUserOrAnonymous<TrackEvent>(e);
 }
 
-async function trackEvent(action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
+async function tenantTrackEvent(tenentId: string, action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
     const e = {
-        tenantIdType: null,
+        tenantIdType: 'cloudId',
+        tenantId: tenentId,
         trackEvent: event(action, actionSubject, attributes)
     };
 
