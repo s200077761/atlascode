@@ -7,7 +7,7 @@ import { isPostComment, isPostChange, isOpenStartWorkPageAction } from "../ipc/b
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
-import { bbIssueUrlCopiedEvent } from "../analytics";
+import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -145,6 +145,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                         try {
                             await BitbucketIssuesApi.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
+                            bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -160,6 +161,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                             await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
                             this._issue = await BitbucketIssuesApi.refetch(this._issue!);
                             await this.update(this._issue!);
+                            bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
