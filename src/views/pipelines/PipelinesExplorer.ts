@@ -1,5 +1,4 @@
 import { Disposable, ConfigurationChangeEvent, window, commands, TreeViewVisibilityChangeEvent } from "vscode";
-import { Time } from '../../util/time';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { PipelinesTree } from "./PipelinesTree";
@@ -9,15 +8,13 @@ import { PipelinesMonitor } from "./PipelinesMonitor";
 import { Commands } from "../../commands";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { viewScreenEvent } from "../../analytics";
-
-const defaultRefreshInterval = 5 * Time.MINUTES;
+import { RefreshTimer } from "../RefreshTimer";
 
 export class PipelinesExplorer extends Disposable {
     private _disposable: Disposable;
-    private _timer: any | undefined;
-    private _refreshInterval = defaultRefreshInterval;
     private _tree: PipelinesTree | undefined;
     private _monitor: PipelinesMonitor | undefined;
+    private _refreshTimer: RefreshTimer;
 
     constructor(private _ctx: BitbucketContext) {
         super(() => this.dispose());
@@ -28,6 +25,7 @@ export class PipelinesExplorer extends Disposable {
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         this.onConfigurationChanged(configuration.initializingChangeEvent);
+        this._refreshTimer = new RefreshTimer('bitbucket.pipelines.explorerEnabled', 'bitbucket.pipelines.refreshInterval', () => this.refresh());
         this._disposable = Disposable.from(
             this._ctx.onDidChangeBitbucketContext(() => {
                 this.updateMonitor();
@@ -38,9 +36,6 @@ export class PipelinesExplorer extends Disposable {
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
-        if (initializing || configuration.changed(e, 'bitbucket.pipelines.refreshInterval')) {
-            this._refreshInterval = Container.config.bitbucket.pipelines.refreshInterval * Time.MINUTES;
-        }
 
         if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
             if (!Container.config.bitbucket.pipelines.explorerEnabled) {
@@ -58,24 +53,15 @@ export class PipelinesExplorer extends Disposable {
 
         if (initializing ||
             configuration.changed(e, 'bitbucket.pipelines.monitorEnabled') ||
-            configuration.changed(e, 'bitbucket.pipelines.explorerEnabled') ||
-            configuration.changed(e, 'bitbucket.pipelines.refreshInterval')) {
+            configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
 
             this.updateMonitor();
-
-            this.stopTimer();
-            if (Container.config.bitbucket.pipelines.explorerEnabled &&
-                Container.config.bitbucket.pipelines.monitorEnabled &&
-                this._refreshInterval > 0) {
-                this.startTimer();
-            }
         }
     }
 
     updateMonitor() {
         if (Container.config.bitbucket.pipelines.explorerEnabled &&
-            Container.config.bitbucket.pipelines.monitorEnabled &&
-            this._refreshInterval > 0) {
+            Container.config.bitbucket.pipelines.monitorEnabled) {
             const repos = this._ctx.getBitbucketRepositores();
             this._monitor = new PipelinesMonitor(repos);
         } else {
@@ -85,6 +71,7 @@ export class PipelinesExplorer extends Disposable {
 
     dispose() {
         this._disposable.dispose();
+        this._refreshTimer.setActive(false);
     }
 
     refresh() {
@@ -97,21 +84,6 @@ export class PipelinesExplorer extends Disposable {
         }
         if (this._monitor) {
             this._monitor.checkForNewResults();
-        }
-    }
-
-    private startTimer() {
-        if (this._refreshInterval > 0 && !this._timer) {
-            this._timer = setInterval(() => {
-                this.refresh();
-            }, this._refreshInterval);
-        }
-    }
-
-    private stopTimer() {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = undefined;
         }
     }
 

@@ -1,5 +1,4 @@
 import { Disposable, ConfigurationChangeEvent, window, commands } from "vscode";
-import { Time } from "../util/time";
 import { Container } from "../container";
 import { Commands } from "../commands";
 import { Logger } from "../logger";
@@ -8,15 +7,13 @@ import { issuesForJQL } from "../jira/issuesForJql";
 import * as moment from "moment";
 import { AuthProvider } from "../atlclients/authInfo";
 import { Issue } from "./jiraIssue";
-
-const defaultRefreshInterval = 5 * Time.MINUTES;
+import { RefreshTimer } from "../views/RefreshTimer";
 
 export class NewIssueMonitor implements Disposable {
-  private _timer: any | undefined;
-  private _refreshInterval = defaultRefreshInterval;
   private _disposables: Disposable[] = [];
   private _workingProject: WorkingProject | undefined;
   private _timestamp = new Date();
+  private _refreshTimer: RefreshTimer;
 
   constructor() {
     this._disposables.push(
@@ -25,11 +22,13 @@ export class NewIssueMonitor implements Disposable {
       )
     );
 
+    this._refreshTimer = new RefreshTimer(undefined, 'jira.issueMonitor.refreshInterval', () => this.checkForNewIssues());
     void this.onConfigurationChanged(configuration.initializingChangeEvent);
   }
 
   dispose() {
     this._disposables.forEach(d => d.dispose());
+    this._refreshTimer.setActive(false);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -41,15 +40,6 @@ export class NewIssueMonitor implements Disposable {
     ) {
       this._workingProject = await Container.jiraSiteManager.getEffectiveProject();
       this._timestamp = new Date();
-      this._refreshInterval =
-        Container.config.jira.issueMonitor.refreshInterval * Time.MINUTES;
-      if (this._refreshInterval <= 0) {
-        this._refreshInterval = 0;
-        this.stopTimer();
-      } else {
-        this.stopTimer();
-        this.startTimer();
-      }
     }
   }
 
@@ -99,20 +89,5 @@ export class NewIssueMonitor implements Disposable {
           commands.executeCommand("workbench.view.extension.atlascode-drawer");
         }
       });
-  }
-
-  private startTimer() {
-    if (this._refreshInterval > 0 && !this._timer) {
-      this._timer = setInterval(() => {
-        this.checkForNewIssues();
-      }, this._refreshInterval);
-    }
-  }
-
-  private stopTimer() {
-    if (this._timer) {
-      clearInterval(this._timer);
-      this._timer = undefined;
-    }
   }
 }

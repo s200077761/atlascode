@@ -9,16 +9,13 @@ import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
-import { Time } from '../../util/time';
-
-const defaultRefreshInterval = 5 * Time.MINUTES;
+import { RefreshTimer } from "../RefreshTimer";
 
 export class JiraExplorer extends Disposable {
 
     private _trees: RefreshableTree[] = [];
     private _disposable: Disposable;
-    private _timer: any | undefined;
-    private _refreshInterval = defaultRefreshInterval;
+    private _refreshTimer: RefreshTimer;
 
     constructor() {
         super(() => this.dispose());
@@ -33,7 +30,7 @@ export class JiraExplorer extends Disposable {
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
-
+        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -60,24 +57,6 @@ export class JiraExplorer extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (initializing ||
-            configuration.changed(e, 'jira.explorer.refreshInterval') ||
-            configuration.changed(e, 'jira.explorer.enabled')) {
-            this._refreshInterval = Container.config.jira.explorer.refreshInterval * Time.MINUTES;
-            const enabled = Container.config.jira.explorer.enabled;
-
-            if (this._refreshInterval <= 0) {
-                this._refreshInterval = 0;
-            }
-
-            if (this._refreshInterval === 0 || !enabled) {
-                this.stopTimer();
-            } else {
-                this.stopTimer();
-                this.startTimer();
-            }
-        }
-
         if (initializing) {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
@@ -90,6 +69,7 @@ export class JiraExplorer extends Disposable {
             tree.dispose();
         });
         this._trees = [];
+        this._refreshTimer.setActive(false);
     }
 
     async refresh() {
@@ -107,21 +87,6 @@ export class JiraExplorer extends Disposable {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
-        }
-    }
-
-    private startTimer() {
-        if (this._refreshInterval > 0 && !this._timer) {
-            this._timer = setInterval(() => {
-                this.refresh();
-            }, this._refreshInterval);
-        }
-    }
-
-    private stopTimer() {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = undefined;
         }
     }
 }

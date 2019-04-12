@@ -4,22 +4,19 @@ import { Container } from '../../container';
 import { configuration } from '../../config/configuration';
 import { Commands } from '../../commands';
 import { PullRequestTreeViewId, setCommandContext, CommandContext } from '../../constants';
-import { Time } from '../../util/time';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { viewScreenEvent } from '../../analytics';
 import { BaseNode } from '../nodes/baseNode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedNotifier } from './prCreatedNotifier';
-
-const defaultRefreshInterval = 5 * Time.MINUTES;
+import { RefreshTimer } from '../RefreshTimer';
 
 export class PullRequestsExplorer extends Disposable {
 
     private _tree: TreeView<BaseNode> | undefined;
     private _dataProvider: PullRequestNodeDataProvider;
-    private _timer: any | undefined;
-    private _refreshInterval = defaultRefreshInterval;
     private _prCreatedNotifier: PullRequestCreatedNotifier;
+    private _refreshTimer: RefreshTimer;
 
     constructor(private _ctx: BitbucketContext) {
         super(() => this.dispose());
@@ -41,6 +38,7 @@ export class PullRequestsExplorer extends Disposable {
             _ctx.onDidChangeBitbucketContext(() => this.refresh())
         );
 
+        this._refreshTimer = new RefreshTimer('bitbucket.explorer.enabled', 'bitbucket.explorer.refreshInterval', () => this.refresh());
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
@@ -62,19 +60,6 @@ export class PullRequestsExplorer extends Disposable {
             }
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
         }
-
-        if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled') || configuration.changed(e, 'bitbucket.explorer.refreshInterval')) {
-            if (!Container.config.bitbucket.explorer.enabled || Container.config.bitbucket.explorer.refreshInterval === 0) {
-                this._refreshInterval = 0;
-                this.stopTimer();
-            } else {
-                this._refreshInterval = Container.config.bitbucket.explorer.refreshInterval > 0
-                    ? Container.config.bitbucket.explorer.refreshInterval * Time.MINUTES
-                    : defaultRefreshInterval;
-                this.stopTimer();
-                this.startTimer();
-            }
-        }
     }
 
     refresh() {
@@ -88,25 +73,9 @@ export class PullRequestsExplorer extends Disposable {
     }
 
     async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
+        this._refreshTimer.setActive(event.visible);
         if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
             viewScreenEvent(PullRequestTreeViewId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-        }
-    }
-
-    private startTimer() {
-        if (!this._timer && this._refreshInterval > 0) {
-            this._timer = setInterval(() => {
-                if (this._tree && this._dataProvider) {
-                    this.refresh();
-                }
-            }, this._refreshInterval);
-        }
-    }
-
-    private stopTimer() {
-        if (this._timer) {
-            clearInterval(this._timer);
-            this._timer = undefined;
         }
     }
 }
