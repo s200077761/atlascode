@@ -10,6 +10,7 @@ import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { Logger } from '../../logger';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
+import { PullRequestCommentController } from './prCommentController';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -30,8 +31,11 @@ export interface FileDiffQueryParams {
 }
 
 export class PullRequestTitlesNode extends BaseNode {
-    constructor(private pr: PullRequest) {
+    public prHref: string;
+
+    constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
         super();
+        this.prHref = pr.data!.links!.self!.href!;
     }
 
     getTreeItem(): vscode.TreeItem {
@@ -101,7 +105,7 @@ export class PullRequestTitlesNode extends BaseNode {
     private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<BaseNode[]> {
         const result: BaseNode[] = [];
         const inlineComments = await this.getInlineComments(allComments.data);
-        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments)));
+        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments, this.commentController)));
         if (fileChanges.next) {
             result.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
         }
@@ -159,7 +163,8 @@ export class PullRequestTitlesNode extends BaseNode {
 }
 
 class PullRequestFilesNode extends BaseNode {
-    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>) {
+
+    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>, private commentController: PullRequestCommentController) {
         super();
     }
 
@@ -246,11 +251,10 @@ class PullRequestFilesNode extends BaseNode {
                 break;
         }
 
-        const diffArgs = [
-            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam),
-            vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam),
-            fileDisplayName
-        ];
+        const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam);
+        const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam);
+
+        const diffArgs = [lhsUri, rhsUri, fileDisplayName];
         item.command = {
             command: Commands.ViewDiff,
             title: 'Diff file',
@@ -259,6 +263,9 @@ class PullRequestFilesNode extends BaseNode {
 
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(`${this.pr.data.links!.html!.href!}#chg-${fileDisplayName}`);
+
+        this.commentController.provideComments(lhsUri);
+        this.commentController.provideComments(rhsUri);
 
         return item;
     }

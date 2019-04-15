@@ -1,10 +1,9 @@
-import { TreeDataProvider, Disposable, EventEmitter, Event, workspace, TreeItem, commands } from 'vscode';
+import { workspace, TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
-import { getPRDocumentCommentProvider } from './pullRequestCommentProvider';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { AuthProvider } from '../atlclients/authInfo';
@@ -25,8 +24,6 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     constructor(private ctx: BitbucketContext) {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
-            workspace.registerDocumentCommentProvider(getPRDocumentCommentProvider()),
-            getPRDocumentCommentProvider().onDidChangeCommentThreads(this.refresh, this),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
                 const result = await PullRequestApi.nextPage(prs);
                 this.addItems(result);
@@ -47,13 +44,16 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         this._childrenMap.forEach((val, key) => {
             if (!repos.find(repo => repo.rootUri.toString() === key)) {
                 val.dispose();
+                this._childrenMap!.delete(key);
             }
         });
 
-        this._childrenMap.clear();
         // add nodes for newly added repos
         repos.forEach(repo => {
-            this._childrenMap!.set(repo.rootUri.toString(), new RepositoriesNode(repo, expand));
+            const repoUri = repo.rootUri.toString();
+            this._childrenMap!.has(repoUri)
+                ? this._childrenMap!.get(repoUri)!.refresh()
+                : this._childrenMap!.set(repoUri, new RepositoriesNode(repo, expand));
         });
     }
 
@@ -96,6 +96,9 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     }
 
     dispose() {
+        if (this._childrenMap) {
+            this._childrenMap.forEach(node => node.dispose());
+        }
         this._disposable.dispose();
         this._onDidChangeTreeData.dispose();
     }
