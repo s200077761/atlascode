@@ -16,19 +16,19 @@ export class NewIssueMonitor implements Disposable {
   private _refreshTimer: RefreshTimer;
 
   constructor() {
+    this._refreshTimer = new RefreshTimer(undefined, 'jira.issueMonitor.refreshInterval', () => this.checkForNewIssues());
     this._disposables.push(
       Disposable.from(
-        configuration.onDidChange(this.onConfigurationChanged, this)
+        configuration.onDidChange(this.onConfigurationChanged, this),
+        this._refreshTimer
       )
     );
 
-    this._refreshTimer = new RefreshTimer(undefined, 'jira.issueMonitor.refreshInterval', () => this.checkForNewIssues());
     void this.onConfigurationChanged(configuration.initializingChangeEvent);
   }
 
   dispose() {
     this._disposables.forEach(d => d.dispose());
-    this._refreshTimer.setActive(false);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {

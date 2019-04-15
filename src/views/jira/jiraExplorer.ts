@@ -22,15 +22,16 @@ export class JiraExplorer extends Disposable {
 
         commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
 
+        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
+            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            this._refreshTimer
         );
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
-        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -69,7 +70,6 @@ export class JiraExplorer extends Disposable {
             tree.dispose();
         });
         this._trees = [];
-        this._refreshTimer.setActive(false);
     }
 
     async refresh() {

@@ -8,17 +8,18 @@ import * as moment from "moment";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
+import { BaseNode } from "../nodes/baseNode";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
     pipelineUuid: string;
     repo: Repository;
 }
-export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
+export class PipelinesTree implements TreeDataProvider<BaseNode>, Disposable {
     private _disposable: Disposable;
     private _childrenMap = new Map<string, PipelinesRepoNode>();
-    private _onDidChangeTreeData = new EventEmitter<Node>();
-    public get onDidChangeTreeData(): Event<Node> {
+    private _onDidChangeTreeData = new EventEmitter<BaseNode>();
+    public get onDidChangeTreeData(): Event<BaseNode> {
         return this._onDidChangeTreeData.event;
     }
 
@@ -37,11 +38,11 @@ export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: Node): TreeItem {
-        return element.treeItem();
+    getTreeItem(element: BaseNode): TreeItem | Promise<TreeItem> {
+        return element.getTreeItem();
     }
 
-    async getChildren(element?: Node): Promise<Node[]> {
+    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (element) {
             return element.getChildren(element);
         }
@@ -70,14 +71,7 @@ export class PipelinesTree implements TreeDataProvider<Node>, Disposable {
     }
 }
 
-export abstract class Node {
-    abstract treeItem(): TreeItem;
-    async getChildren(element?: Node): Promise<Node[]> {
-        return [];
-    }
-}
-
-export class PipelinesRepoNode extends Node {
+export class PipelinesRepoNode extends BaseNode {
     private _branches: string[];
     private _page = 1;
     private _morePages = true;
@@ -87,7 +81,7 @@ export class PipelinesRepoNode extends Node {
         super();
     }
 
-    treeItem(): TreeItem {
+    getTreeItem(): TreeItem {
         const directory = this._repo.rootUri.path.split('/').pop();
         const item = new TreeItem(`${directory}`, this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed);
         item.tooltip = this._repo.rootUri.path;
@@ -105,7 +99,7 @@ export class PipelinesRepoNode extends Node {
         this._branches = this._branches.concat(newBranches);
     }
 
-    async getChildren(element?: Node): Promise<Node[]> {
+    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
             return Promise.resolve([new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
@@ -116,7 +110,7 @@ export class PipelinesRepoNode extends Node {
             if ([...this._pipelines.values()].every(results => results.length === 0)) {
                 return [new EmptyNode("No Pipelines results for this repository")];
             }
-            const nodes: Node[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
+            const nodes: BaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }
@@ -240,12 +234,12 @@ function statusForPipeline(pipeline: Pipeline): string {
     }
 }
 
-export class PipelineNode extends Node {
+export class PipelineNode extends BaseNode {
     constructor(private _repoNode: PipelinesRepoNode, private _pipeline: Pipeline, private _repo: Repository) {
         super();
     }
 
-    treeItem() {
+    getTreeItem() {
         var label = "";
         if (this._pipeline.created_on) {
             label = moment(this._pipeline.created_on).fromNow();
@@ -257,17 +251,17 @@ export class PipelineNode extends Node {
         return item;
     }
 
-    getChildren(element: Node): Promise<Node[]> {
+    getChildren(element: BaseNode): Promise<BaseNode[]> {
         return this._repoNode.getChildren(element);
     }
 }
 
-export class BranchNode extends Node {
+export class BranchNode extends BaseNode {
     constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
         super();
     }
 
-    treeItem() {
+    getTreeItem() {
         const treeItem = new TreeItem(this.branchName);
         treeItem.collapsibleState = TreeItemCollapsibleState.Collapsed;
         treeItem.contextValue = PipelineBranchContextValue;
@@ -280,17 +274,17 @@ export class BranchNode extends Node {
         return treeItem;
     }
 
-    getChildren(element: Node): Promise<Node[]> {
+    getChildren(element: BaseNode): Promise<BaseNode[]> {
         return this._repoNode.getChildren(element);
     }
 }
 
-class NextPageNode extends Node {
+class NextPageNode extends BaseNode {
     constructor(private _repo: Repository) {
         super();
     }
 
-    treeItem() {
+    getTreeItem() {
         const treeItem = new TreeItem('Load next page', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
@@ -302,12 +296,12 @@ class NextPageNode extends Node {
     }
 }
 
-class EmptyNode extends Node {
+class EmptyNode extends BaseNode {
     constructor(readonly _message: string, readonly _command?: Command) {
         super();
     }
 
-    treeItem() {
+    getTreeItem() {
         const text = this._message;
         const treeItem = new TreeItem(text, TreeItemCollapsibleState.None);
         treeItem.tooltip = text;

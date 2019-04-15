@@ -3,7 +3,6 @@ import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
-import { AuthProvider } from '../../atlclients/authInfo';
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -12,8 +11,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
   }
 
   async checkForNewActivity() {
-    if (!Container.config.bitbucket.pipelines.monitorEnabled ||
-      !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+    if (!Container.config.bitbucket.pipelines.monitorEnabled) {
       return;
     }
     await Container.clientManager.bbrequest();
