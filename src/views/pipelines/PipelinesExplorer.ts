@@ -13,7 +13,7 @@ import { RefreshTimer } from "../RefreshTimer";
 export class PipelinesExplorer extends Disposable {
     private _disposable: Disposable;
     private _tree: PipelinesTree | undefined;
-    private _monitor: PipelinesMonitor | undefined;
+    private _monitor: BitbucketActivityMonitor | undefined;
     private _refreshTimer: RefreshTimer;
 
     constructor(private _ctx: BitbucketContext) {
@@ -83,7 +83,7 @@ export class PipelinesExplorer extends Disposable {
             this._tree.refresh();
         }
         if (this._monitor) {
-            this._monitor.checkForNewResults();
+            this._monitor.checkForNewActivity();
         }
     }
 

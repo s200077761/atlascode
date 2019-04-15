@@ -5,13 +5,13 @@ import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { AuthProvider } from '../../atlclients/authInfo';
 
-export class PipelinesMonitor {
+export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
 
   constructor(private _repositories: Repository[]) {
   }
 
-  async checkForNewResults() {
+  async checkForNewActivity() {
     if (!Container.config.bitbucket.pipelines.monitorEnabled ||
       !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
       return;

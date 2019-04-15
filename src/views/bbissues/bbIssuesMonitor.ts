@@ -5,14 +5,14 @@ import { Commands } from "../../commands";
 import { BitbucketIssuesApi } from "../../bitbucket/bbIssues";
 import { Repository } from "../../typings/git";
 
-export class BitbucketIssuesMonitor {
+export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   private _lastCheckedTime = new Map<String, Date>();
 
   constructor(private _repos: Repository[]) {
     this._repos.forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
   }
 
-  async checkForNewBitbucketIssues() {
+  async checkForNewActivity() {
     if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
       return;
     }

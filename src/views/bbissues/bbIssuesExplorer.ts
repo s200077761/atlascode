@@ -15,7 +15,7 @@ export class BitbucketIssuesExplorer extends Disposable {
     private _disposable: Disposable;
     private _tree: TreeView<BaseNode> | undefined;
     private _bitbucketIssuesDataProvider: BitbucketIssuesDataProvider;
-    private _monitor: BitbucketIssuesMonitor | undefined;
+    private _monitor: BitbucketActivityMonitor | undefined;
     private _refreshTimer: RefreshTimer;
 
     constructor(private _ctx: BitbucketContext) {
@@ -95,7 +95,7 @@ export class BitbucketIssuesExplorer extends Disposable {
             this._bitbucketIssuesDataProvider.refresh();
         }
         if (this._monitor) {
-            this._monitor.checkForNewBitbucketIssues();
+            this._monitor.checkForNewActivity();
         }
     }
 

@@ -8,21 +8,21 @@ import { AuthProvider } from '../../atlclients/authInfo';
 import { viewScreenEvent } from '../../analytics';
 import { BaseNode } from '../nodes/baseNode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
-import { PullRequestCreatedNotifier } from './prCreatedNotifier';
+import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 import { RefreshTimer } from '../RefreshTimer';
 
 export class PullRequestsExplorer extends Disposable {
 
     private _tree: TreeView<BaseNode> | undefined;
     private _dataProvider: PullRequestNodeDataProvider;
-    private _prCreatedNotifier: PullRequestCreatedNotifier;
+    private _prCreatedNotifier: BitbucketActivityMonitor;
     private _refreshTimer: RefreshTimer;
 
     constructor(private _ctx: BitbucketContext) {
         super(() => this.dispose());
 
         this._dataProvider = new PullRequestNodeDataProvider(this._ctx);
-        this._prCreatedNotifier = new PullRequestCreatedNotifier(this._ctx);
+        this._prCreatedNotifier = new PullRequestCreatedMonitor(this._ctx);
 
         Container.context.subscriptions.push(
 
@@ -33,7 +33,6 @@ export class PullRequestsExplorer extends Disposable {
 
             commands.registerCommand(Commands.CreatePullRequest, Container.pullRequestCreatorView.createOrShow, Container.pullRequestCreatorView),
 
-            this._prCreatedNotifier,
             configuration.onDidChange(this.onConfigurationChanged, this),
             _ctx.onDidChangeBitbucketContext(() => this.refresh())
         );
@@ -69,6 +68,9 @@ export class PullRequestsExplorer extends Disposable {
 
         if (this._tree && this._dataProvider) {
             this._dataProvider.refresh();
+        }
+        if (this._prCreatedNotifier) {
+            this._prCreatedNotifier.checkForNewActivity();
         }
     }
 
