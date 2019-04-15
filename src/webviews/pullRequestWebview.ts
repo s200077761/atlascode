@@ -18,6 +18,7 @@ import { RepositoriesApi } from '../bitbucket/repositories';
 import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 
 interface PRState {
     prData: PRData;
@@ -152,7 +153,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 case 'openPipelineBuild': {
                     if (isOpenPipelineBuild(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowPipeline, e.pipelineUUID);
+                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: e.pipelineUUID } as PipelineInfo);
                         break;
                     }
                 }
