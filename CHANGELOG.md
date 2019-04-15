@@ -1,3 +1,18 @@
+## What's New In 1.2.0
+### Improvements
+* Start work from Bitbucket issue webview
+* Show additional information in Jira issue view (reporter, Bitbucket pull request status)
+* Add issue titles to Jira notifications
+* Option to close source branch after merge when creating pull request
+* Made pipelines header consistent with other webviews
+* Use new VS Code API for comments in pull requests
+
+### Bugs fixed
+* Long code blocks in Jira issues break out of their column
+* Markdown doesn't render in comments on Jira issues
+* Hovering on issue key to get details not working
+* Pipeline summary fails for in-progress builds
+
 ## What's New In 1.1.0
 ### Improvements
 * Code hint to create issue from comment triggers
