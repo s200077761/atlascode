@@ -15,6 +15,8 @@ import ErrorBanner from "../ErrorBanner";
 import { FieldValidators } from "../fieldValidators";
 import Offline from "../Offline";
 
+const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
+
 type Emit = CreateBitbucketIssueAction | Action;
 type Receive = CreateBitbucketIssueData | HostErrorMessage;
 interface MyState extends CreateBitbucketIssueData {
@@ -130,7 +132,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                             )
                                         }
                                     </Field>
-                                    <Field defaultValue={''}
+                                    <Field defaultValue={createdFromAtlascodeFooter}
                                         label='Description'
                                         id='description'
                                         name='description'>
@@ -141,7 +143,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         style={{ width: '100%', display: 'block' }}
                                                         className='ac-textarea'
-                                                        rows={3} />
+                                                        rows={5} />
                                                     {fieldArgs.error && <ErrorMessage>Title is required</ErrorMessage>}
                                                 </React.Fragment>
                                             )

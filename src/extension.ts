@@ -8,7 +8,7 @@ import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
-import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
+import { setCommandContext, CommandContext, GlobalStateVersionKey, JiraWorkingSiteConfigurationKey } from './constants';
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
@@ -30,7 +30,7 @@ export async function activate(context: ExtensionContext) {
     Configuration.configure(context);
     Logger.configure(context);
 
-    const cfg = configuration.get<IConfig>();
+    const cfg = await migrateConfig();
 
     Container.initialize(context, cfg, atlascodeVersion);
 
@@ -63,6 +63,16 @@ export async function activate(context: ExtensionContext) {
     await activateYamlExtension();
 
     Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
+}
+
+async function migrateConfig(): Promise<IConfig> {
+    const cfg = configuration.get<IConfig>();
+    if (cfg.jira.workingSite &&
+        (!cfg.jira.workingSite.baseUrlSuffix || cfg.jira.workingSite.baseUrlSuffix.length < 1)) {
+        await configuration.updateEffective(JiraWorkingSiteConfigurationKey, { ...cfg.jira.workingSite, baseUrlSuffix: 'atlassian.net' });
+        return configuration.get<IConfig>();
+    }
+    return cfg;
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

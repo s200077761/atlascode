@@ -7,8 +7,10 @@ import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
-import { RepoData, CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
+import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { RepoData } from '../ipc/prMessaging';
+import { bbIssueCreatedEvent } from '../analytics';
 
 type Emit = CreateBitbucketIssueData | HostErrorMessage;
 export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
@@ -51,7 +53,11 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                 repoData.push({
                     uri: r.rootUri.toString(),
                     href: repo.links!.html!.href!,
-                    avatarUrl: repo.links!.avatar!.href!
+                    avatarUrl: repo.links!.avatar!.href!,
+                    remotes: bbRemotes,
+                    defaultReviewers: [],
+                    localBranches: [],
+                    remoteBranches: []
                 });
             }
 
@@ -102,6 +108,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
         let issue = await BitbucketIssuesApi.create(href, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
+        bbIssueCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         this.hide();
     }
 }

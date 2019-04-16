@@ -1,4 +1,4 @@
-import {Disposable, ConfigurationChangeEvent, languages} from 'vscode';
+import { Disposable, ConfigurationChangeEvent, languages } from 'vscode';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { AuthInfoEvent } from "../../atlclients/authStore";
@@ -16,6 +16,7 @@ export class IssueHoverProviderManager implements Disposable {
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private async onDidAuthChange(e: AuthInfoEvent) {

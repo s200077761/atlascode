@@ -65,6 +65,27 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.2.0 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Start work from Bitbucket issue webview</li>
+                                <li>Show additional information in Jira issue view (reporter, Bitbucket pull request status)</li>
+                                <li>Add issue titles to Jira notifications</li>
+                                <li>Option to close source branch after merge when creating pull request</li>
+                                <li>Made pipelines header consistent with other webviews</li>
+                                <li>Use new VS Code API for comments in pull requests</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Long code blocks in Jira issues break out of their column</li>
+                                <li>Markdown doesn't render in comments on Jira issues</li>
+                                <li>Hovering on issue key to get details not working</li>
+                                <li>Pipeline summary fails for in-progress builds</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.1.0 🎉</h2>
                         <section>
                             <h4>✨ Improvements ✨</h4>

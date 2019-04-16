@@ -36,6 +36,7 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { OpenPullRequest } from "../../../ipc/prActions";
+import PullRequests from "./PullRequests";
 
 type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -215,6 +216,11 @@ export default class JiraIssuePage extends WebviewComponent<
           primaryText={issue.assignee.displayName || "Unassigned"}
         />
         {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+        <h3>Reporter</h3>
+        <AvatarItem
+          avatar={<Avatar src={issue.reporter.avatarUrls["48x48"]} />}
+          primaryText={issue.reporter.displayName || "Unknown"}
+        />
         <h3>Labels</h3>
         {this.tags(issue.labels)}
         <h3>Components</h3>
@@ -223,8 +229,10 @@ export default class JiraIssuePage extends WebviewComponent<
         {this.tags(fixVersions)}
         {this.state.data.recentPullRequests && this.state.data.recentPullRequests.length > 0 &&
           <React.Fragment>
-            <Tooltip content='Recent pullrequests from workspace repositories'><h3>Recent pullrequests</h3></Tooltip>
-            {this.state.data.recentPullRequests.map(pr => <Button appearance='link' onClick={() => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })}>{`${pr.destination!.repository!.name} - Pull request #${pr.id}`}</Button>)}
+            <Tooltip content='Recent pull requests from workspace repositories'><h3>Recent pull requests</h3></Tooltip>
+            {this.state.data.recentPullRequests.map(pr => {
+              return <PullRequests pullRequests={this.state.data.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })} />;
+            })}
           </React.Fragment>
         }
       </div>

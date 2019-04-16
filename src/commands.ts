@@ -14,6 +14,7 @@ import { viewScreenEvent, Registry } from './analytics';
 import { Issue, isIssue } from './jira/jiraIssue';
 import { showIssue } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
+import { PullRequestCommentController } from './views/pullrequest/prCommentController';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -22,6 +23,7 @@ export enum Commands {
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     BitbucketViewInWebBrowser = 'atlascode.bb.viewInWebBrowser',
+    BitbucketAddComment = 'atlascode.bb.addComment',
     AuthenticateBitbucket = 'atlascode.bb.authenticate',
     AuthenticateBitbucketStaging = 'atlascode.bb.authenticateStaging',
     ClearBitbucketAuth = 'atlascode.bb.clearAuth',
@@ -50,6 +52,7 @@ export enum Commands {
     BitbucketIssuesRefresh = 'atlascode.bb.refreshIssues',
     CreateBitbucketIssue = 'atlascode.bb.createIssue',
     ShowBitbucketIssue = 'atlascode.bb.showIssue',
+    StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
     ViewDiff = 'atlascode.viewDiff'
 }
 
@@ -66,6 +69,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.BitbucketViewInWebBrowser, async (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
+        vscode.commands.registerCommand(Commands.BitbucketAddComment, async (cc: PullRequestCommentController, uri: vscode.Uri, t: vscode.CommentThread) => await cc.addComment(t, uri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
@@ -73,6 +77,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrIssue: IssueNode | Issue) => Container.startWorkOnIssueWebview.createOrShowIssue(isIssue(issueNodeOrIssue) ? issueNodeOrIssue : issueNodeOrIssue.issue)),
+        vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: Bitbucket.Schema.Issue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: any[]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });

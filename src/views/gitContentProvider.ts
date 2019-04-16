@@ -13,6 +13,9 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
         const { repoUri, remote, branchName, path, commitHash } = JSON.parse(uri.query) as FileDiffQueryParams;
 
+        if (!repoUri) {
+            return '';
+        }
         const u: vscode.Uri = vscode.Uri.parse(repoUri);
         const repo = this.bbContext.getRepository(u);
         if (!repo || !path || !commitHash) {

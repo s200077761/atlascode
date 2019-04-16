@@ -3,9 +3,11 @@ import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
-import { isPostComment, isPostChange } from "../ipc/bitbucketIssueActions";
+import { isPostComment, isPostChange, isOpenStartWorkPageAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { Commands } from "../commands";
+import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -122,6 +124,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     const linkUrl = this._issue!.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     break;
                 }
                 case 'assign': {
@@ -142,6 +145,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                         try {
                             await BitbucketIssuesApi.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
+                            bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -157,11 +161,19 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                             await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
                             this._issue = await BitbucketIssuesApi.refetch(this._issue!);
                             await this.update(this._issue!);
+                            bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
 
+                    }
+                    break;
+                }
+                case 'openStartWorkPage': {
+                    if (isOpenStartWorkPageAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, e.issue);
                     }
                     break;
                 }

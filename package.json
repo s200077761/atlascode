@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.31.1"
+        "vscode": "^1.33.0"
     },
     "categories": [
         "Other"
@@ -730,6 +730,7 @@
         }
     },
     "scripts": {
+        "vscode:uninstall": "node ./build/extension/uninstall.js",
         "vscode:prepublish": "react-scripts-ts build && webpack --env.production",
         "compile": "react-scripts-ts build && webpack --env.development",
         "watch": "tsc --watch -p ./",
@@ -785,6 +786,7 @@
         "jquery": "^3.3.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
+        "macaddress": "^0.2.9",
         "moment": "^2.23.0",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.0",

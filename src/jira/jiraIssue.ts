@@ -116,14 +116,18 @@ export function isAttachment(a: any): a is Attachment {
 }
 
 export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource): Issue {
-    let comments: Comment[] = [];
-    if (issueJson.fields.comment && issueJson.fields.comment.comments) {
-        comments = issueJson.fields.comment.comments.map((commentJson: any) => {
-            if (isComment(commentJson)) { return commentJson; }
-
-            return emptyComment;
-        });
+    let jsonComments: any[] = [];
+    if (issueJson.renderedFields && issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
+        jsonComments = issueJson.renderedFields.comment.comments;
     }
+    else if (issueJson.fields.comment && issueJson.fields.comment.comments) {
+        jsonComments = issueJson.fields.comment.comments;
+    }
+    const comments = jsonComments.map((commentJson: any) => {
+        if (isComment(commentJson)) { return commentJson; }
+
+        return emptyComment;
+    });
 
     let transitions: Transition[] = [];
     if (issueJson.transitions) {

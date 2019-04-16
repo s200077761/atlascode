@@ -147,7 +147,11 @@ async function getPipelineLog(remote: Remote,
   return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
     return splitLogs(r.data.toString());
   }).catch((err: any) => {
-    Logger.error(new Error(`Error fetching pipeline logs: ${err}`));
+    // If we get a 404 it's probably just that there aren't logs yet.
+    if (err.code !== 404) {
+      Logger.error(new Error(`Error fetching pipeline logs: ${err}`));
+    }
+    return [];
   });
 }
 
@@ -189,6 +193,7 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   }
 
   return {
+    repository: pipeline.repository!,
     build_number: pipeline.build_number!,
     created_on: pipeline.created_on!,
     creator_name: name,
