@@ -39,7 +39,8 @@
         "*"
     ],
     "extensionDependencies": [
-        "vscode.git"
+        "vscode.git",
+        "redhat.vscode-yaml"
     ],
     "main": "./build/extension/extension",
     "contributes": {
