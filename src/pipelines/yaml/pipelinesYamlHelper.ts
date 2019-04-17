@@ -1,4 +1,4 @@
-import { workspace, Uri, ConfigurationTarget, window, Extension, extensions } from "vscode";
+import { workspace, Uri, ConfigurationTarget, window, Extension, extensions, commands } from "vscode";
 import { Resources } from "../../resources";
 
 export const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
@@ -33,7 +33,10 @@ async function addPipelinesSchemaToConfigAtScope(key: string, value: string, sco
 export async function activateYamlExtension() {
     const ext: Extension<any> | undefined = extensions.getExtension(VSCODE_YAML_EXTENSION_ID);
     if (!ext) {
-        window.showWarningMessage('Please install \'YAML Support by Red Hat\' via the Extensions pane.');
+        window.showWarningMessage('Please install \'YAML Support by Red Hat\' via the Extensions pane.', 'install yaml extension')
+            .then(sel => {
+                commands.executeCommand('workbench.extensions.installExtension', VSCODE_YAML_EXTENSION_ID);
+            });
         return;
     }
     const yamlPlugin = await ext.activate();
