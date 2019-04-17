@@ -3,6 +3,9 @@ import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { FileDiffQueryParams } from './pullRequestNode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
+import TurndownService from 'turndown';
+
+const turndownService = new TurndownService();
 
 // PullRequestCommentController is a comment controller for a given PR
 export class PullRequestCommentController implements vscode.Disposable {
@@ -70,7 +73,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 const comments = c.map(comment => {
                     return {
                         userName: comment.user!.display_name!,
-                        body: new vscode.MarkdownString(comment.content!.raw),
+                        body: new vscode.MarkdownString(turndownService.turndown(comment.content!.html!)),
                         commentId: String(comment.id!)
                     };
                 });
@@ -109,7 +112,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         const { data } = await PullRequestApi.postComment(remote, prId, text, undefined, inline);
 
         const comments = [{
-            body: new vscode.MarkdownString(data.content!.raw),
+            body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
             userName: data.user!.display_name!,
             commentId: String(data.id!)
         }];
@@ -123,7 +126,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         commentThread.comments = [
             ...commentThread.comments,
             {
-                body: new vscode.MarkdownString(data.content!.raw),
+                body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
                 userName: data.user!.display_name!,
                 commentId: String(data.id!)
             }
