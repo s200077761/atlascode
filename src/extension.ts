@@ -16,7 +16,7 @@ import { installedEvent, upgradedEvent } from './analytics';
 import { window, Memento } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
-import { addPipelinesSchemaToYamlConfig, activateYamlExtension } from './pipelines/yaml/pipelinesYamlHelper';
+import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
 
 const AnalyticDelay = 5000;
 
@@ -57,7 +57,7 @@ export async function activate(context: ExtensionContext) {
 
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
-    context.subscriptions.push(languages.registerCompletionItemProvider({ scheme: 'file', language: 'yaml' }, new PipelinesYamlCompletionProvider()));
+    context.subscriptions.push(languages.registerCompletionItemProvider({ scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` }, new PipelinesYamlCompletionProvider()));
 
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();

@@ -4,7 +4,6 @@ import {
 
 import fetch from 'node-fetch';
 import { Logger } from '../../logger';
-import { BB_FILE_GLOBAL_PATTERN } from './pipelinesYamlHelper';
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
 
@@ -35,7 +34,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     public provideCompletionItems(doc: TextDocument, pos: Position) {
-        if (!doc.fileName.endsWith(BB_FILE_GLOBAL_PATTERN) || this.pipeItems.length < 1 || !this.showPipes(doc, pos)) {
+        if (this.pipeItems.length < 1 || !this.showPipes(doc, pos)) {
             return undefined;
         }
 

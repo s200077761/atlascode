@@ -5,12 +5,12 @@ export const VSCODE_YAML_EXTENSION_ID = 'redhat.vscode-yaml';
 
 export const YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION = "yaml.schemas";
 
-export const BB_FILE_GLOBAL_PATTERN = "bitbucket-pipelines.yml";
+export const BB_PIPELINES_FILENAME = "bitbucket-pipelines.yml";
 
 export async function addPipelinesSchemaToYamlConfig() {
     const config = workspace.getConfiguration().inspect(YAML_SCHEMA_CONFIG_NAME_OF_VSCODE_YAML_EXTENSION);
 
-    await addPipelinesSchemaToConfigAtScope(Uri.file(Resources.pipelinesSchemaPath).toString(), BB_FILE_GLOBAL_PATTERN, ConfigurationTarget.Global, config!.globalValue);
+    await addPipelinesSchemaToConfigAtScope(Uri.file(Resources.pipelinesSchemaPath).toString(), BB_PIPELINES_FILENAME, ConfigurationTarget.Global, config!.globalValue);
 
 }
 
