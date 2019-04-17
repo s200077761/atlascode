@@ -15,6 +15,8 @@ import { activate as activateCodebucket } from './codebucket/command/registerCom
 import { installedEvent, upgradedEvent } from './analytics';
 import { window, Memento } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
+import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
+import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
 
 const AnalyticDelay = 5000;
 
@@ -55,7 +57,12 @@ export async function activate(context: ExtensionContext) {
 
     const duration = process.hrtime(start);
     context.subscriptions.push(languages.registerCodeLensProvider({ scheme: 'file' }, { provideCodeLenses }));
-    Logger.debug(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
+    context.subscriptions.push(languages.registerCompletionItemProvider({ scheme: 'file', language: 'yaml', pattern: `**/*${BB_PIPELINES_FILENAME}` }, new PipelinesYamlCompletionProvider()));
+
+    await addPipelinesSchemaToYamlConfig();
+    await activateYamlExtension();
+
+    Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
 async function migrateConfig(): Promise<IConfig> {
@@ -86,7 +93,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
     }
 
     if (semver.gt(version, previousVersion)) {
-        Logger.debug(`Atlassian for VSCode upgraded from v${previousVersion} to v${version}`);
+        Logger.info(`Atlassian for VSCode upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
 }
