@@ -11,7 +11,7 @@ export class RepositoriesNode extends BaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
     private _commentControllers: Map<string, PullRequestCommentController> = new Map();
 
-    constructor(private repository: Repository, private expand?: boolean) {
+    constructor(public fetcher: (repo: Repository) => Promise<PaginatedPullRequests>, private repository: Repository, private expand?: boolean) {
         super();
         this.disposables.push(({
             dispose: () => {
@@ -21,7 +21,7 @@ export class RepositoriesNode extends BaseNode {
     }
 
     async refresh() {
-        let prs = await PullRequestApi.getList(this.repository);
+        let prs = await this.fetcher(this.repository);
         this._children = prs.data.map(pr => this.createChildNode(pr));
         if (prs.next) { this._children!.push(new NextPageNode(prs)); }
 

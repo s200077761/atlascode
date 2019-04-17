@@ -53,6 +53,52 @@ export namespace PullRequestApi {
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
+    export async function getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
+        let remotes = getBitbucketRemotes(repository);
+
+        for (let i = 0; i < remotes.length; i++) {
+            let remote = remotes[i];
+            let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const bb = await bitbucketHosts.get(parsed.source)();
+            const { data } = await bb.repositories.listPullRequests({
+                username: parsed.owner, repo_slug: parsed.name,
+                pagelen: defaultPagelen,
+                q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"`
+            });
+            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
+            const next = data.next;
+            // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
+            if (prs.length > 0) {
+                return { repository: repository, remote: remote, data: prs, next: next };
+            }
+        }
+
+        return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+    }
+
+    export async function getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
+        let remotes = getBitbucketRemotes(repository);
+
+        for (let i = 0; i < remotes.length; i++) {
+            let remote = remotes[i];
+            let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const bb = await bitbucketHosts.get(parsed.source)();
+            const { data } = await bb.repositories.listPullRequests({
+                username: parsed.owner, repo_slug: parsed.name,
+                pagelen: defaultPagelen,
+                q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"`
+            });
+            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
+            const next = data.next;
+            // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
+            if (prs.length > 0) {
+                return { repository: repository, remote: remote, data: prs, next: next };
+            }
+        }
+
+        return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+    }
+
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
         const bb = await bitbucketHosts.get(parsed.source)();

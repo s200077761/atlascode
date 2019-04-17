@@ -1,4 +1,4 @@
-import { workspace, TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
+import { workspace, TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { GitContentProvider } from './gitContentProvider';
@@ -12,11 +12,15 @@ import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
 import { prPaginationEvent } from '../analytics';
+import { PullRequestHeaderNode } from './pullrequest/headerNode';
+
+const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
 export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
     readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
+    private _fetcher: (repo: Repository) => Promise<PaginatedPullRequests> = PullRequestApi.getList;
 
     static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
@@ -29,11 +33,45 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
                 this.addItems(result);
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
+            commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
+                this._fetcher = PullRequestApi.getList;
+                headerNode.description = 'showing open pull requests';
+                this.refresh();
+            }),
+            commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
+                this._fetcher = PullRequestApi.getListCreatedByMe;
+                headerNode.description = 'showing pull requests created by me';
+                this.refresh();
+            }),
+            commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
+                this._fetcher = PullRequestApi.getListToReview;
+                headerNode.description = 'showing pull requests to review';
+                this.refresh();
+            }),
+            commands.registerCommand(Commands.BitbucketPullRequestFilters, () => {
+                window
+                    .showQuickPick(['Show all open pull requests', 'Show pull requests created by me', 'Show pull requests to be reviewed'])
+                    .then((selected: string) => {
+                        switch (selected) {
+                            case 'Show all open pull requests':
+                                commands.executeCommand(Commands.BitbucketShowOpenPullRequests);
+                                break;
+                            case 'Show pull requests created by me':
+                                commands.executeCommand(Commands.BitbucketShowPullRequestsCreatedByMe);
+                                break;
+                            case 'Show pull requests to be reviewed':
+                                commands.executeCommand(Commands.BitbucketShowPullRequestsToReview);
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+            }),
             ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
     }
 
-    private updateChildren(): void {
+    private async updateChildren() {
         if (!this._childrenMap) {
             this._childrenMap = new Map();
         }
@@ -45,20 +83,22 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
             if (!repos.find(repo => repo.rootUri.toString() === key)) {
                 val.dispose();
                 this._childrenMap!.delete(key);
+            } else {
+                val.fetcher = this._fetcher;
             }
         });
 
         // add nodes for newly added repos
-        repos.forEach(repo => {
+        for (const repo of repos) {
             const repoUri = repo.rootUri.toString();
             this._childrenMap!.has(repoUri)
-                ? this._childrenMap!.get(repoUri)!.refresh()
-                : this._childrenMap!.set(repoUri, new RepositoriesNode(repo, expand));
-        });
+                ? await this._childrenMap!.get(repoUri)!.refresh()
+                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, repo, expand));
+        }
     }
 
-    refresh(): void {
-        this.updateChildren();
+    async refresh() {
+        await this.updateChildren();
         this._onDidChangeTreeData.fire();
     }
 
@@ -92,7 +132,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
         if (this.ctx.getBitbucketRepositores().length === 0) {
             return [new EmptyStateNode("No Bitbucket repositories found")];
         }
-        return Array.from(this._childrenMap!.values());
+        return [headerNode, ...Array.from(this._childrenMap!.values())];
     }
 
     dispose() {
