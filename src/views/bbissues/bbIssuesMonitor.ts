@@ -1,22 +1,16 @@
 import * as vscode from "vscode";
-import { Container } from "../../container";
-import { AuthProvider } from "../../atlclients/authInfo";
 import { Commands } from "../../commands";
 import { BitbucketIssuesApi } from "../../bitbucket/bbIssues";
 import { Repository } from "../../typings/git";
 
-export class BitbucketIssuesMonitor {
+export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   private _lastCheckedTime = new Map<String, Date>();
 
   constructor(private _repos: Repository[]) {
     this._repos.forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
   }
 
-  async checkForNewBitbucketIssues() {
-    if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-      return;
-    }
-
+  async checkForNewActivity() {
     const promises = this._repos.map(repo => {
       return BitbucketIssuesApi.getLatest(repo).then(issuesList => {
         const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())

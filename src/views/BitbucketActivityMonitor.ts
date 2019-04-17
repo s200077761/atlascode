@@ -1,0 +1,3 @@
+interface BitbucketActivityMonitor {
+    checkForNewActivity(): void;
+}

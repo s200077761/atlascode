@@ -1,4 +1,4 @@
-import { TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
+import { Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
@@ -12,8 +12,9 @@ import { Repository } from '../typings/git';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
+import { Tree } from './BitbucketExplorer';
 
-export class BitbucketIssuesDataProvider implements TreeDataProvider<BaseNode>, Disposable {
+export class BitbucketIssuesDataProvider implements Tree {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
     readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, BitbucketIssuesRepositoryNode> | undefined = undefined;

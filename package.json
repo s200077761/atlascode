@@ -690,12 +690,6 @@
                     "description": "Periodically check for newly created pull reqeuests and show an information message if there are any",
                     "scope": "window"
                 },
-                "atlascode.bitbucket.explorer.notifications.refreshInterval": {
-                    "type": "integer",
-                    "default": 10,
-                    "description": "Time (in minutes) to wait before checking for newly created pull requests",
-                    "scope": "window"
-                },
                 "atlascode.bitbucket.contextMenus.enabled": {
                     "type": "boolean",
                     "default": true,
