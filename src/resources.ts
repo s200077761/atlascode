@@ -21,6 +21,7 @@ export function registerResources(vscodeContext: vscode.ExtensionContext) {
     Resources.icons.set('edit', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'edit-filled.svg'))));
     Resources.icons.set('delete', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'blocker.svg'))));
     Resources.icons.set('detail', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'detail-view.svg'))));
+    Resources.icons.set('pullrequests', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'pullrequests.svg'))));
 
     Resources.icons.set('issues', vscode.Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
