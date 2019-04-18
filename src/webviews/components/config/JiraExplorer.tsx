@@ -121,15 +121,6 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                         disabled={!this.props.configData.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
-                <div className="refreshInterval">
-                    <span>Notify of new Jira issues: </span>
-                    <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-issue-monitor-refresh-interval"
-                        type="number" min="0"
-                        value={this.props.configData.config.jira.issueMonitor.refreshInterval}
-                        onChange={(e: any) => this.handleNumberChange(e, "jira.issueMonitor.refreshInterval")}
-                        disabled={!this.props.configData.config.jira.explorer.enabled} />
-                    <span> minutes (setting to 0 disables notification)</span>
-                </div>
             </div>
 
         );

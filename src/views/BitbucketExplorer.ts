@@ -1,16 +1,14 @@
-import { Disposable, ConfigurationChangeEvent, TreeViewVisibilityChangeEvent, TreeDataProvider, TreeItem, window } from "vscode";
+import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { BitbucketContext } from "../bitbucket/bbContext";
-import { viewScreenEvent } from "../analytics";
 import { AuthProvider } from "../atlclients/authInfo";
 import { RefreshTimer } from "./RefreshTimer";
-import { BaseNode } from "./nodes/baseNode";
+import { Explorer, BaseTreeDataProvider } from "./Explorer";
 
-export abstract class BitbucketExplorer extends Disposable {
+export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;
 
-    protected tree: Tree | undefined;
     private monitor: BitbucketActivityMonitor | undefined;
     private _refreshTimer: RefreshTimer;
 
@@ -31,14 +29,17 @@ export abstract class BitbucketExplorer extends Disposable {
         this._onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
-    abstract viewId(): string;
     abstract explorerEnabledConfiguration(): string;
     abstract monitorEnabledConfiguration(): string;
     abstract refreshConfiguation(): string;
 
     abstract onConfigurationChanged(e: ConfigurationChangeEvent): void;
-    abstract newTreeDataProvider(): Tree;
+    abstract newTreeDataProvider(): BaseTreeDataProvider;
     abstract newMonitor(): BitbucketActivityMonitor;
+
+    authProvider() {
+        return AuthProvider.BitbucketCloud;
+    }
 
     onBitbucketContextChanged() {
         this.updateMonitor();
@@ -51,8 +52,8 @@ export abstract class BitbucketExplorer extends Disposable {
             return;
         }
 
-        if (this.tree) {
-            this.tree.refresh();
+        if (this.treeDataProvder) {
+            this.treeDataProvder.refresh();
         }
         if (this.monitor) {
             this.monitor.checkForNewActivity();
@@ -60,9 +61,7 @@ export abstract class BitbucketExplorer extends Disposable {
     }
 
     dispose() {
-        if (this.tree) {
-            this.tree.dispose();
-        }
+        super.dispose();
         this._disposable.dispose();
     }
 
@@ -70,18 +69,15 @@ export abstract class BitbucketExplorer extends Disposable {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, this.explorerEnabledConfiguration())) {
-            if (this.tree) {
-                this.tree.dispose();
+            if (this.treeDataProvder) {
+                this.treeDataProvder.dispose();
             }
             if (!configuration.get<boolean>(this.explorerEnabledConfiguration())) {
-                this.tree = undefined;
+                this.treeDataProvder = undefined;
             } else {
-                this.tree = this.newTreeDataProvider();
+                this.treeDataProvder = this.newTreeDataProvider();
             }
-            if (this.tree) {
-                const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.tree });
-                treeView.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
-            }
+            this.newTreeView();
         }
 
         if (initializing ||
@@ -94,12 +90,6 @@ export abstract class BitbucketExplorer extends Disposable {
         this.onConfigurationChanged(e);
     }
 
-    async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            viewScreenEvent(this.viewId()).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-        }
-    }
-
     updateMonitor() {
         if (configuration.get<boolean>(this.explorerEnabledConfiguration()) &&
             configuration.get<boolean>(this.monitorEnabledConfiguration())) {
@@ -108,14 +98,4 @@ export abstract class BitbucketExplorer extends Disposable {
             this.monitor = undefined;
         }
     }
-}
-
-export abstract class Tree implements TreeDataProvider<BaseNode>, Disposable {
-    getTreeItem(element: BaseNode): Promise<TreeItem> | TreeItem {
-        return element.getTreeItem();
-    }
-
-    abstract getChildren(element?: BaseNode): Promise<BaseNode[]>;
-    refresh() { }
-    dispose() { }
 }

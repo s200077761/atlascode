@@ -1,4 +1,4 @@
-import { workspace, TreeDataProvider, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
+import { workspace, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
 import { BaseNode } from './nodes/baseNode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { GitContentProvider } from './gitContentProvider';
@@ -13,10 +13,11 @@ import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
 import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
+import { BaseTreeDataProvider } from './Explorer';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
-export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
+export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
     readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
@@ -26,6 +27,7 @@ export class PullRequestNodeDataProvider implements TreeDataProvider<BaseNode>, 
     private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {
+        super();
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {

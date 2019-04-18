@@ -1,92 +1,42 @@
-import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
-import { OpenIssuesTree } from "./openIssuesTree";
-import { AssignedIssuesTree } from "./assignedIssuesTree";
-import { Commands } from "../../commands";
-import { RefreshableTree } from "./abstractIssueTree";
-import { Container } from "../../container";
-import { AuthInfoEvent } from "../../atlclients/authStore";
-import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
-import { CustomJQLRoot } from "./customJqlRoot";
-import { RefreshTimer } from "../RefreshTimer";
+import { Disposable } from 'vscode';
+import { WorkingProject } from '../../config/configuration';
+import { AuthProvider } from '../../atlclients/authInfo';
+import { Explorer, BaseTreeDataProvider } from '../Explorer';
 
-export class JiraExplorer extends Disposable {
+export interface Refreshable {
+    refresh(): void;
+}
+export class JiraExplorer extends Explorer implements Refreshable {
+    private _disposables: Disposable[] = [];
 
-    private _trees: RefreshableTree[] = [];
-    private _disposable: Disposable;
-    private _refreshTimer: RefreshTimer;
-
-    constructor() {
+    constructor(private _id: string, dataProvider: BaseTreeDataProvider) {
         super(() => this.dispose());
-
-        commands.registerCommand(Commands.RefreshJiraExplorer, this.refresh, this);
-
-        this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
-        this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
-            this._refreshTimer
-        );
-
-        Container.context.subscriptions.push(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
-        void this.onConfigurationChanged(configuration.initializingChangeEvent);
+        this.treeDataProvder = dataProvider;
+        this.newTreeView();
     }
 
-    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
+    viewId() {
+        return this._id;
+    }
 
-        if (initializing || configuration.changed(e, 'jira.explorer.enabled')) {
-            if (!Container.config.jira.explorer.enabled) {
-                this.dispose();
-            } else {
-                if (initializing || this._trees.length === 0) {
-                    this._trees.push(new OpenIssuesTree());
-                    this._trees.push(new AssignedIssuesTree());
-                    this._trees.push(new CustomJQLRoot());
-                }
-            }
-            setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
+    authProvider() {
+        return AuthProvider.JiraCloud;
+    }
+
+    set project(project: WorkingProject) {
+        if (this.treeDataProvder) {
+            this.treeDataProvder.setProject(project);
         }
+    }
 
-        if (initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
-            setCommandContext(CommandContext.OpenIssuesTree, Container.config.jira.explorer.showOpenIssues);
-        }
-
-        if (initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
-            setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
-        }
-
-        if (initializing) {
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
-            setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
+    refresh() {
+        if (this.treeDataProvder) {
+            this.treeDataProvder.refresh();
         }
     }
 
     dispose() {
-        this._disposable.dispose();
-        this._trees.forEach(tree => {
-            tree.dispose();
-        });
-        this._trees = [];
-    }
-
-    async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            return;
-        }
-        this._trees.forEach(tree => {
-            tree.refresh();
-        });
-    }
-
-    async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud) {
-
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
-            setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            this.refresh();
-        }
+        super.dispose();
+        this._disposables.forEach(d => d.dispose());
     }
 }

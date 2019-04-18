@@ -6,7 +6,8 @@ import { BitbucketContext } from "../../bitbucket/bbContext";
 import { Commands } from "../../commands";
 import { BitbucketIssuesDataProvider } from "../bitbucketIssuesDataProvider";
 import { BitbucketIssuesMonitor } from "./bbIssuesMonitor";
-import { BitbucketExplorer, Tree } from "../BitbucketExplorer";
+import { BitbucketExplorer } from "../BitbucketExplorer";
+import { BaseTreeDataProvider } from "../Explorer";
 
 export class BitbucketIssuesExplorer extends BitbucketExplorer {
     constructor(ctx: BitbucketContext) {
@@ -34,7 +35,7 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
         return 'bitbucket.issues.refreshInterval';
     }
 
-    newTreeDataProvider(): Tree {
+    newTreeDataProvider(): BaseTreeDataProvider {
         return new BitbucketIssuesDataProvider(this.ctx);
     }
 

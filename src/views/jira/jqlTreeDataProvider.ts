@@ -1,4 +1,4 @@
-import { Disposable, TreeItem, Command } from 'vscode';
+import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
 import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { EmptyStateNode } from '../nodes/emptyStateNode';
@@ -7,21 +7,25 @@ import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchIssue } from '../../jira/fetchIssue';
+import { BaseTreeDataProvider } from '../Explorer';
+import { BaseNode } from '../nodes/baseNode';
 
-export abstract class AbstractIssueTreeNode extends Disposable {
+export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
-    protected _id: string;
     protected _issues: Issue[] | undefined;
     protected _jql: string | undefined;
 
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
+    protected _onDidChangeTreeData = new EventEmitter<BaseNode>();
+    public get onDidChangeTreeData(): Event<BaseNode> {
+        return this._onDidChangeTreeData.event;
+    }
 
-    constructor(id: string, jql?: string, emptyState?: string, emptyStateCommand?: Command) {
-        super(() => this.dispose());
+    constructor(jql?: string, emptyState?: string, emptyStateCommand?: Command) {
+        super();
 
-        this._id = id;
         this._jql = jql;
         if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
@@ -32,14 +36,20 @@ export abstract class AbstractIssueTreeNode extends Disposable {
         }
     }
 
-    public get id(): string {
-        return this._id;
+    public setJql(jql: string) {
+        this._issues = undefined;
+        this._jql = jql;
     }
 
     setEmptyState(text: string) {
         this._emptyState = text.trim() === ''
             ? 'No issues'
             : text;
+    }
+
+    refresh() {
+        this._issues = undefined;
+        this._onDidChangeTreeData.fire();
     }
 
     dispose() {
