@@ -796,6 +796,7 @@
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
+        "turndown": "^5.0.3",
         "uuid": "^3.3.2"
     },
     "devDependencies": {
@@ -817,6 +818,7 @@
         "@types/react-dom": "^16.0.5",
         "@types/react-loadable": "^5.4.1",
         "@types/semver": "^5.5.0",
+        "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.4",
         "mocha": "^5.2.0",
         "patch-package": "^5.1.1",
