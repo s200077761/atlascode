@@ -771,7 +771,7 @@
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
-        "bitbucket": "^1.11.0",
+        "bitbucket": "^1.14.0",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^11.1.2",

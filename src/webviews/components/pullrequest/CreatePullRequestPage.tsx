@@ -138,8 +138,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
         const sourceBranch = repo.localBranches[0];
         let destinationBranch = remoteBranches[0];
-        if (repo.mainbranch) {
-            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === remote.name && b.name !== undefined && b.name.indexOf(repo.mainbranch!) !== -1);
+        if (repo.developmentBranch) {
+            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
             destinationBranch = mainRemoteBranch ? mainRemoteBranch : destinationBranch;
         }
 

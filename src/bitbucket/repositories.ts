@@ -15,6 +15,23 @@ export namespace RepositoriesApi {
         return data;
     }
 
+    export async function getDevelopmentBranch(remote: Remote): Promise<string> {
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        const [repo, branchingModel] = await Promise.all([
+            RepositoriesApi.get(remote),
+            bb.repositories.getBranchingModel({
+                repo_slug: parsed.name,
+                username: parsed.owner
+            })
+        ]);
+
+        return branchingModel.data.development && branchingModel.data.development.branch
+            ? branchingModel.data.development.branch.name!
+            : repo.mainbranch!.name!;
+    }
+
     export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Bitbucket.Schema.Commit[]> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
