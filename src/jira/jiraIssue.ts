@@ -69,6 +69,7 @@ export const emptyIssue: Issue = {
     reporter: emptyUser,
     assignee: emptyUser,
     subtasks: [],
+    issuelinks: [],
     comments: [],
     labels: [],
     attachments: [],
@@ -80,7 +81,7 @@ export const emptyIssue: Issue = {
 
 export type issueOrKey = Issue | string;
 
-export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
+export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
 export const issueExpand = "transitions,renderedFields";
 
 export function isIssue(a: any): a is Issue {
@@ -113,6 +114,10 @@ export function isTransition(a: any): a is Transition {
 
 export function isAttachment(a: any): a is Attachment {
     return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
+}
+
+export function isIssueLinkType(a: any): a is IssueLinkType {
+    return a && (<IssueLinkType>a).id !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined;
 }
 
 export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource): Issue {
@@ -169,10 +174,34 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
     if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
         subtasks = issueJson.fields.subtasks.map((subtaskJson: any) => {
             const subtaskIssue = issueFromJsonObject(subtaskJson, workingSite);
-            // subtask creation data is not returned in the api response
+            // subtask creation date is not returned in the api response
             subtaskIssue.created = new Date(Date.parse(issueJson.fields.created));
             return subtaskIssue;
         });
+    }
+    let issuelinks: IssueLink[] = [];
+    if (issueJson.fields.issuelinks && Array.isArray(issueJson.fields.issuelinks)) {
+        issuelinks = issueJson.fields.issuelinks
+            .filter((issuelinkJson: any) => isIssueLinkType(issuelinkJson.type) && (issuelinkJson.inwardIssue || issuelinkJson.outwardIssue))
+            .map((issuelinkJson: any): IssueLink => {
+                if (issuelinkJson.inwardIssue) {
+                    const linkedIssue = issueFromJsonObject(issuelinkJson.inwardIssue, workingSite);
+                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
+                    return {
+                        id: issuelinkJson.id,
+                        type: issuelinkJson.type,
+                        inwardIssue: linkedIssue
+                    };
+                } else {
+                    const linkedIssue = issueFromJsonObject(issuelinkJson.outwardIssue, workingSite);
+                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
+                    return {
+                        id: issuelinkJson.id,
+                        type: issuelinkJson.type,
+                        outwardIssue: linkedIssue
+                    };
+                }
+            });
     }
 
     const thisIssue = {
@@ -190,6 +219,7 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
         assignee: isUser(issueJson.fields.assignee) ? issueJson.fields.assignee : emptyUser,
         parentKey: issueJson.fields.parent ? issueJson.fields.parent.key : undefined,
         subtasks: subtasks,
+        issuelinks: issuelinks,
         comments: comments,
         labels: labels,
         attachments: attachments,
@@ -218,6 +248,7 @@ export interface Issue {
     reporter: User;
     assignee: User;
     subtasks: Issue[];
+    issuelinks: IssueLink[];
     comments: Comment[];
     labels: string[];
     attachments: Attachment[];
@@ -282,4 +313,18 @@ export interface Transition {
 export interface IdName {
     id: string;
     name: string;
+}
+
+export interface IssueLinkType {
+    id: string;
+    name: string;
+    inward: string;
+    outward: string;
+}
+
+export interface IssueLink {
+    id: string;
+    type: IssueLinkType;
+    inwardIssue?: Issue;
+    outwardIssue?: Issue;
 }

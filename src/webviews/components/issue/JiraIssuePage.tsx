@@ -37,6 +37,7 @@ import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
+import LinkedIssues from "./LinkedIssues";
 
 type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -57,6 +58,7 @@ const emptyIssueData: IssueData = {
   assignee: emptyUser,
   parentKey: undefined,
   subtasks: [],
+  issuelinks: [],
   comments: [],
   labels: [],
   attachments: [],
@@ -270,6 +272,13 @@ export default class JiraIssuePage extends WebviewComponent<
         <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
       </React.Fragment>;
 
+    const issuelinks = (Array.isArray(this.state.data.issuelinks) && this.state.data.issuelinks.length === 0)
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+        <h3>Linked issues</h3>
+        <LinkedIssues issuelinks={this.state.data.issuelinks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+      </React.Fragment>;
+
     return (
       <Page>
 
@@ -282,6 +291,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   {this.details(issue)}
                   {subtasks}
                   {childIssues}
+                  {issuelinks}
                   <h3>Comments</h3>
                   <Comments issue={issue} onSave={this.handleSave} />
                 </div>
@@ -294,6 +304,7 @@ export default class JiraIssuePage extends WebviewComponent<
                     {this.header(issue)}
                     {subtasks}
                     {childIssues}
+                    {issuelinks}
                     <h3>Comments</h3>
                     <Comments issue={issue} onSave={this.handleSave} />
                   </GridColumn>
