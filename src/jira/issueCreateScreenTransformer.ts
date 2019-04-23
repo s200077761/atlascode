@@ -26,7 +26,7 @@ const knownSystemSchemas: string[] = [
     //,'attachment'
     , 'versions'
     , 'duedate'
-    //,'issuelinks' // TODO: handle issuelinks in UI
+    , 'issuelinks'
     //,'worklog'
     , 'assignee'
 ];
@@ -82,7 +82,7 @@ const schemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , ['resolution', UIType.Select]
         , ['labels', UIType.Select]
         , ['versions', UIType.Select]
-        , ['issuelinks', UIType.Select]
+        , ['issuelinks', UIType.IssueLink]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect', UIType.Select]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:multiselect', UIType.Select]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:select', UIType.Select]
@@ -248,6 +248,17 @@ function transformField(field: JIRA.Schema.FieldMetaBean): any {
                 isCascading: (field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
                 isCreateable: isCreateableSelect(field.schema),
                 autoCompleteUrl: (field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
+                advanced: isAdvanced(field)
+            };
+        }
+        case UIType.IssueLink: {
+            return {
+                required: field.required,
+                name: field.name,
+                key: field.key,
+                uiType: UIType.IssueLink,
+                autoCompleteUrl: (field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
+                allowedValues: [],
                 advanced: isAdvanced(field)
             };
         }

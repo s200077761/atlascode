@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList, PreliminaryIssueData } from '../../../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
 import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
 import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
@@ -90,11 +90,25 @@ const UserValue = (props: any) => {
     );
 };
 
+const IssueSuggestionOption = (props: any) => (
+    <Option {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }} dangerouslySetInnerHTML={{ __html: props.data.summary }} /></div>
+    </Option>
+);
+
+const IssueSuggestionValue = (props: any) => (
+    <components.SingleValue {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
+    </components.SingleValue>
+
+);
+
 export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private newProjects: WorkingProject[] = [];
     private issueTypes: any[] = [];
     private labelSuggestions: string[] | undefined = undefined;
     private userSuggestions: any[] | undefined = undefined;
+    private issueSuggestions: any[] | undefined = undefined;
     private newOption: any;
 
     constructor(props: any) {
@@ -105,7 +119,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
     refreshSelectFields(issueTypeId: string | undefined, issueData: CreateIssueData): Object {
         let fieldOptions = {};
         if (issueTypeId) {
-            let selectFields = issueData.issueTypeScreens[issueTypeId].fields.filter(field => { return field.uiType === UIType.Select; });
+            let selectFields = issueData.issueTypeScreens[issueTypeId].fields.filter(field => { return field.uiType === UIType.Select || field.uiType === UIType.IssueLink; });
 
             selectFields.forEach(field => {
                 fieldOptions[field.key] = this.getSelectOptions(issueTypeId, field.key, issueData);
@@ -130,6 +144,13 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             { label: 'Unreleased Versions', options: unreleasedOpts }
                             , { label: 'Released Versions', options: releasedOpts }
                         ];
+                        break;
+                    }
+                    case 'issuelinks': {
+                        field.allowedValues.forEach(opt => {
+                            opts.push({ ...opt, name: opt.inward, type: 'inward' });
+                            opts.push({ ...opt, name: opt.outward, type: 'outward' });
+                        });
                         break;
                     }
 
@@ -173,6 +194,10 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'userList': {
                 this.userSuggestions = (e as UserList).users;
+                break;
+            }
+            case 'issueSuggestionsList': {
+                this.issueSuggestions = (e as IssueSuggestionsList).issues;
                 break;
             }
             case 'preliminaryIssueData': {
@@ -321,6 +346,27 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     clearInterval(timer);
                     this.setState({ isSomethingLoading: false, loadingField: '' });
                     resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
+    }
+
+    loadIssueOptions = (input: string): Promise<any> => {
+        return new Promise(resolve => {
+            this.issueSuggestions = undefined;
+            this.postMessage({ action: 'fetchIssues', query: input });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.issueSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.issueSuggestions === undefined) {
+                        this.issueSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(this.issueSuggestions);
                 }
             }, 100);
         });
@@ -741,7 +787,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                             getOptionLabel={(option: any) => (option.name) ? option.name : option.value}
                                             getOptionValue={(option: any) => option.id}
                                             options={this.state.fieldOptions[field.key]}
-                                            components={(selectField.allowedValues.length > 0 && selectField.allowedValues[0].iconUrl) ? { Option: IconOption, SingleValue: IconValue } : {}}
+                                            components={(selectField.allowedValues.length > 0) ? { Option: IconOption, SingleValue: IconValue } : {}}
                                         />
                                         {errDiv}
                                     </div>
@@ -749,6 +795,71 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             }
                         }
                     </Field>
+                );
+            }
+            case UIType.IssueLink: {
+                const selectField = field as SelectScreenField;
+
+                let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
+                return (
+                    <React.Fragment>
+                        <Field label={field.name}
+                            isRequired={field.required}
+                            id={`${field.key}.type`}
+                            name={`${field.key}.type`}
+                            validate={validateFunc}>
+                            {
+                                (fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+
+                                    return (
+                                        <div>
+                                            <Select
+                                                {...fieldArgs.fieldProps}
+                                                isMulti={selectField.isMulti}
+                                                isClearable={!field.required && selectField.isMulti}
+                                                className="ac-select-container"
+                                                classNamePrefix="ac-select"
+                                                getOptionLabel={(option: any) => (option.name) ? option.name : option.value}
+                                                getOptionValue={(option: any) => (option.name) ? option.name : option.value}
+                                                placeholder="Select link type"
+                                                options={this.state.fieldOptions[field.key]}
+                                                components={(selectField.allowedValues && selectField.allowedValues.length > 0 && selectField.allowedValues[0].iconUrl) ? { Option: IconOption, SingleValue: IconValue } : {}}
+                                            />
+                                            {errDiv}
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+                        <Field
+                            id={`${field.key}.issue`}
+                            name={`${field.key}.issue`}>
+                            {
+                                (fieldArgs: any) => {
+                                    return (
+                                        <AsyncSelect
+                                            {...fieldArgs.fieldProps}
+                                            className="ac-select-container"
+                                            classNamePrefix="ac-select"
+                                            loadOptions={this.loadIssueOptions}
+                                            getOptionLabel={(option: any) => option.key}
+                                            getOptionValue={(option: any) => option.key}
+                                            placeholder="Search for an issue"
+                                            isLoading={this.state.loadingField === field.key}
+                                            isDisabled={this.state.isSomethingLoading}
+                                            isMulti={selectField.isMulti}
+                                            components={{ Option: IssueSuggestionOption, SingleValue: IssueSuggestionValue }}
+                                        />
+                                    );
+                                }
+                            }
+                        </Field>
+
+                    </React.Fragment>
                 );
             }
         }
