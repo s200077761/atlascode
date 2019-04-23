@@ -116,6 +116,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.viewInWebBrowser",
+                "title": "View issue in browser",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.refreshPullRequests",
                 "title": "Refresh Bitbucket pull requests",
                 "icon": {
@@ -198,6 +203,16 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.viewPipelineBuildInWebBrowser",
+                "title": "View in browser",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.viewIssueInWebBrowser",
+                "title": "View in browser",
                 "category": "Atlassian"
             }
         ],
@@ -344,6 +359,11 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.jira.viewInWebBrowser",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
@@ -353,6 +373,12 @@
                     "when": "viewItem == pullrequest"
                 },
                 {
+                    "command": "atlascode.bb.viewPipelineBuildInWebBrowser",
+                    "when": "viewItem == pipelineBuild"
+                }, {
+                    "command": "atlascode.bb.viewIssueInWebBrowser",
+                    "when": "viewItem == bitbucketIssue"
+                }, {
                     "command": "atlascode.bb.startPipeline",
                     "when": "viewItem == pipelineBranch"
                 }

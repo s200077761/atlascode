@@ -21,7 +21,7 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
         if (this._children.length > 0 && this._children[this._children.length - 1] instanceof NextPageNode) {
             this._children.pop();
         }
-        this._children!.push(...issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] })));
+        this._children!.push(...issues.data.map(i => new BitbucketIssueNode(i)));
         if (issues.next) { this._children!.push(new NextPageNode(issues)); }
     }
 
@@ -42,10 +42,30 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
             if (issues.data.length === 0) {
                 return [new EmptyStateNode('No open issues for this repository')];
             }
-            this._children = issues.data.map(i => new EmptyStateNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
+            this._children = issues.data.map(i => new BitbucketIssueNode(i));
             if (issues.next) { this._children!.push(new NextPageNode(issues)); }
         }
         return this._children;
+    }
+}
+
+export class BitbucketIssueNode extends BaseNode {
+    constructor(readonly issue: Bitbucket.Schema.Issue) {
+        super();
+    }
+
+    getTreeItem(): vscode.TreeItem {
+        const treeItem = new vscode.TreeItem(`#${this.issue.id} ${this.issue.title!}`);
+        treeItem.command = {
+            command: Commands.ShowBitbucketIssue,
+            title: 'Open bitbucket issue', arguments: [this.issue]
+        };
+        treeItem.contextValue = 'bitbucketIssue';
+        return treeItem;
+    }
+
+    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+        return [];
     }
 }
 

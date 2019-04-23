@@ -9,12 +9,14 @@ import { assignIssue } from './commands/jira/assignIssue';
 import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
 import { BaseNode } from './views/nodes/baseNode';
-import { BranchNode } from './views/pipelines/PipelinesTree';
+import { BranchNode, PipelineNode } from './views/pipelines/PipelinesTree';
 import { viewScreenEvent, Registry } from './analytics';
 import { Issue, isIssue } from './jira/jiraIssue';
 import { showIssue } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { PullRequestCommentController } from './views/pullrequest/prCommentController';
+import { viewInBrowser } from './commands/jira/viewInBrowser';
+import { BitbucketIssueNode } from './views/bbissues/bbIssueNode';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -47,8 +49,10 @@ export enum Commands {
     TransitionIssue = 'atlascode.jira.transitionIssue',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
+    JiraViewInWebBrowser = 'atlascode.jira.viewInWebBrowser',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
     StartPipeline = 'atlascode.bb.startPipeline',
+    PipelinesViewInWebBrowser = 'atlascode.bb.viewPipelineBuildInWebBrowser',
     RefreshPipelines = 'atlascode.bb.refreshPipelines',
     ShowPipeline = 'atlascode.bb.showPipeline',
     PipelinesNextPage = 'atlascode.bb.pipelinesNextPage',
@@ -57,6 +61,7 @@ export enum Commands {
     CreateBitbucketIssue = 'atlascode.bb.createIssue',
     ShowBitbucketIssue = 'atlascode.bb.showIssue',
     StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
+    BitbucketIssuesViewInWebBrowser = 'atlascode.bb.viewIssueInWebBrowser',
     ViewDiff = 'atlascode.viewDiff'
 }
 
@@ -81,8 +86,11 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrIssue: IssueNode | Issue) => Container.startWorkOnIssueWebview.createOrShowIssue(isIssue(issueNodeOrIssue) ? issueNodeOrIssue : issueNodeOrIssue.issue)),
+        vscode.commands.registerCommand(Commands.JiraViewInWebBrowser, (issueNode: IssueNode) => { viewInBrowser(issueNode.issue); }),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: Bitbucket.Schema.Issue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
+        vscode.commands.registerCommand(Commands.PipelinesViewInWebBrowser, (node: PipelineNode) => vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`${node.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${node.pipeline.build_number}`))),
+        vscode.commands.registerCommand(Commands.BitbucketIssuesViewInWebBrowser, (node: BitbucketIssueNode) => { vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(node.issue.links!.html!.href!)); }),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: any[]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             vscode.commands.executeCommand('vscode.diff', ...diffArgs);
