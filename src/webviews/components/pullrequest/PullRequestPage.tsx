@@ -8,7 +8,6 @@ import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
-import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -179,9 +178,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     onClick={this.handleMerge}>
                     {isPrOpen ? 'Merge' : pr.state}
                 </Button>
-                <Tooltip content='Open pull request on bitbucket.org'>
-                    <Button className='ac-button' href={pr.links!.html!.href} iconBefore={<BitbucketIcon />} />
-                </Tooltip>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
@@ -191,7 +187,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             <BreadcrumbsStateless onExpand={() => { }}>
                 <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repository!.name!} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />} />
                 <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />} />
-                <BreadcrumbsItem component={() => <NavItem text={`${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`Pull request #${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink} />} />
             </BreadcrumbsStateless>
         );
 
