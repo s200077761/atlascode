@@ -1,14 +1,14 @@
 
-import {  JiraIssueWebview } from './jiraIssueWebview';
+import { JiraIssueWebview } from './jiraIssueWebview';
 import { AbstractMultiViewManager } from './multiViewManager';
-import { issueOrKey, isIssue } from '../jira/jiraModel';
+import { Issue } from '../jira/jiraModel';
 
 // JiraIssueViewManager manages views for issue details.
-export class JiraIssueViewManager extends AbstractMultiViewManager<issueOrKey> {
+export class JiraIssueViewManager extends AbstractMultiViewManager<Issue> {
 
-    dataKey(data: issueOrKey): string {
-        return isIssue(data) ? data.key : data;
-        
+    dataKey(data: Issue): string {
+        return data.key;
+
     }
 
     createView(extensionPath: string) {

@@ -2,14 +2,13 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
+import { Issue, emptyIssue, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
-import { isEmptySite } from '../config/model';
 import { providerForSite } from '../atlclients/authInfo';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
@@ -20,14 +19,12 @@ import { PullRequestApi } from '../bitbucket/pullRequests';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 
 type Emit = IssueData | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<issueOrKey> {
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
     private _state: Issue = emptyIssue;
     private _currentUserId?: string;
-    private _issueKey: string = "";
 
     constructor(extensionPath: string) {
         super(extensionPath);
-        this.tenantId = Container.jiraSiteManager.effectiveSite.id;
     }
 
     public get title(): string {
@@ -37,13 +34,8 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(data: issueOrKey) {
-
-        if (isIssue(data)) {
-            this._issueKey = data.key;
-        } else {
-            this._issueKey = data;
-        }
+    async initialize(data: Issue) {
+        this._state = data;
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -55,14 +47,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             return;
         }
 
-        try {
-            let issue = await fetchIssue(data);
-            this.updateIssue(issue);
-        }
-        catch (e) {
-            Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
-        }
+        this.invalidate();
     }
 
     public invalidate() {
@@ -166,9 +151,6 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
     public async updateIssue(issue: Issue) {
         this._state = issue;
-        if (!isEmptySite(issue.workingSite)) {
-            this.tenantId = issue.workingSite.id;
-        }
         if (!this._currentUserId) {
             const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
             this._currentUserId = authInfo ? authInfo.user.id : undefined;
@@ -185,7 +167,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         let msg = issue as IssueData;
         msg.type = 'update';
         msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
-        const childIssues = await issuesForJQL(`"Parent link"=${issue.key}`);
+        const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key}`);
         msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
         msg.workInProgress = msg.isAssignedToMe &&
             issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
@@ -201,12 +183,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         }
     }
 
-    private async forceUpdateIssue(issue?: Issue) {
-        let key = issue !== undefined ? issue.key : this._issueKey;
-        if (key !== "") {
+    private async forceUpdateIssue() {
+        if (this._state.key !== "") {
             try {
-                let issue = await fetchIssue(key, this._state.workingSite);
-                this.updateIssue(issue);
+                let issue = await fetchIssue(this._state.key, this._state.workingSite);
+                await this.updateIssue(issue);
             }
             catch (e) {
                 Logger.error(e);
@@ -223,7 +204,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
         const relatedPrs = await Promise.all(prs.map(async pr => {
             const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.summary!.raw!)];
-            return issueKeys.find(key => key.toLowerCase() === this._issueKey.toLowerCase()) !== undefined
+            return issueKeys.find(key => key.toLowerCase() === this._state.key.toLowerCase()) !== undefined
                 ? pr
                 : undefined;
         }));
