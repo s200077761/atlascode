@@ -29,7 +29,7 @@ export interface RepoData {
     defaultReviewers: Bitbucket.Schema.User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
-    mainbranch?: string;
+    developmentBranch?: string;
     hasLocalChanges?: boolean;
 }
 

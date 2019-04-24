@@ -172,7 +172,7 @@ export default class StartWorkPage extends WebviewComponent<
   }
 
   handleRepoChange = (repo: { label: string, value: RepoData }) => {
-    const sourceBranchValue = repo!.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo!.value.mainbranch!) !== -1);
+    const sourceBranchValue = repo!.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo!.value.developmentBranch!) !== -1);
     this.setState({ repo: repo, sourceBranch: sourceBranchValue ? { label: sourceBranchValue.name!, value: sourceBranchValue } : undefined });
   }
 
@@ -240,7 +240,7 @@ export default class StartWorkPage extends WebviewComponent<
     if (generatedBranchNameOption) {
       branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
     }
-    const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.mainbranch!) !== -1) || repo.value.localBranches[0];
+    const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.developmentBranch!) !== -1) || repo.value.localBranches[0];
     const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
     const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
     this.setState({

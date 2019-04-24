@@ -46,8 +46,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     continue;
                 }
 
-                const [, repo, defaultReviewers] = await Promise.all([r.fetch(), RepositoriesApi.get(bbRemotes[0]), PullRequestApi.getDefaultReviewers(bbRemotes[0])]);
-                const mainbranch = repo.mainbranch ? repo.mainbranch!.name : undefined;
+                const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
+                    r.fetch(),
+                    RepositoriesApi.get(bbRemotes[0]),
+                    RepositoriesApi.getDevelopmentBranch(bbRemotes[0]),
+                    PullRequestApi.getDefaultReviewers(bbRemotes[0])
+                ]);
                 await state.push({
                     uri: r.rootUri.toString(),
                     href: repo.links!.html!.href,
@@ -62,7 +66,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                             .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
                             .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
                     ),
-                    mainbranch: mainbranch,
+                    developmentBranch: developmentBranch,
                     hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
                 });
             }
