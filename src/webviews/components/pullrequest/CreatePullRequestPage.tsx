@@ -241,10 +241,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         isCreateButtonLoading: false,
                         commits: e.commits,
                         title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits[0].message!
+                            ? e.commits[0].message!.split('\n', 1)[0]
                             : this.state.title,
-                        summary: e.commits.length > 1 && this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
+                        summary: this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
+                            ? e.commits.length === 1
+                                ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1)}${createdFromAtlascodeFooter}`
+                                : `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
                             : this.state.summary
                     });
                 }
@@ -287,19 +289,20 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         return (
             <div className='bitbucket-page'>
                 <Page>
-                    <Grid>
-                        {!this.state.isOnline &&
-                            <Offline />
-                        }
-                        {this.state.isErrorBannerOpen &&
-                            <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
-                        }
-                        <Form
-                            name="bitbucket-pullrequest-form"
-                            onSubmit={(e: any) => this.handleCreatePR(e)}
-                        >
-                            {(frmArgs: any) => {
-                                return (<form {...frmArgs.formProps}>
+                    <Form
+                        name="bitbucket-pullrequest-form"
+                        onSubmit={(e: any) => this.handleCreatePR(e)}
+                    >
+                        {(frmArgs: any) => {
+                            return (<form {...frmArgs.formProps}>
+                                <Grid>
+                                    {!this.state.isOnline &&
+                                        <Offline />
+                                    }
+                                    {this.state.isErrorBannerOpen &&
+                                        <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                                    }
+
                                     <GridColumn medium={12}>
                                         <PageHeader actions={actionsContent}>
                                             <p>Create pull request</p>
@@ -339,7 +342,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                     </div>
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
-                                                        <BitbucketBranchesIcon label='branch' size='medium' />
+                                                        <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
                                                             formatOptionLabel={formatOptionLabel}
                                                             options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
@@ -359,7 +362,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                     </div>
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
-                                                        <BitbucketBranchesIcon label='branch' size='medium' />
+                                                        <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
                                                             options={this.state.remote
                                                                 ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name)
@@ -426,11 +429,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             </Panel>
                                         }
                                     </GridColumn>
-                                </form>);
-                            }
-                            }
-                        </Form>
-                    </Grid>
+                                </Grid>
+                            </form>);
+                        }}
+                    </Form>
                 </Page>
             </div>
         );
