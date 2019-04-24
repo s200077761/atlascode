@@ -17,6 +17,7 @@ import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
+import ConfluenceIcon from '@atlaskit/logo/dist/esm/ConfluenceLogo/Icon';
 import { ButtonGroup } from '@atlaskit/button';
 import PipelinesConfig from './PipelinesConfig';
 import { WorkingProject } from '../../../config/model';
@@ -110,6 +111,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'issueLink' });
     }
 
+    handleDocsLink = () => {
+        this.postMessage({ action: 'docsLink' });
+    }
+
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
@@ -174,6 +179,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
+        const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
 
@@ -263,6 +269,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         </div>
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
                         </div>
                     </GridColumn>
                 </Grid>

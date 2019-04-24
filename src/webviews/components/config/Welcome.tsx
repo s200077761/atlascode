@@ -8,7 +8,7 @@ import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
-// import JiraIcon from '@atlaskit/logo/dist/esm/JiraLogo/Icon';
+import ConfluenceIcon from '@atlaskit/logo/dist/esm/ConfluenceLogo/Icon';
 // import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 // import IssuesIcon from '@atlaskit/icon/glyph/issues';
 // import ArrowUpCircleIcon from '@atlaskit/icon/glyph/arrow-up-circle';
@@ -35,12 +35,17 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
         this.postMessage({ action: 'issueLink' });
     }
 
+    handleDocsLink = () => {
+        this.postMessage({ action: 'docsLink' });
+    }
+
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
+        const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
             <Page>
@@ -52,6 +57,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <DisplayFeedback onFeedback={this.handleFeedback} />
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
+                            <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
                         </ButtonGroup>
                     </GridColumn>
                 </Grid>
@@ -73,6 +79,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>The configured development branch is now the default source when starting work on an issue</li>
                                 <li>Added more default issue code link triggers</li>
                                 <li>🐲 (experimental) bitbucket-pipelines.yml editing support</li>
+                                <li>added external<Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button></li>
                             </ul>
                         </section>
                         <section>

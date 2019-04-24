@@ -27,6 +27,7 @@ declare module '@atlaskit/inline-dialog';
 declare module '@atlaskit/section-message';
 declare module '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 declare module '@atlaskit/logo/dist/esm/JiraLogo/Icon';
+declare module '@atlaskit/logo/dist/esm/ConfluenceLogo/Icon';
 declare module '@atlaskit/form';
 declare module '@atlaskit/datetime-picker';
 declare module '@atlaskit/radio';

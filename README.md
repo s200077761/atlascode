@@ -11,6 +11,7 @@ With Atlassian for VSCode you can create and view issues, start work on issues, 
 * Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 * From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
+For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+For+VSCode)
 ## Features at a Glance
 
 Here's a quick peek at a developer's workflow:
