@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { Resources } from '../../resources';
-import { AbstractIssueTreeNode } from "./abstractIssueTreeNode";
+import { JQLTreeDataProvider } from "./jqlTreeDataProvider";
 import { BaseNode } from '../nodes/baseNode';
 
-export class StaticIssuesNode extends AbstractIssueTreeNode implements BaseNode {
+export class StaticIssuesNode extends JQLTreeDataProvider implements BaseNode {
     public disposables: vscode.Disposable[] = [];
-    
-    constructor(issueKeys:string[], private label: string) {
+
+    constructor(issueKeys: string[], private label: string) {
         super('PullRequestRelatedIssues', `issuekey in (${issueKeys.join(',')})`);
     }
 

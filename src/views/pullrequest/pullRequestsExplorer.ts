@@ -6,7 +6,8 @@ import { Commands } from '../../commands';
 import { PullRequestTreeViewId, setCommandContext, CommandContext } from '../../constants';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
-import { BitbucketExplorer, Tree } from '../BitbucketExplorer';
+import { BitbucketExplorer } from '../BitbucketExplorer';
+import { BaseTreeDataProvider } from '../Explorer';
 
 export class PullRequestsExplorer extends BitbucketExplorer {
 
@@ -38,7 +39,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
         return 'bitbucket.explorer.refreshInterval';
     }
 
-    newTreeDataProvider(): Tree {
+    newTreeDataProvider(): BaseTreeDataProvider {
         return new PullRequestNodeDataProvider(this.ctx);
     }
 

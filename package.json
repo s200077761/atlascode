@@ -474,12 +474,6 @@
                     "description": "Time (in minutes) to wait before refreshing the Jira Issue Explorer (set to 0 to disable auto-refresh)",
                     "scope": "window"
                 },
-                "atlascode.jira.issueMonitor.refreshInterval": {
-                    "type": "integer",
-                    "default": 5,
-                    "description": "Time (in minutes) to wait before checking for new issues in the working project (set to 0 to disable auto-refresh)",
-                    "scope": "window"
-                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,

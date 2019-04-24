@@ -12,9 +12,9 @@ import { Repository } from '../typings/git';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
-import { Tree } from './BitbucketExplorer';
+import { BaseTreeDataProvider } from './Explorer';
 
-export class BitbucketIssuesDataProvider implements Tree {
+export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
     readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, BitbucketIssuesRepositoryNode> | undefined = undefined;
@@ -22,6 +22,7 @@ export class BitbucketIssuesDataProvider implements Tree {
     private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {
+        super();
         this._disposable = Disposable.from(
             commands.registerCommand(Commands.BitbucketIssuesNextPage, async (issues: PaginatedBitbucketIssues) => {
                 const result = await BitbucketIssuesApi.nextPage(issues);

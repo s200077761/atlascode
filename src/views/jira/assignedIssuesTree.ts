@@ -1,27 +1,29 @@
-import { AbstractIssueTree } from "./abstractIssueTree";
-import { AssignedIssuesTreeId } from "../../constants";
+import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 import { Container } from "../../container";
-import { ConfigurationChangeEvent } from "vscode";
-import { configuration } from "../../config/configuration";
+import { WorkingProject } from "../../config/configuration";
+import { Disposable } from 'vscode';
 
-export class AssignedIssuesTree extends AbstractIssueTree {
+export class AssignedIssuesTree extends JQLTreeDataProvider {
+    private _disposable: Disposable;
+
     constructor() {
-        super(AssignedIssuesTreeId, undefined, `You have no assigned issues for '${Container.config.jira.workingProject.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
+        super(undefined, `You have no assigned issues for '${Container.config.jira.workingProject.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
 
         const project = Container.config.jira.workingProject;
+        this._disposable = Disposable.from(
+            this._onDidChangeTreeData,
+        );
         this.setJql(this.jqlForProject(project.id));
     }
 
-    public async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
-        if (!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
-            const project = await Container.jiraSiteManager.getEffectiveProject();
+    dispose() {
+        this._disposable.dispose();
+    }
 
-            this.setEmptyState(`You have no assigned issues for '${project.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
-            this.setJql(this.jqlForProject(project.id));
-        }
-
-        super.onConfigurationChanged(e);
+    public setProject(project: WorkingProject) {
+        this.setEmptyState(`You have no assigned issues for '${project.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
+        this.setJql(this.jqlForProject(project.id));
+        this._onDidChangeTreeData.fire();
     }
 
     private jqlForProject(project?: string): string {

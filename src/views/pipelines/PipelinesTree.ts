@@ -1,4 +1,4 @@
-import { TreeDataProvider, TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Command, Disposable, commands } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Command, Disposable, commands } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
@@ -9,13 +9,14 @@ import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
 import { BaseNode } from "../nodes/baseNode";
+import { BaseTreeDataProvider } from "../Explorer";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
     pipelineUuid: string;
     repo: Repository;
 }
-export class PipelinesTree implements TreeDataProvider<BaseNode>, Disposable {
+export class PipelinesTree extends BaseTreeDataProvider {
     private _disposable: Disposable;
     private _childrenMap = new Map<string, PipelinesRepoNode>();
     private _onDidChangeTreeData = new EventEmitter<BaseNode>();
@@ -24,6 +25,8 @@ export class PipelinesTree implements TreeDataProvider<BaseNode>, Disposable {
     }
 
     constructor() {
+        super();
+
         this._disposable = Disposable.from(
             this._onDidChangeTreeData,
             commands.registerCommand(Commands.PipelinesNextPage, (repo) => { this.fetchNextPage(repo); })

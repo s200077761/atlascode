@@ -1,27 +1,29 @@
-import { AbstractIssueTree } from "./abstractIssueTree";
-import { OpenIssuesTreeId } from "../../constants";
+import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 import { Container } from "../../container";
-import { ConfigurationChangeEvent } from "vscode";
-import { configuration } from "../../config/configuration";
+import { WorkingProject } from "../../config/configuration";
+import { Disposable } from 'vscode';
 
-export class OpenIssuesTree extends AbstractIssueTree {
+export class OpenIssuesTree extends JQLTreeDataProvider {
+    private _disposable: Disposable;
+
     constructor() {
-        super(OpenIssuesTreeId, undefined, `There are no open issues for '${Container.config.jira.workingProject.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
+        super(undefined, `There are no open issues for '${Container.config.jira.workingProject.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
 
         const project = Container.config.jira.workingProject;
+        this._disposable = Disposable.from(
+            this._onDidChangeTreeData,
+        );
         this.setJql(this.jqlForProject(project.id));
     }
 
-    public async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        super.onConfigurationChanged(e);
-        const initializing = configuration.initializing(e);
+    dispose() {
+        this._disposable.dispose();
+    }
 
-        if (!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
-            const project = await Container.jiraSiteManager.getEffectiveProject();
-            this.setEmptyState(`There are no open issues for '${project.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
-            this.setJql(this.jqlForProject(project.id));
-        }
-
+    public setProject(project: WorkingProject) {
+        this.setEmptyState(`You have no open issues for '${project.name}' project in '${Container.jiraSiteManager.effectiveSite.name}' site`);
+        this.setJql(this.jqlForProject(project.id));
+        this._onDidChangeTreeData.fire();
     }
 
     private jqlForProject(project?: string): string {

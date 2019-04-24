@@ -6,7 +6,8 @@ import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../co
 import { BitbucketContext } from "../../bitbucket/bbContext";
 import { PipelinesMonitor } from "./PipelinesMonitor";
 import { Commands } from "../../commands";
-import { BitbucketExplorer, Tree } from "../BitbucketExplorer";
+import { BitbucketExplorer } from "../BitbucketExplorer";
+import { BaseTreeDataProvider } from "../Explorer";
 
 export class PipelinesExplorer extends BitbucketExplorer {
 
@@ -34,7 +35,7 @@ export class PipelinesExplorer extends BitbucketExplorer {
         return 'bitbucket.pipelines.refreshInterval';
     }
 
-    newTreeDataProvider(): Tree {
+    newTreeDataProvider(): BaseTreeDataProvider {
         return new PipelinesTree();
     }
 

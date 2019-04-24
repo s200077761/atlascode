@@ -1,46 +1,23 @@
-import { Disposable, ConfigurationChangeEvent, window, commands } from "vscode";
+import { window, commands } from "vscode";
 import { Container } from "../container";
 import { Commands } from "../commands";
 import { Logger } from "../logger";
-import { configuration, WorkingProject } from "../config/configuration";
+import { WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
 import * as moment from "moment";
 import { AuthProvider } from "../atlclients/authInfo";
 import { Issue } from "./jiraIssue";
-import { RefreshTimer } from "../views/RefreshTimer";
 
-export class NewIssueMonitor implements Disposable {
-  private _disposables: Disposable[] = [];
+export class NewIssueMonitor {
   private _workingProject: WorkingProject | undefined;
   private _timestamp = new Date();
-  private _refreshTimer: RefreshTimer;
 
   constructor() {
-    this._refreshTimer = new RefreshTimer(undefined, 'jira.issueMonitor.refreshInterval', () => this.checkForNewIssues());
-    this._disposables.push(
-      Disposable.from(
-        configuration.onDidChange(this.onConfigurationChanged, this),
-        this._refreshTimer
-      )
-    );
-
-    void this.onConfigurationChanged(configuration.initializingChangeEvent);
   }
 
-  dispose() {
-    this._disposables.forEach(d => d.dispose());
-  }
-
-  protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
-    const initializing = configuration.initializing(e);
-    if (
-      initializing ||
-      configuration.changed(e, "jira.issueMonitor.refreshInterval") ||
-      configuration.changed(e, "jira.workingProject")
-    ) {
-      this._workingProject = await Container.jiraSiteManager.getEffectiveProject();
-      this._timestamp = new Date();
-    }
+  setProject(project: WorkingProject) {
+    this._workingProject = project;
+    this._timestamp = new Date();
   }
 
   async checkForNewIssues() {

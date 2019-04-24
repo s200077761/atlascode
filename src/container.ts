@@ -5,7 +5,7 @@ import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 import { ClientManager } from './atlclients/clientManager';
 import { AuthManager } from './atlclients/authStore';
-import { JiraExplorer } from './views/jira/jiraExplorer';
+import { JiraContext } from './views/jira/jiraContext';
 import { AuthStatusBar } from './views/authStatusBar';
 import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
@@ -14,7 +14,6 @@ import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManage
 import { CreateIssueWebview } from './webviews/createIssueWebview';
 import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
 import { BitbucketContext } from './bitbucket/bbContext';
-import { NewIssueMonitor } from './jira/newIssueMonitor';
 import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
 import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
 import { PipelineViewManager } from './webviews/pipelineViewManager';
@@ -58,7 +57,6 @@ export class Container {
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath));
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
-        context.subscriptions.push((this._newIssueMonitor = new NewIssueMonitor()));
         context.subscriptions.push(new IssueHoverProviderManager());
 
         let analyticsEnv: string = configuration.isDebugging ? 'staging' : 'prod';
@@ -73,13 +71,13 @@ export class Container {
         });
 
         if (config.jira.explorer.enabled) {
-            context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
+            context.subscriptions.push((this._jiraExplorer = new JiraContext()));
         } else {
             let disposable: Disposable;
             disposable = configuration.onDidChange(e => {
                 if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
-                    context.subscriptions.push((this._jiraExplorer = new JiraExplorer()));
+                    context.subscriptions.push((this._jiraExplorer = new JiraContext()));
                 }
             });
         }
@@ -156,8 +154,8 @@ export class Container {
         return this._createBitbucketIssueWebview;
     }
 
-    private static _jiraExplorer: JiraExplorer | undefined;
-    static get jiraExplorer(): JiraExplorer {
+    private static _jiraExplorer: JiraContext | undefined;
+    static get jiraExplorer(): JiraContext {
         return this._jiraExplorer!;
     }
 
@@ -209,11 +207,6 @@ export class Container {
     private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
-    }
-
-    private static _newIssueMonitor: NewIssueMonitor;
-    static get newIssueMonitor() {
-        return this._newIssueMonitor;
     }
 
     static resetConfig() {
