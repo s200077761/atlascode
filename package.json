@@ -619,7 +619,10 @@
                         "type": "string"
                     },
                     "default": [
-                        "TODO:"
+                        "TODO:",
+                        "BUG:",
+                        "FIXME:",
+                        "ISSUE:"
                     ],
                     "description": "Strings that will trigger the Jira issue create Code Lens",
                     "scope": "window"
