@@ -1,3 +1,16 @@
+## What's New In 1.2.1
+### Improvements
+* Added Jira issue links to Issue Details view
+* The configured development branch is now the default source when starting work on an issue
+* Added more default issue code link triggers
+* (experimental) bitbucket-pipelines.yml editing support
+
+### Bugs fixed
+* Mention names in pull request comments are not shown properly
+* Transition menu on start work page not working
+* PR create screen is not splitting the title and description correctly
+* Pipeline summary fails for in-progress builds
+  
 ## What's New In 1.2.0
 ### Improvements
 * Start work from Bitbucket issue webview
