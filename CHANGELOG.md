@@ -9,7 +9,6 @@
 * Mention names in pull request comments are not shown properly
 * Transition menu on start work page not working
 * PR create screen is not splitting the title and description correctly
-* Pipeline summary fails for in-progress builds
   
 ## What's New In 1.2.0
 ### Improvements

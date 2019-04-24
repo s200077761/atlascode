@@ -65,6 +65,24 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.2.1 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added Jira issue links to Issue Details view</li>
+                                <li>The configured development branch is now the default source when starting work on an issue</li>
+                                <li>Added more default issue code link triggers</li>
+                                <li>🐲 (experimental) bitbucket-pipelines.yml editing support</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Mention names in pull request comments are not shown properly</li>
+                                <li>Transition menu on start work page not working</li>
+                                <li>PR create screen is not splitting the title and description correctly</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.2.0 🎉</h2>
                         <section>
                             <h4>✨ Improvements ✨</h4>
