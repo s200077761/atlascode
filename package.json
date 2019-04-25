@@ -355,17 +355,7 @@
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem == pullrequest"
-                },
-                {
-                    "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem == pipelineBuild"
-                }, {
-                    "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem == bitbucketIssue"
-                }, {
-                    "command": "atlascode.bb.startPipeline",
-                    "when": "viewItem == pipelineBranch"
+                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue|pipelineBranch)/"
                 }
             ],
             "commandPalette": [
