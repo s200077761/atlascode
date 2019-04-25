@@ -253,6 +253,7 @@ export class PipelineNode extends BaseNode {
         item.contextValue = PipelineBuildContextValue;
         item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo }] };
         item.iconPath = iconUriForPipeline(this.pipeline);
+        item.resourceUri = Uri.parse(`${this.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.pipeline.build_number}`);
         return item;
     }
 

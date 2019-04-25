@@ -61,6 +61,7 @@ export class BitbucketIssueNode extends BaseNode {
             title: 'Open bitbucket issue', arguments: [this.issue]
         };
         treeItem.contextValue = 'bitbucketIssue';
+        treeItem.resourceUri = vscode.Uri.parse(this.issue.links!.html!.href!);
         return treeItem;
     }
 

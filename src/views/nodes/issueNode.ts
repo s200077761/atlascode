@@ -6,9 +6,9 @@ import { Commands } from "../../commands";
 const IssueNodeContextValue = 'jiraIssue';
 
 export class IssueNode extends BaseNode {
-    public issue:Issue;
+    public issue: Issue;
 
-    constructor(_issue:Issue) {
+    constructor(_issue: Issue) {
         super();
         this.issue = _issue;
     }
@@ -19,6 +19,7 @@ export class IssueNode extends BaseNode {
         treeItem.iconPath = vscode.Uri.parse(this.issue.issueType.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
         treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}`;
+        treeItem.resourceUri = vscode.Uri.parse(`https://${this.issue.workingSite.name}.${this.issue.workingSite.baseUrlSuffix}/browse/${this.issue.key}`);
         return treeItem;
     }
 
