@@ -11,3 +11,55 @@ patch-package
  
  /**
   * Expose constructors.
+--- a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js
++++ b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js
+@@ -5,16 +5,16 @@
+  * @return {Object}
+  * @api private
+  */
+-exports.parse = function(json) {
++exports.parse = function (json) {
+   if ('string' == typeof json) {
+     json = JSON.parse(json);
+   }
+ 
+   var profile = {};
+   profile.id = json.uuid;
++  profile.accountId = json.account_id;
+   profile.displayName = json.display_name;
+-  profile.username = json.username;
+-  profile.profileUrl = json.links.html.href;
++  profile.nickname = json.nickname;
+ 
+   return profile;
+ };
+--- a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js
++++ b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js
+@@ -74,15 +74,15 @@ util.inherits(Strategy, OAuth2Strategy);
+  *
+  *   - `provider`         always set to `bitbucket`
+  *   - `id`               the user's Bitbucket uuid
+- *   - `username`         the user's Bitbucket username
++ *   - `accountId`        the user's Atlassian account id
++ *   - `nickname`         the user's Bitbucket nickname
+  *   - `displayName`      the user's full name
+- *   - `profileUrl`       the URL of the profile for the user on Bitbucket
+  *
+  * @param {String} accessToken
+  * @param {Function} done
+  * @api protected
+  */
+-Strategy.prototype.userProfile = function(accessToken, done) {
++Strategy.prototype.userProfile = function (accessToken, done) {
+   this._oauth2.get(this._userProfileURL, accessToken, function (err, body, res) {
+     var json;
+ 
+@@ -97,7 +97,7 @@ Strategy.prototype.userProfile = function(accessToken, done) {
+     }
+ 
+     var profile = Profile.parse(json);
+-    profile.provider  = 'bitbucket';
++    profile.provider = 'bitbucket';
+     profile._raw = body;
+     profile._json = json;
+ 
