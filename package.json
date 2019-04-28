@@ -125,8 +125,8 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.viewInWebBrowser",
-                "title": "View on bitbucket.org",
+                "command": "atlascode.viewInWebBrowser",
+                "title": "View in Browser",
                 "category": "Atlassian"
             },
             {
@@ -344,17 +344,18 @@
                     "group": "jiraContextMenuGroup1"
                 },
                 {
+                    "command": "atlascode.viewInWebBrowser",
+                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
+                    "group": "jiraContextMenuGroup1"
+                },
+                {
                     "command": "atlascode.jira.createIssue",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup2"
                 },
                 {
-                    "command": "atlascode.bb.viewInWebBrowser",
-                    "when": "viewItem == pullrequest"
-                },
-                {
-                    "command": "atlascode.bb.startPipeline",
-                    "when": "viewItem == pipelineBranch"
+                    "command": "atlascode.viewInWebBrowser",
+                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue|pipelineBranch)/"
                 }
             ],
             "commandPalette": [

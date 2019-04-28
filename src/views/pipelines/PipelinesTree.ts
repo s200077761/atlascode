@@ -194,6 +194,7 @@ export class PipelinesRepoNode extends BaseNode {
 }
 
 const PipelineBranchContextValue = 'pipelineBranch';
+const PipelineBuildContextValue = 'pipelineBuild';
 
 function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
     switch (statusForState(pipeline.state)) {
@@ -238,19 +239,21 @@ function statusForPipeline(pipeline: Pipeline): string {
 }
 
 export class PipelineNode extends BaseNode {
-    constructor(private _repoNode: PipelinesRepoNode, private _pipeline: Pipeline, private _repo: Repository) {
+    constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline, private _repo: Repository) {
         super();
     }
 
     getTreeItem() {
         var label = "";
-        if (this._pipeline.created_on) {
-            label = moment(this._pipeline.created_on).fromNow();
+        if (this.pipeline.created_on) {
+            label = moment(this.pipeline.created_on).fromNow();
         }
-        label += ` ${statusForPipeline(this._pipeline)}`;
+        label += ` ${statusForPipeline(this.pipeline)}`;
         const item = new TreeItem(label);
-        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this._pipeline.uuid, repo: this._repo }] };
-        item.iconPath = iconUriForPipeline(this._pipeline);
+        item.contextValue = PipelineBuildContextValue;
+        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo }] };
+        item.iconPath = iconUriForPipeline(this.pipeline);
+        item.resourceUri = Uri.parse(`${this.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.pipeline.build_number}`);
         return item;
     }
 
