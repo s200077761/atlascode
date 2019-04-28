@@ -2,13 +2,13 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchUsersQuery, isOpenJiraIssue } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
-import { IssueTypeIdScreens } from '../jira/createIssueMeta';
+import { IssueTypeIdScreens, SelectScreenField, UIType } from '../jira/createIssueMeta';
 import { issueCreatedEvent } from '../analytics';
 
 export interface PartialIssue {
@@ -19,7 +19,7 @@ export interface PartialIssue {
     description?: string;
 }
 
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | PreliminaryIssueData;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
 
@@ -89,9 +89,35 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
             let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: projects, expand: 'projects.issuetypes.fields' });
             let transformation = transformIssueScreens(res.data.projects![0], undefined, false);
+            transformation.screens = await this.addIssuelinksFieldData(client, transformation.screens);
             return transformation;
         }
         return Promise.reject("unable to get a jira client");
+    }
+
+    async addIssuelinksFieldData(client: JIRA, screens: IssueTypeIdScreens): Promise<IssueTypeIdScreens> {
+        const issuelinksKey = 'issuelinks';
+        try {
+            const issuelinkTypes = await client.issueLinkType.getIssueLinkTypes({});
+            if (Array.isArray(issuelinkTypes.data.issueLinkTypes) && issuelinkTypes.data.issueLinkTypes.length > 0) {
+                Object.values(screens).forEach(screen => {
+                    screen.fields.filter(screen => screen.key === issuelinksKey).forEach(issuelinksfield => {
+                        (issuelinksfield as SelectScreenField).allowedValues = issuelinkTypes.data.issueLinkTypes!;
+                    });
+                });
+            } else {
+                Object.values(screens).forEach(screen => {
+                    screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
+                });
+            }
+            return screens;
+        } catch (e) {
+            Object.values(screens).forEach(screen => {
+                screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
+            });
+            Logger.debug(new Error(`error getting issuelinks field data: ${e}`));
+            return screens;
+        }
     }
 
     finalizeTodoIssueCreation(issueKey: string) {
@@ -182,6 +208,29 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     }
                     break;
                 }
+                case 'fetchIssues': {
+                    handled = true;
+                    if (isFetchQuery(e)) {
+                        try {
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                let res: JIRA.Response<JIRA.Schema.IssuePickerResult> = await client.issue.getIssuePickerSuggestions({ query: e.query });
+                                let suggestions: JIRA.Schema.IssuePickerIssue[] = [];
+                                if (Array.isArray(res.data.sections)) {
+                                    suggestions = res.data.sections.reduce((prev, curr) => prev.concat(curr.issues), []);
+                                }
+                                this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
+
+                            } else {
+                                this.postMessage({ type: 'error', reason: "jira client undefined" });
+                            }
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching users: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
                 case 'getScreensForProject': {
                     handled = true;
                     if (isScreensForProjects(e)) {
@@ -226,7 +275,26 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
                             if (client) {
-                                let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
+                                let issueUpdates = undefined;
+                                if (e.issueData.issuelinks &&
+                                    e.issueData.issuelinks.type && e.issueData.issuelinks.type.id &&
+                                    e.issueData.issuelinks.issue && e.issueData.issuelinks.issue.key) {
+                                    const issuelinks = [{
+                                        add: {
+                                            type: {
+                                                id: e.issueData.issuelinks.type.id
+                                            },
+                                            inwardIssue: e.issueData.issuelinks.type.type === 'inward' ? { key: e.issueData.issuelinks.issue.key } : undefined,
+                                            outwardIssue: e.issueData.issuelinks.type.type === 'outward' ? { key: e.issueData.issuelinks.issue.key } : undefined
+                                        }
+                                    }];
+
+                                    issueUpdates = { issuelinks: issuelinks };
+                                }
+
+                                delete e.issueData.issuelinks;
+
+                                let resp = await client.issue.createIssue({ body: { fields: e.issueData, update: issueUpdates } });
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
                                 issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);

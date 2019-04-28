@@ -6,7 +6,9 @@ export enum UIType {
     Input = 'input',
     Date = 'date',
     DateTime = 'datetime',
-    User = 'user'
+    User = 'user',
+    IssueLink = 'issuelink',
+    NOT_RENDERED = 'not_rendered'
 }
 
 export enum InputValueType {
@@ -16,37 +18,37 @@ export enum InputValueType {
 }
 
 export interface ScreenField {
-    required:boolean;
-    name:string;
-    key:string;
-    uiType:UIType;
-    advanced:boolean;
+    required: boolean;
+    name: string;
+    key: string;
+    uiType: UIType;
+    advanced: boolean;
 }
 
 export interface InputScreenField extends ScreenField {
-    valueType:InputValueType;
+    valueType: InputValueType;
 }
 
 export interface OptionableScreenField extends ScreenField {
-    allowedValues:any[];
+    allowedValues: any[];
 }
 
 export interface UserScreenField extends ScreenField {
-    isMulti:boolean;
+    isMulti: boolean;
 }
 
 export interface SelectScreenField extends OptionableScreenField {
-    isMulti:boolean;
-    isCascading:boolean;
-    isCreateable:boolean;
-    autoCompleteUrl:string;
+    isMulti: boolean;
+    isCascading: boolean;
+    isCreateable: boolean;
+    autoCompleteUrl: string;
 }
 
 export interface IssueTypeScreen {
-    name:string;
-    id:string;
-    iconUrl:string;
-    fields:ScreenField[];
+    name: string;
+    id: string;
+    iconUrl: string;
+    fields: ScreenField[];
 }
 
-export type IssueTypeIdScreens = {[k:string]:IssueTypeScreen};
+export type IssueTypeIdScreens = { [k: string]: IssueTypeScreen };
