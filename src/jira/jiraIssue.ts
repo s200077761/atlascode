@@ -125,10 +125,6 @@ export function isIssueLinkType(a: any): a is IssueLinkType {
     return a && (<IssueLinkType>a).id !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined;
 }
 
-export function isEpic(a: any): a is Issue {
-    return a && (<Issue>a).epicName !== undefined && (<Issue>a).epicName !== '';
-}
-
 export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource, epicFields: EpicFieldInfo): Issue {
     let jsonComments: any[] = [];
     if (issueJson.renderedFields && issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
@@ -236,7 +232,7 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
         components: components,
         fixVersions: fixVersions,
         workingSite: workingSite,
-        isEpic: isEpic(issueJson),
+        isEpic: (issueJson.fields[epicFields.epicName.id] && issueJson.fields[epicFields.epicName.id] !== ''),
         epicName: issueJson.fields[epicFields.epicName.id],
         epicLink: issueJson.fields[epicFields.epicLink.id],
         epicChildren: []

@@ -108,8 +108,6 @@ export default class JiraIssuePage extends WebviewComponent<
     };
   }
 
-  componentUpdater = (data: IssueData) => { };
-
   public onMessageReceived(e: any) {
     switch (e.type) {
       case 'error': {
@@ -132,12 +130,6 @@ export default class JiraIssuePage extends WebviewComponent<
         break;
       }
     }
-  }
-
-  componentWillMount() {
-    this.componentUpdater = data => {
-      this.setState({ data: data });
-    };
   }
 
   handleSave = (issue: Issue, comment: string) => {
@@ -279,6 +271,13 @@ export default class JiraIssuePage extends WebviewComponent<
         <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
       </React.Fragment>;
 
+    const epicChildren = (Array.isArray(issue.epicChildren) && issue.epicChildren.length === 0)
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+        <h3>Issues in this epic</h3>
+        <IssueList issues={issue.epicChildren} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+      </React.Fragment>;
+
     const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
@@ -304,6 +303,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   {this.header(issue)}
                   {this.details(issue)}
                   {subtasks}
+                  {epicChildren}
                   {childIssues}
                   {issuelinks}
                   <h3>Comments</h3>
@@ -317,6 +317,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   <GridColumn medium={8}>
                     {this.header(issue)}
                     {subtasks}
+                    {epicChildren}
                     {childIssues}
                     {issuelinks}
                     <h3>Comments</h3>
