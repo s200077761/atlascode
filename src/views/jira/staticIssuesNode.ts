@@ -7,7 +7,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements BaseNode {
     public disposables: vscode.Disposable[] = [];
 
     constructor(issueKeys: string[], private label: string) {
-        super('PullRequestRelatedIssues', `issuekey in (${issueKeys.join(',')})`);
+        super(`issuekey in (${issueKeys.join(',')})`, 'PullRequestRelatedIssues');
     }
 
     getTreeItem(): vscode.TreeItem {
