@@ -39,6 +39,10 @@ export interface UserList extends Message {
     users: any[];
 }
 
+export interface IssueSuggestionsList extends Message {
+    issues: any[];
+}
+
 export interface CreatedSomething extends Message {
     createdData: any;
 }

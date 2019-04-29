@@ -1,4 +1,5 @@
-patch-package
+diff --git a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/index.js b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/index.js
+index 8a2d8c3..376f9e6 100644
 --- a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/index.js
 +++ b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/index.js
 @@ -7,7 +7,8 @@ var Strategy = require('./strategy');
@@ -11,3 +12,34 @@ patch-package
  
  /**
   * Expose constructors.
+diff --git a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js
+index 50fd639..e64bd7a 100644
+--- a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js
++++ b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/profile.js
+@@ -13,8 +13,8 @@ exports.parse = function(json) {
+   var profile = {};
+   profile.id = json.uuid;
+   profile.displayName = json.display_name;
+-  profile.username = json.username;
+-  profile.profileUrl = json.links.html.href;
++  profile.accountId = json.account_id;
++  profile.nickname = json.nickname;
+ 
+   return profile;
+ };
+diff --git a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js
+index 20c422c..4624d90 100644
+--- a/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js
++++ b/node_modules/passport-bitbucket-oauth2/lib/passport-bitbucket/strategy.js
+@@ -74,9 +74,9 @@ util.inherits(Strategy, OAuth2Strategy);
+  *
+  *   - `provider`         always set to `bitbucket`
+  *   - `id`               the user's Bitbucket uuid
+- *   - `username`         the user's Bitbucket username
+  *   - `displayName`      the user's full name
+- *   - `profileUrl`       the URL of the profile for the user on Bitbucket
++ *   - `accountId`        the user's Atlassian account id
++ *   - `nickname`         the user's Bitbucket nickname
+  *
+  * @param {String} accessToken
+  * @param {Function} done

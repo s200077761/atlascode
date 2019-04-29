@@ -71,6 +71,15 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.2.2 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Extension works with <a href='https://developer.atlassian.com/cloud/bitbucket/bitbucket-api-changes-gdpr/'>Bitbucket's upcoming API changes</a> related to user privacy </li>
+                                <li>Context menu item in treeviews to open in browser</li>
+                                <li>Support to add an issue link when creating a Jira issue</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.2.1 🎉</h2>
                         <section>
                             <h4>✨ Improvements ✨</h4>
