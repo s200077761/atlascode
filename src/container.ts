@@ -21,6 +21,7 @@ import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager'
 import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
 import { OnlineDetector } from './util/online';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
+import { JiraFieldManager } from './jira/fieldManager';
 
 export class AtlascodeUriHandler extends Disposable implements UriHandler {
     private disposables: Disposable;
@@ -48,6 +49,7 @@ export class Container {
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
+        context.subscriptions.push((this._jiraFieldManager = new JiraFieldManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
         context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
@@ -202,6 +204,11 @@ export class Container {
     private static _jiraSiteManager: JiraSiteManager;
     static get jiraSiteManager() {
         return this._jiraSiteManager;
+    }
+
+    private static _jiraFieldManager: JiraFieldManager;
+    static get jiraFieldManager() {
+        return this._jiraFieldManager;
     }
 
     private static _analyticsClient: AnalyticsClient;

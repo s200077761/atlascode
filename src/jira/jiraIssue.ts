@@ -81,7 +81,7 @@ export const emptyIssue: Issue = {
 
 export type issueOrKey = Issue | string;
 
-export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
+
 export const issueExpand = "transitions,renderedFields";
 
 export function isIssue(a: any): a is Issue {
