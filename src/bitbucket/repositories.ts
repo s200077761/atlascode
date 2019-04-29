@@ -32,6 +32,16 @@ export namespace RepositoriesApi {
             : repo.mainbranch!.name!;
     }
 
+    export async function getBranchingModel(remote: Remote): Promise<Bitbucket.Schema.BranchingModel> {
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
+        let parsed = GitUrlParse(remoteUrl);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        return bb.repositories.getBranchingModel({
+            repo_slug: parsed.name,
+            username: parsed.owner
+        }).then(res => res.data);
+    }
+
     export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Bitbucket.Schema.Commit[]> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);

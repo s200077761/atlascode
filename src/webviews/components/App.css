@@ -600,6 +600,21 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   display: block;
 }
 
+.branch-container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.prefix-container {
+  border: solid var(--vscode-settings-textInputBorder) !important;
+  border-right-width: 0px !important;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
 /*-------------------- END - Start Work On Issue Styles --------------------*/
 
 /*-------------------- BEGIN - Pipelines --------------------*/

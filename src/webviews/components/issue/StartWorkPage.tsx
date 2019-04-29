@@ -43,6 +43,7 @@ type State = {
   bitbucketSetupEnabled: boolean;
   transition: Transition;
   sourceBranch?: { label: string, value: Branch },
+  prefix?: { label: string, value: string },
   localBranch?: BranchNameOption;
   branchOptions: { label: string, options: BranchNameOption[] }[],
   repo: { label: string, value: RepoData };
@@ -204,10 +205,16 @@ export default class StartWorkPage extends WebviewComponent<
   handleStart = () => {
     this.setState({ isStartButtonLoading: true });
 
+    let branchName = '';
+    if (this.state.localBranch) {
+      const prefix = this.state.prefix ? this.state.prefix.value : '';
+      branchName = prefix + this.state.localBranch.value;
+    }
+
     this.postMessage({
       action: 'startWork',
       repoUri: this.state.repo.value.uri,
-      branchName: this.state.localBranch ? this.state.localBranch.value : '',
+      branchName: branchName,
       sourceBranchName: this.state.sourceBranch ? this.state.sourceBranch.value.name! : '',
       remote: this.state.remote ? this.state.remote!.value : '',
       transition: this.state.transition,
@@ -302,6 +309,18 @@ export default class StartWorkPage extends WebviewComponent<
       </GridColumn>;
     }
 
+    let branchTypes: { kind: string, prefix: string }[] = [];
+    if (repo.value.branchingModel && repo.value.branchingModel.branch_types) {
+      branchTypes = [...repo.value.branchingModel.branch_types]
+        .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
+      if (branchTypes.length > 0) {
+        if (!this.state.prefix) {
+          this.setState({ prefix: { label: branchTypes[0].kind, value: branchTypes[0].prefix } });
+        }
+        branchTypes.push({ kind: "other", prefix: "" });
+      }
+    }
+
     return (
       <Page>
         <Grid>
@@ -373,6 +392,16 @@ export default class StartWorkPage extends WebviewComponent<
                         value={repo} />
                     </div>
                   }
+                  {(branchTypes.length > 0) && <div className='ac-vpadding' style={{ textTransform: 'capitalize' }}>
+                    <label>Type</label>
+                    <CreatableSelect
+                      className="ac-select-container"
+                      classNamePrefix="ac-select"
+                      options={branchTypes.map(bt => { return { label: bt.kind, value: bt.prefix }; })}
+                      onChange={(model: any) => { this.setState({ prefix: model }); }}
+                      value={this.state.prefix} />
+                  </div>
+                  }
                   <label>Source branch (this will be the start point for the new branch)</label>
                   <Select
                     className="ac-select-container"
@@ -382,20 +411,29 @@ export default class StartWorkPage extends WebviewComponent<
                     value={this.state.sourceBranch} />
                   <div className='ac-vpadding'>
                     <label>Local branch</label>
-                    <CreatableSelect
-                      isClearable
-                      className="ac-select-container"
-                      classNamePrefix="ac-select"
-                      onCreateOption={this.handleCreateBranchOption}
-                      options={this.state.branchOptions}
-                      isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => {
-                        if (inputValue.trim().length === 0 || selectOptions.find(option => option === inputValue) || /\s/.test(inputValue)) {
-                          return false;
-                        }
-                        return true;
-                      }}
-                      onChange={this.handleBranchNameChange}
-                      value={this.state.localBranch} />
+                    <div className="branch-container">
+                      {this.state.prefix && this.state.prefix.value &&
+                        <div className='prefix-container'>
+                          <label>{this.state.prefix.value}</label>
+                        </div>
+                      }
+                      <div className="branch-name">
+                        <CreatableSelect
+                          isClearable
+                          className="ac-select-container"
+                          classNamePrefix="ac-select"
+                          onCreateOption={this.handleCreateBranchOption}
+                          options={this.state.branchOptions}
+                          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => {
+                            if (inputValue.trim().length === 0 || selectOptions.find(option => option === inputValue) || /\s/.test(inputValue)) {
+                              return false;
+                            }
+                            return true;
+                          }}
+                          onChange={this.handleBranchNameChange}
+                          value={this.state.localBranch} />
+                      </div>
+                    </div>
                   </div>
                   {this.state.repo.value.remotes.length > 1 &&
                     <div>
