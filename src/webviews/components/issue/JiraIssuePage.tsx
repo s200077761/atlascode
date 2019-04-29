@@ -69,7 +69,11 @@ const emptyIssueData: IssueData = {
   isAssignedToMe: false,
   childIssues: [],
   workInProgress: true,
-  recentPullRequests: []
+  recentPullRequests: [],
+  epicName: '',
+  epicLink: '',
+  epicChildren: [],
+  isEpic: false
 };
 
 type MyState = {
@@ -152,6 +156,13 @@ export default class JiraIssuePage extends WebviewComponent<
     });
   }
 
+  handleOpenIssue = (issueKey: string) => {
+    this.postMessage({
+      action: "openJiraIssue",
+      issueOrKey: issueKey
+    });
+  }
+
   onHandleStatusChange = (item: any) => {
     this.setState({ isStatusButtonLoading: true });
     this.postMessage({
@@ -186,8 +197,11 @@ export default class JiraIssuePage extends WebviewComponent<
           </ButtonGroup>}
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
+              {(issue.epicLink && issue.epicLink !== '') &&
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.epicLink}`} onItemClick={() => this.handleOpenIssue(issue.epicLink)} />} />
+              }
               {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.parentKey}`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.handleOpenIssue(issue.parentKey)} />} />
               }
               <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
             </BreadcrumbsStateless>

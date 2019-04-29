@@ -8,12 +8,13 @@ export async function fetchIssue(issue: string, workingSite?: AccessibleResource
   let client = await Container.clientManager.jirarequest(workingSite);
 
   if (client) {
-    let site = workingSite;
-    if (!site) {
-      site = Container.jiraSiteManager.effectiveSite;
+    let site = Container.jiraSiteManager.effectiveSite;
+    if (workingSite) {
+      site = workingSite;
     }
 
     let fields = await Container.jiraFieldManager.getIssueFieldsForSite(site);
+    let epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(site);
 
     return client.issue
       .getIssue({
@@ -22,7 +23,7 @@ export async function fetchIssue(issue: string, workingSite?: AccessibleResource
         fields: fields
       })
       .then((res: JIRA.Response<JIRA.Schema.IssueBean>) => {
-        return issueFromJsonObject(res.data, workingSite || Container.jiraSiteManager.effectiveSite);
+        return issueFromJsonObject(res.data, site, epicFieldInfo);
       });
   }
   return Promise.reject(apiConnectivityError);
