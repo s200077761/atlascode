@@ -4,15 +4,22 @@ import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
-import { CreatePRData, RepoData, CommitsResult } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails } from '../ipc/prActions';
+import { CreatePRData, RepoData, CommitsResult, FetchIssueResult } from '../ipc/prMessaging';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { PullRequest } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { fetchIssue } from '../jira/fetchIssue';
+import { Issue, isIssue } from '../jira/jiraModel';
+import { transitionIssue } from '../commands/jira/transitionIssue';
+import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
+import { AuthProvider } from '../atlclients/authInfo';
+import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 
-type Emit = CreatePRData | CommitsResult | HostErrorMessage;
+type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
 
     constructor(extensionPath: string) {
@@ -70,6 +77,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
                 });
             }
+
             this.postMessage({ type: 'createPullRequestData', repositories: state });
         } catch (e) {
             Logger.error(new Error(`error fetching PR form: ${e}`));
@@ -105,6 +113,18 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     }
                     break;
                 }
+                case 'fetchIssue': {
+                    if (isFetchIssue(e)) {
+                        handled = true;
+                        try {
+                            await this.fetchIssueForBranch(e);
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching issue: ${e}`));
+                            // ignore error. do not send it to webview.
+                        }
+                    }
+                    break;
+                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
@@ -135,8 +155,45 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         });
     }
 
+    async fetchIssueForBranch(e: FetchIssue) {
+        let issue: Issue | Bitbucket.Schema.Issue | undefined = undefined;
+        if (Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
+            if (jiraIssueKeys.length > 0) {
+                issue = await fetchIssue(jiraIssueKeys[0]);
+            }
+        }
+
+        if (!issue) {
+            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
+            if (bbIssueKeys.length > 0) {
+                const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
+                if (bbIssues.length > 0) {
+                    issue = bbIssues[0];
+                }
+            }
+        }
+
+        this.postMessage({
+            type: 'fetchIssueResult',
+            issue: issue
+        });
+    }
+
+    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+        if (!issue) {
+            return;
+        }
+        if (isIssue(issue)) {
+            const transition = issue.transitions.find(t => t.to.id === issue.status.id);
+            await transitionIssue(issue, transition);
+        } else {
+            await BitbucketIssuesApi.postChange(issue, issue.state!);
+        }
+    }
+
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch } = createPullRequestAction;
+        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch, issue } = createPullRequestAction;
         const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
@@ -167,11 +224,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         };
 
         await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
-            .then((pr: PullRequest) => {
+            .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
                 prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
             });
+
+        await this.updateIssue(issue);
         this.hide();
     }
 }

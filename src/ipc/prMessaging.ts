@@ -52,6 +52,11 @@ export interface CommitsResult extends Message {
     commits: Bitbucket.Schema.Commit[];
 }
 
+export interface FetchIssueResult extends Message {
+    type: 'fetchIssueResult';
+    issue?: Issue | Bitbucket.Schema.Issue;
+}
+
 export function isCommitsResult(a: Message): a is CommitsResult {
     return (<CommitsResult>a).type === 'commitsResult';
 }

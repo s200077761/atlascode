@@ -8,7 +8,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
 import Select, { components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, RefreshPullRequest } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue } from '../../../ipc/prActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
@@ -19,10 +19,13 @@ import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
+import { TransitionMenu } from '../issue/TransitionMenu';
+import { Issue, Transition, isIssue } from '../../../jira/jiraModel';
+import { StatusMenu } from '../bbissue/StatusMenu';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | RefreshPullRequest;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | RefreshPullRequest;
 type Receive = CreatePRData | CommitsResult;
 
 interface MyState {
@@ -39,6 +42,8 @@ interface MyState {
     destinationBranch?: { label: string; value: Ref };
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
+    issueSetupEnabled: boolean;
+    issue?: Issue | Bitbucket.Schema.Issue;
     commits: Bitbucket.Schema.Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -58,6 +63,7 @@ const emptyState = {
     summaryManuallyEdited: false,
     pushLocalChanges: true,
     closeSourceBranch: false,
+    issueSetupEnabled: true,
     reviewers: [],
     commits: [],
     isCreateButtonLoading: false,
@@ -169,12 +175,21 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
         this.setState({
             commits: [],
+            issue: undefined,
             sourceRemoteBranchName: sourceRemoteBranchName,
             title: this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)
                 ? this.state.sourceBranch!.label
                 : this.state.title,
             summary: createdFromAtlascodeFooter
         });
+
+        if (this.state.sourceBranch) {
+            this.postMessage({
+                action: 'fetchIssue',
+                repoUri: this.state.repo!.value.uri,
+                sourceBranch: this.state.sourceBranch.value
+            });
+        }
 
         if (this.state.repo &&
             this.state.remote &&
@@ -201,6 +216,24 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({ closeSourceBranch: e.target.checked });
     }
 
+    toggleIssueSetupEnabled = (e: any) => {
+        this.setState({ issueSetupEnabled: e.target.checked });
+    }
+
+    handleJiraIssueStatusChange = (item: Transition) => {
+        console.log(JSON.stringify(item));
+        this.setState({
+            // there must be a better way to update the transition dropdown!!
+            issue: { ...this.state.issue as Issue, status: { ...(this.state.issue as Issue).status, id: item.to.id, name: item.to.name } }
+        });
+    }
+
+    handleBitbucketIssueStatusChange = (item: string) => {
+        this.setState({
+            issue: { ...this.state.issue, state: item } as Bitbucket.Schema.Issue
+        });
+    }
+
     handleCreatePR = (e: any) => {
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
@@ -213,7 +246,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             sourceBranch: this.state.sourceBranch!.value,
             destinationBranch: this.state.destinationBranch!.value,
             pushLocalChanges: this.state.pushLocalChanges,
-            closeSourceBranch: this.state.closeSourceBranch
+            closeSourceBranch: this.state.closeSourceBranch,
+            issue: this.state.issueSetupEnabled ? this.state.issue : undefined
         });
     }
 
@@ -250,6 +284,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             : this.state.summary
                     });
                 }
+                break;
+            }
+            case 'fetchIssueResult': {
+                this.setState({ issue: e.issue });
                 break;
             }
             case 'onlineStatus': {
@@ -420,8 +458,31 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 onChange={this.handleCloseSourceBranchChange}
                                                 name="close-source-branch-enabled" />
                                         </div>
+                                    </GridColumn>
+                                    <GridColumn medium={6}>
+                                        {this.state.issue &&
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
+                                                <h4>Transition issue - {isIssue(this.state.issue) ? this.state.issue.key : `#${this.state.issue.state}`}</h4>
+                                            </div>
+                                        }
+                                        {this.state.issue && this.state.issueSetupEnabled &&
+                                            <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                                                <div style={{ margin: 10 }}>
+                                                    <label>Select new status</label>
+                                                    {isIssue(this.state.issue)
+                                                        ? <TransitionMenu issue={this.state.issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                                        : <StatusMenu issue={this.state.issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
 
-                                        <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
+                                        <div className='ac-vpadding'>
+                                            <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>
+                                        </div>
 
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
