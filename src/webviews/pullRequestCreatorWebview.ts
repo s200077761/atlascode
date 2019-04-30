@@ -18,6 +18,8 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { AuthProvider } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
+import { isOpenJiraIssue } from '../ipc/issueActions';
+import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -122,6 +124,20 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                             Logger.error(new Error(`error fetching issue: ${e}`));
                             // ignore error. do not send it to webview.
                         }
+                    }
+                    break;
+                }
+                case 'openJiraIssue': {
+                    if (isOpenJiraIssue(e)) {
+                        handled = true;
+                        commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        break;
+                    }
+                }
+                case 'openBitbucketIssue': {
+                    if (isOpenBitbucketIssueAction(e)) {
+                        handled = true;
+                        commands.executeCommand(Commands.ShowBitbucketIssue, e.issue);
                     }
                     break;
                 }

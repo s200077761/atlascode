@@ -9,6 +9,8 @@ import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
 import Select, { components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue } from '../../../ipc/prActions';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import Commits from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
@@ -22,10 +24,11 @@ import Offline from '../Offline';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import { Issue, Transition, isIssue } from '../../../jira/jiraModel';
 import { StatusMenu } from '../bbissue/StatusMenu';
+import NavItem from '../issue/NavItem';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | RefreshPullRequest;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction;
 type Receive = CreatePRData | CommitsResult;
 
 interface MyState {
@@ -324,6 +327,38 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             </ButtonGroup>
         );
 
+        const issueDetails = <React.Fragment>
+            {this.state.issue &&
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
+
+                    {isIssue(this.state.issue)
+                        ? <div className='ac-flex'>
+                            <h4>Transition Jira issue - </h4>
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.issue as Issue })} />
+                        </div>
+                        : <div className='ac-flex'>
+                            <h4>Transition Bitbucket issue - </h4>
+                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: this.state.issue as Bitbucket.Schema.Issue })} />
+                        </div>
+                    }
+                </div>
+            }
+            {this.state.issue && this.state.issueSetupEnabled &&
+                <GridColumn medium={6}>
+                    <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                        <div style={{ margin: 10 }}>
+                            <label>Select new status</label>
+                            {isIssue(this.state.issue)
+                                ? <TransitionMenu issue={this.state.issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                : <StatusMenu issue={this.state.issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                            }
+                        </div>
+                    </div>
+                </GridColumn>
+            }
+        </React.Fragment>;
+
         return (
             <div className='bitbucket-page'>
                 <Page>
@@ -459,25 +494,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 name="close-source-branch-enabled" />
                                         </div>
                                     </GridColumn>
-                                    <GridColumn medium={6}>
-                                        {this.state.issue &&
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
-                                                <h4>Transition issue - {isIssue(this.state.issue) ? this.state.issue.key : `#${this.state.issue.state}`}</h4>
-                                            </div>
-                                        }
-                                        {this.state.issue && this.state.issueSetupEnabled &&
-                                            <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
-                                                <div style={{ margin: 10 }}>
-                                                    <label>Select new status</label>
-                                                    {isIssue(this.state.issue)
-                                                        ? <TransitionMenu issue={this.state.issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
-                                                        : <StatusMenu issue={this.state.issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
-
+                                    <GridColumn medium={12}>
+                                        {issueDetails}
                                     </GridColumn>
                                     <GridColumn medium={12}>
                                         <div className='ac-vpadding'>
