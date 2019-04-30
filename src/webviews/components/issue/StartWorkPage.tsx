@@ -154,20 +154,13 @@ export default class StartWorkPage extends WebviewComponent<
 
   }
 
-  onHandleStatusChange = (item: any) => {
+  onHandleStatusChange = (item: Transition) => {
     if (isStartWorkOnIssueData(this.state.data)) {
-      const transition = this.state.data.issue.transitions.find(
-        trans =>
-          trans.id === item.target.parentNode.parentNode.dataset.transitionId
-      );
-
-      if (transition) {
-        this.setState({
-          // there must be a better way to update the transition dropdown!!
-          data: { ...this.state.data, issue: { ...this.state.data.issue, status: { ...this.state.data.issue.status, id: transition.to.id, name: transition.to.name } } },
-          transition: transition
-        });
-      }
+      this.setState({
+        // there must be a better way to update the transition dropdown!!
+        data: { ...this.state.data, issue: { ...this.state.data.issue, status: { ...this.state.data.issue.status, id: item.to.id, name: item.to.name } } },
+        transition: item
+      });
     }
   }
 

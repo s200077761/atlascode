@@ -34,7 +34,7 @@ const StatusValue = (props: any) => (
 export class TransitionMenu extends React.Component<{
   issue: Issue;
   isStatusButtonLoading: boolean;
-  onHandleStatusChange: (item: any) => void;
+  onHandleStatusChange: (item: Transition) => void;
 }, {
   selectedTransition: Transition | undefined
 }> {
@@ -52,7 +52,7 @@ export class TransitionMenu extends React.Component<{
     this.setState({ selectedTransition: selectedTransition });
   }
 
-  handleStatusChange = (item: any) => {
+  handleStatusChange = (item: Transition) => {
     this.props.onHandleStatusChange(item);
   }
 
