@@ -171,7 +171,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
 
         if (issue.isEpic && issue.epicChildren.length < 1) {
-            msg.epicChildren = await issuesForJQL(`"Epic Link" = "${msg.key}" and resolution = Unresolved and statusCategory != Done order by lastViewed DESC`);
+            msg.epicChildren = await issuesForJQL(`"Epic Link" = "${msg.key}" order by lastViewed DESC`);
         }
 
         msg.workInProgress = msg.isAssignedToMe &&
@@ -192,7 +192,6 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         if (this._state.key !== "") {
             try {
                 let issue = await fetchIssue(this._state.key, this._state.workingSite);
-                console.log('force update');
                 await this.updateIssue(issue);
             }
             catch (e) {

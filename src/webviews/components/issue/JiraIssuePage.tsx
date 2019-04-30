@@ -271,7 +271,7 @@ export default class JiraIssuePage extends WebviewComponent<
         <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
       </React.Fragment>;
 
-    const epicChildren = (Array.isArray(issue.epicChildren) && issue.epicChildren.length === 0)
+    const epicChildren = (!Array.isArray(issue.epicChildren) || (Array.isArray(issue.epicChildren) && issue.epicChildren.length === 0))
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
         <h3>Issues in this epic</h3>
