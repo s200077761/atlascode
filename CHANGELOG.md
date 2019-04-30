@@ -1,13 +1,12 @@
+## What's New In 1.2.3
+### Bugs fixed
+* JQL error when opening related Jira issues in the pull request tree
+  
 ## What's New In 1.2.2
 ### Improvements
 * Extension works with [Bitbucket's upcoming API changes](https://developer.atlassian.com/cloud/bitbucket/bitbucket-api-changes-gdpr/) related to user privacy
 * Context menu item in treeviews to open in browser
 * Support to add an issue link when creating a Jira issue
-
-### Bugs fixed
-* Mention names in pull request comments are not shown properly
-* Transition menu on start work page not working
-* PR create screen is not splitting the title and description correctly
 
 ## What's New In 1.2.1
 ### Improvements
