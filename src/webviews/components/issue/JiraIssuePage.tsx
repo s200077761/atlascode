@@ -14,7 +14,8 @@ import {
   emptyIssueType,
   emptyUser,
   emptyPriority,
-  Issue
+  Issue,
+  Transition
 } from "../../../jira/jiraModel";
 import { emptyWorkingSite } from '../../../config/model';
 import {
@@ -108,6 +109,7 @@ export default class JiraIssuePage extends WebviewComponent<
     };
   }
 
+
   public onMessageReceived(e: any) {
     switch (e.type) {
       case 'error': {
@@ -132,6 +134,7 @@ export default class JiraIssuePage extends WebviewComponent<
     }
   }
 
+
   handleSave = (issue: Issue, comment: string) => {
     this.postMessage({
       action: "comment",
@@ -155,7 +158,7 @@ export default class JiraIssuePage extends WebviewComponent<
     });
   }
 
-  onHandleStatusChange = (item: any) => {
+  onHandleStatusChange = (item: Transition) => {
     this.setState({ isStatusButtonLoading: true });
     this.postMessage({
       action: "transitionIssue",
