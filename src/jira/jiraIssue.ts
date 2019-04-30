@@ -1,6 +1,7 @@
 import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
 import { emptyWorkingSite } from "../config/model";
 import { AccessibleResource } from "../atlclients/authInfo";
+import { EpicFieldInfo } from "./fieldManager";
 
 export const emptyStatusCategory: StatusCategory = {
     colorName: '',
@@ -76,12 +77,16 @@ export const emptyIssue: Issue = {
     transitions: [],
     components: [],
     fixVersions: [],
-    workingSite: emptyWorkingSite
+    workingSite: emptyWorkingSite,
+    isEpic: false,
+    epicChildren: [],
+    epicName: '',
+    epicLink: ''
 };
 
 export type issueOrKey = Issue | string;
 
-export const issueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
+
 export const issueExpand = "transitions,renderedFields";
 
 export function isIssue(a: any): a is Issue {
@@ -120,7 +125,7 @@ export function isIssueLinkType(a: any): a is IssueLinkType {
     return a && (<IssueLinkType>a).id !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined;
 }
 
-export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource): Issue {
+export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource, epicFields: EpicFieldInfo): Issue {
     let jsonComments: any[] = [];
     if (issueJson.renderedFields && issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
         jsonComments = issueJson.renderedFields.comment.comments;
@@ -173,7 +178,7 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
     let subtasks: Issue[] = [];
     if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
         subtasks = issueJson.fields.subtasks.map((subtaskJson: any) => {
-            const subtaskIssue = issueFromJsonObject(subtaskJson, workingSite);
+            const subtaskIssue = issueFromJsonObject(subtaskJson, workingSite, epicFields);
             // subtask creation date is not returned in the api response
             subtaskIssue.created = new Date(Date.parse(issueJson.fields.created));
             return subtaskIssue;
@@ -185,7 +190,7 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
             .filter((issuelinkJson: any) => isIssueLinkType(issuelinkJson.type) && (issuelinkJson.inwardIssue || issuelinkJson.outwardIssue))
             .map((issuelinkJson: any): IssueLink => {
                 if (issuelinkJson.inwardIssue) {
-                    const linkedIssue = issueFromJsonObject(issuelinkJson.inwardIssue, workingSite);
+                    const linkedIssue = issueFromJsonObject(issuelinkJson.inwardIssue, workingSite, epicFields);
                     linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
                     return {
                         id: issuelinkJson.id,
@@ -193,7 +198,7 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
                         inwardIssue: linkedIssue
                     };
                 } else {
-                    const linkedIssue = issueFromJsonObject(issuelinkJson.outwardIssue, workingSite);
+                    const linkedIssue = issueFromJsonObject(issuelinkJson.outwardIssue, workingSite, epicFields);
                     linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
                     return {
                         id: issuelinkJson.id,
@@ -226,7 +231,11 @@ export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResou
         transitions: transitions,
         components: components,
         fixVersions: fixVersions,
-        workingSite: workingSite
+        workingSite: workingSite,
+        isEpic: (issueJson.fields[epicFields.epicName.id] && issueJson.fields[epicFields.epicName.id] !== ''),
+        epicName: issueJson.fields[epicFields.epicName.id],
+        epicLink: issueJson.fields[epicFields.epicLink.id],
+        epicChildren: []
     };
 
     return thisIssue;
@@ -256,6 +265,10 @@ export interface Issue {
     components: IdName[];
     fixVersions: IdName[];
     workingSite: AccessibleResource;
+    isEpic: boolean;
+    epicChildren: Issue[];
+    epicName: string;
+    epicLink: string;
 }
 
 export interface Status {

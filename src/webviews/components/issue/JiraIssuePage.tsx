@@ -70,7 +70,11 @@ const emptyIssueData: IssueData = {
   isAssignedToMe: false,
   childIssues: [],
   workInProgress: true,
-  recentPullRequests: []
+  recentPullRequests: [],
+  epicName: '',
+  epicLink: '',
+  epicChildren: [],
+  isEpic: false
 };
 
 type MyState = {
@@ -105,7 +109,6 @@ export default class JiraIssuePage extends WebviewComponent<
     };
   }
 
-  componentUpdater = (data: IssueData) => { };
 
   public onMessageReceived(e: any) {
     switch (e.type) {
@@ -131,11 +134,6 @@ export default class JiraIssuePage extends WebviewComponent<
     }
   }
 
-  componentWillMount() {
-    this.componentUpdater = data => {
-      this.setState({ data: data });
-    };
-  }
 
   handleSave = (issue: Issue, comment: string) => {
     this.postMessage({
@@ -150,6 +148,13 @@ export default class JiraIssuePage extends WebviewComponent<
     this.postMessage({
       action: "assign",
       issue: issue
+    });
+  }
+
+  handleOpenIssue = (issueKey: string) => {
+    this.postMessage({
+      action: "openJiraIssue",
+      issueOrKey: issueKey
     });
   }
 
@@ -187,8 +192,11 @@ export default class JiraIssuePage extends WebviewComponent<
           </ButtonGroup>}
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
+              {(issue.epicLink && issue.epicLink !== '') &&
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.epicLink}`} onItemClick={() => this.handleOpenIssue(issue.epicLink)} />} />
+              }
               {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.parentKey}`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.handleOpenIssue(issue.parentKey)} />} />
               }
               <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
             </BreadcrumbsStateless>
@@ -266,6 +274,13 @@ export default class JiraIssuePage extends WebviewComponent<
         <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
       </React.Fragment>;
 
+    const epicChildren = (!Array.isArray(issue.epicChildren) || (Array.isArray(issue.epicChildren) && issue.epicChildren.length === 0))
+      ? <React.Fragment></React.Fragment>
+      : <React.Fragment>
+        <h3>Issues in this epic</h3>
+        <IssueList issues={issue.epicChildren} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+      </React.Fragment>;
+
     const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
       ? <React.Fragment></React.Fragment>
       : <React.Fragment>
@@ -291,6 +306,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   {this.header(issue)}
                   {this.details(issue)}
                   {subtasks}
+                  {epicChildren}
                   {childIssues}
                   {issuelinks}
                   <h3>Comments</h3>
@@ -304,6 +320,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   <GridColumn medium={8}>
                     {this.header(issue)}
                     {subtasks}
+                    {epicChildren}
                     {childIssues}
                     {issuelinks}
                     <h3>Comments</h3>

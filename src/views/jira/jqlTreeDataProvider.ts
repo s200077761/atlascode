@@ -89,16 +89,22 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const newIssues = await issuesForJQL(this._jql);
         const newIssuesKeys = newIssues.map(i => i.key);
 
+        // epics don't have children filled in and children only have a ref to the parent key
+        // we need to fill in the children and fetch the parents of any orphans
+        const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues, newIssuesKeys);
+
         const subIssuesWithoutParents = newIssues.filter(i => i.parentKey && !newIssuesKeys.includes(i.parentKey));
-        const remainingIssues = newIssues.filter(i => subIssuesWithoutParents.find(subIssue => subIssue.key === i.key) === undefined);
+        let remainingIssues = newIssues.filter(i => subIssuesWithoutParents.find(subIssue => subIssue.key === i.key) === undefined);
+        remainingIssues = remainingIssues.filter(i => epics.find(epic => epic.key === i.key) === undefined);
 
         // fetch parent issues for subtasks whose parents are not covered by the jql
         const parentIssues = await this.fetchParentIssues(subIssuesWithoutParents);
 
-        const allIssues = [...remainingIssues, ...parentIssues];
+        const allIssues = [...remainingIssues, ...parentIssues, ...epics];
         const allSubIssueKeys = allIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
+
         // show subtasks under parent if parent is available
-        this._issues = allIssues.filter(issue => !allSubIssueKeys.includes(issue.key));
+        this._issues = allIssues.filter(issue => { return !allSubIssueKeys.includes(issue.key) && !epicChildrenKeys.includes(issue.key); });
         return this.nodesForIssues();
     }
 
@@ -115,6 +121,43 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
                 }));
 
         subIssues.forEach(i => parentIssues.find(parentIssue => parentIssue.key === i.parentKey)!.subtasks.push(i));
+
+        return parentIssues;
+    }
+
+    private async resolveEpics(allIssues: Issue[], allIssueKeys: string[]): Promise<[Issue[], string[]]> {
+        const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
+        const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
+        const remoteEpics = await this.fetchEpicIssues(epicChildrenWithoutParents);
+        let epicChildKeys: string[] = [];
+
+        const epics = [...localEpics, ...remoteEpics];
+
+        // note: we always have to fetch children because they might not be included in the JQL
+        let finalEpics: Issue[] = await Promise.all(
+            epics
+                .map(async epic => {
+                    if (epic.epicChildren.length < 1) {
+                        let children = await issuesForJQL(`"Epic Link" = "${epic.key}" and resolution = Unresolved and statusCategory != Done order by lastViewed DESC`);
+                        epic.epicChildren = children;
+                    }
+
+                    epicChildKeys.push(...epic.epicChildren.map(child => child.key));
+                    return epic;
+                }));
+
+        return [finalEpics, epicChildKeys];
+    }
+
+    private async fetchEpicIssues(childIssues: Issue[]): Promise<Issue[]> {
+        const parentKeys: string[] = Array.from(new Set(childIssues.map(i => i.epicLink!)));
+
+        const parentIssues = await Promise.all(
+            parentKeys
+                .map(async issueKey => {
+                    const parent = await fetchIssue(issueKey);
+                    return parent;
+                }));
 
         return parentIssues;
     }

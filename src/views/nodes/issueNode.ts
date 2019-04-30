@@ -14,7 +14,7 @@ export class IssueNode extends BaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        let treeItem = new vscode.TreeItem(`${this.issue.summary}`, this.issue.subtasks.length > 0 ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
+        let treeItem = new vscode.TreeItem(`${this.issue.summary}`, (this.issue.subtasks.length > 0 || this.issue.epicChildren.length > 0) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
         treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [this.issue], };
         treeItem.iconPath = vscode.Uri.parse(this.issue.issueType.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
@@ -29,6 +29,10 @@ export class IssueNode extends BaseNode {
         }
         if (this.issue.subtasks.length > 0) {
             return this.issue.subtasks.map(subtask => new IssueNode(subtask));
+        }
+
+        if (this.issue.epicChildren.length > 0) {
+            return this.issue.epicChildren.map(epicChild => new IssueNode(epicChild));
         }
         return [];
     }
