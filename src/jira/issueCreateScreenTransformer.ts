@@ -1,8 +1,7 @@
 import { UIType, InputValueType, IssueTypeIdScreens, IssueTypeScreen } from "./createIssueMeta";
-import { EpicFieldInfo } from "./fieldManager";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Container } from "../container";
-import { Issue } from "./jiraIssue";
+import { Issue, EpicFieldInfo } from "./jiraIssue";
 import { issuesForJQL } from "./issuesForJql";
 
 const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
@@ -300,7 +299,10 @@ export class IssueScreenTransformer {
                 let allowedValues = (field.allowedValues !== undefined) ? field.allowedValues : [];
 
                 if (field.key === this._epicFieldInfo.epicLink.id) {
-                    allowedValues = this._openEpics;
+                    allowedValues = [];
+                    this._openEpics.forEach(epic => {
+                        allowedValues.push({ name: `${epic.key} - ${epic.summary}`, id: epic.key });
+                    });
                 }
 
                 return {

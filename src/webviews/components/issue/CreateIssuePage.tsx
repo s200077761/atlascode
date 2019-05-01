@@ -18,6 +18,7 @@ import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueTyp
 import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
+import { epicsDisabled } from '../../../jira/jiraIssue';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -54,7 +55,8 @@ const emptyState: ViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
-    createdIssue: {}
+    createdIssue: {},
+    epicFieldInfo: epicsDisabled
 };
 
 // Used to render custom select options with icons
@@ -109,7 +111,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
     private labelSuggestions: string[] | undefined = undefined;
     private userSuggestions: any[] | undefined = undefined;
     private issueSuggestions: any[] | undefined = undefined;
-    private epicSuggestions: any[] | undefined = undefined;
     private newOption: any;
 
     constructor(props: any) {
@@ -195,10 +196,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'issueSuggestionsList': {
                 this.issueSuggestions = (e as IssueSuggestionsList).issues;
-                break;
-            }
-            case 'epicSuggestionsList': {
-                this.epicSuggestions = (e as IssueSuggestionsList).issues;
                 break;
             }
             case 'preliminaryIssueData': {
@@ -373,27 +370,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         });
     }
 
-    loadEpicOptions = (input: string): Promise<any> => {
-        return new Promise(resolve => {
-            this.epicSuggestions = undefined;
-            this.postMessage({ action: 'fetchEpics', query: input, project: this.state.selectedProject.key });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if (this.epicSuggestions !== undefined || (end - start) > 2000) {
-                    if (this.epicSuggestions === undefined) {
-                        this.epicSuggestions = [];
-                    }
-
-                    clearInterval(timer);
-                    this.setState({ isSomethingLoading: false, loadingField: '' });
-                    resolve(this.epicSuggestions);
-                }
-            }, 100);
-        });
-    }
-
     handleSubmit = (e: any) => {
         let requiredFields = this.state.issueTypeScreens[this.state.selectedIssueTypeId!].fields.filter(field => { return field.required; });
         let errs = {};
@@ -406,6 +382,12 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
 
         if (Object.keys(errs).length > 0) {
             return errs;
+        }
+
+        // TODO: [VSCODE-439] find a better way to transform submit data or deal with different select option shapes
+        if (Object.keys(e).includes(this.state.epicFieldInfo.epicLink.id)) {
+            let val: any = e[this.state.epicFieldInfo.epicLink.id];
+            e[this.state.epicFieldInfo.epicLink.id] = val.id;
         }
 
         this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });

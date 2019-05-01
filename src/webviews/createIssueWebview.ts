@@ -90,7 +90,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 selectedProject: this._currentProject,
                 selectedIssueTypeId: screenData.selectedIssueType.id,
                 availableProjects: availableProjects,
-                issueTypeScreens: screenData.screens
+                issueTypeScreens: screenData.screens,
+                epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
             };
 
 
@@ -103,32 +104,6 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
             this._isRefeshing = false;
         }
     }
-
-    // TODO: [VSCODE-438] Move issuelinks transformations into the IssueCreateScreenTransformer
-    // async addIssuelinksFieldData(client: JIRA, screens: IssueTypeIdScreens): Promise<IssueTypeIdScreens> {
-    //     const issuelinksKey = 'issuelinks';
-    //     try {
-    //         const issuelinkTypes = await client.issueLinkType.getIssueLinkTypes({});
-    //         if (Array.isArray(issuelinkTypes.data.issueLinkTypes) && issuelinkTypes.data.issueLinkTypes.length > 0) {
-    //             Object.values(screens).forEach(screen => {
-    //                 screen.fields.filter(screen => screen.key === issuelinksKey).forEach(issuelinksfield => {
-    //                     (issuelinksfield as SelectScreenField).allowedValues = issuelinkTypes.data.issueLinkTypes!;
-    //                 });
-    //             });
-    //         } else {
-    //             Object.values(screens).forEach(screen => {
-    //                 screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
-    //             });
-    //         }
-    //         return screens;
-    //     } catch (e) {
-    //         Object.values(screens).forEach(screen => {
-    //             screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
-    //         });
-    //         Logger.debug(new Error(`error getting issuelinks field data: ${e}`));
-    //         return screens;
-    //     }
-    // }
 
     finalizeTodoIssueCreation(issueKey: string) {
         if (this._partialIssue && this._partialIssue.uri && this._partialIssue.position && this._partialIssue.onCreated) {
