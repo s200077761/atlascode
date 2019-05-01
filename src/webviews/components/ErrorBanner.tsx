@@ -17,7 +17,7 @@ export default class ErrorBanner extends React.Component<{ errorDetails: any, on
 
     render() {
         let errorMarkup = [];
-
+        console.log('err deets', this.state.errorDetails);
         if (typeof this.state.errorDetails === 'object') {
             Object.keys(this.state.errorDetails).forEach(key => {
                 errorMarkup.push(<p className='force-wrap'><b>{key}:</b><span className='force-wrap' style={{ marginLeft: '5px' }}>{this.state.errorDetails[key]}</span></p>);

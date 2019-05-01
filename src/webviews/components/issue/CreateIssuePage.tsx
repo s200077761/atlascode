@@ -3,7 +3,7 @@ import { Action, HostErrorMessage } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
-import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchUsersQueryAction } from '../../../ipc/issueActions';
+import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchByProjectQueryAction } from '../../../ipc/issueActions';
 import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
@@ -21,7 +21,7 @@ import Offline from '../Offline';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
-type Emit = FetchQueryAction | FetchUsersQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
+type Emit = FetchQueryAction | FetchByProjectQueryAction | ScreensForProjectsAction | CreateSomethingAction | CreateIssueAction | OpenJiraIssueAction | Action;
 type Accept = CreateIssueData | ProjectList | CreatedSomething | LabelList | UserList | HostErrorMessage;
 type IssueType = { id: string, name: string, iconUrl: string };
 
@@ -97,9 +97,9 @@ const IssueSuggestionOption = (props: any) => (
 );
 
 const IssueSuggestionValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
-    </components.SingleValue>
+    <components.MultiValueLabel {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
+    </components.MultiValueLabel>
 
 );
 
@@ -109,6 +109,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
     private labelSuggestions: string[] | undefined = undefined;
     private userSuggestions: any[] | undefined = undefined;
     private issueSuggestions: any[] | undefined = undefined;
+    private epicSuggestions: any[] | undefined = undefined;
     private newOption: any;
 
     constructor(props: any) {
@@ -165,10 +166,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         return opts;
     }
 
-    componentDidMount() {
-        this.postMessage({ action: 'refresh' });
-    }
-
     onMessageReceived(e: any): void {
         switch (e.type) {
             case 'error': {
@@ -198,6 +195,10 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'issueSuggestionsList': {
                 this.issueSuggestions = (e as IssueSuggestionsList).issues;
+                break;
+            }
+            case 'epicSuggestionsList': {
+                this.epicSuggestions = (e as IssueSuggestionsList).issues;
                 break;
             }
             case 'preliminaryIssueData': {
@@ -367,6 +368,27 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     clearInterval(timer);
                     this.setState({ isSomethingLoading: false, loadingField: '' });
                     resolve(this.issueSuggestions);
+                }
+            }, 100);
+        });
+    }
+
+    loadEpicOptions = (input: string): Promise<any> => {
+        return new Promise(resolve => {
+            this.epicSuggestions = undefined;
+            this.postMessage({ action: 'fetchEpics', query: input, project: this.state.selectedProject.key });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.epicSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.epicSuggestions === undefined) {
+                        this.epicSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(this.epicSuggestions);
                 }
             }, 100);
         });
@@ -819,7 +841,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                         <div>
                                             <Select
                                                 {...fieldArgs.fieldProps}
-                                                isMulti={selectField.isMulti}
+                                                isMulti={false}
                                                 isClearable={!field.required && selectField.isMulti}
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select"
@@ -841,18 +863,36 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             {
                                 (fieldArgs: any) => {
                                     return (
-                                        <AsyncSelect
+                                        <AsyncCreatableSelect
                                             {...fieldArgs.fieldProps}
+                                            isMulti={selectField.isMulti}
+                                            isClearable={!field.required && selectField.isMulti}
                                             className="ac-select-container"
                                             classNamePrefix="ac-select"
                                             loadOptions={this.loadIssueOptions}
                                             getOptionLabel={(option: any) => option.key}
                                             getOptionValue={(option: any) => option.key}
                                             placeholder="Search for an issue"
+
+
+                                            onCreateOption={(input: any): void => { this.handleOptionCreate(input, field.key); }}
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selected, field.key); })}
+
                                             isLoading={this.state.loadingField === field.key}
                                             isDisabled={this.state.isSomethingLoading}
-                                            isMulti={selectField.isMulti}
-                                            components={{ Option: IssueSuggestionOption, SingleValue: IssueSuggestionValue }}
+                                            formatCreateLabel={(input: any) => { return `${input} (Enter issue key)`; }}
+                                            components={{ Option: IssueSuggestionOption, MultiValueLabel: IssueSuggestionValue }}
+
+                                            isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => {
+                                                if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
+                                                    return false;
+                                                }
+                                                return true;
+                                            }}
+                                            getNewOptionData={(inputValue: any, optionLabel: any) => ({
+                                                key: inputValue,
+                                                summaryText: optionLabel
+                                            })}
                                         />
                                     );
                                 }

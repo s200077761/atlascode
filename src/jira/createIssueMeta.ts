@@ -7,8 +7,7 @@ export enum UIType {
     Date = 'date',
     DateTime = 'datetime',
     User = 'user',
-    IssueLink = 'issuelink',
-    NOT_RENDERED = 'not_rendered'
+    IssueLink = 'issuelink'
 }
 
 export enum InputValueType {

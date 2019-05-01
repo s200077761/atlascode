@@ -14,13 +14,14 @@ export interface EpicFieldInfo {
 export interface NamedField {
     name: string;
     id: string;
+    cfid: number;
 }
 
 export const defaultIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
 
 export const EpicsDisabled: EpicFieldInfo = {
-    epicLink: { name: "", id: "" },
-    epicName: { name: "", id: "" },
+    epicLink: { name: "", id: "", cfid: 0 },
+    epicName: { name: "", id: "", cfid: 0 },
     epicsEnabled: false
 };
 
@@ -88,9 +89,9 @@ export class JiraFieldManager extends Disposable {
                         return undefined;
                     }).forEach(field => {
                         if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-label') {
-                            epicName = { name: field.name, id: field.id };
+                            epicName = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                         } else if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-link') {
-                            epicLink = { name: field.name, id: field.id };
+                            epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                         }
                     });
 

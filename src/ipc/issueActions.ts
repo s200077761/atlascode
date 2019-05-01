@@ -36,7 +36,7 @@ export interface FetchQueryAction extends Action {
     query: string;
 }
 
-export interface FetchUsersQueryAction extends Action {
+export interface FetchByProjectQueryAction extends Action {
     query: string;
     project: string;
 }
@@ -88,9 +88,9 @@ export function isFetchQuery(a: Action): a is FetchQueryAction {
     return (<FetchQueryAction>a).query !== undefined;
 }
 
-export function isFetchUsersQuery(a: Action): a is FetchUsersQueryAction {
-    return (<FetchUsersQueryAction>a).query !== undefined
-        && (<FetchUsersQueryAction>a).project !== undefined;
+export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
+    return (<FetchByProjectQueryAction>a).query !== undefined
+        && (<FetchByProjectQueryAction>a).project !== undefined;
 }
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
