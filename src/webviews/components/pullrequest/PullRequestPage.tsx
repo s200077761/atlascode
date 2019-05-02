@@ -45,6 +45,8 @@ interface ViewState {
     isCheckoutButtonLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
+    mergeStrategy: { label: string, value: 'merge_commit' | 'squash' | 'fast_forward' | undefined };
+    closeSourceBranch?: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
@@ -64,6 +66,8 @@ const emptyState: ViewState = {
     isCheckoutButtonLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
+    mergeStrategy: { label: 'Default merge strategy', value: undefined },
+    closeSourceBranch: undefined,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
@@ -87,6 +91,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isMergeButtonLoading: true });
         this.postMessage({
             action: 'merge',
+            mergeStrategy: this.state.mergeStrategy.value,
+            closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
     }
@@ -133,7 +139,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
             case 'update': {
                 if (isPRData(e)) {
-                    this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+                    this.setState({
+                        pr: e,
+                        isApproveButtonLoading: false,
+                        isMergeButtonLoading: false,
+                        isCheckoutButtonLoading: false,
+                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.close_source_branch : this.state.closeSourceBranch
+                    });
                 }
                 break;
             }
@@ -162,10 +174,22 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
+    handleBitbucketIssueStatusChange = (item: string) => {
+        this.setState({
+            issueSetupEnabled: true,
+            // there must be a better way to update the transition dropdown!!
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as Bitbucket.Schema.Issue }
+        });
+    }
+
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
 
     toggleIssueSetupEnabled = () => this.setState({ issueSetupEnabled: !this.state.issueSetupEnabled });
+
+    toggleCloseSourceBranch = () => this.setState({ closeSourceBranch: !this.state.closeSourceBranch });
+
+    handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item });
 
     render() {
         const pr = this.state.pr.pr!;
@@ -192,8 +216,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 {isIssue(issue)
                     ? <div>
                         <div className='ac-flex'>
-                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
-                            <h4><p>Update Jira issue status after merge - </p></h4>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
                             <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as Issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
@@ -204,13 +227,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     </div>
                     : <div>
                         <div className='ac-flex'>
-                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
-                            <h4><p>Update Bitbucket issue status after merge - </p></h4>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
                             <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as Bitbucket.Schema.Issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={() => { }} />
+                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -239,15 +261,22 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/admin/merge-strategies`} /></label>
                                         <Select
                                             options={[
-                                                { label: 'Default merge strategy', value: undefined }
+                                                { label: 'Default merge strategy', value: undefined },
+                                                { label: 'Merge commit', value: 'merge_commit' },
+                                                { label: 'Squash', value: 'squash' },
+                                                { label: 'Fast forward', value: 'fast_forward' }
                                             ]}
                                             className="ac-select-container"
                                             classNamePrefix="ac-select"
-                                            value={{ label: 'Default merge strategy', value: undefined }} />
+                                            value={this.state.mergeStrategy}
+                                            onChange={this.handleMergeStrategyChange} />
                                     </div>
                                     {issueDetails}
                                     <div className='ac-vpadding'>
-                                        <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                                        <div className='ac-flex-space-between'>
+                                            <Checkbox isChecked={this.state.closeSourceBranch} onChange={this.toggleCloseSourceBranch} name='setup-jira-checkbox' label='Close source branch' />
+                                            <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                                        </div>
                                     </div>
                                 </div>
                             }
