@@ -114,7 +114,6 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
-            console.log('abstract online post');
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
             this.invalidate();
         }

@@ -2,13 +2,14 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList, JqlOptionsList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
-import { IssueScreenTransformer } from '../jira/issueCreateScreenTransformer';
+import { IssueScreenTransformer, TransformerResult } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
+import { issuesForJQL } from '../jira/issuesForJql';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -18,12 +19,13 @@ export interface PartialIssue {
     description?: string;
 }
 
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | PreliminaryIssueData;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
-    private _currentProject: WorkingProject;
-    private _screenTransformer: IssueScreenTransformer;
+    private _currentProject: WorkingProject | undefined;
+    private _screenData: TransformerResult | undefined;
     private _isRefeshing: boolean = false;
+    private _selectedIssueTypeId: string;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -38,7 +40,6 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
     async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
         await super.createOrShow(column);
-        console.log('createOrShow');
         this._partialIssue = data;
         if (data) {
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
@@ -47,7 +48,6 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     public async invalidate() {
-        console.log('invalidate');
         if (Container.onlineDetector.isOnline()) {
             await this.updateFields();
         } else {
@@ -61,41 +61,48 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         }
 
         this._isRefeshing = true;
-        console.log('updateFields', this._screenTransformer);
         try {
             const availableProjects = await Container.jiraSiteManager.getProjects();
+            let projectChanged = false;
 
-            let effProject = project;
-            if (!effProject) {
-                effProject = await Container.jiraSiteManager.getEffectiveProject();
+            if (project && project !== this._currentProject) {
+                projectChanged = true;
+                this._currentProject = project;
             }
 
-            if (effProject !== this._currentProject) {
-                this._currentProject = effProject;
+            if (!this._currentProject) {
+                this._currentProject = await Container.jiraSiteManager.getEffectiveProject();
+                projectChanged = true;
+            }
 
+            if (projectChanged) {
+                this._selectedIssueTypeId = '';
+                this._screenData = undefined;
                 let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
 
                 if (client) {
                     let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
-                    this._screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
+                    const screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
+                    this._screenData = await screenTransformer.transformIssueScreens(undefined, false);
+                    this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
                 } else {
                     throw (new Error("unable to get a jira client"));
                 }
             }
 
-            const screenData = await this._screenTransformer.transformIssueScreens(undefined, false);
+            if (this._screenData) {
+                const createData: CreateIssueData = {
+                    type: 'screenRefresh',
+                    selectedProject: this._currentProject,
+                    selectedIssueTypeId: this._selectedIssueTypeId,
+                    availableProjects: availableProjects,
+                    issueTypeScreens: this._screenData.screens,
+                    epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
+                };
 
-            const createData: CreateIssueData = {
-                type: 'screenRefresh',
-                selectedProject: this._currentProject,
-                selectedIssueTypeId: screenData.selectedIssueType.id,
-                availableProjects: availableProjects,
-                issueTypeScreens: screenData.screens,
-                epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
-            };
 
-
-            this.postMessage(createData);
+                this.postMessage(createData);
+            }
         } catch (e) {
             let err = new Error(`error updating issue fields issue: ${e}`);
             Logger.error(err);
@@ -118,9 +125,16 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         if (!handled) {
             switch (e.action) {
                 case 'refresh': {
-                    console.log('got refresh from view');
                     handled = true;
                     this.invalidate();
+                    break;
+                }
+
+                case 'setIssueType': {
+                    handled = true;
+                    if (isSetIssueType(e)) {
+                        this._selectedIssueTypeId = e.id;
+                    }
                     break;
                 }
 
@@ -210,6 +224,26 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
                             }
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching issues: ${e}`));
+                            this.postMessage({ type: 'error', reason: `error fetching issues: ${e}` });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchOptionsJql': {
+                    handled = true;
+                    if (isFetchOptionsJQL(e)) {
+                        try {
+                            let options: any[] = [];
+                            let issues = await issuesForJQL(e.jql);
+                            if (issues && Array.isArray(issues)) {
+                                issues.forEach(issue => {
+                                    options.push({ name: `${issue.key} - ${issue.summary}`, id: issue.key });
+                                });
+                            }
+
+                            this.postMessage({ type: 'jqlOptionsList', options: options, fieldId: e.fieldId });
                         } catch (e) {
                             Logger.error(new Error(`error fetching issues: ${e}`));
                             this.postMessage({ type: 'error', reason: `error fetching issues: ${e}` });

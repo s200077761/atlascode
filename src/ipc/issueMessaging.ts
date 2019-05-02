@@ -44,6 +44,11 @@ export interface IssueSuggestionsList extends Message {
     issues: any[];
 }
 
+export interface JqlOptionsList extends Message {
+    options: any[];
+    fieldId: string;
+}
+
 export interface CreatedSomething extends Message {
     createdData: any;
 }

@@ -23,6 +23,11 @@ export interface IssueAssignAction extends Action {
     issue: Issue;
 }
 
+export interface SetIssueTypeAction extends Action {
+    action: 'setIssueType';
+    id: string;
+}
+
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
     issueOrKey: Issue | string;
@@ -39,6 +44,11 @@ export interface FetchQueryAction extends Action {
 export interface FetchByProjectQueryAction extends Action {
     query: string;
     project: string;
+}
+
+export interface FetchIssueFieldOptionsByJQLAction extends Action {
+    jql: string;
+    fieldId: string;
 }
 
 export interface ScreensForProjectsAction extends Action {
@@ -73,6 +83,10 @@ export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
 
+export function isSetIssueType(a: Action): a is SetIssueTypeAction {
+    return (<SetIssueTypeAction>a).id !== undefined && a.action === 'setIssueType';
+}
+
 export function isIssueComment(a: Action): a is IssueCommentAction {
     return (<IssueCommentAction>a).comment !== undefined && (<IssueCommentAction>a).issue !== undefined;
 }
@@ -91,6 +105,11 @@ export function isFetchQuery(a: Action): a is FetchQueryAction {
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
     return (<FetchByProjectQueryAction>a).query !== undefined
         && (<FetchByProjectQueryAction>a).project !== undefined;
+}
+
+export function isFetchOptionsJQL(a: Action): a is FetchIssueFieldOptionsByJQLAction {
+    return (<FetchIssueFieldOptionsByJQLAction>a).jql !== undefined
+        && (<FetchIssueFieldOptionsByJQLAction>a).fieldId !== undefined;
 }
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {

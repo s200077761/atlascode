@@ -1,8 +1,7 @@
 import { UIType, InputValueType, IssueTypeIdScreens, IssueTypeScreen } from "./createIssueMeta";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Container } from "../container";
-import { Issue, EpicFieldInfo } from "./jiraIssue";
-import { issuesForJQL } from "./issuesForJql";
+import { EpicFieldInfo } from "./jiraIssue";
 
 const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
 
@@ -70,7 +69,6 @@ const createableSelectSchemas: string[] = [
     , 'labels'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:labels'
     , 'versions'
-    , 'com.pyxis.greenhopper.jira:gh-epic-link'
 ];
 
 const schemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
@@ -127,7 +125,6 @@ export class IssueScreenTransformer {
     private _project: JIRA.Schema.CreateMetaProjectBean;
     private _epicFieldInfo: EpicFieldInfo;
     private _issueLinkTypes: any[] = [];
-    private _openEpics: Issue[] = [];
 
     constructor(site: AccessibleResource, project: JIRA.Schema.CreateMetaProjectBean) {
         this._site = site;
@@ -154,14 +151,6 @@ export class IssueScreenTransformer {
             } else {
                 filterFieldKeys.push('issuelinks');
             }
-
-            // grab the open epics
-            if (this._epicFieldInfo.epicsEnabled) {
-                const epics = await issuesForJQL(`project = "${this._project.key}" and cf[${this._epicFieldInfo.epicName.cfid}] != ""  and resolution = Unresolved and statusCategory != Done`);
-                if (Array.isArray(epics) && epics.length > 0) {
-                    this._openEpics = epics;
-                }
-            }
         }
 
         if (this._project.issuetypes) {
@@ -180,7 +169,7 @@ export class IssueScreenTransformer {
                 };
 
                 if (issueType.fields) {
-                    let issueTypeFieldFilters = filterFieldKeys;
+                    let issueTypeFieldFilters = [...filterFieldKeys];
 
                     // if it's an Epic type, we need to filter out the epic link field (epics can't belong to other epics)
                     if (Object.keys(issueType.fields!).includes(this._epicFieldInfo.epicName.id)) {
@@ -297,12 +286,10 @@ export class IssueScreenTransformer {
             }
             case UIType.Select: {
                 let allowedValues = (field.allowedValues !== undefined) ? field.allowedValues : [];
+                let autoCompleteJql = '';
 
                 if (field.key === this._epicFieldInfo.epicLink.id) {
-                    allowedValues = [];
-                    this._openEpics.forEach(epic => {
-                        allowedValues.push({ name: `${epic.key} - ${epic.summary}`, id: epic.key });
-                    });
+                    autoCompleteJql = `project = "${this._project.key}" and cf[${this._epicFieldInfo.epicName.cfid}] != ""  and resolution = Unresolved and statusCategory != Done`;
                 }
 
                 return {
@@ -315,6 +302,7 @@ export class IssueScreenTransformer {
                     isCascading: (field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
                     isCreateable: this.isCreateableSelect(field.schema),
                     autoCompleteUrl: (field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
+                    autoCompleteJql: autoCompleteJql,
                     advanced: this.isAdvanced(field)
                 };
             }

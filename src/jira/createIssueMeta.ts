@@ -41,6 +41,7 @@ export interface SelectScreenField extends OptionableScreenField {
     isCascading: boolean;
     isCreateable: boolean;
     autoCompleteUrl: string;
+    autoCompleteJql: string;
 }
 
 export interface IssueTypeScreen {
