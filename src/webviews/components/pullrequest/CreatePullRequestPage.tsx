@@ -224,8 +224,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleJiraIssueStatusChange = (item: Transition) => {
-        console.log(JSON.stringify(item));
         this.setState({
+            issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
             issue: { ...this.state.issue as Issue, status: { ...(this.state.issue as Issue).status, id: item.to.id, name: item.to.name } }
         });

@@ -258,6 +258,14 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - section messages --------------------*/
 
+/*-------------------- BEGIN - inline dialog --------------------*/
+
+.ac-inline-dialog [class^=styled__Container-] {
+  background: var(--vscode-editor-background--lighten-05);
+}
+
+/*-------------------- END - inline dialog --------------------*/
+
 /*-------------------- BEGIN - general form fields --------------------*/
 
 [class^=Field__FieldWrapper-] {
