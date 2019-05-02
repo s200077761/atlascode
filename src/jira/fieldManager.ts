@@ -72,6 +72,7 @@ export class JiraFieldManager extends Disposable {
                         }
                         return undefined;
                     }).forEach(field => {
+                        // cfid example: customfield_10013
                         if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-label') {
                             epicName = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                         } else if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-link') {
