@@ -45,6 +45,7 @@ interface ViewState {
     isCheckoutButtonLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
+    mergeStrategy: { label: string, value: 'merge_commit' | 'squash' | 'fast_forward' | undefined };
     closeSourceBranch?: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
@@ -65,6 +66,7 @@ const emptyState: ViewState = {
     isCheckoutButtonLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
+    mergeStrategy: { label: 'Default merge strategy', value: undefined },
     closeSourceBranch: undefined,
     isErrorBannerOpen: false,
     errorDetails: undefined,
@@ -89,6 +91,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isMergeButtonLoading: true });
         this.postMessage({
             action: 'merge',
+            mergeStrategy: this.state.mergeStrategy.value,
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
@@ -186,6 +189,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     toggleCloseSourceBranch = () => this.setState({ closeSourceBranch: !this.state.closeSourceBranch });
 
+    handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item });
+
     render() {
         const pr = this.state.pr.pr!;
 
@@ -256,11 +261,15 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/admin/merge-strategies`} /></label>
                                         <Select
                                             options={[
-                                                { label: 'Default merge strategy', value: undefined }
+                                                { label: 'Default merge strategy', value: undefined },
+                                                { label: 'Merge commit', value: 'merge_commit' },
+                                                { label: 'Squash', value: 'squash' },
+                                                { label: 'Fast forward', value: 'fast_forward' }
                                             ]}
                                             className="ac-select-container"
                                             classNamePrefix="ac-select"
-                                            value={{ label: 'Default merge strategy', value: undefined }} />
+                                            value={this.state.mergeStrategy}
+                                            onChange={this.handleMergeStrategyChange} />
                                     </div>
                                     {issueDetails}
                                     <div className='ac-vpadding'>

@@ -306,12 +306,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async merge(m: Merge) {
-        await PullRequestApi.merge({
-            repository: this._state.repository!,
-            remote: this._state.remote!,
-            sourceRemote: this._state.sourceRemote,
-            data: { ...this._state.prData.pr!, close_source_branch: m.closeSourceBranch }
-        });
+        await PullRequestApi.merge(
+            { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
+            m.closeSourceBranch,
+            m.mergeStrategy
+        );
         prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
