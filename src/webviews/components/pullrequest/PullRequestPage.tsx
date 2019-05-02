@@ -45,6 +45,7 @@ interface ViewState {
     isCheckoutButtonLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
+    closeSourceBranch?: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
@@ -64,6 +65,7 @@ const emptyState: ViewState = {
     isCheckoutButtonLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
+    closeSourceBranch: undefined,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
@@ -87,6 +89,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isMergeButtonLoading: true });
         this.postMessage({
             action: 'merge',
+            closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
     }
@@ -133,7 +136,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
             case 'update': {
                 if (isPRData(e)) {
-                    this.setState({ pr: e, isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+                    this.setState({
+                        pr: e,
+                        isApproveButtonLoading: false,
+                        isMergeButtonLoading: false,
+                        isCheckoutButtonLoading: false,
+                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.close_source_branch : this.state.closeSourceBranch
+                    });
                 }
                 break;
             }
@@ -162,10 +171,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
+    handleBitbucketIssueStatusChange = (item: string) => {
+        this.setState({
+            issueSetupEnabled: true,
+            // there must be a better way to update the transition dropdown!!
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as Bitbucket.Schema.Issue }
+        });
+    }
+
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
 
     toggleIssueSetupEnabled = () => this.setState({ issueSetupEnabled: !this.state.issueSetupEnabled });
+
+    toggleCloseSourceBranch = () => this.setState({ closeSourceBranch: !this.state.closeSourceBranch });
 
     render() {
         const pr = this.state.pr.pr!;
@@ -192,8 +211,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 {isIssue(issue)
                     ? <div>
                         <div className='ac-flex'>
-                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
-                            <h4><p>Update Jira issue status after merge - </p></h4>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
                             <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as Issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
@@ -204,13 +222,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     </div>
                     : <div>
                         <div className='ac-flex'>
-                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
-                            <h4><p>Update Bitbucket issue status after merge - </p></h4>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
                             <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as Bitbucket.Schema.Issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={() => { }} />
+                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -247,7 +264,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     </div>
                                     {issueDetails}
                                     <div className='ac-vpadding'>
-                                        <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                                        <div className='ac-flex-space-between'>
+                                            <Checkbox isChecked={this.state.closeSourceBranch} onChange={this.toggleCloseSourceBranch} name='setup-jira-checkbox' label='Close source branch' />
+                                            <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                                        </div>
                                     </div>
                                 </div>
                             }

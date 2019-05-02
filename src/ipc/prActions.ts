@@ -21,6 +21,7 @@ export interface Approve extends Action {
 
 export interface Merge extends Action {
     action: 'merge';
+    closeSourceBranch?: boolean;
     issue?: Issue | Bitbucket.Schema.Issue;
 }
 

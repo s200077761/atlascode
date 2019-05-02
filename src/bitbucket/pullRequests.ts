@@ -233,7 +233,10 @@ export namespace PullRequestApi {
         return await bb.pullrequests.merge({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
-            username: parsed.owner
+            username: parsed.owner,
+            _body: {
+                close_source_branch: pr.data.close_source_branch
+            }
         });
     }
 
