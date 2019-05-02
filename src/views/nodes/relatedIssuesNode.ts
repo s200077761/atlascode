@@ -15,7 +15,7 @@ export class RelatedIssuesNode extends BaseNode {
     }
 
     public static async create(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<BaseNode | undefined> {
-        if (!Container.authManager.isAuthenticated(AuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractIssueKeys(pr, allComments);

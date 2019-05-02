@@ -6,11 +6,11 @@ import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
-import { Issue } from '../jira/jiraModel';
+import { Issue, isIssue } from '../jira/jiraModel';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
@@ -19,6 +19,11 @@ import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
+import { AuthProvider } from '../atlclients/authInfo';
+import { issuesForJQL } from '../jira/issuesForJql';
+import { transitionIssue } from '../commands/jira/transitionIssue';
 
 interface PRState {
     prData: PRData;
@@ -99,11 +104,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 }
                 case 'merge': {
                     handled = true;
-                    try {
-                        await this.merge();
-                    } catch (e) {
-                        Logger.error(new Error(`error merging pull request: ${e}`));
-                        this.postMessage({ type: 'error', reason: e });
+                    if (isMerge(e)) {
+                        try {
+                            await this.merge(e.issue);
+                        } catch (e) {
+                            Logger.error(new Error(`error merging pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }
@@ -200,6 +207,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 comments: undefined,
                 relatedJiraIssues: undefined,
                 relatedBitbucketIssues: undefined,
+                mainIssue: undefined,
                 errors: undefined
             }
         };
@@ -208,14 +216,20 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postAugmentedState(pr: PullRequest) {
-        let promises = Promise.all([
+        const prDetailsPromises = Promise.all([
             PullRequestApi.getCommits(pr),
             PullRequestApi.getComments(pr),
             PullRequestApi.getBuildStatuses(pr)
         ]);
-        const [commits, comments, buildStatuses] = await promises;
-        const relatedJiraIssues = await this.fetchRelatedJiraIssues(pr, comments);
-        const relatedBitbucketIssues = await this.fetchRelatedBitbucketIssues(pr, comments);
+        const [commits, comments, buildStatuses] = await prDetailsPromises;
+
+        const issuesPromises = Promise.all([
+            this.fetchRelatedJiraIssues(pr, comments),
+            this.fetchRelatedBitbucketIssues(pr, comments),
+            this.fetchMainIssue(pr)
+        ]);
+        const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
+
         this._state.prData = {
             ...this._state.prData,
             ...{
@@ -224,6 +238,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 comments: comments.data,
                 relatedJiraIssues: relatedJiraIssues,
                 relatedBitbucketIssues: relatedBitbucketIssues,
+                mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
                 errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
             }
@@ -232,11 +247,37 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         this.postMessage(this._state.prData);
     }
 
+    private async fetchMainIssue(pr: PullRequest): Promise<Issue | Bitbucket.Schema.Issue | undefined> {
+        try {
+            const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
+
+            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+                const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
+                const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
+                if (jiraIssues.length > 0) {
+                    return jiraIssues[0];
+                }
+            }
+
+            const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
+            const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, bbIssueKeys);
+            if (bbIssues.length > 0) {
+                return bbIssues[0];
+            }
+        }
+        catch (e) {
+            Logger.debug('error fetching main jira issue: ', e);
+        }
+        return undefined;
+    }
+
     private async fetchRelatedJiraIssues(pr: PullRequest, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
-            const issueKeys = await extractIssueKeys(pr, comments.data);
-            result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
+            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+                const issueKeys = await extractIssueKeys(pr, comments.data);
+                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
+            }
         }
         catch (e) {
             result = [];
@@ -264,12 +305,25 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async merge() {
+    private async merge(issue?: Issue | Bitbucket.Schema.Issue) {
         await PullRequestApi.merge({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
         prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        await this.updateIssue(issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
         await this.forceUpdatePullRequest();
+    }
+
+    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+        if (!issue) {
+            return;
+        }
+        if (isIssue(issue)) {
+            const transition = issue.transitions.find(t => t.to.id === issue.status.id);
+            await transitionIssue(issue, transition);
+        } else {
+            await BitbucketIssuesApi.postChange(issue, issue.state!);
+        }
     }
 
     private async checkout(branch: string, isSourceBranch: boolean) {

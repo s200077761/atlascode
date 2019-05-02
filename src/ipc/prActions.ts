@@ -1,5 +1,6 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
+import { Issue } from "../jira/jiraModel";
 
 export interface PostComment extends Action {
     content: string;
@@ -20,6 +21,11 @@ export interface Approve extends Action {
 
 export interface Merge extends Action {
     action: 'merge';
+    issue?: Issue | Bitbucket.Schema.Issue;
+}
+
+export function isMerge(a: Action): a is Merge {
+    return (<Merge>a).action === 'merge';
 }
 
 export interface CopyPullRequestLink extends Action {
@@ -52,6 +58,7 @@ export interface CreatePullRequest extends Action {
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
+    issue?: Issue | Bitbucket.Schema.Issue;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
@@ -66,8 +73,18 @@ export interface FetchDetails extends Action {
     destinationBranch: Branch;
 }
 
+export interface FetchIssue extends Action {
+    action: 'fetchIssue';
+    repoUri: string;
+    sourceBranch: Branch;
+}
+
 export function isFetchDetails(a: Action): a is FetchDetails {
     return (<FetchDetails>a).action === 'fetchDetails';
+}
+
+export function isFetchIssue(a: Action): a is FetchIssue {
+    return (<FetchIssue>a).action === 'fetchIssue';
 }
 
 export function isOpenPullRequest(a: Action): a is OpenPullRequest {

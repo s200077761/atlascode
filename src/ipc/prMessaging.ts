@@ -11,6 +11,7 @@ export interface PRData extends Message {
     comments?: Bitbucket.Schema.Comment[];
     relatedJiraIssues?: Issue[];
     relatedBitbucketIssues?: Bitbucket.Schema.Issue[];
+    mainIssue?: Issue | Bitbucket.Schema.Issue;
     buildStatuses?: Bitbucket.Schema.Commitstatus[];
     errors?: string;
 }
@@ -51,6 +52,11 @@ export interface CommitsResult extends Message {
     type: 'commitsResult';
     error?: string;
     commits: Bitbucket.Schema.Commit[];
+}
+
+export interface FetchIssueResult extends Message {
+    type: 'fetchIssueResult';
+    issue?: Issue | Bitbucket.Schema.Issue;
 }
 
 export function isCommitsResult(a: Message): a is CommitsResult {

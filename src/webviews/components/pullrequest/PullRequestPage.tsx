@@ -6,8 +6,13 @@ import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Panel from '@atlaskit/panel';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
+import InlineDialog from '@atlaskit/inline-dialog';
+import { Checkbox } from '@atlaskit/checkbox';
+import Select from '@atlaskit/select';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
+import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -17,7 +22,7 @@ import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPull
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
-import { Issue } from '../../../jira/jiraModel';
+import { Issue, isIssue, Transition } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
@@ -27,6 +32,8 @@ import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
+import { TransitionMenu } from '../issue/TransitionMenu';
+import { StatusMenu } from '../bbissue/StatusMenu';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -36,6 +43,8 @@ interface ViewState {
     isApproveButtonLoading: boolean;
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
+    mergeDialogOpen: boolean;
+    issueSetupEnabled: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
@@ -53,6 +62,8 @@ const emptyState: ViewState = {
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
+    mergeDialogOpen: false,
+    issueSetupEnabled: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
@@ -75,7 +86,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleMerge = () => {
         this.setState({ isMergeButtonLoading: true });
         this.postMessage({
-            action: 'merge'
+            action: 'merge',
+            issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
     }
 
@@ -142,6 +154,19 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
+    handleJiraIssueStatusChange = (item: Transition) => {
+        this.setState({
+            issueSetupEnabled: true,
+            // there must be a better way to update the transition dropdown!!
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as Issue, status: { ...(this.state.pr.mainIssue as Issue).status, id: item.to.id, name: item.to.name } } }
+        });
+    }
+
+    toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
+    closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
+
+    toggleIssueSetupEnabled = () => this.setState({ issueSetupEnabled: !this.state.issueSetupEnabled });
+
     render() {
         const pr = this.state.pr.pr!;
 
@@ -161,27 +186,81 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
 
-        const actionsContent = (
-            <ButtonGroup>
-                <Reviewers {...this.state.pr} />
-                <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
-                    <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
-                        isDisabled={currentUserApproved}
-                        isLoading={this.state.isApproveButtonLoading}
-                        onClick={this.handleApprove}>
-                        Approve
-                        </Button>
-                </Tooltip>
-                <Button className='ac-button'
-                    isDisabled={!isPrOpen}
-                    isLoading={this.state.isMergeButtonLoading}
-                    onClick={this.handleMerge}>
-                    {isPrOpen ? 'Merge' : pr.state}
-                </Button>
-                {
-                    this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
+        const issue = this.state.pr.mainIssue;
+        const issueDetails = issue ?
+            <React.Fragment>
+                {isIssue(issue)
+                    ? <div>
+                        <div className='ac-flex'>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
+                            <h4><p>Update Jira issue status after merge - </p></h4>
+                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as Issue })} />
+                        </div>
+                        <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                            <div style={{ marginLeft: 10 }}>
+                                <TransitionMenu issue={issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                            </div>
+                        </div>
+                    </div>
+                    : <div>
+                        <div className='ac-flex'>
+                            <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
+                            <h4><p>Update Bitbucket issue status after merge - </p></h4>
+                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as Bitbucket.Schema.Issue })} />
+                        </div>
+                        <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
+                            <div style={{ marginLeft: 10 }}>
+                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={() => { }} />
+                            </div>
+                        </div>
+                    </div>
                 }
-            </ButtonGroup>
+            </React.Fragment>
+            : null;
+
+        const actionsContent = (
+            <div>
+                <ButtonGroup>
+                    <Reviewers {...this.state.pr} />
+                    <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
+                        <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                            isDisabled={currentUserApproved}
+                            isLoading={this.state.isApproveButtonLoading}
+                            onClick={this.handleApprove}>
+                            Approve
+                        </Button>
+                    </Tooltip>
+
+                    <div className='ac-inline-dialog'>
+                        <InlineDialog placement='bottom-end'
+                            content={
+                                <div>
+                                    <div className='ac-vpadding'>
+                                        <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/admin/merge-strategies`} /></label>
+                                        <Select
+                                            options={[
+                                                { label: 'Default merge strategy', value: undefined }
+                                            ]}
+                                            className="ac-select-container"
+                                            classNamePrefix="ac-select"
+                                            value={{ label: 'Default merge strategy', value: undefined }} />
+                                    </div>
+                                    {issueDetails}
+                                    <div className='ac-vpadding'>
+                                        <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                                    </div>
+                                </div>
+                            }
+                            isOpen={this.state.mergeDialogOpen}
+                            onClose={this.closeMergeDialog}>
+                            <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                        </InlineDialog>
+                    </div>
+                    {
+                        this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
+                    }
+                </ButtonGroup>
+            </div>
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
