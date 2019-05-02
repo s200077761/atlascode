@@ -171,8 +171,14 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
             let repo: Bitbucket.Schema.Repository | undefined = undefined;
             let developmentBranch = undefined;
             let href = undefined;
+            let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
             if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]), RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0])]);
+                [, repo, developmentBranch, branchingModel] = await Promise.all(
+                    [r.fetch(),
+                    RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]),
+                    RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0]),
+                    RepositoriesApi.getBranchingModel(PullRequestApi.getBitbucketRemotes(r)[0])
+                    ]);
                 href = repo.links!.html!.href;
             }
 
@@ -183,7 +189,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 defaultReviewers: [],
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],
-                developmentBranch: developmentBranch
+                developmentBranch: developmentBranch,
+                branchingModel: branchingModel
             });
         }
 

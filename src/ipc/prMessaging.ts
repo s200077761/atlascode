@@ -31,6 +31,7 @@ export interface RepoData {
     remoteBranches: Branch[];
     developmentBranch?: string;
     hasLocalChanges?: boolean;
+    branchingModel?: Bitbucket.Schema.BranchingModel;
 }
 
 export interface CreatePRData extends Message {
