@@ -21,6 +21,11 @@ export interface Approve extends Action {
 
 export interface Merge extends Action {
     action: 'merge';
+    issue?: Issue | Bitbucket.Schema.Issue;
+}
+
+export function isMerge(a: Action): a is Merge {
+    return (<Merge>a).action === 'merge';
 }
 
 export interface CopyPullRequestLink extends Action {
