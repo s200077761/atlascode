@@ -19,10 +19,10 @@ export default class ErrorBanner extends React.Component<{ errorDetails: any, on
         let errorMarkup = [];
         if (typeof this.state.errorDetails === 'object') {
             Object.keys(this.state.errorDetails).forEach(key => {
-                errorMarkup.push(<p className='force-wrap'><b>{key}:</b><span className='force-wrap' style={{ marginLeft: '5px' }}>{this.state.errorDetails[key]}</span></p>);
+                errorMarkup.push(<p className='force-wrap'><b>{key}:</b><span className='force-wrap' style={{ marginLeft: '5px' }}>{JSON.stringify(this.state.errorDetails[key])}</span></p>);
             });
         } else {
-            errorMarkup.push(<p className='force-wrap'>{this.state.errorDetails}</p>);
+            errorMarkup.push(<p className='force-wrap'>{JSON.stringify(this.state.errorDetails)}</p>);
         }
 
         return (
