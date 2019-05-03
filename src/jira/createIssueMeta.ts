@@ -7,8 +7,7 @@ export enum UIType {
     Date = 'date',
     DateTime = 'datetime',
     User = 'user',
-    IssueLink = 'issuelink',
-    NOT_RENDERED = 'not_rendered'
+    IssueLink = 'issuelink'
 }
 
 export enum InputValueType {
@@ -42,6 +41,7 @@ export interface SelectScreenField extends OptionableScreenField {
     isCascading: boolean;
     isCreateable: boolean;
     autoCompleteUrl: string;
+    autoCompleteJql: string;
 }
 
 export interface IssueTypeScreen {

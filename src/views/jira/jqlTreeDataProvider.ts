@@ -133,12 +133,17 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
         const epics = [...localEpics, ...remoteEpics];
 
+        if (epics.length < 1) {
+            return [[], []];
+        }
+
+        const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(epics[0].workingSite);
         // note: we always have to fetch children because they might not be included in the JQL
         let finalEpics: Issue[] = await Promise.all(
             epics
                 .map(async epic => {
                     if (epic.epicChildren.length < 1) {
-                        let children = await issuesForJQL(`"Epic Link" = "${epic.key}" and resolution = Unresolved and statusCategory != Done order by lastViewed DESC`);
+                        let children = await issuesForJQL(`cf[${epicFieldInfo.epicLink.cfid}] = "${epic.key}" and resolution = Unresolved and statusCategory != Done order by lastViewed DESC`);
                         epic.epicChildren = children;
                     }
 

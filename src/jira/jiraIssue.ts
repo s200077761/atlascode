@@ -1,7 +1,6 @@
 import { emptyUser, emptyIssueType, User, IssueType } from "./jiraCommon";
 import { emptyWorkingSite } from "../config/model";
 import { AccessibleResource } from "../atlclients/authInfo";
-import { EpicFieldInfo } from "./fieldManager";
 
 export const emptyStatusCategory: StatusCategory = {
     colorName: '',
@@ -82,6 +81,12 @@ export const emptyIssue: Issue = {
     epicChildren: [],
     epicName: '',
     epicLink: ''
+};
+
+export const epicsDisabled: EpicFieldInfo = {
+    epicLink: { name: "", id: "", cfid: 0 },
+    epicName: { name: "", id: "", cfid: 0 },
+    epicsEnabled: false
 };
 
 export type issueOrKey = Issue | string;
@@ -340,4 +345,16 @@ export interface IssueLink {
     type: IssueLinkType;
     inwardIssue?: Issue;
     outwardIssue?: Issue;
+}
+
+export interface CFIdName {
+    id: string;
+    name: string;
+    cfid: number;
+}
+
+export interface EpicFieldInfo {
+    epicName: CFIdName;
+    epicLink: CFIdName;
+    epicsEnabled: boolean;
 }
