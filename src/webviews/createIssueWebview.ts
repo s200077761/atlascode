@@ -2,12 +2,12 @@ import { AbstractReactWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList } from '../ipc/issueMessaging';
+import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList, JqlOptionsList } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchUsersQuery, isOpenJiraIssue } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
-import { transformIssueScreens } from '../jira/issueCreateScreenTransformer';
+import { IssueScreenTransformer, TransformerResult } from '../jira/issueCreateScreenTransformer';
 import { IssueTypeIdScreens, SelectScreenField, UIType } from '../jira/createIssueMeta';
 import { issueCreatedEvent } from '../analytics';
 
@@ -30,10 +30,13 @@ export interface BBData {
     bbIssue: Bitbucket.Schema.Issue;
     issueKey: string;
 }
-
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | PreliminaryIssueData;
+type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
+    private _currentProject: WorkingProject | undefined;
+    private _screenData: TransformerResult | undefined;
+    private _isRefeshing: boolean = false;
+    private _selectedIssueTypeId: string;
     private _relatedBBIssue: Bitbucket.Schema.Issue | undefined;
 
     constructor(extensionPath: string) {
@@ -71,71 +74,60 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     async updateFields(project?: WorkingProject) {
+        if (this._isRefeshing) {
+            return;
+        }
+
+        this._isRefeshing = true;
         try {
             const availableProjects = await Container.jiraSiteManager.getProjects();
+            let projectChanged = false;
 
-            let effProject = project;
-            if (!effProject) {
-                effProject = await Container.jiraSiteManager.getEffectiveProject();
+            if (project && project !== this._currentProject) {
+                projectChanged = true;
+                this._currentProject = project;
             }
 
-            const screenData = await this.getScreenFields(effProject);
+            if (!this._currentProject) {
+                this._currentProject = await Container.jiraSiteManager.getEffectiveProject();
+                projectChanged = true;
+            }
 
-            const foundProject = (project !== undefined) ? project : effProject;
-            const createData: CreateIssueData = {
-                type: 'screenRefresh',
-                selectedProject: foundProject,
-                selectedIssueTypeId: screenData.selectedIssueType.id,
-                availableProjects: availableProjects,
-                issueTypeScreens: screenData.screens
-            };
+            if (projectChanged) {
+                this._selectedIssueTypeId = '';
+                this._screenData = undefined;
+                let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+
+                if (client) {
+                    let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
+                    const screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
+                    this._screenData = await screenTransformer.transformIssueScreens(undefined, false);
+                    this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
+                } else {
+                    throw (new Error("unable to get a jira client"));
+                }
+            }
+
+            if (this._screenData) {
+                const createData: CreateIssueData = {
+                    type: 'screenRefresh',
+                    selectedProject: this._currentProject,
+                    selectedIssueTypeId: this._selectedIssueTypeId,
+                    availableProjects: availableProjects,
+                    issueTypeScreens: this._screenData.screens,
+                    epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
+                };
 
 
-            this.postMessage(createData);
-        } catch (e) {
-            Logger.error(new Error(`error updating issue fields issue: ${e}`));
-            this.postMessage({ type: 'error', reason: e });
-        }
-
-
-    }
-
-    async getScreenFields(project: WorkingProject): Promise<{ selectedIssueType: JIRA.Schema.CreateMetaIssueTypeBean, screens: IssueTypeIdScreens }> {
-        let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-
-        if (client) {
-            const projects: string[] = [project.key];
-
-            let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: projects, expand: 'projects.issuetypes.fields' });
-            let transformation = transformIssueScreens(res.data.projects![0], undefined, false);
-            transformation.screens = await this.addIssuelinksFieldData(client, transformation.screens);
-            return transformation;
-        }
-        return Promise.reject("unable to get a jira client");
-    }
-
-    async addIssuelinksFieldData(client: JIRA, screens: IssueTypeIdScreens): Promise<IssueTypeIdScreens> {
-        const issuelinksKey = 'issuelinks';
-        try {
-            const issuelinkTypes = await client.issueLinkType.getIssueLinkTypes({});
-            if (Array.isArray(issuelinkTypes.data.issueLinkTypes) && issuelinkTypes.data.issueLinkTypes.length > 0) {
-                Object.values(screens).forEach(screen => {
-                    screen.fields.filter(screen => screen.key === issuelinksKey).forEach(issuelinksfield => {
-                        (issuelinksfield as SelectScreenField).allowedValues = issuelinkTypes.data.issueLinkTypes!;
-                    });
-                });
-            } else {
-                Object.values(screens).forEach(screen => {
-                    screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
-                });
+                this.postMessage(createData);
             }
             return screens;
         } catch (e) {
-            Object.values(screens).forEach(screen => {
-                screen.fields.filter(field => field.key === issuelinksKey).forEach(issuelinksfield => issuelinksfield.uiType = UIType.NOT_RENDERED);
-            });
-            Logger.debug(new Error(`error getting issuelinks field data: ${e}`));
-            return screens;
+            let err = new Error(`error updating issue fields issue: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating issue fields issue: ${e}` });
+        } finally {
+            this._isRefeshing = false;
         }
     }
 
@@ -157,6 +149,14 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'refresh': {
                     handled = true;
                     this.invalidate();
+                    break;
+                }
+
+                case 'setIssueType': {
+                    handled = true;
+                    if (isSetIssueType(e)) {
+                        this._selectedIssueTypeId = e.id;
+                    }
                     break;
                 }
 
@@ -212,7 +212,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'fetchUsers': {
                     handled = true;
-                    if (isFetchUsersQuery(e)) {
+                    if (isFetchByProjectQuery(e)) {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
                             if (client) {
@@ -247,8 +247,28 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
                             }
                         } catch (e) {
-                            Logger.error(new Error(`error fetching users: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            Logger.error(new Error(`error fetching issues: ${e}`));
+                            this.postMessage({ type: 'error', reason: `error fetching issues: ${e}` });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchOptionsJql': {
+                    handled = true;
+                    if (isFetchOptionsJQL(e)) {
+                        try {
+                            let options: any[] = [];
+                            let issues = await issuesForJQL(e.jql);
+                            if (issues && Array.isArray(issues)) {
+                                issues.forEach(issue => {
+                                    options.push({ name: `${issue.key} - ${issue.summary}`, id: issue.key });
+                                });
+                            }
+
+                            this.postMessage({ type: 'jqlOptionsList', options: options, fieldId: e.fieldId });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching issues: ${e}`));
+                            this.postMessage({ type: 'error', reason: `error fetching issues: ${e}` });
                         }
                     }
                     break;
@@ -297,26 +317,38 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
                             if (client) {
-                                let issueUpdates = undefined;
-                                if (e.issueData.issuelinks &&
-                                    e.issueData.issuelinks.type && e.issueData.issuelinks.type.id &&
-                                    e.issueData.issuelinks.issue && e.issueData.issuelinks.issue.key) {
-                                    const issuelinks = [{
-                                        add: {
-                                            type: {
-                                                id: e.issueData.issuelinks.type.id
-                                            },
-                                            inwardIssue: e.issueData.issuelinks.type.type === 'inward' ? { key: e.issueData.issuelinks.issue.key } : undefined,
-                                            outwardIssue: e.issueData.issuelinks.type.type === 'outward' ? { key: e.issueData.issuelinks.issue.key } : undefined
-                                        }
-                                    }];
-
-                                    issueUpdates = { issuelinks: issuelinks };
-                                }
-
+                                const issuelinks: any[] = [];
+                                const formLinks = e.issueData.issuelinks;
                                 delete e.issueData.issuelinks;
 
-                                let resp = await client.issue.createIssue({ body: { fields: e.issueData, update: issueUpdates } });
+                                let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
+
+                                if (formLinks &&
+                                    formLinks.type && formLinks.type.id &&
+                                    formLinks.issue && Array.isArray(formLinks.issue) && formLinks.issue.length > 0) {
+
+                                    formLinks.issue.forEach((link: any) => {
+                                        issuelinks.push(
+                                            {
+                                                type: {
+                                                    id: formLinks.type.id
+                                                },
+                                                inwardIssue: formLinks.type.type === 'inward' ? { key: link.key } : { key: resp.data.key },
+                                                outwardIssue: formLinks.type.type === 'outward' ? { key: link.key } : { key: resp.data.key }
+                                            }
+                                        );
+                                    });
+                                }
+
+                                if (issuelinks.length > 0) {
+                                    issuelinks.forEach(async (link: any) => {
+                                        if (client) {
+                                            await client.issueLink.createIssueLink({ body: link });
+                                        }
+                                    });
+                                }
+
+
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
                                 issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);

@@ -4,25 +4,10 @@ import { Container } from "../container";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { configuration } from "../config/configuration";
+import { EpicFieldInfo, epicsDisabled } from "./jiraIssue";
 
-export interface EpicFieldInfo {
-    epicName: NamedField;
-    epicLink: NamedField;
-    epicsEnabled: boolean;
-}
-
-export interface NamedField {
-    name: string;
-    id: string;
-}
 
 export const defaultIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
-
-export const EpicsDisabled: EpicFieldInfo = {
-    epicLink: { name: "", id: "" },
-    epicName: { name: "", id: "" },
-    epicsEnabled: false
-};
 
 export class JiraFieldManager extends Disposable {
     private _disposable: Disposable;
@@ -72,7 +57,7 @@ export class JiraFieldManager extends Disposable {
 
     private async epicFieldsForSite(site: AccessibleResource): Promise<EpicFieldInfo> {
         let client = await Container.clientManager.jirarequest(site);
-        let epicFields = EpicsDisabled;
+        let epicFields = epicsDisabled;
         if (client) {
             try {
                 let allFields = await client.field.getFields({});
@@ -87,10 +72,11 @@ export class JiraFieldManager extends Disposable {
                         }
                         return undefined;
                     }).forEach(field => {
+                        // cfid example: customfield_10013
                         if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-label') {
-                            epicName = { name: field.name, id: field.id };
+                            epicName = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                         } else if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-link') {
-                            epicLink = { name: field.name, id: field.id };
+                            epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                         }
                     });
 

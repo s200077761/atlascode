@@ -6,7 +6,7 @@ import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
@@ -106,7 +106,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     handled = true;
                     if (isMerge(e)) {
                         try {
-                            await this.merge(e.issue);
+                            await this.merge(e);
                         } catch (e) {
                             Logger.error(new Error(`error merging pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -305,10 +305,14 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async merge(issue?: Issue | Bitbucket.Schema.Issue) {
-        await PullRequestApi.merge({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+    private async merge(m: Merge) {
+        await PullRequestApi.merge(
+            { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
+            m.closeSourceBranch,
+            m.mergeStrategy
+        );
         prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        await this.updateIssue(issue);
+        await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
         await this.forceUpdatePullRequest();

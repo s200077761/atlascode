@@ -226,14 +226,20 @@ export namespace PullRequestApi {
         });
     }
 
-    export async function merge(pr: PullRequest) {
+    export async function merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb = await bitbucketHosts.get(parsed.source)();
+
+        let body = Object.create({});
+        body = closeSourceBranch ? { ...body, close_source_branch: closeSourceBranch } : body;
+        body = mergeStrategy ? { ...body, merge_strategy: mergeStrategy } : body;
+
         return await bb.pullrequests.merge({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
-            username: parsed.owner
+            username: parsed.owner,
+            _body: body
         });
     }
 
