@@ -57,3 +57,13 @@ export interface OpenStartWorkPageAction extends Action {
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
     return (<OpenStartWorkPageAction>a).issue !== undefined;
 }
+
+export interface CreateJiraIssueAction extends Action {
+    action: 'createJiraIssue';
+    issue: Bitbucket.Schema.Issue;
+}
+
+export function isCreateJiraIssueAction(a: Action): a is CreateJiraIssueAction {
+    return (<CreateJiraIssueAction>a).issue !== undefined
+        && (<CreateJiraIssueAction>a).action === 'createJiraIssue';
+}

@@ -95,6 +95,7 @@ export interface BitbucketIssuesConfig {
     explorerEnabled: boolean;
     monitorEnabled: boolean;
     refreshInterval: number;
+    createJiraEnabled: boolean;
 }
 
 export interface BitbucketExplorer {
@@ -253,7 +254,8 @@ export const emptyPipelinesConfig: BitbucketPipelinesConfig = {
 export const emptyIssuesConfig: BitbucketIssuesConfig = {
     explorerEnabled: true,
     monitorEnabled: true,
-    refreshInterval: 15
+    refreshInterval: 15,
+    createJiraEnabled: false,
 };
 
 export const emptyBitbucketConfig: BitbucketConfig = {

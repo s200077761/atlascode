@@ -14,17 +14,29 @@ import { issuesForJQL } from '../jira/issuesForJql';
 export interface PartialIssue {
     uri?: Uri;
     position?: Position;
-    onCreated?: (uri: Uri, position: Position, issueKey: string) => void;
+    onCreated?: (data: CommentData | BBData) => void;
     summary?: string;
     description?: string;
+    bbIssue?: Bitbucket.Schema.Issue;
 }
 
+export interface CommentData {
+    uri: Uri;
+    position: Position;
+    issueKey: string;
+}
+
+export interface BBData {
+    bbIssue: Bitbucket.Schema.Issue;
+    issueKey: string;
+}
 type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: WorkingProject | undefined;
     private _screenData: TransformerResult | undefined;
     private _selectedIssueTypeId: string;
+    private _relatedBBIssue: Bitbucket.Schema.Issue | undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -40,8 +52,14 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
         await super.createOrShow(column);
         this._partialIssue = data;
+
         if (data) {
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
+
+            if (data.bbIssue) {
+                this._relatedBBIssue = data.bbIssue;
+            }
+
             this.postMessage(pd);
         }
     }
@@ -102,6 +120,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
                 this.postMessage(createData);
             }
+
         } catch (e) {
             let err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
@@ -111,9 +130,12 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         }
     }
 
-    finalizeTodoIssueCreation(issueKey: string) {
+    fireCallback(issueKey: string) {
         if (this._partialIssue && this._partialIssue.uri && this._partialIssue.position && this._partialIssue.onCreated) {
-            this._partialIssue.onCreated(this._partialIssue.uri, this._partialIssue.position, issueKey);
+            this._partialIssue.onCreated({ uri: this._partialIssue.uri, position: this._partialIssue.position, issueKey: issueKey });
+            this.hide();
+        } else if (this._relatedBBIssue && this._partialIssue && this._partialIssue.onCreated) {
+            this._partialIssue.onCreated({ bbIssue: this._relatedBBIssue, issueKey: issueKey });
             this.hide();
         }
     }
@@ -325,10 +347,11 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                     });
                                 }
 
+
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
                                 issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);
-                                this.finalizeTodoIssueCreation(resp.data.key);
+                                this.fireCallback(resp.data.key);
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
                             }

@@ -1,19 +1,19 @@
 import * as vscode from 'vscode';
-import { BaseNode } from '../nodes/baseNode';
+import { AbstractBaseNode } from './abstractBaseNode';
 import { PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
 import { AuthProvider } from '../../atlclients/authInfo';
 
-export class RelatedBitbucketIssuesNode extends BaseNode {
+export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     private _delegate: StaticBitbucketIssuesNode;
 
     private constructor() {
         super();
     }
 
-    public static async create(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<BaseNode | undefined> {
+    public static async create(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
         if (!Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             return undefined;
         }
@@ -30,7 +30,7 @@ export class RelatedBitbucketIssuesNode extends BaseNode {
         return this._delegate.getTreeItem();
     }
 
-    getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return this._delegate.getChildren(element);
     }
 }

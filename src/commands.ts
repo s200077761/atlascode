@@ -8,7 +8,7 @@ import { transitionIssue } from './commands/jira/transitionIssue';
 import { assignIssue } from './commands/jira/assignIssue';
 import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
-import { BaseNode } from './views/nodes/baseNode';
+import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { BranchNode } from './views/pipelines/PipelinesTree';
 import { viewScreenEvent, Registry } from './analytics';
 import { Issue, isIssue } from './jira/jiraIssue';
@@ -72,7 +72,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
         vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
-        vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: BaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
+        vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.BitbucketAddComment, async (cc: PullRequestCommentController, uri: vscode.Uri, t: vscode.CommentThread) => await cc.addComment(t, uri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),

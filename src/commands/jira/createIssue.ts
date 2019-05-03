@@ -3,6 +3,8 @@ import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { PullRequestApi, GitUrlParse } from '../../bitbucket/pullRequests';
 import { startIssueCreationEvent } from '../../analytics';
+import { CommentData, BBData } from '../../webviews/createIssueWebview';
+import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
 
 export interface TodoIssueData {
     summary: string;
@@ -10,7 +12,7 @@ export interface TodoIssueData {
     insertionPoint: Position;
 }
 
-export function createIssue(data: Uri | TodoIssueData | undefined) {
+export function createIssue(data: Uri | TodoIssueData | Bitbucket.Schema.Issue | undefined) {
     if (isTodoIssueData(data)) {
         const partialIssue = {
             summary: data.summary,
@@ -26,7 +28,18 @@ export function createIssue(data: Uri | TodoIssueData | undefined) {
         Container.createIssueWebview.createOrShow(ViewColumn.Active, { description: descriptionForUri(data) });
         startIssueCreationEvent('contextMenu').then(e => { Container.analyticsClient.sendTrackEvent(e); });
         return;
+    } else if (isBBIssueData(data)) {
+        const partialIssue = {
+            summary: `BB #${data.id} - ${data.title}`,
+            description: `created from Bitbucket issue: ${data.links!.html!.href!}`,
+            bbIssue: data,
+            onCreated: updateBBIssue,
+        };
+        Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
+        startIssueCreationEvent('todoComment').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        return;
     }
+
     Container.createIssueWebview.createOrShow();
     startIssueCreationEvent('explorer').then(e => { Container.analyticsClient.sendTrackEvent(e); });
 }
@@ -35,15 +48,32 @@ function isTodoIssueData(a: any): a is TodoIssueData {
     return a && (<TodoIssueData>a).insertionPoint !== undefined;
 }
 
+function isBBIssueData(a: any): a is Bitbucket.Schema.Issue {
+    return a && (<Bitbucket.Schema.Issue>a).title !== undefined;
+}
+
 function isUri(a: any): a is Uri {
     return a && (<Uri>a).fsPath !== undefined;
 }
 
-function annotateComment(file: Uri, position: Position, issueKey: string) {
+function annotateComment(data: CommentData) {
     const we = new WorkspaceEdit();
 
-    we.insert(file, position, ` [${issueKey}]`);
+    we.insert(data.uri, data.position, ` [${data.issueKey}]`);
     workspace.applyEdit(we);
+}
+
+async function updateBBIssue(data: BBData) {
+
+    BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
+
+    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!);
+    if (comps && Array.isArray(comps)) {
+        const injiraComp = comps.find(comp => comp.name === 'triaged');
+        if (injiraComp && data.bbIssue.component !== injiraComp) {
+            BitbucketIssuesApi.postNewComponent(data.bbIssue, injiraComp.name!);
+        }
+    }
 }
 
 function descriptionForUri(uri: Uri) {

@@ -3,7 +3,7 @@ import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
-import { isPostComment, isPostChange, isOpenStartWorkPageAction } from "../ipc/bitbucketIssueActions";
+import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
@@ -101,19 +101,20 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
                 });
 
-            //@ts-ignore
-            // replace comment with change data which contains additional details
-            const updatedComments = comments.data.map(comment => updatedChanges.find(
-                change =>
-                    //@ts-ignore
-                    change.id! === comment.id!) || comment);
-            const msg = {
-                type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-                issue: issueLatest,
-                currentUser: currentUser,
-                comments: updatedComments,
-                hasMore: !!comments.next || !!changes.next
-            } as BitbucketIssueData;
+        //@ts-ignore
+        // replace comment with change data which contains additional details
+        const updatedComments = comments.data.map(comment => updatedChanges.find(
+            change =>
+                //@ts-ignore
+                change.id! === comment.id!) || comment);
+        const msg = {
+            type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
+            issue: issueLatest,
+            currentUser: currentUser,
+            comments: updatedComments,
+            hasMore: !!comments.next || !!changes.next,
+            showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
+        } as BitbucketIssueData;
 
             this.postMessage(msg);
         } catch (e) {
@@ -190,6 +191,13 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isOpenStartWorkPageAction(e)) {
                         handled = true;
                         vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, e.issue);
+                    }
+                    break;
+                }
+                case 'createJiraIssue': {
+                    if (isCreateJiraIssueAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.CreateIssue, e.issue);
                     }
                     break;
                 }
