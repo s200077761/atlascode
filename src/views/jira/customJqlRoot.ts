@@ -9,7 +9,7 @@ import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
-import { EmptyStateNode } from "../nodes/emptyStateNode";
+import { EmptyStateJiraIssueNode } from "../nodes/emptyStateJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
@@ -52,7 +52,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
   async getChildren(element: BaseNode | undefined) {
     if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-      return Promise.resolve([new EmptyStateNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+      return Promise.resolve([new EmptyStateJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
     }
 
     if (element) {

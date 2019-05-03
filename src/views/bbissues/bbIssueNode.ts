@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { BaseNode } from "../nodes/baseNode";
 import { Repository } from '../../typings/git';
-import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
 import { PaginatedBitbucketIssues } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { Commands } from '../../commands';
+import { EmptyNode } from '../nodes/emptyStateBaseNode';
 
 export class BitbucketIssuesRepositoryNode extends BaseNode {
     private _children: BaseNode[] | undefined = undefined;
@@ -40,7 +40,7 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
         if (!this._children) {
             let issues = await BitbucketIssuesApi.getList(this.repository);
             if (issues.data.length === 0) {
-                return [new EmptyStateNode('No open issues for this repository')];
+                return [new EmptyNode('No open issues for this repository')];
             }
             this._children = issues.data.map(i => new BitbucketIssueNode(i));
             if (issues.next) { this._children!.push(new NextPageNode(issues)); }

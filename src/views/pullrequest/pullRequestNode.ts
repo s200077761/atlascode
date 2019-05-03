@@ -7,10 +7,10 @@ import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { Remote } from '../../typings/git';
 import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
-import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { Logger } from '../../logger';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { PullRequestCommentController } from './prCommentController';
+import { EmptyNode } from '../nodes/emptyStateBaseNode';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -71,7 +71,7 @@ export class PullRequestTitlesNode extends BaseNode {
                 },
                 reason => {
                     Logger.debug('error fetching pull request details', reason);
-                    return [new EmptyStateNode('⚠️ Error: fetching pull request details failed')];
+                    return [new EmptyNode('⚠️ Error: fetching pull request details failed')];
                 });
         } else {
             return element.getChildren();
@@ -107,10 +107,10 @@ export class PullRequestTitlesNode extends BaseNode {
         const inlineComments = await this.getInlineComments(allComments.data);
         result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments, this.commentController)));
         if (fileChanges.next) {
-            result.push(new EmptyStateNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
+            result.push(new EmptyNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
         }
         if (allComments.next) {
-            result.push(new EmptyStateNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
+            result.push(new EmptyNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
         }
         return result;
     }

@@ -7,13 +7,14 @@ import { RepositoriesNode } from './pullrequest/repositoriesNode';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { AuthProvider } from '../atlclients/authInfo';
-import { EmptyStateNode } from './nodes/emptyStateNode';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
 import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
+import { EmptyNode } from './nodes/emptyStateBaseNode';
+import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -119,7 +120,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
 
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return [new EmptyStateNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
+            return [new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
         }
         if (element) {
             return element.getChildren();
@@ -129,10 +130,10 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         }
         if (this.repoHasStagingRemotes()
             && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
-            return [new EmptyStateNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
+            return [new EmptyNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
         }
         if (this.ctx.getBitbucketRepositores().length === 0) {
-            return [new EmptyStateNode("No Bitbucket repositories found")];
+            return emptyBitbucketNodes;
         }
         return [headerNode, ...Array.from(this._childrenMap!.values())];
     }

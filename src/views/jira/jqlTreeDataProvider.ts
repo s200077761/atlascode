@@ -1,7 +1,7 @@
 import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
 import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
-import { EmptyStateNode } from '../nodes/emptyStateNode';
+import { EmptyStateJiraIssueNode } from '../nodes/emptyStateJiraIssueNode';
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
@@ -62,13 +62,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            return Promise.resolve([new EmptyStateNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+            return Promise.resolve([new EmptyStateJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
         }
         if (parent) {
             return parent.getChildren();
         }
         if (!this._jql) {
-            return Promise.resolve([new EmptyStateNode(this._emptyState, this._emptyStateCommand)]);
+            return Promise.resolve([new EmptyStateJiraIssueNode(this._emptyState, this._emptyStateCommand)]);
         } else if (this._issues) {
             return Promise.resolve(this.nodesForIssues());
         } else {
@@ -171,7 +171,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         if (this._issues && this._issues.length > 0) {
             return this._issues.map((issue) => new IssueNode(issue));
         } else {
-            return [new EmptyStateNode(this._emptyState)];
+            return [new EmptyStateJiraIssueNode(this._emptyState)];
         }
     }
 }

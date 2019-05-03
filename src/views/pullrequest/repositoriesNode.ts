@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import { BaseNode } from "../nodes/baseNode";
 import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
-import { EmptyStateNode } from '../nodes/emptyStateNode';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
 import { PullRequestCommentController } from './prCommentController';
+import { EmptyNode } from '../nodes/emptyStateBaseNode';
 
 export class RepositoriesNode extends BaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
@@ -73,7 +73,7 @@ export class RepositoriesNode extends BaseNode {
             await this.refresh();
         }
         if (this._children!.length === 0) {
-            return [new EmptyStateNode('No pull requests found for this repository')];
+            return [new EmptyNode('No pull requests found for this repository')];
         }
         return this._children!;
     }

@@ -1,4 +1,4 @@
-import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Command, Disposable, commands } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
@@ -10,6 +10,8 @@ import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
 import { BaseNode } from "../nodes/baseNode";
 import { BaseTreeDataProvider } from "../Explorer";
+import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
+import { EmptyNode } from "../nodes/emptyStateBaseNode";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -60,7 +62,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
         }
 
         return this._childrenMap.size === 0
-            ? [new EmptyNode("No Bitbucket repositories found")]
+            ? emptyBitbucketNodes
             : Array.from(this._childrenMap.values());
     }
 
@@ -302,16 +304,3 @@ class NextPageNode extends BaseNode {
     }
 }
 
-class EmptyNode extends BaseNode {
-    constructor(readonly _message: string, readonly _command?: Command) {
-        super();
-    }
-
-    getTreeItem() {
-        const text = this._message;
-        const treeItem = new TreeItem(text, TreeItemCollapsibleState.None);
-        treeItem.tooltip = text;
-        treeItem.command = this._command;
-        return treeItem;
-    }
-}

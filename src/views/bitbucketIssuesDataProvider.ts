@@ -5,7 +5,6 @@ import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { AuthProvider } from '../atlclients/authInfo';
-import { EmptyStateNode } from './nodes/emptyStateNode';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
@@ -13,6 +12,8 @@ import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
+import { EmptyNode } from './nodes/emptyStateBaseNode';
+import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
@@ -67,7 +68,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
 
     async getChildren(element?: BaseNode): Promise<BaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return [new EmptyStateNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
+            return [new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
         }
         if (element) {
             return element.getChildren();
@@ -77,10 +78,10 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         }
         if (this.repoHasStagingRemotes()
             && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
-            return [new EmptyStateNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
+            return [new EmptyNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
         }
         if (this.ctx.getBitbucketRepositores().length === 0) {
-            return [new EmptyStateNode("No Bitbucket repositories found")];
+            return emptyBitbucketNodes;
         }
         return Array.from(this._childrenMap!.values());
     }
