@@ -2,7 +2,7 @@ import { Disposable, TreeViewVisibilityChangeEvent, TreeView, TreeDataProvider, 
 import { viewScreenEvent } from "../analytics";
 import { Container } from "../container";
 import { AuthProvider } from "../atlclients/authInfo";
-import { BaseNode } from "./nodes/baseNode";
+import { AbstractBaseNode } from "./nodes/abstractBaseNode";
 import { WorkingProject } from "../config/model";
 
 export abstract class Explorer extends Disposable {
@@ -11,7 +11,7 @@ export abstract class Explorer extends Disposable {
     abstract viewId(): string;
     abstract authProvider(): AuthProvider;
 
-    protected newTreeView(): TreeView<BaseNode> | undefined {
+    protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
         if (this.treeDataProvder) {
             const treeView = window.createTreeView(this.viewId(), { treeDataProvider: this.treeDataProvder });
             treeView.onDidChangeVisibility(e => this.onDidChangeVisibility(e));
@@ -33,12 +33,12 @@ export abstract class Explorer extends Disposable {
     }
 }
 
-export abstract class BaseTreeDataProvider implements TreeDataProvider<BaseNode>, Disposable {
-    getTreeItem(element: BaseNode): Promise<TreeItem> | TreeItem {
+export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractBaseNode>, Disposable {
+    getTreeItem(element: AbstractBaseNode): Promise<TreeItem> | TreeItem {
         return element.getTreeItem();
     }
 
-    abstract getChildren(element?: BaseNode): Promise<BaseNode[]>;
+    abstract getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]>;
     setProject(project: WorkingProject) { }
 
     refresh() { }

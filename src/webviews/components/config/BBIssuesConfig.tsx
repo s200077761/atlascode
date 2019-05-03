@@ -76,6 +76,24 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                         disabled={!this.props.configData.config.bitbucket.issues.explorerEnabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
+                <div>
+                    <CheckboxField
+                        name='bb-issues-jiracreate-enabled'
+                        id='bb-issues-jiracreate-enabled'
+                        value='bitbucket.issues.createJiraEnabled'>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Show Create Jirra Issue button on Bitbucket issue screens'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isChecked={this.props.configData.config.bitbucket.issues.createJiraEnabled}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                </div>
             </div>
         );
     }

@@ -3,7 +3,7 @@ import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
-import { isPostComment, isPostChange, isOpenStartWorkPageAction } from "../ipc/bitbucketIssueActions";
+import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
@@ -29,7 +29,6 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
     initialize(data: Bitbucket.Schema.Issue) {
         this._issue = data;
-
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
@@ -103,7 +102,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
             issue: issueLatest,
             currentUser: currentUser,
             comments: updatedComments,
-            hasMore: !!comments.next || !!changes.next
+            hasMore: !!comments.next || !!changes.next,
+            showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
         } as BitbucketIssueData;
 
         this.postMessage(msg);
@@ -174,6 +174,13 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isOpenStartWorkPageAction(e)) {
                         handled = true;
                         vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, e.issue);
+                    }
+                    break;
+                }
+                case 'createJiraIssue': {
+                    if (isCreateJiraIssueAction(e)) {
+                        handled = true;
+                        vscode.commands.executeCommand(Commands.CreateIssue, e.issue);
                     }
                     break;
                 }
