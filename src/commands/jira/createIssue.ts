@@ -30,7 +30,7 @@ export function createIssue(data: Uri | TodoIssueData | Bitbucket.Schema.Issue |
         return;
     } else if (isBBIssueData(data)) {
         const partialIssue = {
-            summary: data.title,
+            summary: `BB #${data.id} - ${data.title}`,
             description: `created from Bitbucket issue: ${data.links!.html!.href!}`,
             bbIssue: data,
             onCreated: updateBBIssue,
@@ -63,6 +63,8 @@ function annotateComment(data: CommentData) {
 }
 
 async function updateBBIssue(data: BBData) {
+
+    BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
 
     const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!);
     if (comps && Array.isArray(comps)) {
