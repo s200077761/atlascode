@@ -227,8 +227,8 @@ export class OAuthDancer {
                 reject("authentication timed out");
             });
 
-            this._srv = http.createServer(_app).listen();
-            console.log(`listening on port ${this._srv.address().port}`);
+            this._srv = http.createServer(_app).listen(9090, () => console.log(`listening on port 9090`));
+
             vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:9090/auth/${provider}`));
             this.startTimer();
         });
