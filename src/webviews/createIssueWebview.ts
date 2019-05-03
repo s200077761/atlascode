@@ -8,8 +8,8 @@ import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, i
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { IssueScreenTransformer, TransformerResult } from '../jira/issueCreateScreenTransformer';
-import { IssueTypeIdScreens, SelectScreenField, UIType } from '../jira/createIssueMeta';
 import { issueCreatedEvent } from '../analytics';
+import { issuesForJQL } from '../jira/issuesForJql';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -121,7 +121,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
                 this.postMessage(createData);
             }
-            return screens;
+
         } catch (e) {
             let err = new Error(`error updating issue fields issue: ${e}`);
             Logger.error(err);
