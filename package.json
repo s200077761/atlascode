@@ -652,6 +652,12 @@
                     "description": "Enables the Bitbucket Issues Explorer",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.issues.createJiraEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Shows a create jira issue button on the Bitbucket issue screen",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.issues.monitorEnabled": {
                     "type": "boolean",
                     "default": true,

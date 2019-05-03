@@ -6,6 +6,7 @@ export interface BitbucketIssueData extends Message {
     currentUser: Bitbucket.Schema.User;
     comments: Bitbucket.Schema.Comment[];
     hasMore: boolean;
+    showJiraButton: boolean;
 }
 
 export interface CreateBitbucketIssueData extends Message {

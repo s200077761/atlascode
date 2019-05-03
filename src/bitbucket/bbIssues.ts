@@ -34,6 +34,19 @@ export namespace BitbucketIssuesApi {
         return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
     }
 
+    export async function getAvailableComponents(repository: Bitbucket.Schema.Repository): Promise<Bitbucket.Schema.Component[] | undefined> {
+        let parsed = GitUrlParse(repository.links!.html!.href!);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+
+        const resp = await bb.repositories.listComponents({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            pagelen: defaultPageLength
+        });
+
+        return resp.data.values;
+    }
+
     export async function getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<Bitbucket.Schema.Issue[]> {
         let remotes = PullRequestApi.getBitbucketRemotes(repository);
         if (remotes.length === 0 || !await bitbucketIssuesEnabled(remotes[0])) {
@@ -137,6 +150,24 @@ export namespace BitbucketIssuesApi {
                 },
                 content: {
                     raw: content
+                }
+            }
+        });
+    }
+
+    export async function postNewComponent(issue: Bitbucket.Schema.Issue, newComponent: string): Promise<void> {
+        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await bitbucketHosts.get(parsed.source)();
+        await bb.repositories.createIssueChange({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            issue_id: issue.id!.toString(),
+            _body: {
+                type: 'issue_change',
+                changes: {
+                    component: {
+                        new: newComponent
+                    }
                 }
             }
         });
