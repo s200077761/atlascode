@@ -16,6 +16,25 @@ export enum InputValueType {
     Url = 'url'
 }
 
+export interface TransformerProblems { [k: string]: IssueTypeProblem; };
+export interface TransformerResult {
+    selectedIssueType: JIRA.Schema.CreateMetaIssueTypeBean;
+    screens: IssueTypeIdScreens;
+    problems: TransformerProblems;
+}
+
+export interface IssueTypeProblem {
+    issueType: JIRA.Schema.CreateMetaIssueTypeBean;
+    isRenderable: boolean;
+    nonRenderableFields: FieldProblem[];
+    message: string;
+}
+
+export interface FieldProblem {
+    field: JIRA.Schema.FieldMetaBean;
+    message: string;
+}
+
 export interface ScreenField {
     required: boolean;
     name: string;

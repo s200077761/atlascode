@@ -1,7 +1,7 @@
 import { Message } from "./messaging";
 import { Issue, Project, EpicFieldInfo } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
-import { IssueTypeIdScreens } from "../jira/createIssueMeta";
+import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
 
 
@@ -21,6 +21,7 @@ export interface CreateIssueData extends Message {
     availableProjects: WorkingProject[];
     issueTypeScreens: IssueTypeIdScreens;
     epicFieldInfo: EpicFieldInfo;
+    transformerProblems: TransformerProblems;
 }
 
 export interface PreliminaryIssueData extends Message {

@@ -65,7 +65,8 @@ const emptyState: ViewState = {
     errorDetails: undefined,
     isOnline: true,
     createdIssue: {},
-    epicFieldInfo: epicsDisabled
+    epicFieldInfo: epicsDisabled,
+    transformerProblems: {},
 };
 
 // Used to render custom select options with icons
@@ -452,6 +453,8 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     (field.advanced) ? advancedFields.push(this.getFieldMarkup(field)) : renderableFields.push(this.getFieldMarkup(field));
 
                 });
+            } else {
+                this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.selectedIssueTypeId}` })
             }
         } else if (!this.state.isErrorBannerOpen && this.state.isOnline) {
             return (<div>waiting for data...</div>);
@@ -476,6 +479,11 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             }
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                            }
+                            {this.state.transformerProblems && Object.keys(this.state.transformerProblems).length > 0 &&
+                                <div className='fade-in'>
+                                    <span>non-renderable fields detected.</span> <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { this.postMessage({ action: 'openProblemReport' }); }}>View a problem report</Button>
+                                </div>
                             }
                             <h2>Create Issue</h2>
                             <Form
