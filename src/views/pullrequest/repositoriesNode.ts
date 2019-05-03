@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { BaseNode } from "../nodes/baseNode";
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
 import { PullRequestCommentController } from './prCommentController';
-import { EmptyNode } from '../nodes/emptyStateBaseNode';
+import { SimpleNode } from '../nodes/simpleNode';
 
-export class RepositoriesNode extends BaseNode {
+export class RepositoriesNode extends AbstractBaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
     private _commentControllers: Map<string, PullRequestCommentController> = new Map();
 
@@ -65,7 +65,7 @@ export class RepositoriesNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (element) {
             return element.getChildren();
         }
@@ -73,7 +73,7 @@ export class RepositoriesNode extends BaseNode {
             await this.refresh();
         }
         if (this._children!.length === 0) {
-            return [new EmptyNode('No pull requests found for this repository')];
+            return [new SimpleNode('No pull requests found for this repository')];
         }
         return this._children!;
     }

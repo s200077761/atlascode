@@ -1,5 +1,5 @@
 import { workspace, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
-import { BaseNode } from './nodes/baseNode';
+import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { GitContentProvider } from './gitContentProvider';
 import { PaginatedPullRequests } from '../bitbucket/model';
@@ -13,14 +13,14 @@ import { Repository } from '../typings/git';
 import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
-import { EmptyNode } from './nodes/emptyStateBaseNode';
+import { SimpleNode } from './nodes/simpleNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
-    private _onDidChangeTreeData: EventEmitter<BaseNode | undefined> = new EventEmitter<BaseNode | undefined>();
-    readonly onDidChangeTreeData: Event<BaseNode | undefined> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
+    readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
     private _fetcher: (repo: Repository) => Promise<PaginatedPullRequests> = PullRequestApi.getList;
 
@@ -114,13 +114,13 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._onDidChangeTreeData.fire();
     }
 
-    async getTreeItem(element: BaseNode): Promise<TreeItem> {
+    async getTreeItem(element: AbstractBaseNode): Promise<TreeItem> {
         return element.getTreeItem();
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return [new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
+            return [new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
         }
         if (element) {
             return element.getChildren();
@@ -130,7 +130,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         }
         if (this.repoHasStagingRemotes()
             && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
-            return [new EmptyNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
+            return [new SimpleNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
         }
         if (this.ctx.getBitbucketRepositores().length === 0) {
             return emptyBitbucketNodes;

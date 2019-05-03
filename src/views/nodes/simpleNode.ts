@@ -1,7 +1,7 @@
-import { BaseNode } from "./baseNode";
+import { AbstractBaseNode } from "./abstractBaseNode";
 import { Command, TreeItem, TreeItemCollapsibleState } from "vscode";
 
-export class EmptyNode extends BaseNode {
+export class SimpleNode extends AbstractBaseNode {
     constructor(readonly _message: string, readonly _command?: Command) {
         super();
     }

@@ -1,9 +1,9 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { BaseNode } from '../nodes/baseNode';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { Commands } from '../../commands';
 import { Resources } from '../../resources';
 
-export class PullRequestHeaderNode extends BaseNode {
+export class PullRequestHeaderNode extends AbstractBaseNode {
 
     constructor(public description: string) {
         super();
@@ -24,7 +24,7 @@ export class PullRequestHeaderNode extends BaseNode {
 
     }
 
-    async getChildren(): Promise<BaseNode[]> {
+    async getChildren(): Promise<AbstractBaseNode[]> {
         return [];
     }
 }

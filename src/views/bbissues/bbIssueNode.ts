@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import { BaseNode } from "../nodes/baseNode";
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { Repository } from '../../typings/git';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
 import { PaginatedBitbucketIssues } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { Commands } from '../../commands';
-import { EmptyNode } from '../nodes/emptyStateBaseNode';
+import { SimpleNode } from '../nodes/simpleNode';
 
-export class BitbucketIssuesRepositoryNode extends BaseNode {
-    private _children: BaseNode[] | undefined = undefined;
+export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
+    private _children: AbstractBaseNode[] | undefined = undefined;
 
     constructor(private repository: Repository, private expand?: boolean) {
         super();
@@ -33,14 +33,14 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (element) {
             return element.getChildren();
         }
         if (!this._children) {
             let issues = await BitbucketIssuesApi.getList(this.repository);
             if (issues.data.length === 0) {
-                return [new EmptyNode('No open issues for this repository')];
+                return [new SimpleNode('No open issues for this repository')];
             }
             this._children = issues.data.map(i => new BitbucketIssueNode(i));
             if (issues.next) { this._children!.push(new NextPageNode(issues)); }
@@ -49,7 +49,7 @@ export class BitbucketIssuesRepositoryNode extends BaseNode {
     }
 }
 
-export class BitbucketIssueNode extends BaseNode {
+export class BitbucketIssueNode extends AbstractBaseNode {
     constructor(readonly issue: Bitbucket.Schema.Issue) {
         super();
     }
@@ -65,12 +65,12 @@ export class BitbucketIssueNode extends BaseNode {
         return treeItem;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }
 
-class NextPageNode extends BaseNode {
+class NextPageNode extends AbstractBaseNode {
     constructor(private issues: PaginatedBitbucketIssues) {
         super();
     }
@@ -88,7 +88,7 @@ class NextPageNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }

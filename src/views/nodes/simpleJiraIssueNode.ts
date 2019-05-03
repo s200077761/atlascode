@@ -2,7 +2,7 @@ import { TreeItem, TreeItemCollapsibleState, Command } from 'vscode';
 import { IssueNode } from './issueNode';
 import { emptyIssue } from '../../jira/jiraIssue';
 
-export class EmptyStateJiraIssueNode extends IssueNode {
+export class SimpleJiraIssueNode extends IssueNode {
 
     private command: Command | undefined;
 

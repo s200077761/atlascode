@@ -1,10 +1,10 @@
 import { JQLTreeDataProvider } from './jqlTreeDataProvider';
 import { IssueNode } from "../nodes/issueNode";
 import { JQLEntry } from "src/config/model";
-import { BaseNode } from '../nodes/baseNode';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { TreeItem, TreeItemCollapsibleState, Disposable } from 'vscode';
 
-export class CustomJQLTree extends JQLTreeDataProvider implements BaseNode {
+export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNode {
   public readonly disposables: Disposable[] = [];
 
   constructor(readonly jqlEntry: JQLEntry) {

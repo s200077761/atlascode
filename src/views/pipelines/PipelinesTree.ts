@@ -8,10 +8,10 @@ import * as moment from "moment";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
-import { BaseNode } from "../nodes/baseNode";
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { BaseTreeDataProvider } from "../Explorer";
 import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
-import { EmptyNode } from "../nodes/emptyStateBaseNode";
+import { SimpleNode } from "../nodes/simpleNode";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -21,8 +21,8 @@ export interface PipelineInfo {
 export class PipelinesTree extends BaseTreeDataProvider {
     private _disposable: Disposable;
     private _childrenMap = new Map<string, PipelinesRepoNode>();
-    private _onDidChangeTreeData = new EventEmitter<BaseNode>();
-    public get onDidChangeTreeData(): Event<BaseNode> {
+    private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
+    public get onDidChangeTreeData(): Event<AbstractBaseNode> {
         return this._onDidChangeTreeData.event;
     }
 
@@ -43,11 +43,11 @@ export class PipelinesTree extends BaseTreeDataProvider {
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: BaseNode): TreeItem | Promise<TreeItem> {
+    getTreeItem(element: AbstractBaseNode): TreeItem | Promise<TreeItem> {
         return element.getTreeItem();
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (element) {
             return element.getChildren(element);
         }
@@ -76,7 +76,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
     }
 }
 
-export class PipelinesRepoNode extends BaseNode {
+export class PipelinesRepoNode extends AbstractBaseNode {
     private _branches: string[];
     private _page = 1;
     private _morePages = true;
@@ -104,18 +104,18 @@ export class PipelinesRepoNode extends BaseNode {
         this._branches = this._branches.concat(newBranches);
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return Promise.resolve([new EmptyNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
+            return Promise.resolve([new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
             if (!this._branches) {
                 this._branches = await this.fetchBranches();
             }
             if ([...this._pipelines.values()].every(results => results.length === 0)) {
-                return [new EmptyNode("No Pipelines results for this repository")];
+                return [new SimpleNode("No Pipelines results for this repository")];
             }
-            const nodes: BaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
+            const nodes: AbstractBaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }
@@ -240,7 +240,7 @@ function statusForPipeline(pipeline: Pipeline): string {
     }
 }
 
-export class PipelineNode extends BaseNode {
+export class PipelineNode extends AbstractBaseNode {
     constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline, private _repo: Repository) {
         super();
     }
@@ -259,12 +259,12 @@ export class PipelineNode extends BaseNode {
         return item;
     }
 
-    getChildren(element: BaseNode): Promise<BaseNode[]> {
+    getChildren(element: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return this._repoNode.getChildren(element);
     }
 }
 
-export class BranchNode extends BaseNode {
+export class BranchNode extends AbstractBaseNode {
     constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
         super();
     }
@@ -282,12 +282,12 @@ export class BranchNode extends BaseNode {
         return treeItem;
     }
 
-    getChildren(element: BaseNode): Promise<BaseNode[]> {
+    getChildren(element: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return this._repoNode.getChildren(element);
     }
 }
 
-class NextPageNode extends BaseNode {
+class NextPageNode extends AbstractBaseNode {
     constructor(private _repo: Repository) {
         super();
     }

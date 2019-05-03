@@ -4,12 +4,12 @@ import {
   Disposable,
   ConfigurationChangeEvent
 } from "vscode";
-import { BaseNode } from "../nodes/baseNode";
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
-import { EmptyStateJiraIssueNode } from "../nodes/emptyStateJiraIssueNode";
+import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
@@ -19,8 +19,8 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   private _disposable: Disposable;
   private _jqlList: JQLEntry[];
   private _children: CustomJQLTree[];
-  private _onDidChangeTreeData = new EventEmitter<BaseNode>();
-  public get onDidChangeTreeData(): Event<BaseNode> {
+  private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
+  public get onDidChangeTreeData(): Event<AbstractBaseNode> {
     return this._onDidChangeTreeData.event;
   }
 
@@ -46,13 +46,13 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     }
   }
 
-  getTreeItem(element: BaseNode) {
+  getTreeItem(element: AbstractBaseNode) {
     return element.getTreeItem();
   }
 
-  async getChildren(element: BaseNode | undefined) {
+  async getChildren(element: AbstractBaseNode | undefined) {
     if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-      return Promise.resolve([new EmptyStateJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+      return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
     }
 
     if (element) {

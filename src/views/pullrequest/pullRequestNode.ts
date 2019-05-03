@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
-import { BaseNode } from '../nodes/baseNode';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
@@ -10,7 +10,7 @@ import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { Logger } from '../../logger';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { PullRequestCommentController } from './prCommentController';
-import { EmptyNode } from '../nodes/emptyStateBaseNode';
+import { SimpleNode } from '../nodes/simpleNode';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -30,7 +30,7 @@ export interface FileDiffQueryParams {
     commentThreads: Bitbucket.Schema.Comment[][];
 }
 
-export class PullRequestTitlesNode extends BaseNode {
+export class PullRequestTitlesNode extends AbstractBaseNode {
     public prHref: string;
 
     constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
@@ -48,7 +48,7 @@ export class PullRequestTitlesNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!element) {
             if (!this.pr) { return []; }
 
@@ -63,7 +63,7 @@ export class PullRequestTitlesNode extends BaseNode {
                 async result => {
                     let [fileChanges, allComments] = result;
 
-                    const children: BaseNode[] = [new DescriptionNode(this.pr)];
+                    const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
                     children.push(...await this.createRelatedJiraIssueNode(allComments));
                     children.push(...await this.createRelatedBitbucketIssueNode(allComments));
                     children.push(...await this.createFileChangesNodes(allComments, fileChanges));
@@ -71,7 +71,7 @@ export class PullRequestTitlesNode extends BaseNode {
                 },
                 reason => {
                     Logger.debug('error fetching pull request details', reason);
-                    return [new EmptyNode('⚠️ Error: fetching pull request details failed')];
+                    return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
                 });
         } else {
             return element.getChildren();
@@ -84,8 +84,8 @@ export class PullRequestTitlesNode extends BaseNode {
         return await PullRequestApi.get(pr);
     }
 
-    private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
-        const result: BaseNode[] = [];
+    private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+        const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
@@ -93,8 +93,8 @@ export class PullRequestTitlesNode extends BaseNode {
         return result;
     }
 
-    private async createRelatedBitbucketIssueNode(allComments: PaginatedComments): Promise<BaseNode[]> {
-        const result: BaseNode[] = [];
+    private async createRelatedBitbucketIssueNode(allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+        const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
@@ -102,15 +102,15 @@ export class PullRequestTitlesNode extends BaseNode {
         return result;
     }
 
-    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<BaseNode[]> {
-        const result: BaseNode[] = [];
+    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<AbstractBaseNode[]> {
+        const result: AbstractBaseNode[] = [];
         const inlineComments = await this.getInlineComments(allComments.data);
         result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments, this.commentController)));
         if (fileChanges.next) {
-            result.push(new EmptyNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
+            result.push(new SimpleNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
         }
         if (allComments.next) {
-            result.push(new EmptyNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
+            result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
         }
         return result;
     }
@@ -162,7 +162,7 @@ export class PullRequestTitlesNode extends BaseNode {
     }
 }
 
-class PullRequestFilesNode extends BaseNode {
+class PullRequestFilesNode extends AbstractBaseNode {
 
     constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>, private commentController: PullRequestCommentController) {
         super();
@@ -270,12 +270,12 @@ class PullRequestFilesNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }
 
-class DescriptionNode extends BaseNode {
+class DescriptionNode extends AbstractBaseNode {
     constructor(private pr: PullRequest) {
         super();
     }
@@ -297,12 +297,12 @@ class DescriptionNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }
 
-export class NextPageNode extends BaseNode {
+export class NextPageNode extends AbstractBaseNode {
     constructor(private prs: PaginatedPullRequests) {
         super();
     }
@@ -320,7 +320,7 @@ export class NextPageNode extends BaseNode {
         return item;
     }
 
-    async getChildren(element?: BaseNode): Promise<BaseNode[]> {
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         return [];
     }
 }
