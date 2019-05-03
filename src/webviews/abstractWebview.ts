@@ -48,6 +48,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
     protected tenantId: string | undefined;
+    protected isRefeshing: boolean = false;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;

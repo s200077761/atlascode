@@ -177,6 +177,10 @@ class PullRequestFilesNode extends AbstractBaseNode {
             case 'renamed':
                 fileDisplayName = `${this.fileChange.old!.path!} → ${this.fileChange.new!.path!}`;
                 break;
+            //@ts-ignore
+            case 'merge conflict':
+                fileDisplayName = `⚠️ CONFLICTED: ${this.fileChange.new!.path!}`;
+                break;
             case 'added':
             case 'modified':
             default:
@@ -245,6 +249,10 @@ class PullRequestFilesNode extends AbstractBaseNode {
             case 'removed':
                 item.iconPath = Resources.icons.get('delete');
                 rhsQueryParam = { query: JSON.stringify({}) };
+                break;
+            //@ts-ignore
+            case 'merge conflict':
+                item.iconPath = Resources.icons.get('warning');
                 break;
             default:
                 item.iconPath = Resources.icons.get('edit');
