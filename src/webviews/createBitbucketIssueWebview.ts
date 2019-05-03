@@ -35,6 +35,11 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     }
 
     async updateFields() {
+        if (this.isRefeshing) {
+            return;
+        }
+
+        this.isRefeshing = true;
         try {
             const repoData: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositores();
@@ -65,6 +70,8 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
         } catch (e) {
             Logger.error(new Error(`error updating issue fields: ${e}`));
             this.postMessage({ type: 'error', reason: e });
+        } finally {
+            this.isRefeshing = false;
         }
 
     }

@@ -24,7 +24,6 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: WorkingProject | undefined;
     private _screenData: TransformerResult | undefined;
-    private _isRefeshing: boolean = false;
     private _selectedIssueTypeId: string;
 
     constructor(extensionPath: string) {
@@ -56,11 +55,11 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     }
 
     async updateFields(project?: WorkingProject) {
-        if (this._isRefeshing) {
+        if (this.isRefeshing) {
             return;
         }
 
-        this._isRefeshing = true;
+        this.isRefeshing = true;
         try {
             const availableProjects = await Container.jiraSiteManager.getProjects();
             let projectChanged = false;
@@ -104,11 +103,11 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 this.postMessage(createData);
             }
         } catch (e) {
-            let err = new Error(`error updating issue fields issue: ${e}`);
+            let err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue fields issue: ${e}` });
+            this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
         } finally {
-            this._isRefeshing = false;
+            this.isRefeshing = false;
         }
     }
 

@@ -609,16 +609,16 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 }
 
 .branch-container {
-  display: flex;
+  /* display: flex; */
   flex-direction: row;
   align-items: stretch;
 }
 
-.prefix-container {
+.branch-container .prefix-container {
   border: solid var(--vscode-settings-textInputBorder) !important;
   border-right-width: 0px !important;
   flex-grow: 1;
-  display: flex;
+  /* display: flex; */
   flex-direction: row;
   align-items: center;
 }

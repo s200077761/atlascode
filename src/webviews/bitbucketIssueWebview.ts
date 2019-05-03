@@ -45,6 +45,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
     }
 
     private async update(issue: Bitbucket.Schema.Issue) {
+        if (this.isRefeshing) {
+            return;
+        }
+
+        this.isRefeshing = true;
+
         if (this._panel) { this._panel.title = `Bitbucket issue #${issue.id}`; }
 
         if (!Container.onlineDetector.isOnline()) {
@@ -52,61 +58,71 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
             return;
         }
 
-        const [currentUser, issueLatest, comments, changes] = await Promise.all([
-            Container.bitbucketContext.currentUser(),
-            BitbucketIssuesApi.refetch(issue),
-            BitbucketIssuesApi.getComments(issue),
-            BitbucketIssuesApi.getChanges(issue)]
-        );
-        const updatedChanges = changes.data
-            .map(change => {
-                let content = '';
-                if (change.changes!.state) {
-                    content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${change.changes!.state!.new}</strong></em></li>`;
-                }
-                if (change.changes!.kind) {
-                    content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${change.changes!.kind!.new}</strong></em></li>`;
-                }
-                if (change.changes!.priority) {
-                    content += `<li><em>changed issue priority from <strong>${change.changes!.priority!.old}</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
-                }
-                //@ts-ignore
-                if (change.changes!.attachment && change.changes!.attachment!.new) {
+        try {
+
+
+            const [currentUser, issueLatest, comments, changes] = await Promise.all([
+                Container.bitbucketContext.currentUser(),
+                BitbucketIssuesApi.refetch(issue),
+                BitbucketIssuesApi.getComments(issue),
+                BitbucketIssuesApi.getChanges(issue)]
+            );
+            const updatedChanges = changes.data
+                .map(change => {
+                    let content = '';
+                    if (change.changes!.state) {
+                        content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${change.changes!.state!.new}</strong></em></li>`;
+                    }
+                    if (change.changes!.kind) {
+                        content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${change.changes!.kind!.new}</strong></em></li>`;
+                    }
+                    if (change.changes!.priority) {
+                        content += `<li><em>changed issue priority from <strong>${change.changes!.priority!.old}</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
+                    }
                     //@ts-ignore
-                    content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
-                }
-                //@ts-ignore
-                if (change.changes!.assignee_account_id) {
-                    content += `<li><em>updated assignee</em></li>`;
-                }
-                if (change.changes!.content) {
-                    content += `<li><em>updated description</em></li>`;
-                }
-                if (change.changes!.title) {
-                    content += `<li><em>updated title</em></li>`;
-                }
+                    if (change.changes!.attachment && change.changes!.attachment!.new) {
+                        //@ts-ignore
+                        content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
+                    }
+                    //@ts-ignore
+                    if (change.changes!.assignee_account_id) {
+                        content += `<li><em>updated assignee</em></li>`;
+                    }
+                    if (change.changes!.content) {
+                        content += `<li><em>updated description</em></li>`;
+                    }
+                    if (change.changes!.title) {
+                        content += `<li><em>updated title</em></li>`;
+                    }
 
-                if (content === '') {
-                    content += `<li><em>updated issue</em></li>`;
-                }
-                return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
-            });
+                    if (content === '') {
+                        content += `<li><em>updated issue</em></li>`;
+                    }
+                    return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
+                });
 
-        //@ts-ignore
-        // replace comment with change data which contains additional details
-        const updatedComments = comments.data.map(comment => updatedChanges.find(
-            change =>
-                //@ts-ignore
-                change.id! === comment.id!) || comment);
-        const msg = {
-            type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-            issue: issueLatest,
-            currentUser: currentUser,
-            comments: updatedComments,
-            hasMore: !!comments.next || !!changes.next
-        } as BitbucketIssueData;
+            //@ts-ignore
+            // replace comment with change data which contains additional details
+            const updatedComments = comments.data.map(comment => updatedChanges.find(
+                change =>
+                    //@ts-ignore
+                    change.id! === comment.id!) || comment);
+            const msg = {
+                type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
+                issue: issueLatest,
+                currentUser: currentUser,
+                comments: updatedComments,
+                hasMore: !!comments.next || !!changes.next
+            } as BitbucketIssueData;
 
-        this.postMessage(msg);
+            this.postMessage(msg);
+        } catch (e) {
+            let err = new Error(`error updating issue fields: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
+        } finally {
+            this.isRefeshing = false;
+        }
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {

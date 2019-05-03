@@ -150,44 +150,57 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     }
 
     public async updateIssue(issue: Issue) {
-        this._state = issue;
-        if (!this._currentUserId) {
-            const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
-            this._currentUserId = authInfo ? authInfo.user.id : undefined;
+        if (this.isRefeshing) {
+            return;
         }
 
-        if (this._panel) { this._panel.title = `Jira Issue ${issue.key}`; }
+        this.isRefeshing = true;
+        try {
+            this._state = issue;
+            if (!this._currentUserId) {
+                const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
+                this._currentUserId = authInfo ? authInfo.user.id : undefined;
+            }
 
-        const currentBranches = Container.bitbucketContext ?
-            Container.bitbucketContext.getAllRepositores()
-                .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
-                .map(repo => repo.state.HEAD!.name!)
-            : [];
+            if (this._panel) { this._panel.title = `Jira Issue ${issue.key}`; }
 
-        let msg = issue as IssueData;
-        msg.type = 'update';
-        msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
+            const currentBranches = Container.bitbucketContext ?
+                Container.bitbucketContext.getAllRepositores()
+                    .filter(repo => repo.state.HEAD && repo.state.HEAD.name)
+                    .map(repo => repo.state.HEAD!.name!)
+                : [];
 
-        const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.workingSite);
+            let msg = issue as IssueData;
+            msg.type = 'update';
+            msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
 
-        const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key} AND cf[${epicFieldInfo.epicLink.cfid}] != ${issue.key}`);
-        msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
+            const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.workingSite);
 
-        if (issue.isEpic && issue.epicChildren.length < 1) {
-            msg.epicChildren = await issuesForJQL(`cf[${epicFieldInfo.epicLink.cfid}] = "${msg.key}" order by lastViewed DESC`);
-        }
+            const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key} AND cf[${epicFieldInfo.epicLink.cfid}] != ${issue.key}`);
+            msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
 
-        msg.workInProgress = msg.isAssignedToMe &&
-            issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
-            currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
+            if (issue.isEpic && issue.epicChildren.length < 1) {
+                msg.epicChildren = await issuesForJQL(`cf[${epicFieldInfo.epicLink.cfid}] = "${msg.key}" order by lastViewed DESC`);
+            }
 
-        msg.recentPullRequests = [];
-        this.postMessage(msg);
+            msg.workInProgress = msg.isAssignedToMe &&
+                issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
+                currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
 
-        const relatedPrs = await this.recentPullRequests();
-        if (relatedPrs.length > 0) {
-            msg.recentPullRequests = await this.recentPullRequests();
+            msg.recentPullRequests = [];
             this.postMessage(msg);
+
+            const relatedPrs = await this.recentPullRequests();
+            if (relatedPrs.length > 0) {
+                msg.recentPullRequests = await this.recentPullRequests();
+                this.postMessage(msg);
+            }
+        } catch (e) {
+            let err = new Error(`error updating issue: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+        } finally {
+            this.isRefeshing = false;
         }
     }
 

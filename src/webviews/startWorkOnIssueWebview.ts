@@ -40,7 +40,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         this.initialize(data);
     }
 
-    initialize(data: issueOrKey) {
+    async initialize(data: issueOrKey) {
         if (isIssue(data)) {
             this._issueKey = data.key;
         } else {
@@ -64,13 +64,15 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
             return;
         }
 
-        fetchIssue(data)
-            .then((issue: Issue) => {
-                this.updateIssue(issue);
-            })
-            .catch((reason: any) => {
-                Logger.error(reason);
-            });
+        try {
+            const issue = await fetchIssue(data);
+            this.updateIssue(issue);
+        } catch (e) {
+            let err = new Error(`error updating issue: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+        }
+
     }
 
     public invalidate() {
@@ -149,68 +151,81 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
     }
 
     public async updateIssue(issue: Issue) {
-        this._state = issue;
-        if (!isEmptySite(issue.workingSite)) {
-            this.tenantId = issue.workingSite.id;
+        if (this.isRefeshing) {
+            return;
         }
 
-        if (this._panel) {
-            this._panel.title = `Start work on Jira issue ${issue.key}`;
-        }
-
-        const repoData: RepoData[] = [];
-        const repos = Container.bitbucketContext
-            ? Container.bitbucketContext.getAllRepositores()
-            : [];
-        for (let i = 0; i < repos.length; i++) {
-            const r = repos[i];
-            if (r.state.remotes.length === 0) {
-                break;
+        this.isRefeshing = true;
+        try {
+            this._state = issue;
+            if (!isEmptySite(issue.workingSite)) {
+                this.tenantId = issue.workingSite.id;
             }
 
-            let repo: Bitbucket.Schema.Repository | undefined = undefined;
-            let developmentBranch = undefined;
-            let href = undefined;
-            let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
-            if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                [, repo, developmentBranch, branchingModel] = await Promise.all(
-                    [r.fetch(),
-                    RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]),
-                    RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0]),
-                    RepositoriesApi.getBranchingModel(PullRequestApi.getBitbucketRemotes(r)[0])
-                    ]);
-                href = repo.links!.html!.href;
+            if (this._panel) {
+                this._panel.title = `Start work on Jira issue ${issue.key}`;
             }
 
-            await repoData.push({
-                uri: r.rootUri.toString(),
-                href: href,
-                remotes: r.state.remotes,
-                defaultReviewers: [],
-                localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                remoteBranches: [],
-                developmentBranch: developmentBranch,
-                branchingModel: branchingModel
-            });
-        }
+            const repoData: RepoData[] = [];
+            const repos = Container.bitbucketContext
+                ? Container.bitbucketContext.getAllRepositores()
+                : [];
+            for (let i = 0; i < repos.length; i++) {
+                const r = repos[i];
+                if (r.state.remotes.length === 0) {
+                    break;
+                }
 
-        // best effort to set issue to in-progress
-        if (!issue.status.name.toLowerCase().includes('progress')) {
-            const inProgressTransition = issue.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
-            if (inProgressTransition) {
-                issue.status = inProgressTransition.to;
-            } else {
-                const firstNonInitialTransition = issue.transitions.find(t => !t.isInitial);
-                issue.status = firstNonInitialTransition ? firstNonInitialTransition.to : issue.status;
+                let repo: Bitbucket.Schema.Repository | undefined = undefined;
+                let developmentBranch = undefined;
+                let href = undefined;
+                let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
+                if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                    [, repo, developmentBranch, branchingModel] = await Promise.all(
+                        [r.fetch(),
+                        RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]),
+                        RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0]),
+                        RepositoriesApi.getBranchingModel(PullRequestApi.getBitbucketRemotes(r)[0])
+                        ]);
+                    href = repo.links!.html!.href;
+                }
+
+                await repoData.push({
+                    uri: r.rootUri.toString(),
+                    href: href,
+                    remotes: r.state.remotes,
+                    defaultReviewers: [],
+                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
+                    remoteBranches: [],
+                    developmentBranch: developmentBranch,
+                    branchingModel: branchingModel
+                });
             }
-        }
 
-        const msg: StartWorkOnIssueData = {
-            type: 'update',
-            issue: issue,
-            repoData: repoData
-        };
-        this.postMessage(msg);
+            // best effort to set issue to in-progress
+            if (!issue.status.name.toLowerCase().includes('progress')) {
+                const inProgressTransition = issue.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
+                if (inProgressTransition) {
+                    issue.status = inProgressTransition.to;
+                } else {
+                    const firstNonInitialTransition = issue.transitions.find(t => !t.isInitial);
+                    issue.status = firstNonInitialTransition ? firstNonInitialTransition.to : issue.status;
+                }
+            }
+
+            const msg: StartWorkOnIssueData = {
+                type: 'update',
+                issue: issue,
+                repoData: repoData
+            };
+            this.postMessage(msg);
+        } catch (e) {
+            let err = new Error(`error updating issue: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+        } finally {
+            this.isRefeshing = false;
+        }
     }
 
     private async forceUpdateIssue(issue?: Issue) {

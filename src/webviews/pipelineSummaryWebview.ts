@@ -41,12 +41,18 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
             return;
         }
 
+        if (this.isRefeshing) {
+            return;
+        }
+
+        this.isRefeshing = true;
         try {
             let pipeline = await PipelineApi.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
             this.postMessage({ type: 'error', reason: e });
+            this.isRefeshing = false;
             return;
         }
 
@@ -69,6 +75,8 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
             Logger.error(e);
             this.postMessage({ type: 'error', reason: e });
             return;
+        } finally {
+            this.isRefeshing = false;
         }
     }
 
