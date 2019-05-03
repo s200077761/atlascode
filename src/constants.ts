@@ -16,6 +16,7 @@ export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
 
+
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',
     BitbucketExplorer = 'atlascode:bitbucketExplorerEnabled',
