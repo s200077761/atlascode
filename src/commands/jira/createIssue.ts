@@ -37,6 +37,7 @@ export function createIssue(data: Uri | TodoIssueData | Bitbucket.Schema.Issue |
         };
         Container.createIssueWebview.createOrShow(ViewColumn.Beside, partialIssue);
         startIssueCreationEvent('todoComment').then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        return;
     }
 
     Container.createIssueWebview.createOrShow();

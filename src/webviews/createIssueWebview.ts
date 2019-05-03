@@ -49,9 +49,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
     async createOrShow(column?: ViewColumn, data?: PartialIssue): Promise<void> {
         await super.createOrShow(column);
+        this._partialIssue = data;
 
         if (data) {
-            this._partialIssue = data;
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
 
             if (data.bbIssue) {
