@@ -44,6 +44,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     async updateFields() {
+        if (this.isRefeshing) {
+            return;
+        }
+
+        this.isRefeshing = true;
         try {
             const state: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositores();
@@ -84,6 +89,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         } catch (e) {
             Logger.error(new Error(`error fetching PR form: ${e}`));
             this.postMessage({ type: 'error', reason: e });
+        } finally {
+            this.isRefeshing = false;
         }
 
     }

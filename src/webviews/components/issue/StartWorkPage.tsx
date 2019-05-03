@@ -392,31 +392,34 @@ export default class StartWorkPage extends WebviewComponent<
                         value={repo} />
                     </div>
                   }
-                  {(branchTypes.length > 0) && <div className='ac-vpadding' style={{ textTransform: 'capitalize' }}>
-                    <label>Type</label>
-                    <CreatableSelect
+                  {(branchTypes.length > 0) &&
+                    <div className='ac-vpadding' style={{ textTransform: 'capitalize' }}>
+                      <label>Type</label>
+                      <CreatableSelect
+                        className="ac-select-container"
+                        classNamePrefix="ac-select"
+                        options={branchTypes.map(bt => { return { label: bt.kind, value: bt.prefix }; })}
+                        onChange={(model: any) => { this.setState({ prefix: model }); }}
+                        value={this.state.prefix} />
+                    </div>
+                  }
+                  <div className='ac-vpadding'>
+                    <label>Source branch (this will be the start point for the new branch)</label>
+                    <Select
                       className="ac-select-container"
                       classNamePrefix="ac-select"
-                      options={branchTypes.map(bt => { return { label: bt.kind, value: bt.prefix }; })}
-                      onChange={(model: any) => { this.setState({ prefix: model }); }}
-                      value={this.state.prefix} />
+                      options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
+                      onChange={this.handleSourceBranchChange}
+                      value={this.state.sourceBranch} />
                   </div>
-                  }
-                  <label>Source branch (this will be the start point for the new branch)</label>
-                  <Select
-                    className="ac-select-container"
-                    classNamePrefix="ac-select"
-                    options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
-                    onChange={this.handleSourceBranchChange}
-                    value={this.state.sourceBranch} />
                   <div className='ac-vpadding'>
                     <label>Local branch</label>
                     <div className="branch-container">
-                      {this.state.prefix && this.state.prefix.value &&
-                        <div className='prefix-container'>
+                      <div className='prefix-container'>
+                        {this.state.prefix && this.state.prefix.value &&
                           <label>{this.state.prefix.value}</label>
-                        </div>
-                      }
+                        }
+                      </div>
                       <div className="branch-name">
                         <CreatableSelect
                           isClearable
@@ -434,6 +437,7 @@ export default class StartWorkPage extends WebviewComponent<
                           value={this.state.localBranch} />
                       </div>
                     </div>
+
                   </div>
                   {this.state.repo.value.remotes.length > 1 &&
                     <div>

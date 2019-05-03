@@ -160,6 +160,11 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
     }
 
     private async forceUpdateIssue() {
+        if (this.isRefeshing) {
+            return;
+        }
+
+        this.isRefeshing = true;
         try {
             const updatedIssue = await BitbucketIssuesApi.refetch(this._state);
             this.updateIssue(updatedIssue);
@@ -167,6 +172,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         catch (e) {
             Logger.error(e);
             this.postMessage({ type: 'error', reason: e });
+        } finally {
+            this.isRefeshing = false;
         }
     }
 }

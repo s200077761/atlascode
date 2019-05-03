@@ -11,7 +11,7 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
 import StatusBar from './StatusBar';
 import DisplayFeedback from './DisplayFeedback';
-import { Action } from '../../../ipc/messaging';
+import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import JiraHover from './JiraHover';
 import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
@@ -27,6 +27,7 @@ import Form from '@atlaskit/form';
 import JiraSiteProject from './JiraSiteProject';
 import BitbucketIssuesConfig from './BBIssuesConfig';
 import CreateIssueTriggers from './CreateIssueTriggers';
+import ErrorBanner from '../ErrorBanner';
 
 type changeObject = { [key: string]: any };
 
@@ -37,13 +38,20 @@ const panelHeader = (heading: string, subheading: string) =>
     </div>;
 
 type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | Action;
-type Accept = ConfigData | ProjectList;
+type Accept = ConfigData | ProjectList | HostErrorMessage;
 
 interface ViewState extends ConfigData {
     isProjectsLoading: boolean;
+    isErrorBannerOpen: boolean;
+    errorDetails: any;
 }
 
-const emptyState: ViewState = { ...emptyConfigData, isProjectsLoading: false };
+const emptyState: ViewState = {
+    ...emptyConfigData,
+    isProjectsLoading: false,
+    isErrorBannerOpen: false,
+    errorDetails: undefined
+};
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private newProjects: WorkingProject[] = [];
@@ -53,10 +61,15 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: Accept) {
+    public onMessageReceived(e: any) {
         switch (e.type) {
+            case 'error': {
+                this.setState({ isProjectsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+
+                break;
+            }
             case 'update': {
-                this.setState(e as ConfigData);
+                this.setState({ ...e as ConfigData, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
             case 'projectList': {
@@ -136,6 +149,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         });
     }
 
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    }
+
     private jiraButton(): any {
         return this.state.isJiraAuthenticated
             ? <ButtonGroup>
@@ -182,8 +199,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
         return (
-
             <Page>
+                {this.state.isErrorBannerOpen &&
+                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                }
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
                         <h1>Atlassian for VSCode</h1>

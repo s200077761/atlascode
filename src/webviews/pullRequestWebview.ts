@@ -178,17 +178,31 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async updatePullRequest(pr: PullRequest) {
-        if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
-
-        if (this.validatePRState(this._state)) {
-            this._state.prData.type = 'update';
-            this._state.prData.currentBranch = pr.repository.state.HEAD!.name!;
-            this.postMessage(this._state.prData);
+        if (this.isRefeshing) {
             return;
         }
 
-        await this.postInitialState(pr);
-        await this.postAugmentedState(pr);
+        try {
+
+            if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
+
+            if (this.validatePRState(this._state)) {
+                this._state.prData.type = 'update';
+                this._state.prData.currentBranch = pr.repository.state.HEAD!.name!;
+                this.postMessage(this._state.prData);
+                this.isRefeshing = false;
+                return;
+            }
+
+            await this.postInitialState(pr);
+            await this.postAugmentedState(pr);
+        } catch (e) {
+            let err = new Error(`error updating pull request: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating  pull request: ${e}` });
+        } finally {
+            this.isRefeshing = false;
+        }
     }
 
     private async postInitialState(pr: PullRequest) {
@@ -364,12 +378,17 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async forceUpdatePullRequest() {
-        const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
-        this._state.prData.pr = result.data;
-        this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
-        await this.updatePullRequest(result).catch(reason => {
-            Logger.debug("update rejected", reason);
-        });
+        try {
+            const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+            this._state.prData.pr = result.data;
+            this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
+            await this.updatePullRequest(result);
+        } catch (e) {
+            let err = new Error(`error updating pull request: ${e}`);
+            Logger.error(err);
+            this.postMessage({ type: 'error', reason: `error updating pull request: ${e}` });
+        }
+
     }
 
     private async forceUpdateComments() {
