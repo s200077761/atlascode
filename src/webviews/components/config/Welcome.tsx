@@ -71,6 +71,34 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.3.0 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li> Now using port 31415 for auth listener instead of 9090</li>
+                                <li> Added custom prefix for branches when starting work on issue</li>
+                                <li> Added Jira epics in issue details view</li>
+                                <li> Added ability to link to an epic on jira create issue</li>
+                                <li> It's now possible to create an Epic issue</li>
+                                <li> Merge actions similar to Bitbucket webpage (merge type/close source branch etc)</li>
+                                <li> Option to transition Jira/Bitbucket issue when creating/merging pull requests</li>
+                                <li> Support for creating issue-links on Jira create screen</li>
+                                <li> Added related issues and transition option to create pull request screen</li>
+                                <li> Now showing better messaging when no Bitbucket project is open</li>
+                                <li> Show merge conflicts in pull request treeview</li>
+                                <li> Added non-renderable field warnings and report for jira create issue</li>
+                                <li> Added ability to create a JIRA issue from a Bitbucket issue and link them</li>
+                                <li> Ensure webview controllers don't refresh multiple times at once</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li> Transition menu in start work on issue does not work</li>
+                                <li> Pull request merge fails silently when there are conflicts</li>
+                                <li>Create pull request screen shows blank page when remote branch is deleted</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.2.3 🎉</h2>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>

@@ -1,3 +1,25 @@
+## What's New In 1.3.0
+### Improvements
+* Now using port 31415 for auth listener instead of 9090
+* Added custom prefix for branches when starting work on issue
+* Added Jira epics in issue details view
+* Added ability to link to an epic on jira create issue
+* It's now possible to create an Epic issue
+* Merge actions similar to Bitbucket webpage (merge type/close source branch etc)
+* Option to transition Jira/Bitbucket issue when creating/merging pull requests
+* Support for creating issue-links on Jira create screen
+* Added related issues and transition option to create pull request screen
+* Now showing better messaging when no Bitbucket project is open
+* Show merge conflicts in pull request treeview
+* Added non-renderable field warnings and report for jira create issue
+* Added ability to create a JIRA issue from a Bitbucket issue and link them
+* Ensure webview controllers don't refresh multiple times at once
+
+### Bugs fixed
+* Transition menu in start work on issue does not work
+* Pull request merge fails silently when there are conflicts
+* Create pull request screen shows blank page when remote branch is deleted
+  
 ## What's New In 1.2.3
 ### Bugs fixed
 * JQL error when opening related Jira issues in the pull request tree
