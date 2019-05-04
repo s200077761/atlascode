@@ -711,6 +711,40 @@ img::after is triggered only if img loading fails */
   content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
 }
 
+.problem-table {
+  width: 100%;
+  border-collapse: collapse
+}
+
+.problem-table table, td, th, tr {
+  padding: 5px;
+  border: 1px solid var(--vscode-panel-border)
+}
+
+.problem-table th {
+  background: var(--vscode-list-activeSelectionBackground)!important;
+  color: var(--vscode-list-activeSelectionForeground)!important;
+  white-space: nowrap
+}
+
+.problem-table th, td {
+  padding: 5px
+}
+
+.problem-table tr.issuetype-row {
+  background-color: var(--vscode-sideBarSectionHeader-background);
+}
+
+.field-problem-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.field-problem-table tr:nth-child(odd) {
+  background-color: var(--vscode-list-hoverBackground)
+}
+
 /* uncomment these to see borders on grid layouts */
 
 /* [class^=GridElement__Grid] {

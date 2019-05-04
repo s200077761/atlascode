@@ -7,9 +7,10 @@ import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
-import { IssueScreenTransformer, TransformerResult } from '../jira/issueCreateScreenTransformer';
+import { IssueScreenTransformer } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
+import { TransformerResult } from '../jira/createIssueMeta';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -100,7 +101,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 if (client) {
                     let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
                     const screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
-                    this._screenData = await screenTransformer.transformIssueScreens(undefined, false);
+                    this._screenData = await screenTransformer.transformIssueScreens();
                     this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
                 } else {
                     throw (new Error("unable to get a jira client"));
@@ -114,6 +115,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     selectedIssueTypeId: this._selectedIssueTypeId,
                     availableProjects: availableProjects,
                     issueTypeScreens: this._screenData.screens,
+                    transformerProblems: this._screenData.problems,
                     epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
                 };
 
@@ -369,6 +371,10 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
                     }
                     break;
+                }
+                case 'openProblemReport': {
+                    handled = true;
+                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.jiraSiteManager.effectiveSite, this._currentProject);
                 }
                 default: {
                     break;

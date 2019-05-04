@@ -1,4 +1,4 @@
-import { UIType, InputValueType, IssueTypeIdScreens, IssueTypeScreen } from "./createIssueMeta";
+import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType } from "./createIssueMeta";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { EpicFieldInfo } from "./jiraIssue";
@@ -114,10 +114,7 @@ const schemaToInputValueMap: Map<string, InputValueType> = new Map<string, Input
     ]
 );
 
-export interface TransformerResult {
-    selectedIssueType: JIRA.Schema.CreateMetaIssueTypeBean;
-    screens: IssueTypeIdScreens;
-}
+
 
 export class IssueScreenTransformer {
 
@@ -125,17 +122,18 @@ export class IssueScreenTransformer {
     private _project: JIRA.Schema.CreateMetaProjectBean;
     private _epicFieldInfo: EpicFieldInfo;
     private _issueLinkTypes: any[] = [];
+    private _problems: TransformerProblems = {};
 
     constructor(site: AccessibleResource, project: JIRA.Schema.CreateMetaProjectBean) {
         this._site = site;
         this._project = project;
     }
 
-    public async transformIssueScreens(filterFieldKeys: string[] = defaultFieldFilters
-        , onlyCommonAndRequired: boolean = true): Promise<TransformerResult> {
+    public async transformIssueScreens(filterFieldKeys: string[] = defaultFieldFilters): Promise<TransformerResult> {
 
         const issueTypeIdScreens = {};
         let firstIssueType = {};
+        this._problems = {};
 
         if (!this._epicFieldInfo) {
             this._epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(this._site);
@@ -157,7 +155,7 @@ export class IssueScreenTransformer {
             firstIssueType = this._project.issuetypes[0];
             // get rid of issue types we can't render
             const renderableIssueTypes = this._project.issuetypes.filter(itype => {
-                return (itype.fields !== undefined && this.allFieldsAreRenderable(itype.fields, filterFieldKeys, onlyCommonAndRequired));
+                return (itype.fields !== undefined && this.isRenderableIssueType(itype, filterFieldKeys));
             });
 
             renderableIssueTypes.forEach(issueType => {
@@ -178,7 +176,7 @@ export class IssueScreenTransformer {
 
                     Object.keys(issueType.fields!).forEach(k => {
                         const field: JIRA.Schema.FieldMetaBean = issueType.fields![k];
-                        if (field && !this.shouldFilter(field, issueTypeFieldFilters, onlyCommonAndRequired)) {
+                        if (field && !this.shouldFilter(issueType, field, issueTypeFieldFilters)) {
                             issueTypeScreen.fields.push(this.transformField(field));
                         }
                     });
@@ -192,24 +190,26 @@ export class IssueScreenTransformer {
             }
         }
 
-        return { selectedIssueType: firstIssueType, screens: issueTypeIdScreens };
+        return { selectedIssueType: firstIssueType, screens: issueTypeIdScreens, problems: this._problems };
     }
 
-    private shouldFilter(field: JIRA.Schema.FieldMetaBean, filters: string[], onlyCommonAndRequired: boolean): boolean {
+    private shouldFilter(itype: JIRA.Schema.CreateMetaIssueTypeBean, field: JIRA.Schema.FieldMetaBean, filters: string[]): boolean {
         if (filters.includes(field.key)) {
             return true;
         }
 
-        const commonFields = [...defaultCommonFields, this._epicFieldInfo.epicName.id];
-        if (onlyCommonAndRequired) {
-            if (!field.required && !commonFields.includes(field.key)) {
-                return true;
+        if (!field.required && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
+            || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))) {
+            let schema = field.schema.system !== undefined ? field.schema.system : field.schema.custom;
+            if (!schema) {
+                schema = "unknown schema";
             }
-        } else {
-            if (!field.required && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
-                || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))) {
-                return true;
-            }
+            this.addFieldProblem(itype, {
+                field: field,
+                message: "field contains non-renderable schema",
+                schema: schema
+            });
+            return true;
         }
 
         return false;
@@ -371,17 +371,84 @@ export class IssueScreenTransformer {
         return InputValueType.String;
     }
 
-    private allFieldsAreRenderable(fields: { [k: string]: JIRA.Schema.FieldMetaBean }, filters: string[], onlyCommonAndRequired: boolean): boolean {
+    private isRenderableIssueType(itype: JIRA.Schema.CreateMetaIssueTypeBean, filters: string[]): boolean {
+        const fields: { [k: string]: JIRA.Schema.FieldMetaBean } | undefined = itype.fields;
+
+        if (!fields) {
+            this.addIssueTypeProblem({
+                issueType: this.jiraTypeToSimpleType(itype),
+                isRenderable: false,
+                nonRenderableFields: [],
+                message: "No fields found in issue type"
+            });
+
+            return false;
+        }
+
+        let allRenderable: boolean = true;
+
         for (var k in fields) {
             let field = fields[k];
-            if (!this.shouldFilter(field, filters, onlyCommonAndRequired)
+            if (
+                !this.shouldFilter(itype, field, filters)
                 && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
                     || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))
             ) {
-                return false;
+                let schema = field.schema.system !== undefined ? field.schema.system : field.schema.custom;
+                if (!schema) {
+                    schema = "unknown schema";
+                }
+
+                this.addFieldProblem(itype, {
+                    field: field,
+                    message: "required field contains non-renderable schema",
+                    schema: schema
+                });
+                allRenderable = false;
             }
         }
 
-        return true;
+        if (this._problems[itype.id!]) {
+            this._problems[itype.id!].isRenderable = allRenderable;
+
+            if (!allRenderable) {
+                this._problems[itype.id!].message = "issue type contains required non-renderable fields";
+            }
+        }
+
+        return allRenderable;
+    }
+
+    private addIssueTypeProblem(problem: IssueTypeProblem) {
+        if (!this._problems[problem.issueType.id!]) {
+            this._problems[problem.issueType.id!] = problem;
+        }
+    }
+
+    private addFieldProblem(issueType: JIRA.Schema.CreateMetaIssueTypeBean, problem: FieldProblem) {
+        if (!this._problems[issueType.id!]) {
+            this._problems[issueType.id!] = {
+                issueType: this.jiraTypeToSimpleType(issueType),
+                isRenderable: true,
+                nonRenderableFields: [],
+                message: ""
+            };
+        }
+
+        let alreadyFound = this._problems[issueType.id!].nonRenderableFields.find(p => p.field.key === problem.field.key);
+
+        if (!alreadyFound) {
+            this._problems[issueType.id!].nonRenderableFields.push(problem);
+        }
+    }
+
+    private jiraTypeToSimpleType(issueType: JIRA.Schema.CreateMetaIssueTypeBean): SimpleIssueType {
+        return {
+            description: issueType.description!,
+            iconUrl: issueType.iconUrl!,
+            id: issueType.id!,
+            name: issueType.name!,
+            subtask: issueType.subtask!
+        };
     }
 }

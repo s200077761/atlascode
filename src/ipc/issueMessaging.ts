@@ -1,7 +1,7 @@
 import { Message } from "./messaging";
 import { Issue, Project, EpicFieldInfo } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
-import { IssueTypeIdScreens } from "../jira/createIssueMeta";
+import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
 
 
@@ -15,12 +15,18 @@ export interface IssueData extends Issue {
     recentPullRequests: Bitbucket.Schema.Pullrequest[];
 }
 
+export interface IssueProblemsData extends Message {
+    problems: TransformerProblems;
+    project: WorkingProject;
+}
+
 export interface CreateIssueData extends Message {
     selectedProject: WorkingProject;
     selectedIssueTypeId: string | undefined;
     availableProjects: WorkingProject[];
     issueTypeScreens: IssueTypeIdScreens;
     epicFieldInfo: EpicFieldInfo;
+    transformerProblems: TransformerProblems;
 }
 
 export interface PreliminaryIssueData extends Message {
