@@ -22,13 +22,13 @@ export class OAuthDancer {
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "3hasX42a7Ugka2FJja",
         clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
-        callbackURL: "http://127.0.0.1:31419/" + authinfo.AuthProvider.BitbucketCloud
+        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloud
     }, this.verify.bind(this));
 
     private _bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
         clientID: "7jspxC7fgemuUbnWQL",
         clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
-        callbackURL: "http://127.0.0.1:31419/" + authinfo.AuthProvider.BitbucketCloudStaging,
+        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloudStaging,
         authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
         tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
         userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
@@ -37,7 +37,7 @@ export class OAuthDancer {
     private _jiraCloudStrategy = new AtlassianStrategy({
         clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
         clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-        callbackURL: 'http://127.0.0.1:31419/' + authinfo.AuthProvider.JiraCloud,
+        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloud,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     }, this.verify.bind(this));
 
@@ -48,7 +48,7 @@ export class OAuthDancer {
         tokenURL: "https://auth.stg.atlassian.com/oauth/token",
         profileURL: "https://api.stg.atlassian.com/me",
         accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
-        callbackURL: 'http://127.0.0.1:31419/' + authinfo.AuthProvider.JiraCloudStaging,
+        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloudStaging,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     }, this.verifyJiraStaging.bind(this));
 
@@ -227,8 +227,8 @@ export class OAuthDancer {
                 reject("authentication timed out");
             });
 
-            this._srv = http.createServer(_app).listen(31419, () => console.log('server started on port 31419'));
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31419/auth/${provider}`));
+            this._srv = http.createServer(_app).listen(31415, () => console.log('server started on port 31415'));
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
             this.startTimer();
         });
     }
@@ -254,7 +254,7 @@ export class OAuthDancer {
         }
 
         this._timer = setTimeout(() => {
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31419/timeout`));
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/timeout`));
         }, this._browserTimeout);
     }
 
