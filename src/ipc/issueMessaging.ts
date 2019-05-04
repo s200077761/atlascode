@@ -15,6 +15,11 @@ export interface IssueData extends Issue {
     recentPullRequests: Bitbucket.Schema.Pullrequest[];
 }
 
+export interface IssueProblemsData extends Message {
+    problems: TransformerProblems;
+    project: WorkingProject;
+}
+
 export interface CreateIssueData extends Message {
     selectedProject: WorkingProject;
     selectedIssueTypeId: string | undefined;

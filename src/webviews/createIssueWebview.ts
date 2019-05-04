@@ -374,7 +374,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'openProblemReport': {
                     handled = true;
-
+                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.jiraSiteManager.effectiveSite, this._currentProject);
                 }
                 default: {
                     break;

@@ -16,15 +16,22 @@ export enum InputValueType {
     Url = 'url'
 }
 
-export interface TransformerProblems { [k: string]: IssueTypeProblem; };
+export interface TransformerProblems { [k: string]: IssueTypeProblem; }
 export interface TransformerResult {
     selectedIssueType: JIRA.Schema.CreateMetaIssueTypeBean;
     screens: IssueTypeIdScreens;
     problems: TransformerProblems;
 }
 
+export interface SimpleIssueType {
+    description: string;
+    iconUrl: string;
+    id: string;
+    name: string;
+    subtask: boolean;
+}
 export interface IssueTypeProblem {
-    issueType: JIRA.Schema.CreateMetaIssueTypeBean;
+    issueType: SimpleIssueType;
     isRenderable: boolean;
     nonRenderableFields: FieldProblem[];
     message: string;
@@ -33,6 +40,7 @@ export interface IssueTypeProblem {
 export interface FieldProblem {
     field: JIRA.Schema.FieldMetaBean;
     message: string;
+    schema: string;
 }
 
 export interface ScreenField {

@@ -4,16 +4,29 @@ import { TransformerProblems } from "../../../jira/createIssueMeta";
 import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
-
-type Accept = TransformerProblems | HostErrorMessage;
+import { IssueProblemsData } from '../../../ipc/issueMessaging';
+import { WorkingProject, emptyWorkingProject } from '../../../config/model';
+//import TableTree from '@atlaskit/table-tree';
+type Accept = IssueProblemsData | HostErrorMessage;
 
 interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     problems: TransformerProblems;
+    project: WorkingProject;
 }
 
 export default class CreateIssueProblems extends WebviewComponent<Action, Accept, {}, ViewState> {
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            isErrorBannerOpen: false,
+            errorDetails: undefined,
+            problems: {},
+            project: emptyWorkingProject
+        };
+    }
+
     onMessageReceived(e: any): void {
         switch (e.type) {
             case 'error': {
@@ -22,8 +35,8 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 break;
             }
             case 'screenRefresh': {
-                const data = e as TransformerProblems;
-                this.setState({ problems: data, isErrorBannerOpen: false, errorDetails: undefined });
+                console.log('got problems?', e.problems);
+                this.setState({ problems: e.problems, project: e.project, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
 
@@ -35,19 +48,74 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
     }
 
     public render() {
+        let issueTypeProblems: any[] = [];
+        Object.keys(this.state.problems).forEach(problemKey => {
+            const problem = this.state.problems[problemKey];
+            let issueTypeFields: any[] = [];
+            problem.nonRenderableFields.forEach(fieldProblem => {
+                issueTypeFields.push(
+                    <tr>
+                        <td>{fieldProblem.field.name}</td>
+                        <td>{fieldProblem.field.key}</td>
+                        <td style={{ textAlign: 'center' }}>{String(fieldProblem.field.required)}</td>
+                        <td>{fieldProblem.schema}</td>
+                        <td>{fieldProblem.message}</td>
+                    </tr>
+                );
+            });
+            issueTypeProblems.push(
+                <tr className='issuetype-row'>
+                    <td>
+                        <div className="ac-icon-with-text">
+                            <img src={problem.issueType.iconUrl} />
+                            <h3 style={{ marginLeft: '10px' }}>{problem.issueType.name}</h3>
+                        </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>{String(problem.isRenderable)}</td>
+                    <td>{problem.message}</td>
+                </tr>
+            );
+            issueTypeProblems.push(
+                <tr>
+                    <td colSpan={3}>
+                        <h4 style={{ marginTop: '3px', marginBottom: '5px;' }}>Non-renderable Fields:</h4>
+                        <table className='field-problem-table'>
+                            <tr>
+                                <th>Field Name</th>
+                                <th>Key</th>
+                                <th>Is Required</th>
+                                <th>Schema</th>
+                                <th>Message</th>
+                            </tr>
+                            {issueTypeFields}
+                        </table>
+                    </td>
+                </tr>
+            );
+
+        });
+
         return (
             <Page>
                 <Grid>
-                    <GridColumn medium={8}>
+                    <GridColumn medium={20}>
                         <div>
-
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
+                            <h2>Create Issue Problem Report: {this.state.project.name} ({this.state.project.key})</h2>
+                            <table className='problem-table'>
+                                <tr>
+                                    <th>Issue Type</th>
+                                    <th>Is Renderable</th>
+                                    <th>Message</th>
+                                </tr>
+                                {issueTypeProblems}
+                            </table>
                         </div>
                     </GridColumn>
                 </Grid>
-            </Page>
+            </Page >
         );
     }
 }

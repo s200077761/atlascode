@@ -1,4 +1,4 @@
-import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult } from "./createIssueMeta";
+import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType } from "./createIssueMeta";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { EpicFieldInfo } from "./jiraIssue";
@@ -200,9 +200,14 @@ export class IssueScreenTransformer {
 
         if (!field.required && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
             || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))) {
+            let schema = field.schema.system !== undefined ? field.schema.system : field.schema.custom;
+            if (!schema) {
+                schema = "unknown schema";
+            }
             this.addFieldProblem(itype, {
                 field: field,
-                message: "required field contains non-renderable schema"
+                message: "field contains non-renderable schema",
+                schema: schema
             });
             return true;
         }
@@ -371,7 +376,7 @@ export class IssueScreenTransformer {
 
         if (!fields) {
             this.addIssueTypeProblem({
-                issueType: itype,
+                issueType: this.jiraTypeToSimpleType(itype),
                 isRenderable: false,
                 nonRenderableFields: [],
                 message: "No fields found in issue type"
@@ -389,9 +394,15 @@ export class IssueScreenTransformer {
                 && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
                     || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))
             ) {
+                let schema = field.schema.system !== undefined ? field.schema.system : field.schema.custom;
+                if (!schema) {
+                    schema = "unknown schema";
+                }
+
                 this.addFieldProblem(itype, {
                     field: field,
-                    message: "field contains non-renderable schema"
+                    message: "required field contains non-renderable schema",
+                    schema: schema
                 });
                 allRenderable = false;
             }
@@ -399,6 +410,10 @@ export class IssueScreenTransformer {
 
         if (this._problems[itype.id!]) {
             this._problems[itype.id!].isRenderable = allRenderable;
+
+            if (!allRenderable) {
+                this._problems[itype.id!].message = "issue type contains required non-renderable fields";
+            }
         }
 
         return allRenderable;
@@ -413,7 +428,7 @@ export class IssueScreenTransformer {
     private addFieldProblem(issueType: JIRA.Schema.CreateMetaIssueTypeBean, problem: FieldProblem) {
         if (!this._problems[issueType.id!]) {
             this._problems[issueType.id!] = {
-                issueType: issueType,
+                issueType: this.jiraTypeToSimpleType(issueType),
                 isRenderable: true,
                 nonRenderableFields: [],
                 message: ""
@@ -425,5 +440,15 @@ export class IssueScreenTransformer {
         if (!alreadyFound) {
             this._problems[issueType.id!].nonRenderableFields.push(problem);
         }
+    }
+
+    private jiraTypeToSimpleType(issueType: JIRA.Schema.CreateMetaIssueTypeBean): SimpleIssueType {
+        return {
+            description: issueType.description!,
+            iconUrl: issueType.iconUrl!,
+            id: issueType.id!,
+            name: issueType.name!,
+            subtask: issueType.subtask!
+        };
     }
 }
