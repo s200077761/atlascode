@@ -66,7 +66,7 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
 
 async function saveWorkingProject(project: Project) {
   await configuration
-    .updateEffective(JiraWorkingProjectConfigurationKey, {
+    .updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, {
       id: project.id,
       name: project.name,
       key: project.key

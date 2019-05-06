@@ -83,31 +83,42 @@ export class Configuration extends Disposable {
     }
 
     // update does what it sounds like
-    async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    private async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+        console.log(`UPDATE section: ${section} value: ${value} target: ${target}`);
         return await workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
     }
 
+    async updateForWorkspaceFolder(section: string, value: any) {
+        const f = workspace.workspaceFolders;
+        if (f && f.length > 0) {
+            return workspace.getConfiguration(extensionId, f[0].uri)
+                .update(section, value, ConfigurationTarget.WorkspaceFolder);
+        } else {
+            return this.updateEffective(section, value);
+        }
+    }
+
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
-        const inspect = await configuration.inspect(section, resource)!;
+        const inspect = await this.inspect(section, resource)!;
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return; }
 
-            return await configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
+            return await this.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
             if (value === inspect.workspaceValue) { return; }
 
-            return await configuration.update(section, value, ConfigurationTarget.Workspace);
+            return await this.update(section, value, ConfigurationTarget.Workspace);
         }
 
         if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
             return;
         }
 
-        return await configuration.update(
+        return await this.update(
             section,
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global

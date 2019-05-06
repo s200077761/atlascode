@@ -21,7 +21,7 @@ export async function showSiteSelectionDialog() {
 }
 
 async function saveWorkingSite(site: AccessibleResource) {
-  await configuration.updateEffective(JiraWorkingSiteConfigurationKey, site)
+  await configuration.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site)
     .then(async () => {
       if (Container.config.jira.workingProject) {
         await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);

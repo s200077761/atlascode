@@ -15,6 +15,7 @@ import { submitFeedback } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
+import { JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from '../constants';
 
 type Emit = ConfigData | ProjectList | HostErrorMessage;
 
@@ -160,7 +161,12 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
                                 const value = e.changes[key];
 
-                                await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
+                                console.debug(key);
+                                if (key === JiraWorkingSiteConfigurationKey || key === JiraWorkingProjectConfigurationKey) {
+                                    await configuration.updateForWorkspaceFolder(key, value === inspect.defaultValue ? undefined : value);
+                                } else {
+                                    await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
+                                }
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
