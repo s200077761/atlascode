@@ -36,7 +36,7 @@ export class JiraFieldManager extends Disposable {
     }
 
     public async getIssueFieldsForSite(site: AccessibleResource): Promise<string[]> {
-        let fields = defaultIssueFields;
+        let fields = Array.from(defaultIssueFields);
         let epicFields = await this.getEpicFieldsForSite(site);
 
         if (epicFields.epicsEnabled) {
