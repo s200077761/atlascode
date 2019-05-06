@@ -360,6 +360,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
             .then(() => {
+                this._state.prData.currentBranch = this._state.repository!.state.HEAD!.name!;
                 this.postMessage({
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
