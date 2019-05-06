@@ -424,7 +424,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         }
 
         // TODO: [VSCODE-439] find a better way to transform submit data or deal with different select option shapes
-        if (Object.keys(e).includes(this.state.epicFieldInfo.epicLink.id)) {
+        if (e[this.state.epicFieldInfo.epicLink.id]) {
             let val: any = e[this.state.epicFieldInfo.epicLink.id];
             e[this.state.epicFieldInfo.epicLink.id] = val.id;
         }
