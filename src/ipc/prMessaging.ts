@@ -44,7 +44,6 @@ export function isCreatePRData(a: Message): a is CreatePRData {
 }
 
 export interface CheckoutResult extends Message {
-    error?: string;
     currentBranch: string;
 }
 

@@ -134,7 +134,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 break;
             }
             case 'checkout': {
-                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false });
+                this.setState({
+                    isApproveButtonLoading: false,
+                    isMergeButtonLoading: false,
+                    isCheckoutButtonLoading: false,
+                    pr: { ...this.state.pr, currentBranch: e.currentBranch }
+                });
                 break;
             }
             case 'update': {
