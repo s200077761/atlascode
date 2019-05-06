@@ -1,3 +1,8 @@
+## What's New In 1.3.1
+### Bugs fixed
+* Cannot create Jira issues in certain cases if epic is not specified
+* Jira treeviews show no issues after some time
+
 ## What's New In 1.3.0
 ### Improvements
 * Now using port 31415 for auth listener instead of 9090
