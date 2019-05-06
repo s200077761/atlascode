@@ -14,8 +14,6 @@ import {
 import { extensionId } from '../constants';
 import { Container } from '../container';
 
-const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
-
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
 It basically abstracts away the details of dealing with the workspace settings driectly.
@@ -114,20 +112,6 @@ export class Configuration extends Disposable {
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global
         );
-    }
-
-    private _isDebugging: boolean | undefined;
-    public get isDebugging() {
-        if (this._isDebugging === undefined) {
-            try {
-                const args = process.execArgv;
-
-                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
-            }
-            catch { }
-        }
-
-        return this._isDebugging;
     }
 }
 

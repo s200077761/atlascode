@@ -2,6 +2,7 @@
 import { ConfigurationChangeEvent, ExtensionContext, OutputChannel, window } from 'vscode';
 import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
+import { Container } from './container';
 
 const ConsolePrefix = `[${extensionOutputChannelName}]`;
 
@@ -18,7 +19,7 @@ export class Logger {
         const initializing = configuration.initializing(e);
 
         const section = 'outputLevel';
-        if (initializing && configuration.isDebugging) {
+        if (initializing && Container.isDebugging) {
             this.level = OutputLevel.Debug;
         } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
@@ -47,7 +48,7 @@ export class Logger {
     static debug(message?: any, ...params: any[]): void {
         if (this.level !== OutputLevel.Debug) { return; }
 
-        if (configuration.isDebugging) {
+        if (Container.isDebugging) {
             console.log(this.timestamp, ConsolePrefix, message, ...params);
         }
 
@@ -61,7 +62,7 @@ export class Logger {
     static error(ex: Error, classOrMethod?: string, ...params: any[]): void {
         if (this.level === OutputLevel.Silent) { return; }
 
-        if (configuration.isDebugging) {
+        if (Container.isDebugging) {
             console.error(this.timestamp, ConsolePrefix, classOrMethod, ...params, ex);
         }
 
