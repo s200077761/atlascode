@@ -6,7 +6,7 @@ import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, OpenIssuesTreeId, AssignedIssuesTreeId, CustomJQLTreeId } from "../../constants";
+import { setCommandContext, CommandContext, OpenIssuesTreeId, AssignedIssuesTreeId, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
@@ -61,7 +61,7 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, 'jira.workingProject') || configuration.changed(e, 'jira.workingSite'))) {
+        if (!initializing && (configuration.changed(e, JiraWorkingProjectConfigurationKey) || configuration.changed(e, JiraWorkingSiteConfigurationKey))) {
             const project = await Container.jiraSiteManager.getEffectiveProject();
             this._explorers.forEach(t => t.project = project);
             this._newIssueMonitor.setProject(project);

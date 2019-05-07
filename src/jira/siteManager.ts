@@ -5,6 +5,7 @@ import { AuthInfoEvent } from "../atlclients/authStore";
 import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
 import { Logger } from "../logger";
+import { JiraWorkingSiteConfigurationKey } from "../constants";
 
 
 export type JiraSiteUpdateEvent = {
@@ -45,7 +46,7 @@ export class JiraSiteManager extends Disposable {
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, 'jira.workingSite')) {
+        if (initializing || configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
             this._projectsAvailable = [];
 
             await this.getProjects().then(projects => {

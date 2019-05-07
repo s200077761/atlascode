@@ -5,6 +5,7 @@ import { Container } from "../container";
 import { configuration, isStagingSite } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { Resources } from "../resources";
+import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../constants";
 
 export class AuthStatusBar extends Disposable {
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -30,7 +31,7 @@ export class AuthStatusBar extends Disposable {
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
-    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, 'jira.workingSite') || configuration.changed(e, 'jira.workingProject')) {
+    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraWorkingSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
       const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
       const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
       this.updateAuthenticationStatusBar(AuthProvider.JiraCloud, jiraInfo);
