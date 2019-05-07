@@ -12,7 +12,7 @@ import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
 var tunnel = require("tunnel");
 import * as fs from "fs";
-import { configuration, isEmptySite, isStagingSite } from "../config/configuration";
+import { configuration, isEmptySite, isStagingSite, Configuration } from "../config/configuration";
 import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
@@ -58,7 +58,7 @@ export class ClientManager implements Disposable {
     context.subscriptions.push(
       configuration.onDidChange(this.onConfigurationChanged, this)
     );
-    this.onConfigurationChanged(configuration.initializingChangeEvent);
+    this.onConfigurationChanged(Configuration.initializingChangeEvent);
   }
 
   dispose() {

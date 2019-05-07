@@ -1,5 +1,5 @@
 import { Disposable, EventEmitter, Event, ConfigurationChangeEvent } from "vscode";
-import { configuration } from "../config/configuration";
+import { configuration, Configuration } from "../config/configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import isOnline from "is-online";
@@ -43,7 +43,7 @@ export class OnlineDetector extends Disposable {
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
 
-        void this.onConfigurationChanged(configuration.initializingChangeEvent);
+        void this.onConfigurationChanged(Configuration.initializingChangeEvent);
 
     }
 
@@ -54,7 +54,7 @@ export class OnlineDetector extends Disposable {
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
+        const initializing = Configuration.initializing(e);
 
         if (initializing) {
             this._isOnline = true;
@@ -64,7 +64,7 @@ export class OnlineDetector extends Disposable {
             }, this._options.polling!);
         }
 
-        if (initializing || configuration.changed(e, 'offlineMode')) {
+        if (initializing || Configuration.changed(e, 'offlineMode')) {
             this._isOfflineMode = Container.config.offlineMode;
 
             if (this._isOnline !== !this._isOfflineMode) {

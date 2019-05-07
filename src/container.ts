@@ -1,5 +1,5 @@
 import { ExtensionContext, Disposable, env, UriHandler, window, Uri } from 'vscode';
-import { configuration, IConfig } from './config/configuration';
+import { configuration, IConfig, Configuration } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
@@ -81,7 +81,7 @@ export class Container {
         } else {
             let disposable: Disposable;
             disposable = configuration.onDidChange(e => {
-                if (configuration.changed(e, 'jira.explorer.enabled')) {
+                if (Configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
                 }

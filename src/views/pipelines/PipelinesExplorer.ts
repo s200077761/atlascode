@@ -1,6 +1,6 @@
 import { ConfigurationChangeEvent, commands } from "vscode";
 import { Container } from "../../container";
-import { configuration } from "../../config/configuration";
+import { Configuration } from "../../config/configuration";
 import { PipelinesTree } from "./PipelinesTree";
 import { setCommandContext, CommandContext, PipelinesTreeViewId } from "../../constants";
 import { BitbucketContext } from "../../bitbucket/bbContext";
@@ -45,9 +45,9 @@ export class PipelinesExplorer extends BitbucketExplorer {
     }
 
     async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
+        const initializing = Configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
+        if (initializing || Configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
             setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled);
         }
     }

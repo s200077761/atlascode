@@ -6,7 +6,7 @@ import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
 import { AuthProvider, emptyAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
-import { configuration } from '../config/configuration';
+import { configuration, Configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
 import { AuthInfoEvent } from '../atlclients/authStore';
@@ -157,11 +157,10 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                         try {
 
                             for (const key in e.changes) {
-                                const inspect = await configuration.inspect(key)!;
+                                const inspect = await Configuration.inspect(key)!;
 
                                 const value = e.changes[key];
 
-                                console.debug(key);
                                 if (key === JiraWorkingSiteConfigurationKey || key === JiraWorkingProjectConfigurationKey) {
                                     await configuration.updateForWorkspaceFolder(key, value === inspect.defaultValue ? undefined : value);
                                 } else {

@@ -11,7 +11,7 @@ import { Container } from '../../container';
 import { AuthProvider } from '../../atlclients/authInfo';
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
-import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
+import { JQLEntry, SiteJQL, WorkingProject, configuration, Configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
@@ -41,7 +41,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   onConfigurationChanged(e: ConfigurationChangeEvent) {
-    if (configuration.changed(e, 'jira.customJql')) {
+    if (Configuration.changed(e, 'jira.customJql')) {
       this.refresh();
     }
   }

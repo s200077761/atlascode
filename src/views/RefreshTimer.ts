@@ -1,7 +1,7 @@
 import { ConfigurationChangeEvent, Disposable } from "vscode";
 import { Time } from "../util/time";
 import { Container } from "../container";
-import { configuration } from "../config/configuration";
+import { configuration, Configuration } from "../config/configuration";
 
 const defaultRefreshInterval = 5 * Time.MINUTES;
 
@@ -42,8 +42,8 @@ export class RefreshTimer implements Disposable {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        if (configuration.changed(e, this._intervalConfigPath) ||
-            (this._enabledConfigPath !== undefined && configuration.changed(e, this._enabledConfigPath))) {
+        if (Configuration.changed(e, this._intervalConfigPath) ||
+            (this._enabledConfigPath !== undefined && Configuration.changed(e, this._enabledConfigPath))) {
             this.reloadConfiguration();
         }
     }

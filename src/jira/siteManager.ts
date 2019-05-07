@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscode";
 import { Container } from "../container";
-import { configuration, emptyWorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite } from "../config/configuration";
+import { configuration, emptyWorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite, Configuration } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
@@ -34,7 +34,7 @@ export class JiraSiteManager extends Disposable {
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
 
-        void this.onConfigurationChanged(configuration.initializingChangeEvent);
+        void this.onConfigurationChanged(Configuration.initializingChangeEvent);
 
     }
 
@@ -44,9 +44,9 @@ export class JiraSiteManager extends Disposable {
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
+        const initializing = Configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
+        if (initializing || Configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
             this._projectsAvailable = [];
 
             await this.getProjects().then(projects => {

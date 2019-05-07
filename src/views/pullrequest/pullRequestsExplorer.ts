@@ -1,7 +1,7 @@
 import { commands, ConfigurationChangeEvent } from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
 import { Container } from '../../container';
-import { configuration } from '../../config/configuration';
+import { Configuration } from '../../config/configuration';
 import { Commands } from '../../commands';
 import { PullRequestTreeViewId, setCommandContext, CommandContext } from '../../constants';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
@@ -48,9 +48,9 @@ export class PullRequestsExplorer extends BitbucketExplorer {
     }
 
     onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
+        const initializing = Configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled')) {
+        if (initializing || Configuration.changed(e, 'bitbucket.explorer.enabled')) {
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
         }
     }
