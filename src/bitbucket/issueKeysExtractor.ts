@@ -1,16 +1,13 @@
 import { PullRequest } from "./model";
-import { GitBackend } from "../codebucket/backend/backend-git";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { Logger } from "../logger";
 import { parseBitbucketIssueKeys } from "./bbIssueKeyParser";
 
-export async function extractIssueKeys(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
+export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
-        await pr.repository.fetch();
-        const b = new GitBackend(pr.repository.rootUri.fsPath);
-        const text = await b.getRevisionMessage(`${pr.data.destination!.commit!.hash!}..${pr.data.source!.commit!.hash!}`);
+        const text = commits.map(c => c.message).join('\n');
         const commitMessageMatches = parseJiraIssueKeys(text);
         commitMessageMatches.forEach(m => result.add(m));
 
@@ -30,13 +27,11 @@ export async function extractIssueKeys(pr: PullRequest, allComments: Bitbucket.S
     }
 }
 
-export async function extractBitbucketIssueKeys(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
+export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
-        await pr.repository.fetch();
-        const b = new GitBackend(pr.repository.rootUri.fsPath);
-        const text = await b.getRevisionMessage(`${pr.data.destination!.commit!.hash!}..${pr.data.source!.commit!.hash!}`);
+        const text = commits.map(c => c.message).join('\n');
         const commitMessageMatches = parseBitbucketIssueKeys(text);
         commitMessageMatches.forEach(m => result.add(m));
 

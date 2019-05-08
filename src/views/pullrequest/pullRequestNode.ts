@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
@@ -56,16 +56,17 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
             let promises = Promise.all([
                 PullRequestApi.getChangedFiles(this.pr),
+                PullRequestApi.getCommits(this.pr),
                 PullRequestApi.getComments(this.pr)
             ]);
 
             return promises.then(
                 async result => {
-                    let [fileChanges, allComments] = result;
+                    let [fileChanges, commits, allComments] = result;
 
                     const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
-                    children.push(...await this.createRelatedJiraIssueNode(allComments));
-                    children.push(...await this.createRelatedBitbucketIssueNode(allComments));
+                    children.push(...await this.createRelatedJiraIssueNode(commits, allComments));
+                    children.push(...await this.createRelatedBitbucketIssueNode(commits, allComments));
                     children.push(...await this.createFileChangesNodes(allComments, fileChanges));
                     return children;
                 },
@@ -84,18 +85,18 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return await PullRequestApi.get(pr);
     }
 
-    private async createRelatedJiraIssueNode(allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedJiraIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, allComments.data);
+        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits.data, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
         }
         return result;
     }
 
-    private async createRelatedBitbucketIssueNode(allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedBitbucketIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, allComments.data);
+        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits.data, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
         }

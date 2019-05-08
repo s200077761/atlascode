@@ -13,11 +13,11 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
         if (!Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             return undefined;
         }
-        const issueKeys = await extractBitbucketIssueKeys(pr, allComments);
+        const issueKeys = await extractBitbucketIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedBitbucketIssuesNode();
             node._delegate = new StaticBitbucketIssuesNode(pr.repository, issueKeys);

@@ -14,11 +14,11 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
         if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;
         }
-        const issueKeys = await extractIssueKeys(pr, allComments);
+        const issueKeys = await extractIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedIssuesNode();
             node._delegate = new StaticIssuesNode(issueKeys, 'Related Jira issues');

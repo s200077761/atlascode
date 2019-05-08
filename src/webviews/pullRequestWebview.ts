@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, PaginatedCommits } from '../bitbucket/model';
 import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
@@ -238,8 +238,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         const [commits, comments, buildStatuses] = await prDetailsPromises;
 
         const issuesPromises = Promise.all([
-            this.fetchRelatedJiraIssues(pr, comments),
-            this.fetchRelatedBitbucketIssues(pr, comments),
+            this.fetchRelatedJiraIssues(pr, commits, comments),
+            this.fetchRelatedBitbucketIssues(pr, commits, comments),
             this.fetchMainIssue(pr)
         ]);
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
@@ -285,11 +285,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, comments: PaginatedComments): Promise<Issue[]> {
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
             if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-                const issueKeys = await extractIssueKeys(pr, comments.data);
+                const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
                 result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
             }
         }
@@ -300,10 +300,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return result;
     }
 
-    private async fetchRelatedBitbucketIssues(pr: PullRequest, comments: PaginatedComments): Promise<Bitbucket.Schema.Issue[]> {
+    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Bitbucket.Schema.Issue[]> {
         let result: Bitbucket.Schema.Issue[] = [];
         try {
-            const issueKeys = await extractBitbucketIssueKeys(pr, comments.data);
+            const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
             result = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, issueKeys);
         }
         catch (e) {
