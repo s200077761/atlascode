@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { JiraWorkingProjectConfigurationKey } from "../../constants";
 import {
   Project,
   isProject,
@@ -66,11 +65,7 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
 
 async function saveWorkingProject(project: Project) {
   await configuration
-    .updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, {
-      id: project.id,
-      name: project.name,
-      key: project.key
-    })
+    .setWorkingProject(project)
     .catch(reason => {
       Logger.debug("rejected config update", reason);
     });

@@ -11,8 +11,10 @@ import {
     workspace,
     Disposable
 } from 'vscode';
-import { extensionId } from '../constants';
+import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from '../constants';
 import { Container } from '../container';
+import { Project } from 'src/jira/jiraModel';
+import { AccessibleResource } from 'src/atlclients/authInfo';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -77,6 +79,7 @@ export class Configuration extends Disposable {
 
     // inspect returns details of the given config section
     static inspect(section?: string, resource?: Uri | null) {
+        console.log(`inspect ${section}`);
         return workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
             .inspect(section === undefined ? extensionId : section);
@@ -89,12 +92,34 @@ export class Configuration extends Disposable {
             .update(section, value, target);
     }
 
-    // Will attempt to update the value for the WorkspaceFolder if that fails (no folder is open) it will fall back to setting the value globaly.
-    async updateForWorkspaceFolder(section: string, value: any) {
+    async setWorkingSite(site?: AccessibleResource) {
+        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
+        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
+    }
+
+    async setWorkingProject(project?: Project) {
+        // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
+        // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
+        const inspect = Configuration.inspect(JiraWorkingSiteConfigurationKey);
+        if (inspect && !inspect.workspaceFolderValue) {
+            this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
+        }
+        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
+            id: project.id,
+            name: project.name,
+            key: project.key
+        } : undefined);
+    }
+
+    // Will attempt to update the value for both the WorkspaceFolder and Global. If that fails (no folder is open) it will only set the value globaly.
+    private async updateForWorkspaceFolder(section: string, value: any) {
         const f = workspace.workspaceFolders;
         if (f && f.length > 0) {
-            return workspace.getConfiguration(extensionId, f[0].uri)
-                .update(section, value, ConfigurationTarget.WorkspaceFolder);
+            const config = workspace.getConfiguration(extensionId, f[0].uri);
+            return Promise.all([
+                config.update(section, value, ConfigurationTarget.WorkspaceFolder),
+                config.update(section, value, ConfigurationTarget.Global)
+            ]);
         } else {
             return this.updateEffective(section, value);
         }

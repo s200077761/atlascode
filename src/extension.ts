@@ -8,7 +8,7 @@ import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { AuthProvider } from './atlclients/authInfo';
-import { setCommandContext, CommandContext, GlobalStateVersionKey, JiraWorkingSiteConfigurationKey } from './constants';
+import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
@@ -69,7 +69,7 @@ async function migrateConfig(): Promise<IConfig> {
     const cfg = configuration.get<IConfig>();
     if (cfg.jira.workingSite &&
         (!cfg.jira.workingSite.baseUrlSuffix || cfg.jira.workingSite.baseUrlSuffix.length < 1)) {
-        await configuration.updateEffective(JiraWorkingSiteConfigurationKey, { ...cfg.jira.workingSite, baseUrlSuffix: 'atlassian.net' });
+        await configuration.setWorkingSite({ ...cfg.jira.workingSite, baseUrlSuffix: 'atlassian.net' });
         return configuration.get<IConfig>();
     }
     return cfg;

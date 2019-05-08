@@ -161,8 +161,10 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
                                 const value = e.changes[key];
 
-                                if (key === JiraWorkingSiteConfigurationKey || key === JiraWorkingProjectConfigurationKey) {
-                                    await configuration.updateForWorkspaceFolder(key, value === inspect.defaultValue ? undefined : value);
+                                if (key === JiraWorkingSiteConfigurationKey) {
+                                    await configuration.setWorkingSite(value === inspect.defaultValue ? undefined : value);
+                                } else if (key === JiraWorkingProjectConfigurationKey) {
+                                    await configuration.setWorkingProject(value === inspect.defaultValue ? undefined : value);
                                 } else {
                                     await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
                                 }
