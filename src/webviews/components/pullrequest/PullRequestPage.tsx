@@ -34,6 +34,7 @@ import BitbucketIssueList from '../bbissue/BitbucketIssueList';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
+import MergeChecks from './MergeChecks';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -262,6 +263,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         <InlineDialog placement='bottom-end'
                             content={
                                 <div>
+                                    <MergeChecks {...this.state.pr} />
                                     <div className='ac-vpadding'>
                                         <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/admin/merge-strategies`} /></label>
                                         <Select
