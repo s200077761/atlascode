@@ -106,7 +106,19 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const inlineComments = await this.getInlineComments(allComments.data);
-        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, fileChange, inlineComments, this.commentController)));
+
+        // Use merge base to diff from common ancestor of source and destination.
+        // This will help ignore any unrelated changes in destination branch.
+        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
+        const source = `${this.pr.sourceRemote ? this.pr.sourceRemote.name : this.pr.remote.name}/${this.pr.data.source!.branch!.name!}`;
+        let mergeBase = this.pr.data.destination!.commit!.hash!;
+        try {
+            mergeBase = await this.pr.repository.getMergeBase(destination, source);
+        }
+        catch (e) {
+            Logger.debug('error getting merge base: ', e);
+        }
+        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, mergeBase, fileChange, inlineComments, this.commentController)));
         if (fileChanges.next) {
             result.push(new SimpleNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
         }
@@ -165,7 +177,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 class PullRequestFilesNode extends AbstractBaseNode {
 
-    constructor(private pr: PullRequest, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>, private commentController: PullRequestCommentController) {
+    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>, private commentController: PullRequestCommentController) {
         super();
     }
 
@@ -213,11 +225,6 @@ class PullRequestFilesNode extends AbstractBaseNode {
             }
         });
 
-        // Use merge base to diff from common ancestor of source and destination.
-        // This will help ignore any unrelated changes in destination branch.
-        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
-        const source = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
-        const mergeBase = await this.pr.repository.getMergeBase(destination, source);
         let lhsQueryParam = {
             query: JSON.stringify({
                 lhs: true,
@@ -225,7 +232,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branch!.name!,
-                commitHash: mergeBase,
+                commitHash: this.mergeBase,
                 path: this.fileChange.old ? this.fileChange.old.path! : undefined,
                 commentThreads: lhsCommentThreads
             } as FileDiffQueryParams)
