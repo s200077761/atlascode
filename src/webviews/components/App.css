@@ -701,6 +701,11 @@ pre.pipeline-logs {
   padding-top: 0px !important;
 }
 
+.ac-comments .emoji {
+  max-height: 1.5em;
+  vertical-align: middle;
+}
+
 /*-------------------- END - Comments --------------------*/
 
 /* 
