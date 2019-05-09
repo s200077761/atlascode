@@ -270,7 +270,15 @@ class PullRequestFilesNode extends AbstractBaseNode {
         const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam);
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam);
 
-        const diffArgs = [lhsUri, rhsUri, fileDisplayName];
+        const diffArgs = [
+            () => {
+                this.commentController.provideComments(lhsUri);
+                this.commentController.provideComments(rhsUri);
+            },
+            lhsUri,
+            rhsUri,
+            fileDisplayName
+        ];
         item.command = {
             command: Commands.ViewDiff,
             title: 'Diff file',
@@ -279,9 +287,6 @@ class PullRequestFilesNode extends AbstractBaseNode {
 
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(`${this.pr.data.links!.html!.href!}#chg-${fileDisplayName}`);
-
-        this.commentController.provideComments(lhsUri);
-        this.commentController.provideComments(rhsUri);
 
         return item;
     }

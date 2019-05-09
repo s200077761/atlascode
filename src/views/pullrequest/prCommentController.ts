@@ -83,23 +83,22 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     private createOrUpdateThread(threadId: string, uri: vscode.Uri, range: vscode.Range, comments: vscode.Comment[]) {
-        if (!this._commentsCache.has(threadId)) {
-            const newThread = this._commentController.createCommentThread(threadId, uri, range, comments);
-            newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
-            newThread.acceptInputCommand = {
-                title: 'Add comment',
-                command: Commands.BitbucketAddComment,
-                arguments: [
-                    this,
-                    uri,
-                    newThread
-                ]
-            };
-            this._commentsCache.set(threadId, newThread);
+        if (this._commentsCache.has(threadId)) {
+            this._commentsCache.get(threadId)!.dispose!();
         }
-        else {
-            this._commentsCache.get(threadId)!.comments = comments;
-        }
+
+        const newThread = this._commentController.createCommentThread(threadId, uri, range, comments);
+        newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
+        newThread.acceptInputCommand = {
+            title: 'Add comment',
+            command: Commands.BitbucketAddComment,
+            arguments: [
+                this,
+                uri,
+                newThread
+            ]
+        };
+        this._commentsCache.set(threadId, newThread);
     }
 
     private async postNewComment(uri: vscode.Uri, commentThread: vscode.CommentThread, text: string) {
@@ -131,6 +130,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 commentId: String(data.id!)
             }
         ];
+        this.createOrUpdateThread(commentThread.threadId, uri, commentThread.range, commentThread.comments);
     }
 
     dispose() {
