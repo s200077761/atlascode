@@ -275,11 +275,6 @@
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
-                },
-                {
-                    "command": "atlascode.bb.startPipeline",
-                    "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.pipelines.explorerEnabled"
                 }
             ],
             "view/title": [
@@ -355,7 +350,11 @@
                 },
                 {
                     "command": "atlascode.viewInWebBrowser",
-                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue|pipelineBranch)/"
+                    "when": "viewItem =~ /(pullrequest|pipelineBuild|bitbucketIssue)/"
+                },
+                {
+                    "command": "atlascode.bb.startPipeline",
+                    "when": "viewItem == pipelineBranch"
                 }
             ],
             "commandPalette": [
