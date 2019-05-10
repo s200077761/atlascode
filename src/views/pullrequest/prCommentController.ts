@@ -70,13 +70,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = c.map(comment => {
-                    return {
-                        userName: comment.user!.display_name!,
-                        body: new vscode.MarkdownString(turndownService.turndown(comment.content!.html!)),
-                        commentId: String(comment.id!)
-                    };
-                });
+                const comments = c.map(comment => PullRequestCommentController.createVSCodeComment(comment));
 
                 this.createOrUpdateThread(String(c[0].id!), uri, range, comments);
             });
@@ -110,11 +104,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         };
         const { data } = await PullRequestApi.postComment(remote, prId, text, undefined, inline);
 
-        const comments = [{
-            body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
-            userName: data.user!.display_name!,
-            commentId: String(data.id!)
-        }];
+        const comments = [PullRequestCommentController.createVSCodeComment(data)];
 
         this.createOrUpdateThread(String(data.id!), uri, commentThread.range, comments);
     }
@@ -124,13 +114,17 @@ export class PullRequestCommentController implements vscode.Disposable {
         const { data } = await PullRequestApi.postComment(remote, prId, text, Number(commentThread.threadId));
         commentThread.comments = [
             ...commentThread.comments,
-            {
-                body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
-                userName: data.user!.display_name!,
-                commentId: String(data.id!)
-            }
+            PullRequestCommentController.createVSCodeComment(data)
         ];
         this.createOrUpdateThread(commentThread.threadId, uri, commentThread.range, commentThread.comments);
+    }
+
+    private static createVSCodeComment(data: Bitbucket.Schema.Comment) {
+        return {
+            body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
+            userName: data.user ? data.user.display_name! : 'Unknown user',
+            commentId: String(data.id!)
+        };
     }
 
     dispose() {

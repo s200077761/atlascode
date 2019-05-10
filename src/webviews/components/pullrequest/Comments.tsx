@@ -11,7 +11,7 @@ interface Node {
 
 function toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
     const globalCommentsMap = new Map<Number, Node>();
-    const globalComments = comments.filter(c => !c.inline && !c.deleted);
+    const globalComments = comments.filter(c => !c.inline);
     globalComments.forEach(c => globalCommentsMap.set(c.id!, { data: c, children: [] }));
     globalComments.forEach(c => {
         const n = globalCommentsMap.get(c.id!);
@@ -47,10 +47,12 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
 
     render(): any {
         const { node, currentUser } = this.props;
+        const avatarHref = node.data.user ? node.data.user!.links!.avatar!.href : undefined;
+        const authorName = node.data.user ? node.data.user!.display_name : 'Unknown user';
 
         return <Comment className='ac-comment'
-            avatar={<Avatar src={node.data.user!.links!.avatar!.href} size="medium" />}
-            author={<CommentAuthor>{node.data.user!.display_name}</CommentAuthor>}
+            avatar={<Avatar src={avatarHref} size="medium" />}
+            author={<CommentAuthor>{authorName}</CommentAuthor>}
             time={<CommentTime>{new Date(node.data.created_on!).toDateString()}</CommentTime>}
             content={
                 <React.Fragment>
