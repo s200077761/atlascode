@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as path from 'path';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
@@ -153,7 +154,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         }
 
         this.setState({
-            repo: { label: repo.uri.split('/').pop()!, value: repo },
+            repo: { label: path.basename(repo.uri), value: repo },
             remote: { label: remote.name, value: remote },
             reviewers: repo.defaultReviewers,
             sourceBranch: { label: sourceBranch.name!, value: sourceBranch },
@@ -385,7 +386,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <div style={{ marginBottom: '20px' }}>
                                             <label>Repository</label>
                                             <Select
-                                                options={this.state.data.repositories.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                                                options={this.state.data.repositories.map(repo => { return { label: path.basename(repo.uri), value: repo }; })}
                                                 onChange={this.handleRepoChange}
                                                 placeholder='Loading...'
                                                 value={repo}

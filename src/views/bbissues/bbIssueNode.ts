@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { Repository } from '../../typings/git';
@@ -26,9 +27,9 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const directory = this.repository.rootUri.path.split('/').pop();
+        const directory = path.basename(this.repository.rootUri.fsPath);
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this.repository.rootUri.path;
+        item.tooltip = this.repository.rootUri.fsPath;
 
         return item;
     }

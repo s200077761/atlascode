@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from "vscode";
 import { Commands } from "../../commands";
 import { BitbucketIssuesApi } from "../../bitbucket/bbIssues";
@@ -19,7 +20,7 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
         this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
 
         if (issuesList.data.length > 0 && Date.parse(issuesList.data[0].created_on!) > lastChecked.getTime()) {
-          return [repo.rootUri.path.split('/').pop()!];
+          return [path.basename(repo.rootUri.fsPath)];
         }
         return [];
       });

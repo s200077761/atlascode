@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
@@ -53,9 +54,9 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const directory = this.repository.rootUri.path.split('/').pop();
+        const directory = path.basename(this.repository.rootUri.fsPath);
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this.repository.rootUri.path;
+        item.tooltip = this.repository.rootUri.fsPath;
         item.contextValue = PullRequestContextValue;
         const remote = PullRequestApi.getBitbucketRemotes(this.repository)[0];
         const repoName = GitUrlParse(remote.fetchUrl! || remote.pushUrl!).full_name;

@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as path from 'path';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
@@ -99,7 +100,7 @@ export default class StartWorkPage extends WebviewComponent<
       }
       case 'update': {
         if (isStartWorkOnIssueData(e) && e.issue.key.length > 0) {
-          const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: e.repoData[0].uri.split('/').pop()!, value: e.repoData[0] } : this.state.repo;
+          const repo = this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0 ? { label: path.basename(e.repoData[0].uri), value: e.repoData[0] } : this.state.repo;
           const transition = this.state.transition === emptyTransition ? e.issue.transitions.find(t => t.to.id === e.issue.status.id) || this.state.transition : this.state.transition;
 
 
@@ -119,7 +120,7 @@ export default class StartWorkPage extends WebviewComponent<
           let repo = this.state.repo;
           if (this.isEmptyRepo(this.state.repo.value) && e.repoData.length > 0) {
             const issueRepo = e.repoData.find(r => r.href === e.issue.repository!.links!.html!.href) || e.repoData[0];
-            repo = { label: issueRepo.uri.split('/').pop()!, value: issueRepo };
+            repo = { label: path.basename(issueRepo.uri), value: issueRepo };
           }
 
           const issueType = 'bitbucketIssue';
@@ -386,7 +387,7 @@ export default class StartWorkPage extends WebviewComponent<
                       <Select
                         className="ac-select-container"
                         classNamePrefix="ac-select"
-                        options={this.state.data.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                        options={this.state.data.repoData.map(repo => { return { label: path.basename(repo.uri), value: repo }; })}
                         onChange={this.handleRepoChange}
                         placeholder='Loading...'
                         value={repo} />

@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from "vscode";
 import { BitbucketContext } from "../../bitbucket/bbContext";
 import { PullRequestApi } from "../../bitbucket/pullRequests";
@@ -19,7 +20,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                 this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
 
                 if (prList.data.length > 0 && Date.parse(prList.data[0].data.created_on!) > lastChecked.getTime()) {
-                    return [repo.rootUri.path.split('/').pop()!];
+                    return [path.basename(repo.rootUri.fsPath)];
                 }
                 return [];
             });
