@@ -152,8 +152,27 @@ export namespace PullRequestApi {
             return { data: [], next: undefined };
         }
 
-        const comments = (data.values as Bitbucket.Schema.PullrequestComment[]).filter(c => !c.deleted && c.content && c.content.raw && c.content.raw.trim().length > 0);
-        return { data: comments, next: data.next };
+        const accumulatedComments = data.values as Bitbucket.Schema.PullrequestComment[];
+        while (data.next) {
+            const nextPage = await bb.getNextPage({ next: data.next });
+            data = nextPage.data;
+            accumulatedComments.push(...(data.values || []));
+        }
+
+        const comments = accumulatedComments.map(c => {
+            if (!c.deleted && c.content && c.content.raw && c.content.raw.trim().length > 0) {
+                return c;
+            }
+            return {
+                ...c,
+                content: {
+                    markup: 'markdown',
+                    raw: '*Comment deleted*',
+                    html: '<p><em>Comment deleted</em></p>'
+                }
+            } as Bitbucket.Schema.PullrequestComment;
+        });
+        return { data: comments, next: undefined };
     }
 
     export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
