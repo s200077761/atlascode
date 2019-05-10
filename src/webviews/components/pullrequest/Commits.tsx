@@ -12,7 +12,7 @@ const Hash = (props: any) =>
 const Message = (props: any) => <p style={{ display: "inline" }}>{props.message}</p>;
 const Timestamp = (props: any) => {
     const d = new Date(props.ts);
-    return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}</p></Tooltip>;
+    return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
 };
 
 export default class Commits extends React.Component<PRData, {}> {
