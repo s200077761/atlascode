@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent, languages } from 'vscode';
 import { Container } from "../../container";
-import { configuration, Configuration } from "../../config/configuration";
+import { configuration } from "../../config/configuration";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { JiraHoverProviderConfigurationKey } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
@@ -16,7 +16,7 @@ export class IssueHoverProviderManager implements Disposable {
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
-        void this.onConfigurationChanged(Configuration.initializingChangeEvent);
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private async onDidAuthChange(e: AuthInfoEvent) {
@@ -28,8 +28,8 @@ export class IssueHoverProviderManager implements Disposable {
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
-        if (initializing || Configuration.changed(e, JiraHoverProviderConfigurationKey)) {
+        const initializing = configuration.initializing(e);
+        if (initializing || configuration.changed(e, JiraHoverProviderConfigurationKey)) {
             await this.updateHover();
         }
     }

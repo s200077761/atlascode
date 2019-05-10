@@ -2,7 +2,7 @@ import { AuthInfo, AuthProvider, productForProvider, ProductJira, ProductBitbuck
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
-import { configuration, isStagingSite, Configuration } from "../config/configuration";
+import { configuration, isStagingSite } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
 import { Resources } from "../resources";
 import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../constants";
@@ -22,7 +22,7 @@ export class AuthStatusBar extends Disposable {
       , configuration.onDidChange(this.onConfigurationChanged, this)
     );
 
-    void this.onConfigurationChanged(Configuration.initializingChangeEvent);
+    void this.onConfigurationChanged(configuration.initializingChangeEvent);
   }
 
   async onDidAuthChange(e: AuthInfoEvent) {
@@ -30,8 +30,8 @@ export class AuthStatusBar extends Disposable {
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
-    const initializing = Configuration.initializing(e);
-    if (initializing || Configuration.changed(e, 'jira.statusbar') || Configuration.changed(e, JiraWorkingSiteConfigurationKey) || Configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
+    const initializing = configuration.initializing(e);
+    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraWorkingSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
       const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
       const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
       this.updateAuthenticationStatusBar(AuthProvider.JiraCloud, jiraInfo);
@@ -57,7 +57,7 @@ export class AuthStatusBar extends Disposable {
 
     }
 
-    if (initializing || Configuration.changed(e, 'bitbucket.statusbar')) {
+    if (initializing || configuration.changed(e, 'bitbucket.statusbar')) {
       const bitbucketItem = this.ensureStatusItem(AuthProvider.BitbucketCloud);
       const bitbucketInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
       this.updateAuthenticationStatusBar(AuthProvider.BitbucketCloud, bitbucketInfo);

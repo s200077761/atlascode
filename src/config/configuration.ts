@@ -52,7 +52,7 @@ export class Configuration extends Disposable {
 
     // initializingChangeEvent is an event instance that can be used to determine if the config
     // is being initialized for the first time rather than actually receiving a *real* change event.
-    static readonly initializingChangeEvent: ConfigurationChangeEvent = {
+    readonly initializingChangeEvent: ConfigurationChangeEvent = {
         affectsConfiguration: (section: string, resource?: Uri) => false
     };
 
@@ -68,18 +68,17 @@ export class Configuration extends Disposable {
     }
 
     // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
-    static changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null) {
+    changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null) {
         return e.affectsConfiguration(`${extensionId}.${section}`, resource!);
     }
 
     // initializing takes an event and returns if it is an initalizing event or not
-    static initializing(e: ConfigurationChangeEvent) {
+    initializing(e: ConfigurationChangeEvent) {
         return e === this.initializingChangeEvent;
     }
 
     // inspect returns details of the given config section
-    static inspect(section?: string, resource?: Uri | null) {
-        console.log(`inspect ${section}`);
+    inspect(section?: string, resource?: Uri | null) {
         return workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
             .inspect(section === undefined ? extensionId : section);
@@ -100,7 +99,7 @@ export class Configuration extends Disposable {
     async setWorkingProject(project?: Project) {
         // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
         // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
-        const inspect = Configuration.inspect(JiraWorkingSiteConfigurationKey);
+        const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);
         if (inspect && !inspect.workspaceFolderValue) {
             this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
         }
@@ -126,7 +125,7 @@ export class Configuration extends Disposable {
     }
 
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
-        const inspect = await Configuration.inspect(section, resource)!;
+        const inspect = await this.inspect(section, resource)!;
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return; }
 

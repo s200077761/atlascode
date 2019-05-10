@@ -5,7 +5,7 @@ import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
-import { configuration, Configuration } from "../../config/configuration";
+import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext, OpenIssuesTreeId, AssignedIssuesTreeId, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
@@ -34,13 +34,13 @@ export class JiraContext extends Disposable {
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
-        void this.onConfigurationChanged(Configuration.initializingChangeEvent);
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
+        const initializing = configuration.initializing(e);
 
-        if (initializing || Configuration.changed(e, 'jira.explorer.enabled')) {
+        if (initializing || configuration.changed(e, 'jira.explorer.enabled')) {
             if (!Container.config.jira.explorer.enabled) {
                 this.dispose();
             } else {
@@ -53,15 +53,15 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
         }
 
-        if (initializing || Configuration.changed(e, 'jira.explorer.showOpenIssues')) {
+        if (initializing || configuration.changed(e, 'jira.explorer.showOpenIssues')) {
             setCommandContext(CommandContext.OpenIssuesTree, Container.config.jira.explorer.showOpenIssues);
         }
 
-        if (initializing || Configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
+        if (initializing || configuration.changed(e, 'jira.explorer.showAssignedIssues')) {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (Configuration.changed(e, JiraWorkingProjectConfigurationKey) || Configuration.changed(e, JiraWorkingSiteConfigurationKey))) {
+        if (!initializing && (configuration.changed(e, JiraWorkingProjectConfigurationKey) || configuration.changed(e, JiraWorkingSiteConfigurationKey))) {
             const project = await Container.jiraSiteManager.getEffectiveProject();
             this._explorers.forEach(t => t.project = project);
             this._newIssueMonitor.setProject(project);

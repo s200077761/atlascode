@@ -3,7 +3,7 @@ import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { Container } from "../container";
 import { AccessibleResource } from "../atlclients/authInfo";
 import { Logger } from "../logger";
-import { configuration, Configuration } from "../config/configuration";
+import { configuration } from "../config/configuration";
 import { EpicFieldInfo, epicsDisabled } from "./jiraIssue";
 import { JiraWorkingSiteConfigurationKey } from "../constants";
 
@@ -28,9 +28,9 @@ export class JiraFieldManager extends Disposable {
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
+        const initializing = configuration.initializing(e);
 
-        if (initializing || Configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
+        if (initializing || configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
             const newSite = await Container.jiraSiteManager.effectiveSite;
             this.getEpicFieldsForSite(newSite);
         }

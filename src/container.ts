@@ -1,5 +1,5 @@
 import { ExtensionContext, Disposable, env, UriHandler, window, Uri } from 'vscode';
-import { configuration, IConfig, Configuration } from './config/configuration';
+import { configuration, IConfig } from './config/configuration';
 import { ConfigWebview } from './webviews/configWebview';
 import { PullRequestViewManager } from './webviews/pullRequestViewManager';
 import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
@@ -25,8 +25,8 @@ import { JiraFieldManager } from './jira/fieldManager';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
-export class AtlascodeUriHandler extends Disposable implements UriHandler {
 
+export class AtlascodeUriHandler extends Disposable implements UriHandler {
     private disposables: Disposable;
 
     constructor() {
@@ -81,7 +81,7 @@ export class Container {
         } else {
             let disposable: Disposable;
             disposable = configuration.onDidChange(e => {
-                if (Configuration.changed(e, 'jira.explorer.enabled')) {
+                if (configuration.changed(e, 'jira.explorer.enabled')) {
                     disposable.dispose();
                     context.subscriptions.push((this._jiraExplorer = new JiraContext()));
                 }

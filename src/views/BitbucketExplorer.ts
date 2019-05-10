@@ -1,6 +1,6 @@
 import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { Container } from "../container";
-import { configuration, Configuration } from "../config/configuration";
+import { configuration } from "../config/configuration";
 import { BitbucketContext } from "../bitbucket/bbContext";
 import { AuthProvider } from "../atlclients/authInfo";
 import { RefreshTimer } from "./RefreshTimer";
@@ -26,7 +26,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
             }),
             this._refreshTimer
         );
-        this._onConfigurationChanged(Configuration.initializingChangeEvent);
+        this._onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     abstract explorerEnabledConfiguration(): string;
@@ -66,9 +66,9 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     private async _onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
+        const initializing = configuration.initializing(e);
 
-        if (initializing || Configuration.changed(e, this.explorerEnabledConfiguration())) {
+        if (initializing || configuration.changed(e, this.explorerEnabledConfiguration())) {
             if (this.treeDataProvder) {
                 this.treeDataProvder.dispose();
             }
@@ -81,8 +81,8 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         }
 
         if (initializing ||
-            Configuration.changed(e, this.monitorEnabledConfiguration()) ||
-            Configuration.changed(e, this.explorerEnabledConfiguration())) {
+            configuration.changed(e, this.monitorEnabledConfiguration()) ||
+            configuration.changed(e, this.explorerEnabledConfiguration())) {
 
             this.updateMonitor();
         }

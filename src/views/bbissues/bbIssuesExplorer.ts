@@ -1,6 +1,6 @@
 import { ConfigurationChangeEvent, commands } from "vscode";
 import { Container } from "../../container";
-import { Configuration } from "../../config/configuration";
+import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext, BitbucketIssuesTreeViewId } from "../../constants";
 import { BitbucketContext } from "../../bitbucket/bbContext";
 import { Commands } from "../../commands";
@@ -45,9 +45,9 @@ export class BitbucketIssuesExplorer extends BitbucketExplorer {
     }
 
     async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
+        const initializing = configuration.initializing(e);
 
-        if (initializing || Configuration.changed(e, 'bitbucket.issues.explorerEnabled')) {
+        if (initializing || configuration.changed(e, 'bitbucket.issues.explorerEnabled')) {
             setCommandContext(CommandContext.BitbucketIssuesExplorer, Container.config.bitbucket.issues.explorerEnabled);
         }
     }

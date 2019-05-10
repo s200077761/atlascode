@@ -1,6 +1,6 @@
 'use strict';
 import { ConfigurationChangeEvent, ExtensionContext, OutputChannel, window } from 'vscode';
-import { configuration, OutputLevel, Configuration } from './config/configuration';
+import { configuration, OutputLevel } from './config/configuration';
 import { extensionOutputChannelName } from './constants';
 import { Container } from './container';
 
@@ -12,16 +12,16 @@ export class Logger {
 
     static configure(context: ExtensionContext) {
         context.subscriptions.push(configuration.onDidChange(this.onConfigurationChanged, this));
-        this.onConfigurationChanged(Configuration.initializingChangeEvent);
+        this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
     private static onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = Configuration.initializing(e);
+        const initializing = configuration.initializing(e);
 
         const section = 'outputLevel';
         if (initializing && Container.isDebugging) {
             this.level = OutputLevel.Debug;
-        } else if (initializing || Configuration.changed(e, section)) {
+        } else if (initializing || configuration.changed(e, section)) {
             this.level = configuration.get<OutputLevel>(section);
         }
 
