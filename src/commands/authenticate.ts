@@ -1,7 +1,6 @@
 import { AuthProvider } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { configuration, isStagingSite } from '../config/configuration';
-import { JiraWorkingProjectConfigurationKey } from '../constants';
 
 export async function authenticateBitbucket() {
     authenticate(AuthProvider.BitbucketCloud);
@@ -27,14 +26,14 @@ export async function clearBitbucketAuth() {
 export async function clearJiraAuth() {
     clearAuth(AuthProvider.JiraCloud);
     if (!isStagingSite(Container.jiraSiteManager.effectiveSite)) {
-        await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+        await configuration.setWorkingProject(undefined);
     }
 }
 
 export async function clearJiraAuthStaging() {
     clearAuth(AuthProvider.JiraCloudStaging);
     if (isStagingSite(Container.jiraSiteManager.effectiveSite)) {
-        await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
+        await configuration.setWorkingProject(undefined);
     }
 }
 

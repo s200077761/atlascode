@@ -11,10 +11,10 @@ import {
     workspace,
     Disposable
 } from 'vscode';
-import { extensionId } from '../constants';
+import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from '../constants';
 import { Container } from '../container';
-
-const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
+import { Project } from 'src/jira/jiraModel';
+import { AccessibleResource } from 'src/atlclients/authInfo';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -85,49 +85,68 @@ export class Configuration extends Disposable {
     }
 
     // update does what it sounds like
-    async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    private async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
         return await workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
     }
 
+    async setWorkingSite(site?: AccessibleResource) {
+        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
+        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
+    }
+
+    async setWorkingProject(project?: Project) {
+        // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
+        // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
+        const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);
+        if (inspect && !inspect.workspaceFolderValue) {
+            this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
+        }
+        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
+            id: project.id,
+            name: project.name,
+            key: project.key
+        } : undefined);
+    }
+
+    // Will attempt to update the value for both the WorkspaceFolder and Global. If that fails (no folder is open) it will only set the value globaly.
+    private async updateForWorkspaceFolder(section: string, value: any) {
+        const f = workspace.workspaceFolders;
+        if (f && f.length > 0) {
+            const config = workspace.getConfiguration(extensionId, f[0].uri);
+            return Promise.all([
+                config.update(section, value, ConfigurationTarget.WorkspaceFolder),
+                config.update(section, value, ConfigurationTarget.Global)
+            ]);
+        } else {
+            return this.updateEffective(section, value);
+        }
+    }
+
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
-        const inspect = await configuration.inspect(section, resource)!;
+        const inspect = await this.inspect(section, resource)!;
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return; }
 
-            return await configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
+            return await this.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
             if (value === inspect.workspaceValue) { return; }
 
-            return await configuration.update(section, value, ConfigurationTarget.Workspace);
+            return await this.update(section, value, ConfigurationTarget.Workspace);
         }
 
         if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
             return;
         }
 
-        return await configuration.update(
+        return await this.update(
             section,
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global
         );
-    }
-
-    private _isDebugging: boolean | undefined;
-    public get isDebugging() {
-        if (this._isDebugging === undefined) {
-            try {
-                const args = process.execArgv;
-
-                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
-            }
-            catch { }
-        }
-
-        return this._isDebugging;
     }
 }
 

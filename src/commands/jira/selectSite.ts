@@ -2,7 +2,6 @@ import { commands, window } from "vscode";
 import { AccessibleResource } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { configuration } from "../../config/configuration";
-import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
 import { Commands } from "../../commands";
 import { siteSelectedEvent } from "../../analytics";
 
@@ -21,13 +20,9 @@ export async function showSiteSelectionDialog() {
 }
 
 async function saveWorkingSite(site: AccessibleResource) {
-  await configuration.updateEffective(JiraWorkingSiteConfigurationKey, site)
+  await configuration.setWorkingSite(site)
     .then(async () => {
-      if (Container.config.jira.workingProject) {
-        await configuration.updateEffective(JiraWorkingProjectConfigurationKey, undefined);
-      } else {
-        commands.executeCommand(Commands.RefreshJiraExplorer);
-      }
+      commands.executeCommand(Commands.RefreshJiraExplorer);
 
       siteSelectedEvent(site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     });

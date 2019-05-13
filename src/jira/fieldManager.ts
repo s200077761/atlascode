@@ -5,6 +5,7 @@ import { AccessibleResource } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { configuration } from "../config/configuration";
 import { EpicFieldInfo, epicsDisabled } from "./jiraIssue";
+import { JiraWorkingSiteConfigurationKey } from "../constants";
 
 
 export const defaultIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
@@ -29,7 +30,7 @@ export class JiraFieldManager extends Disposable {
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, 'jira.workingSite')) {
+        if (initializing || configuration.changed(e, JiraWorkingSiteConfigurationKey)) {
             const newSite = await Container.jiraSiteManager.effectiveSite;
             this.getEpicFieldsForSite(newSite);
         }

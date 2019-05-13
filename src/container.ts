@@ -24,6 +24,8 @@ import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucke
 import { JiraFieldManager } from './jira/fieldManager';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 
+const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
+
 export class AtlascodeUriHandler extends Disposable implements UriHandler {
     private disposables: Disposable;
 
@@ -63,7 +65,7 @@ export class Container {
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        let analyticsEnv: string = configuration.isDebugging ? 'staging' : 'prod';
+        let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
         this._analyticsClient = new AnalyticsClient({
             origin: 'desktop',
@@ -96,6 +98,20 @@ export class Container {
 
     static get machineId() {
         return env.machineId;
+    }
+
+    private static _isDebugging: boolean | undefined;
+    public static get isDebugging() {
+        if (this._isDebugging === undefined) {
+            try {
+                const args = process.execArgv;
+
+                this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
+            }
+            catch { }
+        }
+
+        return this._isDebugging;
     }
 
     private static _uriHandler: UriHandler;

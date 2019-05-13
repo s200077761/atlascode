@@ -355,7 +355,7 @@ export class ClientManager implements Disposable {
     try {
       let pemFile = fs.readFileSync(Resources.charlesCert);
 
-      if (configuration.isDebugging && configuration.get<boolean>(section)) {
+      if (Container.isDebugging && configuration.get<boolean>(section)) {
         this._agent = tunnel.httpsOverHttp({
           ca: [pemFile],
           proxy: {
