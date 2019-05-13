@@ -41,6 +41,7 @@ pre {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -155,9 +156,9 @@ pre {
 
 /*-------------------- END - modal dialogs --------------------*/
 
-/*-------------------- BEGIN - Issue creation trigger list --------------------*/
+/*-------------------- BEGIN - Multi option list --------------------*/
 
-div#trigger-row {
+div#multi-option-row {
   display: flex;
   align-items: center;
   margin-top: 8pt;
@@ -168,14 +169,14 @@ div#trigger-row {
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
 }
 
-input#jira-todoTrigger-input {
+input#multi-option-input {
   flex-grow: 100;
   margin-right: 3pt;
   margin-left: 3pt;
   border: none !important;
 }
 
-/*-------------------- END - Issue creation trigger list --------------------*/
+/*-------------------- END - Multi option list --------------------*/
 
 /*-------------------- BEGIN - JQL configuration list --------------------*/
 

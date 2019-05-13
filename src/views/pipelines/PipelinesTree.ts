@@ -1,5 +1,4 @@
-import * as path from 'path';
-import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
@@ -13,6 +12,7 @@ import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { BaseTreeDataProvider } from "../Explorer";
 import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
+import { configuration } from "../../config/configuration";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -32,8 +32,17 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
         this._disposable = Disposable.from(
             this._onDidChangeTreeData,
-            commands.registerCommand(Commands.PipelinesNextPage, (repo) => { this.fetchNextPage(repo); })
+            commands.registerCommand(Commands.PipelinesNextPage, (repo) => { this.fetchNextPage(repo); }),
+            configuration.onDidChange(this.onConfigurationChanged, this)
         );
+    }
+
+    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
+        if (configuration.changed(e, 'bitbucket.pipelines.hideEmpty') ||
+            configuration.changed(e, 'bitbucket.pipelines.hideFiltered') ||
+            configuration.changed(e, 'bitbucket.pipelines.branchFilters')) {
+            this.refresh();
+        }
     }
 
     async fetchNextPage(repo: Repository) {
@@ -137,7 +146,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         return Promise.resolve([]);
     }
 
-    async fetchBranches(): Promise<string[]> {
+    private async fetchBranches(): Promise<string[]> {
         var branches: string[] = [];
         var morePages = false;
         const remotes = await PullRequestApi.getBitbucketRemotes(this._repo);
@@ -163,8 +172,9 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         return this.fetchPipelinesForBranches(branches);
     }
 
-    async fetchPipelinesForBranches(branches: string[]): Promise<string[]> {
+    private async fetchPipelinesForBranches(branches: string[]): Promise<string[]> {
         await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
+        branches = [...this._pipelines.keys()];
         branches.sort((a, b) => {
             const pa = this._pipelines.get(a);
             const pb = this._pipelines.get(b);
@@ -182,11 +192,23 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         return branches;
     }
 
-    async fetchPipelinesForBranch(branchName: string): Promise<Pipeline[]> {
+    private async fetchPipelinesForBranch(branchName: string): Promise<Pipeline[]> {
+        if (Container.config.bitbucket.pipelines.hideFiltered && !this.matches(branchName)) {
+            return [];
+        }
         await Container.clientManager.bbrequest();
         const pipelines = await PipelineApi.getList(this._repo, branchName);
-        this._pipelines.set(branchName, pipelines);
+        if (!Container.config.bitbucket.pipelines.hideEmpty || pipelines.length > 0) {
+            this._pipelines.set(branchName, pipelines);
+        }
         return pipelines;
+    }
+
+    private matches(branchName: string) {
+        const filters = Container.config.bitbucket.pipelines.branchFilters.filter(f => f.length > 0);
+        const reString = filters.map(t => t.replace(/(\W)/g, '\\$1')).join("|");
+        const regex = new RegExp(reString);
+        return regex.exec(branchName) ? true : false;
     }
 
     public refresh() {

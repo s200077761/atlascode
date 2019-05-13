@@ -89,6 +89,9 @@ export interface BitbucketPipelinesConfig {
     explorerEnabled: boolean;
     monitorEnabled: boolean;
     refreshInterval: number;
+    hideEmpty: boolean;
+    hideFiltered: boolean;
+    branchFilters: string[];
 }
 
 export interface BitbucketIssuesConfig {
@@ -248,7 +251,10 @@ export const emptyBitbucketContextMenus: BitbucketContextMenus = {
 export const emptyPipelinesConfig: BitbucketPipelinesConfig = {
     explorerEnabled: true,
     monitorEnabled: true,
-    refreshInterval: 5
+    refreshInterval: 5,
+    hideEmpty: true,
+    hideFiltered: false,
+    branchFilters: []
 };
 
 export const emptyIssuesConfig: BitbucketIssuesConfig = {
