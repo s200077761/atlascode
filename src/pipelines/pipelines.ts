@@ -36,8 +36,9 @@ export namespace PipelineApi {
       const remote = remotes[0];
       const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
       let parsed = GitUrlParse(remoteUrl);
-      const bb = await bitbucketHosts.get(parsed.source)();
+      const bb = await bitbucketHosts.get(parsed.source);
       return bb.pipelines.create({
+        //@ts-ignore
         _body: {
           target: {
             ref_type: "branch",
@@ -57,7 +58,7 @@ export namespace PipelineApi {
       const remote = remotes[0];
       const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
       let parsed = GitUrlParse(remoteUrl);
-      const bb = await bitbucketHosts.get(parsed.source)();
+      const bb = await bitbucketHosts.get(parsed.source);
       return bb.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return pipelineForPipeline(res.data);
@@ -72,7 +73,7 @@ export namespace PipelineApi {
       const remote = remotes[0];
       const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
       let parsed = GitUrlParse(remoteUrl);
-      const bb = await bitbucketHosts.get(parsed.source)();
+      const bb = await bitbucketHosts.get(parsed.source);
       return bb.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return res.data.values!.map((s: any) => pipelineStepForPipelineStep(s));
@@ -143,7 +144,7 @@ async function getPipelineLog(remote: Remote,
   pipelineUuid: string,
   stepUuid: string): Promise<string[]> {
   const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-  const bb = await bitbucketHosts.get(parsed.source)();
+  const bb = await bitbucketHosts.get(parsed.source);
   return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
     return splitLogs(r.data.toString());
   }).catch((err: any) => {
