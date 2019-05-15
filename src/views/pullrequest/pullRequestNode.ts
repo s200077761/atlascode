@@ -21,6 +21,7 @@ interface NestedComment {
 
 export interface FileDiffQueryParams {
     lhs: boolean;
+    prHref: string;
     prId: number;
     repoUri: string;
     remote: Remote;
@@ -228,6 +229,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let lhsQueryParam = {
             query: JSON.stringify({
                 lhs: true,
+                prHref: this.pr.data.links!.self!.href,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.remote,
@@ -240,6 +242,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let rhsQueryParam = {
             query: JSON.stringify({
                 lhs: false,
+                prHref: this.pr.data.links!.self!.href,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.sourceRemote || this.pr.remote,
@@ -271,7 +274,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam);
 
         const diffArgs = [
-            () => {
+            async () => {
                 this.commentController.provideComments(lhsUri);
                 this.commentController.provideComments(rhsUri);
             },

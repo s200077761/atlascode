@@ -73,7 +73,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
         vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
-        vscode.commands.registerCommand(Commands.BitbucketAddComment, async (cc: PullRequestCommentController, uri: vscode.Uri, t: vscode.CommentThread) => await cc.addComment(t, uri)),
+        vscode.commands.registerCommand(Commands.BitbucketAddComment, async (cc: PullRequestCommentController, t: vscode.CommentThread) => await cc.addComment(t)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),

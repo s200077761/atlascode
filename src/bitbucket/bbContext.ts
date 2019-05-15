@@ -10,6 +10,7 @@ import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer'
 import { getCurrentUser } from './user';
 import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest } from './model';
+import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -25,6 +26,7 @@ export class BitbucketContext extends Disposable {
     private _currentUser?: Bitbucket.Schema.User;
     private _currentUserStaging?: Bitbucket.Schema.User;
     private _pullRequestCache = new CacheMap();
+    public readonly prCommentController = new PullRequestCommentController();
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -47,7 +49,8 @@ export class BitbucketContext extends Disposable {
             this._gitApi.onDidOpenRepository(this.refreshRepos, this),
             this._gitApi.onDidCloseRepository(this.refreshRepos, this),
             this._pullRequestsExplorer,
-            this._bitbucketIssuesExplorer
+            this._bitbucketIssuesExplorer,
+            this.prCommentController
         );
 
         this.refreshRepos();

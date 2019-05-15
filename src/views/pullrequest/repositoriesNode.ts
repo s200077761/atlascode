@@ -4,31 +4,41 @@ import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
-import { PullRequestCommentController } from './prCommentController';
 import { SimpleNode } from '../nodes/simpleNode';
+import { Container } from '../../container';
 
 export class RepositoriesNode extends AbstractBaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
-    private _commentControllers: Map<string, PullRequestCommentController> = new Map();
 
     constructor(public fetcher: (repo: Repository) => Promise<PaginatedPullRequests>, private repository: Repository, private expand?: boolean) {
         super();
         this.disposables.push(({
             dispose: () => {
-                this._commentControllers.forEach(val => val.dispose());
+                if (this._children) {
+                    this._children.forEach(child => {
+                        if (child instanceof PullRequestTitlesNode) {
+                            Container.bitbucketContext.prCommentController.disposePR(child.prHref);
+                        }
+                        child.dispose();
+                    });
+                }
             }
         }));
     }
 
     async refresh() {
+        const previousChildrenHrefs = (this._children || [])
+            .filter(child => child instanceof PullRequestTitlesNode)
+            .map(child => (child as PullRequestTitlesNode).prHref);
+
         let prs = await this.fetcher(this.repository);
         this._children = prs.data.map(pr => this.createChildNode(pr));
         if (prs.next) { this._children!.push(new NextPageNode(prs)); }
 
-        // dispose any comment controllers for any PRs that might have been closed during refresh
-        this._commentControllers.forEach((val, key) => {
-            if (!this._children!.find(child => child instanceof PullRequestTitlesNode && child.prHref === key)) {
-                val.dispose();
+        // dispose comments for any PRs that might have been closed during refresh
+        previousChildrenHrefs.forEach(prHref => {
+            if (!this._children!.find(child => child instanceof PullRequestTitlesNode && child.prHref === prHref)) {
+                Container.bitbucketContext.prCommentController.disposePR(prHref);
             }
         });
     }
@@ -45,11 +55,7 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     private createChildNode(pr: PullRequest): PullRequestTitlesNode {
-        const prHref = pr.data!.links!.self!.href!;
-        if (!this._commentControllers.has(prHref)) {
-            this._commentControllers.set(prHref, new PullRequestCommentController());
-        }
-        return new PullRequestTitlesNode(pr, this._commentControllers.get(prHref)!);
+        return new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
     }
 
     getTreeItem(): vscode.TreeItem {
