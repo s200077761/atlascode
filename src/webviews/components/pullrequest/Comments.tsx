@@ -24,7 +24,7 @@ function toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
     return globalCommentsMap;
 }
 
-class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { showCommentForm: false };
@@ -60,6 +60,7 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
                     <CommentForm
                         currentUser={currentUser}
                         visible={this.state.showCommentForm}
+                        isAnyCommentLoading={this.props.isCommentLoading}
                         onSave={(content: string) => this.handleSave(content, node.data.id!)}
                         onCancel={this.handleCancel} />
                 </React.Fragment>
@@ -68,12 +69,12 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
                 this.props.onSave && !this.state.showCommentForm && <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>
             ]}
         >
-            {node.children && node.children.map(child => <NestedComment node={child} currentUser={currentUser} onSave={this.props.onSave} />)}
+            {node.children && node.children.map(child => <NestedComment node={child} currentUser={currentUser} isCommentLoading={this.props.isCommentLoading} onSave={this.props.onSave} />)}
         </Comment>;
     }
 }
 
-export default class Comments extends React.Component<{ comments: Bitbucket.Schema.Comment[], currentUser: Bitbucket.Schema.User, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
+export default class Comments extends React.Component<{ comments: Bitbucket.Schema.Comment[], currentUser: Bitbucket.Schema.User, isAnyCommentLoading: boolean, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -86,7 +87,7 @@ export default class Comments extends React.Component<{ comments: Bitbucket.Sche
         let result: any[] = [];
         nestedGlobalComments.forEach((commentNode) => {
             if (!commentNode.data.parent) {
-                result.push(<NestedComment node={commentNode} currentUser={this.props.currentUser!} onSave={this.props.onComment} />);
+                result.push(<NestedComment node={commentNode} currentUser={this.props.currentUser!} isCommentLoading={this.props.isAnyCommentLoading} onSave={this.props.onComment} />);
             }
         });
         return <div className='ac-comments'>{result}</div>;

@@ -1,21 +1,29 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
+import Spinner from '@atlaskit/spinner';
 
 export default class CommentForm extends React.Component<{
     currentUser: Bitbucket.Schema.User,
     visible: boolean,
+    isAnyCommentLoading: boolean,
     onSave?: (content: string) => void,
     onCancel?: () => void
-}, { commentInput: string }> {
+}, { commentInput: string, isThisCommentLoading: boolean }> {
     constructor(props: any) {
         super(props);
-        this.state = { commentInput: '' };
+        this.state = { commentInput: '', isThisCommentLoading: false };
+    }
+
+    componentWillReceiveProps(nextProps: any) {
+        if (!nextProps.isAnyCommentLoading) {
+            this.setState({ isThisCommentLoading: false });
+        }
     }
 
     handleSave = (e: any) => {
         if (this.props.onSave) { this.props.onSave(this.state.commentInput); }
-        this.setState({ commentInput: '' });
+        this.setState({ commentInput: '', isThisCommentLoading: true });
     }
 
     handleCancel = (e: any) => {
@@ -28,8 +36,10 @@ export default class CommentForm extends React.Component<{
     }
 
     render() {
-        return this.props.visible &&
-            <React.Fragment>
+        return <React.Fragment>
+            {this.props.isAnyCommentLoading && this.state.isThisCommentLoading && <Spinner size='large' />}
+
+            {this.props.visible &&
                 <div style={{ display: 'flex' }}>
                     <Avatar
                         appearance="circle"
@@ -51,6 +61,7 @@ export default class CommentForm extends React.Component<{
                         </ButtonGroup>
                     </div>
                 </div>
-            </React.Fragment>;
+            }
+        </React.Fragment>;
     }
 }
