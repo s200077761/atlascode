@@ -1,7 +1,7 @@
 import * as React from "react";
 import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import Comment, { CommentAuthor } from "@atlaskit/comment";
+import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
 import Spinner from '@atlaskit/spinner';
 import { Comment as JiraComment, Issue } from "../../../jira/jiraModel";
 
@@ -46,6 +46,7 @@ export class Comments extends React.Component<
             />
           }
           author={<CommentAuthor><div className="jira-comment-author">{comment.author.displayName}</div></CommentAuthor>}
+          time={<CommentTime>{new Date(comment.created).toLocaleString()}</CommentTime>}
           content={<div className="jira-comment"><p dangerouslySetInnerHTML={{ __html: comment.body }} /></div>}
         />
       );

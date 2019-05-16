@@ -53,7 +53,7 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
         return <Comment className='ac-comment'
             avatar={<Avatar src={avatarHref} size="medium" />}
             author={<CommentAuthor>{authorName}</CommentAuthor>}
-            time={<CommentTime>{new Date(node.data.created_on!).toDateString()}</CommentTime>}
+            time={<CommentTime>{new Date(node.data.created_on!).toLocaleString()}</CommentTime>}
             content={
                 <React.Fragment>
                     <p dangerouslySetInnerHTML={{ __html: node.data.content!.html! }} />
