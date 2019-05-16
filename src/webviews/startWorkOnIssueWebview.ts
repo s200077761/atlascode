@@ -12,7 +12,7 @@ import { providerForSite } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { PullRequestApi } from '../bitbucket/pullRequests';
-import { Repository, RefType } from '../typings/git';
+import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -120,7 +120,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to "${e.transition.to.name}"</li>` : ''}  ${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
                             });
                             issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
@@ -172,9 +172,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 : [];
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                if (r.state.remotes.length === 0) {
-                    break;
-                }
+                const remotes: Remote[] = r.state.remotes.length > 0
+                    ? r.state.remotes
+                    : [{ name: 'NO_GIT_REMOTE_FOUND', isReadOnly: true }];
 
                 let repo: Bitbucket.Schema.Repository | undefined = undefined;
                 let developmentBranch = undefined;
@@ -193,7 +193,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 await repoData.push({
                     uri: r.rootUri.toString(),
                     href: href,
-                    remotes: r.state.remotes,
+                    remotes: remotes,
                     defaultReviewers: [],
                     localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                     remoteBranches: [],

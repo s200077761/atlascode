@@ -623,6 +623,10 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   align-items: center;
 }
 
+.start-work-success code {
+  font-weight: bold;
+}
+
 /*-------------------- END - Start Work On Issue Styles --------------------*/
 
 /*-------------------- BEGIN - Pipelines --------------------*/
