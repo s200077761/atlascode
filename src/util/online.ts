@@ -2,42 +2,35 @@ import { Disposable, EventEmitter, Event, ConfigurationChangeEvent } from "vscod
 import { configuration } from "../config/configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import isOnline from "is-online";
+import isOnline, { Options } from "is-online";
+import { Time } from "./time";
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
 };
 
-export type Options = {
-    polling?: number;
-    timeout?: number;
-    version?: "v4" | "v6";
+
+const statusCheckOptions: Options = {
+    timeout: 3000, version: 'v4'
 };
 
-const defaultOptions: Options = {
-    timeout: 1000, polling: 1500, version: 'v4'
-};
+const onlinePolling: number = 5 * Time.MINUTES;
+const offlinePolling: number = 5 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
     private _disposable: Disposable;
     private _isOnline: boolean;
     private _isOfflineMode: boolean;
-    private _options: Options;
-    private _timer: any | undefined;
+    private _onlineTimer: any | undefined;
+    private _offlineTimer: any | undefined;
 
     private _onDidOnlineChange = new EventEmitter<OnlineInfoEvent>();
     public get onDidOnlineChange(): Event<OnlineInfoEvent> {
         return this._onDidOnlineChange.event;
     }
 
-    constructor(options?: Options) {
+    constructor() {
         super(() => this.dispose());
-
-        this._options = defaultOptions;
-
-        if (options) {
-            this._options = { ...defaultOptions, ...options };
-        }
 
         this._disposable = Disposable.from(
             configuration.onDidChange(this.onConfigurationChanged, this)
@@ -48,7 +41,8 @@ export class OnlineDetector extends Disposable {
     }
 
     dispose() {
-        clearInterval(this._timer);
+        clearInterval(this._onlineTimer);
+        clearInterval(this._offlineTimer);
         this._disposable.dispose();
         this._onDidOnlineChange.dispose();
     }
@@ -57,11 +51,11 @@ export class OnlineDetector extends Disposable {
         const initializing = configuration.initializing(e);
 
         if (initializing) {
-            this._isOnline = true;
+            await this.checkOnlineStatus();
 
-            this._timer = setInterval(() => {
-                this.checkOnlineStatus(this._options);
-            }, this._options.polling!);
+            this._onlineTimer = setInterval(() => {
+                this.checkOnlineStatus();
+            }, onlinePolling);
         }
 
         if (initializing || configuration.changed(e, 'offlineMode')) {
@@ -81,11 +75,19 @@ export class OnlineDetector extends Disposable {
         return this._isOnline;
     }
 
-    private async checkOnlineStatus(options: Options) {
-        let newIsOnline = await isOnline(options);
+    private async checkOnlineStatus() {
+        let newIsOnline = await isOnline(statusCheckOptions);
 
         if (newIsOnline !== this._isOnline) {
             this._isOnline = newIsOnline;
+
+            if (!this._isOnline) {
+                this._offlineTimer = setInterval(() => {
+                    this.checkOnlineStatus();
+                }, offlinePolling);
+            } else {
+                clearInterval(this._offlineTimer);
+            }
 
             if (!this._isOfflineMode) {
 
