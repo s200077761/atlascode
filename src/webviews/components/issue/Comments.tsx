@@ -2,11 +2,13 @@ import * as React from "react";
 import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import Comment, { CommentAuthor } from "@atlaskit/comment";
+import Spinner from '@atlaskit/spinner';
 import { Comment as JiraComment, Issue } from "../../../jira/jiraModel";
 
 export class Comments extends React.Component<
   {
     issue: Issue;
+    isCommentLoading: boolean;
     onSave: (issue: Issue, comment: string) => void;
   },
   { commentInput: string }
@@ -55,6 +57,7 @@ export class Comments extends React.Component<
   commentForm(): any {
     return (
       <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
+        {this.props.isCommentLoading && <Spinner size='large' />}
         <textarea
           className='ac-textarea'
           rows={3}

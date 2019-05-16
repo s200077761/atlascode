@@ -80,6 +80,7 @@ const emptyIssueData: IssueData = {
 type MyState = {
   data: IssueData;
   isStatusButtonLoading: boolean;
+  isCommentLoading: boolean;
   commentInput: string;
   isErrorBannerOpen: boolean;
   isOnline: boolean;
@@ -102,6 +103,7 @@ export default class JiraIssuePage extends WebviewComponent<
     this.state = {
       data: emptyIssueData,
       isStatusButtonLoading: false,
+      isCommentLoading: false,
       commentInput: "",
       isErrorBannerOpen: false,
       isOnline: true,
@@ -113,12 +115,12 @@ export default class JiraIssuePage extends WebviewComponent<
   public onMessageReceived(e: any) {
     switch (e.type) {
       case 'error': {
-        this.setState({ isStatusButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+        this.setState({ isStatusButtonLoading: false, isCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
 
         break;
       }
       case 'update': {
-        this.setState({ data: e, isStatusButtonLoading: false, isErrorBannerOpen: false, errorDetails: undefined });
+        this.setState({ data: e, isStatusButtonLoading: false, isCommentLoading: false, isErrorBannerOpen: false, errorDetails: undefined });
         break;
       }
       case 'onlineStatus': {
@@ -141,7 +143,7 @@ export default class JiraIssuePage extends WebviewComponent<
       issue: issue,
       comment: comment
     });
-    this.setState({ commentInput: "" });
+    this.setState({ commentInput: "", isCommentLoading: true });
   }
 
   handleAssign = (issue: Issue) => {
@@ -310,7 +312,7 @@ export default class JiraIssuePage extends WebviewComponent<
                   {childIssues}
                   {issuelinks}
                   <h3>Comments</h3>
-                  <Comments issue={issue} onSave={this.handleSave} />
+                  <Comments issue={issue} isCommentLoading={this.state.isCommentLoading} onSave={this.handleSave} />
                 </div>
               );
             }
@@ -324,7 +326,7 @@ export default class JiraIssuePage extends WebviewComponent<
                     {childIssues}
                     {issuelinks}
                     <h3>Comments</h3>
-                    <Comments issue={issue} onSave={this.handleSave} />
+                    <Comments issue={issue} isCommentLoading={this.state.isCommentLoading} onSave={this.handleSave} />
                   </GridColumn>
 
                   <GridColumn medium={4}>{this.details(issue)}</GridColumn>

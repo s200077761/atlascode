@@ -44,6 +44,7 @@ interface ViewState {
     isApproveButtonLoading: boolean;
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
+    isAnyCommentLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
     mergeStrategy: { label: string, value: 'merge_commit' | 'squash' | 'fast_forward' | undefined };
@@ -65,6 +66,7 @@ const emptyState: ViewState = {
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
+    isAnyCommentLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
     mergeStrategy: { label: 'Default merge strategy', value: undefined },
@@ -99,6 +101,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     }
 
     handlePostComment = (content: string, parentCommentId?: number) => {
+        this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'comment',
             content: content,
@@ -131,7 +134,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     onMessageReceived(e: any): void {
         switch (e.type) {
             case 'error': {
-                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'checkout': {
@@ -150,6 +153,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         isApproveButtonLoading: false,
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
+                        isAnyCommentLoading: false,
                         closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.close_source_branch : this.state.closeSourceBranch
                     });
                 }
@@ -355,8 +359,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                            <Comments comments={this.state.pr.comments!} currentUser={this.state.pr.currentUser!} onComment={this.handlePostComment} />
-                                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} onSave={this.handlePostComment} />
+                                            <Comments comments={this.state.pr.comments!} currentUser={this.state.pr.currentUser!} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={this.handlePostComment} />
+                                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} isAnyCommentLoading={this.state.isAnyCommentLoading} onSave={this.handlePostComment} />
                                         </Panel>
                                     </React.Fragment>
                             }

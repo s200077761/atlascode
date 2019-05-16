@@ -65,6 +65,7 @@ type Receive = BitbucketIssueData | HostErrorMessage;
 type MyState = {
     data: BitbucketIssueData;
     isStatusButtonLoading: boolean;
+    isAnyCommentLoading: boolean;
     isErrorBannerOpen: boolean;
     isOnline: boolean;
     errorDetails: any;
@@ -82,6 +83,7 @@ const emptyIssueData = {
 const emptyState = {
     data: emptyIssueData,
     isStatusButtonLoading: false,
+    isAnyCommentLoading: false,
     isErrorBannerOpen: false,
     isOnline: true,
     errorDetails: undefined
@@ -96,12 +98,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     public onMessageReceived(e: any) {
         switch (e.type) {
             case 'error': {
-                this.setState({ isStatusButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
-
+                this.setState({ isStatusButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'updateBitbucketIssue': {
-                this.setState({ data: e, isStatusButtonLoading: false });
+                this.setState({ data: e, isStatusButtonLoading: false, isAnyCommentLoading: false });
                 break;
             }
             case 'onlineStatus': {
@@ -126,7 +127,10 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.setState({ isStatusButtonLoading: true });
         this.postMessage({ action: 'change', newStatus: newStatus, content: content });
     }
-    handlePostComment = (content: string) => this.postMessage({ action: 'comment', content: content });
+    handlePostComment = (content: string) => {
+        this.setState({ isAnyCommentLoading: true });
+        this.postMessage({ action: 'comment', content: content });
+    }
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
@@ -210,8 +214,8 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                             <Button appearance='subtle' href={issue.links!.html!.href} iconAfter={<OpenIcon label='open-previous' />}>See previous comments</Button>
                                         </div>
                                     }
-                                    <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} onComment={undefined} />
-                                    <CommentForm currentUser={this.state.data!.currentUser!} visible={true} onSave={this.handlePostComment} />
+                                    <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={undefined} />
+                                    <CommentForm currentUser={this.state.data!.currentUser!} visible={true} isAnyCommentLoading={this.state.isAnyCommentLoading} onSave={this.handlePostComment} />
                                 </Panel>
                             </GridColumn>
 
