@@ -148,9 +148,9 @@ export class ClientManager implements Disposable {
         }
       }
 
-      // if (!cloudId || cloudId.length < 4) {
-      //   return undefined;
-      // }
+      if (!cloudId || cloudId.length < 1) {
+        return undefined;
+      }
 
       let extraOptions = {};
       if (this._agent) {
