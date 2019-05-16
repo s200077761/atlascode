@@ -333,7 +333,7 @@ export default class StartWorkPage extends WebviewComponent<
               <SectionMessage
                 appearance="confirmation"
                 title="Work Started">
-                <div><p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} /></div>
+                <div className='start-work-success'><p dangerouslySetInnerHTML={{ __html: this.state.result.successMessage }} /></div>
               </SectionMessage>
             }
             {this.state.isErrorBannerOpen &&
