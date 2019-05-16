@@ -11,11 +11,11 @@ export type OnlineInfoEvent = {
 
 
 const statusCheckOptions: Options = {
-    timeout: 1000, version: 'v4'
+    timeout: 3000, version: 'v4'
 };
 
 const onlinePolling: number = 5 * Time.MINUTES;
-const offlinePolling: number = 2 * Time.SECONDS;
+const offlinePolling: number = 5 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
     private _disposable: Disposable;
