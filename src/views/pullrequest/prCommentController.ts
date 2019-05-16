@@ -41,11 +41,6 @@ export class PullRequestCommentController implements vscode.Disposable {
     async addComment(t: vscode.CommentThread) {
         if (!t || t.id === '') {
             await this.postNewComment(this._commentController.inputBox!);
-            if (t && t.dispose) {
-                t.dispose();
-            } else {
-                t.comments = [];
-            }
         } else {
             await this.postReplyToComment(this._commentController.inputBox!.resource, t, this._commentController.inputBox!.value);
         }
