@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits } from '../bitbucket/model';
-import { PullRequestApi, GitUrlParse } from '../bitbucket/pullRequests';
+import { PullRequestApi } from '../bitbucket/pullRequests';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -350,11 +350,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             await this._state.repository!.getConfig(`remote.${this._state.sourceRemote!.name}.url`)
                 .then(async url => {
                     if (!url) {
-                        await this._state.repository!.addRemote(this._state.sourceRemote!.name, GitUrlParse(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                        await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
                     }
                 })
                 .catch(async _ => {
-                    await this._state.repository!.addRemote(this._state.sourceRemote!.name, GitUrlParse(this._state.sourceRemote!.fetchUrl!).toString("ssh"));
+                    await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
                 });
         }
         await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);

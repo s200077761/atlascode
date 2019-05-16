@@ -101,7 +101,7 @@ export namespace PullRequestApi {
         let sourceRemote: Remote | undefined = undefined;
         if (data.source!.repository!.links!.html!.href! !== data.destination!.repository!.links!.html!.href!) {
             sourceRemote = {
-                fetchUrl: data.source!.repository!.links!.html!.href!,
+                fetchUrl: GitUrlParse(data.source!.repository!.links!.html!.href!).toString(parsed.protocol),
                 name: data.source!.repository!.full_name!,
                 isReadOnly: true
             };
