@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
@@ -87,9 +88,9 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     getTreeItem(): TreeItem {
-        const directory = this._repo.rootUri.path.split('/').pop();
+        const directory = path.basename(this._repo.rootUri.fsPath);
         const item = new TreeItem(`${directory}`, this.expand ? TreeItemCollapsibleState.Expanded : TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this._repo.rootUri.path;
+        item.tooltip = this._repo.rootUri.fsPath;
         return item;
     }
 

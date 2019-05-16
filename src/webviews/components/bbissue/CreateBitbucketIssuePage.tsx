@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as path from 'path';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Spinner from '@atlaskit/spinner';
@@ -151,7 +152,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     </Field>
                                 </GridColumn>
                                 <GridColumn medium={6}>
-                                    <Field defaultValue={{ label: this.state.repoData[0].uri.split('/').pop(), value: this.state.repoData[0] }}
+                                    <Field defaultValue={{ label: path.basename(this.state.repoData[0].uri), value: this.state.repoData[0] }}
                                         label='Repository'
                                         isRequired
                                         id='repo'
@@ -163,7 +164,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select"
-                                                        options={this.state.repoData.map(repo => { return { label: repo.uri.split('/').pop(), value: repo }; })}
+                                                        options={this.state.repoData.map(repo => { return { label: path.basename(repo.uri), value: repo }; })}
                                                     />
                                                     {fieldArgs.error && <ErrorMessage>Issue type is required</ErrorMessage>}
                                                 </React.Fragment>

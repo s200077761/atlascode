@@ -129,10 +129,12 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     }
 
     private async getInlineComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
-        const inlineComments = this.toNestedList(allComments);
+        const inlineComments = allComments.filter(c => c.inline && c.inline.path);
+        const nestedComments = this.toNestedList(inlineComments);
+
         const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
 
-        inlineComments.forEach(val => {
+        nestedComments.forEach(val => {
             if (!threads.get(val.data.inline!.path)) {
                 threads.set(val.data.inline!.path, []);
             }
@@ -153,19 +155,18 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     }
 
     private toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, NestedComment> {
-        const inlineComments = comments.filter(c => c.inline);
-        const inlineCommentsTreeMap = new Map<Number, NestedComment>();
-        inlineComments.forEach(c => inlineCommentsTreeMap.set(c.id!, { data: c, children: [] }));
-        inlineComments.forEach(c => {
-            const n = inlineCommentsTreeMap.get(c.id!);
+        const commentsTreeMap = new Map<Number, NestedComment>();
+        comments.forEach(c => commentsTreeMap.set(c.id!, { data: c, children: [] }));
+        comments.forEach(c => {
+            const n = commentsTreeMap.get(c.id!);
             const pid = c.parent && c.parent.id;
-            if (pid && inlineCommentsTreeMap.get(pid)) {
-                inlineCommentsTreeMap.get(pid)!.children.push(n!);
+            if (pid && commentsTreeMap.get(pid)) {
+                commentsTreeMap.get(pid)!.children.push(n!);
             }
         });
 
         const result = new Map<Number, NestedComment>();
-        inlineCommentsTreeMap.forEach((val, key) => {
+        commentsTreeMap.forEach((val, key) => {
             if (!val.data.parent) {
                 result.set(key, val);
             }
@@ -182,32 +183,27 @@ class PullRequestFilesNode extends AbstractBaseNode {
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
+        const lhsFilePath = this.fileChange.old ? this.fileChange.old.path : undefined;
+        const rhsFilePath = this.fileChange.new ? this.fileChange.new.path : undefined;
+
         let fileDisplayName = '';
-        switch (this.fileChange.status) {
-            case 'removed':
-                fileDisplayName = this.fileChange.old!.path!;
-                break;
-            case 'renamed':
-                fileDisplayName = `${this.fileChange.old!.path!} → ${this.fileChange.new!.path!}`;
-                break;
-            //@ts-ignore
-            case 'merge conflict':
-                fileDisplayName = `⚠️ CONFLICTED: ${this.fileChange.new!.path!}`;
-                break;
-            case 'added':
-            case 'modified':
-            default:
-                fileDisplayName = this.fileChange.new!.path!;
-                break;
+        const comments: Bitbucket.Schema.Comment[][] = [];
+
+        if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
+            fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
+            comments.push(...(this.commentsMap.get(lhsFilePath) || []));
+            comments.push(...(this.commentsMap.get(rhsFilePath) || []));
+        } else if (rhsFilePath) {
+            fileDisplayName = rhsFilePath;
+            comments.push(...(this.commentsMap.get(rhsFilePath) || []));
+        } else if (lhsFilePath) {
+            fileDisplayName = lhsFilePath;
+            comments.push(...(this.commentsMap.get(lhsFilePath) || []));
         }
 
-        const comments: Bitbucket.Schema.Comment[][] = [];
-        if (this.fileChange.old && this.commentsMap.has(this.fileChange.old!.path!)) {
-            comments.push(...this.commentsMap.get(this.fileChange.old!.path!)!);
-        }
-        if (this.fileChange.new && this.commentsMap.has(this.fileChange.new!.path!) &&
-            !(this.fileChange.old && this.fileChange.old.path === this.fileChange.new.path)) {
-            comments.push(...this.commentsMap.get(this.fileChange.new!.path!)!);
+        //@ts-ignore
+        if (this.fileChange.status === 'merge conflict') {
+            fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
         }
 
         let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
@@ -233,7 +229,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branch!.name!,
                 commitHash: this.mergeBase,
-                path: this.fileChange.old ? this.fileChange.old.path! : undefined,
+                path: lhsFilePath,
                 commentThreads: lhsCommentThreads
             } as FileDiffQueryParams)
         };
@@ -245,7 +241,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branch!.name!,
                 commitHash: this.pr.data.source!.commit!.hash!,
-                path: this.fileChange.new ? this.fileChange.new.path! : undefined,
+                path: rhsFilePath,
                 commentThreads: rhsCommentThreads
             } as FileDiffQueryParams)
         };
