@@ -4,7 +4,7 @@ import { Action, HostErrorMessage } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { AuthProvider, emptyAuthInfo } from '../atlclients/authInfo';
+import { AuthProvider, emptyAuthInfo, AccessibleResource } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -16,6 +16,7 @@ import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJ
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
 import { JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from '../constants';
+import { Project } from '../jira/jiraModel';
 
 type Emit = ConfigData | ProjectList | HostErrorMessage;
 
@@ -59,11 +60,18 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             }
 
             const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
-            const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
-            const stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
-            const projects = await Container.jiraSiteManager.getProjects();
             const isJiraAuthed = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false);
             const isBBAuthed = await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud);
+
+            let sitesAvailable: AccessibleResource[] = [];
+            let stagingEnabled = false;
+            let projects: Project[] = [];
+
+            if (isJiraAuthed || isJiraStagingAuthenticated) {
+                sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
+                stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
+                projects = await Container.jiraSiteManager.getProjects();
+            }
 
             this.updateConfig({
                 type: 'update',

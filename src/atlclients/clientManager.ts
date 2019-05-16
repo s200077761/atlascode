@@ -37,8 +37,9 @@ export class ClientManager implements Disposable {
   // used to add and remove the proxy agent when charles setting changes.
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
     const section = "enableCharles";
+    const initializing = configuration.initializing(e);
 
-    if (e.affectsConfiguration(section)) {
+    if (initializing || e.affectsConfiguration(section)) {
       try {
         let pemFile = fs.readFileSync(Resources.charlesCert);
 
@@ -66,24 +67,19 @@ export class ClientManager implements Disposable {
   public async userInitiatedLogin(provider: string): Promise<void> {
 
     try {
-      this._dancer.doDance(provider)
-        .then(info => {
-          Container.authManager.saveAuthInfo(info.user.provider, info)
-            .then(() => {
-              const product = productForProvider(info.user.provider);
-              window.showInformationMessage(`You are now authenticated with ${product}`);
-              authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
-            });
-        },
-          reason => {
-            Logger.error(reason, 'Error authenticating');
-            window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${reason}`);
-          }
-        );
+      let info = await this._dancer.doDance(provider);
+      await Container.authManager.saveAuthInfo(info.user.provider, info);
+      const product = productForProvider(info.user.provider);
+      window.showInformationMessage(`You are now authenticated with ${product}`);
+      authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     } catch (e) {
       Logger.error(e, 'Error authenticating');
-      window.showErrorMessage(`There was an error authenticating with provider '${provider}'`);
+      if (typeof e === 'object' && e.cancelled !== undefined) {
+        window.showWarningMessage(`${e.message}`);
+      } else {
+        window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
+      }
+
     }
   }
 
@@ -174,16 +170,7 @@ export class ClientManager implements Disposable {
     useEphemeralClient: boolean = true
   ): Promise<T | undefined> {
 
-    let client = undefined;
-
-    if (useEphemeralClient) {
-      let info = await Container.authManager.getAuthInfo(provider);
-      if (info) {
-        client = factory(info);
-      }
-    } else {
-      client = await this._clients.getItem<T>(provider);
-    }
+    let client = await this._clients.getItem<T>(provider);
 
     if (!client) {
       let info = await Container.authManager.getAuthInfo(provider);
@@ -205,6 +192,13 @@ export class ClientManager implements Disposable {
       client = factory(info);
 
       await this._clients.setItem(provider, client, 45 * Interval.MINUTE);
+    }
+
+    if (useEphemeralClient) {
+      let info = await Container.authManager.getAuthInfo(provider);
+      if (info) {
+        client = factory(info);
+      }
     }
 
     return client;

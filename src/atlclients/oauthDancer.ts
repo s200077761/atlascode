@@ -123,7 +123,6 @@ export class OAuthDancer {
                 vscodeurl: vscodeurl
             }));
             this.shutdown(authinfo.AuthProvider.BitbucketCloud);
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
         });
 
         app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
@@ -133,7 +132,6 @@ export class OAuthDancer {
                 vscodeurl: vscodeurl
             }));
             this.shutdown(authinfo.AuthProvider.BitbucketCloudStaging);
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
         });
 
         app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
@@ -143,7 +141,6 @@ export class OAuthDancer {
                 vscodeurl: vscodeurl
             }));
             this.shutdown(authinfo.AuthProvider.JiraCloud);
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
         });
 
         app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
@@ -153,7 +150,6 @@ export class OAuthDancer {
                 vscodeurl: vscodeurl
             }));
             this.shutdown(authinfo.AuthProvider.JiraCloudStaging);
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
 
         });
 
@@ -267,7 +263,7 @@ export class OAuthDancer {
 
                 if (!authInfo && !authError && !this._authsInFlight.includes(myProvider)) {
                     clearInterval(checkId);
-                    reject(`Authentication for ${myProvider} has been cancelled.`);
+                    reject({ cancelled: true, message: `Authentication for ${myProvider} has been cancelled.` });
                     return;
                 }
 
