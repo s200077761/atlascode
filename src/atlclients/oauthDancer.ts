@@ -15,8 +15,11 @@ const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file'
 
 export class OAuthDancer {
     private _srv: http.Server | undefined;
-    public _authInfo: authinfo.AuthInfo | undefined;
-    private _timer: any;
+    private _app: any;
+    private _authInfo: Map<string, authinfo.AuthInfo> = new Map();
+    private _authErrors: Map<string, string> = new Map();
+    private _authsInFlight: string[] = [];
+    private _timeoutTimers: Map<string, any> = new Map();
     private _browserTimeout = 5 * Time.MINUTES;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
@@ -76,6 +79,109 @@ export class OAuthDancer {
         refresh.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
         refresh.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
+
+        this._app = this.createApp();
+    }
+
+    private createApp(): any {
+        let app = express();
+        app.use(passport.initialize());
+        app.use(passport.session());
+
+        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
+            passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
+            function (req, res) {
+                // The request will be redirected to Bitbucket for authentication, so this
+                // function will not be called.
+            });
+
+        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloudStaging,
+            passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging),
+            function (req, res) {
+                // The request will be redirected to Bitbucket for authentication, so this
+                // function will not be called.
+            });
+
+        app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
+            passport.authenticate(authinfo.AuthProvider.JiraCloud),
+            function (req, res) {
+                // The request will be redirected to Bitbucket for authentication, so this
+                // function will not be called.
+            });
+
+        app.get('/auth/' + authinfo.AuthProvider.JiraCloudStaging,
+            passport.authenticate(authinfo.AuthProvider.JiraCloudStaging),
+            function (req, res) {
+                // The request will be redirected to Bitbucket for authentication, so this
+                // function will not be called.
+            });
+
+        app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
+
+            res.send(Resources.html.get('authSuccessHtml')!({
+                product: ProductBitbucket,
+                vscodeurl: vscodeurl
+            }));
+            this.shutdown(authinfo.AuthProvider.BitbucketCloud);
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
+        });
+
+        app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
+
+            res.send(Resources.html.get('authSuccessHtml')!({
+                product: ProductBitbucket,
+                vscodeurl: vscodeurl
+            }));
+            this.shutdown(authinfo.AuthProvider.BitbucketCloudStaging);
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
+        });
+
+        app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
+
+            res.send(Resources.html.get('authSuccessHtml')!({
+                product: ProductJira,
+                vscodeurl: vscodeurl
+            }));
+            this.shutdown(authinfo.AuthProvider.JiraCloud);
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
+        });
+
+        app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
+
+            res.send(Resources.html.get('authSuccessHtml')!({
+                product: ProductJira,
+                vscodeurl: vscodeurl
+            }));
+            this.shutdown(authinfo.AuthProvider.JiraCloudStaging);
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
+
+        });
+
+        app.get('/error', (req, res) => {
+            // NOTE: If this fires, it means something went very wrong inside of passort or our verify method.
+            // At this point we have no option but to shut everyone down!
+            Logger.debug("got authentication error", req.query);
+            res.send(Resources.html.get('authFailureHtml')!({
+                errMessage: "We weren't able to authorize your account.",
+                actionMessage: 'Give it a moment and try again.',
+                vscodeurl: vscodeurl
+            }));
+            this.forceShutdownAll();
+        });
+
+        app.get('/timeout', (req, res) => {
+            let provider = req.query.provider;
+            this._authErrors.set(provider, `'Authorization did not complete in the time alotted for '${provider}'`);
+            Logger.debug("oauth timed out", req.query);
+            res.send(Resources.html.get('authFailureHtml')!({
+                errMessage: 'Authorization did not complete in the time alotted.',
+                actionMessage: 'Please try again.',
+                vscodeurl: vscodeurl
+            }));
+            this.shutdown(req.query.provider);
+        });
+
+        return app;
     }
 
     private verify(accessToken: string, refreshToken: string, profile: any, done: any): void {
@@ -94,7 +200,7 @@ export class OAuthDancer {
             provider = authinfo.AuthProvider.BitbucketCloudStaging;
         }
 
-        this._authInfo = {
+        this._authInfo.set(provider, {
             access: accessToken,
             refresh: refreshToken,
             user: {
@@ -103,7 +209,7 @@ export class OAuthDancer {
                 provider: provider
             },
             accessibleResources: resources
-        };
+        });
 
         return done(null, profile.id);
     }
@@ -118,7 +224,7 @@ export class OAuthDancer {
             });
         }
 
-        this._authInfo = {
+        this._authInfo.set(authinfo.AuthProvider.JiraCloudStaging, {
             access: accessToken,
             refresh: refreshToken,
             user: {
@@ -127,135 +233,111 @@ export class OAuthDancer {
                 provider: authinfo.AuthProvider.JiraCloudStaging
             },
             accessibleResources: resources
-        };
+        });
 
         return done(null, profile.id);
     }
 
+    private sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     public async doDance(provider: string): Promise<authinfo.AuthInfo> {
+        if (this._authsInFlight.includes(provider)) {
+            this.shutdown(provider);
+            await this.sleep(1 * Time.SECONDS);
+        }
+
+        this._authsInFlight.push(provider);
+
+        if (!this._srv) {
+            this._srv = http.createServer(this._app).listen(31415, () => console.log('server started on port 31415'));
+        }
+
+        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
+        this.startTimeoutTimer(provider);
 
         return new Promise<authinfo.AuthInfo>((resolve, reject) => {
-            let _app = express();
-            _app.use(passport.initialize());
-            _app.use(passport.session());
+            const myProvider = provider;
 
-            _app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
-                passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
-                function (req, res) {
-                    // The request will be redirected to Bitbucket for authentication, so this
-                    // function will not be called.
-                });
+            const checkId = setInterval(() => {
 
-            _app.get('/auth/' + authinfo.AuthProvider.BitbucketCloudStaging,
-                passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging),
-                function (req, res) {
-                    // The request will be redirected to Bitbucket for authentication, so this
-                    // function will not be called.
-                });
+                let authInfo = this._authInfo.get(myProvider);
+                let authError = this._authErrors.get(myProvider);
 
-            _app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
-                passport.authenticate(authinfo.AuthProvider.JiraCloud),
-                function (req, res) {
-                    // The request will be redirected to Bitbucket for authentication, so this
-                    // function will not be called.
-                });
+                if (!authInfo && !authError && !this._authsInFlight.includes(myProvider)) {
+                    clearInterval(checkId);
+                    reject(`Authentication for ${myProvider} has been cancelled.`);
+                    return;
+                }
 
-            _app.get('/auth/' + authinfo.AuthProvider.JiraCloudStaging,
-                passport.authenticate(authinfo.AuthProvider.JiraCloudStaging),
-                function (req, res) {
-                    // The request will be redirected to Bitbucket for authentication, so this
-                    // function will not be called.
-                });
+                if (authInfo) {
+                    clearInterval(checkId);
+                    this._authInfo.delete(myProvider);
+                    resolve(authInfo);
+                    return;
+                }
 
-            _app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
-                res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductBitbucket,
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                resolve(this._authInfo);
-            });
+                if (authError) {
+                    clearInterval(checkId);
+                    this._authErrors.delete(myProvider);
+                    reject(authError);
+                    return;
+                }
 
-            _app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
-                res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductBitbucket,
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                resolve(this._authInfo);
-            });
+            }, 1 * Time.SECONDS);
 
-            _app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
-                res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductJira,
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                resolve(this._authInfo);
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
-            });
-
-            _app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
-                res.send(Resources.html.get('authSuccessHtml')!({
-                    product: ProductJira,
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                resolve(this._authInfo);
-                vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`vscode://`));
-            });
-
-            _app.get('/error', (req, res) => {
-                Logger.debug("got jira error", req.query);
-                res.send(Resources.html.get('authFailureHtml')!({
-                    errMessage: "We weren't able to authorize your account.",
-                    actionMessage: 'Give it a moment and try again.',
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                resolve(this._authInfo);
-            });
-
-            _app.get('/timeout', (req, res) => {
-                Logger.debug("oauth timed out");
-                res.send(Resources.html.get('authFailureHtml')!({
-                    errMessage: 'Authorization did not complete in the time alotted.',
-                    actionMessage: 'Please try again.',
-                    vscodeurl: vscodeurl
-                }));
-                this.shutdown();
-                reject("authentication timed out");
-            });
-
-            this._srv = http.createServer(_app).listen(31415, () => console.log('server started on port 31415'));
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
-            this.startTimer();
         });
     }
 
-    private shutdown() {
-
-        if (this._timer) {
-            clearTimeout(this._timer);
-            this._timer = undefined;
+    private shutdown(provider: string) {
+        let myIndex = this._authsInFlight.indexOf(provider);
+        if (myIndex > -1) {
+            this._authsInFlight.splice(myIndex, 1);
         }
+
+        const timer = this._timeoutTimers.get(provider);
+        if (timer) {
+            clearTimeout(timer);
+            this._timeoutTimers.delete(provider);
+        }
+
+        if (this._srv && this._authsInFlight.length < 1) {
+            this._srv.close();
+            this._srv = undefined;
+            console.log('server on port 31415 has been shutdown');
+        }
+    }
+
+    private forceShutdownAll() {
+        this._authsInFlight.forEach(provider => {
+            const timer = this._timeoutTimers.get(provider);
+            if (timer) {
+                clearTimeout(timer);
+                this._timeoutTimers.delete(provider);
+            }
+        });
+
+        this._authsInFlight = [];
 
         if (this._srv) {
             this._srv.close();
             this._srv = undefined;
+            console.log('server on port 31415 has been shutdown');
         }
     }
 
-    private startTimer() {
+    private startTimeoutTimer(provider: string) {
         //make sure we clear the old one in case they click multiple times
-        if (this._timer) {
-            clearTimeout(this._timer);
-            this._timer = undefined;
+        const oldTimer = this._timeoutTimers.get(provider);
+        if (oldTimer) {
+            clearTimeout(oldTimer);
+            this._timeoutTimers.delete(provider);
         }
 
-        this._timer = setTimeout(() => {
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/timeout`));
-        }, this._browserTimeout);
+        this._timeoutTimers.set(provider, setTimeout(() => {
+            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
+        }, this._browserTimeout));
     }
 
     public async refresh(authInfo: authinfo.AuthInfo): Promise<authinfo.AuthInfo> {

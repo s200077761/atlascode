@@ -61,15 +61,18 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
             const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
             const stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
+            const projects = await Container.jiraSiteManager.getProjects();
+            const isJiraAuthed = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false);
+            const isBBAuthed = await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud);
 
             this.updateConfig({
                 type: 'update',
                 config: config,
                 sites: sitesAvailable,
-                projects: await Container.jiraSiteManager.getProjects(),
-                isJiraAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false),
+                projects: projects,
+                isJiraAuthenticated: isJiraAuthed,
                 isJiraStagingAuthenticated: isJiraStagingAuthenticated,
-                isBitbucketAuthenticated: await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud),
+                isBitbucketAuthenticated: isBBAuthed,
                 jiraAccessToken: authInfo!.access,
                 jiraStagingAccessToken: authInfoStaging!.access,
                 isStagingEnabled: stagingEnabled
