@@ -48,7 +48,15 @@ export class AuthManager implements Disposable {
 
     public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
         if (this._memStore.has(provider)) {
-            return this._memStore.get(provider) as AuthInfo;
+            const ai = await this._memStore.get(provider) as AuthInfo;
+
+            // clean up bad auth
+            if (ai.user && ai.user.provider && ai.user.provider !== provider) {
+                await this.removeAuthInfo(provider);
+                return undefined;
+            }
+
+            return ai;
         }
 
         if (keychain) {
@@ -64,6 +72,12 @@ export class AuthManager implements Disposable {
                         });
                     }
 
+                    //clean up bad auth
+                    if (info.user && info.user.provider && info.user.provider !== provider) {
+                        await this.removeAuthInfo(provider);
+                        return undefined;
+                    }
+
                     this._memStore.set(provider, info);
                     return info;
                 }
@@ -76,6 +90,10 @@ export class AuthManager implements Disposable {
     }
 
     public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
+        if (info.user && info.user.provider && info.user.provider !== provider) {
+            return;
+        }
+
         const oldInfo = await this.getAuthInfo(provider);
 
         if (info.accessibleResources) {
