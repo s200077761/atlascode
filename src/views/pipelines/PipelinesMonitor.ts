@@ -3,6 +3,7 @@ import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
+import { shouldDisplay } from "./Helpers";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -19,7 +20,8 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       const repo = this._repositories[i];
       const previousResults = this._previousResults[repo.rootUri.path];
       PipelineApi.getRecentActivity(repo).then(newResults => {
-        const diffs = this.diffResults(previousResults, newResults);
+        var diffs = this.diffResults(previousResults, newResults);
+        diffs = diffs.filter(p => shouldDisplay(p.target!.ref_name));
         if (diffs.length > 0) {
           window.showInformationMessage(
             this.composeMessage(diffs),

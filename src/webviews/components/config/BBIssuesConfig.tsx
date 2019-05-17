@@ -85,7 +85,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                             (fieldArgs: any) => {
                                 return (
                                     <Checkbox {...fieldArgs.fieldProps}
-                                        label='Show Create Jirra Issue button on Bitbucket issue screens'
+                                        label='Show Create Jira Issue button on Bitbucket issue screens'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isChecked={this.props.configData.config.bitbucket.issues.createJiraEnabled}
                                     />

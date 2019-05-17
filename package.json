@@ -645,6 +645,29 @@
                     "description": "Time (in minutes) to wait before refreshing the Pipelines status",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.pipelines.hideEmpty": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Hide Bitbucket Pipelines that have no results",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.pipelines.hideFiltered": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Hide Bitbucket Pipelines that don't match a filter string",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.pipelines.branchFilters": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "master"
+                    ],
+                    "description": "Bitbucket Pipeline results for branch names that don't contain one of these strings will be hidden.",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.issues.explorerEnabled": {
                     "type": "boolean",
                     "default": true,

@@ -26,7 +26,7 @@ import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
 import JiraSiteProject from './JiraSiteProject';
 import BitbucketIssuesConfig from './BBIssuesConfig';
-import CreateIssueTriggers from './CreateIssueTriggers';
+import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
 
 type changeObject = { [key: string]: any };
@@ -248,7 +248,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
-                                        <CreateIssueTriggers configData={this.state} onConfigChange={this.onConfigChange} />
+                                        <MultiOptionList
+                                            onConfigChange={this.onConfigChange}
+                                            enabledConfig={'jira.todoIssues.enabled'}
+                                            optionsConfig={'jira.todoIssues.triggers'}
+                                            enabledValue={this.state.config.jira.todoIssues.enabled}
+                                            enabledDescription={'Prompt to create Jira issues for TODO style comments'}
+                                            promptString={'Add Trigger'}
+                                            options={this.state.config.jira.todoIssues.triggers} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>

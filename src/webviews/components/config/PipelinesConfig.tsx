@@ -3,6 +3,7 @@ import { Checkbox } from "@atlaskit/checkbox";
 import { CheckboxField } from "@atlaskit/form";
 import { ConfigData } from "../../../ipc/configMessaging";
 import { chain } from "../fieldValidators";
+import MultiOptionList from "./MultiOptionList";
 
 type changeObject = { [key: string]: any };
 
@@ -96,6 +97,35 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
             disabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled} />
           <span> minutes (setting to 0 disables auto-refresh)</span>
         </div>
+
+
+        <CheckboxField
+          name="pipelines-filter-empty"
+          id="pipelines-filter-empty"
+          value="bitbucket.pipelines.hideEmpty"
+        >
+          {(fieldArgs: any) => {
+            return (
+              <Checkbox
+                {...fieldArgs.fieldProps}
+                label="Hide Bitbucket Pipelines with no results"
+                onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
+                isChecked={this.props.configData.config.bitbucket.pipelines.hideEmpty}
+              />
+            );
+          }}
+        </CheckboxField>
+        <MultiOptionList
+          onConfigChange={this.props.onConfigChange}
+          enabledConfig={'bitbucket.pipelines.hideFiltered'}
+          optionsConfig={'bitbucket.pipelines.branchFilters'}
+          enabledValue={this.props.configData.config.bitbucket.pipelines.hideFiltered}
+          enabledDescription={'Show only Bitbucket Piplines matching filters'}
+          promptString={'Add Filter'}
+          options={this.props.configData.config.bitbucket.pipelines.branchFilters.slice()} />
+
+
       </div>
     );
   }
