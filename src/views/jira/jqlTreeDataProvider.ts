@@ -87,20 +87,26 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
         // fetch issues matching the jql
         const newIssues = await issuesForJQL(this._jql);
-        const newIssuesKeys = newIssues.map(i => i.key);
 
         // epics don't have children filled in and children only have a ref to the parent key
         // we need to fill in the children and fetch the parents of any orphans
-        const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues, newIssuesKeys);
+        const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues);
 
-        const subIssuesWithoutParents = newIssues.filter(i => i.parentKey && !newIssuesKeys.includes(i.parentKey));
-        let remainingIssues = newIssues.filter(i => subIssuesWithoutParents.find(subIssue => subIssue.key === i.key) === undefined);
-        remainingIssues = remainingIssues.filter(i => epics.find(epic => epic.key === i.key) === undefined);
+        const issuesMissingParents: Issue[] = [];
+        const standAloneIssues: Issue[] = [];
+
+        newIssues.forEach(i => {
+            if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
+                issuesMissingParents.push(i);
+            } else if (!epics.some(e => e.key === i.key)) {
+                standAloneIssues.push(i);
+            }
+        });
 
         // fetch parent issues for subtasks whose parents are not covered by the jql
-        const parentIssues = await this.fetchParentIssues(subIssuesWithoutParents);
+        const parentIssues = await this.fetchParentIssues(issuesMissingParents);
 
-        const allIssues = [...remainingIssues, ...parentIssues, ...epics];
+        const allIssues = [...standAloneIssues, ...parentIssues, ...epics];
         const allSubIssueKeys = allIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
 
         // show subtasks under parent if parent is available
@@ -125,7 +131,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return parentIssues;
     }
 
-    private async resolveEpics(allIssues: Issue[], allIssueKeys: string[]): Promise<[Issue[], string[]]> {
+    private async resolveEpics(allIssues: Issue[]): Promise<[Issue[], string[]]> {
+        const allIssueKeys = allIssues.map(i => i.key);
         const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
         const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
         const remoteEpics = await this.fetchEpicIssues(epicChildrenWithoutParents);
@@ -137,14 +144,11 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [[], []];
         }
 
-        const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(epics[0].workingSite);
-        // note: we always have to fetch children because they might not be included in the JQL
         let finalEpics: Issue[] = await Promise.all(
             epics
                 .map(async epic => {
                     if (epic.epicChildren.length < 1) {
-                        let children = await issuesForJQL(`cf[${epicFieldInfo.epicLink.cfid}] = "${epic.key}" and resolution = Unresolved and statusCategory != Done order by lastViewed DESC`);
-                        epic.epicChildren = children;
+                        epic.epicChildren = allIssues.filter(i => i.epicLink === epic.key);
                     }
 
                     epicChildKeys.push(...epic.epicChildren.map(child => child.key));
