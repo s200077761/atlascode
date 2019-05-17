@@ -71,6 +71,40 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h2>🎉 What's New in 1.4.0 🎉</h2>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Store Jira working project as workspace config if possible</li>
+                                <li>Update assignee in Jira issue view</li>
+                                <li>Show conflicted state for a pull request file in tree view</li>
+                                <li>Show merge checklist before merging</li>
+                                <li>Reduce number of git calls for better performance on large PRs</li>
+                                <li>Better emoji styling in pull request webview</li>
+                                <li>Add loading indicator when posting comment on webviews</li>
+                                <li>Ticket comments should include date/time metadata</li>
+                                <li>Allow filtering of Pipelines</li>
+                                <li>Make Bitbucket features work with SSH aliases</li>
+                                <li>Bitbucket features work with repositories cloned with https protocol</li>
+                                <li>Better date format on pull request commit list</li>
+                                <li>Update to latest VSCode comments api</li>
+                                <li>Offline detection is too aggressive</li>
+                                <li>Use Atlassian urls for online checks</li>
+                                <li>Authentication related fixes and improvements</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Epic fields are being duplicated in Jira API requests</li>
+                                <li>Other issues from the same epic showing up in JQL results</li>
+                                <li>Checkout source branch button doesn't update correctly</li>
+                                <li>Pull requests with large number of files do not work properly</li>
+                                <li>Large pull requests spawn large number of git/console host processes on refresh/comment change</li>
+                                <li>PR comments disappearing after some time</li>
+                                <li>Unable to start pipeline from explorer</li>
+                            </ul>
+                        </section>
                         <h2>🎉 What's New in 1.3.1 🎉</h2>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>

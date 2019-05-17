@@ -1,3 +1,31 @@
+## What's New In 1.4.0
+### Improvements
+* Store Jira working project as workspace config if possible
+* Update assignee in Jira issue view
+* Show conflicted state for a pull request file in tree view
+* Show merge checklist before merging
+* Reduce number of git calls for better performance on large PRs
+* Better emoji styling in pull request webview
+* Add loading indicator when posting comment on webviews
+* Ticket comments should include date/time metadata
+* Allow filtering of Pipelines
+* Make Bitbucket features work with SSH aliases
+* Bitbucket features work with repositories cloned with https protocol
+* Better date format on pull request commit list
+* Update to latest VSCode comments api
+* Offline detection is too aggressive
+* Use Atlassian urls for online checks
+* Authentication related fixes and improvements
+
+### Bugs fixed
+* Epic fields are being duplicated in Jira API requests
+* Other issues from the same epic showing up in JQL results
+* Checkout source branch button doesn't update correctly
+* Pull requests with large number of files do not work properly
+* Large pull requests spawn large number of git/console host processes on refresh/comment change
+* PR comments disappearing after some time
+* Unable to start pipeline from explorer
+
 ## What's New In 1.3.1
 ### Bugs fixed
 * Cannot create Jira issues in certain cases if epic is not specified
