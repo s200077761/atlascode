@@ -8,7 +8,7 @@ import Tag from "@atlaskit/tag";
 import TagGroup from "@atlaskit/tag-group";
 import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
-import { IssueData } from "../../../ipc/issueMessaging";
+import { IssueData, UserList } from "../../../ipc/issueMessaging";
 import {
   emptyStatus,
   emptyIssueType,
@@ -24,12 +24,13 @@ import {
   IssueAssignAction,
   CopyJiraIssueLinkAction,
   OpenStartWorkPageAction,
-  RefreshIssueAction
+  RefreshIssueAction,
+  FetchQueryAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import { Comments } from "./Comments";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import { AsyncSelect, components } from '@atlaskit/select';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
@@ -40,7 +41,7 @@ import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
 
-type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
+type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
 
 const emptyIssueData: IssueData = {
@@ -67,7 +68,7 @@ const emptyIssueData: IssueData = {
   components: [],
   fixVersions: [],
   workingSite: emptyWorkingSite,
-  isAssignedToMe: false,
+  currentUserId: '',
   childIssues: [],
   workInProgress: true,
   recentPullRequests: [],
@@ -92,12 +93,33 @@ type SizeMetrics = {
   height: number;
 };
 
+const UserOption = (props: any) => {
+  let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+  return (
+    <components.Option {...props}>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
+    </components.Option>
+  );
+};
+
+const UserValue = (props: any) => {
+  let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+  return (
+    <components.SingleValue {...props}>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
+    </components.SingleValue>
+  );
+};
+
 export default class JiraIssuePage extends WebviewComponent<
   Emit,
   Accept,
   {},
   MyState
   > {
+
+  private userSuggestions: JIRA.Schema.User[] | undefined = undefined;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -116,7 +138,10 @@ export default class JiraIssuePage extends WebviewComponent<
     switch (e.type) {
       case 'error': {
         this.setState({ isStatusButtonLoading: false, isCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
-
+        break;
+      }
+      case 'userList': {
+        this.userSuggestions = (e as UserList).users;
         break;
       }
       case 'update': {
@@ -146,10 +171,13 @@ export default class JiraIssuePage extends WebviewComponent<
     this.setState({ commentInput: "", isCommentLoading: true });
   }
 
-  handleAssign = (issue: Issue) => {
+  handleAssign = (issue: Issue, value: any) => {
+    this.setState({ data: { ...this.state.data, assignee: value } });
+
     this.postMessage({
       action: "assign",
-      issue: issue
+      issue: issue,
+      userId: value.accountId
     });
   }
 
@@ -177,6 +205,26 @@ export default class JiraIssuePage extends WebviewComponent<
 
   handleDismissError = () => {
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+  }
+
+  loadUserOptions = (input: string): Promise<any> => {
+    return new Promise(resolve => {
+      this.userSuggestions = undefined;
+      this.postMessage({ action: 'fetchUsers', query: input });
+
+      const start = Date.now();
+      let timer = setInterval(() => {
+        const end = Date.now();
+        if (this.userSuggestions !== undefined || (end - start) > 2000) {
+          if (this.userSuggestions === undefined) {
+            this.userSuggestions = [];
+          }
+
+          clearInterval(timer);
+          resolve(this.userSuggestions);
+        }
+      }, 100);
+    });
   }
 
   header(issue: any): any {
@@ -224,16 +272,33 @@ export default class JiraIssuePage extends WebviewComponent<
           <span>{issue.priority.name}</span>
         </div>
         <h3>Assignee</h3>
-        <AvatarItem
-          avatar={<Avatar src={issue.assignee.avatarUrls["48x48"]} />}
-          primaryText={issue.assignee.displayName || "Unassigned"}
+        <AsyncSelect
+          className="ac-select-container"
+          classNamePrefix="ac-select"
+          defaultOptions={[
+            {
+              label: 'Start typing to search for users',
+              options: [
+                { accountId: undefined, displayName: 'Unassign' },
+                { accountId: this.state.data.currentUserId, displayName: 'Assign to me' }
+              ]
+            }
+          ]}
+          loadOptions={this.loadUserOptions}
+          value={issue.assignee}
+          getOptionLabel={(option: any) => option.name}
+          getOptionValue={(option: any) => option.accountId}
+          formatGroupLabel={(data: any) => <em>{data.label}</em>}
+          placeholder="Search for a User"
+          components={{ Option: UserOption, SingleValue: UserValue }}
+          onChange={(val: any) => this.handleAssign(issue, val)}
         />
-        {!this.state.data.isAssignedToMe && <Button appearance='subtle' onClick={() => this.handleAssign(issue)} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
         <h3>Reporter</h3>
         <AvatarItem
           avatar={<Avatar src={issue.reporter.avatarUrls["48x48"]} />}
           primaryText={issue.reporter.displayName || "Unknown"}
         />
+
         <h3>Labels</h3>
         {this.tags(issue.labels)}
         <h3>Components</h3>

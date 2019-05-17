@@ -21,6 +21,7 @@ export interface IssueCommentAction extends Action {
 export interface IssueAssignAction extends Action {
     action: 'assign';
     issue: Issue;
+    userId?: string;
 }
 
 export interface SetIssueTypeAction extends Action {

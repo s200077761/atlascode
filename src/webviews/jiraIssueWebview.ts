@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { IssueData } from '../ipc/issueMessaging';
+import { IssueData, UserList } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction } from '../ipc/issueActions';
+import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
 import { providerForSite } from '../atlclients/authInfo';
-import { assignIssue } from '../commands/jira/assignIssue';
+import { assignIssue, unassignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { issueUrlCopiedEvent } from '../analytics';
@@ -18,7 +18,7 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 
-type Emit = IssueData | HostErrorMessage;
+type Emit = IssueData | UserList | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
     private _state: Issue = emptyIssue;
     private _currentUserId?: string;
@@ -98,11 +98,31 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
 
                         try {
-                            await assignIssue(e.issue, this._currentUserId);
+                            e.userId
+                                ? await assignIssue(e.issue, e.userId)
+                                : await unassignIssue(e.issue);
                             this.forceUpdateIssue();
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchUsers': {
+                    if (isFetchQuery(e)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: e.query });
+                                this.postMessage({ type: 'userList', users: users.data });
+
+                            }
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error fetching users: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
                     }
@@ -172,7 +192,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
             let msg = issue as IssueData;
             msg.type = 'update';
-            msg.isAssignedToMe = issue.assignee.accountId === this._currentUserId;
+            msg.currentUserId = this._currentUserId!;
 
             const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.workingSite);
 
@@ -183,7 +203,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 msg.epicChildren = await issuesForJQL(`cf[${epicFieldInfo.epicLink.cfid}] = "${msg.key}" order by lastViewed DESC`);
             }
 
-            msg.workInProgress = msg.isAssignedToMe &&
+            msg.workInProgress = issue.assignee.accountId === this._currentUserId &&
                 issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
                 currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
 

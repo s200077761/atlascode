@@ -9,7 +9,7 @@ import { RepoData } from "./prMessaging";
 // we simply use the same name with two extend statements to merge the multiple interfaces
 export interface IssueData extends Message { }
 export interface IssueData extends Issue {
-    isAssignedToMe: boolean;
+    currentUserId: string;
     childIssues: Issue[];
     workInProgress: boolean;
     recentPullRequests: Bitbucket.Schema.Pullrequest[];
