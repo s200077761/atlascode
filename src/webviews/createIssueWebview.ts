@@ -262,7 +262,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                             let issues = await issuesForJQL(e.jql);
                             if (issues && Array.isArray(issues)) {
                                 issues.forEach(issue => {
-                                    options.push({ name: `${issue.key} - ${issue.summary}`, id: issue.key });
+                                    let title = issue.isEpic ? issue.epicName : issue.summary;
+                                    options.push({ name: `${issue.key} - ${title}`, id: issue.key });
                                 });
                             }
 
