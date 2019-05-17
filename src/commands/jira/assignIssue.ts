@@ -26,3 +26,20 @@ export async function assignIssue(param: Issue | IssueNode, accountId?: string) 
   Logger.info(response);
   Container.jiraExplorer.refresh();
 }
+
+export async function unassignIssue(issue: Issue) {
+  const client = await Container.clientManager.jirarequest(issue.workingSite);
+  if (!client) {
+    return;
+  }
+
+  const response = await client.issue
+    .assignIssue({
+      issueIdOrKey: issue.id,
+      body: {
+        accountId: undefined
+      }
+    });
+  Logger.info(response);
+  Container.jiraExplorer.refresh();
+}
