@@ -21,6 +21,7 @@ export class ClientManager implements Disposable {
   private _clients: CacheMap = new CacheMap();
   private _dancer: OAuthDancer = new OAuthDancer();
   private _agent: any | undefined;
+  private _agentChanged: boolean = false;
 
   constructor(context: ExtensionContext) {
     context.subscriptions.push(
@@ -37,13 +38,16 @@ export class ClientManager implements Disposable {
   // used to add and remove the proxy agent when charles setting changes.
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
     const section = "enableCharles";
+
     const initializing = configuration.initializing(e);
 
-    if (initializing || e.affectsConfiguration(section)) {
-      try {
-        let pemFile = fs.readFileSync(Resources.charlesCert);
+    if (initializing || configuration.changed(e, section)) {
+      this._agentChanged = true;
 
+      try {
         if (Container.isDebugging && configuration.get<boolean>(section)) {
+          let pemFile = fs.readFileSync(Resources.charlesCert);
+
           this._agent = tunnel.httpsOverHttp({
             ca: [pemFile],
             proxy: {
@@ -199,6 +203,20 @@ export class ClientManager implements Disposable {
       if (info) {
         client = factory(info);
       }
+    }
+
+    if (this._agentChanged) {
+      let info = await Container.authManager.getAuthInfo(provider);
+
+      if (info) {
+        client = factory(info);
+
+        if (!useEphemeralClient) {
+          await this._clients.updateItem(provider, client);
+        }
+      }
+
+      this._agentChanged = false;
     }
 
     return client;

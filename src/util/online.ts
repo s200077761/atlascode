@@ -2,20 +2,18 @@ import { Disposable, EventEmitter, Event, ConfigurationChangeEvent } from "vscod
 import { configuration } from "../config/configuration";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import isOnline, { Options } from "is-online";
 import { Time } from "./time";
+import pAny from "p-any";
+import pTimeout from "p-timeout";
+import fetch from 'node-fetch';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
 };
 
-
-const statusCheckOptions: Options = {
-    timeout: 3000, version: 'v4'
-};
-
-const onlinePolling: number = 5 * Time.MINUTES;
+const onlinePolling: number = 2 * Time.MINUTES;
 const offlinePolling: number = 5 * Time.SECONDS;
+const statusCheckTimeout: number = 3 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
     private _disposable: Disposable;
@@ -75,8 +73,23 @@ export class OnlineDetector extends Disposable {
         return this._isOnline;
     }
 
+    private async runOnlineChecks(): Promise<boolean> {
+        const promise = pAny([
+            (async () => {
+                await fetch(`http://atlassian.com`, { method: "HEAD" });
+                return true;
+            })(),
+            (async () => {
+                await fetch(`https://bitbucket.org`, { method: "HEAD" });
+                return true;
+            })()
+        ]);
+
+        return pTimeout(promise, statusCheckTimeout).catch(() => false);
+    }
+
     private async checkOnlineStatus() {
-        let newIsOnline = await isOnline(statusCheckOptions);
+        let newIsOnline = await this.runOnlineChecks();
 
         if (newIsOnline !== this._isOnline) {
             this._isOnline = newIsOnline;
