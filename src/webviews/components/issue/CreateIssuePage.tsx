@@ -79,8 +79,8 @@ const IconOption = (props: any) => (
 
 const IconValue = (props: any) => (
     <components.SingleValue {...props}>
-        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
-    </components.SingleValue>
+        <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </components.SingleValue >
 
 );
 
