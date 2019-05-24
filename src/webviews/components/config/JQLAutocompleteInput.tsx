@@ -9,6 +9,7 @@ import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
 import CrossCircleIcon from "@atlaskit/icon/glyph/cross-circle";
 var JQLAutocomplete = require("@deviniti/jql-autocomplete");
 import styled from 'styled-components';
+import { WorkingProjectToken, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const JqlInvalidIcon = <CrossCircleIcon
     size="medium"
@@ -85,6 +86,7 @@ export class JQLAutocompleteInput extends PureComponent<
         this.jql = new JQLAutocomplete(this.constructorData);
 
         this.props.getAutocompleteDataRequest().then(response => {
+            response.visibleFunctionNames.push({ value: WorkingProjectToken, displayName: WorkingProjectDisplayName, types: ["com.atlassian.jira.project.Project"] });
             this.jql.passAutocompleteData(response);
         });
 

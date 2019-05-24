@@ -8,6 +8,7 @@ import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { AccessibleResource } from "../../../atlclients/authInfo";
+import { applyWorkingProject } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -25,6 +26,7 @@ const IconValue = (props: any) => (
 export default class EditJQL extends PureComponent<{
   jiraAccessToken: string;
   workingSite: AccessibleResource;
+  workingProject: string;
   sites: AccessibleResource[];
   jqlEntry: JQLEntry;
   onCancel: () => void;
@@ -68,8 +70,9 @@ export default class EditJQL extends PureComponent<{
   }
 
   validationRequest = async (jql: string) => {
+    const effectiveJql = applyWorkingProject(this.props.workingProject, jql);
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${effectiveJql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({

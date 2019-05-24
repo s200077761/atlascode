@@ -74,7 +74,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   setProject(project: WorkingProject) {
-    // Nothing changes here because custom JQL is site dependent, not project dependent.
+    this._onDidChangeTreeData.fire();
   }
 
   customJqlForWorkingSite(): JQLEntry[] {
