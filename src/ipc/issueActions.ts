@@ -6,6 +6,11 @@ export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
 }
 
+export interface EditIssueAction extends Action {
+    action: 'editIssue';
+    fields: any;
+}
+
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
     issue: Issue;

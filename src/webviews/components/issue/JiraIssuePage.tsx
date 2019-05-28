@@ -4,18 +4,17 @@ import SizeDetector from "@atlaskit/size-detector";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Tag from "@atlaskit/tag";
-import TagGroup from "@atlaskit/tag-group";
 import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
-import { IssueData, UserList } from "../../../ipc/issueMessaging";
+import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from "../../../ipc/issueMessaging";
 import {
   emptyStatus,
   emptyIssueType,
   emptyUser,
   emptyPriority,
   Issue,
-  Transition
+  Transition,
+  IdName
 } from "../../../jira/jiraModel";
 import { emptyWorkingSite } from '../../../config/model';
 import {
@@ -25,12 +24,14 @@ import {
   CopyJiraIssueLinkAction,
   OpenStartWorkPageAction,
   RefreshIssueAction,
-  FetchQueryAction
+  FetchQueryAction,
+  EditIssueAction,
+  CreateSomethingAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
 import { Comments } from "./Comments";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import { AsyncSelect, components } from '@atlaskit/select';
+import { AsyncSelect, AsyncCreatableSelect, components } from '@atlaskit/select';
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
@@ -41,7 +42,7 @@ import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
 
-type Emit = RefreshIssueAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
+type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
 
 const emptyIssueData: IssueData = {
@@ -97,8 +98,8 @@ const UserOption = (props: any) => {
   let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
   return (
     <components.Option {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
-    </components.Option>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
+    </components.Option >
   );
 };
 
@@ -106,10 +107,14 @@ const UserValue = (props: any) => {
   let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
   return (
     <components.SingleValue {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
     </components.SingleValue>
   );
 };
+
+const DropdownIndicator = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.DropdownIndicator {...props} /> : null;
+
+const MultiValueRemove = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.MultiValueRemove {...props} /> : null;
 
 export default class JiraIssuePage extends WebviewComponent<
   Emit,
@@ -119,6 +124,10 @@ export default class JiraIssuePage extends WebviewComponent<
   > {
 
   private userSuggestions: JIRA.Schema.User[] | undefined = undefined;
+  private labelSuggestions: string[] | undefined = undefined;
+  private componentSuggestions: IdName[] | undefined = undefined;
+  private fixVersionSuggestions: IdName[] | undefined = undefined;
+  private newOption: any = undefined;
 
   constructor(props: any) {
     super(props);
@@ -142,6 +151,22 @@ export default class JiraIssuePage extends WebviewComponent<
       }
       case 'userList': {
         this.userSuggestions = (e as UserList).users;
+        break;
+      }
+      case 'labelList': {
+        this.labelSuggestions = (e as LabelList).labels;
+        break;
+      }
+      case 'componentList': {
+        this.componentSuggestions = (e as JqlOptionsList).options;
+        break;
+      }
+      case 'fixVersionList': {
+        this.fixVersionSuggestions = (e as JqlOptionsList).options;
+        break;
+      }
+      case 'optionCreated': {
+        this.newOption = (e as CreatedSomething).createdData;
         break;
       }
       case 'update': {
@@ -178,6 +203,18 @@ export default class JiraIssuePage extends WebviewComponent<
       action: "assign",
       issue: issue,
       userId: value.accountId
+    });
+  }
+
+  editIssue = (fieldName: string, value: any) => {
+    const editedIssueData = { ...this.state.data, [fieldName]: value };
+    this.setState({ data: editedIssueData });
+
+    this.postMessage({
+      action: 'editIssue',
+      fields: {
+        [fieldName]: editedIssueData[fieldName]
+      }
     });
   }
 
@@ -227,6 +264,90 @@ export default class JiraIssuePage extends WebviewComponent<
     });
   }
 
+  loadLabelOptions = (input: string): Promise<any> => {
+    return new Promise(resolve => {
+      this.labelSuggestions = undefined;
+      this.postMessage({ action: 'fetchLabels', query: input });
+
+      const start = Date.now();
+      let timer = setInterval(() => {
+        const end = Date.now();
+        if (this.labelSuggestions !== undefined || (end - start) > 2000) {
+          if (this.labelSuggestions === undefined) {
+            this.labelSuggestions = [];
+          }
+
+          clearInterval(timer);
+          resolve(this.labelSuggestions);
+        }
+      }, 100);
+    });
+  }
+
+  loadComponentOptions = (input: string): Promise<any> => {
+    if (this.componentSuggestions) {
+      return Promise.resolve(this.componentSuggestions);
+    }
+
+    return new Promise(resolve => {
+      this.componentSuggestions = undefined;
+      this.postMessage({ action: 'fetchComponents', query: input });
+
+      const start = Date.now();
+      let timer = setInterval(() => {
+        const end = Date.now();
+        if (this.componentSuggestions !== undefined || (end - start) > 2000) {
+          if (this.componentSuggestions === undefined) {
+            this.componentSuggestions = [];
+          }
+
+          clearInterval(timer);
+          resolve(this.componentSuggestions);
+        }
+      }, 100);
+    });
+  }
+
+  loadFixVersionOptions = (input: string): Promise<any> => {
+    if (this.fixVersionSuggestions) {
+      return Promise.resolve(this.fixVersionSuggestions);
+    }
+
+    return new Promise(resolve => {
+      this.fixVersionSuggestions = undefined;
+      this.postMessage({ action: 'fetchFixVersions', query: input });
+
+      const start = Date.now();
+      let timer = setInterval(() => {
+        const end = Date.now();
+        if (this.fixVersionSuggestions !== undefined || (end - start) > 2000) {
+          if (this.fixVersionSuggestions === undefined) {
+            this.fixVersionSuggestions = [];
+          }
+
+          clearInterval(timer);
+          resolve(this.fixVersionSuggestions);
+        }
+      }, 100);
+    });
+  }
+
+  handleOptionCreate = (fieldName: string, input: any) => {
+    this.newOption = undefined;
+    this.postMessage({ action: 'createOption', createData: { fieldKey: fieldName, name: input } });
+
+    const start = Date.now();
+    let timer = setInterval(() => {
+      const end = Date.now();
+      if (this.newOption && this.newOption.id.length > 0) {
+        clearInterval(timer);
+        this.editIssue(fieldName, [...(this.state.data[fieldName] || []), this.newOption]);
+      } else if ((end - start) > 2000) {
+        clearInterval(timer);
+      }
+    }, 100);
+  }
+
   header(issue: any): any {
     return (
       <div>
@@ -259,9 +380,6 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
   details(issue: Issue): any {
-    let components = Array.isArray(issue.components) ? issue.components.map(c => c.name) : [];
-    let fixVersions = Array.isArray(issue.fixVersions) ? issue.fixVersions.map(v => v.name) : [];
-
     return (
       <div>
         <h3>Status</h3>
@@ -273,7 +391,7 @@ export default class JiraIssuePage extends WebviewComponent<
         </div>
         <h3>Assignee</h3>
         <AsyncSelect
-          className="ac-select-container"
+          className="ac-select-container-control-on-hover"
           classNamePrefix="ac-select"
           defaultOptions={[
             {
@@ -290,21 +408,74 @@ export default class JiraIssuePage extends WebviewComponent<
           getOptionValue={(option: any) => option.accountId}
           formatGroupLabel={(data: any) => <em>{data.label}</em>}
           placeholder="Search for a User"
-          components={{ Option: UserOption, SingleValue: UserValue }}
+          components={{ Option: UserOption, SingleValue: UserValue, DropdownIndicator: DropdownIndicator }}
           onChange={(val: any) => this.handleAssign(issue, val)}
         />
         <h3>Reporter</h3>
         <AvatarItem
-          avatar={<Avatar src={issue.reporter.avatarUrls["48x48"]} />}
+          avatar={<Avatar src={issue.reporter.avatarUrls["24x24"]} size='small' />}
           primaryText={issue.reporter.displayName || "Unknown"}
         />
 
         <h3>Labels</h3>
-        {this.tags(issue.labels)}
+        <AsyncCreatableSelect
+          className="ac-select-container-control-on-hover"
+          classNamePrefix="ac-select"
+          isMulti
+          isClearable={false}
+          loadOptions={this.loadLabelOptions}
+          value={issue.labels}
+          getOptionLabel={(option: any) => option}
+          getOptionValue={(option: any) => option}
+          placeholder="None"
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
+          onChange={(val: any) => this.editIssue('labels', val)}
+          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option === inputValue) === undefined}
+          getNewOptionData={(inputValue: any, optionLabel: any) => (inputValue)}
+        />
+
         <h3>Components</h3>
-        {this.tags(components)}
+        <AsyncCreatableSelect
+          className="ac-select-container-control-on-hover"
+          classNamePrefix="ac-select"
+          isMulti
+          isClearable={false}
+          loadOptions={this.loadComponentOptions}
+          value={issue.components}
+          getOptionLabel={(option: any) => option.name}
+          getOptionValue={(option: any) => option.id}
+          placeholder="None"
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
+          onChange={(val: any) => this.editIssue('components', val)}
+          onCreateOption={(val: any) => this.handleOptionCreate('components', val)}
+          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
+          getNewOptionData={(inputValue: any, optionLabel: any) => ({
+            id: inputValue,
+            name: optionLabel,
+          })}
+        />
+
         <h3>Fix Versions</h3>
-        {this.tags(fixVersions)}
+        <AsyncCreatableSelect
+          className="ac-select-container-control-on-hover"
+          classNamePrefix="ac-select"
+          isMulti
+          isClearable={false}
+          loadOptions={this.loadFixVersionOptions}
+          value={issue.fixVersions}
+          getOptionLabel={(option: any) => option.name}
+          getOptionValue={(option: any) => option.id}
+          placeholder="None"
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
+          onChange={(val: any) => this.editIssue('fixVersions', val)}
+          onCreateOption={(val: any) => this.handleOptionCreate('fixVersions', val)}
+          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
+          getNewOptionData={(inputValue: any, optionLabel: any) => ({
+            id: inputValue,
+            name: optionLabel,
+          })}
+        />
+
         {this.state.data.recentPullRequests && this.state.data.recentPullRequests.length > 0 &&
           <React.Fragment>
             <Tooltip content='Recent pull requests from workspace repositories'><h3>Recent pull requests</h3></Tooltip>
@@ -317,15 +488,7 @@ export default class JiraIssuePage extends WebviewComponent<
     );
   }
 
-  tags(items: string[]) {
-    if (Array.isArray(items) && items.length === 0) {
-      return <span className="no-tags">None</span>;
-    }
-    return (
-      <TagGroup>
-        {items.map(i => <Tag text={i} />)}
-      </TagGroup>);
-  }
+
 
   render() {
     const issue = this.state.data;

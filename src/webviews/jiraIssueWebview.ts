@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { IssueData, UserList } from '../ipc/issueMessaging';
+import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
 import { Issue, emptyIssue, isIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
-import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery } from '../ipc/issueActions';
+import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
@@ -18,7 +18,7 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 
-type Emit = IssueData | UserList | HostErrorMessage;
+type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
     private _state: Issue = emptyIssue;
     private _currentUserId?: string;
@@ -110,19 +110,130 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     }
                     break;
                 }
+                case 'editIssue': {
+                    handled = true;
+
+                    try {
+                        let client = await Container.clientManager.jirarequest(this._state.workingSite);
+                        if (client) {
+                            await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (e as any).fields } });
+                            this.forceUpdateIssue();
+                        }
+                    }
+                    catch (e) {
+                        Logger.error(new Error(`error posting comment: ${e}`));
+                        this.postMessage({ type: 'error', reason: e });
+                    }
+                    break;
+                }
                 case 'fetchUsers': {
                     if (isFetchQuery(e)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
                             if (client) {
                                 const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: e.query });
                                 this.postMessage({ type: 'userList', users: users.data });
-
                             }
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching users: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchLabels': {
+                    if (isFetchQuery(e)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
+                            if (client) {
+                                let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
+                                    fieldName: 'labels',
+                                    fieldValue: `${e.query}`
+                                });
+
+                                const options: any[] = (res.data.results || []).map((suggestion: any) => suggestion.value);
+                                this.postMessage({ type: 'labelList', labels: options });
+                            }
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error fetching labels: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchComponents': {
+                    if (isFetchQuery(e)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
+                            if (client) {
+                                let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+
+                                let options: any[] = [];
+                                if (res.data.fields && res.data.fields['components'] && res.data.fields['components'].allowedValues) {
+                                    options = res.data.fields['components'].allowedValues;
+                                }
+                                this.postMessage({ type: 'componentList', fieldId: 'components', options: options });
+                            }
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error fetching components: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchFixVersions': {
+                    if (isFetchQuery(e)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
+                            if (client) {
+                                let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+
+                                let options: any[] = [];
+                                if (res.data.fields && res.data.fields['fixVersions'] && res.data.fields['fixVersions'].allowedValues) {
+                                    options = res.data.fields['fixVersions'].allowedValues;
+                                }
+                                this.postMessage({ type: 'fixVersionList', fieldId: 'fixVersions', options: options });
+                            }
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error fetching fixVersions: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'createOption': {
+                    handled = true;
+                    if (isCreateSomething(e)) {
+                        try {
+
+                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            if (client) {
+                                switch (e.createData.fieldKey) {
+                                    case 'fixVersions':
+                                    case 'versions': {
+                                        let resp = await client.version.createVersion({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+
+                                        break;
+                                    }
+                                    case 'components': {
+                                        let resp = await client.component.createComponent({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            Logger.error(new Error(`error creating option: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
                     }
