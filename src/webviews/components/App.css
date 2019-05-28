@@ -596,6 +596,18 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - Jira Comments --------------------*/
 
+/*-------------------- BEGIN - jira panel --------------------*/
+
+.jira-comment .panel {
+  color: black;
+}
+
+.jira-comment .panel p {
+  color: black;
+}
+
+/*-------------------- END - jira panel --------------------*/
+
 /*-------------------- BEGIN - Start Work On Issue Styles --------------------*/
 
 .jira-issue-copy-icon {
