@@ -98,8 +98,8 @@ const UserOption = (props: any) => {
   let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
   return (
     <components.Option {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
-    </components.Option>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
+    </components.Option >
   );
 };
 
@@ -107,10 +107,14 @@ const UserValue = (props: any) => {
   let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
   return (
     <components.SingleValue {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName || 'Unassigned'}</span></div>
+      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
     </components.SingleValue>
   );
 };
+
+const DropdownIndicator = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.DropdownIndicator {...props} /> : null;
+
+const MultiValueRemove = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.MultiValueRemove {...props} /> : null;
 
 export default class JiraIssuePage extends WebviewComponent<
   Emit,
@@ -387,7 +391,7 @@ export default class JiraIssuePage extends WebviewComponent<
         </div>
         <h3>Assignee</h3>
         <AsyncSelect
-          className="ac-select-container"
+          className="ac-select-container-control-on-hover"
           classNamePrefix="ac-select"
           defaultOptions={[
             {
@@ -404,18 +408,18 @@ export default class JiraIssuePage extends WebviewComponent<
           getOptionValue={(option: any) => option.accountId}
           formatGroupLabel={(data: any) => <em>{data.label}</em>}
           placeholder="Search for a User"
-          components={{ Option: UserOption, SingleValue: UserValue }}
+          components={{ Option: UserOption, SingleValue: UserValue, DropdownIndicator: DropdownIndicator }}
           onChange={(val: any) => this.handleAssign(issue, val)}
         />
         <h3>Reporter</h3>
         <AvatarItem
-          avatar={<Avatar src={issue.reporter.avatarUrls["48x48"]} />}
+          avatar={<Avatar src={issue.reporter.avatarUrls["24x24"]} size='small' />}
           primaryText={issue.reporter.displayName || "Unknown"}
         />
 
         <h3>Labels</h3>
         <AsyncCreatableSelect
-          className="ac-select-container"
+          className="ac-select-container-control-on-hover"
           classNamePrefix="ac-select"
           isMulti
           isClearable={false}
@@ -424,7 +428,7 @@ export default class JiraIssuePage extends WebviewComponent<
           getOptionLabel={(option: any) => option}
           getOptionValue={(option: any) => option}
           placeholder="None"
-          components={{ DropdownIndicator: null }}
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
           onChange={(val: any) => this.editIssue('labels', val)}
           isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option === inputValue) === undefined}
           getNewOptionData={(inputValue: any, optionLabel: any) => (inputValue)}
@@ -432,7 +436,7 @@ export default class JiraIssuePage extends WebviewComponent<
 
         <h3>Components</h3>
         <AsyncCreatableSelect
-          className="ac-select-container"
+          className="ac-select-container-control-on-hover"
           classNamePrefix="ac-select"
           isMulti
           isClearable={false}
@@ -441,7 +445,7 @@ export default class JiraIssuePage extends WebviewComponent<
           getOptionLabel={(option: any) => option.name}
           getOptionValue={(option: any) => option.id}
           placeholder="None"
-          components={{ DropdownIndicator: null }}
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
           onChange={(val: any) => this.editIssue('components', val)}
           onCreateOption={(val: any) => this.handleOptionCreate('components', val)}
           isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
@@ -453,7 +457,7 @@ export default class JiraIssuePage extends WebviewComponent<
 
         <h3>Fix Versions</h3>
         <AsyncCreatableSelect
-          className="ac-select-container"
+          className="ac-select-container-control-on-hover"
           classNamePrefix="ac-select"
           isMulti
           isClearable={false}
@@ -462,7 +466,7 @@ export default class JiraIssuePage extends WebviewComponent<
           getOptionLabel={(option: any) => option.name}
           getOptionValue={(option: any) => option.id}
           placeholder="None"
-          components={{ DropdownIndicator: null }}
+          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
           onChange={(val: any) => this.editIssue('fixVersions', val)}
           onCreateOption={(val: any) => this.handleOptionCreate('fixVersions', val)}
           isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
