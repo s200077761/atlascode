@@ -427,6 +427,14 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   padding: 0 !important
 }
 
+.ac-select-container-control-on-hover .ac-select__control {
+  border: 1px solid var(--vscode-editor-background) !important
+}
+
+.ac-select-container-control-on-hover .ac-select__control--is-focused, .ac-select__control:hover {
+  border-color: var(--vscode-focusBorder) !important
+}
+
 /*-------------------- END - select boxes --------------------*/
 
 /*-------------------- BEGIN - checkboxes/radios --------------------*/
