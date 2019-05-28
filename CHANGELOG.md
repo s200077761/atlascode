@@ -1,3 +1,11 @@
+## What's New In 1.4.1
+### Improvements
+* Updated marketplace listing name to feature Jira and Bitbucket
+* Add ability to modify a subset of fields on jira details screen
+
+### Bugs fixed
+* Panel text colours appear washed out in Jira webview
+
 ## What's New In 1.4.0
 ### Improvements
 * Store Jira working project as workspace config if possible
