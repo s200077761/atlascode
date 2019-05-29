@@ -305,9 +305,11 @@ export default class CustomJQL extends React.Component<
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
-        <Button className="ac-button" onClick={this.onNewQuery}>
-          Add Query
+        <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+          <Button className="ac-button" onClick={this.onNewQuery}>
+            Add Query
         </Button>
+        </div>
       </React.Fragment>
     );
   }

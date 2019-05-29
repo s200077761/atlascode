@@ -15,7 +15,6 @@ import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import JiraHover from './JiraHover';
 import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
-import CustomJQL from './CustomJQL';
 import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
 import ConfluenceIcon from '@atlaskit/logo/dist/esm/ConfluenceLogo/Icon';
 import { ButtonGroup } from '@atlaskit/button';
@@ -234,18 +233,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         {this.bitBucketButton()}
                                     </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Issue Explorer', 'configure the Jira issue explorer')}>
-                                        <JiraExplorer configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
-
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Custom JQL', 'configure custom JQL queries')}>
-                                        <CustomJQL
-                                            siteJqlList={this.state.config.jira.customJql}
-                                            onConfigChange={this.onConfigChange}
+                                    <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>
+                                        <JiraExplorer configData={this.state}
                                             jiraAccessToken={this.state.jiraAccessToken}
-                                            workingSite={this.state.config.jira.workingSite}
-                                            workingProject={this.state.config.jira.workingProject.id}
-                                            sites={this.state.sites} />
+                                            sites={this.state.sites}
+                                            onConfigChange={this.onConfigChange} />
+
+
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>

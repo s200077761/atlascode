@@ -1,12 +1,10 @@
 import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
-import { OpenIssuesTree } from "./openIssuesTree";
-import { AssignedIssuesTree } from "./assignedIssuesTree";
 import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, OpenIssuesTreeId, AssignedIssuesTreeId, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
+import { setCommandContext, CommandContext, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
 import { AuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
@@ -45,8 +43,6 @@ export class JiraContext extends Disposable {
                 this.dispose();
             } else {
                 if (initializing || this._explorers.length === 0) {
-                    this._explorers.push(new JiraExplorer(OpenIssuesTreeId, new OpenIssuesTree()));
-                    this._explorers.push(new JiraExplorer(AssignedIssuesTreeId, new AssignedIssuesTree()));
                     this._explorers.push(new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot()));
                 }
             }

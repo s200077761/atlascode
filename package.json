@@ -213,18 +213,8 @@
         "views": {
             "atlascode-drawer": [
                 {
-                    "id": "atlascode.views.jira.assignedIssues",
-                    "name": "Your Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
-                },
-                {
-                    "id": "atlascode.views.jira.openIssues",
-                    "name": "Open Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
-                },
-                {
                     "id": "atlascode.views.jira.customJql",
-                    "name": "Custom JQL",
+                    "name": "Jira Issues",
                     "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled"
                 },
                 {
@@ -290,20 +280,20 @@
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
@@ -462,10 +452,22 @@
                     "description": "Enables the Open Issues in the Jira Issue Explorer",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.openIssueJql": {
+                    "type": "string",
+                    "default": "assignee in (EMPTY) and project=currentProject() and resolution = Unresolved and statusCategory != Done order by lastViewed DESC",
+                    "description": "JQL to retrieve open issues",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.showAssignedIssues": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Assigned Issues in the Jira Issue Explorer",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.assignedIssueJql": {
+                    "type": "string",
+                    "default": "assignee=currentUser() and project=currentProject() and resolution = Unresolved and statusCategory != Done",
+                    "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.refreshInterval": {

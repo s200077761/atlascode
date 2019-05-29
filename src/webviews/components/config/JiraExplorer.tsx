@@ -3,10 +3,18 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
+import CustomJQL from './CustomJQL';
+import NonCustomJQL from './NonCustomJQL';
+import { AccessibleResource } from '../../../atlclients/authInfo';
 
 type changeObject = { [key: string]: any };
 
-export default class JiraExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, ConfigData> {
+export default class JiraExplorer extends React.Component<{
+    configData: ConfigData,
+    jiraAccessToken: string,
+    sites: AccessibleResource[],
+    onConfigChange: (changes: changeObject, removes?: string[]) => void
+}, ConfigData> {
 
     constructor(props: any) {
         super(props);
@@ -49,7 +57,7 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
     }
 
     render() {
-
+        const config = this.props.configData.config;
         return (
 
             <div>
@@ -70,47 +78,36 @@ export default class JiraExplorer extends React.Component<{ configData: ConfigDa
                         }
                     }
                 </CheckboxField>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        paddingLeft: '24px',
-                    }}
-                >
-                    <CheckboxField
-                        name='explorer-openissues'
-                        id='explorer-openissues'
-                        value='jira.explorer.showOpenIssues'>
-                        {
-                            (fieldArgs: any) => {
-                                return (
-                                    <Checkbox {...fieldArgs.fieldProps}
-                                        label='Show My Open Issues'
-                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.jira.explorer.enabled}
-                                        isChecked={this.props.configData.config.jira.explorer.showOpenIssues}
-                                    />
-                                );
-                            }
-                        }
-                    </CheckboxField>
-                    <CheckboxField
-                        name='explorer-assigned-issues'
-                        id='explorer-assigned-issues'
-                        value='jira.explorer.showAssignedIssues'>
-                        {
-                            (fieldArgs: any) => {
-                                return (
-                                    <Checkbox {...fieldArgs.fieldProps}
-                                        label='Show My Assigned Issues'
-                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.jira.explorer.enabled}
-                                        isChecked={this.props.configData.config.jira.explorer.showAssignedIssues}
-                                    />
-                                );
-                            }
-                        }
-                    </CheckboxField>
+                <h3>Common Filters</h3>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    paddingLeft: '24px',
+                }}>
+                    <NonCustomJQL
+                        yourIssuesJql={config.jira.explorer.assignedIssueJql}
+                        yourIssuesIsEnabled={config.jira.explorer.showAssignedIssues}
+                        openIssuesJql={config.jira.explorer.openIssueJql}
+                        openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
+                        onConfigChange={this.props.onConfigChange}
+                        jiraAccessToken={this.props.jiraAccessToken}
+                        workingSite={config.jira.workingSite}
+                        workingProject={config.jira.workingProject.id}
+                        sites={this.props.sites} />
+                </div>
+                <h3>Custom JQL</h3>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    paddingLeft: '24px',
+                }}>
+                    <CustomJQL
+                        siteJqlList={config.jira.customJql}
+                        onConfigChange={this.props.onConfigChange}
+                        jiraAccessToken={this.props.jiraAccessToken}
+                        workingSite={config.jira.workingSite}
+                        workingProject={config.jira.workingProject.id}
+                        sites={this.props.sites} />
                 </div>
                 <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
