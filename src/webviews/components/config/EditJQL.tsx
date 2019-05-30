@@ -8,6 +8,7 @@ import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { AccessibleResource } from "../../../atlclients/authInfo";
+import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -25,6 +26,7 @@ const IconValue = (props: any) => (
 export default class EditJQL extends PureComponent<{
   jiraAccessToken: string;
   workingSite: AccessibleResource;
+  workingProject: string;
   sites: AccessibleResource[];
   jqlEntry: JQLEntry;
   onCancel: () => void;
@@ -68,8 +70,9 @@ export default class EditJQL extends PureComponent<{
   }
 
   validationRequest = async (jql: string) => {
+    const effectiveJql = applyWorkingProject(this.props.workingProject, jql);
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${effectiveJql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -199,6 +202,7 @@ export default class EditJQL extends PureComponent<{
               jqlError={this.state.jqlError}
             />
           }
+          <p><strong>Tip:</strong> You can use <code>project = {WorkingProjectDisplayName}</code> to restrict the query to issues in your working project. It's not actually valid JQL, but we'll take care of it.</p>
           <div style={{
             marginTop: '24px',
             display: 'flex',

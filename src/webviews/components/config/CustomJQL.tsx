@@ -15,6 +15,7 @@ type changeObject = { [key: string]: any };
 export default class CustomJQL extends React.Component<
   {
     workingSite: AccessibleResource;
+    workingProject: string;
     sites: AccessibleResource[];
     siteJqlList: SiteJQL[];
     onConfigChange: (changes: changeObject, removes?: string[]) => void;
@@ -293,6 +294,7 @@ export default class CustomJQL extends React.Component<
           <EditJQL
             jiraAccessToken={this.props.jiraAccessToken}
             workingSite={this.props.workingSite}
+            workingProject={this.props.workingProject}
             sites={this.props.sites}
             jqlEntry={this.state.editingEntry}
             onCancel={this.handleCancelEdit}
