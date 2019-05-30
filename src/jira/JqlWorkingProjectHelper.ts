@@ -1,5 +1,5 @@
-export const WorkingProjectToken = 'CURRENT_PROJECT';
-export const WorkingProjectDisplayName = 'CURRENT_PROJECT';
+export const WorkingProjectToken = 'currentProject()';
+export const WorkingProjectDisplayName = 'currentProject()';
 
 export function applyWorkingProject(workingProjectId: string | undefined, jql: string): string | undefined {
     if (workingProjectId === undefined) {

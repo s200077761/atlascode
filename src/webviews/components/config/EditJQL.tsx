@@ -8,7 +8,7 @@ import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { AccessibleResource } from "../../../atlclients/authInfo";
-import { applyWorkingProject } from "../../../jira/JqlWorkingProjectHelper";
+import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -202,6 +202,7 @@ export default class EditJQL extends PureComponent<{
               jqlError={this.state.jqlError}
             />
           }
+          <p><strong>Tip:</strong> You can use <code>project = {WorkingProjectDisplayName}</code> to restrict the query to issues in your working project. It's not actually valid JQL, but we'll take care of it.</p>
           <div style={{
             marginTop: '24px',
             display: 'flex',
