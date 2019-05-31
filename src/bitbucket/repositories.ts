@@ -1,6 +1,6 @@
 import { Remote } from "../typings/git";
 import { GitUrlParse, maxItemsSupported, bitbucketHosts } from "./pullRequests";
-import { Repo, Commit } from "./model";
+import { Repo, Commit, BitbucketBranchingModel } from "./model";
 
 export namespace RepositoriesApi {
 
@@ -44,7 +44,7 @@ export namespace RepositoriesApi {
             : repo.mainbranch!;
     }
 
-    export async function getBranchingModel(remote: Remote): Promise<Bitbucket.Schema.BranchingModel> {
+    export async function getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);

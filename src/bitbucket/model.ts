@@ -101,3 +101,4 @@ export interface PaginatedBitbucketIssues {
 }
 
 export type BitbucketIssue = Bitbucket.Schema.Issue;
+export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
