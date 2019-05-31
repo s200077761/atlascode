@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
@@ -15,7 +15,7 @@ import { SimpleNode } from '../nodes/simpleNode';
 export const PullRequestContextValue = 'pullrequest';
 
 interface NestedComment {
-    data: Bitbucket.Schema.Comment;
+    data: Comment;
     children: NestedComment[];
 }
 
@@ -28,7 +28,7 @@ export interface FileDiffQueryParams {
     branchName: string;
     commitHash: string;
     path: string;
-    commentThreads: Bitbucket.Schema.Comment[][];
+    commentThreads: Comment[][];
 }
 
 export class PullRequestTitlesNode extends AbstractBaseNode {
@@ -129,11 +129,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
-    private async getInlineComments(allComments: Bitbucket.Schema.Comment[]): Promise<Map<string, Bitbucket.Schema.Comment[][]>> {
+    private async getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
         const inlineComments = allComments.filter(c => c.inline && c.inline.path);
         const nestedComments = this.toNestedList(inlineComments);
 
-        const threads: Map<string, Bitbucket.Schema.Comment[][]> = new Map();
+        const threads: Map<string, Comment[][]> = new Map();
 
         nestedComments.forEach(val => {
             if (!threads.get(val.data.inline!.path)) {
@@ -145,8 +145,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return threads;
     }
 
-    private traverse(n: NestedComment): Bitbucket.Schema.Comment[] {
-        let result: Bitbucket.Schema.Comment[] = [];
+    private traverse(n: NestedComment): Comment[] {
+        let result: Comment[] = [];
         result.push(n.data);
         for (let i = 0; i < n.children.length; i++) {
             result.push(...this.traverse(n.children[i]));
@@ -155,12 +155,12 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
-    private toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, NestedComment> {
+    private toNestedList(comments: Comment[]): Map<Number, NestedComment> {
         const commentsTreeMap = new Map<Number, NestedComment>();
         comments.forEach(c => commentsTreeMap.set(c.id!, { data: c, children: [] }));
         comments.forEach(c => {
             const n = commentsTreeMap.get(c.id!);
-            const pid = c.parent && c.parent.id;
+            const pid = c.parentId;
             if (pid && commentsTreeMap.get(pid)) {
                 commentsTreeMap.get(pid)!.children.push(n!);
             }
@@ -168,7 +168,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         const result = new Map<Number, NestedComment>();
         commentsTreeMap.forEach((val, key) => {
-            if (!val.data.parent) {
+            if (!val.data.parentId) {
                 result.set(key, val);
             }
         });
@@ -179,7 +179,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 class PullRequestFilesNode extends AbstractBaseNode {
 
-    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Bitbucket.Schema.Comment[][]>, private commentController: PullRequestCommentController) {
+    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Comment[][]>, private commentController: PullRequestCommentController) {
         super();
     }
 
@@ -188,7 +188,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         const rhsFilePath = this.fileChange.new ? this.fileChange.new.path : undefined;
 
         let fileDisplayName = '';
-        const comments: Bitbucket.Schema.Comment[][] = [];
+        const comments: Comment[][] = [];
 
         if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
             fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
@@ -210,10 +210,10 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
         item.tooltip = fileDisplayName;
 
-        let lhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
-        let rhsCommentThreads: Bitbucket.Schema.Comment[][] = [];
+        let lhsCommentThreads: Comment[][] = [];
+        let rhsCommentThreads: Comment[][] = [];
 
-        comments.forEach((c: Bitbucket.Schema.Comment[]) => {
+        comments.forEach((c: Comment[]) => {
             const parentComment = c[0];
             if (parentComment.inline!.from) {
                 lhsCommentThreads.push(c);

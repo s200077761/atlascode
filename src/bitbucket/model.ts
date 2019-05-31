@@ -8,12 +8,19 @@ export type User = {
     avatarUrl: string;
 };
 
+export const UnknownUser = {
+    accountId: '',
+    displayName: 'Unknown User',
+    url: '',
+    avatarUrl: ''
+};
+
 export type Reviewer = User & {
     approved: boolean;
     role: "PARTICIPANT" | "REVIEWER";
 };
 
-export interface Repo {
+export type Repo = {
     scm?: Repository;
     name: string;
     displayName: string;
@@ -21,7 +28,23 @@ export interface Repo {
     avatarUrl: string;
     mainbranch?: string;
     issueTrackerEnabled: boolean;
-}
+};
+
+export type Comment = {
+    id: number;
+    parentId?: number;
+    user: User;
+    htmlContent: string;
+    rawContent: string;
+    ts: string;
+    updatedTs: string;
+    deleted: boolean;
+    inline?: {
+        from?: number;
+        path: string;
+        to?: number;
+    };
+};
 
 export interface PullRequest {
     repository: Repository;
@@ -45,7 +68,7 @@ export interface PaginatedCommits {
 }
 
 export interface PaginatedComments {
-    data: Bitbucket.Schema.PullrequestComment[];
+    data: Comment[];
     next?: string;
 }
 

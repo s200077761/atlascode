@@ -8,6 +8,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
+import { Comment, UnknownUser } from "../bitbucket/model";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -67,7 +68,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 BitbucketIssuesApi.getComments(issue),
                 BitbucketIssuesApi.getChanges(issue)]
             );
-            const updatedChanges = changes.data
+            const updatedChanges: Bitbucket.Schema.IssueChange[] = changes.data
                 .map(change => {
                     let content = '';
                     if (change.changes!.state) {
@@ -98,14 +99,31 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (content === '') {
                         content += `<li><em>updated issue</em></li>`;
                     }
-                    return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
+                    return { ...change, message: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
                 });
+
+            const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
+                //@ts-ignore
+                id: change.id as number,
+                htmlContent: change.message!.html!,
+                rawContent: change.message!.raw!,
+                deleted: false,
+                ts: change.created_on!,
+                updatedTs: change.created_on!,
+                user: change.user
+                    ? {
+                        accountId: change.user.account_id!,
+                        displayName: change.user.display_name!,
+                        url: change.user.links!.html!.href!,
+                        avatarUrl: change.user.links!.avatar!.href!
+                    }
+                    : UnknownUser
+            }));
 
             //@ts-ignore
             // replace comment with change data which contains additional details
-            const updatedComments = comments.data.map(comment => updatedChanges.find(
+            const updatedComments = comments.data.map(comment => updatedChangesAsComments.find(
                 change =>
-                    //@ts-ignore
                     change.id! === comment.id!) || comment);
             const msg = {
                 type: 'updateBitbucketIssue' as 'updateBitbucketIssue',

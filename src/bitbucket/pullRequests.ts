@@ -1,6 +1,6 @@
 import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
 
@@ -189,7 +189,27 @@ export namespace PullRequestApi {
                 }
             } as Bitbucket.Schema.PullrequestComment;
         });
-        return { data: comments, next: undefined };
+        return {
+            data: comments.map(comment => ({
+                id: comment.id!,
+                parentId: comment.parent ? comment.parent.id! : undefined,
+                htmlContent: comment.content!.html!,
+                rawContent: comment.content!.raw!,
+                ts: comment.created_on,
+                updatedTs: comment.updated_on,
+                deleted: !!comment.deleted,
+                inline: comment.inline,
+                user: comment.user
+                    ? {
+                        accountId: comment.user.account_id!,
+                        displayName: comment.user.display_name!,
+                        url: comment.user.links!.html!.href!,
+                        avatarUrl: comment.user.links!.avatar!.href!
+                    }
+                    : UnknownUser
+            } as Comment)),
+            next: undefined
+        };
     }
 
     export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {

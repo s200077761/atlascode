@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from './abstractBaseNode';
-import { PullRequest } from '../../bitbucket/model';
+import { PullRequest, Comment } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
@@ -13,7 +13,7 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
         if (!Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             return undefined;
         }

@@ -1,7 +1,7 @@
 import { Repository, Remote } from "../typings/git";
 import { RepositoriesApi } from "./repositories";
 import { GitUrlParse, bitbucketHosts, PullRequestApi } from "./pullRequests";
-import { PaginatedBitbucketIssues, PaginatedComments, PaginatedIssueChange } from "./model";
+import { PaginatedBitbucketIssues, PaginatedComments, PaginatedIssueChange, Comment, UnknownUser } from "./model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -117,7 +117,27 @@ export namespace BitbucketIssuesApi {
             sort: '-created_on'
         });
 
-        return { data: (data.values || []).reverse(), next: data.next };
+        return {
+            data: (data.values || []).reverse().map(comment => ({
+                id: comment.id!,
+                parentId: comment.parent ? comment.parent.id! : undefined,
+                htmlContent: comment.content!.html!,
+                rawContent: comment.content!.raw!,
+                ts: comment.created_on,
+                updatedTs: comment.updated_on,
+                deleted: !!comment.deleted,
+                inline: comment.inline,
+                user: comment.user
+                    ? {
+                        accountId: comment.user.account_id!,
+                        displayName: comment.user.display_name!,
+                        url: comment.user.links!.html!.href!,
+                        avatarUrl: comment.user.links!.avatar!.href!
+                    }
+                    : UnknownUser
+            } as Comment)),
+            next: data.next
+        };
     }
 
     export async function getChanges(issue: Bitbucket.Schema.Issue): Promise<PaginatedIssueChange> {

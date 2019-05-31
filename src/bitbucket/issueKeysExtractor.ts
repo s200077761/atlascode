@@ -1,9 +1,9 @@
-import { PullRequest } from "./model";
+import { PullRequest, Comment } from "./model";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { Logger } from "../logger";
 import { parseBitbucketIssueKeys } from "./bbIssueKeyParser";
 
-export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
+export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
@@ -17,7 +17,7 @@ export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schem
         const prSummaryMatches = parseJiraIssueKeys(pr.data.summary!.raw!);
         prSummaryMatches.forEach(m => result.add(m));
 
-        const prCommentsMatches = allComments.map(c => parseJiraIssueKeys(c.content!.raw!)).reduce((prev, curr) => prev.concat(curr), []);
+        const prCommentsMatches = allComments.map(c => parseJiraIssueKeys(c.rawContent)).reduce((prev, curr) => prev.concat(curr), []);
         prCommentsMatches.forEach(m => result.add(m));
 
         return Array.from(result);
@@ -27,7 +27,7 @@ export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schem
     }
 }
 
-export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<string[]> {
+export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
@@ -41,7 +41,7 @@ export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Bitbuc
         const prSummaryMatches = parseBitbucketIssueKeys(pr.data.summary!.raw!);
         prSummaryMatches.forEach(m => result.add(m));
 
-        const prCommentsMatches = allComments.map(c => parseBitbucketIssueKeys(c.content!.raw!)).reduce((prev, curr) => prev.concat(curr), []);
+        const prCommentsMatches = allComments.map(c => parseBitbucketIssueKeys(c.rawContent)).reduce((prev, curr) => prev.concat(curr), []);
         prCommentsMatches.forEach(m => result.add(m));
 
         return Array.from(result);
