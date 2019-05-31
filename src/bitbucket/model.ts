@@ -56,6 +56,13 @@ export type Commit = {
     rawSummary?: string;
 };
 
+export type BuildStatus = {
+    name: string;
+    state: "SUCCESSFUL" | "FAILED" | "INPROGRESS" | "STOPPED";
+    url: string;
+    ts: string;
+};
+
 export type FileChange = {
     status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
     oldPath?: string;

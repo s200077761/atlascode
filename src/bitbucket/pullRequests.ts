@@ -1,6 +1,6 @@
 import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
 
@@ -239,7 +239,7 @@ export namespace PullRequestApi {
         };
     }
 
-    export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
+    export async function getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
         const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -251,7 +251,12 @@ export namespace PullRequestApi {
         });
 
         const statuses = data.values || [];
-        return statuses.filter(status => status.type === 'build');
+        return statuses.filter(status => status.type === 'build').map(status => ({
+            name: status.name!,
+            state: status.state!,
+            url: status.url!,
+            ts: status.created_on!
+        }));
     }
 
     export async function getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
