@@ -1,6 +1,7 @@
 import * as React from "react";
 import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
+import { BitbucketIssue } from "../../../bitbucket/model";
 
 export const StateRenderer = {
   new: <Lozenge appearance='new'>new</Lozenge>,
@@ -27,7 +28,7 @@ const StatusValue = (props: any) => (
 );
 
 export class StatusMenu extends React.Component<{
-  issue: Bitbucket.Schema.Issue;
+  issue: BitbucketIssue;
   isStatusButtonLoading: boolean;
   onHandleStatusChange: (item: any) => void;
 }> {

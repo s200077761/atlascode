@@ -31,6 +31,7 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import { RefreshIssueAction } from "../../../ipc/issueActions";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
+import { BitbucketIssue } from "../../../bitbucket/model";
 
 type SizeMetrics = {
     width: number;
@@ -141,7 +142,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    renderDetails(issue: Bitbucket.Schema.Issue) {
+    renderDetails(issue: BitbucketIssue) {
         return <div style={{ padding: '2em' }}>
             <h3>Status</h3>
             <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
@@ -173,7 +174,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        const issue = this.state.data.issue as Bitbucket.Schema.Issue;
+        const issue = this.state.data.issue as BitbucketIssue;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;

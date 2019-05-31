@@ -5,6 +5,7 @@ import { PullRequestApi, GitUrlParse } from '../../bitbucket/pullRequests';
 import { startIssueCreationEvent } from '../../analytics';
 import { CommentData, BBData } from '../../webviews/createIssueWebview';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
+import { BitbucketIssue } from '../../bitbucket/model';
 
 export interface TodoIssueData {
     summary: string;
@@ -12,7 +13,7 @@ export interface TodoIssueData {
     insertionPoint: Position;
 }
 
-export function createIssue(data: Uri | TodoIssueData | Bitbucket.Schema.Issue | undefined) {
+export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefined) {
     if (isTodoIssueData(data)) {
         const partialIssue = {
             summary: data.summary,
@@ -48,8 +49,8 @@ function isTodoIssueData(a: any): a is TodoIssueData {
     return a && (<TodoIssueData>a).insertionPoint !== undefined;
 }
 
-function isBBIssueData(a: any): a is Bitbucket.Schema.Issue {
-    return a && (<Bitbucket.Schema.Issue>a).title !== undefined;
+function isBBIssueData(a: any): a is BitbucketIssue {
+    return a && (<BitbucketIssue>a).title !== undefined;
 }
 
 function isUri(a: any): a is Uri {

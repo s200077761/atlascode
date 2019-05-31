@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { Repository } from '../../typings/git';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
-import { PaginatedBitbucketIssues } from '../../bitbucket/model';
+import { PaginatedBitbucketIssues, BitbucketIssue } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { Commands } from '../../commands';
 import { SimpleNode } from '../nodes/simpleNode';
@@ -51,7 +51,7 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
 }
 
 export class BitbucketIssueNode extends AbstractBaseNode {
-    constructor(readonly issue: Bitbucket.Schema.Issue) {
+    constructor(readonly issue: BitbucketIssue) {
         super();
     }
 

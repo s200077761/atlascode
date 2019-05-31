@@ -14,11 +14,11 @@ import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { Repo } from '../bitbucket/model';
+import { Repo, BitbucketIssue } from '../bitbucket/model';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
-    private _state: Bitbucket.Schema.Issue;
+export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
+    private _state: BitbucketIssue;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -31,12 +31,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         return "startWorkOnIssueScreen";
     }
 
-    async createOrShowIssue(data: Bitbucket.Schema.Issue) {
+    async createOrShowIssue(data: BitbucketIssue) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    initialize(data: Bitbucket.Schema.Issue) {
+    initialize(data: BitbucketIssue) {
         this._state = data;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -116,7 +116,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         await repo.checkout(destBranch);
     }
 
-    public async updateIssue(issue: Bitbucket.Schema.Issue) {
+    public async updateIssue(issue: BitbucketIssue) {
         this._state = issue;
 
         if (this._panel) {

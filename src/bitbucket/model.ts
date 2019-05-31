@@ -100,7 +100,4 @@ export interface PaginatedBitbucketIssues {
     next?: string;
 }
 
-export interface PaginatedIssueChange {
-    data: Bitbucket.Schema.IssueChange[];
-    next?: string;
-}
+export type BitbucketIssue = Bitbucket.Schema.Issue;

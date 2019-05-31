@@ -9,7 +9,7 @@ import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, i
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
-import { PullRequest } from '../bitbucket/model';
+import { PullRequest, BitbucketIssue } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { Issue, isIssue } from '../jira/jiraModel';
@@ -180,7 +180,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
-        let issue: Issue | Bitbucket.Schema.Issue | undefined = undefined;
+        let issue: Issue | BitbucketIssue | undefined = undefined;
         if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
@@ -205,7 +205,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         });
     }
 
-    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+    private async updateIssue(issue?: Issue | BitbucketIssue) {
         if (!issue) {
             return;
         }
