@@ -151,7 +151,25 @@ export namespace PullRequestApi {
             pagelen: maxItemsSupported.commits
         });
 
-        return data.values ? { data: data.values, next: data.next } : { data: [], next: undefined };
+        const commits = (data.values || []) as Bitbucket.Schema.Commit[];
+
+        return {
+            data: commits.map(commit => ({
+                hash: commit.hash!,
+                message: commit.message!,
+                ts: commit.date!,
+                url: commit.links!.html!.href!,
+                htmlSummary: commit.summary ? commit.summary.html! : undefined,
+                rawSummary: commit.summary ? commit.summary.raw! : undefined,
+                author: {
+                    accountId: commit.author!.user!.account_id,
+                    displayName: commit.author!.user!.display_name!,
+                    url: commit.author!.user!.links!.html!.href!,
+                    avatarUrl: commit.author!.user!.links!.avatar!.href!
+                }
+            })),
+            next: data.next
+        };
     }
 
     export async function getComments(pr: PullRequest): Promise<PaginatedComments> {

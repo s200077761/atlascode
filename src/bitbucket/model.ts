@@ -46,6 +46,16 @@ export type Comment = {
     };
 };
 
+export type Commit = {
+    author: User;
+    ts: string;
+    hash: string;
+    message: string;
+    url: string;
+    htmlSummary?: string;
+    rawSummary?: string;
+};
+
 export interface PullRequest {
     repository: Repository;
     remote: Remote;
@@ -63,7 +73,7 @@ export interface PaginatedPullRequests {
 }
 
 export interface PaginatedCommits {
-    data: Bitbucket.Schema.Commit[];
+    data: Commit[];
     next?: string;
 }
 

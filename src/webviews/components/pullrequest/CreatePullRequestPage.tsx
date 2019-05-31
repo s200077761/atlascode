@@ -28,7 +28,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
-import { Reviewer } from '../../../bitbucket/model';
+import { Reviewer, Commit } from '../../../bitbucket/model';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -51,7 +51,7 @@ interface MyState {
     closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
     issue?: Issue | Bitbucket.Schema.Issue;
-    commits: Bitbucket.Schema.Commit[];
+    commits: Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
     isErrorBannerOpen: boolean;

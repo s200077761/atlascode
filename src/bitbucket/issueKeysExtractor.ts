@@ -1,9 +1,9 @@
-import { PullRequest, Comment } from "./model";
+import { PullRequest, Comment, Commit } from "./model";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { Logger } from "../logger";
 import { parseBitbucketIssueKeys } from "./bbIssueKeyParser";
 
-export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Comment[]): Promise<string[]> {
+export async function extractIssueKeys(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
@@ -27,7 +27,7 @@ export async function extractIssueKeys(pr: PullRequest, commits: Bitbucket.Schem
     }
 }
 
-export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Comment[]): Promise<string[]> {
+export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<string[]> {
     const result = new Set<string>();
 
     try {
