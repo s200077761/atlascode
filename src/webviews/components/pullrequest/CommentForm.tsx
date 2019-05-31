@@ -2,9 +2,10 @@ import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import Spinner from '@atlaskit/spinner';
+import { User } from '../../../bitbucket/model';
 
 export default class CommentForm extends React.Component<{
-    currentUser: Bitbucket.Schema.User,
+    currentUser: User,
     visible: boolean,
     isAnyCommentLoading: boolean,
     onSave?: (content: string) => void,
@@ -43,8 +44,8 @@ export default class CommentForm extends React.Component<{
                 <div style={{ display: 'flex' }}>
                     <Avatar
                         appearance="circle"
-                        name={this.props.currentUser.display_name}
-                        src={this.props.currentUser.links!.avatar!.href}
+                        name={this.props.currentUser.displayName}
+                        src={this.props.currentUser.url}
                         size="medium"
                     />
                     <div style={{ width: '100%', marginLeft: 8 }}>

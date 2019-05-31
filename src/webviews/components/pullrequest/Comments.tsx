@@ -1,8 +1,9 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Comment, { CommentAuthor, CommentTime, CommentAction } from '@atlaskit/comment';
-import * as Bitbucket from 'bitbucket';
+import Bitbucket from 'bitbucket';
 import CommentForm from './CommentForm';
+import { User } from '../../../bitbucket/model';
 
 interface Node {
     data: Bitbucket.Schema.Comment;
@@ -24,7 +25,7 @@ function toNestedList(comments: Bitbucket.Schema.Comment[]): Map<Number, Node> {
     return globalCommentsMap;
 }
 
-class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket.Schema.User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+class NestedComment extends React.Component<{ node: Node, currentUser: User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { showCommentForm: false };
@@ -74,7 +75,7 @@ class NestedComment extends React.Component<{ node: Node, currentUser: Bitbucket
     }
 }
 
-export default class Comments extends React.Component<{ comments: Bitbucket.Schema.Comment[], currentUser: Bitbucket.Schema.User, isAnyCommentLoading: boolean, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
+export default class Comments extends React.Component<{ comments: Bitbucket.Schema.Comment[], currentUser: User, isAnyCommentLoading: boolean, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
     constructor(props: any) {
         super(props);
     }

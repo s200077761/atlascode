@@ -1,6 +1,6 @@
 import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
 
@@ -78,13 +78,13 @@ export namespace PullRequestApi {
     export async function getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser()).accountId}"` });
     }
 
     export async function getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).accountId}"` });
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -99,7 +99,7 @@ export namespace PullRequestApi {
     export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).accountId}"` });
     }
 
     export async function getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
@@ -207,7 +207,7 @@ export namespace PullRequestApi {
         return statuses.filter(status => status.type === 'build');
     }
 
-    export async function getDefaultReviewers(remote: Remote): Promise<Bitbucket.Schema.User[]> {
+    export async function getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -217,8 +217,15 @@ export namespace PullRequestApi {
             pagelen: maxItemsSupported.reviewers
         });
 
-        const reviewers = data.values || [];
-        return reviewers;
+        const reviewers: Bitbucket.Schema.Participant[] = data.values || [];
+        return reviewers.map(reviewer => ({
+            accountId: reviewer.account_id!,
+            displayName: reviewer.display_name!,
+            url: reviewer.links!.html!.href!,
+            avatarUrl: reviewer.links!.avatar!.href!,
+            approved: !!reviewer.approved,
+            role: reviewer.role!
+        }));
     }
 
     export function getBitbucketRemotes(repository: Repository): Remote[] {

@@ -9,7 +9,7 @@ import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { getCurrentUser } from './user';
 import { CacheMap, Interval } from '../util/cachemap';
-import { PullRequest } from './model';
+import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
@@ -23,8 +23,8 @@ export class BitbucketContext extends Disposable {
     private _pullRequestsExplorer: PullRequestsExplorer;
     private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
     private _disposable: Disposable;
-    private _currentUser?: Bitbucket.Schema.User;
-    private _currentUserStaging?: Bitbucket.Schema.User;
+    private _currentUser?: User;
+    private _currentUserStaging?: User;
     private _pullRequestCache = new CacheMap();
     public readonly prCommentController: PullRequestCommentController;
 
@@ -57,7 +57,7 @@ export class BitbucketContext extends Disposable {
         this.refreshRepos();
     }
 
-    public async currentUser(stagingUser: boolean = false): Promise<Bitbucket.Schema.User> {
+    public async currentUser(stagingUser: boolean = false): Promise<User> {
         if (stagingUser) {
             this._currentUserStaging = this._currentUserStaging || await getCurrentUser(stagingUser);
             return this._currentUserStaging!;

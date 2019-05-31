@@ -1,6 +1,7 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
 import { Issue } from "../jira/jiraModel";
+import { Reviewer } from "../bitbucket/model";
 
 export interface PostComment extends Action {
     content: string;
@@ -53,7 +54,7 @@ export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     repoUri: string;
     remote: Remote;
-    reviewers: Bitbucket.Schema.User[];
+    reviewers: Reviewer[];
     title: string;
     summary: string;
     sourceBranch: Branch;

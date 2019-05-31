@@ -28,6 +28,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
+import { Reviewer } from '../../../bitbucket/model';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -42,7 +43,7 @@ interface MyState {
     summaryManuallyEdited: boolean;
     repo?: { label: string; value: RepoData; };
     remote?: { label: string; value: Remote; };
-    reviewers: Bitbucket.Schema.User[];
+    reviewers: Reviewer[];
     sourceBranch?: { label: string; value: Branch };
     sourceRemoteBranchName?: string;
     destinationBranch?: { label: string; value: Ref };

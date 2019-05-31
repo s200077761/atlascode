@@ -1,9 +1,10 @@
 import { Message } from "./messaging";
 import { RepoData } from "./prMessaging";
+import { User } from "../bitbucket/model";
 
 export interface BitbucketIssueData extends Message {
     issue: Bitbucket.Schema.Issue;
-    currentUser: Bitbucket.Schema.User;
+    currentUser: User;
     comments: Bitbucket.Schema.Comment[];
     hasMore: boolean;
     showJiraButton: boolean;

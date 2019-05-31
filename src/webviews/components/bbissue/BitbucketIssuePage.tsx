@@ -74,7 +74,12 @@ type MyState = {
 const emptyIssueData = {
     type: "updateBitbucketIssue",
     issue: { type: "" },
-    currentUser: { type: "" },
+    currentUser: {
+        accountId: '',
+        displayName: '',
+        url: '',
+        avatarUrl: ''
+    },
     comments: [],
     hasMore: false,
     showJiraButton: false,
@@ -151,7 +156,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                     primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
                 />
             </Tooltip>
-            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.account_id) &&
+            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.accountId) &&
                 <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
             <h3>Reporter</h3>
             <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>

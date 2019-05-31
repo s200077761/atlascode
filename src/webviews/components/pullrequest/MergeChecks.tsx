@@ -8,7 +8,7 @@ export default class MergeChecks extends React.Component<PRData, {}> {
 
     render() {
         const openTaskCount = this.props.pr!.task_count || 0;
-        const approvalCount = this.props.pr!.participants!.filter(p => p.approved && p.user!.uuid !== this.props.currentUser!.uuid).length;
+        const approvalCount = this.props.pr!.participants!.filter(p => p.approved && p.user!.account_id !== this.props.currentUser!.accountId).length;
         let unsuccessfulBuilds = false;
         if (Array.isArray(this.props.pr!.buildStatuses) && this.props.pr!.buildStatuses.length > 0) {
             const successes = this.props.pr!.buildStatuses.filter(status => status.state === 'SUCCESSFUL');

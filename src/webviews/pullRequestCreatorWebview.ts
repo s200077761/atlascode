@@ -74,7 +74,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     name: repo.displayName,
                     owner: repo.name,
                     remotes: r.state.remotes,
-                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
+                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.accountId !== currentUser.accountId),
                     localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                     remoteBranches: await Promise.all(
                         r.state.refs
@@ -244,7 +244,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     name: destinationBranchName
                 }
             },
-            reviewers: reviewers,
+            reviewers: reviewers.map(reviewer => ({
+                type: 'user',
+                account_id: reviewer.accountId
+            })),
             close_source_branch: closeSourceBranch
         };
 

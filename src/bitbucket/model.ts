@@ -1,12 +1,17 @@
 import { Repository, Remote } from "../typings/git";
 import Bitbucket from 'bitbucket';
 
-export interface User {
+export type User = {
     accountId: string;
     displayName: string;
+    url: string;
     avatarUrl: string;
-    htmlHref: string;
-}
+};
+
+export type Reviewer = User & {
+    approved: boolean;
+    role: "PARTICIPANT" | "REVIEWER";
+};
 
 export interface Repo {
     scm?: Repository;

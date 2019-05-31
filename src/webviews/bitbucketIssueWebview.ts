@@ -101,20 +101,20 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
                 });
 
-        //@ts-ignore
-        // replace comment with change data which contains additional details
-        const updatedComments = comments.data.map(comment => updatedChanges.find(
-            change =>
-                //@ts-ignore
-                change.id! === comment.id!) || comment);
-        const msg = {
-            type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-            issue: issueLatest,
-            currentUser: currentUser,
-            comments: updatedComments,
-            hasMore: !!comments.next || !!changes.next,
-            showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
-        } as BitbucketIssueData;
+            //@ts-ignore
+            // replace comment with change data which contains additional details
+            const updatedComments = comments.data.map(comment => updatedChanges.find(
+                change =>
+                    //@ts-ignore
+                    change.id! === comment.id!) || comment);
+            const msg = {
+                type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
+                issue: issueLatest,
+                currentUser: currentUser,
+                comments: updatedComments,
+                hasMore: !!comments.next || !!changes.next,
+                showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
+            } as BitbucketIssueData;
 
             this.postMessage(msg);
         } catch (e) {
@@ -147,7 +147,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser()).account_id!);
+                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser()).accountId!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));

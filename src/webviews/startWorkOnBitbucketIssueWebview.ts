@@ -83,7 +83,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser()).account_id!);
+                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser()).accountId!);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
