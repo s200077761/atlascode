@@ -24,6 +24,7 @@ export type Repo = {
     scm?: Repository;
     name: string;
     displayName: string;
+    fullName: string;
     url: string;
     avatarUrl: string;
     mainbranch?: string;
@@ -69,11 +70,47 @@ export type FileChange = {
     newPath?: string;
 };
 
+export type CreatePullRequestData = {
+    reviewerAccountIds: string[];
+    title: string;
+    summary: string;
+    sourceBranchName: string;
+    destinationBranchName: string;
+    closeSourceBranch: boolean;
+};
+
+export type PullRequestData = {
+    id: number;
+    url: string;
+    author: User;
+    reviewers: Reviewer[];
+    participants: Reviewer[];
+    source: {
+        repo: Repo;
+        branchName: string;
+        commitHash: string;
+    },
+    destination: {
+        repo: Repo;
+        branchName: string;
+        commitHash: string;
+    },
+    title: string;
+    htmlSummary?: string;
+    rawSummary?: string;
+    ts: string;
+    updatedTs: string;
+    state: "MERGED" | "SUPERSEDED" | "OPEN" | "DECLINED";
+    closeSourceBranch: boolean;
+    taskCount: number;
+    buildStatuses?: BuildStatus[];
+};
+
 export interface PullRequest {
     repository: Repository;
     remote: Remote;
     sourceRemote?: Remote;
-    data: Bitbucket.Schema.Pullrequest;
+    data: PullRequestData;
 }
 
 export interface PaginatedPullRequests {

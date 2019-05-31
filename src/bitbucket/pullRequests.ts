@@ -1,8 +1,9 @@
 import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
+import { RepositoriesApi } from './repositories';
 
 const bbHostClientMap = new Map()
     .set("bitbucket.org", async () => {
@@ -64,7 +65,7 @@ export namespace PullRequestApi {
                 },
                 ...queryParams
             });
-            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: pr }; });
+            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: toPullRequestData(pr) }; });
             const next = data.next;
             // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
             if (prs.length > 0) {
@@ -92,7 +93,7 @@ export namespace PullRequestApi {
         const bb = await bitbucketHosts.get(parsed.source);
         const { data } = await bb.getNextPage({ next: next });
         //@ts-ignore
-        const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
+        const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: toPullRequestData(pr) }; });
         return { repository: repository, remote: remote, data: prs, next: data.next };
     }
 
@@ -124,7 +125,7 @@ export namespace PullRequestApi {
                 isReadOnly: true
             };
         }
-        return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: data };
+        return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: toPullRequestData(data) };
     }
 
     export async function getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -288,26 +289,40 @@ export namespace PullRequestApi {
         });
     }
 
-    export async function create(pr: PullRequest): Promise<PullRequest> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
+    export async function create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
+        let prBody: Bitbucket.Schema.Pullrequest = {
+            type: 'pullrequest',
+            title: createPrData.title,
+            summary: {
+                raw: createPrData.summary
+            },
+            source: {
+                branch: {
+                    name: createPrData.sourceBranchName
+                }
+            },
+            destination: {
+                branch: {
+                    name: createPrData.destinationBranchName
+                }
+            },
+            reviewers: createPrData.reviewerAccountIds.map(accountId => ({
+                type: 'user',
+                account_id: accountId
+            })),
+            close_source_branch: createPrData.closeSourceBranch
+        };
+
+        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb = await bitbucketHosts.get(parsed.source);
         const { data } = await bb.pullrequests.create({
             repo_slug: parsed.name,
             username: parsed.owner,
-            _body: {
-                type: pr.data.type,
-                title: pr.data.title,
-                summary: pr.data.summary,
-                source: pr.data.source,
-                destination: pr.data.destination,
-                reviewers: pr.data.reviewers,
-                close_source_branch: pr.data.close_source_branch
-
-            }
+            _body: prBody
         });
 
-        return { ...pr, ...{ data: data } };
+        return { repository: repository, remote: remote, data: toPullRequestData(data) };
     }
 
     export async function approve(pr: PullRequest) {
@@ -361,5 +376,45 @@ export namespace PullRequestApi {
                 inline: inline
             } as any
         });
+    }
+
+    function toPullRequestData(pr: Bitbucket.Schema.Pullrequest): PullRequestData {
+        return {
+            id: pr.id!,
+            url: pr.links!.html!.href!,
+            author: {
+                accountId: pr.author!.account_id,
+                displayName: pr.author!.display_name!,
+                url: pr.author!.links!.html!.href!,
+                avatarUrl: pr.author!.links!.avatar!.href!
+            },
+            reviewers: [],
+            participants: (pr.participants || [])!.map(participant => ({
+                accountId: participant.user!.account_id!,
+                displayName: participant.user!.display_name!,
+                url: participant.user!.links!.html!.href!,
+                avatarUrl: participant.user!.links!.avatar!.href!,
+                role: participant.role!,
+                approved: !!participant.approved
+            })),
+            source: {
+                repo: RepositoriesApi.toRepo(pr.source!.repository!),
+                branchName: pr.source!.branch!.name!,
+                commitHash: pr.source!.commit!.hash!
+            },
+            destination: {
+                repo: RepositoriesApi.toRepo(pr.destination!.repository!),
+                branchName: pr.destination!.branch!.name!,
+                commitHash: pr.destination!.commit!.hash!
+            },
+            title: pr.title!,
+            htmlSummary: pr.summary ? pr.summary.html! : undefined,
+            rawSummary: pr.summary ? pr.summary!.raw! : undefined,
+            ts: pr.created_on!,
+            updatedTs: pr.updated_on!,
+            state: pr.state!,
+            closeSourceBranch: !!pr.close_source_branch,
+            taskCount: pr.task_count || 0
+        };
     }
 }

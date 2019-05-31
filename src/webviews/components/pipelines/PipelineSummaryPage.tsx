@@ -99,6 +99,7 @@ const emptyPipeline: PipelineData = {
   repository: {
     name: '',
     displayName: '',
+    fullName: '',
     url: '',
     avatarUrl: '',
     issueTrackerEnabled: false

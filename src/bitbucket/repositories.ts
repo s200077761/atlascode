@@ -20,6 +20,7 @@ export namespace RepositoriesApi {
         return {
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
             displayName: bbRepo.name!,
+            fullName: bbRepo.full_name!,
             url: bbRepo.links!.html!.href!,
             avatarUrl: bbRepo.links!.avatar!.href!,
             mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,

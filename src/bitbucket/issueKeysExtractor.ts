@@ -14,7 +14,7 @@ export async function extractIssueKeys(pr: PullRequest, commits: Commit[], allCo
         const prTitleMatches = parseJiraIssueKeys(pr.data.title!);
         prTitleMatches.forEach(m => result.add(m));
 
-        const prSummaryMatches = parseJiraIssueKeys(pr.data.summary!.raw!);
+        const prSummaryMatches = parseJiraIssueKeys(pr.data.rawSummary!);
         prSummaryMatches.forEach(m => result.add(m));
 
         const prCommentsMatches = allComments.map(c => parseJiraIssueKeys(c.rawContent)).reduce((prev, curr) => prev.concat(curr), []);
@@ -38,7 +38,7 @@ export async function extractBitbucketIssueKeys(pr: PullRequest, commits: Commit
         const prTitleMatches = parseBitbucketIssueKeys(pr.data.title!);
         prTitleMatches.forEach(m => result.add(m));
 
-        const prSummaryMatches = parseBitbucketIssueKeys(pr.data.summary!.raw!);
+        const prSummaryMatches = parseBitbucketIssueKeys(pr.data.rawSummary!);
         prSummaryMatches.forEach(m => result.add(m));
 
         const prCommentsMatches = allComments.map(c => parseBitbucketIssueKeys(c.rawContent)).reduce((prev, curr) => prev.concat(curr), []);

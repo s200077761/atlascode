@@ -228,30 +228,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        let pr: Bitbucket.Schema.Pullrequest = {
-            type: 'pullrequest',
-            title: title,
-            summary: {
-                raw: summary
-            },
-            source: {
-                branch: {
-                    name: sourceBranchName
+        await PullRequestApi
+            .create(
+                repo,
+                remote,
+                {
+                    title: title,
+                    summary: summary,
+                    sourceBranchName: sourceBranchName,
+                    destinationBranchName: destinationBranchName,
+                    closeSourceBranch: closeSourceBranch,
+                    reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
                 }
-            },
-            destination: {
-                branch: {
-                    name: destinationBranchName
-                }
-            },
-            reviewers: reviewers.map(reviewer => ({
-                type: 'user',
-                account_id: reviewer.accountId
-            })),
-            close_source_branch: closeSourceBranch
-        };
-
-        await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
+            )
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);

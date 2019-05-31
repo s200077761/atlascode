@@ -2,13 +2,14 @@ import * as React from "react";
 import Avatar from '@atlaskit/avatar';
 import Button from '@atlaskit/button';
 import Lozenge from "@atlaskit/lozenge";
+import { PullRequestData } from "../../../bitbucket/model";
 
 export default class PullRequests extends React.Component<{
-    pullRequests: any[]
+    pullRequests: PullRequestData[]
     onClick: (pr: any) => any;
 }, {}> {
-    private avatar(pr: any): any {
-        const url = pr.author && pr.author.links && pr.author.links.avatar ? pr.author.links.avatar.href : undefined;
+    private avatar(pr: PullRequestData): any {
+        const url = pr.author.avatarUrl;
         if (url) {
             return <Avatar src={url} size="small" />;
         }
@@ -32,11 +33,11 @@ export default class PullRequests extends React.Component<{
 
     render() {
         return (
-            this.props.pullRequests.map((pr: any) => {
-                return <div style={{ display: 'flex', 'align-items': 'center' }} >
+            this.props.pullRequests.map((pr: PullRequestData) => {
+                return <div style={{ display: 'flex', alignItems: 'center' }} >
 
                     {this.avatar(pr)}
-                    <Button appearance='link' onClick={() => this.props.onClick(pr)}>{`${pr.destination!.repository!.name} - Pull request #${pr.id}`}</Button>
+                    <Button appearance='link' onClick={() => this.props.onClick(pr)}>{`${pr.destination!.repo!.displayName} - Pull request #${pr.id}`}</Button>
                     {this.prState(pr)}
                 </div>;
             })

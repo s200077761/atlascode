@@ -15,13 +15,13 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
         const pr = this.props.prData.pr!;
         let sourcePrefix = '';
         let destinationPrefix = '';
-        if (pr.source!.repository!.links!.html!.href! !== pr.destination!.repository!.links!.html!.href!) {
-            sourcePrefix = pr.source!.repository!.full_name! + ':';
-            destinationPrefix = pr.destination!.repository!.full_name! + ':';
+        if (pr.source!.repo.url !== pr.destination!.repo.url) {
+            sourcePrefix = pr.source!.repo.fullName + ':';
+            destinationPrefix = pr.destination!.repo.fullName + ':';
         }
 
-        const sourceBranch = sourcePrefix + pr.source!.branch!.name;
-        const targetBranch = destinationPrefix + pr.destination!.branch!.name;
+        const sourceBranch = sourcePrefix + pr.source!.branchName;
+        const targetBranch = destinationPrefix + pr.destination!.branchName;
 
         return (
             <React.Fragment>
@@ -29,8 +29,8 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
                     <div className='ac-hmargin'>
                         <Avatar
                             appearance="circle"
-                            name={pr.author!.display_name}
-                            src={pr.author!.links!.avatar!.href}
+                            name={pr.author!.displayName}
+                            src={pr.author!.avatarUrl}
                             size="small"
                         />
                     </div>

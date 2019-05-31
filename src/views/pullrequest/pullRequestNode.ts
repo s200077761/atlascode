@@ -36,15 +36,15 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
         super();
-        this.prHref = pr.data!.links!.self!.href!;
+        this.prHref = pr.data!.url;
     }
 
     getTreeItem(): vscode.TreeItem {
         let item = new vscode.TreeItem(`#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}`;
-        item.iconPath = vscode.Uri.parse(this.pr.data!.author!.links!.avatar!.href!);
+        item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(this.pr.data.links!.html!.href!);
+        item.resourceUri = vscode.Uri.parse(this.pr.data.url);
 
         return item;
     }
@@ -110,9 +110,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
         // Use merge base to diff from common ancestor of source and destination.
         // This will help ignore any unrelated changes in destination branch.
-        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branch!.name!}`;
-        const source = `${this.pr.sourceRemote ? this.pr.sourceRemote.name : this.pr.remote.name}/${this.pr.data.source!.branch!.name!}`;
-        let mergeBase = this.pr.data.destination!.commit!.hash!;
+        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branchName}`;
+        const source = `${this.pr.sourceRemote ? this.pr.sourceRemote.name : this.pr.remote.name}/${this.pr.data.source!.branchName}`;
+        let mergeBase = this.pr.data.destination!.commitHash;
         try {
             mergeBase = await this.pr.repository.getMergeBase(destination, source);
         }
@@ -225,11 +225,11 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let lhsQueryParam = {
             query: JSON.stringify({
                 lhs: true,
-                prHref: this.pr.data.links!.self!.href,
+                prHref: this.pr.data.url,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.remote,
-                branchName: this.pr.data.destination!.branch!.name!,
+                branchName: this.pr.data.destination!.branchName,
                 commitHash: this.mergeBase,
                 path: lhsFilePath,
                 commentThreads: lhsCommentThreads
@@ -238,12 +238,12 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let rhsQueryParam = {
             query: JSON.stringify({
                 lhs: false,
-                prHref: this.pr.data.links!.self!.href,
+                prHref: this.pr.data.url,
                 prId: this.pr.data.id,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.sourceRemote || this.pr.remote,
-                branchName: this.pr.data.source!.branch!.name!,
-                commitHash: this.pr.data.source!.commit!.hash!,
+                branchName: this.pr.data.source!.branchName,
+                commitHash: this.pr.data.source!.commitHash,
                 path: rhsFilePath,
                 commentThreads: rhsCommentThreads
             } as FileDiffQueryParams)
@@ -285,7 +285,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         };
 
         item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(`${this.pr.data.links!.html!.href!}#chg-${fileDisplayName}`);
+        item.resourceUri = vscode.Uri.parse(`${this.pr.data.url}#chg-${fileDisplayName}`);
 
         return item;
     }
@@ -312,7 +312,7 @@ class DescriptionNode extends AbstractBaseNode {
         };
 
         item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(this.pr.data.links!.html!.href!);
+        item.resourceUri = vscode.Uri.parse(this.pr.data.url);
 
         return item;
     }
