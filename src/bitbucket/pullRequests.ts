@@ -137,7 +137,16 @@ export namespace PullRequestApi {
             username: parsed.owner
         });
 
-        return data.values ? { data: data.values as Bitbucket.Schema.Diffstat[], next: data.next } : { data: [], next: undefined };
+        const diffStats: Bitbucket.Schema.Diffstat[] = data.values || [];
+
+        return {
+            data: diffStats.map(diffStat => ({
+                status: diffStat.status!,
+                oldPath: diffStat.old ? diffStat.old.path! : undefined,
+                newPath: diffStat.new ? diffStat.new.path! : undefined
+            })),
+            next: data.next
+        };
     }
 
     export async function getCommits(pr: PullRequest): Promise<PaginatedCommits> {

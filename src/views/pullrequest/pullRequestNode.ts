@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PullRequestApi } from '../../bitbucket/pullRequests';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment, FileChange } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
@@ -179,13 +179,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 class PullRequestFilesNode extends AbstractBaseNode {
 
-    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: Bitbucket.Schema.Diffstat, private commentsMap: Map<string, Comment[][]>, private commentController: PullRequestCommentController) {
+    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: FileChange, private commentsMap: Map<string, Comment[][]>, private commentController: PullRequestCommentController) {
         super();
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
-        const lhsFilePath = this.fileChange.old ? this.fileChange.old.path : undefined;
-        const rhsFilePath = this.fileChange.new ? this.fileChange.new.path : undefined;
+        const lhsFilePath = this.fileChange.oldPath;
+        const rhsFilePath = this.fileChange.newPath;
 
         let fileDisplayName = '';
         const comments: Comment[][] = [];

@@ -56,6 +56,12 @@ export type Commit = {
     rawSummary?: string;
 };
 
+export type FileChange = {
+    status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
+    oldPath?: string;
+    newPath?: string;
+};
+
 export interface PullRequest {
     repository: Repository;
     remote: Remote;
@@ -83,7 +89,7 @@ export interface PaginatedComments {
 }
 
 export interface PaginatedFileChanges {
-    data: Bitbucket.Schema.Diffstat[];
+    data: FileChange[];
     next?: string;
 }
 
