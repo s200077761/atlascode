@@ -34,8 +34,8 @@ export namespace BitbucketIssuesApi {
         return { repository: repository, remote: remotes[0], data: data.values || [], next: data.next };
     }
 
-    export async function getAvailableComponents(repository: Bitbucket.Schema.Repository): Promise<Bitbucket.Schema.Component[] | undefined> {
-        let parsed = GitUrlParse(repository.links!.html!.href!);
+    export async function getAvailableComponents(repositoryHref: string): Promise<Bitbucket.Schema.Component[] | undefined> {
+        let parsed = GitUrlParse(repositoryHref);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
 
         const resp = await bb.repositories.listComponents({
@@ -85,7 +85,7 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function bitbucketIssuesEnabled(remote: Remote): Promise<boolean> {
-        return !!(await RepositoriesApi.get(remote)).has_issues;
+        return !!(await RepositoriesApi.get(remote)).issueTrackerEnabled;
     }
 
     // ---- END - Actions NOT on a specific issue ----

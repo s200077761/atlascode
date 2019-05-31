@@ -69,10 +69,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                 ]);
                 await state.push({
                     uri: r.rootUri.toString(),
-                    href: repo.links!.html!.href,
-                    avatarUrl: repo.links!.avatar!.href,
-                    name: repo.name,
-                    owner: repo.owner!.username,
+                    href: repo.url,
+                    avatarUrl: repo.avatarUrl,
+                    name: repo.displayName,
+                    owner: repo.name,
                     remotes: r.state.remotes,
                     defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
                     localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),

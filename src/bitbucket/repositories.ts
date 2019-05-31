@@ -1,9 +1,10 @@
 import { Remote } from "../typings/git";
 import { GitUrlParse, maxItemsSupported, bitbucketHosts } from "./pullRequests";
+import { Repo } from "./model";
 
 export namespace RepositoriesApi {
 
-    export async function get(remote: Remote): Promise<Bitbucket.Schema.Repository> {
+    export async function get(remote: Remote): Promise<Repo> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -12,7 +13,18 @@ export namespace RepositoriesApi {
             username: parsed.owner
         });
 
-        return data;
+        return toRepo(data);
+    }
+
+    export function toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
+        return {
+            name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
+            displayName: bbRepo.name!,
+            url: bbRepo.links!.html!.href!,
+            avatarUrl: bbRepo.links!.avatar!.href!,
+            mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
+            issueTrackerEnabled: !!bbRepo.has_issues
+        };
     }
 
     export async function getDevelopmentBranch(remote: Remote): Promise<string> {
@@ -29,7 +41,7 @@ export namespace RepositoriesApi {
 
         return branchingModel.data.development && branchingModel.data.development.branch
             ? branchingModel.data.development.branch.name!
-            : repo.mainbranch!.name!;
+            : repo.mainbranch!;
     }
 
     export async function getBranchingModel(remote: Remote): Promise<Bitbucket.Schema.BranchingModel> {

@@ -67,7 +67,7 @@ async function updateBBIssue(data: BBData) {
 
     BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
 
-    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!);
+    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
         if (injiraComp && data.bbIssue.component !== injiraComp) {

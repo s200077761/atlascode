@@ -1,5 +1,22 @@
 import { Repository, Remote } from "../typings/git";
-import * as Bitbucket from 'bitbucket';
+import Bitbucket from 'bitbucket';
+
+export interface User {
+    accountId: string;
+    displayName: string;
+    avatarUrl: string;
+    htmlHref: string;
+}
+
+export interface Repo {
+    scm?: Repository;
+    name: string;
+    displayName: string;
+    url: string;
+    avatarUrl: string;
+    mainbranch?: string;
+    issueTrackerEnabled: boolean;
+}
 
 export interface PullRequest {
     repository: Repository;

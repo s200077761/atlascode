@@ -14,6 +14,7 @@ import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { Repo } from '../bitbucket/model';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
@@ -132,12 +133,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 break;
             }
 
-            let repo: Bitbucket.Schema.Repository | undefined = undefined;
+            let repo: Repo | undefined = undefined;
             let developmentBranch = undefined;
             let href = undefined;
             if (Container.bitbucketContext.isBitbucketRepo(r)) {
                 [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]), RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0])]);
-                href = repo.links!.html!.href;
+                href = repo.url;
             }
 
             await repoData.push({

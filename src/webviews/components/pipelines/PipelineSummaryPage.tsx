@@ -97,7 +97,11 @@ type State = {
 
 const emptyPipeline: PipelineData = {
   repository: {
-    type: ''
+    name: '',
+    displayName: '',
+    url: '',
+    avatarUrl: '',
+    issueTrackerEnabled: false
   },
   type: "",
   build_number: 0,
@@ -328,12 +332,12 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
             <GridColumn medium={12}>
               <PageHeader
                 breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
-                  <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.links!.html!.href} />} />
-                  <BreadcrumbsItem component={() => <NavItem text='Pipelines' href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home`} />} />
+                  <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.url} />} />
+                  <BreadcrumbsItem component={() => <NavItem text='Pipelines' href={`${this.state.pipeline.repository!.url}/addon/pipelines/home`} />} />
                   <BreadcrumbsItem component={() => <NavItem
                     text={`Pipeline #${this.state.pipeline.build_number}`}
-                    href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}`}
-                    onCopy={() => this.postMessage({ action: 'copyPipelineLink', href: `${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}` })} />} />
+                    href={`${this.state.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}`}
+                    onCopy={() => this.postMessage({ action: 'copyPipelineLink', href: `${this.state.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}` })} />} />
                 </BreadcrumbsStateless>}
               >
                 <p>Pipeline #{this.state.pipeline.build_number}</p>
