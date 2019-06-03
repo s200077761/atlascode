@@ -35,6 +35,7 @@ import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
+import PMFBBanner from '../pmfBanner';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -321,6 +322,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
+                            <PMFBBanner onPMFLater={this.onPMFLater} onPMFNever={this.onPMFNever} onPMFSubmit={this.onPMFSubmit} />
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}

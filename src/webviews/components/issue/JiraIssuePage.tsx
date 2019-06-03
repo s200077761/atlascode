@@ -35,12 +35,13 @@ import { AsyncSelect, AsyncCreatableSelect, components } from '@atlaskit/select'
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
-import { HostErrorMessage } from "../../../ipc/messaging";
+import { HostErrorMessage, PMFData } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
+import PMFBBanner from "../pmfBanner";
 
 type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -357,6 +358,8 @@ export default class JiraIssuePage extends WebviewComponent<
         {this.state.isErrorBannerOpen &&
           <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
         }
+
+        <PMFBBanner onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
         <PageHeader
           actions={<ButtonGroup>
             <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>

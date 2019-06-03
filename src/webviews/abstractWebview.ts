@@ -11,10 +11,11 @@ import {
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable, OnlineStatusMessage } from '../ipc/messaging';
+import { Action, isAlertable, OnlineStatusMessage, isPMFSubmitAction } from '../ipc/messaging';
 import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
+import { submitPMF } from '../pmf/pmfSubmitter';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -125,6 +126,20 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
             case 'alertError': {
                 if (isAlertable(a)) {
                     window.showErrorMessage(a.message);
+                }
+                return true;
+            }
+            case 'pmfLater': {
+
+                return true;
+            }
+            case 'pmfNever': {
+
+                return true;
+            }
+            case 'pmfSubmit': {
+                if (isPMFSubmitAction(a)) {
+                    submitPMF(a.pmfData);
                 }
                 return true;
             }

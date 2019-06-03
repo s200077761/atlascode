@@ -39,3 +39,18 @@ export function isOnlineStatus(m: Message): m is OnlineStatusMessage {
 export function onlineStatus(status: boolean): OnlineStatusMessage {
     return { type: 'onlineStatus', isOnline: status };
 }
+
+export function isPMFSubmitAction(a: Action): a is PMFSubmitAction {
+    return (<PMFSubmitAction>a).pmfData !== undefined;
+}
+export interface PMFSubmitAction extends Action {
+    action: 'pmfSubmit';
+    pmfData: PMFData;
+}
+
+export interface PMFData {
+    q1: string;
+    q2: string;
+    q3: string;
+    q4: string;
+}
