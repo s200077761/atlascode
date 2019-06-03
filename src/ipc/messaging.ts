@@ -14,6 +14,11 @@ export interface OnlineStatusMessage extends Message {
     isOnline: boolean;
 }
 
+export interface PMFMessage extends Message {
+    type: 'pmfStatus';
+    showPMF: boolean;
+}
+
 // Action is the base interface for sending messages from react => vscode
 // Action must have an action so receivers can switch on it.
 // Sub-interfaces should be used to carry action specific data and extend this interface.

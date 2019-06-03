@@ -27,7 +27,7 @@ import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
 import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
-import { HostErrorMessage } from '../../../ipc/messaging';
+import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -53,6 +53,7 @@ interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
+    showPMF: boolean;
 }
 
 const emptyPR = {
@@ -75,6 +76,7 @@ const emptyState: ViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
+    showPMF: false,
 
 };
 
@@ -168,6 +170,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     this.postMessage({ action: 'refreshPR' });
                 }
 
+                break;
+            }
+            case 'pmfStatus': {
+                this.setState({ showPMF: e.showPMF });
                 break;
             }
         }
@@ -322,7 +328,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
-                            <PMFBBanner onPMFLater={this.onPMFLater} onPMFNever={this.onPMFNever} onPMFSubmit={this.onPMFSubmit} />
+                            {this.state.showPMF &&
+                                <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                            }
                             <PageHeader
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}

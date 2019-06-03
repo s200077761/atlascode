@@ -11,7 +11,7 @@ import {
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable, OnlineStatusMessage, isPMFSubmitAction } from '../ipc/messaging';
+import { Action, isAlertable, OnlineStatusMessage, isPMFSubmitAction, PMFMessage } from '../ipc/messaging';
 import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
@@ -117,6 +117,9 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
+            this.postMessage({ type: 'pmfStatus', showPMF: Container.pmfStats.shouldShowSurvey() });
+
+
             this.invalidate();
         }
     }
@@ -130,24 +133,25 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
                 return true;
             }
             case 'pmfLater': {
-
+                Container.pmfStats.snoozeSurvey();
                 return true;
             }
             case 'pmfNever': {
-
+                Container.pmfStats.touchSurveyed();
                 return true;
             }
             case 'pmfSubmit': {
                 if (isPMFSubmitAction(a)) {
                     submitPMF(a.pmfData);
                 }
+                Container.pmfStats.touchSurveyed();
                 return true;
             }
         }
         return false;
     }
 
-    protected postMessage(message: S | OnlineStatusMessage) {
+    protected postMessage(message: S | OnlineStatusMessage | PMFMessage) {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);

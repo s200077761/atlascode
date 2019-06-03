@@ -12,7 +12,7 @@ const q2 = { id: "q2", question: "How can we improve this add-on for you?" };
 const q3 = { id: "q3", question: "What would you use as an alternative if this add-on were no longer available?" };
 const q4 = { id: "q4", question: "What is the main benefit you receive from this add-on?" };
 
-export default class PMFBBanner extends React.Component<{ onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
+export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
     constructor(props: any) {
         super(props);
         this.state = { isOpen: false, q1Value: undefined };
@@ -21,16 +21,18 @@ export default class PMFBBanner extends React.Component<{ onPMFLater: () => void
     handleOpen = () => this.setState({ isOpen: true });
     handleLater = () => {
         this.props.onPMFLater();
+        this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
     }
     handleNever = () => {
         this.props.onPMFNever();
+        this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
     }
 
     handleFeedback = (formData: PMFData) => {
-
         this.props.onPMFSubmit(formData);
+        this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
         return undefined;
     }

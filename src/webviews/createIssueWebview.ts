@@ -71,6 +71,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         } else {
             this.postMessage(onlineStatus(false));
         }
+
+        Container.pmfStats.touchActivity();
     }
 
     async updateFields(project?: WorkingProject) {

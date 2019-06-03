@@ -48,6 +48,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         }
 
         this.invalidate();
+        Container.pmfStats.touchActivity();
     }
 
     public invalidate() {

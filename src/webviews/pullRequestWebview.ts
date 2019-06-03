@@ -62,6 +62,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
 
         this.updatePullRequest(data);
+        Container.pmfStats.touchActivity();
     }
 
     public async invalidate() {

@@ -88,6 +88,7 @@ type MyState = {
   isErrorBannerOpen: boolean;
   isOnline: boolean;
   errorDetails: any;
+  showPMF: boolean;
 };
 
 type SizeMetrics = {
@@ -139,7 +140,8 @@ export default class JiraIssuePage extends WebviewComponent<
       commentInput: "",
       isErrorBannerOpen: false,
       isOnline: true,
-      errorDetails: undefined
+      errorDetails: undefined,
+      showPMF: false,
     };
   }
 
@@ -182,6 +184,10 @@ export default class JiraIssuePage extends WebviewComponent<
           this.postMessage({ action: 'refreshIssue' });
         }
 
+        break;
+      }
+      case 'pmfStatus': {
+        this.setState({ showPMF: e.showPMF });
         break;
       }
     }
@@ -359,7 +365,9 @@ export default class JiraIssuePage extends WebviewComponent<
           <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
         }
 
-        <PMFBBanner onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+        {this.state.showPMF &&
+          <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+        }
         <PageHeader
           actions={<ButtonGroup>
             <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
