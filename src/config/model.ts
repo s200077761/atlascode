@@ -52,7 +52,9 @@ export interface JiraIssueMonitor {
 export interface JiraExplorer {
     enabled: boolean;
     showOpenIssues: boolean;
+    openIssueJql: string;
     showAssignedIssues: boolean;
+    assignedIssueJql: string;
     refreshInterval: number;
 }
 
@@ -172,7 +174,9 @@ export function isStagingSite(s: AccessibleResource): boolean {
 export const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
     showOpenIssues: true,
+    openIssueJql: "",
     showAssignedIssues: true,
+    assignedIssueJql: "",
     refreshInterval: 5
 };
 

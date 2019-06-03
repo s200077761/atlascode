@@ -13,12 +13,13 @@ import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
+import { JQLTreeDataProvider } from "./jqlTreeDataProvider";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
   private _disposable: Disposable;
   private _jqlList: JQLEntry[];
-  private _children: CustomJQLTree[];
+  private _children: JQLTreeDataProvider[];
   private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
   public get onDidChangeTreeData(): Event<AbstractBaseNode> {
     return this._onDidChangeTreeData.event;
@@ -41,7 +42,8 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   onConfigurationChanged(e: ConfigurationChangeEvent) {
-    if (configuration.changed(e, 'jira.customJql')) {
+    if (configuration.changed(e, 'jira.customJql') ||
+      (configuration.changed(e, 'jira.explorer'))) {
       this.refresh();
     }
   }
@@ -80,12 +82,22 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   customJqlForWorkingSite(): JQLEntry[] {
     const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => item.siteId === Container.jiraSiteManager.effectiveSite.id);
 
-    if (siteJql) {
-      return siteJql.jql.filter((jql: JQLEntry) => {
-        return jql.enabled;
-      });
+    const base: JQLEntry[] = [];
+
+    if (Container.config.jira.explorer.showAssignedIssues) {
+      base.push({ id: "YOURS", enabled: true, name: "Your Issues", query: Container.config.jira.explorer.assignedIssueJql });
     }
-    return [];
+
+    if (Container.config.jira.explorer.showOpenIssues) {
+      base.push({ id: "OPEN", enabled: true, name: "Open Issues", query: Container.config.jira.explorer.openIssueJql });
+    }
+
+    if (siteJql) {
+      return base.concat(siteJql.jql.filter((jql: JQLEntry) => {
+        return jql.enabled;
+      }));
+    }
+    return base;
   }
 
   dispose() {

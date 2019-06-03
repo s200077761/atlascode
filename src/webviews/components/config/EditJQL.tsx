@@ -29,7 +29,9 @@ export default class EditJQL extends PureComponent<{
   workingProject: string;
   sites: AccessibleResource[];
   jqlEntry: JQLEntry;
+  nameEditable?: boolean;
   onCancel: () => void;
+  onRestoreDefault?: (jqlEntry: JQLEntry) => void;
   onSave: (site: AccessibleResource, jqlEntry: JQLEntry) => void;
 }, {
   selectedSite: AccessibleResource;
@@ -118,12 +120,18 @@ export default class EditJQL extends PureComponent<{
     this.props.onSave(this.state.selectedSite, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
+  onRestoreDefault = () => {
+    var entry = this.props.jqlEntry;
+    if (this.props.onRestoreDefault) {
+      this.props.onRestoreDefault(entry);
+    }
+  }
+
   onOpenComplete = () => {
     this.setState({ openComplete: true });
   }
 
   render() {
-
     return (
       <ModalTransition>
         <Modal
@@ -133,7 +141,7 @@ export default class EditJQL extends PureComponent<{
           shouldCloseOnEscapePress={false}
         >
           <Field label='Name'
-            isRequired={true}
+            isRequired={this.props.nameEditable === undefined || this.props.nameEditable}
             id='jql-name-input'
             name='jql-name-input'
             defaultValue={this.state.nameValue}
@@ -149,6 +157,7 @@ export default class EditJQL extends PureComponent<{
                     <input {...fieldArgs.fieldProps}
                       style={{ width: '100%', display: 'block' }}
                       className='ac-inputField'
+                      readOnly={this.props.nameEditable !== undefined && !this.props.nameEditable}
                       onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
@@ -157,29 +166,31 @@ export default class EditJQL extends PureComponent<{
             }
           </Field>
 
-          <Field label='Select Site'
-            id='site'
-            name='site'
-            defaultValue={this.props.workingSite}
-          >
-            {
-              (fieldArgs: any) => {
-                return (
-                  <Select
-                    {...fieldArgs.fieldProps}
-                    className="ac-select-container"
-                    classNamePrefix="ac-select"
-                    getOptionLabel={(option: any) => option.name}
-                    getOptionValue={(option: any) => option.id}
-                    options={this.props.sites}
-                    components={{ Option: IconOption, SingleValue: IconValue }}
-                    onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
-                  />
-                );
+          {
+            this.props.sites.length > 0 &&
+            <Field label='Select Site'
+              id='site'
+              name='site'
+              defaultValue={this.props.workingSite}
+            >
+              {
+                (fieldArgs: any) => {
+                  return (
+                    <Select
+                      {...fieldArgs.fieldProps}
+                      className="ac-select-container"
+                      classNamePrefix="ac-select"
+                      getOptionLabel={(option: any) => option.name}
+                      getOptionValue={(option: any) => option.id}
+                      options={this.props.sites}
+                      components={{ Option: IconOption, SingleValue: IconValue }}
+                      onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                    />
+                  );
+                }
               }
-            }
-          </Field>
-
+            </Field>
+          }
           {this.state.jqlError && !this.state.isEditing &&
             <div style={{ marginTop: '24px' }}>
               <SectionMessage appearance="error" title="JQL Error">
@@ -217,6 +228,17 @@ export default class EditJQL extends PureComponent<{
                 Save
             </Button>
             </div>
+            {this.props.onRestoreDefault &&
+              <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+                <Button
+                  className='ac-button'
+                  isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
+                  onClick={this.onRestoreDefault}
+                >
+                  Restore Default
+            </Button>
+              </div>
+            }
             <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
               <Button
                 className='ac-button'
