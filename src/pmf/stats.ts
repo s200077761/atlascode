@@ -2,7 +2,7 @@ import { ExtensionContext, Disposable } from 'vscode';
 import moment from 'moment';
 
 const PmfStatsKey = 'pmfStats';
-const FormatYYYYMMDD = 'YYYYMMDD';
+const FormatYYYYMMDD = 'YYYY-MM-DD';
 
 type PmfStatsData = {
     lastSurveyed: string;
