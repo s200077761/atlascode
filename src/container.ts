@@ -67,7 +67,7 @@ export class Container {
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        context.subscriptions.push(this._pmfStats = new PmfStats(context));
+        this._pmfStats = new PmfStats(context);
 
         let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 

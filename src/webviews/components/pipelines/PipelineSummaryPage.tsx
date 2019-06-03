@@ -20,7 +20,7 @@ import ErrorIcon from "@atlaskit/icon/glyph/error";
 import CalendarIcon from "@atlaskit/icon/glyph/calendar";
 import Avatar from "@atlaskit/avatar";
 import { colors } from "@atlaskit/theme";
-import * as moment from "moment";
+import { distanceInWordsToNow } from "date-fns";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
 import PageHeader from '@atlaskit/page-header';
@@ -243,10 +243,9 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     if (!totalSeconds) {
       return "";
     }
-    const duration = moment.duration(totalSeconds, "seconds");
-    const seconds = duration.seconds();
-    const minutes = duration.minutes();
-    if (minutes) {
+    const seconds = totalSeconds % 60;
+    const minutes = Math.trunc(totalSeconds / 60);
+    if (minutes > 0) {
       return `${minutes} min ${seconds} sec`;
     }
     return `${seconds} sec`;
@@ -356,7 +355,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
                 </span>
                 <span className="pipeline-head-item">
                   {calendarIcon}
-                  {moment(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on).fromNow()}
+                  {`${distanceInWordsToNow(this.state.pipeline.completed_on ? this.state.pipeline.completed_on : this.state.pipeline.created_on)} ago`}
                 </span>
                 <Avatar src={this.state.pipeline.creator_avatar} name={this.state.pipeline.creator_name} size="small" />
               </div>
