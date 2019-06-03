@@ -23,6 +23,7 @@ import { OnlineDetector } from './util/online';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { JiraFieldManager } from './jira/fieldManager';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
+import { PmfStats } from './pmf/stats';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -65,6 +66,8 @@ export class Container {
         context.subscriptions.push(this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath));
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
+
+        context.subscriptions.push(this._pmfStats = new PmfStats(context));
 
         let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
@@ -243,6 +246,11 @@ export class Container {
     private static _analyticsClient: AnalyticsClient;
     static get analyticsClient() {
         return this._analyticsClient;
+    }
+
+    private static _pmfStats: PmfStats;
+    static get pmfStats() {
+        return this._pmfStats;
     }
 
     static resetConfig() {
