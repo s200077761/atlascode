@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.34.0"
+        "vscode": "^1.35.0"
     },
     "categories": [
         "Other"
@@ -199,6 +199,11 @@
                     "light": "resources/light/refresh.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.addComment",
+                "title": "Add comment",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -347,6 +352,12 @@
                     "when": "viewItem == pipelineBranch"
                 }
             ],
+            "comments/commentThread/context": [
+                {
+                    "command": "atlascode.bb.addComment",
+                    "group": "inline"
+                }
+            ],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
@@ -403,6 +414,10 @@
                 {
                     "command": "atlascode.bb.clearAuth",
                     "when": "atlascode:isBBAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.addComment",
+                    "when": "false"
                 }
             ]
         },
