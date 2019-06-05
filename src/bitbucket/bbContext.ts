@@ -26,7 +26,7 @@ export class BitbucketContext extends Disposable {
     private _currentUser?: Bitbucket.Schema.User;
     private _currentUserStaging?: Bitbucket.Schema.User;
     private _pullRequestCache = new CacheMap();
-    public readonly prCommentController = new PullRequestCommentController();
+    public readonly prCommentController: PullRequestCommentController;
 
     constructor(gitApi: GitApi) {
         super(() => this.dispose());
@@ -45,6 +45,7 @@ export class BitbucketContext extends Disposable {
             commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
         );
 
+        this.prCommentController = new PullRequestCommentController(Container.context);
         this._disposable = Disposable.from(
             this._gitApi.onDidOpenRepository(this.refreshRepos, this),
             this._gitApi.onDidCloseRepository(this.refreshRepos, this),
