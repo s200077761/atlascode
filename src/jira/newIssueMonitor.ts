@@ -4,7 +4,7 @@ import { Commands } from "../commands";
 import { Logger } from "../logger";
 import { WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
-import * as moment from "moment";
+import { format } from "date-fns";
 import { AuthProvider } from "../atlclients/authInfo";
 import { Issue } from "./jiraIssue";
 
@@ -25,7 +25,7 @@ export class NewIssueMonitor {
       return;
     }
 
-    const ts = moment(this._timestamp).format("YYYY-MM-DD HH:mm");
+    const ts = format(this._timestamp, "YYYY-MM-DD HH:mm");
 
     issuesForJQL(`project = ${this._workingProject.id} AND created > "${ts}"`)
       .then(newIssues => {
