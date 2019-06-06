@@ -1,3 +1,11 @@
+## What's New In 1.4.2
+### Improvements
+* Allow using currentProject() in custom jql
+* Make Your/Open Issues editable custom JQL entries
+
+### Bugs fixed
+* Comment API changes for VS Code May Updates
+
 ## What's New In 1.4.1
 ### Improvements
 * Updated marketplace listing name to feature Jira and Bitbucket
