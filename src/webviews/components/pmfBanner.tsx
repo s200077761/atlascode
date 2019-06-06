@@ -7,10 +7,10 @@ import Form, { FormFooter, Field } from '@atlaskit/form';
 import { RadioGroup } from '@atlaskit/radio';
 import { FieldValidators, chain } from './fieldValidators';
 
-const q1 = { id: "q1", question: "How would you feel if you could no longer use this add-on?" };
-const q2 = { id: "q2", question: "(optional) How can we improve this add-on for you?" };
-const q3 = { id: "q3", question: "(optional) What would you use as an alternative if this add-on were no longer available?" };
-const q4 = { id: "q4", question: "(optional) What is the main benefit you receive from this add-on?" };
+const q1 = { id: "q1", question: "How would you feel if you could no longer use this extension?" };
+const q2 = { id: "q2", question: "(optional) How can we improve this extension for you?" };
+const q3 = { id: "q3", question: "(optional) What would you use as an alternative if this extension were no longer available?" };
+const q4 = { id: "q4", question: "(optional) What is the main benefit you receive from this extension?" };
 
 export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
     constructor(props: any) {
