@@ -27,7 +27,7 @@ import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
 import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
-import { HostErrorMessage } from '../../../ipc/messaging';
+import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -35,6 +35,7 @@ import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
+import PMFBBanner from '../pmfBanner';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -52,6 +53,7 @@ interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
+    showPMF: boolean;
 }
 
 const emptyPR = {
@@ -74,6 +76,7 @@ const emptyState: ViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
+    showPMF: false,
 
 };
 
@@ -167,6 +170,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     this.postMessage({ action: 'refreshPR' });
                 }
 
+                break;
+            }
+            case 'pmfStatus': {
+                this.setState({ showPMF: e.showPMF });
                 break;
             }
         }
@@ -320,6 +327,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         <GridColumn>
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                            }
+                            {this.state.showPMF &&
+                                <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                             }
                             <PageHeader
                                 actions={actionsContent}

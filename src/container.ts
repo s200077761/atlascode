@@ -47,6 +47,7 @@ export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
         this._context = context;
         this._config = config;
+        this._version = version;
         context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager()));
@@ -66,7 +67,7 @@ export class Container {
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
 
-        context.subscriptions.push(this._pmfStats = new PmfStats(context));
+        this._pmfStats = new PmfStats(context);
 
         let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
 
@@ -120,6 +121,11 @@ export class Container {
     private static _uriHandler: UriHandler;
     static get uriHandler() {
         return this._uriHandler;
+    }
+
+    private static _version: string;
+    static get version() {
+        return this._version;
     }
 
     private static _config: IConfig | undefined;

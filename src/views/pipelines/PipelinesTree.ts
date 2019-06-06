@@ -5,7 +5,7 @@ import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
-import * as moment from "moment";
+import { distanceInWordsToNow } from "date-fns";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AuthProvider } from '../../atlclients/authInfo';
@@ -266,7 +266,7 @@ export class PipelineNode extends AbstractBaseNode {
     getTreeItem() {
         var label = "";
         if (this.pipeline.created_on) {
-            label = moment(this.pipeline.created_on).fromNow();
+            label = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;
         }
         label += ` ${statusForPipeline(this.pipeline)}`;
         const item = new TreeItem(label);
