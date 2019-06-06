@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, isIssue } from '../jira/jiraModel';
+import { Issue, emptyIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
@@ -42,12 +42,8 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             return;
         }
 
-        if (isIssue(data)) {
-            this.updateIssue(data);
-            return;
-        }
-
         this.invalidate();
+        Container.pmfStats.touchActivity();
     }
 
     public invalidate() {

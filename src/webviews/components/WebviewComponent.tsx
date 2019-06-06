@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Action } from '../../ipc/messaging';
+import { Action, PMFData } from '../../ipc/messaging';
 import { darken, lighten, opacity } from './colors';
 
 interface VsCodeApi {
@@ -26,6 +26,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
         this._api = acquireVsCodeApi();
 
         const onMessageEvent = this.onMessageEvent.bind(this);
+
         window.addEventListener('message', onMessageEvent);
         this.initializeColors();
     }
@@ -76,6 +77,16 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
         observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
         onColorThemeChanged();
+    }
+
+    protected onPMFLater() {
+        this._api.postMessage({ action: 'pmfLater' });
+    }
+    protected onPMFNever() {
+        this._api.postMessage({ action: 'pmfNever' });
+    }
+    protected onPMFSubmit(data: PMFData) {
+        this._api.postMessage({ action: 'pmfSubmit', pmfData: data });
     }
 
     private onMessageEvent(e: MessageEvent) {

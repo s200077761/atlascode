@@ -826,7 +826,6 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                     errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
                                 }
                                 if (selectField.autoCompleteJql && selectField.autoCompleteJql.length > 1) {
-                                    console.log(`rendering async select for ${field.name}`);
                                     return (
                                         <div>
                                             <AsyncSelect

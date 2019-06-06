@@ -26,6 +26,8 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { Issue, Transition, isIssue } from '../../../jira/jiraModel';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
+import PMFBBanner from '../pmfBanner';
+import { PMFData } from '../../../ipc/messaging';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -54,6 +56,7 @@ interface MyState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
+    showPMF: boolean;
 }
 
 const emptyState = {
@@ -74,6 +77,7 @@ const emptyState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
+    showPMF: false,
 };
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
@@ -303,6 +307,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                 break;
             }
+            case 'pmfStatus': {
+                this.setState({ showPMF: e.showPMF });
+                break;
+            }
         }
     }
 
@@ -376,7 +384,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     {this.state.isErrorBannerOpen &&
                                         <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                     }
-
+                                    {this.state.showPMF &&
+                                        <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                    }
                                     <GridColumn medium={12}>
                                         <PageHeader actions={actionsContent}>
                                             <p>Create pull request</p>

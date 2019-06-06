@@ -7,14 +7,23 @@ import TurndownService from 'turndown';
 
 const turndownService = new TurndownService();
 
+interface PullRequestComment extends vscode.Comment {
+    prCommentThreadId?: number;
+}
+
 // PullRequestCommentController is a comment controller for a given PR
 export class PullRequestCommentController implements vscode.Disposable {
 
-    private _commentController: vscode.CommentController = vscode.comment.createCommentController('bbpr', 'Bitbucket pullrequest comments');
+    private _commentController: vscode.CommentController = vscode.comments.createCommentController('bbpr', 'Bitbucket pullrequest comments');
     // map of comment threads keyed by pull request - Map<`pull request href`, Map<`comment id`, vscode.CommentThread>>
-    private _commentsCache = new Map<string, Map<string, vscode.CommentThread>>();
+    private _commentsCache = new Map<string, Map<number, vscode.CommentThread>>();
 
-    constructor() {
+    constructor(ctx: vscode.ExtensionContext) {
+        ctx.subscriptions.push(
+            vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
+                this.addComment(reply);
+            })
+        );
         this._commentController.commentingRangeProvider = {
             provideCommentingRanges: (document: vscode.TextDocument, token: vscode.CancellationToken): vscode.Range[] | undefined => {
                 if (document.uri.scheme !== PullRequestNodeDataProvider.SCHEME) {
@@ -25,26 +34,26 @@ export class PullRequestCommentController implements vscode.Disposable {
                 return [new vscode.Range(0, 0, lineCount - 1, 0)];
             }
         };
-
-        this._commentController.template = {
-            label: 'Add a new comment',
-            acceptInputCommand: {
-                title: 'Add comment',
-                command: Commands.BitbucketAddComment,
-                arguments: [
-                    this
-                ]
-            }
-        };
     }
 
-    async addComment(t: vscode.CommentThread) {
-        if (!t || t.id === '') {
-            await this.postNewComment(this._commentController.inputBox!);
-        } else {
-            await this.postReplyToComment(this._commentController.inputBox!.resource, t, this._commentController.inputBox!.value);
-        }
-        this._commentController.inputBox!.value = '';
+    async addComment(reply: vscode.CommentReply) {
+        const { remote, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as FileDiffQueryParams;
+        const inline = {
+            from: lhs ? reply.thread.range.start.line + 1 : undefined,
+            to: lhs ? undefined : reply.thread.range.start.line + 1,
+            path: path
+        };
+        const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
+        const { data } = await PullRequestApi.postComment(remote, prId, reply.text, commentThreadId, inline);
+
+        const comments = [
+            ...reply.thread.comments,
+            PullRequestCommentController.createVSCodeComment(data.id!, data)
+        ];
+
+        this.createOrUpdateThread(data.id!, reply.thread.uri, reply.thread.range, comments);
+
+        reply.thread.dispose();
     }
 
     provideComments(uri: vscode.Uri) {
@@ -59,13 +68,13 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = c.map(comment => PullRequestCommentController.createVSCodeComment(comment));
+                const comments = c.map(comment => PullRequestCommentController.createVSCodeComment(c[0].id!, comment));
 
-                this.createOrUpdateThread(String(c[0].id!), uri, range, comments);
+                this.createOrUpdateThread(c[0].id!, uri, range, comments);
             });
     }
 
-    private createOrUpdateThread(threadId: string, uri: vscode.Uri, range: vscode.Range, comments: vscode.Comment[]) {
+    private createOrUpdateThread(threadId: number, uri: vscode.Uri, range: vscode.Range, comments: vscode.Comment[]) {
         const { prHref } = JSON.parse(uri.query) as FileDiffQueryParams;
 
         if (!this._commentsCache.has(prHref)) {
@@ -74,55 +83,25 @@ export class PullRequestCommentController implements vscode.Disposable {
         const prCommentCache = this._commentsCache.get(prHref)!;
 
         if (prCommentCache.has(threadId)) {
-            prCommentCache.get(threadId)!.dispose!();
+            prCommentCache.get(threadId)!.dispose();
         }
 
-        const newThread = this._commentController.createCommentThread(threadId, uri, range, comments);
+        const newThread = this._commentController.createCommentThread(uri, range, comments);
+        newThread.label = '';
         newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
-        newThread.acceptInputCommand = {
-            title: 'Add comment',
-            command: Commands.BitbucketAddComment,
-            arguments: [
-                this,
-                newThread
-            ]
-        };
+
         prCommentCache.set(threadId, newThread);
     }
 
-    private async postNewComment(inputBox: vscode.CommentInputBox) {
-        const { remote, prId, path, lhs } = JSON.parse(inputBox.resource.query) as FileDiffQueryParams;
-        const inline = {
-            from: lhs ? inputBox.range.start.line + 1 : undefined,
-            to: lhs ? undefined : inputBox.range.start.line + 1,
-            path: path
-        };
-        const { data } = await PullRequestApi.postComment(remote, prId, inputBox.value, undefined, inline);
-
-        const comments = [PullRequestCommentController.createVSCodeComment(data)];
-
-        this.createOrUpdateThread(String(data.id!), inputBox.resource, inputBox.range, comments);
-    }
-
-    private async postReplyToComment(uri: vscode.Uri, commentThread: vscode.CommentThread, text: string) {
-        const { remote, prId } = JSON.parse(uri.query) as FileDiffQueryParams;
-        const { data } = await PullRequestApi.postComment(remote, prId, text, Number(commentThread.id));
-        commentThread.comments = [
-            ...commentThread.comments,
-            PullRequestCommentController.createVSCodeComment(data)
-        ];
-        this.createOrUpdateThread(commentThread.id, uri, commentThread.range, commentThread.comments);
-    }
-
-    private static createVSCodeComment(data: Bitbucket.Schema.Comment) {
+    private static createVSCodeComment(prCommentThreadId: number, data: Bitbucket.Schema.Comment): PullRequestComment {
         return {
+            prCommentThreadId: prCommentThreadId,
             body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
-            userName: data.user ? data.user.display_name! : 'Unknown user',
             author: {
-                name: data.user ? data.user.display_name! : 'Unknown user'
+                name: data.user ? data.user.display_name! : 'Unknown user',
+                iconPath: data.user ? vscode.Uri.parse(data.user.links!.avatar!.href!) : undefined
             },
-            commentId: String(data.id!),
-            id: String(data.id!)
+            mode: vscode.CommentMode.Editing
         };
     }
 

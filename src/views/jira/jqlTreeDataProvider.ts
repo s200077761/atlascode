@@ -9,15 +9,18 @@ import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchIssue } from '../../jira/fetchIssue';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
+import { WorkingProject } from '../../config/model';
+import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
     protected _issues: Issue[] | undefined;
-    protected _jql: string | undefined;
+    private _jql: string | undefined;
 
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
+    private _projectId: string | undefined;
     protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
     public get onDidChangeTreeData(): Event<AbstractBaseNode> {
         return this._onDidChangeTreeData.event;
@@ -26,6 +29,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     constructor(jql?: string, emptyState?: string, emptyStateCommand?: Command) {
         super();
 
+        Container.jiraSiteManager.getEffectiveProject().then(p => this._projectId = p.id);
         this._jql = jql;
         if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
@@ -39,6 +43,17 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     public setJql(jql: string) {
         this._issues = undefined;
         this._jql = jql;
+    }
+
+    private effectiveJql(): string | undefined {
+        if (this._jql === undefined) {
+            return undefined;
+        }
+        return applyWorkingProject(this._projectId, this._jql);
+    }
+
+    setProject(project: WorkingProject) {
+        this._projectId = project.id;
     }
 
     setEmptyState(text: string) {
@@ -81,12 +96,13 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchIssues(): Promise<IssueNode[]> {
-        if (!this._jql) {
+        const jql = this.effectiveJql();
+        if (!jql) {
             return Promise.resolve([]);
         }
 
         // fetch issues matching the jql
-        const newIssues = await issuesForJQL(this._jql);
+        const newIssues = await issuesForJQL(jql);
 
         // epics don't have children filled in and children only have a ref to the parent key
         // we need to fill in the children and fetch the parents of any orphans

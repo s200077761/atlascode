@@ -35,12 +35,13 @@ import { AsyncSelect, AsyncCreatableSelect, components } from '@atlaskit/select'
 import IssueList from "./IssueList";
 import { OpenJiraIssueAction } from "../../../ipc/issueActions";
 import NavItem from "./NavItem";
-import { HostErrorMessage } from "../../../ipc/messaging";
+import { HostErrorMessage, PMFData } from "../../../ipc/messaging";
 import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
+import PMFBBanner from "../pmfBanner";
 
 type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -87,6 +88,7 @@ type MyState = {
   isErrorBannerOpen: boolean;
   isOnline: boolean;
   errorDetails: any;
+  showPMF: boolean;
 };
 
 type SizeMetrics = {
@@ -138,7 +140,8 @@ export default class JiraIssuePage extends WebviewComponent<
       commentInput: "",
       isErrorBannerOpen: false,
       isOnline: true,
-      errorDetails: undefined
+      errorDetails: undefined,
+      showPMF: false,
     };
   }
 
@@ -181,6 +184,10 @@ export default class JiraIssuePage extends WebviewComponent<
           this.postMessage({ action: 'refreshIssue' });
         }
 
+        break;
+      }
+      case 'pmfStatus': {
+        this.setState({ showPMF: e.showPMF });
         break;
       }
     }
@@ -356,6 +363,10 @@ export default class JiraIssuePage extends WebviewComponent<
         }
         {this.state.isErrorBannerOpen &&
           <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+        }
+
+        {this.state.showPMF &&
+          <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
         }
         <PageHeader
           actions={<ButtonGroup>

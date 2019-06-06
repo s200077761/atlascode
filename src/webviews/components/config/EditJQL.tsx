@@ -8,6 +8,7 @@ import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { AccessibleResource } from "../../../atlclients/authInfo";
+import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -25,9 +26,12 @@ const IconValue = (props: any) => (
 export default class EditJQL extends PureComponent<{
   jiraAccessToken: string;
   workingSite: AccessibleResource;
+  workingProject: string;
   sites: AccessibleResource[];
   jqlEntry: JQLEntry;
+  nameEditable?: boolean;
   onCancel: () => void;
+  onRestoreDefault?: (jqlEntry: JQLEntry) => void;
   onSave: (site: AccessibleResource, jqlEntry: JQLEntry) => void;
 }, {
   selectedSite: AccessibleResource;
@@ -68,8 +72,9 @@ export default class EditJQL extends PureComponent<{
   }
 
   validationRequest = async (jql: string) => {
+    const effectiveJql = applyWorkingProject(this.props.workingProject, jql);
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${effectiveJql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -115,12 +120,18 @@ export default class EditJQL extends PureComponent<{
     this.props.onSave(this.state.selectedSite, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
+  onRestoreDefault = () => {
+    var entry = this.props.jqlEntry;
+    if (this.props.onRestoreDefault) {
+      this.props.onRestoreDefault(entry);
+    }
+  }
+
   onOpenComplete = () => {
     this.setState({ openComplete: true });
   }
 
   render() {
-
     return (
       <ModalTransition>
         <Modal
@@ -130,7 +141,7 @@ export default class EditJQL extends PureComponent<{
           shouldCloseOnEscapePress={false}
         >
           <Field label='Name'
-            isRequired={true}
+            isRequired={this.props.nameEditable === undefined || this.props.nameEditable}
             id='jql-name-input'
             name='jql-name-input'
             defaultValue={this.state.nameValue}
@@ -146,6 +157,7 @@ export default class EditJQL extends PureComponent<{
                     <input {...fieldArgs.fieldProps}
                       style={{ width: '100%', display: 'block' }}
                       className='ac-inputField'
+                      readOnly={this.props.nameEditable !== undefined && !this.props.nameEditable}
                       onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
@@ -154,29 +166,31 @@ export default class EditJQL extends PureComponent<{
             }
           </Field>
 
-          <Field label='Select Site'
-            id='site'
-            name='site'
-            defaultValue={this.props.workingSite}
-          >
-            {
-              (fieldArgs: any) => {
-                return (
-                  <Select
-                    {...fieldArgs.fieldProps}
-                    className="ac-select-container"
-                    classNamePrefix="ac-select"
-                    getOptionLabel={(option: any) => option.name}
-                    getOptionValue={(option: any) => option.id}
-                    options={this.props.sites}
-                    components={{ Option: IconOption, SingleValue: IconValue }}
-                    onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
-                  />
-                );
+          {
+            this.props.sites.length > 0 &&
+            <Field label='Select Site'
+              id='site'
+              name='site'
+              defaultValue={this.props.workingSite}
+            >
+              {
+                (fieldArgs: any) => {
+                  return (
+                    <Select
+                      {...fieldArgs.fieldProps}
+                      className="ac-select-container"
+                      classNamePrefix="ac-select"
+                      getOptionLabel={(option: any) => option.name}
+                      getOptionValue={(option: any) => option.id}
+                      options={this.props.sites}
+                      components={{ Option: IconOption, SingleValue: IconValue }}
+                      onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                    />
+                  );
+                }
               }
-            }
-          </Field>
-
+            </Field>
+          }
           {this.state.jqlError && !this.state.isEditing &&
             <div style={{ marginTop: '24px' }}>
               <SectionMessage appearance="error" title="JQL Error">
@@ -199,6 +213,7 @@ export default class EditJQL extends PureComponent<{
               jqlError={this.state.jqlError}
             />
           }
+          <p><strong>Tip:</strong> You can use <code>project = {WorkingProjectDisplayName}</code> to restrict the query to issues in your working project. It's not actually valid JQL, but we'll take care of it.</p>
           <div style={{
             marginTop: '24px',
             display: 'flex',
@@ -213,6 +228,17 @@ export default class EditJQL extends PureComponent<{
                 Save
             </Button>
             </div>
+            {this.props.onRestoreDefault &&
+              <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+                <Button
+                  className='ac-button'
+                  isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
+                  onClick={this.onRestoreDefault}
+                >
+                  Restore Default
+            </Button>
+              </div>
+            }
             <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
               <Button
                 className='ac-button'

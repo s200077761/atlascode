@@ -24,13 +24,13 @@
     },
     "icon": "images/atlascode-icon.png",
     "preview": false,
-    "enableProposedApi": true,
+    "enableProposedApi": false,
     "galleryBanner": {
         "color": "#c5ddff",
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.34.0"
+        "vscode": "^1.35.0"
     },
     "categories": [
         "Other"
@@ -199,6 +199,11 @@
                     "light": "resources/light/refresh.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.addComment",
+                "title": "Add comment",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -213,18 +218,8 @@
         "views": {
             "atlascode-drawer": [
                 {
-                    "id": "atlascode.views.jira.assignedIssues",
-                    "name": "Your Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:assignedIssuesTreeEnabled"
-                },
-                {
-                    "id": "atlascode.views.jira.openIssues",
-                    "name": "Open Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:openIssuesTreeEnabled"
-                },
-                {
                     "id": "atlascode.views.jira.customJql",
-                    "name": "Custom JQL",
+                    "name": "Jira Issues",
                     "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled"
                 },
                 {
@@ -290,20 +285,20 @@
                 },
                 {
                     "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.createIssue",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
                     "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues)/ && atlascode:isJiraAuthenticated"
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
-                    "when": "view =~ /(atlascode.views.jira.assignedIssues|atlascode.views.jira.openIssues|atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
@@ -355,6 +350,12 @@
                 {
                     "command": "atlascode.bb.startPipeline",
                     "when": "viewItem == pipelineBranch"
+                }
+            ],
+            "comments/commentThread/context": [
+                {
+                    "command": "atlascode.bb.addComment",
+                    "group": "inline"
                 }
             ],
             "commandPalette": [
@@ -413,6 +414,10 @@
                 {
                     "command": "atlascode.bb.clearAuth",
                     "when": "atlascode:isBBAuthenticated"
+                },
+                {
+                    "command": "atlascode.bb.addComment",
+                    "when": "false"
                 }
             ]
         },
@@ -462,10 +467,22 @@
                     "description": "Enables the Open Issues in the Jira Issue Explorer",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.openIssueJql": {
+                    "type": "string",
+                    "default": "assignee in (EMPTY) and project=currentProject() and resolution = Unresolved and statusCategory != Done order by lastViewed DESC",
+                    "description": "JQL to retrieve open issues",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.showAssignedIssues": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Assigned Issues in the Jira Issue Explorer",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.assignedIssueJql": {
+                    "type": "string",
+                    "default": "assignee=currentUser() and project=currentProject() and resolution = Unresolved and statusCategory != Done",
+                    "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.refreshInterval": {
@@ -798,6 +815,7 @@
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
         "bitbucket": "^1.14.0",
+        "date-fns": "^1.30.1",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.16.3",
         "git-url-parse": "^11.1.2",
@@ -806,7 +824,6 @@
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
         "macaddress": "^0.2.9",
-        "moment": "^2.23.0",
         "p-any": "^2.1.0",
         "p-timeout": "^3.1.0",
         "passport": "^0.4.0",
@@ -836,7 +853,6 @@
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
         "@types/mocha": "^5.2.2",
-        "@types/moment": "^2.13.0",
         "@types/node": "^8.10.25",
         "@types/node-fetch": "^2.1.4",
         "@types/passport": "^0.4.6",

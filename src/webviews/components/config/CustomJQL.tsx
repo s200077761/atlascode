@@ -15,6 +15,7 @@ type changeObject = { [key: string]: any };
 export default class CustomJQL extends React.Component<
   {
     workingSite: AccessibleResource;
+    workingProject: string;
     sites: AccessibleResource[];
     siteJqlList: SiteJQL[];
     onConfigChange: (changes: changeObject, removes?: string[]) => void;
@@ -293,6 +294,7 @@ export default class CustomJQL extends React.Component<
           <EditJQL
             jiraAccessToken={this.props.jiraAccessToken}
             workingSite={this.props.workingSite}
+            workingProject={this.props.workingProject}
             sites={this.props.sites}
             jqlEntry={this.state.editingEntry}
             onCancel={this.handleCancelEdit}
@@ -303,9 +305,11 @@ export default class CustomJQL extends React.Component<
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
-        <Button className="ac-button" onClick={this.onNewQuery}>
-          Add Query
+        <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+          <Button className="ac-button" onClick={this.onNewQuery}>
+            Add Query
         </Button>
+        </div>
       </React.Fragment>
     );
   }

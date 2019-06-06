@@ -19,8 +19,9 @@ pipelines:
             - npm install -g vsce
             - npm -no-git-tag-version --allow-same-version -f version ${BITBUCKET_TAG}
             - yarn
-            - vsce package
-            - curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
+            - vsce package --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --yarn
+            - vsce publish -p ${DEPLOY_AUTH} --baseContentUrl https://bitbucket.org/atlassianlabs/atlascode/src/master/ --packagePath atlascode-${BITBUCKET_TAG}.vsix --yarn
+            #- curl -X POST "https://${DEPLOY_AUTH}@api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" --form files=@"atlascode-${BITBUCKET_TAG}.vsix"
   custom:
     nightly:
       - step:
