@@ -7,6 +7,7 @@ import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
 import { AuthProvider } from "../atlclients/authInfo";
 import { Issue } from "./jiraIssue";
+import { showIssue } from "../commands/jira/showIssue";
 
 export class NewIssueMonitor {
   private _workingProject: WorkingProject | undefined;
@@ -63,7 +64,11 @@ export class NewIssueMonitor {
     window.showInformationMessage(message, "View Atlassian Explorer")
       .then((selection) => {
         if (selection) {
-          commands.executeCommand("workbench.view.extension.atlascode-drawer");
+          if (newIssues.length === 1) {
+            showIssue(newIssues[0].id);
+          } else {
+            commands.executeCommand("workbench.view.extension.atlascode-drawer");
+          }
         }
       });
   }

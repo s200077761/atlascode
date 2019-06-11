@@ -4,6 +4,7 @@ import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { shouldDisplay } from "./Helpers";
+import { Commands } from "../../commands";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -22,13 +23,18 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       PipelineApi.getRecentActivity(repo).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
         diffs = diffs.filter(p => shouldDisplay(p.target!.ref_name));
+        const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
         if (diffs.length > 0) {
           window.showInformationMessage(
             this.composeMessage(diffs),
-            "View Pipeline Explorer"
+            buttonText
           ).then((selection) => {
             if (selection) {
-              commands.executeCommand("workbench.view.extension.atlascode-drawer");
+              if (diffs.length === 1) {
+                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo });
+              } else {
+                commands.executeCommand("workbench.view.extension.atlascode-drawer");
+              }
             }
           });
         }
