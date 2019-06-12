@@ -94,13 +94,13 @@ export class PullRequestCommentController implements vscode.Disposable {
         prCommentCache.set(threadId, newThread);
     }
 
-    private static createVSCodeComment(prCommentThreadId: number, data: Bitbucket.Schema.Comment): PullRequestComment {
+    private static createVSCodeComment(prCommentThreadId: number, comment: Comment): PullRequestComment {
         return {
             prCommentThreadId: prCommentThreadId,
-            body: new vscode.MarkdownString(turndownService.turndown(data.content!.html!)),
+            body: new vscode.MarkdownString(turndownService.turndown(comment.htmlContent)),
             author: {
-                name: data.user ? data.user.display_name! : 'Unknown user',
-                iconPath: data.user ? vscode.Uri.parse(data.user.links!.avatar!.href!) : undefined
+                name: comment.user.displayName || 'Unknown user',
+                iconPath: vscode.Uri.parse(comment.user.avatarUrl)
             },
             mode: vscode.CommentMode.Editing
         };
