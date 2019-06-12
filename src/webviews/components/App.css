@@ -277,7 +277,13 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], [class^=Modal__Dialog], [class^=Radio__Label] {
+[class^=Checkbox__Label],
+[class^=Field__Label],
+[class^=Label__LabelWrapper-],
+[class^=Label__LabelInner-],
+[class^=Modal__Dialog],
+[class^=Radio__Label],
+[class^=Field__FieldWrapper-]>label>span {
   color: var(--vscode-foreground) !important
 }
 
