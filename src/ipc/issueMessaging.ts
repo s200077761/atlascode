@@ -3,6 +3,7 @@ import { Issue, Project, EpicFieldInfo } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
+import { PullRequestData } from "../bitbucket/model";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -12,7 +13,7 @@ export interface IssueData extends Issue {
     currentUserId: string;
     childIssues: Issue[];
     workInProgress: boolean;
-    recentPullRequests: Bitbucket.Schema.Pullrequest[];
+    recentPullRequests: PullRequestData[];
 }
 
 export interface IssueProblemsData extends Message {

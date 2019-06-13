@@ -1,9 +1,10 @@
 import { Remote } from "../typings/git";
 import { GitUrlParse, maxItemsSupported, bitbucketHosts } from "./pullRequests";
+import { Repo, Commit, BitbucketBranchingModel } from "./model";
 
 export namespace RepositoriesApi {
 
-    export async function get(remote: Remote): Promise<Bitbucket.Schema.Repository> {
+    export async function get(remote: Remote): Promise<Repo> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -12,7 +13,19 @@ export namespace RepositoriesApi {
             username: parsed.owner
         });
 
-        return data;
+        return toRepo(data);
+    }
+
+    export function toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
+        return {
+            name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
+            displayName: bbRepo.name!,
+            fullName: bbRepo.full_name!,
+            url: bbRepo.links!.html!.href!,
+            avatarUrl: bbRepo.links!.avatar!.href!,
+            mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
+            issueTrackerEnabled: !!bbRepo.has_issues
+        };
     }
 
     export async function getDevelopmentBranch(remote: Remote): Promise<string> {
@@ -29,10 +42,10 @@ export namespace RepositoriesApi {
 
         return branchingModel.data.development && branchingModel.data.development.branch
             ? branchingModel.data.development.branch.name!
-            : repo.mainbranch!.name!;
+            : repo.mainbranch!;
     }
 
-    export async function getBranchingModel(remote: Remote): Promise<Bitbucket.Schema.BranchingModel> {
+    export async function getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -42,7 +55,7 @@ export namespace RepositoriesApi {
         }).then(res => res.data);
     }
 
-    export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Bitbucket.Schema.Commit[]> {
+    export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
         let parsed = GitUrlParse(remoteUrl);
         const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
@@ -54,7 +67,22 @@ export namespace RepositoriesApi {
             pagelen: maxItemsSupported.commits
         });
 
-        return data.values;
+        const commits: Bitbucket.Schema.Commit[] = data.values || [];
+
+        return commits.map(commit => ({
+            hash: commit.hash!,
+            message: commit.message!,
+            ts: commit.date!,
+            url: commit.links!.html!.href!,
+            htmlSummary: commit.summary ? commit.summary.html! : undefined,
+            rawSummary: commit.summary ? commit.summary.raw! : undefined,
+            author: {
+                accountId: commit.author!.user!.account_id,
+                displayName: commit.author!.user!.display_name!,
+                url: commit.author!.user!.links!.html!.href!,
+                avatarUrl: commit.author!.user!.links!.avatar!.href!
+            }
+        }));
     }
 
     export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {

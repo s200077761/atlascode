@@ -6,12 +6,13 @@ import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import Button from '@atlaskit/button';
 import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
+import { BuildStatus as BitbucketBuildStatus } from '../../../bitbucket/model';
 
 const successIcon = <CheckCircleIcon primaryColor='green' label='build successful' />;
 const inprogressIcon = <RecentIcon primaryColor='blue' label='build in progress' />;
 const errorIcon = <ErrorIcon primaryColor='red' label='build failure' />;
 
-export default class BuildStatus extends React.Component<{ buildStatuses?: Bitbucket.Schema.Commitstatus[], postMessage: (e: OpenPipelineBuildAction) => void }, { dialogOpen: boolean }> {
+export default class BuildStatus extends React.Component<{ buildStatuses?: BitbucketBuildStatus[], postMessage: (e: OpenPipelineBuildAction) => void }, { dialogOpen: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { dialogOpen: false };

@@ -30,6 +30,7 @@ import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { StartWorkOnBitbucketIssueData, isStartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/bitbucketIssueActions";
+import { BitbucketIssue } from "../../../bitbucket/model";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
@@ -291,7 +292,7 @@ export default class StartWorkPage extends WebviewComponent<
       </GridColumn>;
     }
     else if (this.state.issueType === 'bitbucketIssue') {
-      const bbIssue = issue as Bitbucket.Schema.Issue;
+      const bbIssue = issue as BitbucketIssue;
       pageHeader = <GridColumn medium={8}>
         <em><p>Start work on:</p></em>
         <PageHeader

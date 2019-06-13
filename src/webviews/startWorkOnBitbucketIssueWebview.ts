@@ -14,10 +14,11 @@ import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { Repo, BitbucketIssue } from '../bitbucket/model';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
-    private _state: Bitbucket.Schema.Issue;
+export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
+    private _state: BitbucketIssue;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -30,12 +31,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         return "startWorkOnIssueScreen";
     }
 
-    async createOrShowIssue(data: Bitbucket.Schema.Issue) {
+    async createOrShowIssue(data: BitbucketIssue) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    initialize(data: Bitbucket.Schema.Issue) {
+    initialize(data: BitbucketIssue) {
         this._state = data;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -82,7 +83,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser()).account_id!);
+                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser()).accountId!);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
@@ -115,7 +116,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         await repo.checkout(destBranch);
     }
 
-    public async updateIssue(issue: Bitbucket.Schema.Issue) {
+    public async updateIssue(issue: BitbucketIssue) {
         this._state = issue;
 
         if (this._panel) {
@@ -132,12 +133,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 break;
             }
 
-            let repo: Bitbucket.Schema.Repository | undefined = undefined;
+            let repo: Repo | undefined = undefined;
             let developmentBranch = undefined;
             let href = undefined;
             if (Container.bitbucketContext.isBitbucketRepo(r)) {
                 [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]), RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0])]);
-                href = repo.links!.html!.href;
+                href = repo.url;
             }
 
             await repoData.push({

@@ -36,6 +36,7 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
+import { BitbucketIssue } from '../../../bitbucket/model';
 
 type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -157,7 +158,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
                         isAnyCommentLoading: false,
-                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.close_source_branch : this.state.closeSourceBranch
+                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.closeSourceBranch : this.state.closeSourceBranch
                     });
                 }
                 break;
@@ -195,7 +196,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as Bitbucket.Schema.Issue }
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssue }
         });
     }
 
@@ -224,7 +225,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const isPrOpen = pr.state === "OPEN";
 
         let currentUserApproved = pr.participants!
-            .filter((participant) => participant.user!.account_id === this.state.pr.currentUser!.account_id)
+            .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
             .reduce((acc, curr) => !!acc || !!curr.approved, false);
 
         const issue = this.state.pr.mainIssue;
@@ -245,11 +246,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     : <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
-                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as Bitbucket.Schema.Issue })} />
+                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as BitbucketIssue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as Bitbucket.Schema.Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                <StatusMenu issue={issue as BitbucketIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -276,7 +277,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <div>
                                     <MergeChecks {...this.state.pr} />
                                     <div className='ac-vpadding'>
-                                        <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/admin/merge-strategies`} /></label>
+                                        <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
                                         <Select
                                             options={[
                                                 { label: 'Default merge strategy', value: undefined },
@@ -311,9 +312,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
-                <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repository!.name!} href={this.state.pr.pr!.destination!.repository!.links!.html!.href} />} />
-                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repository!.links!.html!.href}/pull-requests`} />} />
-                <BreadcrumbsItem component={() => <NavItem text={`Pull request #${pr.id}`} href={pr.links!.html!.href} onCopy={this.handleCopyLink} />} />
+                <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repo.displayName} href={this.state.pr.pr!.destination!.repo.url} />} />
+                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repo.url}/pull-requests`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`Pull request #${pr.id}`} href={pr.url} onCopy={this.handleCopyLink} />} />
             </BreadcrumbsStateless>
         );
 
@@ -340,14 +341,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div className='ac-flex-space-between'>
                                 <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
                                 <div className='ac-flex'>
-                                    <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branch!.name! === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branch!.name!)}>
-                                        {pr.source!.branch!.name! === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
+                                    <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branchName === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branchName)}>
+                                        {pr.source!.branchName === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
                                     </Button>
                                     <BuildStatus buildStatuses={this.state.pr.buildStatuses} postMessage={(e: OpenPipelineBuildAction) => this.postMessage(e)} />
                                 </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>
-                                <p dangerouslySetInnerHTML={{ __html: pr.summary!.html! }} />
+                                <p dangerouslySetInnerHTML={{ __html: pr.htmlSummary! }} />
                             </Panel>
                             {
                                 !this.state.pr.commits && !this.state.pr.comments

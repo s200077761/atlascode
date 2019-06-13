@@ -13,8 +13,8 @@ export default class Reviewers extends React.Component<PRData, {}> {
             .filter(p => p.role === 'REVIEWER')
             .map(p => {
                 return {
-                    name: p.user!.display_name!,
-                    src: p.user!.links!.avatar!.href!,
+                    name: p.displayName,
+                    src: p.avatarUrl,
                     status: p.approved ? 'approved' : undefined
                 };
             });

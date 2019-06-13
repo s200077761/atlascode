@@ -11,6 +11,7 @@ import { IssueScreenTransformer } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { TransformerResult } from '../jira/createIssueMeta';
+import { BitbucketIssue } from '../bitbucket/model';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -18,7 +19,7 @@ export interface PartialIssue {
     onCreated?: (data: CommentData | BBData) => void;
     summary?: string;
     description?: string;
-    bbIssue?: Bitbucket.Schema.Issue;
+    bbIssue?: BitbucketIssue;
 }
 
 export interface CommentData {
@@ -28,7 +29,7 @@ export interface CommentData {
 }
 
 export interface BBData {
-    bbIssue: Bitbucket.Schema.Issue;
+    bbIssue: BitbucketIssue;
     issueKey: string;
 }
 type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
@@ -37,7 +38,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _currentProject: WorkingProject | undefined;
     private _screenData: TransformerResult | undefined;
     private _selectedIssueTypeId: string;
-    private _relatedBBIssue: Bitbucket.Schema.Issue | undefined;
+    private _relatedBBIssue: BitbucketIssue | undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);

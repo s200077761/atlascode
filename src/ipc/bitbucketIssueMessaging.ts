@@ -1,10 +1,11 @@
 import { Message } from "./messaging";
 import { RepoData } from "./prMessaging";
+import { User, Comment, BitbucketIssue } from "../bitbucket/model";
 
 export interface BitbucketIssueData extends Message {
-    issue: Bitbucket.Schema.Issue;
-    currentUser: Bitbucket.Schema.User;
-    comments: Bitbucket.Schema.Comment[];
+    issue: BitbucketIssue;
+    currentUser: User;
+    comments: Comment[];
     hasMore: boolean;
     showJiraButton: boolean;
 }
@@ -16,7 +17,7 @@ export interface CreateBitbucketIssueData extends Message {
 
 export interface StartWorkOnBitbucketIssueData extends Message {
     type: 'startWorkOnBitbucketIssueData';
-    issue: Bitbucket.Schema.Issue;
+    issue: BitbucketIssue;
     repoData: RepoData[];
 }
 

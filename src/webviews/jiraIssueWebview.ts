@@ -17,6 +17,7 @@ import { issueUrlCopiedEvent } from '../analytics';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { PullRequestData } from '../bitbucket/model';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
@@ -260,7 +261,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 case 'openPullRequest': {
                     if (isOpenPullRequest(e)) {
                         handled = true;
-                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.links!.self!.href === e.prHref);
+                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === e.prHref);
                         if (pr) {
                             vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestApi.get(pr));
                         } else {
@@ -344,14 +345,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         }
     }
 
-    private async recentPullRequests(): Promise<Bitbucket.Schema.Pullrequest[]> {
+    private async recentPullRequests(): Promise<PullRequestData[]> {
         if (!Container.bitbucketContext) {
             return [];
         }
 
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
         const relatedPrs = await Promise.all(prs.map(async pr => {
-            const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.summary!.raw!)];
+            const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.rawSummary!)];
             return issueKeys.find(key => key.toLowerCase() === this._state.key.toLowerCase()) !== undefined
                 ? pr
                 : undefined;

@@ -7,7 +7,7 @@ import { PullRequest } from '../bitbucket/model';
 export class PullRequestViewManager extends AbstractMultiViewManager<PullRequest> {
 
     dataKey(data: PullRequest): string {
-        return data.data.links!.self!.href!;
+        return data.data.url;
     }
 
     createView(extensionPath: string) {
