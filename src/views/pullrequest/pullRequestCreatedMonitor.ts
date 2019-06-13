@@ -19,25 +19,23 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     : new Date();
                 this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
 
-                if (prList.data.length > 0 && Date.parse(prList.data[0].data.ts) > lastChecked.getTime()) {
-                    return [prList.data[0]];
-                }
-                return [];
+                let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
+                return newPRs;
             });
         });
         Promise.all(promises)
             .then(result => result.reduce((prev, curr) => prev.concat(curr), []))
-            .then(notifiableRepos => {
-                if (notifiableRepos.length === 1) {
-                    let repoName = path.basename(notifiableRepos[0].repository.rootUri.path);
-                    vscode.window.showInformationMessage(`New pull request "${notifiableRepos[0].data.title}" for repo "${repoName}"`, 'Show')
+            .then(allPRs => {
+                if (allPRs.length === 1) {
+                    let repoName = path.basename(allPRs[0].repository.rootUri.path);
+                    vscode.window.showInformationMessage(`New pull request "${allPRs[0].data.title}" for repo "${repoName}"`, 'Show')
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
-                                vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, notifiableRepos[0]);
+                                vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, allPRs[0]);
                             }
                         });
-                } else if (notifiableRepos.length > 0) {
-                    let repoNames = notifiableRepos.map(r => path.basename(r.repository.rootUri.path)).join(", ");
+                } else if (allPRs.length > 0) {
+                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.repository.rootUri.path)))].join(", ");
                     vscode.window.showInformationMessage(`New pull requests found for the following repositories: ${repoNames}`, 'Show')
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
