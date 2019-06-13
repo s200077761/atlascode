@@ -1,6 +1,6 @@
 'use strict';
 
-import { AccessibleResource } from "../atlclients/authInfo";
+import { DetailedSiteInfo, emptySiteInfo, AccessibleResource, emptyAccessibleResource } from "../atlclients/authInfo";
 
 export enum OutputLevel {
     Silent = 'silent',
@@ -28,6 +28,7 @@ export interface IConfig {
 export interface JiraConfig {
     workingProject: WorkingProject;
     workingSite: AccessibleResource;
+    defaultSite: DetailedSiteInfo;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
@@ -135,22 +136,6 @@ export interface BitbucketContextMenus {
     enabled: boolean;
 }
 
-export const emptyWorkingSite: AccessibleResource = {
-    name: '',
-    id: '',
-    scopes: [],
-    avatarUrl: '',
-    baseUrlSuffix: 'atlassian.net'
-};
-
-export function isEmptySite(s: AccessibleResource): boolean {
-    return ((s.name === undefined || s.name === '')
-        && (s.id === undefined || s.id === '')
-        && (s.avatarUrl === undefined || s.avatarUrl === '')
-        && (s.scopes === undefined || s.scopes === []))
-        ;
-}
-
 export const emptyWorkingProject: WorkingProject = {
     name: '',
     id: '',
@@ -165,10 +150,6 @@ export function notEmptyProject(p: WorkingProject): p is WorkingProject {
         && (<WorkingProject>p).key !== undefined
         && (<WorkingProject>p).key !== ''
         ;
-}
-
-export function isStagingSite(s: AccessibleResource): boolean {
-    return s.baseUrlSuffix === 'jira-dev.com';
 }
 
 export const emptyJiraExplorer: JiraExplorer = {
@@ -211,7 +192,8 @@ export const emptyTodoIssues: TodoIssues = {
 
 export const emptyJiraConfig: JiraConfig = {
     workingProject: emptyWorkingProject,
-    workingSite: emptyWorkingSite,
+    workingSite: emptyAccessibleResource,
+    defaultSite: emptySiteInfo,
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,

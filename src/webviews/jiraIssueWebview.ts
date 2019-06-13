@@ -9,7 +9,7 @@ import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOp
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
-import { providerForSite } from '../atlclients/authInfo';
+import { oauthProviderForSite } from '../atlclients/authInfo';
 import { assignIssue, unassignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
@@ -285,7 +285,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         try {
             this._state = issue;
             if (!this._currentUserId) {
-                const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
+                const authInfo = await Container.authManager.getAuthInfo(oauthProviderForSite(issue.workingSite));
                 this._currentUserId = authInfo ? authInfo.user.id : undefined;
             }
 

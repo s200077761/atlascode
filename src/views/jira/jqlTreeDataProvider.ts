@@ -3,7 +3,7 @@ import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { OAuthProvider } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchIssue } from '../../jira/fetchIssue';
@@ -76,7 +76,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
             return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
         }
         if (parent) {

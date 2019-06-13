@@ -2,7 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../bitbucket/pullRequests";
 import { Container } from "../container";
 import fetch from 'node-fetch';
-import { AuthProvider } from "../atlclients/authInfo";
+import { OAuthProvider } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 
@@ -93,7 +93,7 @@ export namespace PipelineApi {
 
   async function getAccessToken(): Promise<string> {
     return Container.authManager.getAuthInfo(
-      AuthProvider.BitbucketCloud
+      OAuthProvider.BitbucketCloud
     ).then(authInfo => authInfo!.access);
   }
 

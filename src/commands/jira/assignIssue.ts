@@ -1,7 +1,7 @@
 import { Issue, isIssue } from "../../jira/jiraIssue";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { providerForSite } from "../../atlclients/authInfo";
+import { oauthProviderForSite } from "../../atlclients/authInfo";
 import { IssueNode } from "../../views/nodes/issueNode";
 
 export async function assignIssue(param: Issue | IssueNode, accountId?: string) {
@@ -12,7 +12,7 @@ export async function assignIssue(param: Issue | IssueNode, accountId?: string) 
   }
 
   if (!accountId) {
-    const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
+    const authInfo = await Container.authManager.getAuthInfo(oauthProviderForSite(issue.workingSite));
     accountId = authInfo ? authInfo.user.id : undefined;
   }
 

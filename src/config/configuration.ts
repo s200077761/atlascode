@@ -14,7 +14,7 @@ import {
 import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from '../constants';
 import { Container } from '../container';
 import { Project } from 'src/jira/jiraModel';
-import { AccessibleResource } from 'src/atlclients/authInfo';
+import { DetailedSiteInfo, AccessibleResource } from 'src/atlclients/authInfo';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -92,6 +92,11 @@ export class Configuration extends Disposable {
     }
 
     async setWorkingSite(site?: AccessibleResource) {
+        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
+        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
+    }
+
+    async setDefaultSite(site?: DetailedSiteInfo) {
         await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
     }

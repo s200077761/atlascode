@@ -5,7 +5,7 @@ import { Container } from "../../container";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
+import { OAuthProvider } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
@@ -64,7 +64,7 @@ export class JiraContext extends Disposable {
         }
 
         if (initializing) {
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
         }
     }
@@ -78,7 +78,7 @@ export class JiraContext extends Disposable {
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
             return;
         }
         this._explorers.forEach(e => e.refresh());
@@ -86,9 +86,9 @@ export class JiraContext extends Disposable {
     }
 
     async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud) {
+        if (e.provider === OAuthProvider.JiraCloud) {
 
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }

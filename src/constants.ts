@@ -3,6 +3,7 @@ import { commands } from "vscode";
 export const extensionId = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
+export const JiraDefaultSiteConfigurationKey = 'jira.defaultSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
 export const CustomJQLKey = "jira.customJql";
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';

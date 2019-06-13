@@ -8,7 +8,7 @@ import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { OAuthProvider } from '../../atlclients/authInfo';
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
@@ -53,7 +53,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   async getChildren(element: AbstractBaseNode | undefined) {
-    if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+    if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
       return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
     }
 

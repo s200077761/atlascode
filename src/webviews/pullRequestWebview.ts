@@ -21,7 +21,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { AuthProvider } from '../atlclients/authInfo';
+import { OAuthProvider } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 
@@ -266,7 +266,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         try {
             const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
 
-            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
                 const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
                 const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
                 if (jiraIssues.length > 0) {
@@ -289,7 +289,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
-            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
                 result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
             }

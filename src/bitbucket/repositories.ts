@@ -76,4 +76,8 @@ export namespace RepositoriesApi {
     export function isStagingUrl(url: string): boolean {
         return url.indexOf('bb-inf.net') !== -1;
     }
+
+    export function isProductionUrl(url: string): boolean {
+        return url.indexOf('bitbucket.org') !== -1;
+    }
 }

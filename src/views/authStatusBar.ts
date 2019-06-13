@@ -1,4 +1,4 @@
-import { AuthInfo, AuthProvider, productForProvider, ProductJira, ProductBitbucket, ProductJiraStaging } from "../atlclients/authInfo";
+import { LegacyAuthInfo, OAuthProvider, productForProvider, ProductJira, ProductBitbucket, ProductJiraStaging } from "../atlclients/authInfo";
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
@@ -32,22 +32,22 @@ export class AuthStatusBar extends Disposable {
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
     if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraWorkingSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
-      const jiraItem = this.ensureStatusItem(AuthProvider.JiraCloud);
-      const jiraInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-      this.updateAuthenticationStatusBar(AuthProvider.JiraCloud, jiraInfo);
+      const jiraItem = this.ensureStatusItem(OAuthProvider.JiraCloud);
+      const jiraInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
+      this.updateAuthenticationStatusBar(OAuthProvider.JiraCloud, jiraInfo);
 
       if (!Container.config.jira.statusbar.enabled) {
         jiraItem.hide();
       }
 
-      const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
+      const isJiraStagingAuthenticated = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloudStaging, false);
       const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
       const stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
 
       if (stagingEnabled) {
-        const jiraStagingItem = this.ensureStatusItem(AuthProvider.JiraCloudStaging);
-        const jiraStagingInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
-        this.updateAuthenticationStatusBar(AuthProvider.JiraCloudStaging, jiraStagingInfo);
+        const jiraStagingItem = this.ensureStatusItem(OAuthProvider.JiraCloudStaging);
+        const jiraStagingInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloudStaging);
+        this.updateAuthenticationStatusBar(OAuthProvider.JiraCloudStaging, jiraStagingInfo);
 
         if (!Container.config.jira.statusbar.enabled) {
           jiraStagingItem.hide();
@@ -58,9 +58,9 @@ export class AuthStatusBar extends Disposable {
     }
 
     if (initializing || configuration.changed(e, 'bitbucket.statusbar')) {
-      const bitbucketItem = this.ensureStatusItem(AuthProvider.BitbucketCloud);
-      const bitbucketInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
-      this.updateAuthenticationStatusBar(AuthProvider.BitbucketCloud, bitbucketInfo);
+      const bitbucketItem = this.ensureStatusItem(OAuthProvider.BitbucketCloud);
+      const bitbucketInfo = await Container.authManager.getAuthInfo(OAuthProvider.BitbucketCloud);
+      this.updateAuthenticationStatusBar(OAuthProvider.BitbucketCloud, bitbucketInfo);
 
       if (!Container.config.bitbucket.statusbar.enabled) {
         bitbucketItem.hide();
@@ -87,7 +87,7 @@ export class AuthStatusBar extends Disposable {
 
   private async updateAuthenticationStatusBar(
     provider: string,
-    info: AuthInfo | undefined
+    info: LegacyAuthInfo | undefined
   ): Promise<void> {
     const statusBarItem = this.ensureStatusItem(provider);
     await this.updateStatusBarItem(statusBarItem, provider, info);
@@ -96,7 +96,7 @@ export class AuthStatusBar extends Disposable {
   private async updateStatusBarItem(
     statusBarItem: StatusBarItem,
     provider: string,
-    info: AuthInfo | undefined
+    info: LegacyAuthInfo | undefined
   ): Promise<void> {
     let text: string = "$(sign-in)";
     let command: string | undefined;
@@ -105,7 +105,7 @@ export class AuthStatusBar extends Disposable {
     const tmpl = Resources.html.get('statusBarText');
 
     switch (provider) {
-      case AuthProvider.JiraCloud.toString(): {
+      case OAuthProvider.JiraCloud.toString(): {
         if (info) {
           text = `$(person) ${product}: ${info.user.displayName}`;
 
@@ -138,7 +138,7 @@ export class AuthStatusBar extends Disposable {
 
         break;
       }
-      case AuthProvider.JiraCloudStaging.toString(): {
+      case OAuthProvider.JiraCloudStaging.toString(): {
         if (info) {
           text = `$(person) ${product}: ${info.user.displayName}`;
 
@@ -172,7 +172,7 @@ export class AuthStatusBar extends Disposable {
 
         break;
       }
-      case AuthProvider.BitbucketCloud.toString(): {
+      case OAuthProvider.BitbucketCloud.toString(): {
         if (info) {
           text = `$(person) ${product}: ${info.user.displayName}`;
 

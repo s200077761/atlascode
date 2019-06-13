@@ -5,7 +5,7 @@ import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import { AuthProvider } from '../../../atlclients/authInfo';
+import { OAuthProvider } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
@@ -84,27 +84,27 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleJiraLogin = () => {
-        this.handleLogin(AuthProvider.JiraCloud);
+        this.handleLogin(OAuthProvider.JiraCloud);
     }
 
     handleJiraLoginStaging = () => {
-        this.handleLogin(AuthProvider.JiraCloudStaging);
+        this.handleLogin(OAuthProvider.JiraCloudStaging);
     }
 
     handleBBLogin = () => {
-        this.handleLogin(AuthProvider.BitbucketCloud);
+        this.handleLogin(OAuthProvider.BitbucketCloud);
     }
 
     handleJiraLogout = () => {
-        this.handleLogout(AuthProvider.JiraCloud);
+        this.handleLogout(OAuthProvider.JiraCloud);
     }
 
     handleJiraLogoutStaging = () => {
-        this.handleLogout(AuthProvider.JiraCloudStaging);
+        this.handleLogout(OAuthProvider.JiraCloudStaging);
     }
 
     handleBBLogout = () => {
-        this.handleLogout(AuthProvider.BitbucketCloud);
+        this.handleLogout(OAuthProvider.BitbucketCloud);
     }
 
     handleLogin = (provider: string) => {

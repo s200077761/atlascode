@@ -1,7 +1,7 @@
 import { Disposable, TreeViewVisibilityChangeEvent, TreeView, TreeDataProvider, window, TreeItem } from "vscode";
 import { viewScreenEvent } from "../analytics";
 import { Container } from "../container";
-import { AuthProvider } from "../atlclients/authInfo";
+import { OAuthProvider } from "../atlclients/authInfo";
 import { AbstractBaseNode } from "./nodes/abstractBaseNode";
 import { WorkingProject } from "../config/model";
 
@@ -9,7 +9,7 @@ export abstract class Explorer extends Disposable {
     protected treeDataProvder: BaseTreeDataProvider | undefined;
 
     abstract viewId(): string;
-    abstract authProvider(): AuthProvider;
+    abstract authProvider(): OAuthProvider;
 
     protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
         if (this.treeDataProvder) {
@@ -21,7 +21,7 @@ export abstract class Explorer extends Disposable {
     }
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isAuthenticated(this.authProvider())) {
+        if (event.visible && await Container.authManager.isProductAuthenticatedticated(this.authProvider())) {
             viewScreenEvent(this.viewId()).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         }
     }

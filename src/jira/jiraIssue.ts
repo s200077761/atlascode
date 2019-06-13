@@ -127,7 +127,7 @@ export function isAttachment(a: any): a is Attachment {
 }
 
 export function isIssueLinkType(a: any): a is IssueLinkType {
-    return a && (<IssueLinkType>a).id !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).name !== undefined;
+    return a && (<IssueLinkType>a).id !== undefined && (<IssueLinkType>a).name !== undefined && (<IssueLinkType>a).inward !== undefined && (<IssueLinkType>a).outward !== undefined;
 }
 
 export function issueFromJsonObject(issueJson: any, workingSite: AccessibleResource, epicFields: EpicFieldInfo): Issue {

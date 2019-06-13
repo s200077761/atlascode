@@ -4,7 +4,7 @@ import { BitbucketContext } from '../bitbucket/bbContext';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { AuthProvider } from '../atlclients/authInfo';
+import { OAuthProvider } from '../atlclients/authInfo';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository } from '../typings/git';
@@ -67,7 +67,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud)) {
             return [new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
         }
         if (element) {
@@ -77,7 +77,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             this.updateChildren();
         }
         if (this.repoHasStagingRemotes()
-            && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
+            && !await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloudStaging)) {
             return [new SimpleNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
         }
         if (this.ctx.getBitbucketRepositores().length === 0) {

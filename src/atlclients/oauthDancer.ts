@@ -6,43 +6,42 @@ import { Logger } from '../logger';
 import * as express from 'express';
 import * as passport from 'passport';
 import * as http from 'http';
-import * as authinfo from './authInfo';
 import { Resources } from '../resources';
 import { Time } from '../util/time';
-import { ProductBitbucket, ProductJira } from './authInfo';
+import { ProductBitbucket, ProductJira, OAuthProvider, AccessibleResource, OAuthResponse } from './authInfo';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file' : 'vscode://file';
 
 export class OAuthDancer {
     private _srv: http.Server | undefined;
     private _app: any;
-    private _authInfo: Map<string, authinfo.AuthInfo> = new Map();
-    private _authErrors: Map<string, string> = new Map();
-    private _authsInFlight: string[] = [];
-    private _timeoutTimers: Map<string, any> = new Map();
+    private _authInfo: Map<OAuthProvider, OAuthResponse> = new Map();
+    private _authErrors: Map<OAuthProvider, string> = new Map();
+    private _authsInFlight: OAuthProvider[] = [];
+    private _timeoutTimers: Map<OAuthProvider, any> = new Map();
     private _browserTimeout = 5 * Time.MINUTES;
 
     private _bbCloudStrategy = new BitbucketStrategy.Strategy({
         clientID: "3hasX42a7Ugka2FJja",
         clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
-        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloud
-    }, this.verify.bind(this));
+        callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloud
+    }, this.verifyBitbucket.bind(this));
 
     private _bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
         clientID: "7jspxC7fgemuUbnWQL",
         clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
-        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloudStaging,
+        callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloudStaging,
         authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
         tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
         userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
-    }, this.verify.bind(this));
+    }, this.verifyBitbucketStaging.bind(this));
 
     private _jiraCloudStrategy = new AtlassianStrategy({
         clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
         clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloud,
+        callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-    }, this.verify.bind(this));
+    }, this.verifyJira.bind(this));
 
     private _jiraCloudStrategyStaging = new AtlassianStrategy({
         clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
@@ -51,7 +50,7 @@ export class OAuthDancer {
         tokenURL: "https://auth.stg.atlassian.com/oauth/token",
         profileURL: "https://api.stg.atlassian.com/me",
         accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
-        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloudStaging,
+        callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloudStaging,
         scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
     }, this.verifyJiraStaging.bind(this));
 
@@ -71,14 +70,14 @@ export class OAuthDancer {
             };
         };
 
-        passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        passport.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-        passport.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
-        refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        refresh.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-        refresh.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
+        passport.use(OAuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        passport.use(OAuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
+        passport.use(OAuthProvider.JiraCloud, this._jiraCloudStrategy);
+        passport.use(OAuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
+        refresh.use(OAuthProvider.BitbucketCloud, this._bbCloudStrategy);
+        refresh.use(OAuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
+        refresh.use(OAuthProvider.JiraCloud, this._jiraCloudStrategy);
+        refresh.use(OAuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
 
         this._app = this.createApp();
     }
@@ -88,68 +87,68 @@ export class OAuthDancer {
         app.use(passport.initialize());
         app.use(passport.session());
 
-        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
-            passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
+        app.get('/auth/' + OAuthProvider.BitbucketCloud,
+            passport.authenticate(OAuthProvider.BitbucketCloud),
             function (req, res) {
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloudStaging,
-            passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging),
+        app.get('/auth/' + OAuthProvider.BitbucketCloudStaging,
+            passport.authenticate(OAuthProvider.BitbucketCloudStaging),
             function (req, res) {
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-        app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
-            passport.authenticate(authinfo.AuthProvider.JiraCloud),
+        app.get('/auth/' + OAuthProvider.JiraCloud,
+            passport.authenticate(OAuthProvider.JiraCloud),
             function (req, res) {
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-        app.get('/auth/' + authinfo.AuthProvider.JiraCloudStaging,
-            passport.authenticate(authinfo.AuthProvider.JiraCloudStaging),
+        app.get('/auth/' + OAuthProvider.JiraCloudStaging,
+            passport.authenticate(OAuthProvider.JiraCloudStaging),
             function (req, res) {
                 // The request will be redirected to Bitbucket for authentication, so this
                 // function will not be called.
             });
 
-        app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
+        app.get('/' + OAuthProvider.BitbucketCloud, passport.authenticate(OAuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
 
             res.send(Resources.html.get('authSuccessHtml')!({
                 product: ProductBitbucket,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(authinfo.AuthProvider.BitbucketCloud);
+            this.shutdown(OAuthProvider.BitbucketCloud);
         });
 
-        app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
+        app.get('/' + OAuthProvider.BitbucketCloudStaging, passport.authenticate(OAuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
 
             res.send(Resources.html.get('authSuccessHtml')!({
                 product: ProductBitbucket,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(authinfo.AuthProvider.BitbucketCloudStaging);
+            this.shutdown(OAuthProvider.BitbucketCloudStaging);
         });
 
-        app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
+        app.get('/' + OAuthProvider.JiraCloud, passport.authenticate(OAuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
 
             res.send(Resources.html.get('authSuccessHtml')!({
                 product: ProductJira,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(authinfo.AuthProvider.JiraCloud);
+            this.shutdown(OAuthProvider.JiraCloud);
         });
 
-        app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
+        app.get('/' + OAuthProvider.JiraCloudStaging, passport.authenticate(OAuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
 
             res.send(Resources.html.get('authSuccessHtml')!({
                 product: ProductJira,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(authinfo.AuthProvider.JiraCloudStaging);
+            this.shutdown(OAuthProvider.JiraCloudStaging);
 
         });
 
@@ -180,20 +179,13 @@ export class OAuthDancer {
         return app;
     }
 
-    private verify(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        let resources: authinfo.AccessibleResource[] = [];
-
-        const isBitbucketStaging: boolean = (profile.profileUrl && profile.profileUrl.indexOf('bb-inf.net') !== -1) ? true : false;
+    private verify(provider: OAuthProvider, accessToken: string, refreshToken: string, profile: any, done: any): void {
+        let resources: AccessibleResource[] = [];
 
         if (profile.accessibleResources) {
-            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
+            profile.accessibleResources.forEach((resource: AccessibleResource) => {
                 resources.push(resource);
             });
-        }
-
-        let provider = profile.provider === 'atlassian' ? authinfo.AuthProvider.JiraCloud : authinfo.AuthProvider.BitbucketCloud;
-        if (isBitbucketStaging) {
-            provider = authinfo.AuthProvider.BitbucketCloudStaging;
         }
 
         this._authInfo.set(provider, {
@@ -201,44 +193,51 @@ export class OAuthDancer {
             refresh: refreshToken,
             user: {
                 id: profile.id,
-                displayName: profile.displayName,
-                provider: provider
+                displayName: profile.displayName
             },
-            accessibleResources: resources
+            accessibleResources: resources,
         });
 
         return done(null, profile.id);
     }
 
+    private verifyJira(accessToken: string, refreshToken: string, profile: any, done: any): void {
+        return this.verify(OAuthProvider.JiraCloud, accessToken, refreshToken, profile, done);
+    }
+
     private verifyJiraStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        let resources: authinfo.AccessibleResource[] = [];
-        if (profile.accessibleResources) {
-            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
-                let newresource = resource;
-                newresource.baseUrlSuffix = 'jira-dev.com';
-                resources.push(newresource);
-            });
-        }
+        return this.verify(OAuthProvider.JiraCloudStaging, accessToken, refreshToken, profile, done);
+    }
 
-        this._authInfo.set(authinfo.AuthProvider.JiraCloudStaging, {
-            access: accessToken,
-            refresh: refreshToken,
-            user: {
-                id: profile.id,
-                displayName: profile.displayName,
-                provider: authinfo.AuthProvider.JiraCloudStaging
-            },
-            accessibleResources: resources
-        });
+    private verifyBitbucket(accessToken: string, refreshToken: string, profile: any, done: any): void {
+        profile.accessibleResources = [{
+            id: OAuthProvider.BitbucketCloud,
+            name: ProductBitbucket.name,
+            scopes: [],
+            avatarUrl: "",
+            baseUrlSuffix: "bitbucket.org"
+        }];
 
-        return done(null, profile.id);
+        return this.verify(OAuthProvider.BitbucketCloud, accessToken, refreshToken, profile, done);
+    }
+
+    private verifyBitbucketStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
+        profile.accessibleResources = [{
+            id: OAuthProvider.BitbucketCloudStaging,
+            name: ProductBitbucket.name,
+            scopes: [],
+            avatarUrl: "",
+            baseUrlSuffix: "bb-inf.net"
+        }];
+
+        return this.verify(OAuthProvider.BitbucketCloudStaging, accessToken, refreshToken, profile, done);
     }
 
     private sleep(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    public async doDance(provider: string): Promise<authinfo.AuthInfo> {
+    public async doDance(provider: OAuthProvider): Promise<OAuthResponse> {
         if (this._authsInFlight.includes(provider)) {
             this.shutdown(provider);
             await this.sleep(1 * Time.SECONDS);
@@ -253,7 +252,7 @@ export class OAuthDancer {
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
         this.startTimeoutTimer(provider);
 
-        return new Promise<authinfo.AuthInfo>((resolve, reject) => {
+        return new Promise<OAuthResponse>((resolve, reject) => {
             const myProvider = provider;
 
             const checkId = setInterval(() => {
@@ -286,7 +285,7 @@ export class OAuthDancer {
         });
     }
 
-    private shutdown(provider: string) {
+    private shutdown(provider: OAuthProvider) {
         let myIndex = this._authsInFlight.indexOf(provider);
         if (myIndex > -1) {
             this._authsInFlight.splice(myIndex, 1);
@@ -323,7 +322,7 @@ export class OAuthDancer {
         }
     }
 
-    private startTimeoutTimer(provider: string) {
+    private startTimeoutTimer(provider: OAuthProvider) {
         //make sure we clear the old one in case they click multiple times
         const oldTimer = this._timeoutTimers.get(provider);
         if (oldTimer) {
@@ -336,20 +335,18 @@ export class OAuthDancer {
         }, this._browserTimeout));
     }
 
-    public async refresh(authInfo: authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
-        return new Promise<authinfo.AuthInfo>((resolve, reject) => {
-            refresh.requestNewAccessToken(authInfo.user.provider, authInfo.refresh, (err: Error, accessToken: string, refreshToken: string) => {
+    public async getNewAccessToken(provider: OAuthProvider, refreshToken: string): Promise<string | undefined> {
+        return new Promise<string>((resolve, reject) => {
+            refresh.requestNewAccessToken(provider, refreshToken, (err: Error, accessToken: string, newRefreshToken: string) => {
                 if (err) {
-                    Logger.debug("refresh error: " + err);
+                    Logger.error(err, "refresh error");
+                    reject(undefined);
                 }
-                let newAuth: authinfo.AuthInfo = authInfo;
-                newAuth.access = accessToken;
-
-                if (newAuth.access && newAuth.access !== '') {
-                    resolve(newAuth);
+                if (accessToken && accessToken !== '') {
+                    resolve(accessToken);
                 } else {
                     // the refresh token may have been revoked, in which case BB returns valid token info with the access token removed instead of an error.
-                    reject("invalid refresh token");
+                    reject(undefined);
                 }
             });
         });

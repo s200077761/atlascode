@@ -1,37 +1,37 @@
-import { AuthProvider } from '../atlclients/authInfo';
+import { OAuthProvider } from '../atlclients/authInfo';
 import { Container } from '../container';
 import { configuration, isStagingSite } from '../config/configuration';
 
 export async function authenticateBitbucket() {
-    authenticate(AuthProvider.BitbucketCloud);
+    authenticate(OAuthProvider.BitbucketCloud);
 }
 
 export async function authenticateBitbucketStaging() {
-    authenticate(AuthProvider.BitbucketCloudStaging);
+    authenticate(OAuthProvider.BitbucketCloudStaging);
 }
 
 export async function authenticateJira() {
-    authenticate(AuthProvider.JiraCloud);
+    authenticate(OAuthProvider.JiraCloud);
 }
 
 export async function authenticateJiraStaging() {
-    authenticate(AuthProvider.JiraCloudStaging);
+    authenticate(OAuthProvider.JiraCloudStaging);
 }
 
 export async function clearBitbucketAuth() {
-    clearAuth(AuthProvider.BitbucketCloud);
-    clearAuth(AuthProvider.BitbucketCloudStaging);
+    clearAuth(OAuthProvider.BitbucketCloud);
+    clearAuth(OAuthProvider.BitbucketCloudStaging);
 }
 
 export async function clearJiraAuth() {
-    clearAuth(AuthProvider.JiraCloud);
+    clearAuth(OAuthProvider.JiraCloud);
     if (!isStagingSite(Container.jiraSiteManager.effectiveSite)) {
         await configuration.setWorkingProject(undefined);
     }
 }
 
 export async function clearJiraAuthStaging() {
-    clearAuth(AuthProvider.JiraCloudStaging);
+    clearAuth(OAuthProvider.JiraCloudStaging);
     if (isStagingSite(Container.jiraSiteManager.effectiveSite)) {
         await configuration.setWorkingProject(undefined);
     }

@@ -4,7 +4,7 @@ import { Commands } from '../commands';
 import { Container } from '../container';
 import { PullRequestApi } from './pullRequests';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
-import { AuthProvider } from '../atlclients/authInfo';
+import { OAuthProvider } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { getCurrentUser } from './user';
@@ -36,7 +36,7 @@ export class BitbucketContext extends Disposable {
 
         Container.context.subscriptions.push(
             Container.authManager.onDidAuthChange((e) => {
-                if (e.provider === AuthProvider.BitbucketCloud || e.provider === AuthProvider.BitbucketCloudStaging) {
+                if (e.provider === OAuthProvider.BitbucketCloud || e.provider === OAuthProvider.BitbucketCloudStaging) {
                     this._currentUser = undefined;
                     this._currentUserStaging = undefined;
                     this._onDidChangeBitbucketContext.fire();

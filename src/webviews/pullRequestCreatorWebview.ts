@@ -15,7 +15,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { Issue, isIssue } from '../jira/jiraModel';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
-import { AuthProvider } from '../atlclients/authInfo';
+import { OAuthProvider } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
@@ -181,7 +181,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
     async fetchIssueForBranch(e: FetchIssue) {
         let issue: Issue | Bitbucket.Schema.Issue | undefined = undefined;
-        if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
             if (jiraIssues.length > 0) {

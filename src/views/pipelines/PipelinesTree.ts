@@ -8,7 +8,7 @@ import { Container } from "../../container";
 import { distanceInWordsToNow } from "date-fns";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
-import { AuthProvider } from '../../atlclients/authInfo';
+import { OAuthProvider } from '../../atlclients/authInfo';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { BaseTreeDataProvider } from "../Explorer";
 import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
@@ -117,7 +117,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud)) {
             return Promise.resolve([new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {

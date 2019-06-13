@@ -5,7 +5,7 @@ import { IssueNode } from './issueNode';
 import { PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { OAuthProvider } from '../../atlclients/authInfo';
 
 export class RelatedIssuesNode extends AbstractBaseNode {
     private _delegate: StaticIssuesNode;
@@ -15,7 +15,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
     }
 
     public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractIssueKeys(pr, commits, allComments);

@@ -2,7 +2,7 @@ import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscod
 import { Container } from "../container";
 import { configuration, emptyWorkingSite, WorkingProject, emptyWorkingProject, notEmptyProject, isEmptySite } from "../config/configuration";
 import { AuthInfoEvent } from "../atlclients/authStore";
-import { AccessibleResource, AuthProvider } from "../atlclients/authInfo";
+import { AccessibleResource, OAuthProvider } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
 import { Logger } from "../logger";
 import { JiraWorkingSiteConfigurationKey } from "../constants";
@@ -61,14 +61,14 @@ export class JiraSiteManager extends Disposable {
         this._projectsAvailable = [];
 
         switch (e.provider) {
-            case AuthProvider.JiraCloud: {
+            case OAuthProvider.JiraCloud: {
                 this._prodSitesAvailable = [];
                 if (e.authInfo && e.authInfo.accessibleResources) {
                     this._prodSitesAvailable = e.authInfo.accessibleResources;
                 }
                 break;
             }
-            case AuthProvider.JiraCloudStaging: {
+            case OAuthProvider.JiraCloudStaging: {
                 this._stagingSitesAvailable = [];
                 if (e.authInfo && e.authInfo.accessibleResources) {
                     this._stagingSitesAvailable = e.authInfo.accessibleResources;
@@ -77,7 +77,7 @@ export class JiraSiteManager extends Disposable {
             }
         }
 
-        if (e.provider === AuthProvider.JiraCloud || e.provider === AuthProvider.JiraCloudStaging) {
+        if (e.provider === OAuthProvider.JiraCloud || e.provider === OAuthProvider.JiraCloudStaging) {
             this._sitesAvailable = this._prodSitesAvailable.concat(this._stagingSitesAvailable);
 
             await this.getProjects().then(projects => {
@@ -94,7 +94,7 @@ export class JiraSiteManager extends Disposable {
         }
 
         // don't force auth
-        if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
             let client = await Container.clientManager.jirarequest();
 
             if (client) {
@@ -130,13 +130,13 @@ export class JiraSiteManager extends Disposable {
             this._prodSitesAvailable = [];
             this._stagingSitesAvailable = [];
 
-            const ai = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            const ai = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
 
             if (ai && ai.accessibleResources) {
                 this._prodSitesAvailable = ai.accessibleResources;
             }
 
-            const ais = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
+            const ais = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloudStaging);
 
             if (ais && ais.accessibleResources) {
                 this._stagingSitesAvailable = ais.accessibleResources;

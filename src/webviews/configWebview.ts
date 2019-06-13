@@ -4,7 +4,7 @@ import { Action, HostErrorMessage } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { AuthProvider, emptyAuthInfo, AccessibleResource } from '../atlclients/authInfo';
+import { OAuthProvider, emptyLegacyAuthInfo, AccessibleResource } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -49,19 +49,19 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             const config: IConfig = await configuration.get<IConfig>();
             config.jira.workingSite = Container.jiraSiteManager.effectiveSite;
 
-            var authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            var authInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
             if (!authInfo) {
-                authInfo = emptyAuthInfo;
+                authInfo = emptyLegacyAuthInfo;
             }
 
-            var authInfoStaging = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
+            var authInfoStaging = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloudStaging);
             if (!authInfoStaging) {
-                authInfoStaging = emptyAuthInfo;
+                authInfoStaging = emptyLegacyAuthInfo;
             }
 
-            const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
-            const isJiraAuthed = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false);
-            const isBBAuthed = await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud);
+            const isJiraStagingAuthenticated = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloudStaging, false);
+            const isJiraAuthed = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud, false);
+            const isBBAuthed = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud);
 
             let sitesAvailable: AccessibleResource[] = [];
             let stagingEnabled = false;
@@ -124,15 +124,15 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isAuthAction(e)) {
                         switch (e.provider) {
-                            case AuthProvider.JiraCloud: {
+                            case OAuthProvider.JiraCloud: {
                                 commands.executeCommand(Commands.AuthenticateJira);
                                 break;
                             }
-                            case AuthProvider.BitbucketCloud: {
+                            case OAuthProvider.BitbucketCloud: {
                                 commands.executeCommand(Commands.AuthenticateBitbucket);
                                 break;
                             }
-                            case AuthProvider.JiraCloudStaging: {
+                            case OAuthProvider.JiraCloudStaging: {
                                 commands.executeCommand(Commands.AuthenticateJiraStaging);
                                 break;
                             }
@@ -145,15 +145,15 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isAuthAction(e)) {
                         switch (e.provider) {
-                            case AuthProvider.JiraCloud: {
+                            case OAuthProvider.JiraCloud: {
                                 commands.executeCommand(Commands.ClearJiraAuth);
                                 break;
                             }
-                            case AuthProvider.JiraCloudStaging: {
+                            case OAuthProvider.JiraCloudStaging: {
                                 commands.executeCommand(Commands.ClearJiraAuthStaging);
                                 break;
                             }
-                            case AuthProvider.BitbucketCloud: {
+                            case OAuthProvider.BitbucketCloud: {
                                 commands.executeCommand(Commands.ClearBitbucketAuth);
                                 break;
                             }

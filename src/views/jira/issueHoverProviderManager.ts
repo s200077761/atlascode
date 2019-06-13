@@ -3,7 +3,7 @@ import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { AuthInfoEvent } from "../../atlclients/authStore";
 import { JiraHoverProviderConfigurationKey } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
+import { OAuthProvider } from "../../atlclients/authInfo";
 import { IssueHoverProvider } from "./issueHoverProvider";
 
 export class IssueHoverProviderManager implements Disposable {
@@ -20,7 +20,7 @@ export class IssueHoverProviderManager implements Disposable {
     }
 
     private async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (e.provider === OAuthProvider.JiraCloud && await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
             this.updateHover();
         } else {
             this.disposeHoverProvider();

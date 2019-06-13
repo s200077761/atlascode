@@ -7,7 +7,7 @@ import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
-import { AuthProvider } from './atlclients/authInfo';
+import { ProductJira, ProductBitbucket } from './atlclients/authInfo';
 import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
@@ -34,8 +34,8 @@ export async function activate(context: ExtensionContext) {
 
     Container.initialize(context, cfg, atlascodeVersion);
 
-    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false));
-    setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud));
+    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isProductAuthenticated(ProductJira));
+    setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isProductAuthenticated(ProductBitbucket));
 
     registerCommands(context);
     activateCodebucket(context);
@@ -67,11 +67,8 @@ export async function activate(context: ExtensionContext) {
 
 async function migrateConfig(): Promise<IConfig> {
     const cfg = configuration.get<IConfig>();
-    if (cfg.jira.workingSite &&
-        (!cfg.jira.workingSite.baseUrlSuffix || cfg.jira.workingSite.baseUrlSuffix.length < 1)) {
-        await configuration.setWorkingSite({ ...cfg.jira.workingSite, baseUrlSuffix: 'atlassian.net' });
-        return configuration.get<IConfig>();
-    }
+    Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
+
     return cfg;
 }
 
