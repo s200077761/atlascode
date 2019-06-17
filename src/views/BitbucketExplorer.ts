@@ -2,7 +2,7 @@ import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { BitbucketContext } from "../bitbucket/bbContext";
-import { OAuthProvider } from "../atlclients/authInfo";
+import { ProductBitbucket } from "../atlclients/authInfo";
 import { RefreshTimer } from "./RefreshTimer";
 import { Explorer, BaseTreeDataProvider } from "./Explorer";
 
@@ -37,8 +37,8 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     abstract newTreeDataProvider(): BaseTreeDataProvider;
     abstract newMonitor(): BitbucketActivityMonitor;
 
-    authProvider() {
-        return OAuthProvider.BitbucketCloud;
+    product() {
+        return ProductBitbucket;
     }
 
     onBitbucketContextChanged() {
@@ -48,7 +48,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
 
     async refresh() {
         if (!Container.onlineDetector.isOnline() ||
-            !await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud)) {
+            !await Container.authManager.isProductAuthenticated(ProductBitbucket)) {
             return;
         }
 

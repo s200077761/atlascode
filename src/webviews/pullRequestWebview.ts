@@ -14,14 +14,13 @@ import { Issue, isIssue } from '../jira/jiraModel';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { OAuthProvider } from '../atlclients/authInfo';
+import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 
@@ -207,8 +206,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postInitialState(pr: PullRequest) {
-        const isStagingRepo = pr.remote && RepositoriesApi.isStagingUrl(pr.remote.fetchUrl!);
-        const currentUser = await Container.bitbucketContext.currentUser(isStagingRepo);
+        const currentUser = await Container.bitbucketContext.currentUser(pr.repository);
         this._state = {
             repository: pr.repository,
             remote: pr.remote,
@@ -266,7 +264,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         try {
             const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
 
-            if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
+            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
                 const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
                 const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
                 if (jiraIssues.length > 0) {
@@ -289,7 +287,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
-            if (await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
+            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
                 result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
             }

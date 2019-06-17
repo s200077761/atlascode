@@ -1,7 +1,7 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
-import { OAuthProvider, LegacyAuthInfo, ProductJiraStaging, ProductBitbucketStaging, ProductJira, ProductBitbucket } from './atlclients/authInfo';
+import { OAuthProvider, AuthInfoV1, ProductJiraStaging, ProductBitbucketStaging, ProductJira, ProductBitbucket } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
@@ -274,7 +274,7 @@ function event(action: string, actionSubject: string, attributes: any): any {
 async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T> {
     let userType = 'anonymousId';
     let userId = Container.machineId;
-    let authInfo: LegacyAuthInfo | undefined = undefined;
+    let authInfo: AuthInfoV1 | undefined = undefined;
 
     let newObj: Object;
 

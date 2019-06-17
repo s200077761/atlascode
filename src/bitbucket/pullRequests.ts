@@ -1,37 +1,8 @@
-import * as gup from 'git-url-parse';
 import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
-
-const bbHostClientMap = new Map()
-    .set("bitbucket.org", async () => {
-        const bb = await Container.clientManager.bbrequest();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-        return bb;
-    })
-    .set("bb-inf.net", async () => {
-        const bb = await Container.clientManager.bbrequestStaging();
-        if (!bb) { return Promise.reject(apiConnectivityError); }
-        return bb;
-    });
-export const bitbucketHosts = {
-    get: async (source: string): Promise<Bitbucket> => {
-        if (bbHostClientMap.has(source)) {
-            return await bbHostClientMap.get(source)();
-        }
-        return await bbHostClientMap.get('bitbucket.org')();
-    },
-    has: (source: string): boolean => {
-        if (bbHostClientMap.has(source)) {
-            return true;
-        }
-        if (source.includes('bitbucket.org')) {
-            return true;
-        }
-        return false;
-    }
-};
+import { getBitbucketRemotes, parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -40,12 +11,7 @@ export const maxItemsSupported = {
     buildStatuses: 100
 };
 export const defaultPagelen = 25;
-const apiConnectivityError = new Error('cannot connect to bitbucket api');
 const dummyRemote = { name: '', isReadOnly: true };
-
-export function GitUrlParse(url: string): gup.GitUrl {
-    return gup(url);
-}
 
 export namespace PullRequestApi {
 
@@ -54,8 +20,8 @@ export namespace PullRequestApi {
 
         for (let i = 0; i < remotes.length; i++) {
             let remote = remotes[i];
-            let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-            const bb = await bitbucketHosts.get(parsed.source);
+            let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
+            const bb = await clientForHostname(parsed.source);
             const { data } = await bb.repositories.listPullRequests({
                 ...{
                     username: parsed.owner,
@@ -78,18 +44,17 @@ export namespace PullRequestApi {
     export async function getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
     }
 
     export async function getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        let parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-        const bb = await bitbucketHosts.get(parsed.source);
+        const bb = await clientForRemote(remote);
         const { data } = await bb.getNextPage({ next: next });
         //@ts-ignore
         const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: pr }; });
@@ -99,7 +64,7 @@ export namespace PullRequestApi {
     export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).account_id}"` });
+            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
     }
 
     export async function getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
@@ -109,8 +74,8 @@ export namespace PullRequestApi {
     }
 
     export async function get(pr: PullRequest): Promise<PullRequest> {
-        let parsed = GitUrlParse(pr.remote.fetchUrl! || pr.remote.pushUrl!);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         let { data } = await bb.repositories.getPullRequest({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -119,7 +84,7 @@ export namespace PullRequestApi {
         let sourceRemote: Remote | undefined = undefined;
         if (data.source!.repository!.links!.html!.href! !== data.destination!.repository!.links!.html!.href!) {
             sourceRemote = {
-                fetchUrl: GitUrlParse(data.source!.repository!.links!.html!.href!).toString(parsed.protocol),
+                fetchUrl: parseGitUrl(data.source!.repository!.links!.html!.href!).toString(parsed.protocol),
                 name: data.source!.repository!.full_name!,
                 isReadOnly: true
             };
@@ -128,9 +93,8 @@ export namespace PullRequestApi {
     }
 
     export async function getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         let { data } = await bb.pullrequests.getDiffStat({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -141,9 +105,8 @@ export namespace PullRequestApi {
     }
 
     export async function getCommits(pr: PullRequest): Promise<PaginatedCommits> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         let { data } = await bb.pullrequests.listCommits({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -155,9 +118,8 @@ export namespace PullRequestApi {
     }
 
     export async function getComments(pr: PullRequest): Promise<PaginatedComments> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         let { data } = await bb.pullrequests.listComments({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -193,9 +155,8 @@ export namespace PullRequestApi {
     }
 
     export async function getBuildStatuses(pr: PullRequest): Promise<Bitbucket.Schema.Commitstatus[]> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.pullrequests.listStatuses({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
@@ -208,9 +169,8 @@ export namespace PullRequestApi {
     }
 
     export async function getDefaultReviewers(remote: Remote): Promise<Bitbucket.Schema.User[]> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.pullrequests.listDefaultReviewers({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -221,18 +181,9 @@ export namespace PullRequestApi {
         return reviewers;
     }
 
-    export function getBitbucketRemotes(repository: Repository): Remote[] {
-        return repository.state.remotes.filter(remote => {
-            const remoteUrl = remote.fetchUrl || remote.pushUrl;
-            let parsed = remoteUrl ? GitUrlParse(remoteUrl) : null;
-            return parsed && bitbucketHosts.has(parsed.source);
-        });
-    }
-
     export async function create(pr: PullRequest): Promise<PullRequest> {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         const { data } = await bb.pullrequests.create({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -252,9 +203,8 @@ export namespace PullRequestApi {
     }
 
     export async function approve(pr: PullRequest) {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
         return await bb.pullrequests.createApproval({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
@@ -263,9 +213,8 @@ export namespace PullRequestApi {
     }
 
     export async function merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
-        const remoteUrl = pr.remote.fetchUrl! || pr.remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.source);
 
         let body = Object.create({});
         body = closeSourceBranch ? { ...body, close_source_branch: closeSourceBranch } : body;
@@ -285,9 +234,8 @@ export namespace PullRequestApi {
         parentCommentId?: number,
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Bitbucket.Schema.Comment> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb = await clientForHostname(parsed.source);
         prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         //@ts-ignore
         return await bb.pullrequests.createComment({

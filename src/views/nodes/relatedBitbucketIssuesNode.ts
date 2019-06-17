@@ -4,7 +4,7 @@ import { PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
-import { OAuthProvider } from '../../atlclients/authInfo';
+import { ProductBitbucket } from '../../atlclients/authInfo';
 
 export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     private _delegate: StaticBitbucketIssuesNode;
@@ -14,7 +14,8 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     }
 
     public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
-        if (!Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
+        // TODO: [VSCODE-503] handle related issues across cloud/server
+        if (!Container.authManager.isProductAuthenticated(ProductBitbucket) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractBitbucketIssueKeys(pr, commits, allComments);

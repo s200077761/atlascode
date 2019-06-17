@@ -4,15 +4,10 @@ import { BitbucketContext } from '../bitbucket/bbContext';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { OAuthProvider } from '../atlclients/authInfo';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RepositoriesApi } from '../bitbucket/repositories';
-import { Repository } from '../typings/git';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
-import { SimpleNode } from './nodes/simpleNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
@@ -67,37 +62,24 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud)) {
-            return [new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
+        const repos = this.ctx.getBitbucketRepositores();
+        if (repos.length < 1) {
+            return emptyBitbucketNodes;
         }
+
         if (element) {
             return element.getChildren();
         }
+
         if (!this._childrenMap) {
             this.updateChildren();
         }
-        if (this.repoHasStagingRemotes()
-            && !await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloudStaging)) {
-            return [new SimpleNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
-        }
-        if (this.ctx.getBitbucketRepositores().length === 0) {
-            return emptyBitbucketNodes;
-        }
+
         return Array.from(this._childrenMap!.values());
     }
 
     dispose() {
         this._disposable.dispose();
         this._onDidChangeTreeData.dispose();
-    }
-
-    private repoHasStagingRemotes(): boolean {
-        return !!this.ctx.getBitbucketRepositores()
-            .find(repo => this.isStagingRepo(repo));
-    }
-
-    private isStagingRepo(repo: Repository): boolean {
-        return !!PullRequestApi.getBitbucketRemotes(repo)
-            .find(remote => RepositoriesApi.isStagingUrl(RepositoriesApi.urlForRemote(remote)));
     }
 }

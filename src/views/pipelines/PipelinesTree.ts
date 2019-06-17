@@ -2,19 +2,19 @@ import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
-import { PullRequestApi, GitUrlParse, bitbucketHosts } from "../../bitbucket/pullRequests";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { distanceInWordsToNow } from "date-fns";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
-import { OAuthProvider } from '../../atlclients/authInfo';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { BaseTreeDataProvider } from "../Explorer";
 import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { shouldDisplay } from "./Helpers";
+import { siteDetailsForRepository, parseGitUrl, getBitbucketRemotes, urlForRemote, clientForHostname } from '../../bitbucket/bbUtils';
+import { ProductBitbucket } from '../../atlclients/authInfo';
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -117,8 +117,8 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud)) {
-            return Promise.resolve([new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
+        if (!siteDetailsForRepository(this._repo)) {
+            return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
             if (!this._branches) {
@@ -151,11 +151,11 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     private async fetchBranches(): Promise<string[]> {
         var branches: string[] = [];
         var morePages = false;
-        const remotes = await PullRequestApi.getBitbucketRemotes(this._repo);
+        const remotes = getBitbucketRemotes(this._repo);
         if (remotes.length > 0) {
             const remote = remotes[0];
-            const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
-            const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+            const parsed = parseGitUrl(urlForRemote(remotes[0]));
+            const bb: Bitbucket = await clientForHostname(parsed.source);
             const branchesResponse = await bb.refs.listBranches({
                 repo_slug: parsed.name,
                 username: parsed.owner,
@@ -198,7 +198,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         if (!shouldDisplay(branchName)) {
             return [];
         }
-        await Container.clientManager.bbrequest();
+
         const pipelines = await PipelineApi.getList(this._repo, branchName);
         if (!Container.config.bitbucket.pipelines.hideEmpty || pipelines.length > 0) {
             this._pipelines.set(branchName, pipelines);

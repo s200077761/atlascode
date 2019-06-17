@@ -1,12 +1,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { PullRequestApi, GitUrlParse } from "../../bitbucket/pullRequests";
 import { Repository } from '../../typings/git';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
 import { SimpleNode } from '../nodes/simpleNode';
 import { Container } from '../../container';
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 
 export class RepositoriesNode extends AbstractBaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
@@ -64,10 +64,15 @@ export class RepositoriesNode extends AbstractBaseNode {
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = this.repository.rootUri.fsPath;
         item.contextValue = PullRequestContextValue;
-        const remote = PullRequestApi.getBitbucketRemotes(this.repository)[0];
-        const repoName = GitUrlParse(remote.fetchUrl! || remote.pushUrl!).full_name;
-        const prUrl = `https://bitbucket.org/${repoName}/pull-requests`;
-        item.resourceUri = vscode.Uri.parse(prUrl);
+        const remotes = getBitbucketRemotes(this.repository);
+        if (remotes.length > 0) {
+            const repoName = parseGitUrl(urlForRemote(remotes[0])).full_name;
+            const site = siteDetailsForRemote(remotes[0]);
+
+            if (site) {
+                item.resourceUri = vscode.Uri.parse(`${site.baseLinkUrl}/${repoName}/pull-requests`);
+            }
+        }
 
         return item;
     }

@@ -1,4 +1,4 @@
-import { LegacyAuthInfo, OAuthProvider, productForProvider, ProductJira, ProductBitbucket, ProductJiraStaging } from "../atlclients/authInfo";
+import { AuthInfoV1, OAuthProvider, productForProvider, ProductJira, ProductBitbucket, ProductJiraStaging } from "../atlclients/authInfo";
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
@@ -87,7 +87,7 @@ export class AuthStatusBar extends Disposable {
 
   private async updateAuthenticationStatusBar(
     provider: string,
-    info: LegacyAuthInfo | undefined
+    info: AuthInfoV1 | undefined
   ): Promise<void> {
     const statusBarItem = this.ensureStatusItem(provider);
     await this.updateStatusBarItem(statusBarItem, provider, info);
@@ -96,7 +96,7 @@ export class AuthStatusBar extends Disposable {
   private async updateStatusBarItem(
     statusBarItem: StatusBarItem,
     provider: string,
-    info: LegacyAuthInfo | undefined
+    info: AuthInfoV1 | undefined
   ): Promise<void> {
     let text: string = "$(sign-in)";
     let command: string | undefined;

@@ -1,4 +1,4 @@
-import { Disposable, ConfigurationChangeEvent, EventEmitter, Event, Memento } from "vscode";
+import { Disposable, EventEmitter, Event, Memento } from "vscode";
 import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, isUpdateAuthEvent, emptySiteInfo, isEmptySiteInfo } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
@@ -82,6 +82,22 @@ export class SiteManager extends Disposable {
         }
 
         return sites;
+    }
+
+    public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
+        let sites = this._sitesAvailable.get(product.key);
+
+        if (!sites || sites.length < 1) {
+            sites = this._globalStore.get<DetailedSiteInfo[]>(`${product.key}${SitesSuffix}`);
+            if (!sites) {
+                sites = [];
+            }
+
+            this._sitesAvailable.set(product.key, sites);
+        }
+
+        return sites.find(site => site.hostname === hostname);
+
     }
 
     public effectiveSite(product: Product): DetailedSiteInfo {

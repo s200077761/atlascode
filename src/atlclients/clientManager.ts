@@ -260,6 +260,37 @@ export class ClientManager implements Disposable {
     return client;
   }
 
+  public async getValidAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
+    if (!site.isCloud) {
+      return undefined;
+    }
+
+    let client: any = this._clients.getItem(site.hostname);
+    let info = await Container.authManager.getAuthInfo(site);
+    let newAccessToken: string | undefined = undefined;
+
+    if (isOAuthInfo(info)) {
+      if (!client) {
+        try {
+          const provider: OAuthProvider | undefined = oauthProviderForSite(site);
+          if (provider) {
+            newAccessToken = await this._dancer.getNewAccessToken(provider, info.refresh);
+            if (newAccessToken) {
+              info.access = newAccessToken;
+              await Container.authManager.saveAuthInfo(site, info);
+            }
+          }
+        } catch (e) {
+          Logger.debug(`error refreshing token ${e}`);
+          return undefined;
+        }
+      } else if (info) {
+        newAccessToken = info.access;
+      }
+    }
+    return newAccessToken;
+  }
+
   public async removeClient(site: SiteInfo) {
     this._clients.deleteItem(site.hostname);
   }

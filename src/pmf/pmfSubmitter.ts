@@ -1,5 +1,5 @@
 import { PMFData } from "../ipc/messaging";
-import { LegacyAuthInfo, OAuthProvider } from "../atlclients/authInfo";
+import { AuthInfoV1, OAuthProvider } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { format } from 'date-fns';
 import fetch from 'node-fetch';
@@ -142,7 +142,7 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
 }
 
 async function getAAID(): Promise<string | undefined> {
-    let authInfo: LegacyAuthInfo | undefined = undefined;
+    let authInfo: AuthInfoV1 | undefined = undefined;
 
     authInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
     if (!authInfo) {

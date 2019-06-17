@@ -15,6 +15,7 @@ export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
 
+export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api');
 
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',

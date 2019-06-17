@@ -38,7 +38,7 @@ export async function clearJiraAuthStaging() {
 }
 
 async function authenticate(provider: string) {
-    Container.clientManager.userInitiatedLogin(provider);
+    Container.clientManager.userInitiatedOAuthLogin(provider);
 }
 
 async function clearAuth(provider: string) {

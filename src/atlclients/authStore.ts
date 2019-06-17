@@ -51,6 +51,10 @@ export class AuthManager implements Disposable {
         return await this.getFirstAuthInfoForProduct(product) !== undefined;
     }
 
+    public async isSiteAuthenticated(site: SiteInfo): Promise<boolean> {
+        return await this.getAuthInfo(site) !== undefined;
+    }
+
     private async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
 
