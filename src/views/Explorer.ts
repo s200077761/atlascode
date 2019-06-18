@@ -1,7 +1,7 @@
 import { Disposable, TreeViewVisibilityChangeEvent, TreeView, TreeDataProvider, window, TreeItem } from "vscode";
 import { viewScreenEvent } from "../analytics";
 import { Container } from "../container";
-import { OAuthProvider, Product } from "../atlclients/authInfo";
+import { Product } from "../atlclients/authInfo";
 import { AbstractBaseNode } from "./nodes/abstractBaseNode";
 import { WorkingProject } from "../config/model";
 

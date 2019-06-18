@@ -11,6 +11,7 @@ import { IssueScreenTransformer } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { TransformerResult } from '../jira/createIssueMeta';
+import { ProductJira } from '../atlclients/authInfo';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -82,7 +83,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
         this.isRefeshing = true;
         try {
-            const availableProjects = await Container.jiraSiteManager.getProjects();
+            const availableProjects = await Container.jiraProjectManager.getProjects();
             let projectChanged = false;
 
             if (project && project !== this._currentProject) {
@@ -91,23 +92,20 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
             }
 
             if (!this._currentProject) {
-                this._currentProject = await Container.jiraSiteManager.getEffectiveProject();
+                this._currentProject = await Container.jiraProjectManager.getEffectiveProject();
                 projectChanged = true;
             }
 
             if (projectChanged) {
                 this._selectedIssueTypeId = '';
                 this._screenData = undefined;
-                let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
-                if (client) {
-                    let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
-                    const screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
-                    this._screenData = await screenTransformer.transformIssueScreens();
-                    this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
-                } else {
-                    throw (new Error("unable to get a jira client"));
-                }
+                let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
+                const screenTransformer = new IssueScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.data.projects![0]);
+                this._screenData = await screenTransformer.transformIssueScreens();
+                this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
+
             }
 
             if (this._screenData) {
@@ -118,7 +116,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     availableProjects: availableProjects,
                     issueTypeScreens: this._screenData.screens,
                     transformerProblems: this._screenData.problems,
-                    epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.jiraSiteManager.effectiveSite)
+                    epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.siteManager.effectiveSite(ProductJira))
                 };
 
 
@@ -167,7 +165,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isFetchQuery(e)) {
                         try {
-                            let projects = await Container.jiraSiteManager.getProjects('name', e.query);
+                            let projects = await Container.jiraProjectManager.getProjects('name', e.query);
                             this.postMessage({ type: 'projectList', availableProjects: projects });
                         } catch (e) {
                             Logger.error(new Error(`error fetching projects: ${e}`));
@@ -181,7 +179,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isFetchQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
                             if (client) {
                                 let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
@@ -217,7 +215,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isFetchByProjectQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 let res: JIRA.Response<JIRA.Schema.User[]> = await client.user.findUsersAssignableToIssues({ project: `${e.project}`, query: `${e.query}` });
 
@@ -237,7 +235,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isFetchQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 let res: JIRA.Response<JIRA.Schema.IssuePickerResult> = await client.issue.getIssuePickerSuggestions({ query: e.query });
                                 let suggestions: JIRA.Schema.IssuePickerIssue[] = [];
@@ -289,7 +287,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     if (isCreateSomething(e)) {
                         try {
 
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 switch (e.createData.fieldKey) {
                                     case 'fixVersions':
@@ -319,7 +317,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isCreateIssue(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
+                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 const issuelinks: any[] = [];
                                 const formLinks = e.issueData.issuelinks;
@@ -354,7 +352,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
 
                                 this.postMessage({ type: 'issueCreated', issueData: resp.data });
-                                issueCreatedEvent(resp.data.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                issueCreatedEvent(resp.data.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);
                                 this.fireCallback(resp.data.key);
                             } else {
@@ -377,7 +375,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'openProblemReport': {
                     handled = true;
-                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.jiraSiteManager.effectiveSite, this._currentProject);
+                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.siteManager.effectiveSite(ProductJira), this._currentProject);
                 }
                 default: {
                     break;

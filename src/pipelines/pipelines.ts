@@ -1,7 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
 import fetch from 'node-fetch';
-import { isOAuthInfo } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRepository } from "../bitbucket/bbUtils";

@@ -5,7 +5,7 @@ import { configuration } from "./config/configuration";
 
 
 
-export type SiteUpdateEvent = {
+export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
     product: Product;
 };
@@ -17,9 +17,9 @@ export class SiteManager extends Disposable {
     private _sitesAvailable: Map<string, DetailedSiteInfo[]>;
     private _globalStore: Memento;
 
-    private _onDidSiteChange = new EventEmitter<SiteUpdateEvent>();
-    public get onDidSiteChange(): Event<SiteUpdateEvent> {
-        return this._onDidSiteChange.event;
+    private _onDidSitesAvailableChange = new EventEmitter<SitesAvailableUpdateEvent>();
+    public get onDidSitesAvailableChange(): Event<SitesAvailableUpdateEvent> {
+        return this._onDidSitesAvailableChange.event;
     }
 
     constructor(globalStore: Memento) {
@@ -37,7 +37,7 @@ export class SiteManager extends Disposable {
 
     dispose() {
         this._disposable.dispose();
-        this._onDidSiteChange.dispose();
+        this._onDidSitesAvailableChange.dispose();
     }
 
     onDidAuthChange(e: AuthInfoEvent) {
@@ -65,7 +65,7 @@ export class SiteManager extends Disposable {
         }
 
         if (notify) {
-            this._onDidSiteChange.fire({ sites: sites, product: e.site.product });
+            this._onDidSitesAvailableChange.fire({ sites: sites, product: e.site.product });
         }
     }
 

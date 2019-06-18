@@ -289,7 +289,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         try {
             if (await Container.authManager.isProductAuthenticated(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
+                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
             }
         }
         catch (e) {

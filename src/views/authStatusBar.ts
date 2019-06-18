@@ -1,11 +1,10 @@
-import { AuthInfoV1, OAuthProvider, productForProvider, ProductJira, ProductBitbucket, ProductJiraStaging } from "../atlclients/authInfo";
+import { ProductJira, ProductBitbucket, Product, AuthInfo, AuthInfoEvent } from "../atlclients/authInfo";
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
-import { configuration, isStagingSite } from "../config/configuration";
-import { AuthInfoEvent } from "../atlclients/authStore";
+import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
-import { JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../constants";
+import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from "../constants";
 
 export class AuthStatusBar extends Disposable {
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -26,41 +25,25 @@ export class AuthStatusBar extends Disposable {
   }
 
   async onDidAuthChange(e: AuthInfoEvent) {
-    this.updateAuthenticationStatusBar(e.provider, e.authInfo);
+    this.updateAuthenticationStatusBar(e.site.product, e.authInfo);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
-    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraWorkingSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
-      const jiraItem = this.ensureStatusItem(OAuthProvider.JiraCloud);
-      const jiraInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
-      this.updateAuthenticationStatusBar(OAuthProvider.JiraCloud, jiraInfo);
+    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
+      const jiraItem = this.ensureStatusItem(ProductJira);
+      const jiraInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductJira));
+      this.updateAuthenticationStatusBar(ProductJira, jiraInfo);
 
       if (!Container.config.jira.statusbar.enabled) {
         jiraItem.hide();
       }
-
-      const isJiraStagingAuthenticated = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloudStaging, false);
-      const sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
-      const stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
-
-      if (stagingEnabled) {
-        const jiraStagingItem = this.ensureStatusItem(OAuthProvider.JiraCloudStaging);
-        const jiraStagingInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloudStaging);
-        this.updateAuthenticationStatusBar(OAuthProvider.JiraCloudStaging, jiraStagingInfo);
-
-        if (!Container.config.jira.statusbar.enabled) {
-          jiraStagingItem.hide();
-        }
-      }
-
-
     }
 
     if (initializing || configuration.changed(e, 'bitbucket.statusbar')) {
-      const bitbucketItem = this.ensureStatusItem(OAuthProvider.BitbucketCloud);
-      const bitbucketInfo = await Container.authManager.getAuthInfo(OAuthProvider.BitbucketCloud);
-      this.updateAuthenticationStatusBar(OAuthProvider.BitbucketCloud, bitbucketInfo);
+      const bitbucketItem = this.ensureStatusItem(ProductBitbucket);
+      const bitbucketInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductBitbucket));
+      this.updateAuthenticationStatusBar(ProductBitbucket, bitbucketInfo);
 
       if (!Container.config.bitbucket.statusbar.enabled) {
         bitbucketItem.hide();
@@ -76,58 +59,53 @@ export class AuthStatusBar extends Disposable {
     this._disposable.dispose();
   }
 
-  private ensureStatusItem(provider: string): StatusBarItem {
-    let statusBarItem = this._authenticationStatusBarItems.get(provider);
+  private ensureStatusItem(product: Product): StatusBarItem {
+    let statusBarItem = this._authenticationStatusBarItems.get(product.key);
     if (!statusBarItem) {
       statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
-      this._authenticationStatusBarItems.set(provider, statusBarItem);
+      this._authenticationStatusBarItems.set(product.key, statusBarItem);
     }
     return statusBarItem;
   }
 
   private async updateAuthenticationStatusBar(
-    provider: string,
-    info: AuthInfoV1 | undefined
+    product: Product,
+    info: AuthInfo | undefined
   ): Promise<void> {
-    const statusBarItem = this.ensureStatusItem(provider);
-    await this.updateStatusBarItem(statusBarItem, provider, info);
+    const statusBarItem = this.ensureStatusItem(product);
+    await this.updateStatusBarItem(statusBarItem, product, info);
   }
 
   private async updateStatusBarItem(
     statusBarItem: StatusBarItem,
-    provider: string,
-    info: AuthInfoV1 | undefined
+    product: Product,
+    info: AuthInfo | undefined
   ): Promise<void> {
     let text: string = "$(sign-in)";
     let command: string | undefined;
-    let product: string = productForProvider(provider);
     let showIt: boolean = true;
     const tmpl = Resources.html.get('statusBarText');
 
-    switch (provider) {
-      case OAuthProvider.JiraCloud.toString(): {
+    switch (product.key) {
+      case ProductJira.key: {
         if (info) {
-          text = `$(person) ${product}: ${info.user.displayName}`;
+          text = `$(person) ${product.name}: ${info.user.displayName}`;
 
           if (tmpl) {
-            const effSite = Container.jiraSiteManager.effectiveSite;
-            let site = '';
-            let project = '';
+            const effSite = Container.siteManager.effectiveSite(product);
+            const effProject = await Container.jiraProjectManager.getEffectiveProject();
+            const site = effSite.name;
+            const project = effProject.name;
 
-            if (!isStagingSite(effSite)) {
-              site = Container.jiraSiteManager.effectiveSite.name;
-              project = Container.jiraSiteManager.workingProjectOrEmpty.name;
-            }
-
-            let data = { product: product, user: info.user.displayName, site: site, project: project };
-            let ctx = { ...Container.config.jira.statusbar, ...data };
+            const data = { product: product, user: info.user.displayName, site: site, project: project };
+            const ctx = { ...Container.config.jira.statusbar, ...data };
             command = Commands.ShowConfigPage;
             text = tmpl(ctx);
           }
 
         } else {
           if (Container.config.jira.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to  ${product}`;
+            text = `$(sign-in) Sign in to  ${product.name}`;
             command = Commands.AuthenticateJira;
             product = ProductJira;
           } else {
@@ -138,43 +116,10 @@ export class AuthStatusBar extends Disposable {
 
         break;
       }
-      case OAuthProvider.JiraCloudStaging.toString(): {
+
+      case ProductBitbucket.key: {
         if (info) {
-          text = `$(person) ${product}: ${info.user.displayName}`;
-
-          if (tmpl) {
-            const effSite = Container.jiraSiteManager.effectiveSite;
-            let site = '';
-            let project = '';
-
-            if (isStagingSite(effSite)) {
-              site = Container.jiraSiteManager.effectiveSite.name;
-              project = Container.jiraSiteManager.workingProjectOrEmpty.name;
-            }
-
-
-            let data = { product: product, user: info.user.displayName, site: site, project: project };
-            let ctx = { ...Container.config.jira.statusbar, ...data };
-            command = Commands.ShowConfigPage;
-            text = tmpl(ctx);
-          }
-
-        } else {
-          if (Container.config.jira.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to ${product}`;
-            command = Commands.AuthenticateJiraStaging;
-            product = ProductJiraStaging;
-          } else {
-            statusBarItem.hide();
-            showIt = false;
-          }
-        }
-
-        break;
-      }
-      case OAuthProvider.BitbucketCloud.toString(): {
-        if (info) {
-          text = `$(person) ${product}: ${info.user.displayName}`;
+          text = `$(person) ${product.name}: ${info.user.displayName}`;
 
           if (tmpl) {
             let data = { product: product, user: info.user.displayName };
@@ -184,7 +129,7 @@ export class AuthStatusBar extends Disposable {
           }
         } else {
           if (Container.config.bitbucket.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to ${product}`;
+            text = `$(sign-in) Sign in to ${product.name}`;
             command = Commands.AuthenticateBitbucket;
             product = ProductBitbucket;
           } else {
@@ -196,7 +141,7 @@ export class AuthStatusBar extends Disposable {
         break;
       }
       default: {
-        text = `$(person) Unknown Atlassian auth provider ${provider}`;
+        text = `$(person) Unknown Atlassian product ${product.name}`;
         command = undefined;
       }
     }

@@ -77,7 +77,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
         vscode.commands.registerCommand(Commands.ShowIssue, async (issue: any) => await showIssue(issue)),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
-        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issuNode: IssueNode) => assignIssue(issuNode)),
+        vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrIssue: IssueNode | Issue) => Container.startWorkOnIssueWebview.createOrShowIssue(isIssue(issueNodeOrIssue) ? issueNodeOrIssue : issueNodeOrIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: Bitbucket.Schema.Issue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),

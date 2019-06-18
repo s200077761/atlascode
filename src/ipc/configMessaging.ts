@@ -1,11 +1,11 @@
 import { Message } from "./messaging";
 import { IConfig, emptyConfig } from "../config/model";
-import { AccessibleResource } from "../atlclients/authInfo";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Project } from "../jira/jiraModel";
 
 export interface ConfigData extends Message {
     config: IConfig;
-    sites: AccessibleResource[];
+    sites: DetailedSiteInfo[];
     projects: Project[];
     isJiraAuthenticated: boolean;
     isJiraStagingAuthenticated: boolean;

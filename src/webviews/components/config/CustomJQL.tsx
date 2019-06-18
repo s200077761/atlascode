@@ -8,15 +8,15 @@ import TrashIcon from '@atlaskit/icon/glyph/trash';
 import EditJQL from "./EditJQL";
 import { v4 } from "uuid";
 import { ButtonGroup } from "@atlaskit/button";
-import { AccessibleResource } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 
 type changeObject = { [key: string]: any };
 
 export default class CustomJQL extends React.Component<
   {
-    workingSite: AccessibleResource;
+    defaultSite: DetailedSiteInfo;
     workingProject: string;
-    sites: AccessibleResource[];
+    sites: DetailedSiteInfo[];
     siteJqlList: SiteJQL[];
     onConfigChange: (changes: changeObject, removes?: string[]) => void;
     jiraAccessToken: string;
@@ -98,7 +98,7 @@ export default class CustomJQL extends React.Component<
     const index = this.indexForId(jqlList, id);
     if (index >= 0) {
       jqlList.splice(index, 1);
-      this.publishChanges({ siteId: this.props.workingSite.id, jql: jqlList });
+      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jqlList });
     }
   }
 
@@ -110,12 +110,12 @@ export default class CustomJQL extends React.Component<
     if (index >= 0) {
       const entry = jqlList[index];
       entry.enabled = e.target.checked;
-      this.publishChanges({ siteId: this.props.workingSite.id, jql: jqlList });
+      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jqlList });
     }
   }
 
-  private readJqlListFromProps(inputSite?: AccessibleResource): JQLEntry[] {
-    const site = inputSite ? inputSite : this.props.workingSite;
+  private readJqlListFromProps(inputSite?: DetailedSiteInfo): JQLEntry[] {
+    const site = inputSite ? inputSite : this.props.defaultSite;
     const customJqlList = this.props.siteJqlList;
     const siteJql = customJqlList.find((item: SiteJQL) => {
       return item.siteId === site.id;
@@ -142,7 +142,7 @@ export default class CustomJQL extends React.Component<
     });
   }
 
-  handleSaveEdit = (site: AccessibleResource, jqlEntry: JQLEntry) => {
+  handleSaveEdit = (site: DetailedSiteInfo, jqlEntry: JQLEntry) => {
     const jqlList = this.readJqlListFromProps(site);
     const index = this.indexForId(jqlList, this.state.editingId);
 
@@ -197,7 +197,7 @@ export default class CustomJQL extends React.Component<
       const temp = jql[this.state.dragSourceIndex];
       jql.splice(this.state.dragSourceIndex, 1);
       jql.splice(this.state.dragTargetIndex, 0, temp);
-      this.publishChanges({ siteId: this.props.workingSite.id, jql: jql });
+      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jql });
     }
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
   }
@@ -282,7 +282,7 @@ export default class CustomJQL extends React.Component<
   }
 
   render() {
-    if (!this.props.workingSite && !this.props.jiraAccessToken) {
+    if (!this.props.defaultSite && !this.props.jiraAccessToken) {
       return <div />;
     }
 
@@ -293,7 +293,7 @@ export default class CustomJQL extends React.Component<
         {this.state.editingEntry && (
           <EditJQL
             jiraAccessToken={this.props.jiraAccessToken}
-            workingSite={this.props.workingSite}
+            defaultSite={this.props.defaultSite}
             workingProject={this.props.workingProject}
             sites={this.props.sites}
             jqlEntry={this.state.editingEntry}
@@ -301,7 +301,7 @@ export default class CustomJQL extends React.Component<
             onSave={this.handleSaveEdit}
           />
         )}
-        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.workingSite ? this.props.workingSite.name : '<default site not set>'}</strong> (default site can be changed in the authentication section above)</em></p>
+        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.defaultSite ? this.props.defaultSite.name : '<default site not set>'}</strong> (default site can be changed in the authentication section above)</em></p>
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}

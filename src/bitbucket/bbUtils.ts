@@ -40,14 +40,9 @@ export function urlForRemote(remote: Remote): string {
 
 export async function clientForRemote(remote: Remote): Promise<Bitbucket> {
     let site = siteDetailsForRemote(remote);
-    let client: Bitbucket | undefined = undefined;
 
     if (site) {
-        client = await Container.clientManager.bbrequest(site);
-
-        if (client) {
-            return client;
-        }
+        return await Container.clientManager.bbrequest(site);
     }
 
     return Promise.reject(bbAPIConnectivityError);
@@ -55,14 +50,9 @@ export async function clientForRemote(remote: Remote): Promise<Bitbucket> {
 
 export async function clientForHostname(hostname: string): Promise<Bitbucket> {
     let site = Container.siteManager.getSiteForHostname(ProductBitbucket, hostname);
-    let client: Bitbucket | undefined = undefined;
 
     if (site) {
-        client = await Container.clientManager.bbrequest(site);
-
-        if (client) {
-            return client;
-        }
+        return await Container.clientManager.bbrequest(site);
     }
 
     return Promise.reject(bbAPIConnectivityError);

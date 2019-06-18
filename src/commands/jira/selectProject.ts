@@ -9,9 +9,10 @@ import {
 import { Logger } from "../../logger";
 import { projectSelectedEvent } from "../../analytics";
 import debounce from "lodash.debounce";
+import { ProductJira } from "../../atlclients/authInfo";
 
 export async function showProjectSelectionDialog() {
-  const projects = await Container.jiraSiteManager.getProjects();
+  const projects = await Container.jiraProjectManager.getProjects();
 
   const quickPick: vscode.QuickPick<ProjectQuickPickItem> = vscode.window.createQuickPick();
   quickPick.placeholder = "Select a project";
@@ -44,7 +45,7 @@ export async function showProjectSelectionDialog() {
 }
 
 async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickItem[] | undefined> {
-  const client = await Container.clientManager.jirarequest();
+  const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
   if (client) {
     const res = await client.project.getProjectsPaginated({ query: value });
@@ -72,7 +73,7 @@ async function saveWorkingProject(project: Project) {
 
   projectSelectedEvent(
     project.id,
-    Container.jiraSiteManager.effectiveSite.id
+    Container.siteManager.effectiveSite(ProductJira).id
   ).then(e => {
     Container.analyticsClient.sendTrackEvent(e);
   });

@@ -1,9 +1,8 @@
 import { Disposable, ConfigurationChangeEvent, languages } from 'vscode';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { AuthInfoEvent } from "../../atlclients/authStore";
 import { JiraHoverProviderConfigurationKey } from "../../constants";
-import { OAuthProvider } from "../../atlclients/authInfo";
+import { AuthInfoEvent, ProductJira } from "../../atlclients/authInfo";
 import { IssueHoverProvider } from "./issueHoverProvider";
 
 export class IssueHoverProviderManager implements Disposable {
@@ -20,10 +19,12 @@ export class IssueHoverProviderManager implements Disposable {
     }
 
     private async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === OAuthProvider.JiraCloud && await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
-            this.updateHover();
-        } else {
-            this.disposeHoverProvider();
+        if (e.site.product.key === ProductJira.key) {
+            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
+                this.updateHover();
+            } else {
+                this.disposeHoverProvider();
+            }
         }
     }
 

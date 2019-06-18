@@ -58,22 +58,19 @@ function isValidTransition(issue: Issue, transition: Transition): boolean {
 }
 
 async function performTranstion(issue: Issue, transition: Transition) {
-  let client = await Container.clientManager.jirarequest(issue.workingSite);
+  try {
+    const client = await Container.clientManager.jirarequest(issue.siteDetails);
+    await client.issue.transitionIssue({ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } });
 
-  if (client) {
-    try {
-      await client.issue.transitionIssue({ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } });
+    vscode.commands.executeCommand(Commands.RefreshJiraExplorer)
+      .then(b => {
+        Container.jiraIssueViewManager.refreshAll();
+      });
 
-      vscode.commands.executeCommand(Commands.RefreshJiraExplorer)
-        .then(b => {
-          Container.jiraIssueViewManager.refreshAll();
-        });
-
-      issueTransitionedEvent(issue.key, Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-    }
-    catch (err) {
-      Logger.error(err);
-      throw err;
-    }
+    issueTransitionedEvent(issue.key, issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+  }
+  catch (err) {
+    Logger.error(err);
+    throw err;
   }
 }

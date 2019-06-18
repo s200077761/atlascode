@@ -8,7 +8,7 @@ import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
-import { OAuthProvider } from '../../atlclients/authInfo';
+import { ProductJira } from '../../atlclients/authInfo';
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
@@ -33,7 +33,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     this._children = [];
 
     this._disposable = Disposable.from(
-      Container.jiraSiteManager.onDidSiteChange(this.refresh, this),
+      Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
     );
 
     Container.context.subscriptions.push(
@@ -53,7 +53,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   async getChildren(element: AbstractBaseNode | undefined) {
-    if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
+    if (!await Container.authManager.isProductAuthenticated(ProductJira)) {
       return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
     }
 
@@ -80,7 +80,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   customJqlForWorkingSite(): JQLEntry[] {
-    const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => item.siteId === Container.jiraSiteManager.effectiveSite.id);
+    const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => item.siteId === Container.siteManager.effectiveSite(ProductJira).id);
 
     const base: JQLEntry[] = [];
 

@@ -1,5 +1,5 @@
 import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType } from "./createIssueMeta";
-import { AccessibleResource } from "../atlclients/authInfo";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { EpicFieldInfo } from "./jiraIssue";
 
@@ -118,13 +118,13 @@ const schemaToInputValueMap: Map<string, InputValueType> = new Map<string, Input
 
 export class IssueScreenTransformer {
 
-    private _site: AccessibleResource;
+    private _site: DetailedSiteInfo;
     private _project: JIRA.Schema.CreateMetaProjectBean;
     private _epicFieldInfo: EpicFieldInfo;
     private _issueLinkTypes: any[] = [];
     private _problems: TransformerProblems = {};
 
-    constructor(site: AccessibleResource, project: JIRA.Schema.CreateMetaProjectBean) {
+    constructor(site: DetailedSiteInfo, project: JIRA.Schema.CreateMetaProjectBean) {
         this._site = site;
         this._project = project;
     }
@@ -139,17 +139,16 @@ export class IssueScreenTransformer {
             this._epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(this._site);
         }
 
-        let client = await Container.clientManager.jirarequest(this._site);
+        const client = await Container.clientManager.jirarequest(this._site);
 
-        if (client) {
-            // grab the issue link types
-            const issuelinkTypesResponse = await client.issueLinkType.getIssueLinkTypes({});
-            if (Array.isArray(issuelinkTypesResponse.data.issueLinkTypes) && issuelinkTypesResponse.data.issueLinkTypes.length > 0) {
-                this._issueLinkTypes = issuelinkTypesResponse.data.issueLinkTypes!;
-            } else {
-                filterFieldKeys.push('issuelinks');
-            }
+        // grab the issue link types
+        const issuelinkTypesResponse = await client.issueLinkType.getIssueLinkTypes({});
+        if (Array.isArray(issuelinkTypesResponse.data.issueLinkTypes) && issuelinkTypesResponse.data.issueLinkTypes.length > 0) {
+            this._issueLinkTypes = issuelinkTypesResponse.data.issueLinkTypes!;
+        } else {
+            filterFieldKeys.push('issuelinks');
         }
+
 
         if (this._project.issuetypes) {
             firstIssueType = this._project.issuetypes[0];

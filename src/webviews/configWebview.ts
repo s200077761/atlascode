@@ -4,19 +4,19 @@ import { Action, HostErrorMessage } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { OAuthProvider, emptyLegacyAuthInfo, AccessibleResource } from '../atlclients/authInfo';
+import { OAuthProvider, ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
-import { AuthInfoEvent } from '../atlclients/authStore';
-import { JiraSiteUpdateEvent } from '../jira/siteManager';
 import { submitFeedback } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
-import { JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from '../constants';
+import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { Project } from '../jira/jiraModel';
+import { SitesAvailableUpdateEvent } from '../siteManager';
+import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 
 type Emit = ConfigData | ProjectList | HostErrorMessage;
 
@@ -28,7 +28,8 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
             Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
-            Container.jiraSiteManager.onDidSiteChange(this.onDidSiteChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
+            Container.jiraProjectManager.onDidProjectsAvailableChange(this.onProjectsAvailableChange, this),
         );
     }
 
@@ -47,30 +48,24 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         this.isRefeshing = true;
         try {
             const config: IConfig = await configuration.get<IConfig>();
-            config.jira.workingSite = Container.jiraSiteManager.effectiveSite;
+            config.jira.defaultSite = Container.siteManager.effectiveSite(ProductJira);
 
-            var authInfo = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloud);
+            var authInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductJira));
             if (!authInfo) {
-                authInfo = emptyLegacyAuthInfo;
+                authInfo = emptyAuthInfo;
             }
 
-            var authInfoStaging = await Container.authManager.getAuthInfo(OAuthProvider.JiraCloudStaging);
-            if (!authInfoStaging) {
-                authInfoStaging = emptyLegacyAuthInfo;
-            }
+            const isJiraAuthed = await Container.authManager.isProductAuthenticated(ProductJira);
+            const isBBAuthed = await Container.authManager.isProductAuthenticated(ProductBitbucket);
 
-            const isJiraStagingAuthenticated = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloudStaging, false);
-            const isJiraAuthed = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud, false);
-            const isBBAuthed = await Container.authManager.isProductAuthenticatedticated(OAuthProvider.BitbucketCloud);
-
-            let sitesAvailable: AccessibleResource[] = [];
+            let sitesAvailable: DetailedSiteInfo[] = [];
             let stagingEnabled = false;
             let projects: Project[] = [];
 
-            if (isJiraAuthed || isJiraStagingAuthenticated) {
-                sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
-                stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
-                projects = await Container.jiraSiteManager.getProjects();
+            if (isJiraAuthed) {
+                sitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
+                stagingEnabled = false;
+                projects = await Container.jiraProjectManager.getProjects();
             }
 
             this.updateConfig({
@@ -79,10 +74,10 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 sites: sitesAvailable,
                 projects: projects,
                 isJiraAuthenticated: isJiraAuthed,
-                isJiraStagingAuthenticated: isJiraStagingAuthenticated,
+                isJiraStagingAuthenticated: false,
                 isBitbucketAuthenticated: isBBAuthed,
-                jiraAccessToken: authInfo!.access,
-                jiraStagingAccessToken: authInfoStaging!.access,
+                jiraAccessToken: "FIXME!",
+                jiraStagingAccessToken: "REMOVEME!",
                 isStagingEnabled: stagingEnabled
             });
         } catch (e) {
@@ -102,7 +97,11 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         this.invalidate();
     }
 
-    private onDidSiteChange(e: JiraSiteUpdateEvent) {
+    private onProjectsAvailableChange(e: JiraAvailableProjectsUpdateEvent) {
+        this.invalidate();
+    }
+
+    private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
         this.invalidate();
     }
 
@@ -132,10 +131,6 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                                 commands.executeCommand(Commands.AuthenticateBitbucket);
                                 break;
                             }
-                            case OAuthProvider.JiraCloudStaging: {
-                                commands.executeCommand(Commands.AuthenticateJiraStaging);
-                                break;
-                            }
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
@@ -153,10 +148,6 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                                 commands.executeCommand(Commands.ClearJiraAuthStaging);
                                 break;
                             }
-                            case OAuthProvider.BitbucketCloud: {
-                                commands.executeCommand(Commands.ClearBitbucketAuth);
-                                break;
-                            }
                         }
                         logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
@@ -172,8 +163,8 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
 
                                 const value = e.changes[key];
 
-                                if (key === JiraWorkingSiteConfigurationKey) {
-                                    await configuration.setWorkingSite(value === inspect.defaultValue ? undefined : value);
+                                if (key === JiraDefaultSiteConfigurationKey) {
+                                    await configuration.setDefaultSite(value === inspect.defaultValue ? undefined : value);
                                 } else if (key === JiraWorkingProjectConfigurationKey) {
                                     await configuration.setWorkingProject(value === inspect.defaultValue ? undefined : value);
                                 } else {
@@ -185,7 +176,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                                 }
 
                                 if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 }
                             }
 
@@ -206,7 +197,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 case 'fetchProjects': {
                     handled = true;
                     if (isFetchQuery(e)) {
-                        Container.jiraSiteManager.getProjects('name', e.query).then(projects => {
+                        Container.jiraProjectManager.getProjects('name', e.query).then(projects => {
                             this.postMessage({ type: 'projectList', availableProjects: projects });
                         });
                     }

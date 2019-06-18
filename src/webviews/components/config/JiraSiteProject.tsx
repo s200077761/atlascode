@@ -3,7 +3,7 @@ import { Field } from '@atlaskit/form';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
-import { AccessibleResource } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 const { Option } = components;
 const IconOption = (props: any) => (
@@ -30,8 +30,8 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
 
     componentWillReceiveProps = (nextProps: any) => {
 
-        if (nextProps.configData.config.jira.workingSite && !nextProps.configData.config.jira.workingSite.id) {
-            nextProps.configData.config.jira.workingSite = '';
+        if (nextProps.configData.config.jira.defaultSite && !nextProps.configData.config.jira.defaultSite.id) {
+            nextProps.configData.config.jira.defaultSite = '';
         }
 
         if (nextProps.configData.config.jira.workingProject && !nextProps.configData.config.jira.workingProject.id) {
@@ -40,13 +40,13 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
         this.setState(nextProps.configData);
     }
 
-    handleSiteChange = (item: AccessibleResource) => {
+    handleSiteChange = (item: DetailedSiteInfo) => {
         if (item) {
             const changes = Object.create(null);
             const removes = [];
 
             removes.push('jira.workingProject');
-            changes['jira.workingSite'] = item;
+            changes['jira.defaultSite'] = item;
 
             if (this.props.onConfigChange) {
                 this.props.onConfigChange(changes, removes);
@@ -75,7 +75,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
             <Field label='Default Site'
                 id='defaultSite'
                 name='defaultSite'
-                defaultValue={this.state.config.jira.workingSite}
+                defaultValue={this.state.config.jira.defaultSite}
             >
                 {
                     (fieldArgs: any) => {
@@ -84,7 +84,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
                                 {...fieldArgs.fieldProps}
                                 className="ac-select-container"
                                 classNamePrefix="ac-select"
-                                getOptionLabel={(option: any) => `${option.name}.${option.baseUrlSuffix}`}
+                                getOptionLabel={(option: any) => `${option.hostname}`}
                                 getOptionValue={(option: any) => option.id}
                                 options={this.state.sites}
                                 components={{ Option: IconOption, SingleValue: IconValue }}

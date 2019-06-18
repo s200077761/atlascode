@@ -6,15 +6,15 @@ import Tooltip from '@atlaskit/tooltip';
 import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled';
 import EditJQL from "./EditJQL";
 import { ButtonGroup } from "@atlaskit/button";
-import { AccessibleResource } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 
 type changeObject = { [key: string]: any };
 
 export default class NonCustomJQL extends React.Component<
     {
-        workingSite: AccessibleResource;
+        defaultSite: DetailedSiteInfo;
         workingProject: string;
-        sites: AccessibleResource[];
+        sites: DetailedSiteInfo[];
         yourIssuesJql: string;
         yourIssuesIsEnabled: boolean;
         openIssuesJql: string;
@@ -100,7 +100,7 @@ export default class NonCustomJQL extends React.Component<
         });
     }
 
-    handleSaveEdit = (site: AccessibleResource, jqlEntry: JQLEntry) => {
+    handleSaveEdit = (site: DetailedSiteInfo, jqlEntry: JQLEntry) => {
         switch (jqlEntry.id) {
             case "YOURS":
                 this.publishChanges("jira.explorer.assignedIssueJql", jqlEntry.query);
@@ -185,7 +185,7 @@ export default class NonCustomJQL extends React.Component<
     }
 
     render() {
-        if (!this.props.workingSite && !this.props.jiraAccessToken) {
+        if (!this.props.defaultSite && !this.props.jiraAccessToken) {
             return <div />;
         }
 
@@ -196,7 +196,7 @@ export default class NonCustomJQL extends React.Component<
                 {this.state.editingEntry && (
                     <EditJQL
                         jiraAccessToken={this.props.jiraAccessToken}
-                        workingSite={this.props.workingSite}
+                        defaultSite={this.props.defaultSite}
                         workingProject={this.props.workingProject}
                         sites={[]}
                         jqlEntry={this.state.editingEntry}

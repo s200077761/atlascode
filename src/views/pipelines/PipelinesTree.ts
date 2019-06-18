@@ -153,7 +153,6 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         var morePages = false;
         const remotes = getBitbucketRemotes(this._repo);
         if (remotes.length > 0) {
-            const remote = remotes[0];
             const parsed = parseGitUrl(urlForRemote(remotes[0]));
             const bb: Bitbucket = await clientForHostname(parsed.source);
             const branchesResponse = await bb.refs.listBranches({

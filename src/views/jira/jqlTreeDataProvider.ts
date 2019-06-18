@@ -3,7 +3,7 @@ import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
-import { OAuthProvider } from '../../atlclients/authInfo';
+import { ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchIssue } from '../../jira/fetchIssue';
@@ -29,7 +29,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     constructor(jql?: string, emptyState?: string, emptyStateCommand?: Command) {
         super();
 
-        Container.jiraSiteManager.getEffectiveProject().then(p => this._projectId = p.id);
+        Container.jiraProjectManager.getEffectiveProject().then(p => this._projectId = p.id);
         this._jql = jql;
         if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
@@ -76,7 +76,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-        if (!await Container.authManager.isProductAuthenticatedticated(OAuthProvider.JiraCloud)) {
+        if (!await Container.authManager.isProductAuthenticated(ProductJira)) {
             return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
         }
         if (parent) {
@@ -131,12 +131,16 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchParentIssues(subIssues: Issue[]): Promise<Issue[]> {
+        if (subIssues.length < 1) {
+            return [];
+        }
+        const site = subIssues[0].siteDetails;
         const parentKeys: string[] = Array.from(new Set(subIssues.map(i => i.parentKey!)));
 
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey);
+                    const parent = await fetchIssue(issueKey, site);
                     // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                     parent.subtasks = [];
                     return parent;
@@ -175,12 +179,16 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchEpicIssues(childIssues: Issue[]): Promise<Issue[]> {
+        if (childIssues.length < 1) {
+            return [];
+        }
+        const site = childIssues[0].siteDetails;
         const parentKeys: string[] = Array.from(new Set(childIssues.map(i => i.epicLink!)));
 
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey);
+                    const parent = await fetchIssue(issueKey, site);
                     return parent;
                 }));
 

@@ -7,7 +7,6 @@ import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { getCurrentUser } from './user';
 import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
@@ -73,7 +72,7 @@ export class BitbucketContext extends Disposable {
         if (site) {
             let foundUser = this._currentUsers.get(site.hostname);
             if (!foundUser) {
-                foundUser = await getCurrentUser(site);
+                foundUser = await currentUserBitbucket(site);
             }
 
             if (foundUser) {

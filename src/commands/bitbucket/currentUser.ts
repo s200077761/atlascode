@@ -1,8 +1,13 @@
-import { getCurrentUser } from "../../bitbucket/user";
 import { Container } from "../../container";
-import { ProductBitbucket } from "../../atlclients/authInfo";
+import { ProductBitbucket, DetailedSiteInfo } from "../../atlclients/authInfo";
 
-export async function currentUserBitbucket(): Promise<Bitbucket.Schema.User> {
-    const user = await getCurrentUser(Container.siteManager.effectiveSite(ProductBitbucket));
-    return user;
+export async function currentUserBitbucket(site?: DetailedSiteInfo): Promise<Bitbucket.Schema.User> {
+    let effectiveSite = site;
+    if (!effectiveSite) {
+        effectiveSite = Container.siteManager.effectiveSite(ProductBitbucket);
+    }
+
+    const bbreq = await Container.clientManager.bbrequest(effectiveSite);
+    const { data } = await bbreq.user.get('');
+    return data;
 }

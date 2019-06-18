@@ -17,6 +17,7 @@ import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
 import { getJiraCloudBaseUrl } from "./serverInfo";
+import { cannotGetClientFor } from "../constants";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -160,7 +161,7 @@ export class ClientManager implements Disposable {
     return newSite;
   }
 
-  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit | undefined> {
+  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit> {
 
     return this.getClient<BitbucketKit>(
       site,
@@ -190,7 +191,7 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async jirarequest(site: DetailedSiteInfo): Promise<JiraKit | undefined> {
+  public async jirarequest(site: DetailedSiteInfo): Promise<JiraKit> {
     return this.getClient<JiraKit>(
       site,
       info => {
@@ -199,7 +200,7 @@ export class ClientManager implements Disposable {
           extraOptions = { agent: this._agent };
         }
 
-        let client = new JiraKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+        const client = new JiraKit({ baseUrl: site.baseApiUrl, options: extraOptions });
 
         if (isOAuthInfo(info)) {
           client.authenticate({ type: "token", token: info.access });
@@ -218,11 +219,11 @@ export class ClientManager implements Disposable {
     );
   }
 
-  private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T | undefined> {
+  private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
     let client: T | undefined = this._clients.getItem<T>(site.hostname);
 
     if (!client) {
-      let info = await Container.authManager.getAuthInfo(site);
+      const info = await Container.authManager.getAuthInfo(site);
 
       if (isOAuthInfo(info)) {
         try {
@@ -239,7 +240,7 @@ export class ClientManager implements Disposable {
           }
         } catch (e) {
           Logger.debug(`error refreshing token ${e}`);
-          return undefined;
+          return Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
         }
       } else if (info) {
         client = factory(info);
@@ -257,12 +258,12 @@ export class ClientManager implements Disposable {
       this._agentChanged = false;
     }
 
-    return client;
+    return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
   }
 
-  public async getValidAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
+  public async getValidAccessToken(site: DetailedSiteInfo): Promise<string> {
     if (!site.isCloud) {
-      return undefined;
+      return Promise.reject(`site ${site.name} is not a cloud instance`);
     }
 
     let client: any = this._clients.getItem(site.hostname);
@@ -282,13 +283,13 @@ export class ClientManager implements Disposable {
           }
         } catch (e) {
           Logger.debug(`error refreshing token ${e}`);
-          return undefined;
+          return Promise.reject(e);
         }
       } else if (info) {
         newAccessToken = info.access;
       }
     }
-    return newAccessToken;
+    return newAccessToken ? newAccessToken : Promise.reject('authInfo is not a valid OAuthInfo instance');
   }
 
   public async removeClient(site: SiteInfo) {

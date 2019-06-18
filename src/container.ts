@@ -24,6 +24,7 @@ import { JiraFieldManager } from './jira/fieldManager';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { PmfStats } from './pmf/stats';
 import { SiteManager } from './siteManager';
+import { JiraProjectManager } from './jira/projectManager';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -54,6 +55,7 @@ export class Container {
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
+        context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraFieldManager = new JiraFieldManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
@@ -241,6 +243,11 @@ export class Container {
     private static _jiraFieldManager: JiraFieldManager;
     static get jiraFieldManager() {
         return this._jiraFieldManager;
+    }
+
+    private static _jiraProjectManager: JiraProjectManager;
+    static get jiraProjectManager() {
+        return this._jiraProjectManager;
     }
 
     private static _analyticsClient: AnalyticsClient;

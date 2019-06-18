@@ -1,4 +1,4 @@
-import { AuthInfoV1, AuthInfo, Product, SiteInfo, OAuthProvider, AccessibleResource, ProductJira, ProductBitbucket, OAuthInfo, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, isDetailedSiteInfo, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent, isOAuthInfo } from './authInfo';
+import { AuthInfoV1, AuthInfo, Product, SiteInfo, OAuthProvider, AccessibleResource, ProductJira, ProductBitbucket, OAuthInfo, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, isDetailedSiteInfo, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event, Memento } from 'vscode';
 import { Logger } from '../logger';
@@ -55,7 +55,7 @@ export class AuthManager implements Disposable {
         return await this.getAuthInfo(site) !== undefined;
     }
 
-    private async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
+    public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
 
         let productAuths = this._memStore.get(product.key);

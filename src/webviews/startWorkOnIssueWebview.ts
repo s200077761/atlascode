@@ -2,21 +2,20 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
+import { Issue, emptyIssue, issueOrKey } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
-import { isEmptySite } from '../config/model';
-import { oauthProviderForSite } from '../atlclients/authInfo';
+import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../commands';
 import { RepositoriesApi } from '../bitbucket/repositories';
-import { PullRequestApi } from '../bitbucket/pullRequests';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
+import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
@@ -25,7 +24,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
 
     constructor(extensionPath: string) {
         super(extensionPath);
-        this.tenantId = Container.jiraSiteManager.effectiveSite.id;
+        this.tenantId = Container.siteManager.effectiveSite(ProductJira).id;
     }
 
     public get title(): string {
@@ -35,44 +34,26 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         return "startWorkOnIssueScreen";
     }
 
-    async createOrShowIssue(data: issueOrKey) {
+    async createOrShowIssue(data: Issue) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    async initialize(data: issueOrKey) {
-        if (isIssue(data)) {
-            this._issueKey = data.key;
-        } else {
-            this._issueKey = data;
-        }
-
+    async initialize(data: Issue) {
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
         }
 
-        if (isIssue(data)) {
-            if (this._state.key !== data.key) {
-                this.postMessage({
-                    type: 'update',
-                    issue: emptyIssue,
-                    repoData: []
-                });
-            }
-            this.updateIssue(data);
-            return;
+        if (this._state.key !== data.key) {
+            this.postMessage({
+                type: 'update',
+                issue: emptyIssue,
+                repoData: []
+            });
         }
-
-        try {
-            const issue = await fetchIssue(data);
-            this.updateIssue(issue);
-        } catch (e) {
-            let err = new Error(`error updating issue: ${e}`);
-            Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
-        }
-
+        this.updateIssue(data);
+        return;
     }
 
     public invalidate() {
@@ -98,10 +79,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.workingSite.name}.${this._state.workingSite.baseUrlSuffix}/browse/${this._state.key}`;
+                    const linkUrl = `https://${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
-                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     break;
                 }
                 case 'startWork': {
@@ -112,7 +93,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            const authInfo = await Container.authManager.getAuthInfo(oauthProviderForSite(issue.workingSite));
+                            const authInfo = await Container.authManager.getAuthInfo(issue.siteDetails);
                             const currentUserId = authInfo!.user.id;
                             await assignIssue(issue, currentUserId);
                             if (e.setupJira) {
@@ -122,7 +103,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
                             });
-                            issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueWorkStartedEvent(issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
                             this.postMessage({ type: 'error', reason: e });
@@ -158,8 +139,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         this.isRefeshing = true;
         try {
             this._state = issue;
-            if (!isEmptySite(issue.workingSite)) {
-                this.tenantId = issue.workingSite.id;
+            if (!isEmptySiteInfo(issue.siteDetails)) {
+                this.tenantId = issue.siteDetails.id;
             }
 
             if (this._panel) {
@@ -181,13 +162,16 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 let href = undefined;
                 let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
                 if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                    [, repo, developmentBranch, branchingModel] = await Promise.all(
-                        [r.fetch(),
-                        RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]),
-                        RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0]),
-                        RepositoriesApi.getBranchingModel(PullRequestApi.getBitbucketRemotes(r)[0])
-                        ]);
-                    href = repo.links!.html!.href;
+                    const remotes = getBitbucketRemotes(r);
+                    if (remotes.length > 0) {
+                        [, repo, developmentBranch, branchingModel] = await Promise.all(
+                            [r.fetch(),
+                            RepositoriesApi.get(remotes[0]),
+                            RepositoriesApi.getDevelopmentBranch(remotes[0]),
+                            RepositoriesApi.getBranchingModel(remotes[0])
+                            ]);
+                        href = repo.links!.html!.href;
+                    }
                 }
 
                 await repoData.push({
@@ -228,11 +212,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         }
     }
 
-    private async forceUpdateIssue(issue?: Issue) {
-        let key = issue !== undefined ? issue.key : this._issueKey;
+    private async forceUpdateIssue() {
+        let key = this._issueKey;
         if (key !== "") {
             try {
-                let issue = await fetchIssue(key, this._state.workingSite);
+                let issue = await fetchIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             }
             catch (e) {

@@ -15,7 +15,6 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     if (!Container.config.bitbucket.pipelines.monitorEnabled) {
       return;
     }
-    await Container.clientManager.bbrequest();
     for (var i = 0; i < this._repositories.length; i++) {
       const repo = this._repositories[i];
       const previousResults = this._previousResults[repo.rootUri.path];
