@@ -8,7 +8,7 @@ import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { CacheMap, Interval } from '../util/cachemap';
-import { PullRequest } from './model';
+import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { getBitbucketRemotes, siteDetailsForRepository, parseGitUrl } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
@@ -24,7 +24,7 @@ export class BitbucketContext extends Disposable {
     private _pullRequestsExplorer: PullRequestsExplorer;
     private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
     private _disposable: Disposable;
-    private _currentUsers: Map<string, Bitbucket.Schema.User>;
+    private _currentUsers: Map<string, User>;
     private _pullRequestCache = new CacheMap();
     public readonly prCommentController: PullRequestCommentController;
 
@@ -33,7 +33,7 @@ export class BitbucketContext extends Disposable {
         this._gitApi = gitApi;
         this._pullRequestsExplorer = new PullRequestsExplorer(this);
         this._bitbucketIssuesExplorer = new BitbucketIssuesExplorer(this);
-        this._currentUsers = new Map<string, Bitbucket.Schema.User>();
+        this._currentUsers = new Map<string, User>();
 
         Container.context.subscriptions.push(
             Container.authManager.onDidAuthChange((e) => {
@@ -59,7 +59,7 @@ export class BitbucketContext extends Disposable {
         this.refreshRepos();
     }
 
-    public async currentUser(repo: Repository | Bitbucket.Schema.Repository): Promise<Bitbucket.Schema.User> {
+    public async currentUser(repo: Repository | Bitbucket.Schema.Repository): Promise<User> {
         let site: DetailedSiteInfo | undefined = undefined;
 
         if (this.isSchemaRepository(repo)) {

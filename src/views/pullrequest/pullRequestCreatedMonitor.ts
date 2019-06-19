@@ -19,7 +19,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                     : new Date();
                 this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
 
-                if (prList.data.length > 0 && Date.parse(prList.data[0].data.created_on!) > lastChecked.getTime()) {
+                if (prList.data.length > 0 && Date.parse(prList.data[0].data.ts) > lastChecked.getTime()) {
                     return [path.basename(repo.rootUri.fsPath)];
                 }
                 return [];

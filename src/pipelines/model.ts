@@ -1,5 +1,7 @@
+import { Repo } from "../bitbucket/model";
+
 export interface Pipeline {
-    repository: Bitbucket.Schema.Repository;
+    repository: Repo;
     build_number: number;
     created_on: string;
     creator_name?: string;

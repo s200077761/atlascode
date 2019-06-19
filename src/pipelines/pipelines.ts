@@ -5,6 +5,7 @@ import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRepository } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
+import { RepositoriesApi } from "../bitbucket/repositories";
 
 export namespace PipelineApi {
   export async function getList(
@@ -196,7 +197,7 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   }
 
   return {
-    repository: pipeline.repository!,
+    repository: RepositoriesApi.toRepo(pipeline.repository!),
     build_number: pipeline.build_number!,
     created_on: pipeline.created_on!,
     creator_name: name,

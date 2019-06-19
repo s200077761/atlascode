@@ -16,6 +16,7 @@ import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
@@ -157,10 +158,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                     ? r.state.remotes
                     : [{ name: 'NO_GIT_REMOTE_FOUND', isReadOnly: true }];
 
-                let repo: Bitbucket.Schema.Repository | undefined = undefined;
+                let repo: Repo | undefined = undefined;
                 let developmentBranch = undefined;
                 let href = undefined;
-                let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
+                let branchingModel: BitbucketBranchingModel | undefined = undefined;
                 if (Container.bitbucketContext.isBitbucketRepo(r)) {
                     const remotes = getBitbucketRemotes(r);
                     if (remotes.length > 0) {

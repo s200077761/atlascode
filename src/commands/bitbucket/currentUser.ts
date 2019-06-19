@@ -1,7 +1,8 @@
 import { Container } from "../../container";
 import { ProductBitbucket, DetailedSiteInfo } from "../../atlclients/authInfo";
+import { User } from "../../bitbucket/model";
 
-export async function currentUserBitbucket(site?: DetailedSiteInfo): Promise<Bitbucket.Schema.User> {
+export async function currentUserBitbucket(site?: DetailedSiteInfo): Promise<User> {
     let effectiveSite = site;
     if (!effectiveSite) {
         effectiveSite = Container.siteManager.effectiveSite(ProductBitbucket);

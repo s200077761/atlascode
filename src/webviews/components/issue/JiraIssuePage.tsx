@@ -491,7 +491,7 @@ export default class JiraIssuePage extends WebviewComponent<
           <React.Fragment>
             <Tooltip content='Recent pull requests from workspace repositories'><h3>Recent pull requests</h3></Tooltip>
             {this.state.data.recentPullRequests.map(pr => {
-              return <PullRequests pullRequests={this.state.data.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })} />;
+              return <PullRequests pullRequests={this.state.data.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })} />;
             })}
           </React.Fragment>
         }

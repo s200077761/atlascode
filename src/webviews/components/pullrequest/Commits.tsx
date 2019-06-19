@@ -23,10 +23,10 @@ export default class Commits extends React.Component<PRData, {}> {
     render() {
         const commitsData = this.props.commits!.map((commit) => {
             return {
-                hash: commit.hash!,
+                hash: commit.hash,
                 message: commit.message,
-                href: commit.links.html.href,
-                ts: commit.date
+                href: commit.url,
+                ts: commit.ts
             };
         });
 

@@ -51,14 +51,14 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                 }
 
                 const repo = await RepositoriesApi.get(bbRemotes[0]);
-                if (!repo.has_issues) {
+                if (!repo.issueTrackerEnabled) {
                     continue;
                 }
 
                 repoData.push({
                     uri: r.rootUri.toString(),
-                    href: repo.links!.html!.href!,
-                    avatarUrl: repo.links!.avatar!.href!,
+                    href: repo.url,
+                    avatarUrl: repo.avatarUrl,
                     remotes: bbRemotes,
                     defaultReviewers: [],
                     localBranches: [],

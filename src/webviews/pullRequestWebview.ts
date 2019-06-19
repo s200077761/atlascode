@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssue } from '../bitbucket/model';
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
@@ -166,7 +166,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 }
                 case 'copyPullRequestLink': {
                     handled = true;
-                    const linkUrl = this._state.prData.pr!.links!.html!.href!;
+                    const linkUrl = this._state.prData.pr!.url;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied pull request link to clipboard - ${linkUrl}`);
                     break;
@@ -260,9 +260,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<Issue | Bitbucket.Schema.Issue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<Issue | BitbucketIssue | undefined> {
         try {
-            const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
+            const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
             if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
@@ -299,8 +299,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return result;
     }
 
-    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Bitbucket.Schema.Issue[]> {
-        let result: Bitbucket.Schema.Issue[] = [];
+    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<BitbucketIssue[]> {
+        let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
             result = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, issueKeys);
@@ -331,7 +331,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+    private async updateIssue(issue?: Issue | BitbucketIssue) {
         if (!issue) {
             return;
         }
@@ -356,8 +356,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
                 });
         }
-        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
-        this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
+        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
+        this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branchName)
             .then(() => {
                 this._state.prData.currentBranch = this._state.repository!.state.HEAD!.name!;
                 this.postMessage({

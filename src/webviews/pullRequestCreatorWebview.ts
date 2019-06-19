@@ -9,7 +9,7 @@ import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, i
 import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
-import { PullRequest } from '../bitbucket/model';
+import { PullRequest, BitbucketIssue } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { Issue, isIssue } from '../jira/jiraModel';
@@ -73,12 +73,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
                 await state.push({
                     uri: r.rootUri.toString(),
-                    href: repo.links!.html!.href,
-                    avatarUrl: repo.links!.avatar!.href,
-                    name: repo.name,
-                    owner: repo.owner!.username,
+                    href: repo.url,
+                    avatarUrl: repo.avatarUrl,
+                    name: repo.displayName,
+                    owner: repo.name,
                     remotes: r.state.remotes,
-                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
+                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.accountId !== currentUser.accountId),
                     localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                     remoteBranches: await Promise.all(
                         r.state.refs
@@ -184,7 +184,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
-        let issue: Issue | Bitbucket.Schema.Issue | undefined = undefined;
+        let issue: Issue | BitbucketIssue | undefined = undefined;
         if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
@@ -209,7 +209,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         });
     }
 
-    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+    private async updateIssue(issue?: Issue | BitbucketIssue) {
         if (!issue) {
             return;
         }
@@ -232,27 +232,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        let pr: Bitbucket.Schema.Pullrequest = {
-            type: 'pullrequest',
-            title: title,
-            summary: {
-                raw: summary
-            },
-            source: {
-                branch: {
-                    name: sourceBranchName
+        await PullRequestApi
+            .create(
+                repo,
+                remote,
+                {
+                    title: title,
+                    summary: summary,
+                    sourceBranchName: sourceBranchName,
+                    destinationBranchName: destinationBranchName,
+                    closeSourceBranch: closeSourceBranch,
+                    reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
                 }
-            },
-            destination: {
-                branch: {
-                    name: destinationBranchName
-                }
-            },
-            reviewers: reviewers,
-            close_source_branch: closeSourceBranch
-        };
-
-        await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
+            )
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { StaticIssuesNode } from '../jira/staticIssuesNode';
 import { IssueNode } from './issueNode';
-import { PullRequest } from '../../bitbucket/model';
+import { PullRequest, Comment, Commit } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { ProductJira } from '../../atlclients/authInfo';
@@ -14,7 +14,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
+    public static async create(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
         // TODO: [VSCODE-503] handle related issues across cloud/server
         if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;

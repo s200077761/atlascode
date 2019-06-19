@@ -4,8 +4,9 @@ import Tooltip from '@atlaskit/tooltip';
 import TableTree from '@atlaskit/table-tree';
 import { StateRenderer } from './StatusMenu';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
+import { BitbucketIssue } from '../../../bitbucket/model';
 
-type ItemData = { issue: Bitbucket.Schema.Issue, postMessage: (e: OpenBitbucketIssueAction) => void };
+type ItemData = { issue: BitbucketIssue, postMessage: (e: OpenBitbucketIssueAction) => void };
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
@@ -17,7 +18,7 @@ const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue
 const Priority = (data: ItemData) => <Tooltip content={`priority: ${data.issue.priority}`}><p>{data.issue.priority}</p></Tooltip>;
 const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}>{StateRenderer[data.issue.state!]}</p>;
 
-export default class BitbucketIssueList extends React.Component<{ issues: Bitbucket.Schema.Issue[], postMessage: (e: OpenBitbucketIssueAction) => void }, {}> {
+export default class BitbucketIssueList extends React.Component<{ issues: BitbucketIssue[], postMessage: (e: OpenBitbucketIssueAction) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
