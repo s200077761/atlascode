@@ -7,11 +7,13 @@ import { loggedOutEvent } from '../analytics';
 import { Container } from '../container';
 import debounce from 'lodash.debounce';
 import { OAuthDancer } from './oauthDancer';
-import { getJiraCloudBaseUrl } from './serverInfo';
+//import { getJiraCloudBaseUrl } from './serverInfo';
 import { configuration } from '../config/configuration';
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const keychainServiceNameV2 = "atlascode-authinfoV2";
+
+interface HostToAuthInfo { [k: string]: AuthInfo; }
 
 export class AuthManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
@@ -69,9 +71,9 @@ export class AuthManager implements Disposable {
             try {
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(product) || undefined;
                 if (infoEntry) {
-                    let infos: Map<string, AuthInfo> = JSON.parse(infoEntry);
+                    let infos: HostToAuthInfo = JSON.parse(infoEntry);
                     if (infos) {
-                        let entry = infos.entries().next().value;
+                        let entry = Object.entries(infos).values().next().value;
 
                         if (entry) {
                             foundInfo = entry[1];
@@ -101,8 +103,8 @@ export class AuthManager implements Disposable {
             try {
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
                 if (infoEntry) {
-                    let infos: Map<string, AuthInfo> = JSON.parse(infoEntry);
-                    let info = infos.get(site.hostname);
+                    let infos: HostToAuthInfo = JSON.parse(infoEntry);
+                    let info = infos[site.hostname];
                     if (info && productAuths) {
                         this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
                         return info;
@@ -138,13 +140,14 @@ export class AuthManager implements Disposable {
 
             if (keychain) {
                 try {
-                    let infos: Map<string, AuthInfo> = new Map<string, AuthInfo>();
+                    let infos: HostToAuthInfo = {};
                     let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
                     if (infoEntry) {
                         infos = JSON.parse(infoEntry);
+                        infos[site.hostname] = info;
                     }
 
-                    await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos.set(site.hostname, info)));
+                    await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
                 }
                 catch (e) {
                     Logger.debug("error saving auth info to keychain: ", e);
@@ -168,8 +171,10 @@ export class AuthManager implements Disposable {
         if (keychain) {
             let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
             if (infoEntry) {
-                let infos: Map<string, AuthInfo> = JSON.parse(infoEntry);
-                wasKeyDeleted = infos.delete(site.hostname);
+                let infos: HostToAuthInfo = JSON.parse(infoEntry);
+                wasKeyDeleted = Object.keys(infos).includes(site.hostname);
+                delete infos[site.hostname];
+
                 await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
             }
         }
@@ -213,31 +218,43 @@ export class AuthManager implements Disposable {
     }
 
     public async convertLegacyAuthInfo(defaultSite?: AccessibleResource) {
-        let jiraInfo: Map<string, AuthInfo> | undefined = undefined;
-        let bbInfo: Map<string, AuthInfo> | undefined = undefined;
+        let jiraInfo: HostToAuthInfo | undefined = undefined;
+        let bbInfo: HostToAuthInfo | undefined = undefined;
+
         const _dancer = new OAuthDancer();
         let jiraSites: DetailedSiteInfo[] = [];
         let bbSites: DetailedSiteInfo[] = [];
         if (keychain) {
             for (const provider of Object.values(OAuthProvider)) {
+                Logger.debug('converting auth provider', provider);
                 try {
                     let infoEntry = await this.getJsonAuthInfoFromKeychain({ key: provider, name: 'legacy' }, keychainServiceNameV1) || undefined;
+                    Logger.debug('got legacy auth info', infoEntry);
                     if (infoEntry) {
                         let info: AuthInfoV1 = JSON.parse(infoEntry);
 
                         if (provider.startsWith('jira')) {
                             const newAccess = await _dancer.getNewAccessToken(provider, info.refresh);
+                            Logger.debug('new access token is', newAccess);
                             if (!newAccess) {
                                 continue;
                             }
                             if (info.accessibleResources) {
-                                info.accessibleResources.forEach(async (resource: AccessibleResource) => {
+                                for (const resource of info.accessibleResources) {
                                     if (jiraInfo === undefined) {
-                                        jiraInfo = new Map<string, AuthInfo>();
+                                        jiraInfo = {};
                                     }
 
+                                    Logger.debug('processing resource', resource.name);
                                     let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-                                    const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${resource.id}/rest/2`, newAccess);
+                                    Logger.debug('trying to get base url', provider);
+
+                                    // TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
+                                    //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${resource.id}/rest/2`, newAccess);
+
+                                    const baseUrlString = provider === OAuthProvider.JiraCloudStaging ? `https://${resource.name}.jira-dev.com` : `https://${resource.name}.atlassian.net`;
+
+                                    Logger.debug('got base url', baseUrlString);
                                     const baseUrl: URL = new URL(baseUrlString);
 
                                     const newInfo: OAuthInfo = {
@@ -249,7 +266,9 @@ export class AuthManager implements Disposable {
                                             id: info.user.id
                                         }
                                     };
-                                    jiraInfo.set(baseUrl.hostname, newInfo);
+                                    jiraInfo[baseUrl.hostname] = newInfo;
+
+                                    Logger.debug('set jira info', jiraInfo);
 
                                     let newSite: DetailedSiteInfo = {
                                         avatarUrl: resource.avatarUrl,
@@ -264,18 +283,21 @@ export class AuthManager implements Disposable {
 
                                     jiraSites.push(newSite);
 
+                                    Logger.debug('added site', newSite);
+
                                     if (defaultSite && defaultSite.id === resource.id) {
                                         configuration.setDefaultSite(newSite);
+                                        Logger.debug('set default site site', newSite);
 
-                                        if (!Container.isDebugging) {
+                                        if (!this.isDebugging) {
                                             configuration.setWorkingSite(undefined);
                                         }
                                     }
-                                });
+                                }
                             }
                         } else {
                             if (bbInfo === undefined) {
-                                bbInfo = new Map<string, AuthInfo>();
+                                bbInfo = {};
                             }
 
                             const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
@@ -291,7 +313,7 @@ export class AuthManager implements Disposable {
                                 }
                             };
 
-                            bbInfo.set(hostname, newInfo);
+                            bbInfo[hostname] = newInfo;
 
                             // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
                             bbSites.push({
@@ -307,7 +329,7 @@ export class AuthManager implements Disposable {
                         }
                     }
 
-                    if (!Container.isDebugging) {
+                    if (!this.isDebugging) {
                         await this.removeV1AuthInfo(provider);
                     }
                 } catch (e) {
@@ -317,6 +339,7 @@ export class AuthManager implements Disposable {
         }
 
         if (jiraSites.length > 0) {
+            Logger.debug('updating global store', `${ProductJira.key}Sites`);
             this._globalStore.update(`${ProductJira.key}Sites`, jiraSites);
         }
 
@@ -325,10 +348,12 @@ export class AuthManager implements Disposable {
         }
 
         if (jiraInfo !== undefined) {
-            this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
+            Logger.debug('updating mem store', jiraInfo);
+            this._memStore.set(ProductJira.key, new Map(Object.entries(jiraInfo)));
 
             if (keychain) {
                 try {
+                    Logger.debug('updating key store', JSON.stringify(jiraInfo));
                     await keychain.setPassword(keychainServiceNameV2, ProductJira.key, JSON.stringify(jiraInfo));
                 }
                 catch (e) {
@@ -338,7 +363,8 @@ export class AuthManager implements Disposable {
         }
 
         if (bbInfo !== undefined) {
-            this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
+            Logger.debug('updating mem store', bbInfo);
+            this._memStore.set(ProductBitbucket.key, new Map(Object.entries(bbInfo)));
             if (keychain) {
                 try {
                     await keychain.setPassword(keychainServiceNameV2, ProductBitbucket.key, JSON.stringify(bbInfo));
@@ -349,5 +375,15 @@ export class AuthManager implements Disposable {
             }
         }
 
+    }
+
+    private isDebugging(): boolean {
+        let isDebugging = false;
+        try {
+            const args = process.execArgv;
+            isDebugging = args ? args.some(arg => /^--(debug|inspect)\b(-brk\b|(?!-))=?/.test(arg)) : false;
+        }
+        catch { }
+        return isDebugging;
     }
 }

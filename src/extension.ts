@@ -26,27 +26,42 @@ export async function activate(context: ExtensionContext) {
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
+    console.log("registering resources");
     registerResources(context);
+
+    console.log("configuring configuration");
     Configuration.configure(context);
+    console.log("configuring Logger");
     Logger.configure(context);
 
-    const cfg = await migrateConfig();
+    try {
+        Logger.debug('initializing container');
+        Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-    Container.initialize(context, cfg, atlascodeVersion);
+        Logger.debug('registering commands');
+        registerCommands(context);
+        activateCodebucket(context);
 
-    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isProductAuthenticated(ProductJira));
-    setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isProductAuthenticated(ProductBitbucket));
+        Logger.debug('migrating old config');
+        await migrateConfig();
+        Logger.debug('old config migrated');
 
-    registerCommands(context);
-    activateCodebucket(context);
+        Logger.debug('setting auth command context');
+        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isProductAuthenticated(ProductJira));
+        setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isProductAuthenticated(ProductBitbucket));
 
-    const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
-    if (gitExtension) {
-        const gitApi = gitExtension.exports.getAPI(1);
-        const bbContext = new BitbucketContext(gitApi);
-        Container.initializeBitbucket(bbContext);
-    } else {
-        Logger.error(new Error('vscode.git extension not found'));
+        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
+        if (gitExtension) {
+            const gitApi = gitExtension.exports.getAPI(1);
+            const bbContext = new BitbucketContext(gitApi);
+            Logger.debug('initializing bitbucket');
+            Container.initializeBitbucket(bbContext);
+        } else {
+            Logger.error(new Error('vscode.git extension not found'));
+        }
+
+    } catch (e) {
+        Logger.error(e, 'Error initializing atlascode!');
     }
 
     showWelcomePage(atlascodeVersion, previousVersion);
@@ -65,11 +80,9 @@ export async function activate(context: ExtensionContext) {
     Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
-async function migrateConfig(): Promise<IConfig> {
+async function migrateConfig(): Promise<void> {
     const cfg = configuration.get<IConfig>();
-    Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
-
-    return cfg;
+    await Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

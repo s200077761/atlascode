@@ -16,7 +16,7 @@ import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
 import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
-import { getJiraCloudBaseUrl } from "./serverInfo";
+//import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
@@ -141,7 +141,10 @@ export class ClientManager implements Disposable {
           newResource = jiraResources[0];
 
           let apiUri = authInfo.provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-          const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
+
+          //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
+          //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
+          const baseUrlString = authInfo.provider === OAuthProvider.JiraCloudStaging ? `https://${newResource.name}.jira-dev.com` : `https://${newResource.name}.atlassian.net`;
           const baseUrl: URL = new URL(baseUrlString);
 
           newSite = {

@@ -53,7 +53,6 @@ export class Container {
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
         context.subscriptions.push((this._authManager = new AuthManager(context.globalState)));
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
-        context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
         context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
         context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraFieldManager = new JiraFieldManager()));
@@ -68,6 +67,7 @@ export class Container {
         context.subscriptions.push(this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath));
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
+        context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
 
         this._pmfStats = new PmfStats(context);
 
