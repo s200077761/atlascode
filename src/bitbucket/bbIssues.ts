@@ -1,7 +1,7 @@
 import { Repository, Remote } from "../typings/git";
 import { RepositoriesApi } from "./repositories";
 import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, clientForHostname } from "./bbUtils";
-import { PaginatedBitbucketIssues, BitbucketIssue, PaginatedComments, UnknownUser } from "./model";
+import { PaginatedBitbucketIssues, BitbucketIssue, PaginatedComments, UnknownUser, Comment } from "./model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -123,8 +123,8 @@ export namespace BitbucketIssuesApi {
                 parentId: comment.parent ? comment.parent.id! : undefined,
                 htmlContent: comment.content!.html!,
                 rawContent: comment.content!.raw!,
-                ts: comment.created_on,
-                updatedTs: comment.updated_on,
+                ts: comment.created_on!,
+                updatedTs: comment.updated_on!,
                 deleted: !!comment.deleted,
                 inline: comment.inline,
                 user: comment.user
@@ -135,7 +135,7 @@ export namespace BitbucketIssuesApi {
                         avatarUrl: comment.user.links!.avatar!.href!
                     }
                     : UnknownUser
-            } as Comment)),
+            })),
             next: data.next
         };
     }
@@ -188,7 +188,6 @@ export namespace BitbucketIssuesApi {
             });
 
         const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
-            //@ts-ignore
             id: change.id as number,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
