@@ -21,7 +21,7 @@ export abstract class Explorer extends Disposable {
     }
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isProductAuthenticated(this.product())) {
+        if (event.visible && await Container.siteManager.productHasAtLeastOneSite(this.product())) {
             viewScreenEvent(this.viewId()).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         }
     }

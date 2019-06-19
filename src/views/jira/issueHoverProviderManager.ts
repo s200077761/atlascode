@@ -20,7 +20,7 @@ export class IssueHoverProviderManager implements Disposable {
 
     private async onDidAuthChange(e: AuthInfoEvent) {
         if (e.site.product.key === ProductJira.key) {
-            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
+            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 this.updateHover();
             } else {
                 this.disposeHoverProvider();

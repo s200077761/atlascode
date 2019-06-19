@@ -76,7 +76,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-        if (!await Container.authManager.isProductAuthenticated(ProductJira)) {
+        if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
         }
         if (parent) {

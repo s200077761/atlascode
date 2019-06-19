@@ -55,8 +55,8 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 authInfo = emptyAuthInfo;
             }
 
-            const isJiraAuthed = await Container.authManager.isProductAuthenticated(ProductJira);
-            const isBBAuthed = await Container.authManager.isProductAuthenticated(ProductBitbucket);
+            const isJiraAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
+            const isBBAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
 
             let sitesAvailable: DetailedSiteInfo[] = [];
             let stagingEnabled = false;

@@ -63,7 +63,7 @@ export class JiraContext extends Disposable {
         }
 
         if (initializing) {
-            const isLoggedIn = await Container.authManager.isProductAuthenticated(ProductJira);
+            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
         }
     }
@@ -77,7 +77,7 @@ export class JiraContext extends Disposable {
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isProductAuthenticated(ProductJira)) {
+        if (!Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return;
         }
         this._explorers.forEach(e => e.refresh());
@@ -87,7 +87,7 @@ export class JiraContext extends Disposable {
     async onDidAuthChange(e: AuthInfoEvent) {
         if (e.site.product.key === ProductJira.key) {
 
-            const isLoggedIn = await Container.authManager.isProductAuthenticated(ProductJira);
+            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }

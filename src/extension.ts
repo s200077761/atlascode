@@ -47,8 +47,8 @@ export async function activate(context: ExtensionContext) {
         Logger.debug('old config migrated');
 
         Logger.debug('setting auth command context');
-        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isProductAuthenticated(ProductJira));
-        setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isProductAuthenticated(ProductBitbucket));
+        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
+        setCommandContext(CommandContext.IsBBAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
 
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (gitExtension) {

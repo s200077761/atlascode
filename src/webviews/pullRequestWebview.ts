@@ -264,7 +264,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         try {
             const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
 
-            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
+            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
                 const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
                 if (jiraIssues.length > 0) {
@@ -287,7 +287,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
         let result: Issue[] = [];
         try {
-            if (await Container.authManager.isProductAuthenticated(ProductJira)) {
+            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
                 result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
             }

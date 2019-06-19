@@ -85,6 +85,10 @@ export class SiteManager extends Disposable {
         return sites;
     }
 
+    public productHasAtLeastOneSite(product: Product): boolean {
+        return this.getSitesAvailable(product).length > 0;
+    }
+
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
         return this.getSitesAvailable(product).find(site => site.hostname === hostname);
     }

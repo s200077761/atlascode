@@ -21,7 +21,7 @@ export class NewIssueMonitor {
   }
 
   async checkForNewIssues() {
-    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.authManager.isProductAuthenticated(ProductJira)) {
+    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
       return;
     }
 

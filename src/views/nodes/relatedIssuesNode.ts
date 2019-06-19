@@ -16,7 +16,7 @@ export class RelatedIssuesNode extends AbstractBaseNode {
 
     public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
         // TODO: [VSCODE-503] handle related issues across cloud/server
-        if (!await Container.authManager.isProductAuthenticated(ProductJira) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+        if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractIssueKeys(pr, commits, allComments);

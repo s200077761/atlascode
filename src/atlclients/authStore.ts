@@ -49,14 +49,6 @@ export class AuthManager implements Disposable {
         return await this._debouncedKeychain[product.key]();
     }
 
-    public async isProductAuthenticated(product: Product): Promise<boolean> {
-        return await this.getFirstAuthInfoForProduct(product) !== undefined;
-    }
-
-    public async isSiteAuthenticated(site: SiteInfo): Promise<boolean> {
-        return await this.getAuthInfo(site) !== undefined;
-    }
-
     public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
 
