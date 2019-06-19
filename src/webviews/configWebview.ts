@@ -50,7 +50,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             const config: IConfig = await configuration.get<IConfig>();
             config.jira.defaultSite = Container.siteManager.effectiveSite(ProductJira);
 
-            var authInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductJira));
+            var authInfo = await Container.authManager.getAuthInfo(config.jira.defaultSite);
             if (!authInfo) {
                 authInfo = emptyAuthInfo;
             }
@@ -65,7 +65,9 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             if (isJiraAuthed) {
                 sitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
                 stagingEnabled = false;
+                Logger.debug('trying to load projects for config screen');
                 projects = await Container.jiraProjectManager.getProjects();
+                Logger.debug('got projects', projects);
             }
 
             this.updateConfig({

@@ -4,6 +4,7 @@ import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } f
 import { ProductJira } from "../atlclients/authInfo";
 import { Project, isProject, projectFromJsonObject } from "./jiraModel";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
+import { Logger } from "../logger";
 
 
 export type JiraAvailableProjectsUpdateEvent = {
@@ -57,8 +58,12 @@ export class JiraProjectManager extends Disposable {
 
         const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
         const order = orderBy !== undefined ? orderBy : 'key';
+        Logger.debug('calling getProjectsPaginated');
         const resp = await client.project.getProjectsPaginated({ orderBy: order, query: query });
-        return this.readProjects(resp.data.values);
+        Logger.debug('got response', resp);
+        this._projectsAvailable = this.readProjects(resp.data.values);
+
+        return this._projectsAvailable;
     }
 
     private readProjects(projects: JIRA.Schema.ProjectBean[] | undefined): Project[] {

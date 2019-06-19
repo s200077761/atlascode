@@ -119,7 +119,7 @@ export class ClientManager implements Disposable {
         if (bbResources.length > 0) {
           newResource = bbResources[0];
           const hostname = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-          const baseApiUrl = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'api.bitbucket.org/2.0' : 'api-staging.bb-inf.net/2.0';
+          const baseApiUrl = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
           const siteName = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
 
           // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
@@ -149,7 +149,7 @@ export class ClientManager implements Disposable {
 
           newSite = {
             avatarUrl: newResource.avatarUrl,
-            baseApiUrl: `https://${apiUri}/ex/jira/${newResource.id}/rest/2`,
+            baseApiUrl: `https://${apiUri}/ex/jira/${newResource.id}/rest`,
             baseLinkUrl: baseUrlString,
             hostname: baseUrl.hostname,
             id: newResource.id,
@@ -226,24 +226,31 @@ export class ClientManager implements Disposable {
     let client: T | undefined = this._clients.getItem<T>(site.hostname);
 
     if (!client) {
+      Logger.debug('trying to build new client', site);
       const info = await Container.authManager.getAuthInfo(site);
+
+      Logger.debug('got authInfo', info);
 
       if (isOAuthInfo(info)) {
         try {
           const provider: OAuthProvider | undefined = oauthProviderForSite(site);
+          Logger.debug('got authProvider', provider);
           if (provider) {
             const newAccessToken = await this._dancer.getNewAccessToken(provider, info.refresh);
+            Logger.debug('got newAccessToken', newAccessToken);
             if (newAccessToken) {
               info.access = newAccessToken;
               await Container.authManager.saveAuthInfo(site, info);
 
               client = factory(info);
+
+              Logger.debug('got new client', client);
               this._clients.setItem(site.hostname, client, oauthTTL);
             }
           }
         } catch (e) {
           Logger.debug(`error refreshing token ${e}`);
-          return Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
+          return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
         }
       } else if (info) {
         client = factory(info);
@@ -252,15 +259,20 @@ export class ClientManager implements Disposable {
     }
 
     if (this._agentChanged) {
+      Logger.debug('agent changed, getting authInfo');
       let info = await Container.authManager.getAuthInfo(site);
+      Logger.debug('got authInfo', info);
 
       if (info) {
         client = factory(info);
+        Logger.debug('got new client', client);
+
         this._clients.updateItem(site.hostname, client);
       }
       this._agentChanged = false;
     }
 
+    Logger.debug('got client?', client);
     return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
   }
 

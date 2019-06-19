@@ -2,6 +2,7 @@ import { Disposable, EventEmitter, Event, Memento } from "vscode";
 import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, isUpdateAuthEvent, emptySiteInfo, isEmptySiteInfo } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
+import { Logger } from "./logger";
 
 
 
@@ -85,30 +86,20 @@ export class SiteManager extends Disposable {
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
-        let sites = this._sitesAvailable.get(product.key);
-
-        if (!sites || sites.length < 1) {
-            sites = this._globalStore.get<DetailedSiteInfo[]>(`${product.key}${SitesSuffix}`);
-            if (!sites) {
-                sites = [];
-            }
-
-            this._sitesAvailable.set(product.key, sites);
-        }
-
-        return sites.find(site => site.hostname === hostname);
-
+        return this.getSitesAvailable(product).find(site => site.hostname === hostname);
     }
 
     public effectiveSite(product: Product): DetailedSiteInfo {
         let defaultSite = emptySiteInfo;
         switch (product.key) {
             case ProductJira.key:
+                Logger.debug(`getting siteInfo for ${product.key}`);
                 const configSite = Container.config.jira.defaultSite;
                 if (configSite && !isEmptySiteInfo(configSite)) {
+                    Logger.debug(`got site from config`, configSite);
                     defaultSite = configSite;
                 } else {
-                    const sites = this._sitesAvailable.get(product.key);
+                    const sites = this.getSitesAvailable(product);
                     if (sites && sites.length > 0) {
                         defaultSite = sites[0];
                         configuration.setDefaultSite(defaultSite);
@@ -117,7 +108,7 @@ export class SiteManager extends Disposable {
                 break;
 
             case ProductBitbucket.key:
-                const sites = this._sitesAvailable.get(product.key);
+                const sites = this.getSitesAvailable(product);
                 if (sites && sites.length > 0) {
                     defaultSite = sites[0];
                 }

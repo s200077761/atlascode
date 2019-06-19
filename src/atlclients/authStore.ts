@@ -91,23 +91,36 @@ export class AuthManager implements Disposable {
         return foundInfo;
     }
 
-    public async getAuthInfo(site: SiteInfo): Promise<AuthInfo | undefined> {
+    public async getAuthInfo(site: SiteInfo): Promise<AuthInfo> {
+        Logger.debug('trying to get authInfo for site', site.hostname);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(site.product.key);
 
+        Logger.debug('productAuths', productAuths);
+
         if (productAuths && productAuths.has(site.hostname)) {
             foundInfo = productAuths.get(site.hostname);
+
+            Logger.debug('mem found info', foundInfo);
         }
 
         if (!foundInfo && keychain) {
             try {
+                Logger.debug('getting info from keychain');
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
                 if (infoEntry) {
+                    Logger.debug(`found info entry for ${site.product}`);
                     let infos: HostToAuthInfo = JSON.parse(infoEntry);
+
+                    Logger.debug(`infos`, infos);
                     let info = infos[site.hostname];
+
+                    Logger.debug(`info for hostname ${site.hostname}`, info);
                     if (info && productAuths) {
+                        Logger.debug(`setting info in memstore`);
                         this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
-                        return info;
+
+                        foundInfo = info;
                     }
 
                 }
@@ -116,7 +129,7 @@ export class AuthManager implements Disposable {
             }
         }
 
-        return undefined;
+        return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
@@ -272,7 +285,7 @@ export class AuthManager implements Disposable {
 
                                     let newSite: DetailedSiteInfo = {
                                         avatarUrl: resource.avatarUrl,
-                                        baseApiUrl: `https://${apiUri}/ex/jira/${resource.id}/rest/2`,
+                                        baseApiUrl: `https://${apiUri}/ex/jira/${resource.id}/rest`,
                                         baseLinkUrl: baseUrlString,
                                         hostname: baseUrl.hostname,
                                         id: resource.id,
@@ -286,7 +299,10 @@ export class AuthManager implements Disposable {
                                     Logger.debug('added site', newSite);
 
                                     if (defaultSite && defaultSite.id === resource.id) {
-                                        configuration.setDefaultSite(newSite);
+                                        const oldProject = Container.config.jira.workingProject;
+                                        await configuration.setDefaultSite(newSite);
+                                        await configuration.setWorkingProject(oldProject);
+
                                         Logger.debug('set default site site', newSite);
 
                                         if (!this.isDebugging) {
@@ -301,7 +317,7 @@ export class AuthManager implements Disposable {
                             }
 
                             const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-                            const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'api.bitbucket.org/2.0' : 'api-staging.bb-inf.net/2.0';
+                            const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
                             const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
                             const newInfo: OAuthInfo = {
                                 access: info.access,

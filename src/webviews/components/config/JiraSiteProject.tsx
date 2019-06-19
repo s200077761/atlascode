@@ -8,13 +8,13 @@ import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}.{props.data.baseUrlSuffix}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.hostname}</span></div>
     </Option>
 );
 
 const IconValue = (props: any) => (
     <components.SingleValue {...props}>
-        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}.{props.data.baseUrlSuffix}</span></div>
+        <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.hostname}</span></div>
     </components.SingleValue>
 
 );

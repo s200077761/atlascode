@@ -11,10 +11,11 @@ import {
     workspace,
     Disposable
 } from 'vscode';
-import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from '../constants';
+import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { Container } from '../container';
 import { Project } from 'src/jira/jiraModel';
 import { DetailedSiteInfo, AccessibleResource } from 'src/atlclients/authInfo';
+import { WorkingProject } from './model';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -97,11 +98,11 @@ export class Configuration extends Disposable {
     }
 
     async setDefaultSite(site?: DetailedSiteInfo) {
-        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
+        await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, site);
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
     }
 
-    async setWorkingProject(project?: Project) {
+    async setWorkingProject(project?: Project | WorkingProject) {
         // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
         // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
         const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);

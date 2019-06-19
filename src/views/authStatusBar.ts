@@ -97,7 +97,7 @@ export class AuthStatusBar extends Disposable {
             const site = effSite.name;
             const project = effProject.name;
 
-            const data = { product: product, user: info.user.displayName, site: site, project: project };
+            const data = { product: product.name, user: info.user.displayName, site: site, project: project };
             const ctx = { ...Container.config.jira.statusbar, ...data };
             command = Commands.ShowConfigPage;
             text = tmpl(ctx);
@@ -122,7 +122,7 @@ export class AuthStatusBar extends Disposable {
           text = `$(person) ${product.name}: ${info.user.displayName}`;
 
           if (tmpl) {
-            let data = { product: product, user: info.user.displayName };
+            let data = { product: product.name, user: info.user.displayName };
             let ctx = { ...Container.config.bitbucket.statusbar, ...data };
             command = Commands.ShowConfigPage;
             text = tmpl(ctx);

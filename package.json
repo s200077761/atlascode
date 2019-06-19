@@ -576,6 +576,37 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
+                "atlascode.jira.defaultSite": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "id": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "avatarUrl": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "baseLinkUrl": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "baseApiUrl": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "isCloud": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    },
+                    "description": "Jira site for workspace",
+                    "scope": "resource"
+                },
                 "atlascode.jira.customJql": {
                     "type": "array",
                     "items": {
