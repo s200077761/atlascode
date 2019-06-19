@@ -171,7 +171,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                             RepositoriesApi.getDevelopmentBranch(remotes[0]),
                             RepositoriesApi.getBranchingModel(remotes[0])
                             ]);
-                        href = repo.links!.html!.href;
+                        href = repo.url;
                     }
                 }
 

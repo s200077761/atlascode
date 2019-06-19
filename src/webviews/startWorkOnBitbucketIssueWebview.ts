@@ -83,7 +83,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                             if (e.setupBitbucket) {
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser(repo)).account_id!);
+                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser(repo)).accountId!);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
@@ -141,7 +141,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 if (remotes.length > 0) {
                     const remote = remotes[0];
                     [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoriesApi.get(remote), RepositoriesApi.getDevelopmentBranch(remote)]);
-                    href = repo.links!.html!.href;
+                    href = repo.url;
                 }
             }
 

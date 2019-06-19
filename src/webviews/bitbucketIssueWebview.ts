@@ -113,7 +113,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.repository!)).account_id!);
+                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.repository!)).accountId!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));

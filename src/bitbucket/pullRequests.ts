@@ -3,6 +3,7 @@ import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
 import { getBitbucketRemotes, parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
+import { RepositoriesApi } from "./repositories";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -44,13 +45,13 @@ export namespace PullRequestApi {
     export async function getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
+            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
     export async function getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
+            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -64,7 +65,7 @@ export namespace PullRequestApi {
     export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).account_id}"` });
+            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
     export async function getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
@@ -264,7 +265,7 @@ export namespace PullRequestApi {
             close_source_branch: createPrData.closeSourceBranch
         };
 
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        let parsed = parseGitUrl(urlForRemote(remote));
         const bb = await clientForHostname(parsed.source);
         const { data } = await bb.pullrequests.create({
             repo_slug: parsed.name,

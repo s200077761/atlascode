@@ -1,7 +1,7 @@
 import { Repository, Remote } from "../typings/git";
 import { RepositoriesApi } from "./repositories";
-import { PaginatedBitbucketIssues, PaginatedComments, PaginatedIssueChange } from "./model";
 import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, clientForHostname } from "./bbUtils";
+import { PaginatedBitbucketIssues, BitbucketIssue, PaginatedComments, UnknownUser } from "./model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {

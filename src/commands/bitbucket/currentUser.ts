@@ -10,5 +10,11 @@ export async function currentUserBitbucket(site?: DetailedSiteInfo): Promise<Use
 
     const bbreq = await Container.clientManager.bbrequest(effectiveSite);
     const { data } = await bbreq.user.get('');
-    return data;
+    return {
+        accountId: data.account_id!,
+        avatarUrl: data.links!.avatar!.href!,
+        displayName: data.display_name!,
+        url: data.links!.html!.href!
+
+    };
 }
