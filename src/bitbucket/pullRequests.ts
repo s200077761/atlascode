@@ -100,7 +100,7 @@ export namespace PullRequestApi {
     export async function getLatest(repository: Repository): Promise<PaginatedPullRequests> {
         return PullRequestApi.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).accountId}"` });
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser()).accountId}"` });
     }
 
     export async function getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
@@ -418,3 +418,4 @@ export namespace PullRequestApi {
         };
     }
 }
+

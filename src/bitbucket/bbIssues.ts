@@ -76,7 +76,7 @@ export namespace BitbucketIssuesApi {
         const { data } = await bb.repositories.listIssues({
             repo_slug: parsed.name,
             username: parsed.owner,
-            pagelen: 1,
+            pagelen: 2,
             q: '(state="new" OR state="open" OR state="on hold")',
             sort: '-created_on'
         });
