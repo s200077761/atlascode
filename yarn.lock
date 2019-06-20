@@ -488,6 +488,18 @@
   dependencies:
     babel-runtime "^6.11.6"
 
+"@atlassian/bitbucket-server@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@atlassian/bitbucket-server/-/bitbucket-server-0.0.3.tgz#71c82ef99f6dcbc3a8531c8c4bad39ebc4754d27"
+  integrity sha512-3cQDwQFiXAV7ckSfF9nd7nAlNI0NbC1/xn6lwq3pcw3ecPG3rZL7t1kgP3bSxJsoeSMHePc0ThRVruTdzVEVOg==
+  dependencies:
+    before-after-hook "^1.1.0"
+    btoa-lite "^1.0.0"
+    debug "^3.1.0"
+    is-plain-object "^2.0.4"
+    node-fetch "^2.1.2"
+    url-template "^2.0.8"
+
 "@atlassian/jira@^0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@atlassian/jira/-/jira-0.1.0.tgz#0238d6d1e053886a5909f473859a380a6b794b08"

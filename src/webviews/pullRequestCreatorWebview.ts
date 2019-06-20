@@ -6,8 +6,6 @@ import { Container } from '../container';
 import { RefType } from '../typings/git';
 import { CreatePRData, RepoData, CommitsResult, FetchIssueResult } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue } from '../ipc/prActions';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssue } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
@@ -21,6 +19,8 @@ import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { PullRequestProvider } from '../bitbucket/prProvider';
+import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -64,9 +64,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
                     r.fetch(),
-                    RepositoriesApi.get(bbRemotes[0]),
-                    RepositoriesApi.getDevelopmentBranch(bbRemotes[0]),
-                    PullRequestApi.getDefaultReviewers(bbRemotes[0])
+                    RepositoryProvider.forRemote(bbRemotes[0]).get(bbRemotes[0]),
+                    RepositoryProvider.forRemote(bbRemotes[0]).getDevelopmentBranch(bbRemotes[0]),
+                    PullRequestProvider.forRepository(r).getDefaultReviewers(bbRemotes[0])
                 ]);
 
                 const currentUser = await Container.bitbucketContext.currentUser(r);
@@ -176,7 +176,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
-        const result = await RepositoriesApi.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
+        const result = await RepositoryProvider.forRemote(remote).getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
         this.postMessage({
             type: 'commitsResult',
             commits: result
@@ -232,7 +232,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        await PullRequestApi
+        await PullRequestProvider.forRepository(repo)
             .create(
                 repo,
                 remote,

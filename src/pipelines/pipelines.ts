@@ -5,7 +5,7 @@ import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRepository } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
-import { RepositoriesApi } from "../bitbucket/repositories";
+import { CloudRepositoriesApi } from "../bitbucket/repositories";
 
 export namespace PipelineApi {
   export async function getList(
@@ -35,7 +35,7 @@ export namespace PipelineApi {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
       let parsed = parseGitUrl(urlForRemote(remotes[0]));
-      const bb = await clientForHostname(parsed.source);
+      const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.create({
         //@ts-ignore
         _body: {
@@ -55,7 +55,7 @@ export namespace PipelineApi {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
       let parsed = parseGitUrl(urlForRemote(remotes[0]));
-      const bb = await clientForHostname(parsed.source);
+      const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return pipelineForPipeline(res.data);
@@ -68,7 +68,7 @@ export namespace PipelineApi {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
       let parsed = parseGitUrl(urlForRemote(remotes[0]));
-      const bb = await clientForHostname(parsed.source);
+      const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return res.data.values!.map((s: any) => pipelineStepForPipelineStep(s));
@@ -89,7 +89,7 @@ export namespace PipelineApi {
   export async function getValidPipelinesAccessToken(repository: Repository): Promise<string> {
     let site = siteDetailsForRepository(repository);
 
-    if (site) {
+    if (site && site.isCloud) {
       const token = await Container.clientManager.getValidAccessToken(site);
       if (token) {
         return token;
@@ -147,7 +147,7 @@ async function getPipelineLog(remote: Remote,
   pipelineUuid: string,
   stepUuid: string): Promise<string[]> {
   let parsed = parseGitUrl(urlForRemote(remote));
-  const bb = await clientForHostname(parsed.source);
+  const bb = await clientForHostname(parsed.resource) as Bitbucket;
   return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
     return splitLogs(r.data.toString());
   }).catch((err: any) => {
@@ -197,7 +197,7 @@ function pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
   }
 
   return {
-    repository: RepositoriesApi.toRepo(pipeline.repository!),
+    repository: CloudRepositoriesApi.toRepo(pipeline.repository!),
     build_number: pipeline.build_number!,
     created_on: pipeline.created_on!,
     creator_name: name,

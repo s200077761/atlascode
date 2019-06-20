@@ -146,3 +146,32 @@ export interface PaginatedBitbucketIssues {
 
 export type BitbucketIssue = Bitbucket.Schema.Issue;
 export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
+
+export interface PullRequestApi {
+    getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests>;
+    getListToReview(repository: Repository): Promise<PaginatedPullRequests>;
+    nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
+    getLatest(repository: Repository): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests>;
+    get(pr: PullRequest): Promise<PullRequest>;
+    getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
+    getCommits(pr: PullRequest): Promise<PaginatedCommits>;
+    getComments(pr: PullRequest): Promise<PaginatedComments>;
+    getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
+    getDefaultReviewers(remote: Remote): Promise<Reviewer[]>;
+    create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
+    approve(pr: PullRequest): Promise<void>;
+    merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;
+    postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+}
+
+export interface RepositoriesApi {
+    get(remote: Remote): Promise<Repo>;
+    getDevelopmentBranch(remote: Remote): Promise<string>;
+    getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
+    getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
+    getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]>;
+}
+
+export function getSupportedRepositores() { }

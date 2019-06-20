@@ -20,6 +20,7 @@ import { Logger } from "../logger";
 import { cannotGetClientFor } from "../constants";
 import fetch from 'node-fetch';
 import { OAuthRefesher } from "./oauthRefresher";
+import BitbucketServer from "@atlassian/bitbucket-server";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -174,7 +175,7 @@ export class ClientManager implements Disposable {
               isCloud: false,
               avatarUrl: ``,
               hostname: site.hostname,
-              baseApiUrl: `https://${site.hostname}/rest/api/1.0`,
+              baseApiUrl: `https://${site.hostname}`,
               baseLinkUrl: `https://${site.hostname}`,
               id: site.hostname,
               name: site.hostname
@@ -262,7 +263,12 @@ export class ClientManager implements Disposable {
           extraOptions = { agent: this._agent };
         }
 
-        let bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+        let bbclient: BitbucketKit | BitbucketServer;
+        if (site.isCloud) {
+          bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+        } else {
+          bbclient = new BitbucketServer({ baseUrl: site.baseApiUrl, options: extraOptions });
+        }
 
         if (isOAuthInfo(info)) {
           bbclient.authenticate({ type: "token", token: info.access });

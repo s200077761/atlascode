@@ -115,7 +115,7 @@ function bitbucketUrlsInRepo(repo: Repository, fullPath: string, linesText: stri
         return remotes.map((remote) => {
             const parsed = parseGitUrl(urlForRemote(remote));
             if (branch) {
-                const url = `https://${parsed.source}/${parsed.owner}/${parsed.name}/src/${branch}${relativePath}${linesText}`;
+                const url = `https://${parsed.resource}/${parsed.owner}/${parsed.name}/src/${branch}${relativePath}${linesText}`;
                 return url;
             }
             return undefined;

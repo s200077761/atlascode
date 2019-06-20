@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { BitbucketContext } from "../../bitbucket/bbContext";
-import { PullRequestApi } from "../../bitbucket/pullRequests";
 import { Commands } from "../../commands";
+import { PullRequestProvider } from '../../bitbucket/prProvider';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
@@ -13,7 +13,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
 
     checkForNewActivity() {
         const promises = this._bbCtx.getBitbucketRepositores().map(repo => {
-            return PullRequestApi.getLatest(repo).then(prList => {
+            return PullRequestProvider.forRepository(repo).getLatest(repo).then(prList => {
                 const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
                     ? this._lastCheckedTime.get(repo.rootUri.toString())!
                     : new Date();

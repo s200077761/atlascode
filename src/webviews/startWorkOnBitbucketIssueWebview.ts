@@ -6,7 +6,6 @@ import { Logger } from '../logger';
 import { isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { Commands } from '../commands';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository, RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
@@ -15,6 +14,7 @@ import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
+import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
@@ -140,7 +140,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 const remotes = getBitbucketRemotes(r);
                 if (remotes.length > 0) {
                     const remote = remotes[0];
-                    [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoriesApi.get(remote), RepositoriesApi.getDevelopmentBranch(remote)]);
+                    [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoryProvider.forRemote(remote).get(remote), RepositoryProvider.forRemote(remote).getDevelopmentBranch(remote)]);
                     href = repo.url;
                 }
             }
