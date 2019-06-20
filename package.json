@@ -46,16 +46,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "atlascode.bb.authenticate",
-                "title": "Authenticate With Bitbucket",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.clearAuth",
-                "title": "Logout From Bitbucket",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.jira.selectProject",
                 "title": "Select Working Jira Project",
                 "icon": "resources/atlassian-icon.svg",
@@ -83,16 +73,6 @@
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
                 },
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.authenticate",
-                "title": "Authenticate With Jira",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.clearAuth",
-                "title": "Logout from Jira",
                 "category": "Atlassian"
             },
             {
@@ -398,22 +378,6 @@
                 {
                     "command": "atlascode.jira.selectSite",
                     "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.authenticate",
-                    "when": "!atlascode:isJiraAuthenticated && !atlascode:isJiraStagingAuthenticated"
-                },
-                {
-                    "command": "atlascode.bb.authenticate",
-                    "when": "!atlascode:isBBAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.clearAuth",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.bb.clearAuth",
-                    "when": "atlascode:isBBAuthenticated"
                 },
                 {
                     "command": "atlascode.bb.addComment",

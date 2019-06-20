@@ -6,7 +6,7 @@ import {
 } from "vscode";
 import * as BitbucketKit from "bitbucket";
 import * as JiraKit from "@atlassian/jira";
-import { OAuthProvider, AccessibleResource, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, isAppAuthInfo } from "./authInfo";
+import { OAuthProvider, AccessibleResource, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
 import { Container } from "../container";
 import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
@@ -108,6 +108,90 @@ export class ClientManager implements Disposable {
     }
   }
 
+  public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
+    let siteDetails: DetailedSiteInfo | undefined = undefined;
+
+    switch (site.product.key) {
+      case ProductJira.key:
+        if (isBasicAuthInfo(authInfo)) {
+          let authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
+          try {
+            const res = await fetch(`https://${site.hostname}/rest/api/2/myself`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: authHeader
+              }
+            });
+            const json = await res.json();
+
+            siteDetails = {
+              product: site.product,
+              isCloud: false,
+              avatarUrl: `https://${site.hostname}/images/fav-jcore.png`,
+              hostname: site.hostname,
+              baseApiUrl: `https://${site.hostname}/rest/api/2`,
+              baseLinkUrl: `https://${site.hostname}`,
+              id: site.hostname,
+              name: site.hostname
+            };
+
+            authInfo.user = {
+              displayName: json.displayName,
+              id: json.key
+            };
+
+            await Container.authManager.saveAuthInfo(siteDetails, authInfo);
+
+          } catch (err) {
+            Logger.error(new Error(`Error authenticating with Jira: ${err}`));
+            return Promise.reject(`Error authenticating with Jira: ${err}`);
+          }
+        }
+        break;
+
+      case ProductBitbucket.key:
+        let authHeader = "";
+        if (isBasicAuthInfo(authInfo)) {
+          authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
+        }
+
+        try {
+          const res = await fetch(`https://${site.hostname}/rest/api/2/myself`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: authHeader
+            }
+          });
+          const json = await res.json();
+
+          siteDetails = {
+            product: site.product,
+            isCloud: false,
+            avatarUrl: ``,
+            hostname: site.hostname,
+            baseApiUrl: `https://${site.hostname}/rest/api/1.0`,
+            baseLinkUrl: `https://${site.hostname}`,
+            id: site.hostname,
+            name: site.hostname
+          };
+
+          authInfo.user = {
+            displayName: json.displayName,
+            id: json.slug
+          };
+
+          await Container.authManager.saveAuthInfo(siteDetails, authInfo);
+
+        } catch (err) {
+          Logger.error(new Error(`Error authenticating with Bitbucket: ${err}`));
+          return Promise.reject(`Error authenticating with Bitbucket: ${err}`);
+        }
+        break;
+    }
+  }
+
   private async getNewOAuthSiteDetails(product: Product, authInfo: OAuthInfo, resources: AccessibleResource[]): Promise<DetailedSiteInfo | undefined> {
     const knownSites = Container.siteManager.getSitesAvailable(product);
     let newResource: AccessibleResource | undefined = undefined;
@@ -184,10 +268,6 @@ export class ClientManager implements Disposable {
           bbclient.authenticate({ type: "basic", username: info.username, password: info.password });
         }
 
-        if (isAppAuthInfo(info)) {
-          bbclient.authenticate({ type: "basic", username: info.username, password: info.token });
-        }
-
         return bbclient;
       }
     );
@@ -211,10 +291,6 @@ export class ClientManager implements Disposable {
 
         if (isBasicAuthInfo(info)) {
           client.authenticate({ type: "basic", username: info.username, password: info.password });
-        }
-
-        if (isAppAuthInfo(info)) {
-          client.authenticate({ type: "basic", username: info.username, password: info.token });
         }
 
         return client;

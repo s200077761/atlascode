@@ -5,7 +5,8 @@ import { Project } from "../jira/jiraModel";
 
 export interface ConfigData extends Message {
     config: IConfig;
-    sites: DetailedSiteInfo[];
+    jiraSites: DetailedSiteInfo[];
+    bitbucketSites: DetailedSiteInfo[];
     projects: Project[];
     isJiraAuthenticated: boolean;
     isJiraStagingAuthenticated: boolean;
@@ -18,8 +19,9 @@ export interface ConfigData extends Message {
 export const emptyConfigData: ConfigData = {
     type: 'init',
     config: emptyConfig,
-    sites: [],
+    jiraSites: [],
     projects: [],
+    bitbucketSites: [],
     isJiraAuthenticated: false,
     isJiraStagingAuthenticated: false,
     isStagingEnabled: false,

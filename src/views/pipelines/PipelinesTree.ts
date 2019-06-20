@@ -118,7 +118,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!siteDetailsForRepository(this._repo)) {
-            return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })]);
+            return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.ShowConfigPage, title: "Login to Bitbucket", arguments: [ProductBitbucket] })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
             if (!this._branches) {

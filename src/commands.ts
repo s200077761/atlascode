@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { currentUserJira } from './commands//jira/currentUser';
-import { authenticateJira, clearJiraAuth, authenticateBitbucket, clearBitbucketAuth, authenticateBitbucketStaging, authenticateJiraStaging, clearJiraAuthStaging } from './commands/authenticate';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
@@ -28,15 +27,8 @@ export enum Commands {
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
-    AuthenticateBitbucket = 'atlascode.bb.authenticate',
-    AuthenticateBitbucketStaging = 'atlascode.bb.authenticateStaging',
-    ClearBitbucketAuth = 'atlascode.bb.clearAuth',
     CurrentUserBitbucket = 'atlascode.bb.me',
     currentUserJira = 'atlascode.jira.me',
-    AuthenticateJira = 'atlascode.jira.authenticate',
-    AuthenticateJiraStaging = 'atlascode.jira.authenticateStaging',
-    ClearJiraAuth = 'atlascode.jira.clearAuth',
-    ClearJiraAuthStaging = 'atlascode.jira.clearAuthStaging',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
     CreateIssue = 'atlascode.jira.createIssue',
@@ -65,13 +57,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
         vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
-        vscode.commands.registerCommand(Commands.AuthenticateJira, authenticateJira),
-        vscode.commands.registerCommand(Commands.AuthenticateJiraStaging, authenticateJiraStaging),
-        vscode.commands.registerCommand(Commands.ClearJiraAuth, clearJiraAuth),
-        vscode.commands.registerCommand(Commands.ClearJiraAuthStaging, clearJiraAuthStaging),
-        vscode.commands.registerCommand(Commands.AuthenticateBitbucket, authenticateBitbucket),
-        vscode.commands.registerCommand(Commands.AuthenticateBitbucketStaging, authenticateBitbucketStaging),
-        vscode.commands.registerCommand(Commands.ClearBitbucketAuth, clearBitbucketAuth),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),

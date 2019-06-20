@@ -76,11 +76,6 @@ export interface BasicAuthInfo extends AuthInfo {
     password: string;
 }
 
-export interface AppAuthInfo extends AuthInfo {
-    username: string;
-    token: string;
-}
-
 export interface UserInfo {
     id: string;
     displayName: string;
@@ -177,11 +172,6 @@ export function isBasicAuthInfo(a: any): a is BasicAuthInfo {
         && (<BasicAuthInfo>a).password !== undefined;
 }
 
-export function isAppAuthInfo(a: any): a is AppAuthInfo {
-    return a && (<AppAuthInfo>a).token !== undefined
-        && (<AppAuthInfo>a).username !== undefined;
-}
-
 export function getSecretForAuthInfo(info: any): string {
     if (isOAuthInfo(info)) {
         return info.access;
@@ -189,10 +179,6 @@ export function getSecretForAuthInfo(info: any): string {
 
     if (isBasicAuthInfo(info)) {
         return info.password;
-    }
-
-    if (isAppAuthInfo(info)) {
-        return info.token;
     }
 
     return "";

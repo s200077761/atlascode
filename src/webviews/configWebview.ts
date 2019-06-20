@@ -2,9 +2,8 @@ import { AbstractReactWebview } from './abstractWebview';
 import { IConfig } from '../config/model';
 import { Action, HostErrorMessage } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
-import { Commands } from '../commands';
-import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { OAuthProvider, ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent } from '../atlclients/authInfo';
+import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
+import { ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isOAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -17,6 +16,7 @@ import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } f
 import { Project } from '../jira/jiraModel';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
+import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 
 type Emit = ConfigData | ProjectList | HostErrorMessage;
 
@@ -58,22 +58,28 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             const isJiraAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             const isBBAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
 
-            let sitesAvailable: DetailedSiteInfo[] = [];
+            let jiraSitesAvailable: DetailedSiteInfo[] = [];
+            let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
             let stagingEnabled = false;
             let projects: Project[] = [];
 
             if (isJiraAuthed) {
-                sitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
+                jiraSitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
                 stagingEnabled = false;
                 Logger.debug('trying to load projects for config screen');
                 projects = await Container.jiraProjectManager.getProjects();
                 Logger.debug('got projects', projects);
             }
 
+            if (isBBAuthed) {
+                bitbucketSitesAvailable = await Container.siteManager.getSitesAvailable(ProductBitbucket);
+            }
+
             this.updateConfig({
                 type: 'update',
                 config: config,
-                sites: sitesAvailable,
+                jiraSites: jiraSitesAvailable,
+                bitbucketSites: bitbucketSitesAvailable,
                 projects: projects,
                 isJiraAuthenticated: isJiraAuthed,
                 isJiraStagingAuthenticated: false,
@@ -123,16 +129,17 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
             switch (e.action) {
                 case 'login': {
                     handled = true;
-                    if (isAuthAction(e)) {
-                        switch (e.provider) {
-                            case OAuthProvider.JiraCloud: {
-                                commands.executeCommand(Commands.AuthenticateJira);
-                                break;
+                    if (isLoginAuthAction(e)) {
+                        if (!isOAuthInfo(e.authInfo)) {
+                            try {
+                                await authenticateServer(e.siteInfo, e.authInfo);
+                            } catch (e) {
+                                let err = new Error(`Authentication error: ${e}`);
+                                Logger.error(err);
+                                this.postMessage({ type: 'error', reason: `Authentication error: ${e}` });
                             }
-                            case OAuthProvider.BitbucketCloud: {
-                                commands.executeCommand(Commands.AuthenticateBitbucket);
-                                break;
-                            }
+                        } else {
+                            authenticateCloud(e.siteInfo);
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
@@ -141,16 +148,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 case 'logout': {
                     handled = true;
                     if (isAuthAction(e)) {
-                        switch (e.provider) {
-                            case OAuthProvider.JiraCloud: {
-                                commands.executeCommand(Commands.ClearJiraAuth);
-                                break;
-                            }
-                            case OAuthProvider.JiraCloudStaging: {
-                                commands.executeCommand(Commands.ClearJiraAuthStaging);
-                                break;
-                            }
-                        }
+                        clearAuth(e.siteInfo);
                         logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
                     break;

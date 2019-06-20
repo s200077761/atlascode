@@ -4,8 +4,8 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
-import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import { OAuthProvider } from '../../../atlclients/authInfo';
+import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction } from '../../../ipc/configActions';
+import { OAuthProvider, DetailedSiteInfo, AuthInfo, SiteInfo, ProductJira, emptyUserInfo } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
@@ -26,6 +26,7 @@ import JiraSiteProject from './JiraSiteProject';
 import BitbucketIssuesConfig from './BBIssuesConfig';
 import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
+import BitbucketAuth from './BBAuth';
 
 type changeObject = { [key: string]: any };
 
@@ -35,7 +36,7 @@ const panelHeader = (heading: string, subheading: string) =>
         <p className='inlinePanelSubheading'>{subheading}</p>
     </div>;
 
-type Emit = AuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | Action;
+type Emit = AuthAction | LoginAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | Action;
 type Accept = ConfigData | ProjectList | HostErrorMessage;
 
 interface ViewState extends ConfigData {
@@ -82,36 +83,29 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
     }
 
-    handleJiraLogin = () => {
-        this.handleLogin(OAuthProvider.JiraCloud);
+    handleJiraCloudLogin = () => {
+        let authInfo = {
+            user: emptyUserInfo,
+            access: "",
+            refresh: "",
+            provider: OAuthProvider.JiraCloud
+        };
+
+        this.postMessage({
+            action: 'login', siteInfo: {
+                hostname: "atlassian.net",
+                product: ProductJira
+            },
+            authInfo: authInfo
+        });
     }
 
-    handleJiraLoginStaging = () => {
-        this.handleLogin(OAuthProvider.JiraCloudStaging);
+    handleLogin = (site: SiteInfo, auth: AuthInfo) => {
+        this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     }
 
-    handleBBLogin = () => {
-        this.handleLogin(OAuthProvider.BitbucketCloud);
-    }
-
-    handleJiraLogout = () => {
-        this.handleLogout(OAuthProvider.JiraCloud);
-    }
-
-    handleJiraLogoutStaging = () => {
-        this.handleLogout(OAuthProvider.JiraCloudStaging);
-    }
-
-    handleBBLogout = () => {
-        this.handleLogout(OAuthProvider.BitbucketCloud);
-    }
-
-    handleLogin = (provider: string) => {
-        this.postMessage({ action: 'login', provider: provider });
-    }
-
-    handleLogout = (provider: string) => {
-        this.postMessage({ action: 'logout', provider });
+    handleLogout = (site: DetailedSiteInfo) => {
+        this.postMessage({ action: 'logout', siteInfo: site });
     }
 
     handleSourceLink = () => {
@@ -154,10 +148,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     private jiraButton(): any {
         return this.state.isJiraAuthenticated
             ? <ButtonGroup>
-                <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate with another site</Button>
-                <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button>
+                <Button className='ac-button' onClick={this.handleJiraCloudLogin}>Authenticate with another site</Button>
+                {/* <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button> */}
             </ButtonGroup>
-            : <Button className='ac-button' onClick={this.handleJiraLogin}>Authenticate</Button>;
+            : <Button className='ac-button' onClick={this.handleJiraCloudLogin}>Authenticate</Button>;
     }
 
     private jiraButtonStaging(): any {
@@ -169,28 +163,25 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             ? <div>
                 <hr />
                 <h3>Jira (staging)</h3>
-                <ButtonGroup>
-                    <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate with another site</Button>
-                    <Button className='ac-button' onClick={this.handleJiraLogoutStaging}>Logout</Button>
-                </ButtonGroup>
+
             </div>
 
             : <div>
                 <hr />
                 <h3>Jira (staging)</h3>
-                <Button className='ac-button' onClick={this.handleJiraLoginStaging}>(staging) Authenticate</Button>
+
             </div>;
     }
 
-    private bitBucketButton(): any {
-        if (this.state.isBitbucketAuthenticated) {
-            return (<Button className='ac-button'
-                onClick={this.handleBBLogout}>Logout</Button>);
-        } else {
-            return (<Button className='ac-button'
-                onClick={this.handleBBLogin}>Authenticate</Button>);
-        }
-    }
+    // private bitBucketButton(): any {
+    //     if (this.state.isBitbucketAuthenticated) {
+    //         return (<Button className='ac-button'
+    //             onClick={this.handleBBLogout}>Logout</Button>);
+    //     } else {
+    //         return (<Button className='ac-button'
+    //             onClick={this.handleBBLogin}>Authenticate</Button>);
+    //     }
+    // }
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
@@ -229,13 +220,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         <hr />
                                         <h3>Bitbucket</h3>
-                                        {this.bitBucketButton()}
+                                        <BitbucketAuth sites={this.state.bitbucketSites} handleDeleteSite={this.handleLogout} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>
                                         <JiraExplorer configData={this.state}
                                             jiraAccessToken={this.state.jiraAccessToken}
-                                            sites={this.state.sites}
+                                            sites={this.state.jiraSites}
                                             onConfigChange={this.onConfigChange} />
 
 

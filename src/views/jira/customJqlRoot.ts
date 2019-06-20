@@ -54,7 +54,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
   async getChildren(element: AbstractBaseNode | undefined) {
     if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-      return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+      return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })]);
     }
 
     if (element) {

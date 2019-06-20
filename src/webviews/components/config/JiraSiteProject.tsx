@@ -86,7 +86,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
                                 classNamePrefix="ac-select"
                                 getOptionLabel={(option: any) => `${option.hostname}`}
                                 getOptionValue={(option: any) => option.id}
-                                options={this.state.sites}
+                                options={this.state.jiraSites}
                                 components={{ Option: IconOption, SingleValue: IconValue }}
                                 onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
                             />

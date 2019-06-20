@@ -106,7 +106,7 @@ export class AuthStatusBar extends Disposable {
         } else {
           if (Container.config.jira.statusbar.showLogin) {
             text = `$(sign-in) Sign in to  ${product.name}`;
-            command = Commands.AuthenticateJira;
+            command = Commands.ShowConfigPage;
             product = ProductJira;
           } else {
             statusBarItem.hide();
@@ -130,7 +130,7 @@ export class AuthStatusBar extends Disposable {
         } else {
           if (Container.config.bitbucket.statusbar.showLogin) {
             text = `$(sign-in) Sign in to ${product.name}`;
-            command = Commands.AuthenticateBitbucket;
+            command = Commands.ShowConfigPage;
             product = ProductBitbucket;
           } else {
             statusBarItem.hide();
