@@ -89,6 +89,7 @@ export default class AuthForm extends PureComponent<{
         };
 
         if (!this.state.requiresCredentials) {
+            console.log('saving oauth site', siteInfo);
             this.props.onSave(siteInfo, emptyAuthInfo);
         } else {
             const authInfo: BasicAuthInfo = {

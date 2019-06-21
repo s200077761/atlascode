@@ -3,7 +3,7 @@ import { IConfig } from '../config/model';
 import { Action, HostErrorMessage } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
-import { ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isOAuthInfo } from '../atlclients/authInfo';
+import { ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isBasicAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -130,7 +130,7 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 case 'login': {
                     handled = true;
                     if (isLoginAuthAction(e)) {
-                        if (!isOAuthInfo(e.authInfo)) {
+                        if (isBasicAuthInfo(e.authInfo)) {
                             try {
                                 await authenticateServer(e.siteInfo, e.authInfo);
                             } catch (e) {

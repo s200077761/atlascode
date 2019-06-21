@@ -45,7 +45,7 @@ export interface AuthInfoV1 {
     access: string;
     refresh: string;
     user: UserInfoV1;
-    accessibleResources?: Array<AccessibleResource>;
+    accessibleResources?: Array<AccessibleResourceV1>;
 }
 
 export interface UserInfoV1 {
@@ -95,12 +95,20 @@ export interface DetailedSiteInfo extends SiteInfo {
     isCloud: boolean;
 }
 
-export interface AccessibleResource {
+export interface AccessibleResourceV1 {
     id: string;
     name: string;
     scopes: Array<string>;
     avatarUrl: string;
     baseUrlSuffix: string;
+}
+
+export interface AccessibleResource {
+    id: string;
+    name: string;
+    scopes: Array<string>;
+    avatarUrl: string;
+    url: string;
 }
 
 export const emptyUserInfo: UserInfo = {
@@ -125,6 +133,14 @@ export const emptySiteInfo: DetailedSiteInfo = {
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
+    id: 'empty',
+    name: 'empty',
+    avatarUrl: 'empty',
+    scopes: [],
+    url: 'empty'
+};
+
+export const emptyAccessibleResourceV1: AccessibleResourceV1 = {
     id: 'empty',
     name: 'empty',
     avatarUrl: 'empty',

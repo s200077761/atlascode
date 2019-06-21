@@ -5,7 +5,7 @@ import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction } from '../../../ipc/configActions';
-import { OAuthProvider, DetailedSiteInfo, AuthInfo, SiteInfo, ProductJira, emptyUserInfo } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo, AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
@@ -16,7 +16,6 @@ import JiraHover from './JiraHover';
 import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
-import { ButtonGroup } from '@atlaskit/button';
 import PipelinesConfig from './PipelinesConfig';
 import { WorkingProject } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
@@ -27,6 +26,7 @@ import BitbucketIssuesConfig from './BBIssuesConfig';
 import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
 import BitbucketAuth from './BBAuth';
+import JiraAuth from './JiraAuth';
 
 type changeObject = { [key: string]: any };
 
@@ -83,24 +83,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
     }
 
-    handleJiraCloudLogin = () => {
-        let authInfo = {
-            user: emptyUserInfo,
-            access: "",
-            refresh: "",
-            provider: OAuthProvider.JiraCloud
-        };
-
-        this.postMessage({
-            action: 'login', siteInfo: {
-                hostname: "atlassian.net",
-                product: ProductJira
-            },
-            authInfo: authInfo
-        });
-    }
-
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
+        console.log('config posting saving site', site);
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     }
 
@@ -145,44 +129,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    private jiraButton(): any {
-        return this.state.isJiraAuthenticated
-            ? <ButtonGroup>
-                <Button className='ac-button' onClick={this.handleJiraCloudLogin}>Authenticate with another site</Button>
-                {/* <Button className='ac-button' onClick={this.handleJiraLogout}>Logout</Button> */}
-            </ButtonGroup>
-            : <Button className='ac-button' onClick={this.handleJiraCloudLogin}>Authenticate</Button>;
-    }
-
-    private jiraButtonStaging(): any {
-        if (!this.state.isStagingEnabled) {
-            return;
-        }
-
-        return this.state.isJiraStagingAuthenticated
-            ? <div>
-                <hr />
-                <h3>Jira (staging)</h3>
-
-            </div>
-
-            : <div>
-                <hr />
-                <h3>Jira (staging)</h3>
-
-            </div>;
-    }
-
-    // private bitBucketButton(): any {
-    //     if (this.state.isBitbucketAuthenticated) {
-    //         return (<Button className='ac-button'
-    //             onClick={this.handleBBLogout}>Logout</Button>);
-    //     } else {
-    //         return (<Button className='ac-button'
-    //             onClick={this.handleBBLogin}>Authenticate</Button>);
-    //     }
-    // }
-
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
@@ -215,8 +161,11 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                 return (<form {...frmArgs.formProps}>
                                     <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
                                         <h3>Jira</h3>
-                                        {this.jiraButton()}
-                                        {this.jiraButtonStaging()}
+                                        <JiraAuth
+                                            sites={this.state.jiraSites}
+                                            handleDeleteSite={this.handleLogout}
+                                            handleSaveSite={this.handleLogin} />
+                                        {/* TODO: [VSCODE-509] move default site selection to auth list */}
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         <hr />
                                         <h3>Bitbucket</h3>

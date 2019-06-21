@@ -1,4 +1,4 @@
-import { AuthInfoV1, AuthInfo, Product, SiteInfo, OAuthProvider, AccessibleResource, ProductJira, ProductBitbucket, OAuthInfo, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, isDetailedSiteInfo, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent } from './authInfo';
+import { AuthInfoV1, AuthInfo, Product, SiteInfo, OAuthProvider, AccessibleResourceV1, ProductJira, ProductBitbucket, OAuthInfo, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, isDetailedSiteInfo, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent } from './authInfo';
 import { keychain } from '../util/keychain';
 import { window, Disposable, EventEmitter, Event, Memento } from 'vscode';
 import { Logger } from '../logger';
@@ -6,9 +6,9 @@ import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
 import { Container } from '../container';
 import debounce from 'lodash.debounce';
-import { OAuthDancer } from './oauthDancer';
 //import { getJiraCloudBaseUrl } from './serverInfo';
 import { configuration } from '../config/configuration';
+import { OAuthRefesher } from './oauthRefresher';
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const keychainServiceNameV2 = "atlascode-authinfoV2";
@@ -223,11 +223,11 @@ export class AuthManager implements Disposable {
         }
     }
 
-    public async convertLegacyAuthInfo(defaultSite?: AccessibleResource) {
+    public async convertLegacyAuthInfo(defaultSite?: AccessibleResourceV1) {
         let jiraInfo: HostToAuthInfo | undefined = undefined;
         let bbInfo: HostToAuthInfo | undefined = undefined;
 
-        const _dancer = new OAuthDancer();
+        const _refresher = new OAuthRefesher();
         let jiraSites: DetailedSiteInfo[] = [];
         let bbSites: DetailedSiteInfo[] = [];
         if (keychain) {
@@ -240,7 +240,7 @@ export class AuthManager implements Disposable {
                         let info: AuthInfoV1 = JSON.parse(infoEntry);
 
                         if (provider.startsWith('jira')) {
-                            const newAccess = await _dancer.getNewAccessToken(provider, info.refresh);
+                            const newAccess = await _refresher.getNewAccessToken(provider, info.refresh);
                             Logger.debug('new access token is', newAccess);
                             if (!newAccess) {
                                 continue;

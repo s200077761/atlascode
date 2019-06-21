@@ -14,7 +14,7 @@ import {
 import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { Container } from '../container';
 import { Project } from 'src/jira/jiraModel';
-import { DetailedSiteInfo, AccessibleResource } from 'src/atlclients/authInfo';
+import { DetailedSiteInfo, AccessibleResourceV1 } from 'src/atlclients/authInfo';
 import { WorkingProject } from './model';
 
 /*
@@ -92,7 +92,7 @@ export class Configuration extends Disposable {
             .update(section, value, target);
     }
 
-    async setWorkingSite(site?: AccessibleResource) {
+    async setWorkingSite(site?: AccessibleResourceV1) {
         await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
     }

@@ -1,60 +1,38 @@
 import * as vscode from 'vscode';
 const BitbucketStrategy = require('passport-bitbucket-oauth2');
 const AtlassianStrategy = require('passport-atlassian-oauth2');
-import * as refresh from 'passport-oauth2-refresh';
 import { Logger } from '../logger';
 import * as express from 'express';
 import * as passport from 'passport';
 import * as http from 'http';
 import { Resources } from '../resources';
 import { Time } from '../util/time';
-import { ProductBitbucket, ProductJira, OAuthProvider, AccessibleResource, OAuthResponse } from './authInfo';
+import { ProductBitbucket, ProductJira, OAuthProvider, OAuthResponse, AccessibleResource } from './authInfo';
+import { Disposable } from 'vscode';
 
-const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file' : 'vscode://file';
+const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
-export class OAuthDancer {
+export class OAuthDancer implements Disposable {
+    private static _instance: OAuthDancer;
+
     private _srv: http.Server | undefined;
     private _app: any;
     private _authInfo: Map<OAuthProvider, OAuthResponse> = new Map();
     private _authErrors: Map<OAuthProvider, string> = new Map();
     private _authsInFlight: OAuthProvider[] = [];
     private _timeoutTimers: Map<OAuthProvider, any> = new Map();
+    private _shutdownCheck: any;
+    private _shutdownCheckInterval = 5 * Time.MINUTES;
     private _browserTimeout = 5 * Time.MINUTES;
 
-    private _bbCloudStrategy = new BitbucketStrategy.Strategy({
-        clientID: "3hasX42a7Ugka2FJja",
-        clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
-        callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloud
-    }, this.verifyBitbucket.bind(this));
+    private _bbCloudStrategy: any;
+    private _bbCloudStrategyStaging: any;
+    private _jiraCloudStrategy: any;
+    private _jiraCloudStrategyStaging: any;
+    private _myId: number;
 
-    private _bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
-        clientID: "7jspxC7fgemuUbnWQL",
-        clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
-        callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloudStaging,
-        authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
-        tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
-        userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
-    }, this.verifyBitbucketStaging.bind(this));
-
-    private _jiraCloudStrategy = new AtlassianStrategy({
-        clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
-        clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-        callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-    }, this.verifyJira.bind(this));
-
-    private _jiraCloudStrategyStaging = new AtlassianStrategy({
-        clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
-        clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
-        authorizationURL: "https://auth.stg.atlassian.com/authorize",
-        tokenURL: "https://auth.stg.atlassian.com/oauth/token",
-        profileURL: "https://api.stg.atlassian.com/me",
-        accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
-        callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloudStaging,
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-    }, this.verifyJiraStaging.bind(this));
-
-    public constructor() {
+    private constructor() {
+        this._myId = Math.random();
         passport.serializeUser(function (user, done) {
             done(null, user);
         });
@@ -62,6 +40,39 @@ export class OAuthDancer {
         passport.deserializeUser(function (obj, done) {
             done(null, obj);
         });
+
+        this._bbCloudStrategy = new BitbucketStrategy.Strategy({
+            clientID: "3hasX42a7Ugka2FJja",
+            clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
+            callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloud
+        }, this.verifyBitbucket.bind(this));
+
+        this._bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
+            clientID: "7jspxC7fgemuUbnWQL",
+            clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
+            callbackURL: "http://127.0.0.1:31415/" + OAuthProvider.BitbucketCloudStaging,
+            authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
+            tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
+            userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
+        }, this.verifyBitbucketStaging.bind(this));
+
+        this._jiraCloudStrategy = new AtlassianStrategy({
+            clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
+            clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
+            callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloud,
+            scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+        }, this.verifyJira.bind(this));
+
+        this._jiraCloudStrategyStaging = new AtlassianStrategy({
+            clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
+            clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
+            authorizationURL: "https://auth.stg.atlassian.com/authorize",
+            tokenURL: "https://auth.stg.atlassian.com/oauth/token",
+            profileURL: "https://api.stg.atlassian.com/me",
+            accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
+            callbackURL: 'http://127.0.0.1:31415/' + OAuthProvider.JiraCloudStaging,
+            scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
+        }, this.verifyJiraStaging.bind(this));
 
         this._jiraCloudStrategyStaging.authorizationParams = () => {
             return {
@@ -74,12 +85,16 @@ export class OAuthDancer {
         passport.use(OAuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
         passport.use(OAuthProvider.JiraCloud, this._jiraCloudStrategy);
         passport.use(OAuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
-        refresh.use(OAuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        refresh.use(OAuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        refresh.use(OAuthProvider.JiraCloud, this._jiraCloudStrategy);
-        refresh.use(OAuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
 
         this._app = this.createApp();
+    }
+
+    public static get Instance(): OAuthDancer {
+        return this._instance || (this._instance = new this());
+    }
+
+    dispose() {
+        this.forceShutdownAll();
     }
 
     private createApp(): any {
@@ -121,7 +136,7 @@ export class OAuthDancer {
                 product: ProductBitbucket,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(OAuthProvider.BitbucketCloud);
+            this.clearTimeoutForProvider(OAuthProvider.BitbucketCloud);
         });
 
         app.get('/' + OAuthProvider.BitbucketCloudStaging, passport.authenticate(OAuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
@@ -130,7 +145,7 @@ export class OAuthDancer {
                 product: ProductBitbucket,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(OAuthProvider.BitbucketCloudStaging);
+            this.clearTimeoutForProvider(OAuthProvider.BitbucketCloudStaging);
         });
 
         app.get('/' + OAuthProvider.JiraCloud, passport.authenticate(OAuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
@@ -139,7 +154,7 @@ export class OAuthDancer {
                 product: ProductJira,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(OAuthProvider.JiraCloud);
+            this.clearTimeoutForProvider(OAuthProvider.JiraCloud);
         });
 
         app.get('/' + OAuthProvider.JiraCloudStaging, passport.authenticate(OAuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
@@ -148,7 +163,7 @@ export class OAuthDancer {
                 product: ProductJira,
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(OAuthProvider.JiraCloudStaging);
+            this.clearTimeoutForProvider(OAuthProvider.JiraCloudStaging);
 
         });
 
@@ -173,7 +188,7 @@ export class OAuthDancer {
                 actionMessage: 'Please try again.',
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(req.query.provider);
+            this.clearTimeoutForProvider(req.query.provider);
         });
 
         return app;
@@ -197,7 +212,6 @@ export class OAuthDancer {
             },
             accessibleResources: resources,
         });
-
         return done(null, profile.id);
     }
 
@@ -215,7 +229,7 @@ export class OAuthDancer {
             name: ProductBitbucket.name,
             scopes: [],
             avatarUrl: "",
-            baseUrlSuffix: "bitbucket.org"
+            url: "https://bitbucket.org"
         }];
 
         return this.verify(OAuthProvider.BitbucketCloud, accessToken, refreshToken, profile, done);
@@ -227,7 +241,7 @@ export class OAuthDancer {
             name: ProductBitbucket.name,
             scopes: [],
             avatarUrl: "",
-            baseUrlSuffix: "bb-inf.net"
+            url: "https://bb-inf.net"
         }];
 
         return this.verify(OAuthProvider.BitbucketCloudStaging, accessToken, refreshToken, profile, done);
@@ -238,15 +252,14 @@ export class OAuthDancer {
     }
 
     public async doDance(provider: OAuthProvider): Promise<OAuthResponse> {
-        if (this._authsInFlight.includes(provider)) {
-            this.shutdown(provider);
-            await this.sleep(1 * Time.SECONDS);
-        }
+        this.clearAuthInFlight(provider);
+        await this.sleep(1 * Time.SECONDS);
 
         this._authsInFlight.push(provider);
 
         if (!this._srv) {
             this._srv = http.createServer(this._app).listen(31415, () => console.log('server started on port 31415'));
+            this.startShutdownChecker();
         }
 
         vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
@@ -285,7 +298,7 @@ export class OAuthDancer {
         });
     }
 
-    private shutdown(provider: OAuthProvider) {
+    private clearAuthInFlight(provider: OAuthProvider) {
         let myIndex = this._authsInFlight.indexOf(provider);
         if (myIndex > -1) {
             this._authsInFlight.splice(myIndex, 1);
@@ -296,11 +309,34 @@ export class OAuthDancer {
             clearTimeout(timer);
             this._timeoutTimers.delete(provider);
         }
+    }
 
-        if (this._srv && this._authsInFlight.length < 1) {
-            this._srv.close();
-            this._srv = undefined;
-            console.log('server on port 31415 has been shutdown');
+    private clearTimeoutForProvider(provider: OAuthProvider) {
+        const timer = this._timeoutTimers.get(provider);
+        if (timer) {
+            clearTimeout(timer);
+            this._timeoutTimers.delete(provider);
+        }
+    }
+
+    private maybeShutdown() {
+        if (this._authsInFlight.length < 1) {
+
+            this._timeoutTimers.forEach((timer: any, key: OAuthProvider) => {
+                clearTimeout(timer);
+            });
+
+            this._timeoutTimers.clear();
+
+            if (this._shutdownCheck) {
+                clearInterval(this._shutdownCheck);
+            }
+
+            if (this._srv) {
+                this._srv.close();
+                this._srv = undefined;
+                console.log('server on port 31415 has been shutdown');
+            }
         }
     }
 
@@ -314,6 +350,10 @@ export class OAuthDancer {
         });
 
         this._authsInFlight = [];
+
+        if (this._shutdownCheck) {
+            clearInterval(this._shutdownCheck);
+        }
 
         if (this._srv) {
             this._srv.close();
@@ -335,20 +375,13 @@ export class OAuthDancer {
         }, this._browserTimeout));
     }
 
-    public async getNewAccessToken(provider: OAuthProvider, refreshToken: string): Promise<string | undefined> {
-        return new Promise<string>((resolve, reject) => {
-            refresh.requestNewAccessToken(provider, refreshToken, (err: Error, accessToken: string, newRefreshToken: string) => {
-                if (err) {
-                    Logger.error(err, "refresh error");
-                    reject(undefined);
-                }
-                if (accessToken && accessToken !== '') {
-                    resolve(accessToken);
-                } else {
-                    // the refresh token may have been revoked, in which case BB returns valid token info with the access token removed instead of an error.
-                    reject(undefined);
-                }
-            });
-        });
+    private startShutdownChecker() {
+        //make sure we clear the old one in case they click multiple times
+        const oldTimer = this._shutdownCheck;
+        if (oldTimer) {
+            clearInterval(oldTimer);
+        }
+
+        this._shutdownCheck = setInterval(this.maybeShutdown, this._shutdownCheckInterval);
     }
 }

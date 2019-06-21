@@ -1,6 +1,6 @@
 'use strict';
 
-import { DetailedSiteInfo, emptySiteInfo, AccessibleResource, emptyAccessibleResource } from "../atlclients/authInfo";
+import { DetailedSiteInfo, emptySiteInfo, AccessibleResourceV1, emptyAccessibleResourceV1 } from "../atlclients/authInfo";
 
 export enum OutputLevel {
     Silent = 'silent',
@@ -27,7 +27,7 @@ export interface IConfig {
 
 export interface JiraConfig {
     workingProject: WorkingProject;
-    workingSite: AccessibleResource;
+    workingSite: AccessibleResourceV1;
     defaultSite: DetailedSiteInfo;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
@@ -192,7 +192,7 @@ export const emptyTodoIssues: TodoIssues = {
 
 export const emptyJiraConfig: JiraConfig = {
     workingProject: emptyWorkingProject,
-    workingSite: emptyAccessibleResource,
+    workingSite: emptyAccessibleResourceV1,
     defaultSite: emptySiteInfo,
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,

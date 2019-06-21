@@ -6,7 +6,7 @@ import {
 } from "vscode";
 import * as BitbucketKit from "bitbucket";
 import * as JiraKit from "@atlassian/jira";
-import { OAuthProvider, AccessibleResource, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
+import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, AccessibleResource } from "./authInfo";
 import { Container } from "../container";
 import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
@@ -19,13 +19,15 @@ import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
 import fetch from 'node-fetch';
+import { OAuthRefesher } from "./oauthRefresher";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
 
 export class ClientManager implements Disposable {
   private _clients: CacheMap = new CacheMap();
-  private _dancer: OAuthDancer = new OAuthDancer();
+  private _dancer: OAuthDancer = OAuthDancer.Instance;
+  private _refresher: OAuthRefesher = new OAuthRefesher();
   private _agent: any | undefined;
   private _agentChanged: boolean = false;
 
@@ -38,7 +40,7 @@ export class ClientManager implements Disposable {
 
   dispose() {
     this._clients.clear();
-
+    this._dancer.dispose();
   }
 
   // used to add and remove the proxy agent when charles setting changes.
@@ -201,7 +203,7 @@ export class ClientManager implements Disposable {
 
     switch (product.key) {
       case ProductBitbucket.key:
-        const bbResources = resources.filter(resource => knownSites.find(site => site.hostname.endsWith(resource.baseUrlSuffix) === undefined));
+        const bbResources = resources.filter(resource => knownSites.find(site => resource.url.endsWith(site.hostname) === undefined));
         if (bbResources.length > 0) {
           newResource = bbResources[0];
           const hostname = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
@@ -212,7 +214,7 @@ export class ClientManager implements Disposable {
           newSite = {
             avatarUrl: "",
             baseApiUrl: baseApiUrl,
-            baseLinkUrl: `https://${hostname}`,
+            baseLinkUrl: newResource.url,
             hostname: hostname,
             id: newResource.id,
             name: siteName,
@@ -230,7 +232,7 @@ export class ClientManager implements Disposable {
 
           //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
           //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
-          const baseUrlString = authInfo.provider === OAuthProvider.JiraCloudStaging ? `https://${newResource.name}.jira-dev.com` : `https://${newResource.name}.atlassian.net`;
+          const baseUrlString = newResource.url;
           const baseUrl: URL = new URL(baseUrlString);
 
           newSite = {
@@ -314,7 +316,7 @@ export class ClientManager implements Disposable {
           const provider: OAuthProvider | undefined = oauthProviderForSite(site);
           Logger.debug('got authProvider', provider);
           if (provider) {
-            const newAccessToken = await this._dancer.getNewAccessToken(provider, info.refresh);
+            const newAccessToken = await this._refresher.getNewAccessToken(provider, info.refresh);
             Logger.debug('got newAccessToken', newAccessToken);
             if (newAccessToken) {
               info.access = newAccessToken;
@@ -368,7 +370,7 @@ export class ClientManager implements Disposable {
         try {
           const provider: OAuthProvider | undefined = oauthProviderForSite(site);
           if (provider) {
-            newAccessToken = await this._dancer.getNewAccessToken(provider, info.refresh);
+            newAccessToken = await this._refresher.getNewAccessToken(provider, info.refresh);
             if (newAccessToken) {
               info.access = newAccessToken;
               await Container.authManager.saveAuthInfo(site, info);

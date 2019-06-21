@@ -3,10 +3,10 @@ import Button from "@atlaskit/button";
 import Tooltip from '@atlaskit/tooltip';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import { ButtonGroup } from "@atlaskit/button";
-import { DetailedSiteInfo, SiteInfo, AuthInfo, ProductBitbucket } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, SiteInfo, AuthInfo, ProductJira } from "../../../atlclients/authInfo";
 import AuthForm from "./AuthForm";
 
-export default class BitbucketAuth extends React.Component<
+export default class JiraAuth extends React.Component<
     {
         sites: DetailedSiteInfo[];
         handleDeleteSite: (site: DetailedSiteInfo) => void;
@@ -40,6 +40,7 @@ export default class BitbucketAuth extends React.Component<
     }
 
     handleSave = (site: SiteInfo, auth: AuthInfo) => {
+        console.log('jira saving site', site);
         this.props.handleSaveSite(site, auth);
         this.setState({ addingSite: false });
     }
@@ -71,7 +72,7 @@ export default class BitbucketAuth extends React.Component<
                     <AuthForm
                         onCancel={this.handleCancel}
                         onSave={this.handleSave}
-                        product={ProductBitbucket} />
+                        product={ProductJira} />
                 )}
                 {this.state.sites.map((site) => {
                     return this.htmlForSite(site);
