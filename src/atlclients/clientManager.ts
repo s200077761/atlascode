@@ -18,6 +18,7 @@ import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
+import fetch from 'node-fetch';
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -154,39 +155,40 @@ export class ClientManager implements Disposable {
         let authHeader = "";
         if (isBasicAuthInfo(authInfo)) {
           authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
-        }
 
-        try {
-          const res = await fetch(`https://${site.hostname}/rest/api/2/myself`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: authHeader
-            }
-          });
-          const json = await res.json();
 
-          siteDetails = {
-            product: site.product,
-            isCloud: false,
-            avatarUrl: ``,
-            hostname: site.hostname,
-            baseApiUrl: `https://${site.hostname}/rest/api/1.0`,
-            baseLinkUrl: `https://${site.hostname}`,
-            id: site.hostname,
-            name: site.hostname
-          };
+          try {
+            const res = await fetch(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: authHeader
+              }
+            });
+            const json = await res.json();
 
-          authInfo.user = {
-            displayName: json.displayName,
-            id: json.slug
-          };
+            siteDetails = {
+              product: site.product,
+              isCloud: false,
+              avatarUrl: ``,
+              hostname: site.hostname,
+              baseApiUrl: `https://${site.hostname}/rest/api/1.0`,
+              baseLinkUrl: `https://${site.hostname}`,
+              id: site.hostname,
+              name: site.hostname
+            };
 
-          await Container.authManager.saveAuthInfo(siteDetails, authInfo);
+            authInfo.user = {
+              displayName: json.displayName,
+              id: json.slug
+            };
 
-        } catch (err) {
-          Logger.error(new Error(`Error authenticating with Bitbucket: ${err}`));
-          return Promise.reject(`Error authenticating with Bitbucket: ${err}`);
+            await Container.authManager.saveAuthInfo(siteDetails, authInfo);
+
+          } catch (err) {
+            Logger.error(new Error(`Error authenticating with Bitbucket: ${err}`));
+            return Promise.reject(`Error authenticating with Bitbucket: ${err}`);
+          }
         }
         break;
     }

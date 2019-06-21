@@ -220,7 +220,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                         <hr />
                                         <h3>Bitbucket</h3>
-                                        <BitbucketAuth sites={this.state.bitbucketSites} handleDeleteSite={this.handleLogout} />
+                                        <BitbucketAuth
+                                            sites={this.state.bitbucketSites}
+                                            handleDeleteSite={this.handleLogout}
+                                            handleSaveSite={this.handleLogin} />
                                     </Panel>
 
                                     <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>

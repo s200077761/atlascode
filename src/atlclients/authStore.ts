@@ -83,7 +83,7 @@ export class AuthManager implements Disposable {
         return foundInfo;
     }
 
-    public async getAuthInfo(site: SiteInfo): Promise<AuthInfo> {
+    public async getAuthInfo(site: SiteInfo): Promise<AuthInfo | undefined> {
         Logger.debug('trying to get authInfo for site', site.hostname);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(site.product.key);
@@ -121,7 +121,8 @@ export class AuthManager implements Disposable {
             }
         }
 
-        return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
+        return foundInfo;
+        //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
