@@ -133,7 +133,7 @@ export default class AuthForm extends PureComponent<{
                                     errDiv = <ErrorMessage>Base URL must be a valid absolute URL</ErrorMessage>;
                                 }
                                 if (!fieldArgs.error) {
-                                    errDiv = <HelperMessage>{helperText}</HelperMessage>
+                                    errDiv = <HelperMessage>{helperText}</HelperMessage>;
                                 }
                                 return (
                                     <div>

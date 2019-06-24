@@ -29,10 +29,10 @@ export class OAuthDancer implements Disposable {
     private _bbCloudStrategyStaging: any;
     private _jiraCloudStrategy: any;
     private _jiraCloudStrategyStaging: any;
-    private _myId: number;
+    //private _myId: number;
 
     private constructor() {
-        this._myId = Math.random();
+        //this._myId = Math.random();
         passport.serializeUser(function (user, done) {
             done(null, user);
         });
