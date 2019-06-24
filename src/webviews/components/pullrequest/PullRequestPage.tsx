@@ -224,10 +224,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         const isPrOpen = pr.state === "OPEN";
 
-        let currentUserApproved = pr.participants!
-            .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
-            .reduce((acc, curr) => !!acc || !!curr.approved, false);
-
+        let currentUserApproved = false;
+        if (pr.participants) {
+          currentUserApproved = pr.participants!
+              .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
+              .reduce((acc, curr) => !!acc || !!curr.approved, false);
+        }
         const issue = this.state.pr.mainIssue;
         const issueDetails = issue ?
             <React.Fragment>
