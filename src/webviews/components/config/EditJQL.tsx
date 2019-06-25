@@ -7,7 +7,7 @@ import Select, { components } from '@atlaskit/select';
 import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
-import { AccessibleResource } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
@@ -25,16 +25,16 @@ const IconValue = (props: any) => (
 
 export default class EditJQL extends PureComponent<{
   jiraAccessToken: string;
-  workingSite: AccessibleResource;
+  defaultSite: DetailedSiteInfo;
   workingProject: string;
-  sites: AccessibleResource[];
+  sites: DetailedSiteInfo[];
   jqlEntry: JQLEntry;
   nameEditable?: boolean;
   onCancel: () => void;
   onRestoreDefault?: (jqlEntry: JQLEntry) => void;
-  onSave: (site: AccessibleResource, jqlEntry: JQLEntry) => void;
+  onSave: (site: DetailedSiteInfo, jqlEntry: JQLEntry) => void;
 }, {
-  selectedSite: AccessibleResource;
+  selectedSite: DetailedSiteInfo;
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
@@ -42,7 +42,7 @@ export default class EditJQL extends PureComponent<{
   isEditing: boolean;
 }> {
   state = {
-    selectedSite: this.props.workingSite,
+    selectedSite: this.props.defaultSite,
     nameValue: this.props.jqlEntry.name,
     inputValue: this.props.jqlEntry.query,
     openComplete: false,
@@ -90,7 +90,7 @@ export default class EditJQL extends PureComponent<{
     return this.fetchEndpoint("jql/autocompletedata");
   }
 
-  handleSiteChange = (e: AccessibleResource) => {
+  handleSiteChange = (e: DetailedSiteInfo) => {
     this.setState({
       selectedSite: e
     });
@@ -171,7 +171,7 @@ export default class EditJQL extends PureComponent<{
             <Field label='Select Site'
               id='site'
               name='site'
-              defaultValue={this.props.workingSite}
+              defaultValue={this.props.defaultSite}
             >
               {
                 (fieldArgs: any) => {

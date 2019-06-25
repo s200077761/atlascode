@@ -16,7 +16,6 @@ import {
   Transition,
   IdName
 } from "../../../jira/jiraModel";
-import { emptyWorkingSite } from '../../../config/model';
 import {
   TransitionIssueAction,
   IssueCommentAction,
@@ -42,6 +41,7 @@ import { OpenPullRequest } from "../../../ipc/prActions";
 import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
 import PMFBBanner from "../pmfBanner";
+import { emptySiteInfo } from "../../../atlclients/authInfo";
 
 type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -69,7 +69,7 @@ const emptyIssueData: IssueData = {
   transitions: [],
   components: [],
   fixVersions: [],
-  workingSite: emptyWorkingSite,
+  siteDetails: emptySiteInfo,
   currentUserId: '',
   childIssues: [],
   workInProgress: true,
@@ -380,7 +380,7 @@ export default class JiraIssuePage extends WebviewComponent<
               {issue.parentKey &&
                 <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.handleOpenIssue(issue.parentKey)} />} />
               }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
             </BreadcrumbsStateless>
           }>
           <p>{issue.summary}</p>

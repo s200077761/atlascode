@@ -15,11 +15,12 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { Issue, isIssue } from '../jira/jiraModel';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
-import { AuthProvider } from '../atlclients/authInfo';
+import { ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
+import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -53,10 +54,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         try {
             const state: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositores();
-            const currentUser = await Container.bitbucketContext.currentUser();
+
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
+                const bbRemotes = getBitbucketRemotes(r);
                 if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
                     continue;
                 }
@@ -67,6 +68,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     RepositoriesApi.getDevelopmentBranch(bbRemotes[0]),
                     PullRequestApi.getDefaultReviewers(bbRemotes[0])
                 ]);
+
+                const currentUser = await Container.bitbucketContext.currentUser(r);
+
                 await state.push({
                     uri: r.rootUri.toString(),
                     href: repo.url,
@@ -181,7 +185,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
     async fetchIssueForBranch(e: FetchIssue) {
         let issue: Issue | BitbucketIssue | undefined = undefined;
-        if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
             if (jiraIssues.length > 0) {

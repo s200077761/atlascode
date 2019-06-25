@@ -1,7 +1,7 @@
 import { Repository, Remote } from "../typings/git";
 import { RepositoriesApi } from "./repositories";
-import { GitUrlParse, bitbucketHosts, PullRequestApi } from "./pullRequests";
-import { PaginatedBitbucketIssues, PaginatedComments, Comment, UnknownUser, BitbucketIssue } from "./model";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, clientForHostname } from "./bbUtils";
+import { PaginatedBitbucketIssues, BitbucketIssue, PaginatedComments, UnknownUser, Comment } from "./model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -16,13 +16,13 @@ export namespace BitbucketIssuesApi {
     // ---- => ensure Bitbucket Issues are enabled for the repo
 
     export async function getList(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        let remotes = PullRequestApi.getBitbucketRemotes(repository);
+        let remotes = getBitbucketRemotes(repository);
         if (remotes.length === 0 || !await bitbucketIssuesEnabled(remotes[0])) {
             return { repository: repository, remote: dummyRemote, data: [], next: undefined };
         }
 
-        let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        const bb: Bitbucket = await clientForRemote(remotes[0]);
 
         const { data } = await bb.repositories.listIssues({
             repo_slug: parsed.name,
@@ -35,8 +35,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function getAvailableComponents(repositoryHref: string): Promise<Bitbucket.Schema.Component[] | undefined> {
-        let parsed = GitUrlParse(repositoryHref);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(repositoryHref);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
 
         const resp = await bb.repositories.listComponents({
             repo_slug: parsed.name,
@@ -48,13 +48,13 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<BitbucketIssue[]> {
-        let remotes = PullRequestApi.getBitbucketRemotes(repository);
+        let remotes = getBitbucketRemotes(repository);
         if (remotes.length === 0 || !await bitbucketIssuesEnabled(remotes[0])) {
             return [];
         }
 
-        let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
         const results = await Promise.all(keyNumbers.map(key => bb.repositories.getIssue({
@@ -66,13 +66,13 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        let remotes = PullRequestApi.getBitbucketRemotes(repository);
+        let remotes = getBitbucketRemotes(repository);
         if (remotes.length === 0 || !await bitbucketIssuesEnabled(remotes[0])) {
             return { repository: repository, remote: dummyRemote, data: [], next: undefined };
         }
 
-        let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remotes[0]));
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.listIssues({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -95,8 +95,8 @@ export namespace BitbucketIssuesApi {
     // ---- => Bitbucket Issues enabled for the repo
 
     export async function refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.getIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -107,8 +107,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function getComments(issue: BitbucketIssue): Promise<PaginatedComments> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.listIssueComments({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -123,8 +123,8 @@ export namespace BitbucketIssuesApi {
                 parentId: comment.parent ? comment.parent.id! : undefined,
                 htmlContent: comment.content!.html!,
                 rawContent: comment.content!.raw!,
-                ts: comment.created_on,
-                updatedTs: comment.updated_on,
+                ts: comment.created_on!,
+                updatedTs: comment.updated_on!,
                 deleted: !!comment.deleted,
                 inline: comment.inline,
                 user: comment.user
@@ -135,14 +135,14 @@ export namespace BitbucketIssuesApi {
                         avatarUrl: comment.user.links!.avatar!.href!
                     }
                     : UnknownUser
-            } as Comment)),
+            })),
             next: data.next
         };
     }
 
     export async function getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.listIssueChanges({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -188,7 +188,6 @@ export namespace BitbucketIssuesApi {
             });
 
         const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
-            //@ts-ignore
             id: change.id as number,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
@@ -209,8 +208,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         await bb.repositories.createIssueChange({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -230,8 +229,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         await bb.repositories.createIssueChange({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -248,8 +247,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function postComment(issue: BitbucketIssue, content: string): Promise<void> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         await bb.repositories.createIssueComment({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -264,8 +263,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function assign(issue: BitbucketIssue, account_id: string): Promise<void> {
-        let parsed = GitUrlParse(issue.repository!.links!.html!.href!);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(issue.repository!.links!.html!.href!);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         await bb.repositories.updateIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -281,8 +280,8 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
-        let parsed = GitUrlParse(href);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(href);
+        const bb: Bitbucket = await clientForHostname(parsed.source);
 
         const { data } = await bb.repositories.createIssue({
             repo_slug: parsed.name,
@@ -302,8 +301,7 @@ export namespace BitbucketIssuesApi {
     }
 
     export async function nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        let parsed = GitUrlParse(RepositoriesApi.urlForRemote(remote));
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        const bb: Bitbucket = await clientForRemote(remote);
         const { data } = await bb.getNextPage({ next: next });
         //@ts-ignore
         return { repository: repository, remote: remote, data: data.values || [], next: data.next };

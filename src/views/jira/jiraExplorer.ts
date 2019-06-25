@@ -1,6 +1,6 @@
 import { Disposable } from 'vscode';
 import { WorkingProject } from '../../config/configuration';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { ProductJira } from '../../atlclients/authInfo';
 import { Explorer, BaseTreeDataProvider } from '../Explorer';
 
 export interface Refreshable {
@@ -19,8 +19,8 @@ export class JiraExplorer extends Explorer implements Refreshable {
         return this._id;
     }
 
-    authProvider() {
-        return AuthProvider.JiraCloud;
+    product() {
+        return ProductJira;
     }
 
     set project(project: WorkingProject) {

@@ -1,19 +1,16 @@
 import { Issue, isIssue } from "../../jira/jiraIssue";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { providerForSite } from "../../atlclients/authInfo";
 import { IssueNode } from "../../views/nodes/issueNode";
+import { currentUserJira } from "./currentUser";
 
 export async function assignIssue(param: Issue | IssueNode, accountId?: string) {
   const issue = isIssue(param) ? param : param.issue;
-  let client = await Container.clientManager.jirarequest(issue.workingSite);
-  if (!client) {
-    return;
-  }
+  const client = await Container.clientManager.jirarequest(issue.siteDetails);
 
   if (!accountId) {
-    const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
-    accountId = authInfo ? authInfo.user.id : undefined;
+    const me = await currentUserJira(issue.siteDetails);
+    accountId = me ? me.accountId : undefined;
   }
 
   const response = await client.issue
@@ -28,10 +25,7 @@ export async function assignIssue(param: Issue | IssueNode, accountId?: string) 
 }
 
 export async function unassignIssue(issue: Issue) {
-  const client = await Container.clientManager.jirarequest(issue.workingSite);
-  if (!client) {
-    return;
-  }
+  const client = await Container.clientManager.jirarequest(issue.siteDetails);
 
   const response = await client.issue
     .assignIssue({

@@ -1,13 +1,13 @@
 import { Remote } from "../typings/git";
-import { GitUrlParse, maxItemsSupported, bitbucketHosts } from "./pullRequests";
+import { maxItemsSupported } from "./pullRequests";
+import { parseGitUrl, clientForHostname, urlForRemote } from "./bbUtils";
 import { Repo, Commit, BitbucketBranchingModel } from "./model";
 
 export namespace RepositoriesApi {
 
     export async function get(remote: Remote): Promise<Repo> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.get({
             repo_slug: parsed.name,
             username: parsed.owner
@@ -29,9 +29,8 @@ export namespace RepositoriesApi {
     }
 
     export async function getDevelopmentBranch(remote: Remote): Promise<string> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const [repo, branchingModel] = await Promise.all([
             RepositoriesApi.get(remote),
             bb.repositories.getBranchingModel({
@@ -46,9 +45,8 @@ export namespace RepositoriesApi {
     }
 
     export async function getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         return bb.repositories.getBranchingModel({
             repo_slug: parsed.name,
             username: parsed.owner
@@ -56,9 +54,8 @@ export namespace RepositoriesApi {
     }
 
     export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
-        const remoteUrl = remote.fetchUrl! || remote.pushUrl!;
-        let parsed = GitUrlParse(remoteUrl);
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.listCommits({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -86,8 +83,8 @@ export namespace RepositoriesApi {
     }
 
     export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
-        let parsed = GitUrlParse(urlForRemote(remote));
-        const bb: Bitbucket = await bitbucketHosts.get(parsed.source);
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb: Bitbucket = await clientForHostname(parsed.source);
         const { data } = await bb.repositories.listPullrequestsForCommit({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -95,13 +92,5 @@ export namespace RepositoriesApi {
         });
 
         return data.values || [];
-    }
-
-    export function urlForRemote(remote: Remote): string {
-        return remote.fetchUrl! || remote.pushUrl!;
-    }
-
-    export function isStagingUrl(url: string): boolean {
-        return url.indexOf('bb-inf.net') !== -1;
     }
 }

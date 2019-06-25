@@ -3,7 +3,6 @@ import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { PullRequestApi } from '../bitbucket/pullRequests';
 import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
@@ -11,6 +10,7 @@ import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
+import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 
 type Emit = CreateBitbucketIssueData | HostErrorMessage;
 export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
@@ -45,7 +45,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
             const repos = Container.bitbucketContext.getBitbucketRepositores();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
+                const bbRemotes = getBitbucketRemotes(r);
                 if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
                     continue;
                 }

@@ -1,7 +1,7 @@
 import { AbstractReactWebview } from "./abstractWebview";
 import { Action, HostErrorMessage } from "../ipc/messaging";
 import { Container } from "../container";
-import { AccessibleResource } from "../atlclients/authInfo";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { WorkingProject } from "../config/model";
 import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
@@ -11,7 +11,7 @@ import { IssueProblemsData } from "../ipc/issueMessaging";
 type Emit = HostErrorMessage | IssueProblemsData;
 
 export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Action> {
-    private _site: AccessibleResource | undefined;
+    private _site: DetailedSiteInfo | undefined;
     private _project: WorkingProject | undefined;
 
     constructor(extensionPath: string) {
@@ -25,7 +25,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Actio
         return "atlascodeCreateIssueProblemsScreen";
     }
 
-    async createOrShow(column?: ViewColumn, site?: AccessibleResource, project?: WorkingProject): Promise<void> {
+    async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: WorkingProject): Promise<void> {
         await super.createOrShow(column);
         this._site = site;
         this._project = project;
@@ -46,15 +46,13 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Actio
                 return;
             }
 
-            let client = await Container.clientManager.jirarequest(this._site);
+            const client = await Container.clientManager.jirarequest(this._site);
 
-            if (client) {
-                let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._project.key], expand: 'projects.issuetypes.fields' });
-                const screenTransformer = new IssueScreenTransformer(Container.jiraSiteManager.effectiveSite, res.data.projects![0]);
-                let data = await screenTransformer.transformIssueScreens();
+            let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._project.key], expand: 'projects.issuetypes.fields' });
+            const screenTransformer = new IssueScreenTransformer(this._site, res.data.projects![0]);
+            let data = await screenTransformer.transformIssueScreens();
 
-                this.postMessage({ type: 'screenRefresh', problems: data.problems, project: this._project });
-            }
+            this.postMessage({ type: 'screenRefresh', problems: data.problems, project: this._project });
 
         } catch (e) {
             let err = new Error(`error updating issue fields: ${e}`);

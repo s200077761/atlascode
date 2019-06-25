@@ -29,9 +29,14 @@ export namespace FieldValidators {
     export function validateUrl(value: string, state: any): string | undefined {
         let err = undefined;
 
-        // if(value !== undefined && value.length > 0) {
-        //     err = (!this.validURL(value)) ? 'NOT_URL' : undefined;
-        // }
+        try {
+            const url = new URL(value);
+            if (url.hostname === '') {
+                err = 'NOT_URL';
+            }
+        } catch (e) {
+            err = 'NOT_URL';
+        }
 
         return err;
     }
@@ -49,9 +54,9 @@ export namespace FieldValidators {
     export function validateRequiredUrl(value: string, state: any): string | undefined {
         let err = validateString(value, state);
 
-        // if(err === undefined) {
-        //     err = (!this.validURL(value)) ? 'NOT_URL' : undefined;
-        // }
+        if (err === undefined) {
+            err = validateUrl(value, state);
+        }
 
         return err;
     }

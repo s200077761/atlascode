@@ -1,7 +1,7 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
 import { FeedbackData } from './ipc/configActions';
-import { AuthProvider, AuthInfo, ProductJiraStaging, ProductBitbucketStaging, ProductJira, ProductBitbucket } from './atlclients/authInfo';
+import { ProductJira, ProductBitbucket, AuthInfo } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
@@ -281,32 +281,18 @@ async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T
     switch (hostProduct) {
         case undefined:
         default: {
-            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+            authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductJira);
             if (!authInfo) {
-                authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
-            }
-            if (!authInfo) {
-                authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
-            }
-            if (!authInfo) {
-                authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloudStaging);
+                authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductBitbucket);
             }
             break;
         }
-        case ProductJira: {
-            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
+        case ProductJira.key: {
+            authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductJira);
             break;
         }
-        case ProductJiraStaging: {
-            authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
-            break;
-        }
-        case ProductBitbucket: {
-            authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
-            break;
-        }
-        case ProductBitbucketStaging: {
-            authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloudStaging);
+        case ProductBitbucket.key: {
+            authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductBitbucket);
             break;
         }
     }

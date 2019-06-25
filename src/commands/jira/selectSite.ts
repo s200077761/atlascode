@@ -1,12 +1,12 @@
 import { commands, window } from "vscode";
-import { AccessibleResource } from '../../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Container } from '../../container';
 import { configuration } from "../../config/configuration";
 import { Commands } from "../../commands";
 import { siteSelectedEvent } from "../../analytics";
 
 export async function showSiteSelectionDialog() {
-  const sites = await Container.jiraSiteManager.getSitesAvailable();
+  const sites = await Container.siteManager.getSitesAvailable(ProductJira);
   window
     .showQuickPick(sites.map(site => site.name), {
       placeHolder: "Select a site"
@@ -19,8 +19,8 @@ export async function showSiteSelectionDialog() {
     });
 }
 
-async function saveWorkingSite(site: AccessibleResource) {
-  await configuration.setWorkingSite(site)
+async function saveWorkingSite(site: DetailedSiteInfo) {
+  await configuration.setDefaultSite(site)
     .then(async () => {
       commands.executeCommand(Commands.RefreshJiraExplorer);
 

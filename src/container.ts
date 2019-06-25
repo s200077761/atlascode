@@ -7,7 +7,6 @@ import { ClientManager } from './atlclients/clientManager';
 import { AuthManager } from './atlclients/authStore';
 import { JiraContext } from './views/jira/jiraContext';
 import { AuthStatusBar } from './views/authStatusBar';
-import { JiraSiteManager } from './jira/siteManager';
 import { WelcomeWebview } from './webviews/welcomeWebview';
 import { AnalyticsClient } from './analytics-node-client/src/index';
 import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
@@ -24,6 +23,8 @@ import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucke
 import { JiraFieldManager } from './jira/fieldManager';
 import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { PmfStats } from './pmf/stats';
+import { SiteManager } from './siteManager';
+import { JiraProjectManager } from './jira/projectManager';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -36,6 +37,9 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
     }
 
     handleUri(uri: Uri): void {
+        if (uri.path.endsWith('openSettings')) {
+            Container.configWebview.createOrShow();
+        }
     }
 
     dispose(): void {
@@ -50,10 +54,10 @@ export class Container {
         this._version = version;
         context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
-        context.subscriptions.push((this._authManager = new AuthManager()));
+        context.subscriptions.push((this._authManager = new AuthManager(context.globalState)));
         context.subscriptions.push((this._onlineDetector = new OnlineDetector()));
-        context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
-        context.subscriptions.push((this._jiraSiteManager = new JiraSiteManager()));
+        context.subscriptions.push((this._siteManager = new SiteManager(context.globalState)));
+        context.subscriptions.push((this._jiraProjectManager = new JiraProjectManager()));
         context.subscriptions.push((this._jiraFieldManager = new JiraFieldManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
@@ -66,6 +70,7 @@ export class Container {
         context.subscriptions.push(this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath));
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
+        context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
 
         this._pmfStats = new PmfStats(context);
 
@@ -233,14 +238,19 @@ export class Container {
         return this._authStatusBar;
     }
 
-    private static _jiraSiteManager: JiraSiteManager;
-    static get jiraSiteManager() {
-        return this._jiraSiteManager;
+    private static _siteManager: SiteManager;
+    static get siteManager() {
+        return this._siteManager;
     }
 
     private static _jiraFieldManager: JiraFieldManager;
     static get jiraFieldManager() {
         return this._jiraFieldManager;
+    }
+
+    private static _jiraProjectManager: JiraProjectManager;
+    static get jiraProjectManager() {
+        return this._jiraProjectManager;
     }
 
     private static _analyticsClient: AnalyticsClient;

@@ -9,7 +9,6 @@ import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOp
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { postComment } from '../commands/jira/postComment';
 import { Container } from '../container';
-import { providerForSite } from '../atlclients/authInfo';
 import { assignIssue, unassignIssue } from '../commands/jira/assignIssue';
 import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
@@ -111,11 +110,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     handled = true;
 
                     try {
-                        let client = await Container.clientManager.jirarequest(this._state.workingSite);
-                        if (client) {
-                            await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (e as any).fields } });
-                            this.forceUpdateIssue();
-                        }
+                        const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                        await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (e as any).fields } });
+                        this.forceUpdateIssue();
                     }
                     catch (e) {
                         Logger.error(new Error(`error posting comment: ${e}`));
@@ -127,11 +124,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     if (isFetchQuery(e)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
-                            if (client) {
-                                const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: e.query });
-                                this.postMessage({ type: 'userList', users: users.data });
-                            }
+                            const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                            const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: e.query });
+                            this.postMessage({ type: 'userList', users: users.data });
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching users: ${e}`));
@@ -144,16 +139,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     if (isFetchQuery(e)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
-                            if (client) {
-                                let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
-                                    fieldName: 'labels',
-                                    fieldValue: `${e.query}`
-                                });
+                            const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                            let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
+                                fieldName: 'labels',
+                                fieldValue: `${e.query}`
+                            });
 
-                                const options: any[] = (res.data.results || []).map((suggestion: any) => suggestion.value);
-                                this.postMessage({ type: 'labelList', labels: options });
-                            }
+                            const options: any[] = (res.data.results || []).map((suggestion: any) => suggestion.value);
+                            this.postMessage({ type: 'labelList', labels: options });
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching labels: ${e}`));
@@ -166,16 +159,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     if (isFetchQuery(e)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
-                            if (client) {
-                                let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+                            const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                            let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
 
-                                let options: any[] = [];
-                                if (res.data.fields && res.data.fields['components'] && res.data.fields['components'].allowedValues) {
-                                    options = res.data.fields['components'].allowedValues;
-                                }
-                                this.postMessage({ type: 'componentList', fieldId: 'components', options: options });
+                            let options: any[] = [];
+                            if (res.data.fields && res.data.fields['components'] && res.data.fields['components'].allowedValues) {
+                                options = res.data.fields['components'].allowedValues;
                             }
+                            this.postMessage({ type: 'componentList', fieldId: 'components', options: options });
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching components: ${e}`));
@@ -188,16 +179,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     if (isFetchQuery(e)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(this._state.workingSite);
-                            if (client) {
-                                let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+                            const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                            let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
 
-                                let options: any[] = [];
-                                if (res.data.fields && res.data.fields['fixVersions'] && res.data.fields['fixVersions'].allowedValues) {
-                                    options = res.data.fields['fixVersions'].allowedValues;
-                                }
-                                this.postMessage({ type: 'fixVersionList', fieldId: 'fixVersions', options: options });
+                            let options: any[] = [];
+                            if (res.data.fields && res.data.fields['fixVersions'] && res.data.fields['fixVersions'].allowedValues) {
+                                options = res.data.fields['fixVersions'].allowedValues;
                             }
+                            this.postMessage({ type: 'fixVersionList', fieldId: 'fixVersions', options: options });
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching fixVersions: ${e}`));
@@ -211,22 +200,20 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     if (isCreateSomething(e)) {
                         try {
 
-                            let client = await Container.clientManager.jirarequest(Container.jiraSiteManager.effectiveSite);
-                            if (client) {
-                                switch (e.createData.fieldKey) {
-                                    case 'fixVersions':
-                                    case 'versions': {
-                                        let resp = await client.version.createVersion({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                            const client = await Container.clientManager.jirarequest(this._state.siteDetails);
+                            switch (e.createData.fieldKey) {
+                                case 'fixVersions':
+                                case 'versions': {
+                                    let resp = await client.version.createVersion({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                    this.postMessage({ type: 'optionCreated', createdData: resp.data });
 
-                                        break;
-                                    }
-                                    case 'components': {
-                                        let resp = await client.component.createComponent({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                                    break;
+                                }
+                                case 'components': {
+                                    let resp = await client.component.createComponent({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                    this.postMessage({ type: 'optionCreated', createdData: resp.data });
 
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
                         } catch (e) {
@@ -245,10 +232,10 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.workingSite.name}.${this._state.workingSite.baseUrlSuffix}/browse/${this._state.key}`;
+                    const linkUrl = `https://${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
-                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     break;
                 }
                 case 'openStartWorkPage': {
@@ -286,7 +273,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         try {
             this._state = issue;
             if (!this._currentUserId) {
-                const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
+                const authInfo = await Container.authManager.getAuthInfo(this._state.siteDetails);
                 this._currentUserId = authInfo ? authInfo.user.id : undefined;
             }
 
@@ -302,7 +289,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             msg.type = 'update';
             msg.currentUserId = this._currentUserId!;
 
-            const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.workingSite);
+            const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.siteDetails);
 
             const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key} AND cf[${epicFieldInfo.epicLink.cfid}] != ${issue.key}`);
             msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
@@ -335,7 +322,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     private async forceUpdateIssue() {
         if (this._state.key !== "") {
             try {
-                let issue = await fetchIssue(this._state.key, this._state.workingSite);
+                let issue = await fetchIssue(this._state.key, this._state.siteDetails);
                 await this.updateIssue(issue);
             }
             catch (e) {

@@ -5,14 +5,14 @@ import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
 import NonCustomJQL from './NonCustomJQL';
-import { AccessibleResource } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 type changeObject = { [key: string]: any };
 
 export default class JiraExplorer extends React.Component<{
     configData: ConfigData,
     jiraAccessToken: string,
-    sites: AccessibleResource[],
+    sites: DetailedSiteInfo[],
     onConfigChange: (changes: changeObject, removes?: string[]) => void
 }, ConfigData> {
 
@@ -91,7 +91,7 @@ export default class JiraExplorer extends React.Component<{
                         openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
                         onConfigChange={this.props.onConfigChange}
                         jiraAccessToken={this.props.jiraAccessToken}
-                        workingSite={config.jira.workingSite}
+                        defaultSite={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
@@ -105,7 +105,7 @@ export default class JiraExplorer extends React.Component<{
                         siteJqlList={config.jira.customJql}
                         onConfigChange={this.props.onConfigChange}
                         jiraAccessToken={this.props.jiraAccessToken}
-                        workingSite={config.jira.workingSite}
+                        defaultSite={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>

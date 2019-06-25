@@ -3,6 +3,7 @@ import { commands } from "vscode";
 export const extensionId = 'atlascode';
 export const extensionOutputChannelName = 'Atlassian';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
+export const JiraDefaultSiteConfigurationKey = 'jira.defaultSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
 export const CustomJQLKey = "jira.customJql";
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
@@ -14,6 +15,9 @@ export const PipelinesTreeViewId = 'atlascode.views.bb.pipelinesTreeView';
 export const BitbucketIssuesTreeViewId = 'atlascode.views.bb.issuesTreeView';
 export const GlobalStateVersionKey = 'atlascodeVersion';
 
+export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api');
+export const jiraAPIConnectivityError = new Error('cannot connect to jira api');
+export const cannotGetClientFor = 'cannot get client for';
 
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',

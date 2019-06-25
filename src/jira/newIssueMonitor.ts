@@ -5,7 +5,7 @@ import { Logger } from "../logger";
 import { WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
-import { AuthProvider } from "../atlclients/authInfo";
+import { ProductJira } from "../atlclients/authInfo";
 import { Issue } from "./jiraIssue";
 import { showIssue } from "../commands/jira/showIssue";
 
@@ -22,7 +22,7 @@ export class NewIssueMonitor {
   }
 
   async checkForNewIssues() {
-    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
       return;
     }
 

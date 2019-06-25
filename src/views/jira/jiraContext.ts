@@ -2,10 +2,9 @@ import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
-import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
+import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey } from "../../constants";
+import { ProductJira, AuthInfoEvent } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
@@ -57,16 +56,16 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, JiraWorkingProjectConfigurationKey) || configuration.changed(e, JiraWorkingSiteConfigurationKey))) {
-            const project = await Container.jiraSiteManager.getEffectiveProject();
+        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraDefaultSiteConfigurationKey))) {
+            const project = await Container.jiraProjectManager.getEffectiveProject();
             this._explorers.forEach(t => t.project = project);
             this._newIssueMonitor.setProject(project);
         }
 
         if (initializing) {
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            const project = await Container.jiraSiteManager.getEffectiveProject();
+            const project = await Container.jiraProjectManager.getEffectiveProject();
             this._newIssueMonitor.setProject(project);
         }
     }
@@ -80,7 +79,7 @@ export class JiraContext extends Disposable {
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (!Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return;
         }
         this._explorers.forEach(e => e.refresh());
@@ -88,9 +87,9 @@ export class JiraContext extends Disposable {
     }
 
     async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud) {
+        if (e.site.product.key === ProductJira.key) {
 
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }

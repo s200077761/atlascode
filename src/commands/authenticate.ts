@@ -1,47 +1,20 @@
-import { AuthProvider } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { configuration, isStagingSite } from '../config/configuration';
+import { SiteInfo, AuthInfo } from '../atlclients/authInfo';
 
-export async function authenticateBitbucket() {
-    authenticate(AuthProvider.BitbucketCloud);
+
+
+export async function authenticateCloud(site: SiteInfo) {
+    Container.clientManager.userInitiatedOAuthLogin(site);
 }
 
-export async function authenticateBitbucketStaging() {
-    authenticate(AuthProvider.BitbucketCloudStaging);
+export async function authenticateServer(site: SiteInfo, authInfo: AuthInfo) {
+    return await Container.clientManager.userInitiatedServerLogin(site, authInfo);
 }
 
-export async function authenticateJira() {
-    authenticate(AuthProvider.JiraCloud);
-}
+export async function clearAuth(site: SiteInfo) {
+    await Container.clientManager.removeClient(site);
+    await Container.authManager.removeAuthInfo(site);
 
-export async function authenticateJiraStaging() {
-    authenticate(AuthProvider.JiraCloudStaging);
-}
-
-export async function clearBitbucketAuth() {
-    clearAuth(AuthProvider.BitbucketCloud);
-    clearAuth(AuthProvider.BitbucketCloudStaging);
-}
-
-export async function clearJiraAuth() {
-    clearAuth(AuthProvider.JiraCloud);
-    if (!isStagingSite(Container.jiraSiteManager.effectiveSite)) {
-        await configuration.setWorkingProject(undefined);
-    }
-}
-
-export async function clearJiraAuthStaging() {
-    clearAuth(AuthProvider.JiraCloudStaging);
-    if (isStagingSite(Container.jiraSiteManager.effectiveSite)) {
-        await configuration.setWorkingProject(undefined);
-    }
-}
-
-async function authenticate(provider: string) {
-    Container.clientManager.userInitiatedLogin(provider);
-}
-
-async function clearAuth(provider: string) {
-    await Container.clientManager.removeClient(provider);
-    await Container.authManager.removeAuthInfo(provider);
+    //just in case
+    await Container.siteManager.removeSite(site);
 }

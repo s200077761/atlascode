@@ -1,7 +1,8 @@
 import { Action } from "./messaging";
+import { SiteInfo, AuthInfo } from "../atlclients/authInfo";
 
 export enum FeedbackType {
-    Bug ='bug',
+    Bug = 'bug',
     Comment = 'comment',
     Suggestion = 'suggestion',
     Question = 'question',
@@ -9,12 +10,17 @@ export enum FeedbackType {
 }
 export interface FeedbackData {
     type: FeedbackType;
-    description:string;
-    canBeContacted:boolean;
+    description: string;
+    canBeContacted: boolean;
 }
 
 export interface AuthAction extends Action {
-    provider: string;
+    siteInfo: SiteInfo;
+}
+
+export interface LoginAuthAction extends AuthAction {
+    authInfo: AuthInfo;
+
 }
 
 export interface SaveSettingsAction extends Action {
@@ -25,15 +31,21 @@ export interface SaveSettingsAction extends Action {
 }
 
 export interface SubmitFeedbackAction extends Action {
-    feedback:FeedbackData;
+    feedback: FeedbackData;
 }
 
 export function isAuthAction(a: Action): a is AuthAction {
-    return (<AuthAction>a).provider !== undefined 
-    && (
-        (<AuthAction>a).action === 'login'
-        || (<AuthAction>a).action === 'logout'
-       );
+    return (<AuthAction>a).siteInfo !== undefined
+        && (
+            (<AuthAction>a).action === 'login'
+            || (<AuthAction>a).action === 'logout'
+        );
+}
+
+export function isLoginAuthAction(a: Action): a is LoginAuthAction {
+    return (<LoginAuthAction>a).siteInfo !== undefined
+        && (<LoginAuthAction>a).authInfo !== undefined
+        && (<LoginAuthAction>a).action === 'login';
 }
 
 export function isSaveSettingsAction(a: Action): a is SaveSettingsAction {

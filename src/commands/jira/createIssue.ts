@@ -1,10 +1,10 @@
 import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn } from 'vscode';
 import { Repository } from "../../typings/git";
 import { Container } from '../../container';
-import { PullRequestApi, GitUrlParse } from '../../bitbucket/pullRequests';
 import { startIssueCreationEvent } from '../../analytics';
 import { CommentData, BBData } from '../../webviews/createIssueWebview';
 import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
+import { getBitbucketRemotes, parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketIssue } from '../../bitbucket/model';
 
 export interface TodoIssueData {
@@ -110,12 +110,12 @@ function bitbucketUrlsInRepo(repo: Repository, fullPath: string, linesText: stri
     }
     const relativePath = fullPath.replace(rootPath, "");
     if (Container.bitbucketContext.isBitbucketRepo(repo)) {
-        const remotes = PullRequestApi.getBitbucketRemotes(repo);
+        const remotes = getBitbucketRemotes(repo);
         const branch = head.commit;
         return remotes.map((remote) => {
-            const parsed = GitUrlParse(remote.fetchUrl! || remote.pushUrl!);
+            const parsed = parseGitUrl(urlForRemote(remote));
             if (branch) {
-                const url = `https://bitbucket.org/${parsed.owner}/${parsed.name}/src/${branch}${relativePath}${linesText}`;
+                const url = `https://${parsed.source}/${parsed.owner}/${parsed.name}/src/${branch}${relativePath}${linesText}`;
                 return url;
             }
             return undefined;
