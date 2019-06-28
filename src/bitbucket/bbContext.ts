@@ -2,7 +2,6 @@ import { Disposable, EventEmitter, Event, commands, Uri } from 'vscode';
 import { Repository, API as GitApi } from "../typings/git";
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { PullRequestApi } from './pullRequests';
 import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
@@ -12,6 +11,7 @@ import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { getBitbucketRemotes, siteDetailsForRepository, parseGitUrl } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
+import { PullRequestProvider } from './prProvider';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -64,7 +64,7 @@ export class BitbucketContext extends Disposable {
 
         if (this.isSchemaRepository(repo)) {
             let parsed = parseGitUrl(repo.links!.html!.href!);
-            site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.source);
+            site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
         } else {
             site = siteDetailsForRepository(repo);
         }
@@ -72,7 +72,8 @@ export class BitbucketContext extends Disposable {
         if (site) {
             let foundUser = this._currentUsers.get(site.hostname);
             if (!foundUser) {
-                foundUser = await currentUserBitbucket(site);
+                //@ts-ignore
+                foundUser = site.isCloud ? await currentUserBitbucket(site) : await PullRequestProvider.forRepository(repo as Repository).getCurrentUser(site)!;
             }
 
             if (foundUser) {
@@ -89,7 +90,7 @@ export class BitbucketContext extends Disposable {
 
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
-            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => (await PullRequestApi.getRecentAllStatus(repo)).data));
+            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => (await PullRequestProvider.forRepository(repo).getRecentAllStatus(repo)).data));
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
         }

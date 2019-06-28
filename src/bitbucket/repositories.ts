@@ -1,38 +1,26 @@
 import { Remote } from "../typings/git";
 import { maxItemsSupported } from "./pullRequests";
 import { parseGitUrl, clientForHostname, urlForRemote } from "./bbUtils";
-import { Repo, Commit, BitbucketBranchingModel } from "./model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "./model";
 
-export namespace RepositoriesApi {
+export class CloudRepositoriesApi implements RepositoriesApi {
 
-    export async function get(remote: Remote): Promise<Repo> {
+    async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.source);
+        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         const { data } = await bb.repositories.get({
             repo_slug: parsed.name,
             username: parsed.owner
         });
 
-        return toRepo(data);
+        return CloudRepositoriesApi.toRepo(data);
     }
 
-    export function toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
-        return {
-            name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
-            displayName: bbRepo.name!,
-            fullName: bbRepo.full_name!,
-            url: bbRepo.links!.html!.href!,
-            avatarUrl: bbRepo.links!.avatar!.href!,
-            mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
-            issueTrackerEnabled: !!bbRepo.has_issues
-        };
-    }
-
-    export async function getDevelopmentBranch(remote: Remote): Promise<string> {
+    async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.source);
+        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         const [repo, branchingModel] = await Promise.all([
-            RepositoriesApi.get(remote),
+            this.get(remote),
             bb.repositories.getBranchingModel({
                 repo_slug: parsed.name,
                 username: parsed.owner
@@ -44,18 +32,18 @@ export namespace RepositoriesApi {
             : repo.mainbranch!;
     }
 
-    export async function getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
+    async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.source);
+        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         return bb.repositories.getBranchingModel({
             repo_slug: parsed.name,
             username: parsed.owner
         }).then(res => res.data);
     }
 
-    export async function getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
+    async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.source);
+        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         const { data } = await bb.repositories.listCommits({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -82,9 +70,9 @@ export namespace RepositoriesApi {
         }));
     }
 
-    export async function getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
+    async getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.source);
+        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         const { data } = await bb.repositories.listPullrequestsForCommit({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -92,5 +80,17 @@ export namespace RepositoriesApi {
         });
 
         return data.values || [];
+    }
+
+    static toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
+        return {
+            name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
+            displayName: bbRepo.name!,
+            fullName: bbRepo.full_name!,
+            url: bbRepo.links!.html!.href!,
+            avatarUrl: bbRepo.links!.avatar!.href!,
+            mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
+            issueTrackerEnabled: !!bbRepo.has_issues
+        };
     }
 }

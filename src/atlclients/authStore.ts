@@ -362,6 +362,14 @@ export class AuthManager implements Disposable {
 
             if (keychain) {
                 try {
+                    if (this.isDebugging()) {
+                        const infoEntry = await this.getJsonAuthInfoFromKeychain(ProductJira);
+                        if (infoEntry) {
+                            let infos: HostToAuthInfo = JSON.parse(infoEntry);
+                            jiraInfo = { ...jiraInfo, ...infos };
+                        }
+                    }
+
                     Logger.debug('updating key store', JSON.stringify(jiraInfo));
                     await keychain.setPassword(keychainServiceNameV2, ProductJira.key, JSON.stringify(jiraInfo));
                 }
@@ -376,6 +384,12 @@ export class AuthManager implements Disposable {
             this._memStore.set(ProductBitbucket.key, new Map(Object.entries(bbInfo)));
             if (keychain) {
                 try {
+                    const infoEntry = await this.getJsonAuthInfoFromKeychain(ProductBitbucket);
+                    if (infoEntry) {
+                        let infos: HostToAuthInfo = JSON.parse(infoEntry);
+                        bbInfo = { ...bbInfo, ...infos };
+                    }
+
                     await keychain.setPassword(keychainServiceNameV2, ProductBitbucket.key, JSON.stringify(bbInfo));
                 }
                 catch (e) {
@@ -383,7 +397,6 @@ export class AuthManager implements Disposable {
                 }
             }
         }
-
     }
 
     private isDebugging(): boolean {

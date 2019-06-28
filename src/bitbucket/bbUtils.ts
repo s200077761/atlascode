@@ -5,7 +5,11 @@ import { Container } from "../container";
 import { bbAPIConnectivityError } from "../constants";
 
 export function parseGitUrl(url: string): gup.GitUrl {
-    return gup(url);
+    const parsed = gup(url);
+    if (parsed.owner.startsWith('scm/')) {
+        parsed.owner = parsed.owner.slice(4);
+    }
+    return parsed;
 }
 
 export function getBitbucketRemotes(repository: Repository): Remote[] {
@@ -16,7 +20,7 @@ export function getBitbucketRemotes(repository: Repository): Remote[] {
 
 export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefined {
     let parsed = parseGitUrl(urlForRemote(remote));
-    return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.source);
+    return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
 }
 
 export function siteDetailsForRepository(repository: Repository): DetailedSiteInfo | undefined {
@@ -38,7 +42,7 @@ export function urlForRemote(remote: Remote): string {
     return remote.fetchUrl! || remote.pushUrl!;
 }
 
-export async function clientForRemote(remote: Remote): Promise<Bitbucket> {
+export async function clientForRemote(remote: Remote): Promise<Bitbucket | BitbucketServer> {
     let site = siteDetailsForRemote(remote);
 
     if (site) {
@@ -48,7 +52,7 @@ export async function clientForRemote(remote: Remote): Promise<Bitbucket> {
     return Promise.reject(bbAPIConnectivityError);
 }
 
-export async function clientForHostname(hostname: string): Promise<Bitbucket> {
+export async function clientForHostname(hostname: string): Promise<Bitbucket | BitbucketServer> {
     let site = Container.siteManager.getSiteForHostname(ProductBitbucket, hostname);
 
     if (site) {

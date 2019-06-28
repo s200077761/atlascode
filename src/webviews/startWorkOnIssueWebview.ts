@@ -9,7 +9,6 @@ import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Commands } from '../commands';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
@@ -17,6 +16,7 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
+import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
@@ -167,9 +167,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                     if (remotes.length > 0) {
                         [, repo, developmentBranch, branchingModel] = await Promise.all(
                             [r.fetch(),
-                            RepositoriesApi.get(remotes[0]),
-                            RepositoriesApi.getDevelopmentBranch(remotes[0]),
-                            RepositoriesApi.getBranchingModel(remotes[0])
+                            RepositoryProvider.forRemote(remotes[0]).get(remotes[0]),
+                            RepositoryProvider.forRemote(remotes[0]).getDevelopmentBranch(remotes[0]),
+                            RepositoryProvider.forRemote(remotes[0]).getBranchingModel(remotes[0])
                             ]);
                         href = repo.url;
                     }

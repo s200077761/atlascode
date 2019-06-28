@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
 import { FileDiffQueryParams } from './pullRequestNode';
-import { PullRequestApi } from '../../bitbucket/pullRequests';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
+import { PullRequestProvider } from '../../bitbucket/prProvider';
 
 const turndownService = new TurndownService();
 
@@ -45,7 +45,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             path: path
         };
         const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
-        const { data } = await PullRequestApi.postComment(remote, prId, reply.text, commentThreadId, inline);
+        const data = await PullRequestProvider.forRemote(remote).postComment(remote, prId, reply.text, commentThreadId, inline);
 
         const comments = [
             ...reply.thread.comments,

@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssue } from '../bitbucket/model';
-import { PullRequestApi } from '../bitbucket/pullRequests';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -23,6 +22,7 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
+import { PullRequestProvider } from '../bitbucket/prProvider';
 
 interface PRState {
     prData: PRData;
@@ -230,9 +230,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async postAugmentedState(pr: PullRequest) {
         const prDetailsPromises = Promise.all([
-            PullRequestApi.getCommits(pr),
-            PullRequestApi.getComments(pr),
-            PullRequestApi.getBuildStatuses(pr)
+            PullRequestProvider.forRepository(pr.repository!).getCommits(pr),
+            PullRequestProvider.forRepository(pr.repository!).getComments(pr),
+            PullRequestProvider.forRepository(pr.repository!).getBuildStatuses(pr)
         ]);
         const [commits, comments, buildStatuses] = await prDetailsPromises;
 
@@ -313,13 +313,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async approve() {
-        await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+        await PullRequestProvider.forRepository(this._state.repository!).approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
         prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }
 
     private async merge(m: Merge) {
-        await PullRequestApi.merge(
+        await PullRequestProvider.forRepository(this._state.repository!).merge(
             { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
             m.closeSourceBranch,
             m.mergeStrategy
@@ -373,13 +373,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequestApi.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        await PullRequestProvider.forRepository(this._state.repository!).postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
         await this.forceUpdateComments();
     }
 
     private async forceUpdatePullRequest() {
         try {
-            const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+            const result = await PullRequestProvider.forRepository(this._state.repository!).get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
             this._state.prData.pr = result.data;
             this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
             await this.updatePullRequest(result);
@@ -393,7 +393,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async forceUpdateComments() {
         const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
-        const paginatedComments = await PullRequestApi.getComments(pr);
+        const paginatedComments = await PullRequestProvider.forRepository(this._state.repository!).getComments(pr);
         this._state.prData.comments = paginatedComments.data;
         await this.updatePullRequest(pr);
     }

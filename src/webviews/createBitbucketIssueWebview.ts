@@ -3,7 +3,6 @@ import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
@@ -11,6 +10,7 @@ import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
 import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 type Emit = CreateBitbucketIssueData | HostErrorMessage;
 export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
@@ -50,7 +50,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                     continue;
                 }
 
-                const repo = await RepositoriesApi.get(bbRemotes[0]);
+                const repo = await RepositoryProvider.forRemote(bbRemotes[0]).get(bbRemotes[0]);
                 if (!repo.issueTrackerEnabled) {
                     continue;
                 }

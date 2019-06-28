@@ -14,9 +14,9 @@ import { Commands } from '../commands';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { issueUrlCopiedEvent } from '../analytics';
 import { isOpenPullRequest } from '../ipc/prActions';
-import { PullRequestApi } from '../bitbucket/pullRequests';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
+import { PullRequestProvider } from '../bitbucket/prProvider';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
@@ -250,7 +250,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === e.prHref);
                         if (pr) {
-                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestApi.get(pr));
+                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestProvider.forRepository(pr.repository).get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${e.prHref}`));
                             this.postMessage({ type: 'error', reason: `error opening pullrequest: ${e.prHref}` });
