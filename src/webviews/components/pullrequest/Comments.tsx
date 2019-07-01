@@ -4,27 +4,7 @@ import CommentComponent, { CommentAuthor, CommentTime, CommentAction } from '@at
 import CommentForm from './CommentForm';
 import { User, Comment } from '../../../bitbucket/model';
 
-interface Node {
-    data: Comment;
-    children: Node[];
-}
-
-function toNestedList(comments: Comment[]): Map<Number, Node> {
-    const globalCommentsMap = new Map<Number, Node>();
-    const globalComments = comments.filter(c => !c.inline);
-    globalComments.forEach(c => globalCommentsMap.set(c.id!, { data: c, children: [] }));
-    globalComments.forEach(c => {
-        const n = globalCommentsMap.get(c.id!);
-        const pid = c.parentId;
-        if (pid && globalCommentsMap.get(pid)) {
-            globalCommentsMap.get(pid)!.children.push(n!);
-        }
-    });
-
-    return globalCommentsMap;
-}
-
-class NestedComment extends React.Component<{ node: Node, currentUser: User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+class NestedComment extends React.Component<{ node: Comment, currentUser: User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { showCommentForm: false };
@@ -47,21 +27,21 @@ class NestedComment extends React.Component<{ node: Node, currentUser: User, isC
 
     render(): any {
         const { node, currentUser } = this.props;
-        const avatarHref = node.data.user.avatarUrl;
-        const authorName = node.data.user.displayName;
+        const avatarHref = node.user.avatarUrl;
+        const authorName = node.user.displayName;
 
         return <CommentComponent className='ac-comment'
             avatar={<Avatar src={avatarHref} size="medium" />}
             author={<CommentAuthor>{authorName}</CommentAuthor>}
-            time={<CommentTime>{new Date(node.data.ts).toLocaleString()}</CommentTime>}
+            time={<CommentTime>{new Date(node.ts).toLocaleString()}</CommentTime>}
             content={
                 <React.Fragment>
-                    <p dangerouslySetInnerHTML={{ __html: node.data.htmlContent }} />
+                    <p dangerouslySetInnerHTML={{ __html: node.htmlContent }} />
                     <CommentForm
                         currentUser={currentUser}
                         visible={this.state.showCommentForm}
                         isAnyCommentLoading={this.props.isCommentLoading}
-                        onSave={(content: string) => this.handleSave(content, node.data.id)}
+                        onSave={(content: string) => this.handleSave(content, node.id)}
                         onCancel={this.handleCancel} />
                 </React.Fragment>
             }
@@ -83,13 +63,8 @@ export default class Comments extends React.Component<{ comments: Comment[], cur
         if (!this.props.comments || !this.props.currentUser) {
             return null;
         }
-        const nestedGlobalComments = toNestedList(this.props.comments!);
-        let result: any[] = [];
-        nestedGlobalComments.forEach((commentNode) => {
-            if (!commentNode.data.parentId) {
-                result.push(<NestedComment node={commentNode} currentUser={this.props.currentUser!} isCommentLoading={this.props.isAnyCommentLoading} onSave={this.props.onComment} />);
-            }
-        });
+        const result = this.props.comments.filter(comment => !comment.inline).map((comment) =>
+            <NestedComment node={comment} currentUser={this.props.currentUser!} isCommentLoading={this.props.isAnyCommentLoading} onSave={this.props.onComment} />);
         return <div className='ac-comments'>{result}</div>;
     }
 }
