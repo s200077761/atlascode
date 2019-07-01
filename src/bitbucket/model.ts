@@ -82,6 +82,7 @@ export type CreatePullRequestData = {
 
 export type PullRequestData = {
     id: number;
+    version: number;
     url: string;
     author: User;
     reviewers: Reviewer[];

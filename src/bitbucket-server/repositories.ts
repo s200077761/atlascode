@@ -40,8 +40,8 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         const { data } = await bb.repos.getCommits({
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
-            since: includeRef,
-            until: excludeRef
+            until: includeRef,
+            since: excludeRef
         });
 
         const commits: any[] = data.values || [];

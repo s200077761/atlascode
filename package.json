@@ -804,7 +804,7 @@
         "@atlaskit/tag-group": "^8.0.0",
         "@atlaskit/tooltip": "^15.0.0",
         "@atlaskit/util-shared-styles": "^3.1.2",
-        "@atlassian/bitbucket-server": "^0.0.3",
+        "@atlassian/bitbucket-server": "^0.0.4",
         "@atlassian/jira": "^0.1.0",
         "@deviniti/jql-autocomplete": "^1.0.2",
         "ajv": "^6.5.4",
