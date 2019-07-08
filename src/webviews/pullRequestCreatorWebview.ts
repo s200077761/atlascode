@@ -18,7 +18,7 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 
@@ -69,7 +69,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     PullRequestProvider.forRepository(r).getDefaultReviewers(bbRemotes[0])
                 ]);
 
-                const currentUser = await Container.bitbucketContext.currentUser(r);
+                const currentUser = { accountId: (await Container.authManager.getAuthInfo(await siteDetailsForRepository(r)!))!.user.id };
 
                 await state.push({
                     uri: r.rootUri.toString(),

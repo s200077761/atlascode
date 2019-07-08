@@ -488,10 +488,10 @@
   dependencies:
     babel-runtime "^6.11.6"
 
-"@atlassian/bitbucket-server@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@atlassian/bitbucket-server/-/bitbucket-server-0.0.4.tgz#d46f37c752e693303a883273576310440bfb5f5f"
-  integrity sha512-wW0C6xEu6MZCrSz8tVP32nD43ALjpribw+MbyTPEtPXcUvPwWgH8Lz09Ny/4AWAheTVH4iX29ueNkFUcwXRGcA==
+"@atlassian/bitbucket-server@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@atlassian/bitbucket-server/-/bitbucket-server-0.0.5.tgz#ab88442bb03a13f740eae46e45801d23b23c8b9d"
+  integrity sha512-aYdvKEaWQv0sE4aeKSgK9DpdRD37VDo4Tstt2BtV+kFsx0WiYLoj70plK/fQEi8BQGt5gZ+zi78q1hVzUIudDw==
   dependencies:
     before-after-hook "^1.1.0"
     btoa-lite "^1.0.0"

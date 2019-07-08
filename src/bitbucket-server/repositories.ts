@@ -15,8 +15,6 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return ServerRepositoriesApi.toRepo(data);
     }
 
-
-
     async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
@@ -31,7 +29,20 @@ export class ServerRepositoriesApi implements RepositoriesApi {
     }
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
-        return undefined!;
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
+        const { data } = await bb.repos.getBranchModel({
+            projectKey: parsed.owner,
+            repositorySlug: parsed.name
+        });
+
+        return {
+            type: 'branching_model',
+            branch_types: (data.types || []).map((type: any) => ({
+                kind: type.displayName,
+                prefix: type.prefix
+            }))
+        };
     }
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {

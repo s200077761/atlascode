@@ -113,7 +113,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
 const UserOption = (props: any) => {
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.Option>
     );
 };
@@ -121,7 +121,7 @@ const UserOption = (props: any) => {
 const UserValue = (props: any) => {
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.MultiValueLabel>
     );
 };
