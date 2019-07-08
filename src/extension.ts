@@ -8,7 +8,7 @@ import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
 import { ProductJira, ProductBitbucket } from './atlclients/authInfo';
-import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
+import { setCommandContext, CommandContext, GlobalStateVersionKey, AuthInfoVersionKey } from './constants';
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
@@ -42,9 +42,7 @@ export async function activate(context: ExtensionContext) {
         registerCommands(context);
         activateCodebucket(context);
 
-        Logger.debug('migrating old config');
-        await migrateConfig();
-        Logger.debug('old config migrated');
+        await migrateConfig(context.globalState);
 
         Logger.debug('setting auth command context');
         setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
@@ -80,9 +78,16 @@ export async function activate(context: ExtensionContext) {
     Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
-async function migrateConfig(): Promise<void> {
-    const cfg = configuration.get<IConfig>();
-    await Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
+async function migrateConfig(globalState: Memento): Promise<void> {
+    const authModelVersion = globalState.get<number>(AuthInfoVersionKey);
+
+    if (!authModelVersion || authModelVersion < 2) {
+        Logger.debug('migrating old config');
+        const cfg = configuration.get<IConfig>();
+        await Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
+        await globalState.update(AuthInfoVersionKey, 2);
+        Logger.debug('old config migrated');
+    }
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {
