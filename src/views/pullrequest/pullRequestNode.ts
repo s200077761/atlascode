@@ -14,11 +14,6 @@ import { PullRequestProvider } from '../../bitbucket/prProvider';
 
 export const PullRequestContextValue = 'pullrequest';
 
-interface NestedComment {
-    data: Comment;
-    children: NestedComment[];
-}
-
 export interface FileDiffQueryParams {
     lhs: boolean;
     prHref: string;
@@ -131,47 +126,25 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
     private async getInlineComments(allComments: Comment[]): Promise<Map<string, Comment[][]>> {
         const inlineComments = allComments.filter(c => c.inline && c.inline.path);
-        const nestedComments = this.toNestedList(inlineComments);
 
         const threads: Map<string, Comment[][]> = new Map();
 
-        nestedComments.forEach(val => {
-            if (!threads.get(val.data.inline!.path)) {
-                threads.set(val.data.inline!.path, []);
+        inlineComments.forEach(val => {
+            if (!threads.get(val.inline!.path)) {
+                threads.set(val.inline!.path, []);
             }
-            threads.get(val.data.inline!.path)!.push(this.traverse(val));
+            threads.get(val.inline!.path)!.push(this.traverse(val));
         });
 
         return threads;
     }
 
-    private traverse(n: NestedComment): Comment[] {
+    private traverse(n: Comment): Comment[] {
         let result: Comment[] = [];
-        result.push(n.data);
+        result.push(n);
         for (let i = 0; i < n.children.length; i++) {
             result.push(...this.traverse(n.children[i]));
         }
-
-        return result;
-    }
-
-    private toNestedList(comments: Comment[]): Map<Number, NestedComment> {
-        const commentsTreeMap = new Map<Number, NestedComment>();
-        comments.forEach(c => commentsTreeMap.set(c.id!, { data: c, children: [] }));
-        comments.forEach(c => {
-            const n = commentsTreeMap.get(c.id!);
-            const pid = c.parentId;
-            if (pid && commentsTreeMap.get(pid)) {
-                commentsTreeMap.get(pid)!.children.push(n!);
-            }
-        });
-
-        const result = new Map<Number, NestedComment>();
-        commentsTreeMap.forEach((val, key) => {
-            if (!val.data.parentId) {
-                result.set(key, val);
-            }
-        });
 
         return result;
     }

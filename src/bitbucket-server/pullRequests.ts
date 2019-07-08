@@ -148,26 +148,32 @@ export class ServerPullRequestApi implements PullRequestApi {
             pullRequestId: pr.data.id
         });
         const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
+
         return {
-            data: activities.map(activity => ({
-                id: activity.comment.id!,
-                parentId: undefined,
-                htmlContent: activity.comment.html,
-                rawContent: activity.comment.text,
-                ts: activity.comment.createdDate,
-                updatedTs: activity.comment.updatedDate,
-                deleted: !!activity.comment.deleted,
-                inline: activity.commentAnchor
-                    ? {
-                        path: activity.commentAnchor.path,
-                        from: activity.commentAnchor.fileType === 'TO' ? undefined : activity.commentAnchor.line,
-                        to: activity.commentAnchor.fileType === 'TO' ? activity.commentAnchor.line : undefined
-                    }
-                    : undefined,
-                user: activity.comment.author
-                    ? this.toUser(siteDetailsForRemote(pr.remote)!, activity.comment.author)
-                    : UnknownUser
-            }))
+            data: activities.map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
+        };
+    }
+
+    private toCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Comment {
+        return {
+            id: comment.id!,
+            parentId: parentId,
+            htmlContent: comment.html,
+            rawContent: comment.text,
+            ts: comment.createdDate,
+            updatedTs: comment.updatedDate,
+            deleted: !!comment.deleted,
+            inline: commentAnchor
+                ? {
+                    path: commentAnchor.path,
+                    from: commentAnchor.fileType === 'TO' ? undefined : commentAnchor.line,
+                    to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
+                }
+                : undefined,
+            user: comment.author
+                ? this.toUser(siteDetailsForRemote(remote)!, comment.author)
+                : UnknownUser,
+            children: (comment.comments || []).map((c: any) => this.toCommentModel(c, commentAnchor, comment.id, remote))
         };
     }
 
@@ -248,7 +254,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                     from: data.commentAnchor.fileType === 'TO' ? undefined : data.commentAnchor.line,
                     to: data.commentAnchor.fileType === 'TO' ? data.commentAnchor.line : undefined
                 }
-                : undefined
+                : undefined,
+            children: []
         };
     }
 

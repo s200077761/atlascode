@@ -134,7 +134,8 @@ export namespace BitbucketIssuesApi {
                         url: comment.user.links!.html!.href!,
                         avatarUrl: comment.user.links!.avatar!.href!
                     }
-                    : UnknownUser
+                    : UnknownUser,
+                children: []
             })),
             next: data.next
         };
@@ -201,7 +202,8 @@ export namespace BitbucketIssuesApi {
                     url: change.user.links!.html!.href!,
                     avatarUrl: change.user.links!.avatar!.href!
                 }
-                : UnknownUser
+                : UnknownUser,
+            children: []
         }));
 
         return { data: updatedChangesAsComments, next: data.next };

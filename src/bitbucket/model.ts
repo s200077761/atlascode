@@ -45,6 +45,7 @@ export type Comment = {
         path: string;
         to?: number;
     };
+    children: Comment[];
 };
 
 export type Commit = {

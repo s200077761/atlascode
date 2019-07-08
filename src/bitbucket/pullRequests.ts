@@ -179,14 +179,15 @@ export class CloudPullRequestApi implements PullRequestApi {
                 }
             } as Bitbucket.Schema.PullrequestComment;
         });
-        return {
-            data: comments.map(comment => ({
+
+        const nestedComments = this.toNestedList(
+            comments.map(comment => ({
                 id: comment.id!,
                 parentId: comment.parent ? comment.parent.id! : undefined,
                 htmlContent: comment.content!.html!,
                 rawContent: comment.content!.raw!,
-                ts: comment.created_on,
-                updatedTs: comment.updated_on,
+                ts: comment.created_on!,
+                updatedTs: comment.updated_on!,
                 deleted: !!comment.deleted,
                 inline: comment.inline,
                 user: comment.user
@@ -196,10 +197,35 @@ export class CloudPullRequestApi implements PullRequestApi {
                         url: comment.user.links!.html!.href!,
                         avatarUrl: comment.user.links!.avatar!.href!
                     }
-                    : UnknownUser
-            } as Comment)),
+                    : UnknownUser,
+                children: []
+            })));
+
+        return {
+            data: nestedComments,
             next: undefined
         };
+    }
+
+    private toNestedList(comments: Comment[]): Comment[] {
+        const commentsTreeMap = new Map<Number, Comment>();
+        comments.forEach(c => commentsTreeMap.set(c.id!, c));
+        comments.forEach(c => {
+            const n = commentsTreeMap.get(c.id!);
+            const pid = c.parentId;
+            if (pid && commentsTreeMap.get(pid)) {
+                commentsTreeMap.get(pid)!.children.push(n!);
+            }
+        });
+
+        const result: Comment[] = [];
+        commentsTreeMap.forEach((val) => {
+            if (!val.parentId) {
+                result.push(val);
+            }
+        });
+
+        return result;
     }
 
     async  getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
@@ -341,7 +367,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                     url: data.user.links!.html!.href!,
                     avatarUrl: data.user.links!.avatar!.href!
                 }
-                : UnknownUser
+                : UnknownUser,
+            children: []
         };
     }
 
