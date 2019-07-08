@@ -4,8 +4,8 @@ import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType } from '../typings/git';
-import { CreatePRData, RepoData, CommitsResult, FetchIssueResult } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue } from '../ipc/prActions';
+import { CreatePRData, RepoData, CommitsResult, FetchIssueResult, FetchUsersResult } from '../ipc/prMessaging';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssue } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
@@ -22,7 +22,7 @@ import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUt
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 
-type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
+type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
 
     constructor(extensionPath: string) {
@@ -86,7 +86,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                             .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
                     ),
                     developmentBranch: developmentBranch,
-                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
+                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
+                    isCloud: siteDetailsForRepository(r)!.isCloud
                 });
             }
 
@@ -135,6 +136,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                         } catch (e) {
                             Logger.error(new Error(`error fetching issue: ${e}`));
                             // ignore error. do not send it to webview.
+                        }
+                    }
+                    break;
+                }
+                case 'fetchUsers': {
+                    if (isFetchUsers(e)) {
+                        handled = true;
+                        try {
+                            const reviewers = await PullRequestProvider.forRemote(e.remote).getDefaultReviewers(e.remote, e.query);
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
                         }
                     }
                     break;

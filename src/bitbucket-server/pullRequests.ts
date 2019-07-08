@@ -213,7 +213,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async  getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
+    async  getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
 
@@ -222,7 +222,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 'permission.1': 'REPO_READ',
                 'permission.1.projectKey': parsed.owner,
                 'permission.1.repositorySlug': parsed.name,
-                limit: 5
+                filter: query,
+                limit: 10
             }
         });
 
@@ -245,7 +246,11 @@ export class ServerPullRequestApi implements PullRequestApi {
                 toRef: {
                     id: createPrData.destinationBranchName
                 },
-                reviewers: []
+                reviewers: createPrData.reviewerAccountIds.map(accountId => ({
+                    user: {
+                        name: accountId
+                    }
+                }))
             }
         });
 
@@ -344,7 +349,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     toUser(site: DetailedSiteInfo, input: BitbucketServer.Schema.User): User {
         return {
-            accountId: String(input.id!),
+            accountId: input.slug!,
             displayName: input.displayName!,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
             avatarUrl: this.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
