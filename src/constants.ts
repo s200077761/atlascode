@@ -19,6 +19,8 @@ export const bbAPIConnectivityError = new Error('cannot connect to bitbucket api
 export const jiraAPIConnectivityError = new Error('cannot connect to jira api');
 export const cannotGetClientFor = 'cannot get client for';
 
+export const AuthInfoVersionKey = 'authInfoVersion';
+
 export enum CommandContext {
     JiraExplorer = 'atlascode:jiraExplorerEnabled',
     BitbucketExplorer = 'atlascode:bitbucketExplorerEnabled',
