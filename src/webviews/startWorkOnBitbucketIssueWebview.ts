@@ -12,7 +12,7 @@ import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 
@@ -152,7 +152,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 defaultReviewers: [],
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],
-                developmentBranch: developmentBranch
+                developmentBranch: developmentBranch,
+                isCloud: siteDetailsForRepository(r)!.isCloud
             });
         }
 

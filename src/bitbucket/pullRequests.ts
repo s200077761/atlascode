@@ -71,7 +71,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     async  getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
+            { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 
     async  get(pr: PullRequest): Promise<PullRequest> {
@@ -375,6 +375,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     static toPullRequestData(pr: Bitbucket.Schema.Pullrequest): PullRequestData {
         return {
             id: pr.id!,
+            version: -1,
             url: pr.links!.html!.href!,
             author: {
                 accountId: pr.author!.account_id,

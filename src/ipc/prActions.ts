@@ -93,3 +93,13 @@ export function isFetchIssue(a: Action): a is FetchIssue {
 export function isOpenPullRequest(a: Action): a is OpenPullRequest {
     return (<OpenPullRequest>a).action === 'openPullRequest';
 }
+
+export interface FetchUsers extends Action {
+    action: 'fetchUsers';
+    query: string;
+    remote: Remote;
+}
+
+export function isFetchUsers(a: Action): a is FetchUsers {
+    return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
+}

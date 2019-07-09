@@ -8,8 +8,8 @@ import { Field } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
-import Select, { components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue } from '../../../ipc/prActions';
+import Select, { AsyncSelect, components } from '@atlaskit/select';
+import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import Commits from './Commits';
@@ -32,7 +32,7 @@ import { Reviewer, Commit, BitbucketIssue } from '../../../bitbucket/model';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction;
 type Receive = CreatePRData | CommitsResult;
 
 interface MyState {
@@ -58,6 +58,7 @@ interface MyState {
     errorDetails: any;
     isOnline: boolean;
     showPMF: boolean;
+    isSomethingLoading: boolean;
 }
 
 const emptyState = {
@@ -79,9 +80,10 @@ const emptyState = {
     errorDetails: undefined,
     isOnline: true,
     showPMF: false,
+    isSomethingLoading: false
 };
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [] };
+const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], isCloud: true };
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (
@@ -113,7 +115,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
 const UserOption = (props: any) => {
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.Option>
     );
 };
@@ -121,12 +123,14 @@ const UserOption = (props: any) => {
 const UserValue = (props: any) => {
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.links.avatar.href} /><span style={{ marginLeft: '4px' }}>{props.data.display_name}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.MultiValueLabel>
     );
 };
 
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private userSuggestions: any[] | undefined = undefined;
+
     constructor(props: any) {
         super(props);
         this.state = emptyState;
@@ -243,6 +247,30 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         });
     }
 
+    loadUserOptions = (input: string): Promise<any> => {
+        if (!this.state.remote || !this.state.repo || this.state.repo.value.isCloud) {
+            return Promise.resolve(this.state.repo!.value.defaultReviewers);
+        }
+        return new Promise(resolve => {
+            this.userSuggestions = undefined;
+            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.remote!.value });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.userSuggestions === undefined) {
+                        this.userSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({ isSomethingLoading: false });
+                    resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
+    }
+
     handleCreatePR = (e: any) => {
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
@@ -297,6 +325,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             }
             case 'fetchIssueResult': {
                 this.setState({ issue: e.issue });
+                break;
+            }
+            case 'fetchUsersResult': {
+                this.userSuggestions = e.users;
                 break;
             }
             case 'onlineStatus': {
@@ -480,17 +512,26 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                     (fieldArgs: any) => {
                                                         return (
                                                             <div>
-                                                                <Select
+                                                                <AsyncSelect
                                                                     {...fieldArgs.fieldProps}
                                                                     className="ac-select-container"
                                                                     classNamePrefix="ac-select"
+                                                                    loadOptions={this.loadUserOptions}
                                                                     getOptionLabel={(option: any) => option.display_name}
-                                                                    getOptionValue={(option: any) => option.uuid}
-                                                                    placeholder="This extension only supports selecting from default reviewers"
-                                                                    noOptionsMessage={() => "No options (This extension only supports selecting from default reviewers)"}
+                                                                    getOptionValue={(option: any) => option.accountId}
+                                                                    placeholder={repo.value.isCloud
+                                                                        ? "This extension only supports selecting from default reviewers"
+                                                                        : "Start typing to search for reviewers"
+                                                                    }
+                                                                    noOptionsMessage={() => repo.value.isCloud
+                                                                        ? "No options (This extension only supports selecting from default reviewers)"
+                                                                        : "No options"
+                                                                    }
+                                                                    defaultOptions={repo.value.defaultReviewers}
                                                                     isMulti
-                                                                    options={repo.value.defaultReviewers}
-                                                                    components={{ Option: UserOption, MultiValueLabel: UserValue }} />
+                                                                    components={{ Option: UserOption, MultiValueLabel: UserValue }}
+                                                                    isDisabled={this.state.isSomethingLoading}
+                                                                    isLoading={this.state.isSomethingLoading} />
                                                             </div>
                                                         );
                                                     }

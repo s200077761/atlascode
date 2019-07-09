@@ -9,7 +9,7 @@ const dummyRemote = { name: '', isReadOnly: true };
 
 export class ServerPullRequestApi implements PullRequestApi {
 
-    async getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
+    async getList(repository: Repository, queryParams?: { q?: any, limit?: number }): Promise<PaginatedPullRequests> {
 
         const remote = getBitbucketRemotes(repository)[0];
 
@@ -19,8 +19,9 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { data } = await bb.repos.getPullRequests({
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
+            ...queryParams
         });
-        const prs: PullRequest[] = data.values!.map((pr: BitbucketServer.Schema.Any) => this.toPullRequestModel(repository, remote, pr));
+        const prs: PullRequest[] = data.values!.map((pr: BitbucketServer.Schema.Any) => this.toPullRequestModel(repository, remote, pr, 0));
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
@@ -31,11 +32,29 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async  getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
-        return this.getList(repository);
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
+        return this.getList(
+            repository,
+            {
+                q: {
+                    'username.1': currentUser,
+                    'role.1': 'AUTHOR'
+                }
+            }
+        );
     }
 
     async  getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
-        return this.getList(repository);
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
+        return this.getList(
+            repository,
+            {
+                q: {
+                    'username.1': currentUser,
+                    'role.1': 'REVIEWER'
+                }
+            }
+        );
     }
 
     async  nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -43,15 +62,27 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async  getLatest(repository: Repository): Promise<PaginatedPullRequests> {
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
         return this.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id}"` });
+            {
+                q: {
+                    'username.1': currentUser,
+                    'role.1': 'REVIEWER',
+                    limit: 2
+                }
+            }
+        );
     }
 
     async  getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
-            { pagelen: 1, sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
+            {
+                q: {
+                    'state': 'ALL'
+                }
+            });
     }
 
     async  get(pr: PullRequest): Promise<PullRequest> {
@@ -64,7 +95,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             pullRequestId: pr.data.id
         });
 
-        return this.toPullRequestModel(pr.repository, pr.remote, data);
+        const taskCount = await this.getTaskCount(pr);
+        return this.toPullRequestModel(pr.repository, pr.remote, data, taskCount);
     }
 
     async  getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -181,22 +213,62 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async  getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
-        return [];
+    async  getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
+
+        const { data } = await bb.api.getUsers({
+            q: {
+                'permission.1': 'REPO_READ',
+                'permission.1.projectKey': parsed.owner,
+                'permission.1.repositorySlug': parsed.name,
+                filter: query,
+                limit: 10
+            }
+        });
+
+        return (data.values || []).map(val => ({ ...this.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
     }
 
     async  create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
-        return Promise.reject();
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
+
+        const { data } = await bb.repos.createPullRequest({
+            projectKey: parsed.owner,
+            repositorySlug: parsed.name,
+            body: {
+                title: createPrData.title,
+                description: createPrData.summary,
+                fromRef: {
+                    id: createPrData.sourceBranchName
+                },
+                toRef: {
+                    id: createPrData.destinationBranchName
+                },
+                reviewers: createPrData.reviewerAccountIds.map(accountId => ({
+                    user: {
+                        name: accountId
+                    }
+                }))
+            }
+        });
+
+        return this.toPullRequestModel(repository, remote, data, 0);
     }
 
     async  approve(pr: PullRequest) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
 
-        await bb.pullRequests.approve({
+        await bb.participants.updateStatus({
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
-            pullRequestId: pr.data.id
+            pullRequestId: pr.data.id,
+            userSlug: (await Container.authManager.getAuthInfo(await siteDetailsForRepository(pr.repository)!))!.user.id,
+            body: {
+                "status": "APPROVED"
+            }
         });
     }
 
@@ -208,7 +280,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
             pullRequestId: pr.data.id,
-            version: -1
+            version: pr.data.version
         });
     }
 
@@ -259,26 +331,39 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
+    private async getTaskCount(pr: PullRequest): Promise<number> {
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
+        const { data } = await bb.pullRequests.getTaskCount({
+            projectKey: parsed.owner,
+            repositorySlug: parsed.name,
+            pullRequestId: String(pr.data.id)
+        });
+
+        return data;
+    }
+
     getBitbucketRemotes(repository: Repository): Remote[] {
         return [];
     }
 
     toUser(site: DetailedSiteInfo, input: BitbucketServer.Schema.User): User {
         return {
-            accountId: String(input.id!),
+            accountId: input.slug!,
             displayName: input.displayName!,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
             avatarUrl: this.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
         };
     }
 
-    toPullRequestModel(repository: Repository, remote: Remote, data: BitbucketServer.Schema.Any): PullRequest {
+    toPullRequestModel(repository: Repository, remote: Remote, data: BitbucketServer.Schema.Any, taskCount: number): PullRequest {
         const site = siteDetailsForRemote(remote)!;
         return {
             remote: remote,
             repository: repository,
             data: {
                 id: data.id,
+                version: data.version,
                 url: data.links.self[0].href,
                 author: this.toUser(site, data.author.user),
                 reviewers: [],
@@ -322,7 +407,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 updatedTs: data.updatedDate,
                 state: data.state,
                 closeSourceBranch: false,
-                taskCount: 0,
+                taskCount: taskCount,
                 buildStatuses: []
             }
         };

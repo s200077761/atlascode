@@ -34,6 +34,7 @@ export interface RepoData {
     developmentBranch?: string;
     hasLocalChanges?: boolean;
     branchingModel?: BitbucketBranchingModel;
+    isCloud: boolean;
 }
 
 export interface CreatePRData extends Message {
@@ -57,6 +58,11 @@ export interface CommitsResult extends Message {
 export interface FetchIssueResult extends Message {
     type: 'fetchIssueResult';
     issue?: Issue | BitbucketIssue;
+}
+
+export interface FetchUsersResult extends Message {
+    type: 'fetchUsersResult';
+    users: Reviewer[];
 }
 
 export function isCommitsResult(a: Message): a is CommitsResult {

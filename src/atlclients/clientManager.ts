@@ -267,7 +267,7 @@ export class ClientManager implements Disposable {
         if (site.isCloud) {
           bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
         } else {
-          bbclient = new BitbucketServer({ baseUrl: site.baseApiUrl, options: extraOptions });
+          bbclient = new BitbucketServer({ baseUrl: site.baseApiUrl, options: extraOptions, headers: { 'X-Atlassian-Token': 'no-check' } });
         }
 
         if (isOAuthInfo(info)) {

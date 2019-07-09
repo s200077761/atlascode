@@ -14,7 +14,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
-import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 
@@ -183,7 +183,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                     localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                     remoteBranches: [],
                     developmentBranch: developmentBranch,
-                    branchingModel: branchingModel
+                    branchingModel: branchingModel,
+                    isCloud: siteDetailsForRepository(r)!.isCloud
                 });
             }
 

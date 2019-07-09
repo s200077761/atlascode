@@ -34,17 +34,17 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getList.bind(PullRequestProvider.forRepository(repo));
+                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo);
                 headerNode.description = 'showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListCreatedByMe.bind(PullRequestProvider.forRepository(repo));
+                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListCreatedByMe.call(PullRequestProvider.forRepository(repo), repo);
                 headerNode.description = 'showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListToReview.bind(PullRequestProvider.forRepository(repo));
+                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListToReview.call(PullRequestProvider.forRepository(repo), repo);
                 headerNode.description = 'showing pull requests to review';
                 this.refresh();
             }),
