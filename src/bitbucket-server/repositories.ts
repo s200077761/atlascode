@@ -12,7 +12,12 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             repositorySlug: parsed.name
         });
 
-        return ServerRepositoriesApi.toRepo(data);
+        const defaultBranch = await bb.repos.getDefaultBranch({
+            projectKey: parsed.owner,
+            repositorySlug: parsed.name
+        });
+
+        return ServerRepositoriesApi.toRepo(data, defaultBranch.data.id);
     }
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
@@ -84,14 +89,15 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return avatarUrl;
     }
 
-    static toRepo(bbRepo: any): Repo {
+    static toRepo(bbRepo: any, defaultBranch: string): Repo {
         return {
+            id: bbRepo.id,
             name: bbRepo.slug,
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
             url: bbRepo.links.self[0].href,
             avatarUrl: bbRepo.avatarUrl,
-            mainbranch: undefined,
+            mainbranch: defaultBranch,
             issueTrackerEnabled: false
         };
     }
