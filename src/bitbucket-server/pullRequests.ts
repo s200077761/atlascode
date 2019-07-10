@@ -4,6 +4,7 @@ import { Remote, Repository } from '../typings/git';
 import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForHostname, siteDetailsForRepository, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { Container } from '../container';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -217,17 +218,33 @@ export class ServerPullRequestApi implements PullRequestApi {
         let parsed = parseGitUrl(urlForRemote(remote));
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
 
-        const { data } = await bb.api.getUsers({
-            q: {
-                'permission.1': 'REPO_READ',
-                'permission.1.projectKey': parsed.owner,
-                'permission.1.repositorySlug': parsed.name,
-                filter: query,
-                limit: 10
-            }
-        });
+        let users: BitbucketServer.Schema.User[] = [];
 
-        return (data.values || []).map(val => ({ ...this.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
+        if (!query) {
+            const repo = await RepositoryProvider.forRemote(remote).get(remote);
+            const { data } = await bb.repos.getDefaultReviewers({
+                projectKey: parsed.owner,
+                repositorySlug: parsed.name,
+                sourceRepoId: Number(repo.id),
+                targetRepoId: Number(repo.id),
+                sourceRefId: repo.mainbranch!,
+                targetRefId: repo.mainbranch!
+            });
+            users = Array.isArray(data) ? data : [];
+        } else {
+            const { data } = await bb.api.getUsers({
+                q: {
+                    'permission.1': 'REPO_READ',
+                    'permission.1.projectKey': parsed.owner,
+                    'permission.1.repositorySlug': parsed.name,
+                    filter: query,
+                    limit: 10
+                }
+            });
+            users = data.values || [];
+        }
+
+        return users.map(val => ({ ...this.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
     }
 
     async  create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -376,6 +393,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 )),
                 source: {
                     repo: {
+                        id: data.fromRef.repository.id,
                         name: data.fromRef.repository.slug,
                         displayName: data.fromRef.repository.name,
                         fullName: `${data.fromRef.repository.project.key}/${data.fromRef.repository.slug}`,
@@ -389,6 +407,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 },
                 destination: {
                     repo: {
+                        id: data.toRef.repository.id,
                         name: data.toRef.repository.slug,
                         displayName: data.toRef.repository.name,
                         fullName: `${data.toRef.repository.project.key}/${data.fromRef.repository.slug}`,

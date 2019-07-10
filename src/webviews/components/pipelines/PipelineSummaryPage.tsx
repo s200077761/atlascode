@@ -97,6 +97,7 @@ type State = {
 
 const emptyPipeline: PipelineData = {
   repository: {
+    id: '',
     name: '',
     displayName: '',
     fullName: '',

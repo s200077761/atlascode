@@ -84,6 +84,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
     static toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
         return {
+            id: bbRepo.uuid!,
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
             displayName: bbRepo.name!,
             fullName: bbRepo.full_name!,

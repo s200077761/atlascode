@@ -21,6 +21,7 @@ export type Reviewer = User & {
 };
 
 export type Repo = {
+    id: string;
     scm?: Repository;
     name: string;
     displayName: string;
