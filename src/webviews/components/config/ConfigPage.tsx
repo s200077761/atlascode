@@ -9,7 +9,8 @@ import { DetailedSiteInfo, AuthInfo, SiteInfo } from '../../../atlclients/authIn
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
-import StatusBar from './StatusBar';
+import JiraStatusBar from './JiraStatusBar';
+import BBStatusBar from './BBStatusBar';
 import DisplayFeedback from './DisplayFeedback';
 import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import JiraHover from './JiraHover';
@@ -27,6 +28,8 @@ import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
 import BitbucketAuth from './BBAuth';
 import JiraAuth from './JiraAuth';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import ProductEnabler from './ProductEnabler';
 
 type changeObject = { [key: string]: any };
 
@@ -149,7 +152,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         <h2>Settings</h2>
                     </GridColumn>
                 </Grid>
-
                 <Grid spacing='comfortable' layout='fixed'>
 
                     <GridColumn medium={9}>
@@ -159,69 +161,95 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         >
                             {(frmArgs: any) => {
                                 return (<form {...frmArgs.formProps}>
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira and Bitbucket')}>
-                                        <h3>Jira</h3>
-                                        <JiraAuth
-                                            sites={this.state.jiraSites}
-                                            handleDeleteSite={this.handleLogout}
-                                            handleSaveSite={this.handleLogin} />
-                                        {/* TODO: [VSCODE-509] move default site selection to auth list */}
-                                        <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
-                                        <hr />
-                                        <h3>Bitbucket</h3>
-                                        <BitbucketAuth
-                                            sites={this.state.bitbucketSites}
-                                            handleDeleteSite={this.handleLogout}
-                                            handleSaveSite={this.handleLogin} />
-                                    </Panel>
+                                    <ProductEnabler
+                                        jiraEnabled={this.state.config.jira.enabled}
+                                        bbEnabled={this.state.config.bitbucket.enabled}
+                                        onConfigChange={this.onConfigChange} />
+                                    <Tabs>
+                                        <TabList>
+                                            {this.state.config.jira.enabled &&
+                                                <Tab>Jira</Tab>
+                                            }
+                                            {this.state.config.bitbucket.enabled &&
+                                                <Tab>Bitbucket</Tab>
+                                            }
+                                            <Tab>General</Tab>
+                                        </TabList>
+                                        {this.state.config.jira.enabled &&
+                                            <TabPanel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira')}>
+                                                    <JiraAuth
+                                                        sites={this.state.jiraSites}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin} />
+                                                    {/* TODO: [VSCODE-509] move default site selection to auth list */}
+                                                    <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>
-                                        <JiraExplorer configData={this.state}
-                                            jiraAccessToken={this.state.jiraAccessToken}
-                                            sites={this.state.jiraSites}
-                                            onConfigChange={this.onConfigChange} />
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>
+                                                    <JiraExplorer configData={this.state}
+                                                        jiraAccessToken={this.state.jiraAccessToken}
+                                                        sites={this.state.jiraSites}
+                                                        onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
+                                                    <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
+                                                    <MultiOptionList
+                                                        onConfigChange={this.onConfigChange}
+                                                        enabledConfig={'jira.todoIssues.enabled'}
+                                                        optionsConfig={'jira.todoIssues.triggers'}
+                                                        enabledValue={this.state.config.jira.todoIssues.enabled}
+                                                        enabledDescription={'Prompt to create Jira issues for TODO style comments'}
+                                                        promptString={'Add Trigger'}
+                                                        options={this.state.config.jira.todoIssues.triggers} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
-                                        <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Jira')}>
+                                                    <JiraStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
+                                            </TabPanel>
+                                        }
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
-                                        <MultiOptionList
-                                            onConfigChange={this.onConfigChange}
-                                            enabledConfig={'jira.todoIssues.enabled'}
-                                            optionsConfig={'jira.todoIssues.triggers'}
-                                            enabledValue={this.state.config.jira.todoIssues.enabled}
-                                            enabledDescription={'Prompt to create Jira issues for TODO style comments'}
-                                            promptString={'Add Trigger'}
-                                            options={this.state.config.jira.todoIssues.triggers} />
-                                    </Panel>
+                                        {this.state.config.bitbucket.enabled &&
+                                            <TabPanel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
+                                                    <BitbucketAuth
+                                                        sites={this.state.bitbucketSites}
+                                                        handleDeleteSite={this.handleLogout}
+                                                        handleSaveSite={this.handleLogin} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
-                                        <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
+                                                    <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
-                                        <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
+                                                    <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer')}>
-                                        <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer')}>
+                                                    <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
-                                        <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
+                                                    <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
+                                                <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Bitbucket')}>
+                                                    <BBStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                                                </Panel>
+                                            </TabPanel>
+                                        }
+                                        <TabPanel>
+                                            <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
+                                                <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                            </Panel>
+                                        </TabPanel>
+                                    </Tabs>
 
-                                    <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Jira and Bitbucket')}>
-                                        <StatusBar configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
-
-                                    <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
-                                        <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
-                                    </Panel>
                                 </form>);
                             }
                             }

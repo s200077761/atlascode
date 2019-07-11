@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Field } from '@atlaskit/form';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
+import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
@@ -25,7 +25,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
     constructor(props: any) {
         super(props);
 
-        this.state = emptyConfigData;
+        this.state = props.configData;
     }
 
     componentWillReceiveProps = (nextProps: any) => {
@@ -96,7 +96,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
             </Field>
             <div className='ac-hmargin' />
             <Field defaultValue={this.state.config.jira.workingProject}
-                label='Project'
+                label='Default Project'
                 id='project'
                 name='project'
             >

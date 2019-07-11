@@ -26,6 +26,7 @@ export interface IConfig {
 }
 
 export interface JiraConfig {
+    enabled: boolean;
     workingProject: WorkingProject;
     workingSite: AccessibleResourceV1;
     defaultSite: DetailedSiteInfo;
@@ -81,6 +82,7 @@ export interface JQLEntry {
 }
 
 export interface BitbucketConfig {
+    enabled: boolean;
     explorer: BitbucketExplorer;
     statusbar: BitbucketStatusBar;
     contextMenus: BitbucketContextMenus;
@@ -191,6 +193,7 @@ export const emptyTodoIssues: TodoIssues = {
 };
 
 export const emptyJiraConfig: JiraConfig = {
+    enabled: true,
     workingProject: emptyWorkingProject,
     workingSite: emptyAccessibleResourceV1,
     defaultSite: emptySiteInfo,
@@ -251,6 +254,7 @@ export const emptyIssuesConfig: BitbucketIssuesConfig = {
 };
 
 export const emptyBitbucketConfig: BitbucketConfig = {
+    enabled: true,
     explorer: emptyBitbucketExplorer,
     statusbar: emptyBitbucketStatusBar,
     contextMenus: emptyBitbucketContextMenus,
