@@ -112,8 +112,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 break;
             }
             case 'onlineStatus': {
-                let data = e.isOnline ? emptyState : this.state;
-                this.setState({ ...data, ...{ isOnline: e.isOnline } });
+                this.setState({ isOnline: e.isOnline });
 
                 if (e.isOnline) {
                     this.postMessage({ action: 'refreshIssue' });

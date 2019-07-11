@@ -177,8 +177,7 @@ export default class JiraIssuePage extends WebviewComponent<
         break;
       }
       case 'onlineStatus': {
-        let data = e.isOnline ? emptyIssueData : this.state.data;
-        this.setState({ isOnline: e.isOnline, data: data });
+        this.setState({ isOnline: e.isOnline });
 
         if (e.isOnline) {
           this.postMessage({ action: 'refreshIssue' });
