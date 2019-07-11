@@ -707,7 +707,7 @@
                 "atlascode.bitbucket.explorer.refreshInterval": {
                     "type": "integer",
                     "default": 5,
-                    "description": "Time (in minutes) to wait before refreshing the pull reqeusts explorer (set to 0 to disable auto-refresh)",
+                    "description": "Time (in minutes) to wait before refreshing the pull requests explorer (set to 0 to disable auto-refresh)",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.explorer.relatedJiraIssues.enabled": {
@@ -725,7 +725,7 @@
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Periodically check for newly created pull reqeuests and show an information message if there are any",
+                    "description": "Periodically check for newly created pull requests and show an information message if there are any",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.contextMenus.enabled": {
