@@ -1,7 +1,9 @@
 import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType } from "./createIssueMeta";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
-import { EpicFieldInfo } from "./jiraCommon";
+import { EpicFieldInfo, IssueType } from "./jiraCommon";
+import { FieldMeta, FieldSchema } from "./jira-client/field";
+import { ProjectIssueCreateMetadata, emptyIssueTypeIssueCreateMetadata, IssueTypeIssueCreateMetadata } from "./jira-client/issueCreateMetadata";
 
 const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
 
@@ -121,12 +123,12 @@ const schemaToInputValueMap: Map<string, InputValueType> = new Map<string, Input
 export class IssueScreenTransformer {
 
     private _site: DetailedSiteInfo;
-    private _project: JIRA.Schema.CreateMetaProjectBean;
+    private _project: ProjectIssueCreateMetadata;
     private _epicFieldInfo: EpicFieldInfo;
     private _issueLinkTypes: any[] = [];
     private _problems: TransformerProblems = {};
 
-    constructor(site: DetailedSiteInfo, project: JIRA.Schema.CreateMetaProjectBean) {
+    constructor(site: DetailedSiteInfo, project: ProjectIssueCreateMetadata) {
         this._site = site;
         this._project = project;
     }
@@ -134,7 +136,7 @@ export class IssueScreenTransformer {
     public async transformIssueScreens(filterFieldKeys: string[] = defaultFieldFilters): Promise<TransformerResult> {
 
         const issueTypeIdScreens = {};
-        let firstIssueType = {};
+        let firstIssueType = emptyIssueTypeIssueCreateMetadata;
         this._problems = {};
 
         if (!this._epicFieldInfo) {
@@ -144,18 +146,18 @@ export class IssueScreenTransformer {
         const client = await Container.clientManager.jirarequest(this._site);
 
         // grab the issue link types
-        const issuelinkTypesResponse = await client.issueLinkType.getIssueLinkTypes({});
-        if (Array.isArray(issuelinkTypesResponse.data.issueLinkTypes) && issuelinkTypesResponse.data.issueLinkTypes.length > 0) {
-            this._issueLinkTypes = issuelinkTypesResponse.data.issueLinkTypes!;
+        const issuelinkTypesResponse = await client.getIssueLinkTypes();
+        if (Array.isArray(issuelinkTypesResponse) && issuelinkTypesResponse.length > 0) {
+            this._issueLinkTypes = issuelinkTypesResponse;
         } else {
             filterFieldKeys.push('issuelinks');
         }
 
 
-        if (this._project.issuetypes) {
-            firstIssueType = this._project.issuetypes[0];
+        if (this._project.issueTypes) {
+            firstIssueType = this._project.issueTypes[0];
             // get rid of issue types we can't render
-            const renderableIssueTypes = this._project.issuetypes.filter(itype => {
+            const renderableIssueTypes = this._project.issueTypes.filter(itype => {
                 return (itype.fields !== undefined && this.isRenderableIssueType(itype, filterFieldKeys));
             });
 
@@ -176,7 +178,7 @@ export class IssueScreenTransformer {
                     }
 
                     Object.keys(issueType.fields!).forEach(k => {
-                        const field: JIRA.Schema.FieldMetaBean = issueType.fields![k];
+                        const field: FieldMeta = issueType.fields![k];
                         if (field && !this.shouldFilter(issueType, field, issueTypeFieldFilters)) {
                             issueTypeScreen.fields.push(this.transformField(field));
                         }
@@ -194,7 +196,7 @@ export class IssueScreenTransformer {
         return { selectedIssueType: firstIssueType, screens: issueTypeIdScreens, problems: this._problems };
     }
 
-    private shouldFilter(itype: JIRA.Schema.CreateMetaIssueTypeBean, field: JIRA.Schema.FieldMetaBean, filters: string[]): boolean {
+    private shouldFilter(itype: IssueType, field: FieldMeta, filters: string[]): boolean { //CreateMetaIssueTypeBean
         if (filters.includes(field.key)) {
             return true;
         }
@@ -216,7 +218,7 @@ export class IssueScreenTransformer {
         return false;
     }
 
-    private transformField(field: JIRA.Schema.FieldMetaBean): any {
+    private transformField(field: FieldMeta): any {
         switch (this.uiTypeForField(field.schema)) {
             case UIType.Input: {
                 return {
@@ -341,7 +343,7 @@ export class IssueScreenTransformer {
         }
     }
 
-    private isAdvanced(field: JIRA.Schema.FieldMetaBean): boolean {
+    private isAdvanced(field: FieldMeta): boolean {
         const commonFields = [...defaultCommonFields, this._epicFieldInfo.epicName.id];
         return (!commonFields.includes(field.key) && !field.required);
     }
@@ -366,7 +368,7 @@ export class IssueScreenTransformer {
         return false;
     }
 
-    private uiTypeForField(schema: { type: string, system?: string, custom?: string }): UIType {
+    private uiTypeForField(schema: FieldSchema): UIType {
         if (schema.system && schemaToUIMap.has(schema.system)) {
             return schemaToUIMap.get(schema.system)!;
         }
@@ -390,8 +392,8 @@ export class IssueScreenTransformer {
         return InputValueType.String;
     }
 
-    private isRenderableIssueType(itype: JIRA.Schema.CreateMetaIssueTypeBean, filters: string[]): boolean {
-        const fields: { [k: string]: JIRA.Schema.FieldMetaBean } | undefined = itype.fields;
+    private isRenderableIssueType(itype: IssueTypeIssueCreateMetadata, filters: string[]): boolean {
+        const fields: { [k: string]: FieldMeta } | undefined = itype.fields;
 
         if (!fields) {
             this.addIssueTypeProblem({
@@ -444,7 +446,7 @@ export class IssueScreenTransformer {
         }
     }
 
-    private addFieldProblem(issueType: JIRA.Schema.CreateMetaIssueTypeBean, problem: FieldProblem) {
+    private addFieldProblem(issueType: IssueType, problem: FieldProblem) {
         if (!this._problems[issueType.id!]) {
             this._problems[issueType.id!] = {
                 issueType: this.jiraTypeToSimpleType(issueType),
@@ -461,7 +463,7 @@ export class IssueScreenTransformer {
         }
     }
 
-    private jiraTypeToSimpleType(issueType: JIRA.Schema.CreateMetaIssueTypeBean): SimpleIssueType {
+    private jiraTypeToSimpleType(issueType: IssueType): SimpleIssueType {
         return {
             description: issueType.description!,
             iconUrl: issueType.iconUrl!,

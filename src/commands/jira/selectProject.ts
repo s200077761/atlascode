@@ -3,7 +3,6 @@ import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import {
   Project,
-  isProject,
   projectFromJsonObject
 } from "../../jira/jiraModel";
 import { Logger } from "../../logger";
@@ -48,11 +47,10 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
   const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
   if (client) {
-    const res = await client.project.getProjectsPaginated({ query: value });
-    const projectObjects = res.data.values;
+    const res = await client.getProjectsPaginated(value);
+    const projectObjects = res;
     if (projectObjects) {
       return projectObjects
-        .filter(project => isProject(project))
         .map(project => {
           const p = projectFromJsonObject(project);
           return new ProjectQuickPickItem(p);

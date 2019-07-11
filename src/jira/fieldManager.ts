@@ -72,12 +72,12 @@ export class JiraFieldManager extends Disposable {
         const client = await Container.clientManager.jirarequest(site);
         let epicFields = epicsDisabled;
         try {
-            let allFields = await client.field.getFields({});
+            let allFields = await client.getFields({});
             if (allFields) {
                 let epicName = undefined;
                 let epicLink = undefined;
 
-                allFields.data.filter(field => {
+                allFields.filter(field => {
                     if (field.schema && field.schema.custom && (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label'
                         || field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')) {
                         return field;
@@ -87,7 +87,7 @@ export class JiraFieldManager extends Disposable {
                     // cfid example: customfield_10013
                     if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-label') {
                         epicName = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
-                    } else if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-link') {
+                    } else if (field.schema!.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
                         epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
                     }
                 });

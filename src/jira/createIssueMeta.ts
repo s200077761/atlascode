@@ -1,3 +1,6 @@
+import { FieldMeta } from "./jira-client/field";
+import { IssueType } from "./jiraCommon";
+
 export enum UIType {
     Select = 'select',
     Checkbox = 'checkbox',
@@ -20,7 +23,7 @@ export enum InputValueType {
 
 export interface TransformerProblems { [k: string]: IssueTypeProblem; }
 export interface TransformerResult {
-    selectedIssueType: JIRA.Schema.CreateMetaIssueTypeBean;
+    selectedIssueType: IssueType;
     screens: IssueTypeIdScreens;
     problems: TransformerProblems;
 }
@@ -40,7 +43,7 @@ export interface IssueTypeProblem {
 }
 
 export interface FieldProblem {
-    field: JIRA.Schema.FieldMetaBean;
+    field: FieldMeta;
     message: string;
     schema: string;
 }

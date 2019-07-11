@@ -60,7 +60,7 @@ function isValidTransition(issue: MinimalIssue, transition: Transition): boolean
 async function performTranstion(issue: MinimalIssue, transition: Transition) {
   try {
     const client = await Container.clientManager.jirarequest(issue.siteDetails);
-    await client.issue.transitionIssue({ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } });
+    await client.transitionIssue(issue.key, transition.id);
 
     vscode.commands.executeCommand(Commands.RefreshJiraExplorer)
       .then(b => {

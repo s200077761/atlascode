@@ -1,8 +1,7 @@
 import { Container } from "../container";
 import { ProductJira } from "../atlclients/authInfo";
-import { minimalIssueFromJsonObject } from "./issueFromJson";
 import { MinimalIssue } from "./minimalJiraIssue";
-import { issueExpand } from "./detailedJiraIssue";
+import { readSearchResults } from "./jira-client/searchResults";
 
 export async function issuesForJQL(jql: string): Promise<MinimalIssue[]> {
   const site = Container.siteManager.effectiveSite(ProductJira);
@@ -11,20 +10,8 @@ export async function issuesForJQL(jql: string): Promise<MinimalIssue[]> {
   const fields = await Container.jiraFieldManager.getMinimalIssueFieldIdsForSite(site);
   const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(site);
 
-  const res = await client.search
-    .searchForIssuesUsingJqlGet({
-      expand: issueExpand,
-      jql: jql,
-      fields: fields
-    });
+  const res = await client.searchForIssuesUsingJqlGet(jql, fields);
+  const searchResults = await readSearchResults(res, site, epicFieldInfo);
 
-  const issues = res.data.issues;
-  if (issues) {
-    return issues.map((issue: any) => {
-      return minimalIssueFromJsonObject(issue, site, epicFieldInfo);
-    });
-  }
-
-  return [];
-
+  return searchResults.issues;
 }
