@@ -5,7 +5,7 @@ import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export async function fetchIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<Issue> {
   const client = await Container.clientManager.jirarequest(siteDetails);
-  const fields = await Container.jiraFieldManager.getIssueFieldsForSite(siteDetails);
+  const fields = await Container.jiraFieldManager.getOrderableFieldIdsForSite(siteDetails);
   const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(siteDetails);
 
   return client.issue

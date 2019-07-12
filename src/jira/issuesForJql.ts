@@ -6,7 +6,7 @@ export async function issuesForJQL(jql: string): Promise<Issue[]> {
   const site = Container.siteManager.effectiveSite(ProductJira);
 
   const client = await Container.clientManager.jirarequest(site);
-  const fields = await Container.jiraFieldManager.getIssueFieldsForSite(site);
+  const fields = await Container.jiraFieldManager.getOrderableFieldIdsForSite(site);
   const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(site);
 
   return client.search
