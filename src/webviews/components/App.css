@@ -114,6 +114,10 @@ pre {
   margin: 5px;
 }
 
+[class^=styledPanel__PanelHeader] {
+  left: 0px;
+}
+
 .vscode-dark [class^=styledPanel__PanelHeader] {
   background: var(--vscode-editor-background--lighten-05);
 }
@@ -372,6 +376,14 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .refreshInterval {
   margin-top: 10px;
+  margin-bottom: 10px;
+  color: var(--vscode-foreground) !important;
+}
+
+.productEnabler {
+  margin-top: 0px;
+  margin-bottom: 25px;
+  display: flex;
   color: var(--vscode-foreground) !important;
 }
 
@@ -783,3 +795,64 @@ img::after is triggered only if img loading fails */
 [class^=GridColumnElement__GridColumn] {
   border: 2px solid blue;
 } */
+
+/*   TABS   */
+
+.react-tabs {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.react-tabs__tab-list {
+  border-bottom: 1px solid var(--vscode-settings-textInputBorder);
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.react-tabs__tab {
+  display: inline-block;
+  border: 1px solid var(--vscode-settings-textInputBorder);
+  border-radius: 5px 5px 0 0;
+  margin-left: 1px;
+  bottom: -1px;
+  position: relative;
+  list-style: none;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.react-tabs__tab--selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  border-color: var(--vscode-focusBorder);
+  color: var(--vscode-list-activeSelectionForeground);
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 0 5px var(--vscode-focusBorder);
+}
+
+.react-tabs__tab--disabled {
+  color: GrayText;
+  cursor: default;
+}
+
+.react-tabs__tab:focus {
+  box-shadow: 0 0 5px var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder);
+  outline: none;
+}
+
+.react-tabs__tab:focus:after, .react-tabs__tab--selected:after {
+  content: "";
+  position: absolute;
+  height: 5px;
+  left: -4px;
+  right: -4px;
+  bottom: -5px;
+  background: var(--vscode-focusBorder);
+}
+
+.react-tabs__tab-panel {
+  display: none;
+}
+
+.react-tabs__tab-panel--selected {
+  display: block;
+}
