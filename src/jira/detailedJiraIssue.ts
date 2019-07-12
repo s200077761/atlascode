@@ -51,14 +51,13 @@ export const emptyIssue: DetailedIssue = {
     epicLink: ''
 };
 
-export type detailedIssueOrKey = DetailedIssue | string;
 
 export const issueExpand = "names,transitions,renderedFields";
 
 export function isDetailedIssue(a: any): a is DetailedIssue {
     return a && (<DetailedIssue>a).key !== undefined
         && (<DetailedIssue>a).summary !== undefined
-        && (<DetailedIssue>a).description !== undefined;
+        && (<DetailedIssue>a).reporter !== undefined;
 }
 
 export function isComment(a: any): a is Comment {

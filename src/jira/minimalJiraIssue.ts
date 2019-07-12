@@ -57,7 +57,6 @@ export const emptyMinimalIssue: MinimalIssue = {
 
 export function isMinimalIssue(a: any): a is MinimalIssue {
     return a && (<MinimalIssue>a).key !== undefined
-        && (<MinimalIssue>a).summary !== undefined
-        && !a.description;
+        && (<MinimalIssue>a).summary !== undefined;
 }
 

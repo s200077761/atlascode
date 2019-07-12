@@ -6,7 +6,7 @@ import { MinimalIssue } from "./minimalJiraIssue";
 
 export async function fetchIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<DetailedIssue> {
   const client = await Container.clientManager.jirarequest(siteDetails);
-  const fields = await Container.jiraFieldManager.getMinimalIssueFieldIdsForSite(siteDetails);
+  const fields = await Container.jiraFieldManager.getDetailedIssueFieldIdsForSite(siteDetails);
   const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(siteDetails);
 
   const res = await client.issue.getIssue({
