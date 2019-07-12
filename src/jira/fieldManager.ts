@@ -9,7 +9,7 @@ import { JiraDefaultSiteConfigurationKey } from "../constants";
 
 
 export const defaultIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
-export const treeviewDefaultIssueFields: string[] = ["summary", "issuetype", "parent", "subtasks", "issuelinks"];
+export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "status", "priority", "description", "created", "updated", "parent", "subtasks", "issuelinks"];
 
 export class JiraFieldManager extends Disposable {
     private _disposable: Disposable;
@@ -37,8 +37,8 @@ export class JiraFieldManager extends Disposable {
         }
     }
 
-    public async getTreeviewFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
-        let fields = Array.from(treeviewDefaultIssueFields);
+    public async getMinimalIssueFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
+        let fields = Array.from(minimalDefaultIssueFields);
         let epicFields = await this.getEpicFieldsForSite(site);
 
         if (epicFields.epicsEnabled) {

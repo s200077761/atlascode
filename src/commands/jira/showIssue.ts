@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import { issueOrKey, isIssue } from "../../jira/jiraModel";
+import { detailedIssueOrKey, isDetailedIssue } from "../../jira/jiraModel";
 import { Container } from "../../container";
 import { fetchIssue } from "../../jira/fetchIssue";
 import { ProductJira } from "../../atlclients/authInfo";
 
-export async function showIssue(param: issueOrKey | undefined) {
+export async function showIssue(param: detailedIssueOrKey | undefined) {
   let issue = param;
 
   if (param === undefined) {
@@ -15,6 +15,6 @@ export async function showIssue(param: issueOrKey | undefined) {
   }
 
   if (issue) {
-    Container.jiraIssueViewManager.createOrShow(isIssue(issue) ? issue : await fetchIssue(issue, Container.siteManager.effectiveSite(ProductJira)));
+    Container.jiraIssueViewManager.createOrShow(isDetailedIssue(issue) ? issue : await fetchIssue(issue, Container.siteManager.effectiveSite(ProductJira)));
   }
 }

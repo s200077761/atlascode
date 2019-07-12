@@ -10,7 +10,6 @@ import { Commands } from '../commands';
 import { PullRequest, BitbucketIssue } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { Issue, isIssue } from '../jira/jiraModel';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { ProductJira } from '../atlclients/authInfo';
@@ -21,6 +20,7 @@ import { issuesForJQL } from '../jira/issuesForJql';
 import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
+import { MinimalIssue, isMinimalIssue } from '../jira/jiraModel';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -198,7 +198,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
-        let issue: Issue | BitbucketIssue | undefined = undefined;
+        let issue: MinimalIssue | BitbucketIssue | undefined = undefined;
         if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
@@ -223,11 +223,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         });
     }
 
-    private async updateIssue(issue?: Issue | BitbucketIssue) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
         if (!issue) {
             return;
         }
-        if (isIssue(issue)) {
+        if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {

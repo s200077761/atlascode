@@ -22,7 +22,7 @@ import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPull
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
-import { Issue, isIssue, Transition } from '../../../jira/jiraModel';
+import { Transition, MinimalIssue, isMinimalIssue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
@@ -113,7 +113,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleIssueClicked = (issue: Issue) => {
+    handleIssueClicked = (issue: MinimalIssue) => {
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issue
@@ -188,7 +188,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as Issue, status: { ...(this.state.pr.mainIssue as Issue).status, id: item.to.id, name: item.to.name } } }
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue, status: { ...(this.state.pr.mainIssue as MinimalIssue).status, id: item.to.id, name: item.to.name } } }
         });
     }
 
@@ -226,22 +226,22 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         let currentUserApproved = false;
         if (pr.participants) {
-          currentUserApproved = pr.participants!
-              .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
-              .reduce((acc, curr) => !!acc || !!curr.approved, false);
+            currentUserApproved = pr.participants!
+                .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
+                .reduce((acc, curr) => !!acc || !!curr.approved, false);
         }
         const issue = this.state.pr.mainIssue;
         const issueDetails = issue ?
             <React.Fragment>
-                {isIssue(issue)
+                {isMinimalIssue(issue)
                     ? <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
-                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as Issue })} />
+                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as MinimalIssue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <TransitionMenu issue={issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import { Message } from "./messaging";
-import { Issue, Project, EpicFieldInfo } from "../jira/jiraModel";
+import { DetailedIssue, Project, EpicFieldInfo, MinimalIssue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
@@ -9,9 +9,9 @@ import { PullRequestData } from "../bitbucket/model";
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
 export interface IssueData extends Message { }
-export interface IssueData extends Issue {
+export interface IssueData extends DetailedIssue {
     currentUserId: string;
-    childIssues: Issue[];
+    childIssues: MinimalIssue[];
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
 }
@@ -65,7 +65,7 @@ export interface IssueCreated extends Message {
 }
 
 export interface StartWorkOnIssueData extends Message {
-    issue: Issue;
+    issue: MinimalIssue;
     repoData: RepoData[];
 }
 

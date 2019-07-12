@@ -23,7 +23,7 @@ import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { TransitionMenu } from '../issue/TransitionMenu';
-import { Issue, Transition, isIssue } from '../../../jira/jiraModel';
+import { Transition, MinimalIssue, isMinimalIssue } from '../../../jira/jiraModel';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
@@ -50,7 +50,7 @@ interface MyState {
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
-    issue?: Issue | BitbucketIssue;
+    issue?: MinimalIssue | BitbucketIssue;
     commits: Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -237,7 +237,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            issue: { ...this.state.issue as Issue, status: { ...(this.state.issue as Issue).status, id: item.to.id, name: item.to.name } }
+            issue: { ...this.state.issue as MinimalIssue, status: { ...(this.state.issue as MinimalIssue).status, id: item.to.id, name: item.to.name } }
         });
     }
 
@@ -374,10 +374,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' />
 
-                    {isIssue(this.state.issue)
+                    {isMinimalIssue(this.state.issue)
                         ? <div className='ac-flex'>
                             <h4>Transition Jira issue - </h4>
-                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.issue as Issue })} />
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.issue as MinimalIssue })} />
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
@@ -391,8 +391,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                         <div style={{ margin: 10 }}>
                             <label>Select new status</label>
-                            {isIssue(this.state.issue)
-                                ? <TransitionMenu issue={this.state.issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                            {isMinimalIssue(this.state.issue)
+                                ? <TransitionMenu issue={this.state.issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
                                 : <StatusMenu issue={this.state.issue as BitbucketIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>

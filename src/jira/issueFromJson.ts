@@ -1,45 +1,30 @@
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Issue, isComment, emptyComment, Transition, isTransition, emptyTransition, Attachment, isAttachment, emptyAttachment, IdName, IssueLink, isIssueLinkType, isStatus, emptyStatus, isPriority, emptyPriority, isIssueType, emptyIssueType, isUser, emptyUser } from "./jiraModel";
+import { DetailedIssue, isComment, emptyComment, Transition, isTransition, emptyTransition, Attachment, isAttachment, emptyAttachment, IdName, isIssueLinkType, isStatus, emptyStatus, isPriority, emptyPriority, isIssueType, emptyIssueType, isUser, emptyUser } from "./jiraModel";
 import { EpicFieldInfo } from "./jiraCommon";
-import { TreeViewIssue, TreeViewIssueLink } from "./jiraTreeviewIssue";
+import { MinimalIssue, MinimalIssueLink } from "./minimalJiraIssue";
 
-export function treeViewissueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): TreeViewIssue {
+export function minimalIssueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): MinimalIssue {
 
-    let subtasks: Issue[] = [];
-    if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
-        subtasks = issueJson.fields.subtasks.map((subtaskJson: any) => {
-            const subtaskIssue = treeViewissueFromJsonObject(subtaskJson, siteDetails, epicFields);
-            return subtaskIssue;
-        });
-    }
-    let issuelinks: TreeViewIssueLink[] = [];
-    if (issueJson.fields.issuelinks && Array.isArray(issueJson.fields.issuelinks)) {
-        issuelinks = issueJson.fields.issuelinks
-            .filter((issuelinkJson: any) => isIssueLinkType(issuelinkJson.type) && (issuelinkJson.inwardIssue || issuelinkJson.outwardIssue))
-            .map((issuelinkJson: any): TreeViewIssueLink => {
-                if (issuelinkJson.inwardIssue) {
-                    const linkedIssue = treeViewissueFromJsonObject(issuelinkJson.inwardIssue, siteDetails, epicFields);
-                    return {
-                        id: issuelinkJson.id,
-                        type: issuelinkJson.type,
-                        inwardIssue: linkedIssue
-                    };
-                } else {
-                    const linkedIssue = treeViewissueFromJsonObject(issuelinkJson.outwardIssue, siteDetails, epicFields);
-                    return {
-                        id: issuelinkJson.id,
-                        type: issuelinkJson.type,
-                        outwardIssue: linkedIssue
-                    };
-                }
-            });
+    const subtasks: MinimalIssue[] = getSubtasks(issueJson, siteDetails, epicFields);
+    const issuelinks: MinimalIssueLink[] = getIssueLinks(issueJson, siteDetails, epicFields, minimalIssueFromJsonObject);
+    const transitions: Transition[] = getTransitions(issueJson);
+    let descriptionHtml = issueJson.fields.description;
+    if (issueJson.renderedFields && issueJson.renderedFields.description) {
+        descriptionHtml = issueJson.renderedFields.description;
     }
 
     const thisIssue = {
         key: issueJson.key,
         id: issueJson.id,
         self: issueJson.self,
+        created: new Date(Date.parse(issueJson.fields.created)),
+        updated: new Date(Date.parse(issueJson.fields.updated)),
         summary: issueJson.fields.summary,
+        description: issueJson.fields.description,
+        descriptionHtml: descriptionHtml,
+        transitions: transitions,
+        status: isStatus(issueJson.fields.status) ? issueJson.fields.status : emptyStatus,
+        priority: isPriority(issueJson.fields.priority) ? issueJson.fields.priority : emptyPriority,
         issueType: isIssueType(issueJson.fields.issuetype) ? issueJson.fields.issuetype : emptyIssueType,
         parentKey: issueJson.fields.parent ? issueJson.fields.parent.key : undefined,
         subtasks: subtasks,
@@ -54,7 +39,7 @@ export function treeViewissueFromJsonObject(issueJson: any, siteDetails: Detaile
     return thisIssue;
 }
 
-export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): Issue {
+export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): DetailedIssue {
     let jsonComments: any[] = [];
 
     if (issueJson.renderedFields && issueJson.renderedFields.comment && issueJson.renderedFields.comment.comments) {
@@ -68,15 +53,6 @@ export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInf
 
         return emptyComment;
     });
-
-    let transitions: Transition[] = [];
-    if (issueJson.transitions) {
-        transitions = issueJson.transitions.map((transitionJson: any) => {
-            if (isTransition(transitionJson)) { return transitionJson; }
-
-            return emptyTransition;
-        });
-    }
 
     let attachments: Attachment[] = [];
     if (issueJson.fields.attachments) {
@@ -105,45 +81,16 @@ export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInf
     if (issueJson.renderedFields && issueJson.renderedFields.description) {
         descriptionHtml = issueJson.renderedFields.description;
     }
-    let subtasks: Issue[] = [];
-    if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
-        subtasks = issueJson.fields.subtasks.map((subtaskJson: any) => {
-            const subtaskIssue = issueFromJsonObject(subtaskJson, siteDetails, epicFields);
-            // subtask creation date is not returned in the api response
-            subtaskIssue.created = new Date(Date.parse(issueJson.fields.created));
-            return subtaskIssue;
-        });
-    }
-    let issuelinks: IssueLink[] = [];
-    if (issueJson.fields.issuelinks && Array.isArray(issueJson.fields.issuelinks)) {
-        issuelinks = issueJson.fields.issuelinks
-            .filter((issuelinkJson: any) => isIssueLinkType(issuelinkJson.type) && (issuelinkJson.inwardIssue || issuelinkJson.outwardIssue))
-            .map((issuelinkJson: any): IssueLink => {
-                if (issuelinkJson.inwardIssue) {
-                    const linkedIssue = issueFromJsonObject(issuelinkJson.inwardIssue, siteDetails, epicFields);
-                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
-                    return {
-                        id: issuelinkJson.id,
-                        type: issuelinkJson.type,
-                        inwardIssue: linkedIssue
-                    };
-                } else {
-                    const linkedIssue = issueFromJsonObject(issuelinkJson.outwardIssue, siteDetails, epicFields);
-                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
-                    return {
-                        id: issuelinkJson.id,
-                        type: issuelinkJson.type,
-                        outwardIssue: linkedIssue
-                    };
-                }
-            });
-    }
+    const transitions: Transition[] = getTransitions(issueJson);
+    const subtasks: MinimalIssue[] = getSubtasks(issueJson, siteDetails, epicFields);
+    const issuelinks: MinimalIssueLink[] = getIssueLinks(issueJson, siteDetails, epicFields, minimalIssueFromJsonObject);
 
     const thisIssue = {
         key: issueJson.key,
         id: issueJson.id,
         self: issueJson.self,
         created: new Date(Date.parse(issueJson.fields.created)),
+        updated: new Date(Date.parse(issueJson.fields.updated)),
         description: issueJson.fields.description,
         descriptionHtml: descriptionHtml,
         summary: issueJson.fields.summary,
@@ -169,4 +116,60 @@ export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInf
     };
 
     return thisIssue;
+}
+
+function getTransitions(issueJson: any): Transition[] {
+    let transitions: Transition[] = [];
+    if (issueJson.transitions) {
+        transitions = issueJson.transitions.map((transitionJson: any) => {
+            if (isTransition(transitionJson)) { return transitionJson; }
+
+            return emptyTransition;
+        });
+    }
+
+    return transitions;
+}
+
+function getSubtasks(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): MinimalIssue[] {
+    let subtasks: MinimalIssue[] = [];
+    if (issueJson.fields.subtasks && Array.isArray(issueJson.fields.subtasks)) {
+        subtasks = issueJson.fields.subtasks.map((subtaskJson: any) => {
+            const subtaskIssue = minimalIssueFromJsonObject(subtaskJson, siteDetails, epicFields);
+            // subtask creation date is not returned in the api response
+            subtaskIssue.created = new Date(Date.parse(issueJson.fields.created));
+            return subtaskIssue;
+        });
+    }
+
+    return subtasks;
+}
+
+function getIssueLinks(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo, factory: (issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo) => MinimalIssue): MinimalIssueLink[] {
+    let issuelinks: any[] = [];
+    if (issueJson.fields.issuelinks && Array.isArray(issueJson.fields.issuelinks)) {
+        issuelinks = issueJson.fields.issuelinks
+            .filter((issuelinkJson: any) => isIssueLinkType(issuelinkJson.type) && (issuelinkJson.inwardIssue || issuelinkJson.outwardIssue))
+            .map((issuelinkJson: any): any => {
+                if (issuelinkJson.inwardIssue) {
+                    const linkedIssue = factory(issuelinkJson.inwardIssue, siteDetails, epicFields);
+                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
+                    return {
+                        id: issuelinkJson.id,
+                        type: issuelinkJson.type,
+                        inwardIssue: linkedIssue
+                    };
+                } else {
+                    const linkedIssue = factory(issuelinkJson.outwardIssue, siteDetails, epicFields);
+                    linkedIssue.created = new Date(Date.parse(issueJson.fields.created));
+                    return {
+                        id: issuelinkJson.id,
+                        type: issuelinkJson.type,
+                        outwardIssue: linkedIssue
+                    };
+                }
+            });
+    }
+
+    return issuelinks;
 }

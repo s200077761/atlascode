@@ -10,11 +10,11 @@ import { CreatableSelect } from '@atlaskit/select';
 import { WebviewComponent } from "../WebviewComponent";
 import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import {
-  emptyIssue,
   Transition,
   emptyTransition,
-  Issue,
-  isIssue
+  emptyMinimalIssue,
+  isMinimalIssue,
+  MinimalIssue,
 } from "../../../jira/jiraModel";
 import {
   StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction, RefreshIssueAction
@@ -58,7 +58,7 @@ type State = {
 };
 
 const emptyState: State = {
-  data: { type: 'update', issue: emptyIssue, repoData: [] },
+  data: { type: 'update', issue: emptyMinimalIssue, repoData: [] },
   issueType: 'jiraIssue',
   jiraSetupEnabled: true,
   bitbucketSetupEnabled: true,
@@ -272,7 +272,7 @@ export default class StartWorkPage extends WebviewComponent<
         <em><p>Start work on:</p></em>
       </GridColumn>;
 
-    if (this.state.issueType === 'jiraIssue' && isIssue(issue)) {
+    if (this.state.issueType === 'jiraIssue' && isMinimalIssue(issue)) {
       pageHeader = <GridColumn medium={8}>
         <em><p>Start work on:</p></em>
         <PageHeader
@@ -353,7 +353,7 @@ export default class StartWorkPage extends WebviewComponent<
                 <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                   <div style={{ margin: 10 }}>
                     <label>Select new status</label>
-                    <TransitionMenu issue={issue as Issue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
+                    <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
                   </div>
                 </div>
               }

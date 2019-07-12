@@ -3,10 +3,10 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { Issue } from '../../../jira/jiraModel';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { MinimalIssue } from '../../../jira/jiraModel';
 
-type ItemData = { issue: Issue, postMessage: (e: OpenJiraIssueAction) => void };
+type ItemData = { issue: MinimalIssue, postMessage: (e: OpenJiraIssueAction) => void };
 
 const colorToLozengeAppearanceMap = {
     neutral: 'default',
@@ -28,7 +28,7 @@ const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
 const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}><Lozenge appearence={colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName]}>{data.issue.status.name}</Lozenge></p>;
 
-export default class IssueList extends React.Component<{ issues: Issue[], postMessage: (e: OpenJiraIssueAction) => void }, {}> {
+export default class IssueList extends React.Component<{ issues: MinimalIssue[], postMessage: (e: OpenJiraIssueAction) => void }, {}> {
     constructor(props: any) {
         super(props);
     }

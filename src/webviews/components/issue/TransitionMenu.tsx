@@ -1,7 +1,7 @@
 import * as React from "react";
 import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
-import { Issue, Transition } from "../../../jira/jiraIssue";
+import { MinimalIssue, Transition } from "../../../jira/jiraModel";
 
 const colorToLozengeAppearanceMap = {
   neutral: 'default',
@@ -32,7 +32,7 @@ const StatusValue = (props: any) => (
 );
 
 export class TransitionMenu extends React.Component<{
-  issue: Issue;
+  issue: MinimalIssue;
   isStatusButtonLoading: boolean;
   onHandleStatusChange: (item: Transition) => void;
 }, {
@@ -41,13 +41,13 @@ export class TransitionMenu extends React.Component<{
 
   constructor(props: any) {
     super(props);
-    const issue: Issue = props.issue;
+    const issue: MinimalIssue = props.issue;
     const selectedTransition = issue.transitions.find(transition => transition.to.id === issue.status.id);
     this.state = { selectedTransition: selectedTransition };
   }
 
   componentWillReceiveProps(nextProps: any) {
-    const issue: Issue = nextProps.issue;
+    const issue: MinimalIssue = nextProps.issue;
     const selectedTransition = issue.transitions.find(transition => transition.to.id === issue.status.id);
     this.setState({ selectedTransition: selectedTransition });
   }

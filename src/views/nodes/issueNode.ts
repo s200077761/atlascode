@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import { AbstractBaseNode } from "./abstractBaseNode";
-import { Issue } from "../../jira/jiraIssue";
 import { Commands } from "../../commands";
+import { MinimalIssue } from "../../jira/minimalJiraIssue";
 
 const IssueNodeContextValue = 'jiraIssue';
 
 export class IssueNode extends AbstractBaseNode {
-    public issue: Issue;
+    public issue: MinimalIssue;
 
-    constructor(_issue: Issue) {
+    constructor(_issue: MinimalIssue) {
         super();
         this.issue = _issue;
     }

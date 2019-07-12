@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
-import { Issue, emptyIssue } from '../jira/jiraModel';
+import { DetailedIssue, emptyIssue } from '../jira/jiraModel';
 import { fetchIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
@@ -19,8 +19,8 @@ import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
-    private _state: Issue = emptyIssue;
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {
+    private _state: DetailedIssue = emptyIssue;
     private _currentUserId?: string;
 
     constructor(extensionPath: string) {
@@ -34,7 +34,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(data: Issue) {
+    async initialize(data: DetailedIssue) {
         this._state = data;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -264,7 +264,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return handled;
     }
 
-    public async updateIssue(issue: Issue) {
+    public async updateIssue(issue: DetailedIssue) {
         if (this.isRefeshing) {
             return;
         }

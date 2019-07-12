@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { HoverProvider } from "vscode";
-import { fetchIssue } from "../../jira/fetchIssue";
+import { fetchMinimalIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
 import { Container } from "../../container";
@@ -20,7 +20,7 @@ export class IssueHoverProvider implements HoverProvider {
   private async getIssueDetails(key: string): Promise<vscode.Hover> {
     // TODO: make sure the key exists in our list of known project before we try to fetch the issue
     // e.g. if the issue key is in a different site, or is completely made up, we shouldn't fetch.
-    const issue = await fetchIssue(key, Container.siteManager.effectiveSite(ProductJira));
+    const issue = await fetchMinimalIssue(key, Container.siteManager.effectiveSite(ProductJira));
 
     let summaryText = issue.summary ? issue.summary : "";
     let statusText = issue.status.name;

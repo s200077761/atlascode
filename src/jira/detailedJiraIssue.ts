@@ -1,28 +1,6 @@
-import { emptyUser, emptyIssueType, User, IssueType, IssueLinkType, EpicFieldInfo, isIssueType, isIssueLinkType } from "./jiraCommon";
+import { emptyUser, emptyIssueType, User, IssueType, emptyStatus, emptyPriority, Status, Priority, Transition } from "./jiraCommon";
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
-
-export const emptyStatusCategory: StatusCategory = {
-    colorName: '',
-    id: -1,
-    key: '',
-    name: '',
-    self: ''
-};
-
-export const emptyStatus: Status = {
-    description: '',
-    iconUrl: '',
-    id: '',
-    name: '',
-    self: '',
-    statusCategory: emptyStatusCategory
-};
-
-export const emptyPriority: Priority = {
-    id: '',
-    name: '',
-    iconUrl: ''
-};
+import { MinimalIssue, MinimalIssueLink } from "./minimalJiraIssue";
 
 export const emptyComment: Comment = {
     author: emptyUser,
@@ -30,16 +8,6 @@ export const emptyComment: Comment = {
     created: '',
     id: '',
     self: ''
-};
-
-export const emptyTransition: Transition = {
-    hasScreen: false,
-    id: '',
-    isConditional: false,
-    isGlobal: false,
-    isInitial: false,
-    name: '',
-    to: emptyStatus,
 };
 
 export const emptyAttachment: Attachment = {
@@ -54,11 +22,12 @@ export const emptyAttachment: Attachment = {
     thumbnail: '',
 };
 
-export const emptyIssue: Issue = {
+export const emptyIssue: DetailedIssue = {
     key: '',
     id: '',
     self: '',
     created: new Date(0),
+    updated: new Date(0),
     description: '',
     descriptionHtml: '',
     summary: '',
@@ -82,16 +51,14 @@ export const emptyIssue: Issue = {
     epicLink: ''
 };
 
-export type issueOrKey = Issue | string;
-
+export type detailedIssueOrKey = DetailedIssue | string;
 
 export const issueExpand = "names,transitions,renderedFields";
-export const issueTreeviewExpand = "names";
 
-export function isIssue(a: any): a is Issue {
-    return a && (<Issue>a).key !== undefined
-        && (<Issue>a).summary !== undefined
-        && (<Issue>a).description !== undefined;
+export function isDetailedIssue(a: any): a is DetailedIssue {
+    return a && (<DetailedIssue>a).key !== undefined
+        && (<DetailedIssue>a).summary !== undefined
+        && (<DetailedIssue>a).description !== undefined;
 }
 
 export function isComment(a: any): a is Comment {
@@ -102,27 +69,17 @@ export function isUser(a: any): a is User {
     return a && (<User>a).displayName !== undefined && (<User>a).avatarUrls !== undefined;
 }
 
-export function isStatus(a: any): a is Status {
-    return a && (<Status>a).iconUrl !== undefined && (<Status>a).statusCategory !== undefined;
-}
-
-export function isPriority(a: any): a is Priority {
-    return a && (<Priority>a).name !== undefined && (<Priority>a).iconUrl !== undefined;
-}
-
-export function isTransition(a: any): a is Transition {
-    return a && (<Transition>a).to !== undefined && (<Transition>a).hasScreen !== undefined;
-}
-
 export function isAttachment(a: any): a is Attachment {
     return a && (<Attachment>a).mimeType !== undefined && (<Attachment>a).thumbnail !== undefined;
 }
 
-export interface Issue {
+
+export interface DetailedIssue {
     key: string;
     id: string;
     self: string;
     created: Date;
+    updated: Date;
     description: string;
     descriptionHtml: string;
     summary: string;
@@ -132,8 +89,8 @@ export interface Issue {
     parentKey?: string;
     reporter: User;
     assignee: User;
-    subtasks: Issue[];
-    issuelinks: IssueLink[];
+    subtasks: MinimalIssue[];
+    issuelinks: MinimalIssueLink[];
     comments: Comment[];
     labels: string[];
     attachments: Attachment[];
@@ -142,31 +99,9 @@ export interface Issue {
     fixVersions: IdName[];
     siteDetails: DetailedSiteInfo;
     isEpic: boolean;
-    epicChildren: Issue[];
+    epicChildren: MinimalIssue[];
     epicName: string;
     epicLink: string;
-}
-
-export interface Status {
-    description: string;
-    iconUrl: string;
-    id: string;
-    name: string;
-    self: string;
-    statusCategory: StatusCategory;
-}
-export interface StatusCategory {
-    colorName: string;
-    id: number;
-    key: string;
-    name: string;
-    self: string;
-}
-
-export interface Priority {
-    id: string;
-    name: string;
-    iconUrl: string;
 }
 
 export interface Attachment {
@@ -189,24 +124,8 @@ export interface Comment {
     self: string;
 }
 
-export interface Transition {
-    hasScreen: boolean;
-    id: string;
-    isConditional: boolean;
-    isGlobal: boolean;
-    isInitial: boolean;
-    name: string;
-    to: Status;
-}
-
 export interface IdName {
     id: string;
     name: string;
 }
 
-export interface IssueLink {
-    id: string;
-    type: IssueLinkType;
-    inwardIssue?: Issue;
-    outwardIssue?: Issue;
-}

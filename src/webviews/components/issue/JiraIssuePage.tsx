@@ -12,7 +12,7 @@ import {
   emptyIssueType,
   emptyUser,
   emptyPriority,
-  Issue,
+  DetailedIssue,
   Transition,
   IdName
 } from "../../../jira/jiraModel";
@@ -52,6 +52,7 @@ const emptyIssueData: IssueData = {
   id: "",
   self: "",
   created: new Date(0),
+  updated: new Date(0),
   description: "",
   descriptionHtml: "",
   summary: "",
@@ -194,7 +195,7 @@ export default class JiraIssuePage extends WebviewComponent<
   }
 
 
-  handleSave = (issue: Issue, comment: string) => {
+  handleSave = (issue: DetailedIssue, comment: string) => {
     this.postMessage({
       action: "comment",
       issue: issue,
@@ -203,7 +204,7 @@ export default class JiraIssuePage extends WebviewComponent<
     this.setState({ commentInput: "", isCommentLoading: true });
   }
 
-  handleAssign = (issue: Issue, value: any) => {
+  handleAssign = (issue: DetailedIssue, value: any) => {
     this.setState({ data: { ...this.state.data, assignee: value } });
 
     this.postMessage({
@@ -390,7 +391,7 @@ export default class JiraIssuePage extends WebviewComponent<
     );
   }
 
-  details(issue: Issue): any {
+  details(issue: DetailedIssue): any {
     return (
       <div>
         <h3>Status</h3>
