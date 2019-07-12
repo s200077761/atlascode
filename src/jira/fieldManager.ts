@@ -4,11 +4,12 @@ import { Container } from "../container";
 import { ProductJira, DetailedSiteInfo } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { configuration } from "../config/configuration";
-import { EpicFieldInfo, epicsDisabled } from "./jiraIssue";
+import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 
 
 export const defaultIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
+export const treeviewDefaultIssueFields: string[] = ["summary", "issuetype", "parent", "subtasks", "issuelinks"];
 
 export class JiraFieldManager extends Disposable {
     private _disposable: Disposable;
@@ -36,8 +37,8 @@ export class JiraFieldManager extends Disposable {
         }
     }
 
-    public async getOrderableFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
-        let fields = Array.from(defaultIssueFields);
+    public async getTreeviewFieldIdsForSite(site: DetailedSiteInfo): Promise<string[]> {
+        let fields = Array.from(treeviewDefaultIssueFields);
         let epicFields = await this.getEpicFieldsForSite(site);
 
         if (epicFields.epicsEnabled) {

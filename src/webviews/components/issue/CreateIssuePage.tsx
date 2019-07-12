@@ -18,7 +18,7 @@ import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueTyp
 import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
-import { epicsDisabled } from '../../../jira/jiraIssue';
+import { epicsDisabled } from '../../../jira/jiraCommon';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
