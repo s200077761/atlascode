@@ -164,8 +164,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 break;
             }
             case 'onlineStatus': {
-                let data = e.isOnline ? emptyPR : this.state.pr;
-                this.setState({ isOnline: e.isOnline, pr: data });
+                this.setState({ isOnline: e.isOnline });
 
                 if (e.isOnline) {
                     this.postMessage({ action: 'refreshPR' });
@@ -226,9 +225,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         let currentUserApproved = false;
         if (pr.participants) {
-          currentUserApproved = pr.participants!
-              .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
-              .reduce((acc, curr) => !!acc || !!curr.approved, false);
+            currentUserApproved = pr.participants!
+                .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
+                .reduce((acc, curr) => !!acc || !!curr.approved, false);
         }
         const issue = this.state.pr.mainIssue;
         const issueDetails = issue ?

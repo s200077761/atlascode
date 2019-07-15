@@ -143,8 +143,7 @@ export default class StartWorkPage extends WebviewComponent<
       }
 
       case 'onlineStatus': {
-        let data = e.isOnline ? emptyState : this.state;
-        this.setState({ ...data, ...{ isOnline: e.isOnline } });
+        this.setState({ isOnline: e.isOnline });
 
         if (e.isOnline) {
           this.postMessage({ action: 'refreshIssue' });
