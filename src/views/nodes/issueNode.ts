@@ -15,7 +15,7 @@ export class IssueNode extends AbstractBaseNode {
 
     getTreeItem(): vscode.TreeItem {
         let title = this.issue.isEpic ? this.issue.epicName : this.issue.summary;
-        let treeItem = new vscode.TreeItem(`${title}`, (this.issue.subtasks.length > 0 || this.issue.epicChildren.length > 0) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
+        let treeItem = new vscode.TreeItem(`${this.issue.key} ${title}`, (this.issue.subtasks.length > 0 || this.issue.epicChildren.length > 0) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None);
         treeItem.command = { command: Commands.ShowIssue, title: "Show Issue", arguments: [this.issue], };
         treeItem.iconPath = vscode.Uri.parse(this.issue.issueType.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
