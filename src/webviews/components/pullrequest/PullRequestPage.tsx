@@ -163,8 +163,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 break;
             }
             case 'onlineStatus': {
-                let data = e.isOnline ? emptyPR : this.state.pr;
-                this.setState({ isOnline: e.isOnline, pr: data });
+                this.setState({ isOnline: e.isOnline });
 
                 if (e.isOnline) {
                     this.postMessage({ action: 'refreshPR' });
