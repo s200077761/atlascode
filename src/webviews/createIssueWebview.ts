@@ -13,6 +13,7 @@ import { issuesForJQL } from '../jira/issuesForJql';
 import { TransformerResult } from '../jira/createIssueMeta';
 import { ProductJira } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
+import { format } from 'date-fns';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -324,7 +325,26 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 const formLinks = e.issueData.issuelinks;
                                 delete e.issueData.issuelinks;
 
-                                let resp = await client.issue.createIssue({ body: { fields: e.issueData } });
+                                let worklog: any = undefined;
+                                if (e.issueData.worklog && e.issueData.worklog.enabled) {
+                                    delete e.issueData.worklog.enabled;
+                                    worklog = {
+                                        worklog: [
+                                            {
+                                                add: {
+                                                    ...e.issueData.worklog,
+                                                    adjustEstimate: 'new',
+                                                    started: e.issueData.worklog.started
+                                                        ? format(e.issueData.worklog.started, 'YYYY-MM-DDTHH:mm:ss.SSSZZ')
+                                                        : undefined
+                                                }
+                                            }
+                                        ]
+                                    };
+                                    delete e.issueData.worklog;
+                                }
+
+                                const resp = await client.issue.createIssue({ body: { fields: e.issueData, update: worklog } });
 
                                 if (formLinks &&
                                     formLinks.type && formLinks.type.id &&

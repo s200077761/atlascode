@@ -24,13 +24,13 @@ const knownSystemSchemas: string[] = [
     , 'priority'
     , 'resolution'
     , 'labels'
-    //,'timetracking'
+    , 'timetracking'
+    , 'worklog'
     , 'environment'
     //,'attachment'
     , 'versions'
     , 'duedate'
     , 'issuelinks'
-    //,'worklog'
     , 'assignee'
 ];
 
@@ -86,6 +86,8 @@ const schemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , ['priority', UIType.Select]
         , ['resolution', UIType.Select]
         , ['labels', UIType.Select]
+        , ['timetracking', UIType.Timetracking]
+        , ['worklog', UIType.Worklog]
         , ['versions', UIType.Select]
         , ['issuelinks', UIType.IssueLink]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect', UIType.Select]
@@ -315,6 +317,24 @@ export class IssueScreenTransformer {
                     allowedValues: this._issueLinkTypes,
                     isCreateable: true,
                     isMulti: this.isMultiSelect(field.schema),
+                    advanced: this.isAdvanced(field)
+                };
+            }
+            case UIType.Timetracking: {
+                return {
+                    required: field.required,
+                    name: field.name,
+                    key: field.key,
+                    uiType: UIType.Timetracking,
+                    advanced: this.isAdvanced(field)
+                };
+            }
+            case UIType.Worklog: {
+                return {
+                    required: field.required,
+                    name: field.name,
+                    key: field.key,
+                    uiType: UIType.Worklog,
                     advanced: this.isAdvanced(field)
                 };
             }

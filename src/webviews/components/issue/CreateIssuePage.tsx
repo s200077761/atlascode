@@ -4,7 +4,7 @@ import { WebviewComponent } from "../WebviewComponent";
 import { CreateIssueData, ProjectList, CreatedSomething, isCreatedSomething, isIssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList, JqlOptionsList } from '../../../ipc/issueMessaging';
 import { emptyWorkingProject, WorkingProject } from '../../../config/model';
 import { FetchQueryAction, ScreensForProjectsAction, CreateSomethingAction, CreateIssueAction, OpenJiraIssueAction, FetchByProjectQueryAction, SetIssueTypeAction, FetchIssueFieldOptionsByJQLAction } from '../../../ipc/issueActions';
-import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField } from '@atlaskit/form';
+import Form, { Field, Fieldset, FormFooter, ErrorMessage, CheckboxField, HelperMessage } from '@atlaskit/form';
 import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -114,6 +114,14 @@ const IssueSuggestionValue = (props: any) => (
     </components.MultiValueLabel>
 
 );
+
+const Condition = ({ when, is, children }: any) => {
+    return <Field name={when} subscription={{ value: false }}>
+        {({ fieldProps }: { fieldProps: any }) => {
+            return (fieldProps && fieldProps.value && fieldProps.value === is ? children : null);
+        }}
+    </Field>;
+};
 
 export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private newProjects: WorkingProject[] = [];
@@ -948,6 +956,175 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                             }
                         </Field>
 
+                    </React.Fragment>
+                );
+            }
+            case UIType.Timetracking: {
+                let validateFunc = field.required ? FieldValidators.validateString : undefined;
+                return (
+                    <div className='ac-flex'>
+                        <Field
+                            label='Original estimate'
+                            isRequired={field.required}
+                            id={`${field.key}.originalEstimate`}
+                            name={`${field.key}.originalEstimate`}
+                            validate={validateFunc}>
+                            {
+                                (fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                            {errDiv}
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+                        <div className='ac-inline-flex-hpad'></div>
+                        <Field
+                            label='Remaining estimate'
+                            isRequired={field.required}
+                            id={`${field.key}.remainingEstimate`}
+                            name={`${field.key}.remainingEstimate`}
+                            validate={validateFunc}>
+                            {
+                                (fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                            {errDiv}
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+                    </div>
+                );
+            }
+            case UIType.Worklog: {
+                let validateFunc = FieldValidators.validateString;
+                return (
+                    <React.Fragment>
+                        <div style={{ display: field.required ? 'none' : 'block' }}>
+                            <Field
+                                id={`${field.key}.enabled`}
+                                name={`${field.key}.enabled`}>
+                                {
+                                    (fieldArgs: any) => <Checkbox {...fieldArgs.fieldProps} label='Log work' />
+                                }
+                            </Field>
+                        </div>
+                        <Condition when='worklog.enabled' is={true}>
+                            <div className='ac-flex'>
+                                <Field
+                                    label='Worklog time spent'
+                                    isRequired={true}
+                                    id={`${field.key}.timeSpent`}
+                                    name={`${field.key}.timeSpent`}
+                                    validate={validateFunc}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            let errDiv = <span />;
+                                            if (fieldArgs.error === 'EMPTY') {
+                                                errDiv = <ErrorMessage>Time spent is required</ErrorMessage>;
+                                            }
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    {errDiv}
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+                                <div className='ac-inline-flex-hpad'></div>
+                                <Field
+                                    label='Remaining estimate'
+                                    isRequired={true}
+                                    id={`${field.key}.newEstimate`}
+                                    name={`${field.key}.newEstimate`}
+                                    validate={validateFunc}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            let errDiv = <span />;
+                                            if (fieldArgs.error === 'EMPTY') {
+                                                errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                            }
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    {errDiv}
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+                            </div>
+                            <Field
+                                label='Worklog start time'
+                                isRequired={true}
+                                id={`${field.key}.started`}
+                                name={`${field.key}.started`}
+                                validate={validateFunc}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Start time is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <div>
+                                                <DateTimePicker
+                                                    {...fieldArgs.fieldProps}
+                                                    className="ac-select-container"
+                                                    timeIsEditable
+                                                    datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                />
+                                                {errDiv}
+                                            </div>
+                                        );
+                                    }
+                                }
+                            </Field>
+                            <Field
+                                label='Worklog comment'
+                                isRequired={false}
+                                id={`${field.key}.comment`}
+                                name={`${field.key}.comment`}
+                                validate={validateFunc}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Comment is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <div>
+                                                <textarea {...fieldArgs.fieldProps}
+                                                    style={{ width: '100%', display: 'block' }}
+                                                    className='ac-textarea'
+                                                    rows={5}
+                                                />
+                                                {errDiv}
+                                            </div>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        </Condition>
                     </React.Fragment>
                 );
             }
