@@ -66,6 +66,8 @@ export class JiraContext extends Disposable {
         if (initializing) {
             const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
+            const project = await Container.jiraSiteManager.getEffectiveProject();
+            this._newIssueMonitor.setProject(project);
         }
     }
 
