@@ -1,3 +1,11 @@
+## What's New In 1.4.3
+### Improvements
+* Show Jira issue key in explorer
+
+### Bugs fixed
+* Webviews show loading message when they come to focus
+* Jira issue created notifications do not show up sometimes
+
 ## What's New In 1.4.2
 ### Improvements
 * Allow using currentProject() in custom jql
