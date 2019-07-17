@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { isDetailedIssue, DetailedIssue, MinimalIssue, isMinimalIssue } from "../../jira/jiraModel";
 import { Container } from "../../container";
-import { fetchIssue } from "../../jira/fetchIssue";
+import { fetchDetailedIssue } from "../../jira/fetchIssue";
 import { ProductJira } from "../../atlclients/authInfo";
 
 export async function showIssue(param: DetailedIssue | MinimalIssue | string | undefined) {
@@ -21,7 +21,7 @@ export async function showIssue(param: DetailedIssue | MinimalIssue | string | u
       detailedIssue = issue;
     } else {
       const key: string = isMinimalIssue(issue) ? issue.key : issue;
-      detailedIssue = await fetchIssue(key, Container.siteManager.effectiveSite(ProductJira));
+      detailedIssue = await fetchDetailedIssue(key, Container.siteManager.effectiveSite(ProductJira));
     }
 
     Container.jiraIssueViewManager.createOrShow(detailedIssue);

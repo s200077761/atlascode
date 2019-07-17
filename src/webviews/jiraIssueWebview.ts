@@ -3,7 +3,7 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
 import { DetailedIssue, emptyIssue } from '../jira/jiraModel';
-import { fetchIssue } from "../jira/fetchIssue";
+import { fetchDetailedIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -324,7 +324,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     private async forceUpdateIssue() {
         if (this._state.key !== "") {
             try {
-                let issue = await fetchIssue(this._state.key, this._state.siteDetails);
+                let issue = await fetchDetailedIssue(this._state.key, this._state.siteDetails);
                 await this.updateIssue(issue);
             }
             catch (e) {
