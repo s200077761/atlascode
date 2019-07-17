@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { Transition, Issue } from "../jira/jiraModel";
+import { Transition, MinimalIssue, DetailedIssue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 
 export interface RefreshIssueAction extends Action {
@@ -13,19 +13,19 @@ export interface EditIssueAction extends Action {
 
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
-    issue: Issue;
+    issue: MinimalIssue;
     transition: Transition;
 }
 
 export interface IssueCommentAction extends Action {
     action: 'comment';
-    issue: Issue;
+    issue: DetailedIssue;
     comment: string;
 }
 
 export interface IssueAssignAction extends Action {
     action: 'assign';
-    issue: Issue;
+    issue: MinimalIssue;
     userId?: string;
 }
 
@@ -36,7 +36,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueOrKey: Issue | string;
+    issueOrKey: MinimalIssue | string;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
@@ -82,7 +82,7 @@ export interface StartWorkAction extends Action {
 
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
-    issue: Issue;
+    issue: MinimalIssue;
 }
 
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {

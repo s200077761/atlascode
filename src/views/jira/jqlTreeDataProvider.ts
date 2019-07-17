@@ -1,12 +1,12 @@
 import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
-import { Issue } from '../../jira/jiraModel';
+import { MinimalIssue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
 import { ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
-import { fetchIssue } from '../../jira/fetchIssue';
+import { fetchMinimalIssue } from '../../jira/fetchIssue';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { WorkingProject } from '../../config/model';
@@ -15,7 +15,7 @@ import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
-    protected _issues: Issue[] | undefined;
+    protected _issues: MinimalIssue[] | undefined;
     private _jql: string | undefined;
 
     private _emptyState = "No issues";
@@ -108,8 +108,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         // we need to fill in the children and fetch the parents of any orphans
         const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues);
 
-        const issuesMissingParents: Issue[] = [];
-        const standAloneIssues: Issue[] = [];
+        const issuesMissingParents: MinimalIssue[] = [];
+        const standAloneIssues: MinimalIssue[] = [];
 
         newIssues.forEach(i => {
             if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
@@ -130,7 +130,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return this.nodesForIssues();
     }
 
-    private async fetchParentIssues(subIssues: Issue[]): Promise<Issue[]> {
+    private async fetchParentIssues(subIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
         if (subIssues.length < 1) {
             return [];
         }
@@ -140,7 +140,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey, site);
+                    const parent = await fetchMinimalIssue(issueKey, site);
                     // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                     parent.subtasks = [];
                     return parent;
@@ -151,7 +151,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return parentIssues;
     }
 
-    private async resolveEpics(allIssues: Issue[]): Promise<[Issue[], string[]]> {
+    private async resolveEpics(allIssues: MinimalIssue[]): Promise<[MinimalIssue[], string[]]> {
         const allIssueKeys = allIssues.map(i => i.key);
         const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
         const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
@@ -164,7 +164,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [[], []];
         }
 
-        let finalEpics: Issue[] = await Promise.all(
+        let finalEpics: MinimalIssue[] = await Promise.all(
             epics
                 .map(async epic => {
                     if (epic.epicChildren.length < 1) {
@@ -178,7 +178,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return [finalEpics, epicChildKeys];
     }
 
-    private async fetchEpicIssues(childIssues: Issue[]): Promise<Issue[]> {
+    private async fetchEpicIssues(childIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
         if (childIssues.length < 1) {
             return [];
         }
@@ -188,7 +188,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey, site);
+                    const parent = await fetchMinimalIssue(issueKey, site);
                     return parent;
                 }));
 

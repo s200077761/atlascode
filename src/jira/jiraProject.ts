@@ -1,5 +1,5 @@
 import { User, IssueType, emptyUser, emptyIssueType } from "./jiraCommon";
-import { isIssueType } from "./jiraIssue";
+import { isIssueType } from "./jiraCommon";
 
 export const emptyProjectVersion: ProjectVersion = {
   archived: false,
@@ -72,10 +72,10 @@ export interface ProjectVersion {
 export interface ProjectComponent {
   assignee: User;
   assigneeType:
-    | "PROJECT_DEFAULT"
-    | "COMPONENT_LEAD"
-    | "PROJECT_LEAD"
-    | "UNASSIGNED";
+  | "PROJECT_DEFAULT"
+  | "COMPONENT_LEAD"
+  | "PROJECT_LEAD"
+  | "UNASSIGNED";
   description: string;
   id: string;
   isAssigneeTypeValid: boolean;
@@ -87,10 +87,10 @@ export interface ProjectComponent {
   projectId: number;
   realAssignee: User;
   realAssigneeType:
-    | "PROJECT_DEFAULT"
-    | "COMPONENT_LEAD"
-    | "PROJECT_LEAD"
-    | "UNASSIGNED";
+  | "PROJECT_DEFAULT"
+  | "COMPONENT_LEAD"
+  | "PROJECT_LEAD"
+  | "UNASSIGNED";
   self: string;
 }
 

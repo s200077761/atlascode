@@ -2,8 +2,7 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, issueOrKey } from '../jira/jiraModel';
-import { fetchIssue } from "../jira/fetchIssue";
+import { MinimalIssue, minimalIssueOrKey, emptyMinimalIssue } from '../jira/jiraModel';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
@@ -17,10 +16,11 @@ import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
-    private _state: Issue = emptyIssue;
+export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<minimalIssueOrKey> {
+    private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 
     constructor(extensionPath: string) {
@@ -35,12 +35,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         return "startWorkOnIssueScreen";
     }
 
-    async createOrShowIssue(data: Issue) {
+    async createOrShowIssue(data: MinimalIssue) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    async initialize(data: Issue) {
+    async initialize(data: MinimalIssue) {
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
@@ -49,7 +49,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         if (this._state.key !== data.key) {
             this.postMessage({
                 type: 'update',
-                issue: emptyIssue,
+                issue: emptyMinimalIssue,
                 repoData: []
             });
         }
@@ -132,7 +132,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         await repo.checkout(destBranch);
     }
 
-    public async updateIssue(issue: Issue) {
+    public async updateIssue(issue: MinimalIssue) {
         if (this.isRefeshing) {
             return;
         }
@@ -218,7 +218,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         let key = this._issueKey;
         if (key !== "") {
             try {
-                let issue = await fetchIssue(key, this._state.siteDetails);
+                let issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             }
             catch (e) {

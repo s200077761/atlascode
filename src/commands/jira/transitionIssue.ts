@@ -1,16 +1,16 @@
 import * as vscode from "vscode";
 
 import { Logger } from "../../logger";
-import { Issue, Transition, emptyIssue, isIssue } from "../../jira/jiraModel";
+import { Transition, MinimalIssue, emptyMinimalIssue, isMinimalIssue } from "../../jira/jiraModel";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { IssueNode } from "../../views/nodes/issueNode";
 import { issueTransitionedEvent } from "../../analytics";
 
-export async function transitionIssue(param: Issue | IssueNode, transition?: Transition) {
-  let issue: Issue = emptyIssue;
+export async function transitionIssue(param: MinimalIssue | IssueNode, transition?: Transition) {
+  let issue: MinimalIssue = emptyMinimalIssue;
 
-  if (isIssue(param)) {
+  if (isMinimalIssue(param)) {
     issue = param;
   } else {
     issue = param.issue;
@@ -49,7 +49,7 @@ export async function transitionIssue(param: Issue | IssueNode, transition?: Tra
     });
 }
 
-function isValidTransition(issue: Issue, transition: Transition): boolean {
+function isValidTransition(issue: MinimalIssue, transition: Transition): boolean {
   return transition.name !== undefined &&
     !transition.hasScreen &&
     transition.to !== undefined &&
@@ -57,7 +57,7 @@ function isValidTransition(issue: Issue, transition: Transition): boolean {
     transition.to.id !== issue.status.id;
 }
 
-async function performTranstion(issue: Issue, transition: Transition) {
+async function performTranstion(issue: MinimalIssue, transition: Transition) {
   try {
     const client = await Container.clientManager.jirarequest(issue.siteDetails);
     await client.issue.transitionIssue({ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } });

@@ -6,8 +6,8 @@ import { WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
 import { ProductJira } from "../atlclients/authInfo";
-import { Issue } from "./jiraIssue";
 import { showIssue } from "../commands/jira/showIssue";
+import { MinimalIssue } from "./minimalJiraIssue";
 
 export class NewIssueMonitor {
   private _workingProject: WorkingProject | undefined;
@@ -48,7 +48,7 @@ export class NewIssueMonitor {
       });
   }
 
-  private showNotification(newIssues: Issue[]) {
+  private showNotification(newIssues: MinimalIssue[]) {
     const issueNames = newIssues.map(issue => `[${issue.key}] "${issue.summary}"`);
     commands.executeCommand(Commands.RefreshJiraExplorer);
     var message = "";

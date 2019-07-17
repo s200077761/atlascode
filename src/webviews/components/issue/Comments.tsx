@@ -3,13 +3,13 @@ import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
 import Spinner from '@atlaskit/spinner';
-import { Comment as JiraComment, Issue } from "../../../jira/jiraModel";
+import { Comment as JiraComment, DetailedIssue } from "../../../jira/jiraModel";
 
 export class Comments extends React.Component<
   {
-    issue: Issue;
+    issue: DetailedIssue;
     isCommentLoading: boolean;
-    onSave: (issue: Issue, comment: string) => void;
+    onSave: (issue: DetailedIssue, comment: string) => void;
   },
   { commentInput: string }
   > {

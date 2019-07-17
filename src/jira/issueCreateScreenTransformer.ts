@@ -1,7 +1,7 @@
 import { UIType, InputValueType, IssueTypeScreen, TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType } from "./createIssueMeta";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
-import { EpicFieldInfo } from "./jiraIssue";
+import { EpicFieldInfo } from "./jiraCommon";
 
 const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
 

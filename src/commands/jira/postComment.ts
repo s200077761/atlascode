@@ -1,8 +1,8 @@
-import { Issue } from "../../jira/jiraIssue";
+import { DetailedIssue } from "../../jira/detailedJiraIssue";
 import { Container } from "../../container";
 import { issueCommentEvent } from "../../analytics";
 
-export async function postComment(issue: Issue, comment: string) {
+export async function postComment(issue: DetailedIssue, comment: string) {
   let client = await Container.clientManager.jirarequest(issue.siteDetails);
 
   let resp = await client.issue.addComment({

@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
-import { Issue, emptyIssue } from '../jira/jiraModel';
-import { fetchIssue } from "../jira/fetchIssue";
+import { DetailedIssue, emptyIssue } from '../jira/jiraModel';
+import { fetchDetailedIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -19,8 +19,8 @@ import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Issue> {
-    private _state: Issue = emptyIssue;
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {
+    private _state: DetailedIssue = emptyIssue;
     private _currentUserId?: string;
 
     constructor(extensionPath: string) {
@@ -34,7 +34,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(data: Issue) {
+    async initialize(data: DetailedIssue) {
         this._state = data;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -52,21 +52,21 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         }
     }
 
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
+            switch (msg.action) {
                 case 'refreshIssue': {
                     handled = true;
                     this.forceUpdateIssue();
                     break;
                 }
                 case 'transitionIssue': {
-                    if (isTransitionIssue(e)) {
+                    if (isTransitionIssue(msg)) {
                         handled = true;
                         try {
-                            await transitionIssue(e.issue, e.transition);
+                            await transitionIssue(msg.issue, msg.transition);
                         }
                         catch (e) {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
@@ -76,10 +76,10 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'comment': {
-                    if (isIssueComment(e)) {
+                    if (isIssueComment(msg)) {
                         handled = true;
                         try {
-                            await postComment(e.issue, e.comment);
+                            await postComment(msg.issue, msg.comment);
                             this.forceUpdateIssue();
                         }
                         catch (e) {
@@ -90,13 +90,15 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'assign': {
-                    if (isIssueAssign(e)) {
+                    if (isIssueAssign(msg)) {
                         handled = true;
 
                         try {
-                            e.userId
-                                ? await assignIssue(e.issue, e.userId)
-                                : await unassignIssue(e.issue);
+                            if (msg.userId) {
+                                await assignIssue(msg.issue, msg.userId);
+                            } else {
+                                await unassignIssue(msg.issue);
+                            }
                             this.forceUpdateIssue();
                         }
                         catch (e) {
@@ -111,7 +113,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
                     try {
                         const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                        await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (e as any).fields } });
+                        await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (msg as any).fields } });
                         this.forceUpdateIssue();
                     }
                     catch (e) {
@@ -121,11 +123,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'fetchUsers': {
-                    if (isFetchQuery(e)) {
+                    if (isFetchQuery(msg)) {
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: e.query });
+                            const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: msg.query });
                             this.postMessage({ type: 'userList', users: users.data });
                         }
                         catch (e) {
@@ -136,13 +138,13 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'fetchLabels': {
-                    if (isFetchQuery(e)) {
+                    if (isFetchQuery(msg)) {
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
                             let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
                                 fieldName: 'labels',
-                                fieldValue: `${e.query}`
+                                fieldValue: `${msg.query}`
                             });
 
                             const options: any[] = (res.data.results || []).map((suggestion: any) => suggestion.value);
@@ -156,7 +158,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'fetchComponents': {
-                    if (isFetchQuery(e)) {
+                    if (isFetchQuery(msg)) {
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
@@ -176,7 +178,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'fetchFixVersions': {
-                    if (isFetchQuery(e)) {
+                    if (isFetchQuery(msg)) {
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
@@ -197,20 +199,20 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 }
                 case 'createOption': {
                     handled = true;
-                    if (isCreateSomething(e)) {
+                    if (isCreateSomething(msg)) {
                         try {
 
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            switch (e.createData.fieldKey) {
+                            switch (msg.createData.fieldKey) {
                                 case 'fixVersions':
                                 case 'versions': {
-                                    let resp = await client.version.createVersion({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                    let resp = await client.version.createVersion({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
                                     this.postMessage({ type: 'optionCreated', createdData: resp.data });
 
                                     break;
                                 }
                                 case 'components': {
-                                    let resp = await client.component.createComponent({ body: { name: e.createData.name, project: this._state.key.split('-')[0] } });
+                                    let resp = await client.component.createComponent({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
                                     this.postMessage({ type: 'optionCreated', createdData: resp.data });
 
                                     break;
@@ -224,9 +226,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'openJiraIssue': {
-                    if (isOpenJiraIssue(e)) {
+                    if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueOrKey);
                         break;
                     }
                 }
@@ -239,21 +241,21 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                     break;
                 }
                 case 'openStartWorkPage': {
-                    if (isOpenStartWorkPageAction(e)) {
+                    if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.StartWorkOnIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.StartWorkOnIssue, msg.issue);
                         break;
                     }
                 }
                 case 'openPullRequest': {
-                    if (isOpenPullRequest(e)) {
+                    if (isOpenPullRequest(msg)) {
                         handled = true;
-                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === e.prHref);
+                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
                             vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestProvider.forRepository(pr.repository).get(pr));
                         } else {
-                            Logger.error(new Error(`error opening pullrequest: ${e.prHref}`));
-                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${e.prHref}` });
+                            Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
+                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}` });
                         }
                         break;
                     }
@@ -264,7 +266,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return handled;
     }
 
-    public async updateIssue(issue: Issue) {
+    public async updateIssue(issue: DetailedIssue) {
         if (this.isRefeshing) {
             return;
         }
@@ -322,7 +324,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     private async forceUpdateIssue() {
         if (this._state.key !== "") {
             try {
-                let issue = await fetchIssue(this._state.key, this._state.siteDetails);
+                let issue = await fetchDetailedIssue(this._state.key, this._state.siteDetails);
                 await this.updateIssue(issue);
             }
             catch (e) {

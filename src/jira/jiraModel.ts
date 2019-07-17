@@ -1,3 +1,4 @@
 export * from './jiraCommon';
-export * from './jiraIssue';
+export * from './detailedJiraIssue';
+export * from './minimalJiraIssue';
 export * from './jiraProject';

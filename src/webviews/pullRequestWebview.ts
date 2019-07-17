@@ -7,9 +7,7 @@ import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout, isMerge, Merge } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
-import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
-import { Issue, isIssue } from '../jira/jiraModel';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
@@ -23,6 +21,8 @@ import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { PullRequestProvider } from '../bitbucket/prProvider';
+import { MinimalIssue, isMinimalIssue } from '../jira/jiraModel';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
 
 interface PRState {
     prData: PRData;
@@ -260,7 +260,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<Issue | BitbucketIssue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssue | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -284,12 +284,12 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
-        let result: Issue[] = [];
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
+        let result: MinimalIssue[] = [];
         try {
             if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
+                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchMinimalIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
             }
         }
         catch (e) {
@@ -331,11 +331,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async updateIssue(issue?: Issue | BitbucketIssue) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
         if (!issue) {
             return;
         }
-        if (isIssue(issue)) {
+        if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {
