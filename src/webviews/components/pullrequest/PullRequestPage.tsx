@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
@@ -18,7 +18,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { Approve, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest } from '../../../ipc/prActions';
+import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -38,7 +38,7 @@ import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssue } from '../../../bitbucket/model';
 
-type Emit = Approve | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -87,10 +87,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.state = emptyState;
     }
 
-    handleApprove = () => {
+    handleApprove = (approved: boolean) => {
         this.setState({ isApproveButtonLoading: true });
         this.postMessage({
-            action: 'approve'
+            action: 'updateApproval',
+            approved: approved
         });
     }
 
@@ -227,7 +228,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         if (pr.participants) {
             currentUserApproved = pr.participants!
                 .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
-                .reduce((acc, curr) => !!acc || !!curr.approved, false);
+                .reduce((acc, curr) => !!acc || !!curr.approved, false as boolean);
         }
         const issue = this.state.pr.mainIssue;
         const issueDetails = issue ?
@@ -260,55 +261,50 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             : null;
 
         const actionsContent = (
-            <div>
-                <ButtonGroup>
-                    <Reviewers {...this.state.pr} />
-                    <Tooltip content={currentUserApproved ? '✔ You approved this pull request' : ''}>
-                        <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
-                            isDisabled={currentUserApproved}
-                            isLoading={this.state.isApproveButtonLoading}
-                            onClick={this.handleApprove}>
-                            Approve
-                        </Button>
-                    </Tooltip>
+            <div className='ac-inline-grid'>
+                <Reviewers {...this.state.pr} />
+                <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
+                    isLoading={this.state.isApproveButtonLoading}
+                    onClick={() => this.handleApprove(!currentUserApproved)}>
+                    {currentUserApproved ? 'Unapprove' : 'Approve'}
+                </Button>
 
-                    <div className='ac-inline-dialog'>
-                        <InlineDialog placement='bottom-end'
-                            content={
-                                <div>
-                                    <MergeChecks {...this.state.pr} />
-                                    <div className='ac-vpadding'>
-                                        <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
-                                        <Select
-                                            options={[
-                                                { label: 'Default merge strategy', value: undefined },
-                                                { label: 'Merge commit', value: 'merge_commit' },
-                                                { label: 'Squash', value: 'squash' },
-                                                { label: 'Fast forward', value: 'fast_forward' }
-                                            ]}
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select"
-                                            value={this.state.mergeStrategy}
-                                            onChange={this.handleMergeStrategyChange} />
-                                    </div>
-                                    {issueDetails}
-                                    <div className='ac-vpadding'>
-                                        <div className='ac-flex-space-between'>
-                                            <Checkbox isChecked={this.state.closeSourceBranch} onChange={this.toggleCloseSourceBranch} name='setup-jira-checkbox' label='Close source branch' />
-                                            <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
-                                        </div>
+                <div className='ac-inline-dialog'>
+                    <InlineDialog placement='bottom-end'
+                        content={
+                            <div>
+                                <MergeChecks {...this.state.pr} />
+                                <div className='ac-vpadding'>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <Select
+                                        options={[
+                                            { label: 'Default merge strategy', value: undefined },
+                                            { label: 'Merge commit', value: 'merge_commit' },
+                                            { label: 'Squash', value: 'squash' },
+                                            { label: 'Fast forward', value: 'fast_forward' }
+                                        ]}
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        value={this.state.mergeStrategy}
+                                        onChange={this.handleMergeStrategyChange} />
+                                </div>
+                                {issueDetails}
+                                <div className='ac-vpadding'>
+                                    <div className='ac-flex-space-between'>
+                                        <Checkbox isChecked={this.state.closeSourceBranch} onChange={this.toggleCloseSourceBranch} name='setup-jira-checkbox' label='Close source branch' />
+                                        <Button className='ac-button' isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.handleMerge}>{isPrOpen ? 'Merge' : pr.state}</Button>
                                     </div>
                                 </div>
-                            }
-                            isOpen={this.state.mergeDialogOpen}
-                            onClose={this.closeMergeDialog}>
-                            <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
-                        </InlineDialog>
-                    </div>
-                    {
-                        this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
-                    }
-                </ButtonGroup>
+                            </div>
+                        }
+                        isOpen={this.state.mergeDialogOpen}
+                        onClose={this.closeMergeDialog}>
+                        <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
+                    </InlineDialog>
+                </div>
+                {
+                    this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
+                }
             </div>
         );
         const breadcrumbs = (

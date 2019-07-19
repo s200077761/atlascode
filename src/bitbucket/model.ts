@@ -164,7 +164,7 @@ export interface PullRequestApi {
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
-    approve(pr: PullRequest): Promise<void>;
+    updateApproval(pr: PullRequest, approved: boolean): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;
     postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
 }

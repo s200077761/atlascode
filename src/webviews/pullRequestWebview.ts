@@ -5,7 +5,7 @@ import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -87,26 +87,28 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             && !!s.prData.comments;
     }
 
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
-                case 'approve': {
+            switch (msg.action) {
+                case 'updateApproval': {
                     handled = true;
-                    try {
-                        await this.approve();
-                    } catch (e) {
-                        Logger.error(new Error(`error approving PR: ${e}`));
-                        this.postMessage({ type: 'error', reason: e });
+                    if (isUpdateApproval(msg)) {
+                        try {
+                            await this.approve(msg.approved);
+                        } catch (e) {
+                            Logger.error(new Error(`error approving PR: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }
                 case 'merge': {
                     handled = true;
-                    if (isMerge(e)) {
+                    if (isMerge(msg)) {
                         try {
-                            await this.merge(e);
+                            await this.merge(msg);
                         } catch (e) {
                             Logger.error(new Error(`error merging pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -115,10 +117,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     break;
                 }
                 case 'comment': {
-                    if (isPostComment(e)) {
+                    if (isPostComment(msg)) {
                         handled = true;
                         try {
-                            await this.postComment(e.content, e.parentCommentId);
+                            await this.postComment(msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -127,10 +129,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     break;
                 }
                 case 'checkout': {
-                    if (isCheckout(e)) {
+                    if (isCheckout(msg)) {
                         handled = true;
                         try {
-                            await this.checkout(e.branch, e.isSourceBranch);
+                            await this.checkout(msg.branch, msg.isSourceBranch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -144,23 +146,23 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     break;
                 }
                 case 'openJiraIssue': {
-                    if (isOpenJiraIssue(e)) {
+                    if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueOrKey);
                         break;
                     }
                 }
                 case 'openBitbucketIssue': {
-                    if (isOpenBitbucketIssueAction(e)) {
+                    if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
                     }
                     break;
                 }
                 case 'openPipelineBuild': {
-                    if (isOpenPipelineBuild(e)) {
+                    if (isOpenPipelineBuild(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: e.pipelineUUID } as PipelineInfo);
+                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: msg.pipelineUUID } as PipelineInfo);
                         break;
                     }
                 }
@@ -312,8 +314,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return result;
     }
 
-    private async approve() {
-        await PullRequestProvider.forRepository(this._state.repository!).approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+    private async approve(approved: boolean) {
+        await PullRequestProvider.forRepository(this._state.repository!).updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
         prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }

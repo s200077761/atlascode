@@ -302,14 +302,20 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(data) };
     }
 
-    async  approve(pr: PullRequest) {
+    async  updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
         const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        await bb.pullrequests.createApproval({
-            pull_request_id: String(pr.data.id!),
-            repo_slug: parsed.name,
-            username: parsed.owner
-        });
+        approved
+            ? await bb.pullrequests.createApproval({
+                pull_request_id: String(pr.data.id!),
+                repo_slug: parsed.name,
+                username: parsed.owner
+            })
+            : await bb.pullrequests.deleteApproval({
+                pull_request_id: String(pr.data.id!),
+                repo_slug: parsed.name,
+                username: parsed.owner
+            });
     }
 
     async  merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
