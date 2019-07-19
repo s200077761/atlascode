@@ -8,9 +8,10 @@ export default class Reviewers extends React.Component<PRData, {}> {
     }
 
     render() {
-        if (!this.props.pr!.participants) { return <p>No reviewers!</p>; }
+        if (!this.props.pr!.participants || this.props.pr!.participants.length === 0) { return <p>No reviewers!</p>; }
         const participants = this.props.pr!.participants!
-            .filter(p => p.role === 'REVIEWER')
+            .filter(p => p.approved || p.role === 'REVIEWER')
+            .sort((a, b) => a.approved ? 0 : 1)
             .map(p => {
                 return {
                     name: p.displayName,
@@ -20,7 +21,7 @@ export default class Reviewers extends React.Component<PRData, {}> {
             });
         return (
             <AvatarGroup
-                appearance="grid"
+                appearance="stack"
                 data={participants}
                 maxCount={5}
                 size="medium"
