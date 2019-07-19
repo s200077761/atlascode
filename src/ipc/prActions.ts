@@ -16,8 +16,13 @@ export interface RefreshPullRequest extends Action {
     action: 'refreshPR';
 }
 
-export interface Approve extends Action {
-    action: 'approve';
+export interface UpdateApproval extends Action {
+    action: 'updateApproval';
+    approved: boolean;
+}
+
+export function isUpdateApproval(a: Action): a is UpdateApproval {
+    return (<UpdateApproval>a).approved !== undefined;
 }
 
 export interface Merge extends Action {

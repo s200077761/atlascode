@@ -274,7 +274,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.toPullRequestModel(repository, remote, data, 0);
     }
 
-    async  approve(pr: PullRequest) {
+    async  updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
 
@@ -284,7 +284,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             pullRequestId: pr.data.id,
             userSlug: (await Container.authManager.getAuthInfo(await siteDetailsForRepository(pr.repository)!))!.user.id,
             body: {
-                "status": "APPROVED"
+                status: approved ? 'APPROVED' : 'UNAPPROVED'
             }
         });
     }
