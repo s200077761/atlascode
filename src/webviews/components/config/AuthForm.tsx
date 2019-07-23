@@ -84,7 +84,7 @@ export default class AuthForm extends PureComponent<{
         const url = new URL(this.state.baseUrl);
 
         const siteInfo = {
-            hostname: url.hostname,
+            hostname: url.host,
             product: this.props.product
         };
 
