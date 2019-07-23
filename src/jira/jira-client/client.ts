@@ -11,7 +11,7 @@ import { Field, readField } from './field';
 import { JiraProjectManager } from '../projectManager';
 import { Project } from '../jiraProject';
 
-const issueExpand = "transitions,renderedFields";
+const issueExpand = "names,transitions,renderedFields";
 const API_VERSION = 2;
 
 export class JiraClient {
