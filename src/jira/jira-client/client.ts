@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import * as qs from 'querystringify';
+import { URLSearchParams } from 'url';
 import { isArray } from 'util';
 import { IssueLinkType, User } from '../jiraCommon';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './issueCreateMetadata';
@@ -30,7 +30,6 @@ export class JiraClient {
     }
 
     public authenticateUsingBasic(username: string, password: string) {
-        console.log('XYZZY authenticateUsingBasic');
 
     }
 
@@ -50,14 +49,12 @@ export class JiraClient {
     public async assignIssue(issueIdOrKey: string, accountId: string | undefined): Promise<any> {
         const res = await this.putToJira(`issue/${issueIdOrKey}/assignee`, { accountId: accountId });
 
-        console.log(`Assign issue response: ${JSON.stringify(res)}`);
         return res;
     }
 
     public async editIssue(issueIdOrKey: string, fields: any): Promise<any> {
         const res = await this.putToJira(`issue/${issueIdOrKey}`, { fields: fields });
 
-        console.log(`Edit issue response: ${JSON.stringify(res)}`);
         return res;
     }
 
@@ -189,9 +186,13 @@ export class JiraClient {
     private async getFromJira(url: string, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {
-            url = `${url}?${qs.stringify(queryParams)}`;
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
         }
-        console.log(`Getting from URL: ${url}`);
+
         const res = await fetch(url, {
             method: "GET",
             headers: {
@@ -201,13 +202,13 @@ export class JiraClient {
             agent: this.agent
         });
         const responseObject = await res.json();
-        // console.log(`Response from ${url}\n${JSON.stringify(responseObject)}`);
+
         return responseObject;
     }
 
     private async postToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
-        console.log(`Posting to URL: ${url}`);
+
         const res = await fetch(url, {
             method: "POST",
             headers: {
@@ -226,7 +227,7 @@ export class JiraClient {
 
     private async putToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
-        console.log(`Posting to URL: ${url}`);
+
         const res = await fetch(url, {
             method: "PUT",
             headers: {
