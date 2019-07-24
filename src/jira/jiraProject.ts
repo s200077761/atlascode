@@ -1,5 +1,4 @@
-import { User, IssueType, emptyUser, emptyIssueType } from "./jiraCommon";
-import { isIssueType } from "./jiraCommon";
+import { User, emptyUser } from "./jiraCommon";
 
 export const emptyProjectVersion: ProjectVersion = {
   archived: false,
@@ -38,19 +37,13 @@ export const emptyProject: Project = {
   id: "",
   name: "",
   key: "",
-  assigneeType: "UNASSIGNED",
   avatarUrls: {},
-  components: [],
-  description: "",
-  favourite: false,
-  issueTypes: [],
-  lead: emptyUser,
-  projectTypeKey: "",
-  roles: {},
   self: "",
   simplified: false,
-  url: "",
-  versions: []
+  projectTypeKey: "software",
+  style: "classic",
+  isPrivate: false,
+  uuid: undefined
 };
 
 export interface ProjectVersion {
@@ -98,23 +91,15 @@ export interface Project {
   id: string;
   name: string;
   key: string;
-  assigneeType: "PROJECT_LEAD" | "UNASSIGNED";
   avatarUrls: {
     [k: string]: string;
   };
-  components: ProjectComponent[];
-  description: string;
-  favourite: boolean;
-  issueTypes: IssueType[];
-  lead: User;
-  projectTypeKey: string;
-  roles: {
-    [k: string]: string;
-  };
+  projectTypeKey: "ops" | "software" | "service_desk" | "business";
   self: string;
   simplified: boolean;
-  url: string;
-  versions: ProjectVersion[];
+  style: "CLASSIC" | "NEXTGEN" | "classic" | "next-gen";
+  isPrivate: boolean;
+  uuid: string | undefined; // defined for next-gen
 }
 
 export function isProjectComponent(a: any): a is ProjectComponent {
@@ -146,65 +131,21 @@ export function isProject(a: any): a is Project {
 }
 
 export function projectFromJsonObject(projectJson: any): Project {
-  let components: ProjectComponent[] = [];
-  if (projectJson.components) {
-    components = projectJson.components.map((compJson: any) => {
-      if (isProjectComponent(compJson)) {
-        return compJson;
-      }
-
-      return emptyProjectComponent;
-    });
-  }
-
-  let issueTypes: IssueType[] = [];
-  if (projectJson.issueTypes) {
-    components = projectJson.issueTypes.map((typeJson: any) => {
-      if (isIssueType(typeJson)) {
-        return typeJson;
-      }
-
-      return emptyIssueType;
-    });
-  }
-
-  let versions: ProjectVersion[] = [];
-  if (projectJson.versions) {
-    versions = projectJson.versions.map((verJson: any) => {
-      if (isProjectVersion(verJson)) {
-        return verJson;
-      }
-
-      return emptyProjectVersion;
-    });
-  }
-
   let avatarUrls: { [k: string]: string } = {};
   if (projectJson.avatarUrls) {
     avatarUrls = projectJson.avatarUrls;
-  }
-
-  let roles: { [k: string]: string } = {};
-  if (projectJson.roles) {
-    roles = projectJson.roles;
   }
 
   return {
     id: projectJson.id,
     name: projectJson.name,
     key: projectJson.key,
-    assigneeType: projectJson.assigneeType,
     avatarUrls: avatarUrls,
-    components: components,
-    description: projectJson.description,
-    favourite: projectJson.favourite,
-    issueTypes: issueTypes,
-    lead: projectJson.lead,
     projectTypeKey: projectJson.projectTypeKey,
-    roles: roles,
     self: projectJson.self,
     simplified: projectJson.simplified,
-    url: projectJson.url,
-    versions: versions
+    style: projectJson.style,
+    isPrivate: projectJson.isPrivate,
+    uuid: projectJson.uuid
   };
 }

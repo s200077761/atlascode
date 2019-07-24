@@ -59,14 +59,14 @@ export class JiraProjectManager extends Disposable {
         const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
         const order = orderBy !== undefined ? orderBy : 'key';
         Logger.debug('calling getProjectsPaginated');
-        const resp = await client.project.getProjectsPaginated({ orderBy: order, query: query });
+        const resp = await client.getProjectsPaginated(query, order);
         Logger.debug('got response', resp);
-        this._projectsAvailable = this.readProjects(resp.data.values);
+        this._projectsAvailable = resp;
 
         return this._projectsAvailable;
     }
 
-    private readProjects(projects: JIRA.Schema.ProjectBean[] | undefined): Project[] {
+    public static readProjects(projects: any[] | undefined): Project[] {
 
         if (projects) {
             return projects

@@ -5,7 +5,7 @@ import {
   Disposable,
 } from "vscode";
 import * as BitbucketKit from "bitbucket";
-import * as JiraKit from "@atlassian/jira";
+import { JiraClient } from "../jira/jira-client/client";
 import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, AccessibleResource } from "./authInfo";
 import { Container } from "../container";
 import { OAuthDancer } from "./oauthDancer";
@@ -284,23 +284,18 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async jirarequest(site: DetailedSiteInfo): Promise<JiraKit> {
-    return this.getClient<JiraKit>(
+  public async jirarequest(site: DetailedSiteInfo): Promise<JiraClient> {
+    return this.getClient<JiraClient>(
       site,
       info => {
-        let extraOptions = {};
-        if (this._agent) {
-          extraOptions = { agent: this._agent };
-        }
-
-        const client = new JiraKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+        const client = new JiraClient(site.baseApiUrl, this._agent);
 
         if (isOAuthInfo(info)) {
-          client.authenticate({ type: "token", token: info.access });
+          client.authenticateUsingToken(info.access);
         }
 
         if (isBasicAuthInfo(info)) {
-          client.authenticate({ type: "basic", username: info.username, password: info.password });
+          client.authenticateUsingBasic(info.username, info.password);
         }
 
         return client;
