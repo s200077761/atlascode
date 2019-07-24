@@ -7,7 +7,7 @@ import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
-import { IssueScreenTransformer } from '../jira/issueCreateScreenTransformer';
+import { IssueCreateScreenTransformer } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { TransformerResult } from '../jira/createIssueMeta';
@@ -104,7 +104,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
                 let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
-                const screenTransformer = new IssueScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.data.projects![0]);
+                const screenTransformer = new IssueCreateScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.data.projects![0]);
                 this._screenData = await screenTransformer.transformIssueScreens();
                 this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
 
@@ -118,7 +118,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     availableProjects: availableProjects,
                     issueTypeScreens: this._screenData.screens,
                     transformerProblems: this._screenData.problems,
-                    epicFieldInfo: await Container.jiraFieldManager.getEpicFieldsForSite(Container.siteManager.effectiveSite(ProductJira))
+                    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(Container.siteManager.effectiveSite(ProductJira))
                 };
 
 

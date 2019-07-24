@@ -5,7 +5,7 @@ import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { WorkingProject } from "../config/model";
 import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
-import { IssueScreenTransformer } from "../jira/issueCreateScreenTransformer";
+import { IssueCreateScreenTransformer } from "../jira/issueCreateScreenTransformer";
 import { IssueProblemsData } from "../ipc/issueMessaging";
 
 type Emit = HostErrorMessage | IssueProblemsData;
@@ -49,7 +49,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Actio
             const client = await Container.clientManager.jirarequest(this._site);
 
             let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._project.key], expand: 'projects.issuetypes.fields' });
-            const screenTransformer = new IssueScreenTransformer(this._site, res.data.projects![0]);
+            const screenTransformer = new IssueCreateScreenTransformer(this._site, res.data.projects![0]);
             let data = await screenTransformer.transformIssueScreens();
 
             this.postMessage({ type: 'screenRefresh', problems: data.problems, project: this._project });

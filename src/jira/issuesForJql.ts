@@ -8,8 +8,8 @@ export async function issuesForJQL(jql: string): Promise<MinimalIssue[]> {
   const site = Container.siteManager.effectiveSite(ProductJira);
 
   const client = await Container.clientManager.jirarequest(site);
-  const fields = await Container.jiraFieldManager.getMinimalIssueFieldIdsForSite(site);
-  const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(site);
+  const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+  const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 
   const res = await client.search
     .searchForIssuesUsingJqlGet({

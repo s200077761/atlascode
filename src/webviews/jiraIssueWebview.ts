@@ -291,7 +291,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             msg.type = 'update';
             msg.currentUserId = this._currentUserId!;
 
-            const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.siteDetails);
+            const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails);
 
             const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key} AND cf[${epicFieldInfo.epicLink.cfid}] != ${issue.key}`);
             msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));

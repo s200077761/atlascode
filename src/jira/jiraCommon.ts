@@ -135,6 +135,10 @@ export interface User {
     timeZone: string;
 }
 
+export interface JiraSettings {
+
+}
+
 export interface Avatars {
     '48x48': string;
     '24x24': string;
