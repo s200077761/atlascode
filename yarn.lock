@@ -500,18 +500,6 @@
     node-fetch "^2.1.2"
     url-template "^2.0.8"
 
-"@atlassian/jira@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@atlassian/jira/-/jira-0.1.0.tgz#0238d6d1e053886a5909f473859a380a6b794b08"
-  integrity sha512-NPQqF6xVoCzkLzVuIILTV5OCvtChoxxVr+N8/JHXOUAPaC23Y29gsX+h40OYJg7JJb4tRnDuOgGqW4ObKBUmxQ==
-  dependencies:
-    before-after-hook "^1.1.0"
-    btoa-lite "^1.0.0"
-    debug "^3.1.0"
-    is-plain-object "^2.0.4"
-    node-fetch "^2.1.2"
-    url-template "^2.0.8"
-
 "@babel/code-frame@^7.0.0-beta.35":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.0.0.tgz#06e2ab19bdb535385559aabb5ba59729482800f8"

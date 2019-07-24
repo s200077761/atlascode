@@ -13,13 +13,7 @@ export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: s
     accountId = me ? me.accountId : undefined;
   }
 
-  const response = await client.issue
-    .assignIssue({
-      issueIdOrKey: issue.id,
-      body: {
-        accountId: accountId
-      }
-    });
+  const response = await client.assignIssue(issue.id, accountId);
   Logger.info(response);
   Container.jiraExplorer.refresh();
 }
@@ -27,13 +21,7 @@ export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: s
 export async function unassignIssue(issue: MinimalIssue) {
   const client = await Container.clientManager.jirarequest(issue.siteDetails);
 
-  const response = await client.issue
-    .assignIssue({
-      issueIdOrKey: issue.id,
-      body: {
-        accountId: undefined
-      }
-    });
+  const response = await client.assignIssue(issue.id, undefined);
   Logger.info(response);
   Container.jiraExplorer.refresh();
 }

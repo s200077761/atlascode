@@ -14,7 +14,8 @@ import {
   emptyPriority,
   DetailedIssue,
   Transition,
-  IdName
+  IdName,
+  User
 } from "../../../jira/jiraModel";
 import {
   TransitionIssueAction,
@@ -126,7 +127,7 @@ export default class JiraIssuePage extends WebviewComponent<
   MyState
   > {
 
-  private userSuggestions: JIRA.Schema.User[] | undefined = undefined;
+  private userSuggestions: User[] | undefined = undefined;
   private labelSuggestions: string[] | undefined = undefined;
   private componentSuggestions: IdName[] | undefined = undefined;
   private fixVersionSuggestions: IdName[] | undefined = undefined;

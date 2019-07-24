@@ -17,6 +17,7 @@ import { isOpenPullRequest } from '../ipc/prActions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
+import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {
@@ -113,7 +114,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
 
                     try {
                         const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                        await client.issue.editIssue({ issueIdOrKey: this._state.key, body: { fields: (msg as any).fields } });
+                        await client.editIssue(this._state.key, (msg as any).fields);
                         this.forceUpdateIssue();
                     }
                     catch (e) {
@@ -127,8 +128,8 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            const users = await client.user.findUsersAssignableToIssues({ issueKey: this._state.key, query: msg.query });
-                            this.postMessage({ type: 'userList', users: users.data });
+                            const users = await client.findUsersAssignableToIssues(this._state.key, msg.query);
+                            this.postMessage({ type: 'userList', users: users });
                         }
                         catch (e) {
                             Logger.error(new Error(`error fetching users: ${e}`));
@@ -142,12 +143,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
-                                fieldName: 'labels',
-                                fieldValue: `${msg.query}`
-                            });
+                            let res: AutoCompleteSuggestion[] = await client.getFieldAutoCompleteSuggestions('labels', msg.query);
 
-                            const options: any[] = (res.data.results || []).map((suggestion: any) => suggestion.value);
+                            const options: any[] = res.map((suggestion: any) => suggestion.value);
                             this.postMessage({ type: 'labelList', labels: options });
                         }
                         catch (e) {
@@ -162,11 +160,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+                            let res = await client.getEditIssueMetadata(this._state.key);
 
                             let options: any[] = [];
-                            if (res.data.fields && res.data.fields['components'] && res.data.fields['components'].allowedValues) {
-                                options = res.data.fields['components'].allowedValues;
+                            if (res.fields && res.fields['components'] && res.fields['components'].allowedValues) {
+                                options = res.fields['components'].allowedValues;
                             }
                             this.postMessage({ type: 'componentList', fieldId: 'components', options: options });
                         }
@@ -182,11 +180,11 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            let res = await client.issue.getEditIssueMetadata({ issueIdOrKey: this._state.key });
+                            let res = await client.getEditIssueMetadata(this._state.key);
 
                             let options: any[] = [];
-                            if (res.data.fields && res.data.fields['fixVersions'] && res.data.fields['fixVersions'].allowedValues) {
-                                options = res.data.fields['fixVersions'].allowedValues;
+                            if (res.fields && res.fields['fixVersions'] && res.fields['fixVersions'].allowedValues) {
+                                options = res.fields['fixVersions'].allowedValues;
                             }
                             this.postMessage({ type: 'fixVersionList', fieldId: 'fixVersions', options: options });
                         }
@@ -206,14 +204,14 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                             switch (msg.createData.fieldKey) {
                                 case 'fixVersions':
                                 case 'versions': {
-                                    let resp = await client.version.createVersion({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
-                                    this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                                    let resp = await client.createVersion({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
+                                    this.postMessage({ type: 'optionCreated', createdData: resp });
 
                                     break;
                                 }
                                 case 'components': {
-                                    let resp = await client.component.createComponent({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
-                                    this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                                    let resp = await client.createComponent({ body: { name: msg.createData.name, project: this._state.key.split('-')[0] } });
+                                    this.postMessage({ type: 'optionCreated', createdData: resp });
 
                                     break;
                                 }

@@ -128,11 +128,11 @@ export interface User {
     active: boolean;
     avatarUrls: Avatars;
     displayName: string;
-    emailAddress: string;
-    key: string;
-    name: string;
+    emailAddress: string | undefined;
+    key: string | undefined;
+    name: string | undefined;
     self: string;
-    timeZone: string;
+    timeZone: string | undefined;
 }
 
 export interface JiraSettings {

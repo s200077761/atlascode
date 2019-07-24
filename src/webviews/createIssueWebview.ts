@@ -14,6 +14,9 @@ import { TransformerResult } from '../jira/createIssueMeta';
 import { ProductJira } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
+import { AutoCompleteSuggestion } from '../jira/jira-client/client';
+import { User } from '../jira/jiraModel';
+import { IssuePickerResult, IssuePickerIssue } from '../jira/jira-client/issuePickerResult';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -103,10 +106,10 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 this._screenData = undefined;
                 let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
-                let res: JIRA.Response<JIRA.Schema.CreateMetaBean> = await client.issue.getCreateIssueMetadata({ projectKeys: [this._currentProject.key], expand: 'projects.issuetypes.fields' });
-                const screenTransformer = new IssueCreateScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.data.projects![0]);
+                let res = await client.getCreateIssueMetadata(this._currentProject.key);
+                const screenTransformer = new IssueCreateScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.projects![0]);
                 this._screenData = await screenTransformer.transformIssueScreens();
-                this._selectedIssueTypeId = this._screenData.selectedIssueType.id!;
+                this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             }
 
@@ -184,19 +187,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
                             if (client) {
-                                let res: JIRA.Response<JIRA.Schema.AutoCompleteResultWrapper> = await client.jql.getFieldAutoCompleteSuggestions({
-                                    fieldName: 'labels',
-                                    fieldValue: `${e.query}`
-                                });
+                                let suggestions: AutoCompleteSuggestion[] = await client.getFieldAutoCompleteSuggestions('labels', e.query);
 
-                                const suggestions = res.data.results;
-                                let options: any[] = [];
-
-                                if (suggestions && suggestions.length > 0) {
-                                    options = suggestions.map((suggestion: any) => {
-                                        return suggestion.value;
-                                    });
-                                }
+                                const options = suggestions.map(suggestion => suggestion.value);
 
                                 this.postMessage({ type: 'labelList', labels: options });
 
@@ -219,9 +212,9 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
-                                let res: JIRA.Response<JIRA.Schema.User[]> = await client.user.findUsersAssignableToIssues({ project: `${e.project}`, query: `${e.query}` });
+                                let res: User[] = await client.findUsersAssignableToIssues(e.project, e.query);
 
-                                this.postMessage({ type: 'userList', users: res.data });
+                                this.postMessage({ type: 'userList', users: res });
 
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
@@ -239,10 +232,10 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
-                                let res: JIRA.Response<JIRA.Schema.IssuePickerResult> = await client.issue.getIssuePickerSuggestions({ query: e.query });
-                                let suggestions: JIRA.Schema.IssuePickerIssue[] = [];
-                                if (Array.isArray(res.data.sections)) {
-                                    suggestions = res.data.sections.reduce((prev, curr) => prev.concat(curr.issues), []);
+                                let res: IssuePickerResult = await client.getIssuePickerSuggestions(e.query);
+                                let suggestions: IssuePickerIssue[] = [];
+                                if (Array.isArray(res.sections)) {
+                                    suggestions = res.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
                                 }
                                 this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
 
@@ -294,14 +287,14 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 switch (e.createData.fieldKey) {
                                     case 'fixVersions':
                                     case 'versions': {
-                                        let resp = await client.version.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                                        let resp = await client.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp });
 
                                         break;
                                     }
                                     case 'components': {
-                                        let resp = await client.component.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp.data });
+                                        let resp = await client.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
+                                        this.postMessage({ type: 'optionCreated', createdData: resp });
 
                                         break;
                                     }
@@ -344,7 +337,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                     delete e.issueData.worklog;
                                 }
 
-                                const resp = await client.issue.createIssue({ body: { fields: e.issueData, update: worklog } });
+                                const resp = await client.createIssue({ body: { fields: e.issueData, update: worklog } });
 
                                 if (formLinks &&
                                     formLinks.type && formLinks.type.id &&
@@ -356,8 +349,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                                 type: {
                                                     id: formLinks.type.id
                                                 },
-                                                inwardIssue: formLinks.type.type === 'inward' ? { key: link.key } : { key: resp.data.key },
-                                                outwardIssue: formLinks.type.type === 'outward' ? { key: link.key } : { key: resp.data.key }
+                                                inwardIssue: formLinks.type.type === 'inward' ? { key: link.key } : { key: resp.key },
+                                                outwardIssue: formLinks.type.type === 'outward' ? { key: link.key } : { key: resp.key }
                                             }
                                         );
                                     });
@@ -366,16 +359,16 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                 if (issuelinks.length > 0) {
                                     issuelinks.forEach(async (link: any) => {
                                         if (client) {
-                                            await client.issueLink.createIssueLink({ body: link });
+                                            await client.createIssueLink({ body: link });
                                         }
                                     });
                                 }
 
 
-                                this.postMessage({ type: 'issueCreated', issueData: resp.data });
-                                issueCreatedEvent(resp.data.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                this.postMessage({ type: 'issueCreated', issueData: resp });
+                                issueCreatedEvent(resp.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);
-                                this.fireCallback(resp.data.key);
+                                this.fireCallback(resp.key);
                             } else {
                                 this.postMessage({ type: 'error', reason: "jira client undefined" });
                             }

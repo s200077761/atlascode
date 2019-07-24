@@ -52,8 +52,6 @@ export const emptyIssue: DetailedIssue = {
 };
 
 
-export const issueExpand = "names,transitions,renderedFields";
-
 export function isDetailedIssue(a: any): a is DetailedIssue {
     return a && (<DetailedIssue>a).key !== undefined
         && (<DetailedIssue>a).summary !== undefined
