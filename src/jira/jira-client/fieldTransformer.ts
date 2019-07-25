@@ -1,10 +1,15 @@
-import { UIType, multiSelectSchemas, createableSelectSchemas, schemaToUIMap, InputValueType, schemaToInputValueMap, defaultFieldFilters, FieldProblem, knownSystemSchemas, knownCustomSchemas } from "./commonIssueMeta";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Container } from "../container";
-import { EpicFieldInfo } from "./jiraCommon";
-import { IssueLinkType } from "./jira-client/model/entities";
-import { FieldMeta } from "./jira-client/model/fieldMetadata";
 
+import { FieldTransformerResult, defaultFieldFilters, UIType, knownSystemSchemas, knownCustomSchemas, multiSelectSchemas, createableSelectSchemas, schemaToUIMap, InputValueType, schemaToInputValueMap, FieldProblem } from "./model/fieldUI";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { EpicFieldInfo } from "../jiraCommon";
+import { IssueLinkType } from "./model/entities";
+import { FieldMeta } from "./model/fieldMetadata";
+import { Container } from "../../container";
+
+interface ProblemCollector {
+    problems: FieldProblem[];
+    hasRequireNonRenderables: boolean;
+}
 
 export class FieldTransformer {
 
@@ -18,17 +23,40 @@ export class FieldTransformer {
         this._commonFields = commonFields;
     }
 
-    public async transformFields(projectKey: string, filterFieldKeys: string[] = defaultFieldFilters): any {
+    public async transformFields(fields: { [k: string]: FieldMeta }, projectKey: string, filterFieldKeys: string[] = defaultFieldFilters): Promise<FieldTransformerResult> {
+
+        const result: FieldTransformerResult = {
+            fields: [],
+            nonRenderableFields: [],
+            hasRequireNonRenderables: false,
+        };
+
+        const problemCollector: ProblemCollector = { problems: [], hasRequireNonRenderables: false };
+
         if (!this._epicFieldInfo) {
             this._epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
         }
-        // grab the issue link types
+
+        // if we don't have issueLinkTypes, filter out the issue links
         const issuelinkTypes = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
         if (Array.isArray(issuelinkTypes) && issuelinkTypes.length > 0) {
             this._issueLinkTypes = issuelinkTypes;
         } else {
             filterFieldKeys.push('issuelinks');
         }
+
+        // transform the fields
+        Object.keys(fields).forEach(k => {
+            const field: FieldMeta = fields[k];
+            if (field && !this.shouldFilter(field, filterFieldKeys, problemCollector)) {
+                result.fields.push(this.transformField(field, projectKey));
+            }
+        });
+
+        result.nonRenderableFields = problemCollector.problems;
+        result.hasRequireNonRenderables = problemCollector.hasRequireNonRenderables;
+
+        return result;
     }
 
     private transformField(field: FieldMeta, projectKey: string): any {
@@ -156,22 +184,27 @@ export class FieldTransformer {
         }
     }
 
-    private shouldFilter(itype: JIRA.Schema.CreateMetaIssueTypeBean, field: JIRA.Schema.FieldMetaBean, filters: string[]): boolean {
+    private shouldFilter(field: FieldMeta, filters: string[], collector: ProblemCollector): boolean {
         if (filters.includes(field.key)) {
             return true;
         }
 
-        if (!field.required && ((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
+        if (((field.schema.system !== undefined && !knownSystemSchemas.includes(field.schema.system))
             || (field.schema.custom !== undefined && !knownCustomSchemas.includes(field.schema.custom)))) {
             let schema = field.schema.system !== undefined ? field.schema.system : field.schema.custom;
             if (!schema) {
                 schema = "unknown schema";
             }
-            this.addFieldProblem(itype, {
-                field: field,
-                message: "field contains non-renderable schema",
+
+            const msg = field.required ? "required field contains non-renderable schema" : "field contains non-renderable schema";
+            this.addFieldProblem({
+                key: field.key,
+                name: field.name,
+                required: field.required,
+                message: msg,
                 schema: schema
-            });
+            }, collector);
+
             return true;
         }
 
@@ -227,20 +260,15 @@ export class FieldTransformer {
         return InputValueType.String;
     }
 
-    private addFieldProblem(problem: FieldProblem) {
-        if (!this._problems[issueType.id!]) {
-            this._problems[issueType.id!] = {
-                issueType: this.jiraTypeToSimpleType(issueType),
-                isRenderable: true,
-                nonRenderableFields: [],
-                message: ""
-            };
-        }
+    private addFieldProblem(problem: FieldProblem, collector: ProblemCollector) {
 
-        let alreadyFound = this._problems[issueType.id!].nonRenderableFields.find(p => p.field.key === problem.field.key);
+        let alreadyFound = collector.problems.find(p => p.key === problem.key);
 
         if (!alreadyFound) {
-            this._problems[issueType.id!].nonRenderableFields.push(problem);
+            collector.problems.push(problem);
+            if (problem.required) {
+                collector.hasRequireNonRenderables = true;
+            }
         }
     }
 }

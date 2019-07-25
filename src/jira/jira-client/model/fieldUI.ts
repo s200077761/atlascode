@@ -18,7 +18,7 @@ export enum InputValueType {
     Url = 'url'
 }
 
-export interface ScreenField {
+export interface FieldUI {
     required: boolean;
     name: string;
     key: string;
@@ -26,19 +26,19 @@ export interface ScreenField {
     advanced: boolean;
 }
 
-export interface InputScreenField extends ScreenField {
+export interface InputFieldUI extends FieldUI {
     valueType: InputValueType;
 }
 
-export interface OptionableScreenField extends ScreenField {
+export interface OptionableFieldUI extends FieldUI {
     allowedValues: any[];
 }
 
-export interface UserScreenField extends ScreenField {
+export interface UserFieldUI extends FieldUI {
     isMulti: boolean;
 }
 
-export interface SelectScreenField extends OptionableScreenField {
+export interface SelectFieldUI extends OptionableFieldUI {
     isMulti: boolean;
     isCascading: boolean;
     isCreateable: boolean;
@@ -47,12 +47,14 @@ export interface SelectScreenField extends OptionableScreenField {
 }
 
 export interface FieldTransformerResult {
-    fields: ScreenField[];
+    fields: FieldUI[];
     nonRenderableFields: FieldProblem[];
+    hasRequireNonRenderables: boolean;
 }
 
 export interface FieldProblem {
     key: string;
+    name: string;
     required: boolean;
     message: string;
     schema: string;

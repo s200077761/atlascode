@@ -25,7 +25,7 @@ export interface FieldMeta {
     readonly id: string;
     readonly name: string;
     readonly key: string;
-    autoCompleteUrl: string | undefined;
+    readonly autoCompleteUrl: string | undefined;
     readonly required: boolean;
     readonly allowedValues: string[];
 }

@@ -1,10 +1,10 @@
-import { TransformerProblems, IssueTypeProblem, FieldProblem, TransformerResult, SimpleIssueType, IssueTypeScreen } from "./createIssueMeta";
+import { TransformerProblems, IssueTypeProblem, TransformerResult, SimpleIssueType, IssueTypeScreen } from "./createIssueMeta";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Container } from "../container";
-import { EpicFieldInfo } from "./jiraCommon";
-import { defaultFieldFilters, knownSystemSchemas, knownCustomSchemas } from "./commonIssueMeta";
+import { knownSystemSchemas, knownCustomSchemas } from "./commonIssueMeta";
 import { FieldTransformer } from "./fieldTransformer";
-import { Project } from "./jiraProject";
+import { Project } from "./jira-client/model/entities";
+import { ProjectIssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
+
 
 const defaultCommonFields: string[] = [
     'summary'
@@ -21,8 +21,8 @@ export class IssueCreateScreenTransformer {
     private _fieldTransformer: FieldTransformer;
     private _problems: TransformerProblems = {};
 
-    constructor(site: DetailedSiteInfo, project: Project) {
-        this._fieldTransformer = new FieldTransformer(site, project, defaultCommonFields);
+    constructor(site: DetailedSiteInfo, project: ProjectIssueCreateMetadata) {
+        this._fieldTransformer = new FieldTransformer(site, defaultCommonFields);
     }
 
     public async transformIssueScreens(filterFieldKeys: string[] = defaultFieldFilters): Promise<TransformerResult> {
