@@ -7,7 +7,7 @@ import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
 import { IssueCreateScreenTransformer } from "../jira/issueCreateScreenTransformer";
 import { IssueProblemsData } from "../ipc/issueMessaging";
-import { IssueCreateMetadata } from "../jira/jira-client/issueCreateMetadata";
+import { IssueCreateMetadata } from "../jira/jira-client/model/issueCreateMetadata";
 
 type Emit = HostErrorMessage | IssueProblemsData;
 

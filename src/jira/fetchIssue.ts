@@ -1,7 +1,7 @@
 import { Container } from "../container";
 import { DetailedIssue } from "./jiraModel";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { issueFromJsonObject, minimalIssueFromJsonObject } from "./issueFromJson";
+import { issueFromJsonObject, minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
 import { MinimalIssue } from "./minimalJiraIssue";
 
 export async function fetchDetailedIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<DetailedIssue> {
@@ -21,10 +21,10 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
 
   return minimalIssueFromJsonObject(res.data, siteDetails, epicFieldInfo);
 
-async function fetchIssue(issue: string, fields: string[], siteDetails: DetailedSiteInfo): Promise<any> {
-  const client = await Container.clientManager.jirarequest(siteDetails);
+  async function fetchIssue(issue: string, fields: string[], siteDetails: DetailedSiteInfo): Promise<any> {
+    const client = await Container.clientManager.jirarequest(siteDetails);
 
-  const issuesJson = await client.getIssue(issue, fields);
+    const issuesJson = await client.getIssue(issue, fields);
 
-  return issuesJson;
-}
+    return issuesJson;
+  }

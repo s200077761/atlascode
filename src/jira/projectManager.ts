@@ -2,9 +2,9 @@ import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscod
 import { Container } from "../container";
 import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } from "../config/configuration";
 import { ProductJira } from "../atlclients/authInfo";
-import { Project, isProject, projectFromJsonObject } from "./jiraModel";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { Logger } from "../logger";
+import { Project, isProject, readProject } from "./jira-client/model/entities";
 
 
 export type JiraAvailableProjectsUpdateEvent = {
@@ -71,7 +71,7 @@ export class JiraProjectManager extends Disposable {
         if (projects) {
             return projects
                 .filter(project => isProject(project))
-                .map(project => projectFromJsonObject(project));
+                .map(project => readProject(project));
         }
 
         return [];

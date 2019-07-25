@@ -1,9 +1,11 @@
 import { Message } from "./messaging";
-import { DetailedIssue, Project, EpicFieldInfo, MinimalIssue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
 import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
+import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
+import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
+import { EpicFieldInfo } from "../jira/jiraCommon";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.

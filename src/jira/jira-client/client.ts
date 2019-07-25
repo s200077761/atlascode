@@ -1,15 +1,10 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import { isArray } from 'util';
-import { IssueLinkType, User } from '../jiraCommon';
-import { IssueCreateMetadata, readIssueCreateMetadata } from './issueCreateMetadata';
-import { Version, readVersion } from './version';
-import { Component, readComponent } from './component';
-import { CreatedIssue, readCreatedIssue } from './createdIssue';
-import { IssuePickerResult } from './issuePickerResult';
-import { Field, readField } from './field';
+import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
+import { Field, readField } from './model/fieldMetadata';
 import { JiraProjectManager } from '../projectManager';
-import { Project } from '../jiraProject';
+import { CreatedIssue, readCreatedIssue, IssuePickerResult } from './model/responses';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User } from './model/entities';
 
 const issueExpand = "names,transitions,renderedFields";
 const API_VERSION = 2;
@@ -107,7 +102,7 @@ export class JiraClient {
         }
         const res = await this.getFromJira('project/search', queryValues);
 
-        if (isArray(res.values)) {
+        if (Array.isArray(res.values)) {
             return JiraProjectManager.readProjects(res.values);
         }
         return [];
@@ -123,7 +118,7 @@ export class JiraClient {
     public async getFieldAutoCompleteSuggestions(fieldName: string, fieldValue: string): Promise<AutoCompleteSuggestion[]> {
         const res = await this.getFromJira('jql/autocompletedata/suggestions', { fieldName: fieldName, fieldValue: fieldValue });
 
-        if (isArray(res)) {
+        if (Array.isArray(res)) {
             return res.map((s: any) => readAutoCompleteSuggestion(s));
         }
 
@@ -169,7 +164,7 @@ export class JiraClient {
     // Field
     public async getFields(params: any): Promise<Field[]> {
         const res = await this.getFromJira('field');
-        if (isArray(res)) {
+        if (Array.isArray(res)) {
             return res.map(f => readField(f));
         }
 

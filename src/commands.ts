@@ -13,7 +13,7 @@ import { viewScreenEvent, Registry } from './analytics';
 import { showIssue } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { BitbucketIssue } from './bitbucket/model';
-import { MinimalIssue, isMinimalIssue } from './jira/jiraModel';
+import { MinimalIssue, isMinimalIssue } from './jira/jira-client/model/entities';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',

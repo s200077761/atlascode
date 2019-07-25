@@ -1,7 +1,8 @@
 import { Container } from "../container";
 import { ProductJira } from "../atlclients/authInfo";
-import { MinimalIssue } from "./minimalJiraIssue";
-import { readSearchResults } from "./jira-client/searchResults";
+import { MinimalIssue } from "./jira-client/model/entities";
+import { readSearchResults } from "./jira-client/model/responses";
+
 
 export async function issuesForJQL(jql: string): Promise<MinimalIssue[]> {
   const site = Container.siteManager.effectiveSite(ProductJira);

@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
-import { isDetailedIssue, DetailedIssue, MinimalIssue, isMinimalIssue } from "../../jira/jiraModel";
 import { Container } from "../../container";
 import { fetchDetailedIssue } from "../../jira/fetchIssue";
 import { ProductJira } from "../../atlclients/authInfo";
+import { DetailedIssue, isDetailedIssue } from "../../jira/jira-client/model/detailedJiraIssue";
+import { MinimalIssue, isMinimalIssue } from "../../jira/jira-client/model/entities";
 
 export async function showIssue(param: DetailedIssue | MinimalIssue | string | undefined) {
   let issue = param;

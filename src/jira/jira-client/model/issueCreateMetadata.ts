@@ -1,5 +1,5 @@
 import { isArray } from 'util';
-import { FieldMeta } from './field';
+import { FieldMeta } from './fieldMetadata';
 
 //CreateMetaBean
 export interface IssueCreateMetadata {

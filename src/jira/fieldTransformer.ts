@@ -11,9 +11,8 @@ export class FieldTransformer {
     protected _issueLinkTypes: IssueLinkType[] = [];
     protected _commonFields: string[];
 
-    constructor(site: DetailedSiteInfo, project: Project, commonFields: string[]) {
+    constructor(site: DetailedSiteInfo, commonFields: string[]) {
         this._site = site;
-        this._project = project;
         this._commonFields = commonFields;
     }
 

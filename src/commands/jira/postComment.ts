@@ -1,4 +1,4 @@
-import { DetailedIssue } from "../../jira/detailedJiraIssue";
+import { DetailedIssue } from "../../jira/jira-client/model/detailedJiraIssue";
 import { Container } from "../../container";
 import { issueCommentEvent } from "../../analytics";
 

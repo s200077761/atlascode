@@ -4,8 +4,9 @@ import { Container } from "../container";
 import { ProductJira, DetailedSiteInfo } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { configuration } from "../config/configuration";
-import { EpicFieldInfo, epicsDisabled, IssueLinkType } from "./jiraCommon";
+import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
+import { IssueLinkType } from "./jira-client/model/entities";
 
 
 export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
@@ -40,20 +41,13 @@ export class JiraSettingsManager extends Disposable {
 
     public async getIssueLinkTypes(site: DetailedSiteInfo): Promise<IssueLinkType[]> {
         if (!this._issueLinkTypesStore.has(site.id)) {
-            const ilts: IssueLinkType[] = [];
+            let ilts: IssueLinkType[] = [];
             try {
                 const client = await Container.clientManager.jirarequest(site);
-                const issuelinkTypesResponse = await client.issueLinkType.getIssueLinkTypes({});
+                const issuelinkTypes = await client.getIssueLinkTypes();
 
-                if (Array.isArray(issuelinkTypesResponse.data.issueLinkTypes) && issuelinkTypesResponse.data.issueLinkTypes.length > 0) {
-                    issuelinkTypesResponse.data.issueLinkTypes!.forEach(ilt => {
-                        ilts.push({
-                            id: ilt.id!,
-                            name: ilt.name!,
-                            inward: ilt.inward!,
-                            outward: ilt.outward!
-                        });
-                    });
+                if (Array.isArray(issuelinkTypes)) {
+                    ilts = issuelinkTypes;
                 }
             } catch (err) {
                 // TODO: [VSCODE-549] use /configuration to get settings

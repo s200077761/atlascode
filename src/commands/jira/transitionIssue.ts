@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
 
 import { Logger } from "../../logger";
-import { Transition, MinimalIssue, emptyMinimalIssue, isMinimalIssue } from "../../jira/jiraModel";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { IssueNode } from "../../views/nodes/issueNode";
 import { issueTransitionedEvent } from "../../analytics";
+import { MinimalIssue, Transition, isMinimalIssue } from "../../jira/jira-client/model/entities";
+import { emptyMinimalIssue } from "../../jira/jira-client/model/emptyEntities";
 
 export async function transitionIssue(param: MinimalIssue | IssueNode, transition?: Transition) {
   let issue: MinimalIssue = emptyMinimalIssue;

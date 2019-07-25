@@ -1,6 +1,7 @@
-import { emptyUser, emptyIssueType, User, IssueType, emptyStatus, emptyPriority, Status, Priority, Transition } from "./jiraCommon";
-import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
-import { MinimalIssue, MinimalIssueLink } from "./minimalJiraIssue";
+import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
+import { emptyUser, emptyStatus, emptyPriority, emptyIssueType } from "./emptyEntities";
+import { Priority, IssueType, MinimalIssue, MinimalIssueLink, Transition, User, Status } from "./entities";
+
 
 export const emptyComment: Comment = {
     author: emptyUser,

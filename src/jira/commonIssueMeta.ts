@@ -58,27 +58,6 @@ export interface FieldProblem {
     schema: string;
 }
 
-export interface JiraFieldMeta {
-    allowedValues?: any[];
-    autoCompleteUrl?: string;
-    defaultValue?: any;
-    hasDefaultValue: boolean;
-    key: string;
-    name: string;
-    operations: string[];
-    required: boolean;
-    schema: JiraFieldSchema;
-}
-
-// TODO: [VSCODE-555] use field meta type/items to map types for input values
-export interface JiraFieldSchema {
-    custom?: string;
-    customId?: number;
-    items?: string;
-    system?: string;
-    type: string;
-}
-
 export const defaultFieldFilters: string[] = [];
 
 export const knownSystemSchemas: string[] = [

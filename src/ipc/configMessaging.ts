@@ -1,7 +1,7 @@
 import { Message } from "./messaging";
 import { IConfig, emptyConfig } from "../config/model";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Project } from "../jira/jiraModel";
+import { Project } from "../jira/jira-client/model/entities";
 
 export interface ConfigData extends Message {
     config: IConfig;

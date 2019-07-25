@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
-import { DetailedIssue, emptyIssue } from '../jira/jiraModel';
 import { fetchDetailedIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
@@ -18,6 +17,7 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
+import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {

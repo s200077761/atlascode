@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { AbstractBaseNode } from "./abstractBaseNode";
 import { Commands } from "../../commands";
-import { MinimalIssue } from "../../jira/minimalJiraIssue";
+import { MinimalIssue } from "../../jira/jira-client/model/entities";
 
 const IssueNodeContextValue = 'jiraIssue';
 

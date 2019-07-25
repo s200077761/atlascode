@@ -21,8 +21,8 @@ import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { PullRequestProvider } from '../bitbucket/prProvider';
-import { MinimalIssue, isMinimalIssue } from '../jira/jiraModel';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 
 interface PRState {
     prData: PRData;

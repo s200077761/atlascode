@@ -1,7 +1,8 @@
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { DetailedIssue, isComment, emptyComment, Transition, isTransition, emptyTransition, Attachment, isAttachment, emptyAttachment, IdName, isIssueLinkType, isStatus, emptyStatus, isPriority, emptyPriority, isIssueType, emptyIssueType, isUser, emptyUser } from "./jiraModel";
-import { EpicFieldInfo } from "./jiraCommon";
-import { MinimalIssue, MinimalIssueLink } from "./minimalJiraIssue";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { EpicFieldInfo } from "../jiraCommon";
+import { MinimalIssue, MinimalIssueLink, Transition, isStatus, isPriority, isIssueType, isTransition, isIssueLinkType } from "./model/entities";
+import { emptyStatus, emptyPriority, emptyIssueType, emptyUser, emptyTransition } from "./model/emptyEntities";
+import { DetailedIssue, isComment, emptyComment, Attachment, isAttachment, emptyAttachment, IdName, isUser } from "./model/detailedJiraIssue";
 
 export function minimalIssueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): MinimalIssue {
 

@@ -13,10 +13,10 @@ import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJ
 import { isFetchQuery } from '../ipc/issueActions';
 import { ProjectList } from '../ipc/issueMessaging';
 import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
-import { Project } from '../jira/jiraModel';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { Project } from '../jira/jira-client/model/entities';
 
 type Emit = ConfigData | ProjectList | HostErrorMessage;
 

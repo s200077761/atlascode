@@ -1,7 +1,7 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
 import { Reviewer, BitbucketIssue } from "../bitbucket/model";
-import { MinimalIssue } from "../jira/jiraModel";
+import { MinimalIssue } from "../jira/jira-client/model/entities";
 
 export interface PostComment extends Action {
     content: string;

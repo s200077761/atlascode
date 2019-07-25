@@ -15,8 +15,8 @@ import { ProductJira } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
-import { User } from '../jira/jiraModel';
-import { IssuePickerResult, IssuePickerIssue } from '../jira/jira-client/issuePickerResult';
+import { User } from '../jira/jira-client/model/entities';
+import { IssuePickerResult, IssuePickerIssue } from '../jira/jira-client/model/responses';
 
 export interface PartialIssue {
     uri?: Uri;

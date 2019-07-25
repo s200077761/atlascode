@@ -1,5 +1,4 @@
 import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
-import { MinimalIssue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
@@ -11,6 +10,7 @@ import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { WorkingProject } from '../../config/model';
 import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
+import { MinimalIssue } from '../../jira/jira-client/model/entities';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];

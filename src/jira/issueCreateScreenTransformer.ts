@@ -132,22 +132,7 @@ export class IssueCreateScreenTransformer {
         }
     }
 
-    private addFieldProblem(issueType: JIRA.Schema.CreateMetaIssueTypeBean, problem: FieldProblem) {
-        if (!this._problems[issueType.id!]) {
-            this._problems[issueType.id!] = {
-                issueType: this.jiraTypeToSimpleType(issueType),
-                isRenderable: true,
-                nonRenderableFields: [],
-                message: ""
-            };
-        }
 
-        let alreadyFound = this._problems[issueType.id!].nonRenderableFields.find(p => p.field.key === problem.field.key);
-
-        if (!alreadyFound) {
-            this._problems[issueType.id!].nonRenderableFields.push(problem);
-        }
-    }
 
     private jiraTypeToSimpleType(issueType: JIRA.Schema.CreateMetaIssueTypeBean): SimpleIssueType {
         return {

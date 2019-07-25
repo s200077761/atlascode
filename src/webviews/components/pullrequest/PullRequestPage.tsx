@@ -22,7 +22,6 @@ import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, Refr
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
-import { Transition, MinimalIssue, isMinimalIssue } from '../../../jira/jiraModel';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
@@ -37,6 +36,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssue } from '../../../bitbucket/model';
+import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;

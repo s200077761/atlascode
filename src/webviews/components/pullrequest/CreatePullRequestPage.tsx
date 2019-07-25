@@ -23,12 +23,12 @@ import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { TransitionMenu } from '../issue/TransitionMenu';
-import { Transition, MinimalIssue, isMinimalIssue } from '../../../jira/jiraModel';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import { Reviewer, Commit, BitbucketIssue } from '../../../bitbucket/model';
+import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
