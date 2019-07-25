@@ -1,15 +1,11 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import { Field, readField } from './model/fieldMetadata';
 import { JiraProjectManager } from '../projectManager';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, MinimalIssue } from './model/entities';
-import { minimalIssueFromJsonObject } from './issueFromJson';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { Container } from '../../container';
-import { CreateMetaTransformerResult } from './model/createIssueUI';
-import { IssueCreateScreenTransformer } from './issueCreateScreenTransformer';
+import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
 const issueExpand = "names,transitions,renderedFields";
 const API_VERSION = 2;
@@ -19,13 +15,11 @@ export class JiraClient {
     readonly site: DetailedSiteInfo;
     readonly agent: any | undefined;
     private _token: string | undefined;
-    private _createIssueTransformer: IssueCreateScreenTransformer;
 
     constructor(site: DetailedSiteInfo, agent?: any) {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
         this.agent = agent;
-        this._createIssueTransformer = new IssueCreateScreenTransformer(site);
     }
 
     public authenticateUsingToken(token: string) {
@@ -45,8 +39,7 @@ export class JiraClient {
 
     public async getIssue(issueIdOrKey: string, fields: string[]): Promise<MinimalIssue> {
         const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: issueExpand, fields: fields });
-
-        return minimalIssueFromJsonObject(res, this.site, await Container.jiraSettingsManager.getEpicFieldsForSite(this.site));
+        return res;
     }
 
     public async assignIssue(issueIdOrKey: string, accountId: string | undefined): Promise<any> {
@@ -81,13 +74,13 @@ export class JiraClient {
         return new IssueUpdateMetadata(res);
     }
 
-    public async getCreateIssueUIMetadata(projectKey: string): Promise<CreateMetaTransformerResult> {
+    public async getCreateIssueMetadata(projectKey: string): Promise<IssueCreateMetadata> {
         const res = await this.getFromJira(`issue/createmeta`, {
             projectKeys: [projectKey],
             expand: 'projects.issuetypes.fields'
         });
 
-        return this._createIssueTransformer.transformIssueScreens(res.projects[0]);
+        return readIssueCreateMetadata(res);
     }
 
     public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
@@ -229,9 +222,7 @@ export class JiraClient {
             agent: this.agent
         });
         var j: any = {};
-        if (res.size > 0) {
-            j = await res.json();
-        }
+        j = await res.json();
         return j;
     }
 
@@ -248,9 +239,7 @@ export class JiraClient {
             agent: this.agent
         });
         var j: any = {};
-        if (res.size > 0) {
-            j = await res.json();
-        }
+        j = await res.json();
         return j;
     }
 }

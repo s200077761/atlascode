@@ -1,4 +1,4 @@
-import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project } from "./entities";
+import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project, Comment } from "./entities";
 import { emptySiteInfo } from "../../../atlclients/authInfo";
 
 export const emptyAvatars: Avatars = { '48x48': '', '24x24': '', '16x16': '', '32x32': '' };
@@ -90,4 +90,12 @@ export const emptyProject: Project = {
     simplified: false,
     style: "",
     isPrivate: false
+};
+
+export const emptyComment: Comment = {
+    author: emptyUser,
+    body: '',
+    created: '',
+    id: '',
+    self: ''
 };

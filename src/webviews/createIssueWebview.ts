@@ -9,13 +9,14 @@ import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { ProductJira } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { User } from '../jira/jira-client/model/entities';
 import { IssuePickerIssue } from '../jira/jira-client/model/responses';
 import { CreateMetaTransformerResult } from '../jira/jira-client/model/createIssueUI';
+import { fetchCreateIssueUI } from '../jira/fetchIssue';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -60,12 +61,14 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         this._partialIssue = data;
 
         if (data) {
+            Logger.debug('got create partial data', data);
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
 
             if (data.bbIssue) {
                 this._relatedBBIssue = data.bbIssue;
             }
 
+            Logger.debug('sending create partial data', pd);
             this.postMessage(pd);
         }
     }
@@ -87,6 +90,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
         this.isRefeshing = true;
         try {
+            const site: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
+
             const availableProjects = await Container.jiraProjectManager.getProjects();
             let projectChanged = false;
 
@@ -103,8 +108,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
             if (projectChanged) {
                 this._selectedIssueTypeId = '';
                 this._screenData = undefined;
-                let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
-                this._screenData = await client.getCreateIssueUIMetadata(this._currentProject.key);
+                this._screenData = await fetchCreateIssueUI(site, this._currentProject.key);
                 this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             }
@@ -117,7 +121,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     availableProjects: availableProjects,
                     issueTypeScreens: this._screenData.issueTypeUIs,
                     transformerProblems: this._screenData.problems,
-                    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(Container.siteManager.effectiveSite(ProductJira))
+                    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(site)
                 };
 
 
@@ -329,7 +333,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                     delete e.issueData.worklog;
                                 }
 
-                                const resp = await client.createIssue({ body: { fields: e.issueData, update: worklog } });
+                                const resp = await client.createIssue({ fields: e.issueData, update: worklog });
 
                                 if (formLinks &&
                                     formLinks.type && formLinks.type.id &&

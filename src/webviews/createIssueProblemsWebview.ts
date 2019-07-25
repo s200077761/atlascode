@@ -1,11 +1,11 @@
 import { AbstractReactWebview } from "./abstractWebview";
 import { Action, HostErrorMessage } from "../ipc/messaging";
-import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { WorkingProject } from "../config/model";
 import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
 import { IssueProblemsData } from "../ipc/issueMessaging";
+import { fetchCreateIssueUI } from "../jira/fetchIssue";
 
 type Emit = HostErrorMessage | IssueProblemsData;
 
@@ -45,8 +45,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Actio
                 return;
             }
 
-            const client = await Container.clientManager.jirarequest(this._site);
-            let data = await client.getCreateIssueUIMetadata(this._project.key);
+            let data = await fetchCreateIssueUI(this._site, this._project.key);
 
             this.postMessage({ type: 'screenRefresh', problems: data.problems, project: this._project });
 

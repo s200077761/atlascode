@@ -1,4 +1,3 @@
-import { isArray } from 'util';
 import { FieldMeta } from './fieldMetadata';
 
 //CreateMetaBean
@@ -9,7 +8,7 @@ export interface IssueCreateMetadata {
 export function readIssueCreateMetadata(params: any): IssueCreateMetadata {
     // accessed via res.projects![0] so, might should do some validation
     return {
-        projects: isArray(params.projects) ? params.projects.map((p: any) => readProjectIssueCreateMetadata(p)) : []
+        projects: Array.isArray(params.projects) ? params.projects.map((p: any) => readProjectIssueCreateMetadata(p)) : []
     };
 }
 
@@ -28,7 +27,7 @@ function readProjectIssueCreateMetadata(params: any): ProjectIssueCreateMetadata
         key: params.key,
         name: params.name,
         avatarUrls: params.avatarUrls ? params.avatarUrls : {},
-        issueTypes: params.issueTypes ? params.issueTypes.map((t: any) => readIssueTypeIssueCreateMetadata(t)) : []
+        issueTypes: params.issuetypes ? params.issuetypes.map((t: any) => readIssueTypeIssueCreateMetadata(t)) : []
     };
 }
 

@@ -109,6 +109,14 @@ export interface IssueLinkType {
     outward: string;
 }
 
+export interface Comment {
+    author: User;
+    body: string;
+    created: string;
+    id: string;
+    self: string;
+}
+
 export interface User {
     accountId: string;
     active: boolean;
@@ -194,4 +202,8 @@ export function isProject(a: any): a is Project {
         (<Project>a).id !== undefined &&
         (<Project>a).projectTypeKey !== undefined
     );
+}
+
+export function isComment(a: any): a is Comment {
+    return a && (<Comment>a).author !== undefined && (<Comment>a).body !== undefined;
 }
