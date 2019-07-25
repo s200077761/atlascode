@@ -2,24 +2,10 @@ import * as React from "react";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { FieldValidators, chain } from '../fieldValidators';
 
-export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, { title: string, summary: string }> {
+export default class CreatePRTitleSummary extends React.Component<{ title: string, summary: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }> {
 
     constructor(props: any) {
         super(props);
-        this.state = {
-            title: '',
-            summary: ''
-        };
-    }
-
-    componentWillReceiveProps(nextProps: any) {
-        if (nextProps.title === this.state.title && nextProps.summary === this.state.summary) {
-            return;
-        }
-        this.setState({
-            title: nextProps.title,
-            summary: nextProps.summary
-        });
     }
 
     render() {
@@ -30,7 +16,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                     id='title'
                     name='title'
                     validate={FieldValidators.validateString}
-                    defaultValue={this.state.title}
+                    defaultValue={this.props.title}
                 >
                     {
                         (fieldArgs: any) => {
@@ -54,7 +40,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                     isRequired={false}
                     id='summary'
                     name='summary'
-                    defaultValue={this.state.summary}
+                    defaultValue={this.props.summary}
                 >
                     {
                         (fieldArgs: any) => {

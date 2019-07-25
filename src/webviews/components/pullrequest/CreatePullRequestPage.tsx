@@ -137,11 +137,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleTitleChange = (e: any) => {
-        this.setState({ title: e.target.value, titleManuallyEdited: true });
+        this.setState({ titleManuallyEdited: true });
     }
 
     handleSummaryChange = (e: any) => {
-        this.setState({ summary: e.target.value, summaryManuallyEdited: true });
+        this.setState({ summaryManuallyEdited: true });
     }
 
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
@@ -186,15 +186,19 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 : `${this.state.remote.value.name}/${this.state.sourceBranch.value.name}`
             : undefined;
 
-        this.setState({
+        let newState: Partial<MyState> = {
             commits: [],
             issue: undefined,
-            sourceRemoteBranchName: sourceRemoteBranchName,
-            title: this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)
-                ? this.state.sourceBranch!.label
-                : this.state.title,
-            summary: createdFromAtlascodeFooter
-        });
+            sourceRemoteBranchName: sourceRemoteBranchName
+        };
+
+        if (this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)) {
+            newState = { ...newState, title: this.state.sourceBranch!.label };
+        }
+        if (!this.state.summaryManuallyEdited) {
+            newState = { ...newState, summary: createdFromAtlascodeFooter };
+        }
+        this.setState(newState as any);
 
         if (this.state.sourceBranch) {
             this.postMessage({
@@ -278,8 +282,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             repoUri: this.state.repo!.value.uri,
             remote: this.state.remote!.value,
             reviewers: e.reviewers,
-            title: this.state.title,
-            summary: this.state.summary,
+            title: e.title,
+            summary: e.summary,
             sourceBranch: this.state.sourceBranch!.value,
             destinationBranch: this.state.destinationBranch!.value,
             pushLocalChanges: this.state.pushLocalChanges,
