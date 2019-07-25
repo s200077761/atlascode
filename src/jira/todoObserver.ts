@@ -27,14 +27,25 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
 
 function findTodos(document: TextDocument) {
     const triggers = Container.config.jira.todoIssues.triggers;
-    var reString = triggers.map(t => t.replace(/(\W)/g, '\\$1')).join("|");
-    reString = `(${reString})\\s`;
-    const masterRegex = new RegExp(reString);
     const matches: LensMatch[] = [];
+
+    /*
+        This// builds a regex which will find words that:
+        1. Contain the Trigger
+        2. Are not preceeded by an alphanumeric character
+    */
+    let regexString: string = "(^|\\W)(";
+    regexString += triggers.map(t => `(${t.replace(/(\W)/g, '\\$1')})`).join('|');
+    regexString += ')'; //Regex string should now have the form: (^|\W)((trigger1)|(trigger2)|...|(triggerN))
+    const masterRegex = new RegExp(regexString);
+
+    //Search through the document line by line
     for (let i = 0; i < document.lineCount; i++) {
         const line = document.lineAt(i).text;
+
+        //Find a match in the line given the regex
         const reMatches = masterRegex.exec(line);
-        if (reMatches) {
+        if(reMatches){
             const issueKeys = parseJiraIssueKeys(line);
             if (issueKeys.length === 0) {
                 const index = reMatches.index;
@@ -47,3 +58,4 @@ function findTodos(document: TextDocument) {
     }
     return matches;
 }
+
