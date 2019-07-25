@@ -4,7 +4,8 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import { MinimalIssue } from '../../../jira/jiraModel';
+import { MinimalIssue } from '../../../jira/jira-client/model/entities';
+
 
 type ItemData = { issue: MinimalIssue, postMessage: (e: OpenJiraIssueAction) => void };
 
@@ -20,7 +21,7 @@ const colorToLozengeAppearanceMap = {
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
+        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueKey: data.issue.key })}>
             {data.issue.key}
         </Button>
     </div>;

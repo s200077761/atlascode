@@ -156,7 +156,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        commands.executeCommand(Commands.ShowIssue, e.issueKey);
                         break;
                     }
                 }

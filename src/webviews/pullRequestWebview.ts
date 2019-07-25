@@ -148,7 +148,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
                         break;
                     }
                 }

@@ -8,16 +8,6 @@ import Tooltip from '@atlaskit/tooltip';
 import { WebviewComponent } from "../WebviewComponent";
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from "../../../ipc/issueMessaging";
 import {
-  emptyStatus,
-  emptyIssueType,
-  emptyUser,
-  emptyPriority,
-  DetailedIssue,
-  Transition,
-  IdName,
-  User
-} from "../../../jira/jiraModel";
-import {
   TransitionIssueAction,
   IssueCommentAction,
   IssueAssignAction,
@@ -43,6 +33,9 @@ import PullRequests from "./PullRequests";
 import LinkedIssues from "./LinkedIssues";
 import PMFBBanner from "../pmfBanner";
 import { emptySiteInfo } from "../../../atlclients/authInfo";
+import { emptyStatus, emptyPriority, emptyIssueType, emptyUser } from "../../../jira/jira-client/model/emptyEntities";
+import { User, Transition } from "../../../jira/jira-client/model/entities";
+import { IdName, DetailedIssue } from "../../../jira/jira-client/model/detailedJiraIssue";
 
 type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
 type Accept = IssueData | HostErrorMessage;
@@ -229,7 +222,7 @@ export default class JiraIssuePage extends WebviewComponent<
   handleOpenIssue = (issueKey: string) => {
     this.postMessage({
       action: "openJiraIssue",
-      issueOrKey: issueKey
+      issueKey: issueKey
     });
   }
 

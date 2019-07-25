@@ -288,7 +288,7 @@ export class ClientManager implements Disposable {
     return this.getClient<JiraClient>(
       site,
       info => {
-        const client = new JiraClient(site.baseApiUrl, this._agent);
+        const client = new JiraClient(site, this._agent);
 
         if (isOAuthInfo(info)) {
           client.authenticateUsingToken(info.access);

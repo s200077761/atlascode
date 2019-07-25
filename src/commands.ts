@@ -61,7 +61,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
-        vscode.commands.registerCommand(Commands.ShowIssue, async (issue: any) => await showIssue(issue)),
+        vscode.commands.registerCommand(Commands.ShowIssue, async (issueKey: string) => await showIssue(issueKey)),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => Container.startWorkOnIssueWebview.createOrShowIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),

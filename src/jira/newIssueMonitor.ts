@@ -65,7 +65,7 @@ export class NewIssueMonitor {
       .then((selection) => {
         if (selection) {
           if (newIssues.length === 1) {
-            showIssue(newIssues[0].id);
+            showIssue(newIssues[0].key);
           } else {
             commands.executeCommand("workbench.view.extension.atlascode-drawer");
           }

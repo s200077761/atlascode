@@ -7,16 +7,15 @@ import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
-import { IssueCreateScreenTransformer } from '../jira/issueCreateScreenTransformer';
 import { issueCreatedEvent } from '../analytics';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { TransformerResult } from '../jira/createIssueMeta';
 import { ProductJira } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { User } from '../jira/jira-client/model/entities';
-import { IssuePickerResult, IssuePickerIssue } from '../jira/jira-client/model/responses';
+import { IssuePickerIssue } from '../jira/jira-client/model/responses';
+import { CreateMetaTransformerResult } from '../jira/jira-client/model/createIssueUI';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -41,7 +40,7 @@ type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | Ho
 export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: WorkingProject | undefined;
-    private _screenData: TransformerResult | undefined;
+    private _screenData: CreateMetaTransformerResult | undefined;
     private _selectedIssueTypeId: string;
     private _relatedBBIssue: BitbucketIssue | undefined;
 
@@ -105,10 +104,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 this._selectedIssueTypeId = '';
                 this._screenData = undefined;
                 let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
-
-                let res = await client.getCreateIssueMetadata(this._currentProject.key);
-                const screenTransformer = new IssueCreateScreenTransformer(Container.siteManager.effectiveSite(ProductJira), res.projects![0]);
-                this._screenData = await screenTransformer.transformIssueScreens();
+                this._screenData = await client.getCreateIssueUIMetadata(this._currentProject.key);
                 this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             }
@@ -119,7 +115,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     selectedProject: this._currentProject,
                     selectedIssueTypeId: this._selectedIssueTypeId,
                     availableProjects: availableProjects,
-                    issueTypeScreens: this._screenData.screens,
+                    issueTypeScreens: this._screenData.issueTypeUIs,
                     transformerProblems: this._screenData.problems,
                     epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(Container.siteManager.effectiveSite(ProductJira))
                 };
@@ -232,11 +228,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
-                                let res: IssuePickerResult = await client.getIssuePickerSuggestions(e.query);
-                                let suggestions: IssuePickerIssue[] = [];
-                                if (Array.isArray(res.sections)) {
-                                    suggestions = res.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
-                                }
+                                const suggestions: IssuePickerIssue[] = await client.getIssuePickerSuggestions(e.query);
                                 this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
 
                             } else {
@@ -383,7 +375,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'openJiraIssue': {
                     handled = true;
                     if (isOpenJiraIssue(e)) {
-                        commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        commands.executeCommand(Commands.ShowIssue, e.issueKey);
                     }
                     break;
                 }

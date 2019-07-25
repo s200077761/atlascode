@@ -12,18 +12,13 @@ interface ProblemCollector {
 }
 
 export class FieldTransformer {
+    readonly _site: DetailedSiteInfo;
 
-    protected _site: DetailedSiteInfo;
-    protected _epicFieldInfo: EpicFieldInfo;
-    protected _issueLinkTypes: IssueLinkType[] = [];
-    protected _commonFields: string[];
-
-    constructor(site: DetailedSiteInfo, commonFields: string[]) {
+    constructor(site: DetailedSiteInfo) {
         this._site = site;
-        this._commonFields = commonFields;
     }
 
-    public async transformFields(fields: { [k: string]: FieldMeta }, projectKey: string, filterFieldKeys: string[] = defaultFieldFilters): Promise<FieldTransformerResult> {
+    public async transformFields(fields: { [k: string]: FieldMeta }, projectKey: string, filterFieldKeys: string[] = defaultFieldFilters, commonFields: string[]): Promise<FieldTransformerResult> {
 
         const result: FieldTransformerResult = {
             fields: [],
@@ -32,16 +27,12 @@ export class FieldTransformer {
         };
 
         const problemCollector: ProblemCollector = { problems: [], hasRequireNonRenderables: false };
-
-        if (!this._epicFieldInfo) {
-            this._epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
-        }
+        const epicFieldInfo: EpicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
+        const issueLinkTypes: IssueLinkType[] = [];
+        const issuelinkTypes = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
 
         // if we don't have issueLinkTypes, filter out the issue links
-        const issuelinkTypes = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
-        if (Array.isArray(issuelinkTypes) && issuelinkTypes.length > 0) {
-            this._issueLinkTypes = issuelinkTypes;
-        } else {
+        if (!Array.isArray(issuelinkTypes) || issuelinkTypes.length < 1) {
             filterFieldKeys.push('issuelinks');
         }
 
@@ -49,7 +40,7 @@ export class FieldTransformer {
         Object.keys(fields).forEach(k => {
             const field: FieldMeta = fields[k];
             if (field && !this.shouldFilter(field, filterFieldKeys, problemCollector)) {
-                result.fields.push(this.transformField(field, projectKey));
+                result.fields.push(this.transformField(field, projectKey, commonFields, epicFieldInfo, issueLinkTypes));
             }
         });
 
@@ -59,7 +50,7 @@ export class FieldTransformer {
         return result;
     }
 
-    private transformField(field: FieldMeta, projectKey: string): any {
+    private transformField(field: FieldMeta, projectKey: string, commonFields: string[], epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[]): any {
         switch (this.uiTypeForField(field.schema)) {
             case UIType.Input: {
                 return {
@@ -68,7 +59,7 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.Input,
                     valueType: this.inputValueTypeForField(field.schema),
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Textarea: {
@@ -77,7 +68,7 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.Textarea,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Checkbox: {
@@ -87,7 +78,7 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.Checkbox,
                     allowedValues: (field.allowedValues !== undefined) ? field.allowedValues : [],
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Radio: {
@@ -97,7 +88,7 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.Radio,
                     allowedValues: (field.allowedValues !== undefined) ? field.allowedValues : [],
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Date: {
@@ -106,7 +97,7 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.Date,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.DateTime: {
@@ -115,7 +106,7 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.DateTime,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.User: {
@@ -125,15 +116,15 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.User,
                     isMulti: (field.schema && field.schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker') ? true : false,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Select: {
                 let allowedValues = (field.allowedValues !== undefined) ? field.allowedValues : [];
                 let autoCompleteJql = '';
 
-                if (field.key === this._epicFieldInfo.epicLink.id) {
-                    autoCompleteJql = `project = "${projectKey}" and cf[${this._epicFieldInfo.epicName.cfid}] != ""  and resolution = EMPTY`;
+                if (field.key === epicFieldInfo.epicLink.id) {
+                    autoCompleteJql = `project = "${projectKey}" and cf[${epicFieldInfo.epicName.cfid}] != ""  and resolution = EMPTY`;
                 }
 
                 return {
@@ -147,7 +138,7 @@ export class FieldTransformer {
                     isCreateable: this.isCreateableSelect(field.schema),
                     autoCompleteUrl: (field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
                     autoCompleteJql: autoCompleteJql,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.IssueLink: {
@@ -157,10 +148,10 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.IssueLink,
                     autoCompleteUrl: (field.autoCompleteUrl !== undefined) ? field.autoCompleteUrl : '',
-                    allowedValues: this._issueLinkTypes,
+                    allowedValues: issueLinkTypes,
                     isCreateable: true,
                     isMulti: this.isMultiSelect(field.schema),
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Timetracking: {
@@ -169,7 +160,7 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.Timetracking,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
             case UIType.Worklog: {
@@ -178,7 +169,7 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.Worklog,
-                    advanced: this.isAdvanced(field)
+                    advanced: this.isAdvanced(field, commonFields)
                 };
             }
         }
@@ -211,8 +202,7 @@ export class FieldTransformer {
         return false;
     }
 
-    private isAdvanced(field: FieldMeta): boolean {
-        const commonFields = [...this._commonFields, this._epicFieldInfo.epicName.id];
+    private isAdvanced(field: FieldMeta, commonFields: string[]): boolean {
         return (!commonFields.includes(field.key) && !field.required);
     }
 

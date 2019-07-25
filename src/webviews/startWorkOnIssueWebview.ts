@@ -75,7 +75,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueKey);
                         break;
                     }
                 }

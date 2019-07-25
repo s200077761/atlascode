@@ -114,10 +114,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleIssueClicked = (issue: MinimalIssue) => {
+    handleIssueClicked = (issueKey: string) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issueOrKey: issue
+            issueKey: issueKey
         });
     }
 
@@ -237,7 +237,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     ? <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
-                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue as MinimalIssue })} />
+                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.key })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>

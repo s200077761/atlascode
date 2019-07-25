@@ -3,8 +3,9 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { DetailedIssue, MinimalIssueLink } from '../../../jira/jiraModel';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { DetailedIssue } from '../../../jira/jira-client/model/detailedJiraIssue';
+import { MinimalIssueLink } from '../../../jira/jira-client/model/entities';
 
 type ItemData = { linkDescription: string, issue: DetailedIssue, postMessage: (e: OpenJiraIssueAction) => void };
 
@@ -21,7 +22,7 @@ const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <p style={{ display: "inline" }}><em style={{ position: 'absolute', bottom: '2.25em' }}>{data.linkDescription}</em></p>
         <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
+        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueKey: data.issue.key })}>
             {data.issue.key}
         </Button>
     </div>;

@@ -20,7 +20,7 @@ import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
     private _state: DetailedIssue = emptyIssue;
     private _currentUserId?: string;
 
@@ -35,8 +35,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(data: DetailedIssue) {
-        this._state = data;
+    async initialize(issueKey: string) {
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -226,7 +225,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
                         break;
                     }
                 }
