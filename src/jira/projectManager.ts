@@ -4,7 +4,7 @@ import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } f
 import { ProductJira } from "../atlclients/authInfo";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { Logger } from "../logger";
-import { Project, isProject, readProject } from "./jira-client/model/entities";
+import { Project } from "./jira-client/model/entities";
 
 
 export type JiraAvailableProjectsUpdateEvent = {
@@ -64,17 +64,6 @@ export class JiraProjectManager extends Disposable {
         this._projectsAvailable = resp;
 
         return this._projectsAvailable;
-    }
-
-    public static readProjects(projects: any[] | undefined): Project[] {
-
-        if (projects) {
-            return projects
-                .filter(project => isProject(project))
-                .map(project => readProject(project));
-        }
-
-        return [];
     }
 
     public get workingProjectOrEmpty(): WorkingProject {

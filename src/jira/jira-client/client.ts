@@ -1,8 +1,7 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
-import { JiraProjectManager } from '../projectManager';
-import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
+import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, MinimalIssue } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
@@ -10,6 +9,10 @@ import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreat
 const issueExpand = "names,transitions,renderedFields";
 const API_VERSION = 2;
 
+// JiraClient provides methods to invoke Jira REST API endpoints
+//
+// NOTE: Ensure there are not transitive dependencies to 'vscode' as that will
+// prevent importing this file from webviews
 export class JiraClient {
     readonly baseUrl: string;
     readonly site: DetailedSiteInfo;
@@ -111,7 +114,7 @@ export class JiraClient {
         const res = await this.getFromJira('project/search', queryValues);
 
         if (Array.isArray(res.values)) {
-            return JiraProjectManager.readProjects(res.values);
+            return readProjects(res.values);
         }
         return [];
     }
