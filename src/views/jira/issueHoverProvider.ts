@@ -25,6 +25,7 @@ export class IssueHoverProvider implements HoverProvider {
     let summaryText = issue.summary ? issue.summary : "";
     let statusText = issue.status.name;
     let descriptionText = issue.description ? issue.description : "*No description*";
+    let issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${key}`;
     let header =
       `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
        | -                                                      | -                      |
@@ -38,6 +39,9 @@ export class IssueHoverProvider implements HoverProvider {
 
     text.push(new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
     text[text.length - 1].isTrusted = true;
+    
+    text.push(new vscode.MarkdownString(`[Open In Browser](${issueUrl})`));
+    
 
     viewScreenEvent('issueHover', issue.siteDetails.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
 
