@@ -36,7 +36,11 @@ export class IssueHoverProvider implements HoverProvider {
     text.push(new vscode.MarkdownString(descriptionText));
     let encodedKey = encodeURIComponent(JSON.stringify([key]));
 
-    text.push(new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
+    let showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
+    let issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
+    let issueLinksLine = 
+     `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;
+    text.push(new vscode.MarkdownString(issueLinksLine));
     text[text.length - 1].isTrusted = true;
 
     viewScreenEvent('issueHover', issue.siteDetails.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
