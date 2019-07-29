@@ -1,14 +1,11 @@
 import * as vscode from "vscode";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import {
-  Project,
-  projectFromJsonObject
-} from "../../jira/jiraModel";
 import { Logger } from "../../logger";
 import { projectSelectedEvent } from "../../analytics";
 import debounce from "lodash.debounce";
 import { ProductJira } from "../../atlclients/authInfo";
+import { Project, readProject } from "../../jira/jira-client/model/entities";
 
 export async function showProjectSelectionDialog() {
   const projects = await Container.jiraProjectManager.getProjects();
@@ -52,7 +49,7 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
     if (projectObjects) {
       return projectObjects
         .map(project => {
-          const p = projectFromJsonObject(project);
+          const p = readProject(project);
           return new ProjectQuickPickItem(p);
         });
     } else {

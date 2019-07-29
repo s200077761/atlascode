@@ -1,31 +1,31 @@
 import { Container } from "../container";
-import { DetailedIssue } from "./jiraModel";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { issueFromJsonObject, minimalIssueFromJsonObject } from "./issueFromJson";
-import { MinimalIssue } from "./minimalJiraIssue";
+import { MinimalIssue } from "./jira-client/model/entities";
+import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
+import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
+import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
+import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
+import { Logger } from "../logger";
 
-export async function fetchDetailedIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<DetailedIssue> {
-  const fields = await Container.jiraFieldManager.getDetailedIssueFieldIdsForSite(siteDetails);
-  const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(siteDetails);
 
-  const issuesJson = await fetchIssue(issue, fields, siteDetails);
+export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
+  const client = await Container.clientManager.jirarequest(siteDetails);
+  const createIssueTransformer: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
 
-  return issueFromJsonObject(issuesJson, siteDetails, epicFieldInfo);
+  Logger.debug('loading creat meta', projectKey);
+  const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
+  Logger.debug('got meta', meta);
+
+  Logger.debug('transforming meta...');
+  return await createIssueTransformer.transformIssueScreens(meta.projects[0]);
+
 }
 
 export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {
-  const fields = await Container.jiraFieldManager.getMinimalIssueFieldIdsForSite(siteDetails);
-  const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(siteDetails);
-
-  const issuesJson = await fetchIssue(issue, fields, siteDetails);
-
-  return minimalIssueFromJsonObject(issuesJson, siteDetails, epicFieldInfo);
-}
-
-async function fetchIssue(issue: string, fields: string[], siteDetails: DetailedSiteInfo): Promise<any> {
+  const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
   const client = await Container.clientManager.jirarequest(siteDetails);
 
-  const issuesJson = await client.getIssue(issue, fields);
-
-  return issuesJson;
+  const res = await client.getIssue(issue, fields);
+  return minimalIssueFromJsonObject(res, siteDetails, await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails));
 }
+

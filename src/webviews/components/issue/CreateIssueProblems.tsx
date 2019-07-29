@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { WebviewComponent } from "../WebviewComponent";
-import { TransformerProblems } from "../../../jira/createIssueMeta";
 import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
 import { WorkingProject, emptyWorkingProject } from '../../../config/model';
+import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/createIssueUI';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
 interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
-    problems: TransformerProblems;
+    problems: CreateMetaTransformerProblems;
     project: WorkingProject;
 }
 
@@ -55,9 +55,9 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
             problem.nonRenderableFields.forEach(fieldProblem => {
                 issueTypeFields.push(
                     <tr>
-                        <td>{fieldProblem.field.name}</td>
-                        <td>{fieldProblem.field.key}</td>
-                        <td style={{ textAlign: 'center' }}>{String(fieldProblem.field.required)}</td>
+                        <td>{fieldProblem.name}</td>
+                        <td>{fieldProblem.key}</td>
+                        <td style={{ textAlign: 'center' }}>{String(fieldProblem.required)}</td>
                         <td>{fieldProblem.schema}</td>
                         <td>{fieldProblem.message}</td>
                     </tr>

@@ -23,12 +23,12 @@ import Form from '@atlaskit/form';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { TransitionMenu } from '../issue/TransitionMenu';
-import { Transition, MinimalIssue, isMinimalIssue } from '../../../jira/jiraModel';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import { Reviewer, Commit, BitbucketIssue } from '../../../bitbucket/model';
+import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -381,7 +381,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     {isMinimalIssue(this.state.issue)
                         ? <div className='ac-flex'>
                             <h4>Transition Jira issue - </h4>
-                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.issue as MinimalIssue })} />
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: (this.state.issue as MinimalIssue).key })} />
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>

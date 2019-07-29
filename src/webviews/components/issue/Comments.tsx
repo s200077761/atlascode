@@ -3,7 +3,8 @@ import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
 import Spinner from '@atlaskit/spinner';
-import { Comment as JiraComment, DetailedIssue } from "../../../jira/jiraModel";
+import { DetailedIssue } from "../../../jira/jira-client/model/detailedJiraIssue";
+import { Comment as JiraComment } from "../../../jira/jira-client/model/entities";
 
 export class Comments extends React.Component<
   {

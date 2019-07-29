@@ -1,9 +1,11 @@
 import { Message } from "./messaging";
-import { DetailedIssue, Project, EpicFieldInfo, MinimalIssue } from "../jira/jiraModel";
 import { WorkingProject } from "../config/model";
-import { IssueTypeIdScreens, TransformerProblems } from "../jira/createIssueMeta";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
+import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
+import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
+import { EpicFieldInfo } from "../jira/jiraCommon";
+import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -17,7 +19,7 @@ export interface IssueData extends DetailedIssue {
 }
 
 export interface IssueProblemsData extends Message {
-    problems: TransformerProblems;
+    problems: CreateMetaTransformerProblems;
     project: WorkingProject;
 }
 
@@ -25,9 +27,9 @@ export interface CreateIssueData extends Message {
     selectedProject: WorkingProject;
     selectedIssueTypeId: string | undefined;
     availableProjects: WorkingProject[];
-    issueTypeScreens: IssueTypeIdScreens;
+    issueTypeScreens: IssueTypeUIs;
     epicFieldInfo: EpicFieldInfo;
-    transformerProblems: TransformerProblems;
+    transformerProblems: CreateMetaTransformerProblems;
 }
 
 export interface PreliminaryIssueData extends Message {

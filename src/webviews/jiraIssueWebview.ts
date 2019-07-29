@@ -2,8 +2,6 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from '../ipc/issueMessaging';
-import { DetailedIssue, emptyIssue } from '../jira/jiraModel';
-import { fetchDetailedIssue } from "../jira/fetchIssue";
 import { Logger } from '../logger';
 import { isTransitionIssue, isIssueComment, isIssueAssign, isOpenJiraIssue, isOpenStartWorkPageAction, isFetchQuery, isCreateSomething } from '../ipc/issueActions';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -18,9 +16,10 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
+import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<DetailedIssue> {
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
     private _state: DetailedIssue = emptyIssue;
     private _currentUserId?: string;
 
@@ -35,8 +34,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(data: DetailedIssue) {
-        this._state = data;
+    async initialize(issueKey: string) {
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -226,7 +224,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueOrKey);
+                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
                         break;
                     }
                 }
@@ -289,7 +287,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
             msg.type = 'update';
             msg.currentUserId = this._currentUserId!;
 
-            const epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(issue.siteDetails);
+            const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails);
 
             const childIssues = await issuesForJQL(`linkedIssue = ${issue.key} AND issuekey != ${issue.key} AND cf[${epicFieldInfo.epicLink.cfid}] != ${issue.key}`);
             msg.childIssues = childIssues.filter(childIssue => !issue.subtasks.map(subtask => subtask.key).includes(childIssue.key));
@@ -322,8 +320,8 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     private async forceUpdateIssue() {
         if (this._state.key !== "") {
             try {
-                let issue = await fetchDetailedIssue(this._state.key, this._state.siteDetails);
-                await this.updateIssue(issue);
+                // let issue = await fetchDetailedIssue(this._state.key, this._state.siteDetails);
+                // await this.updateIssue(issue);
             }
             catch (e) {
                 Logger.error(e);

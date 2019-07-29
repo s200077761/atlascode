@@ -7,7 +7,7 @@ import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
 import { ProductJira } from "../atlclients/authInfo";
 import { showIssue } from "../commands/jira/showIssue";
-import { MinimalIssue } from "./minimalJiraIssue";
+import { MinimalIssue } from "./jira-client/model/entities";
 
 export class NewIssueMonitor {
   private _workingProject: WorkingProject | undefined;
@@ -65,7 +65,7 @@ export class NewIssueMonitor {
       .then((selection) => {
         if (selection) {
           if (newIssues.length === 1) {
-            showIssue(newIssues[0].id);
+            showIssue(newIssues[0].key);
           } else {
             commands.executeCommand("workbench.view.extension.atlascode-drawer");
           }

@@ -1,6 +1,6 @@
 import { Container } from "../../container";
 import { ProductJira, DetailedSiteInfo } from "../../atlclients/authInfo";
-import { User } from "../../jira/jiraModel";
+import { User } from "../../jira/jira-client/model/entities";
 
 
 export async function currentUserJira(site?: DetailedSiteInfo): Promise<User> {

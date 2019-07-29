@@ -14,11 +14,11 @@ import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SectionMessage from '@atlaskit/section-message';
-import { SelectScreenField, ScreenField, UIType, InputScreenField, InputValueType, OptionableScreenField } from '../../../jira/createIssueMeta';
 import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { epicsDisabled } from '../../../jira/jiraCommon';
+import { UIType, SelectFieldUI, FieldUI, InputFieldUI, InputValueType, OptionableFieldUI } from '../../../jira/jira-client/model/fieldUI';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -153,7 +153,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         let opts: any[] = new Array();
 
         if (issueTypeId) {
-            const field: SelectScreenField | undefined = issueData.issueTypeScreens[issueTypeId].fields.find(field => field.key === fieldKey) as SelectScreenField | undefined;
+            const field: SelectFieldUI | undefined = issueData.issueTypeScreens[issueTypeId].fields.find(field => field.key === fieldKey) as SelectFieldUI | undefined;
             if (field && field.allowedValues && field.allowedValues.length > 0) {
                 switch (fieldKey) {
                     case 'fixVersions':
@@ -420,7 +420,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
     handleSubmit = (e: any) => {
         let requiredFields = this.state.issueTypeScreens[this.state.selectedIssueTypeId!].fields.filter(field => { return field.required; });
         let errs = {};
-        requiredFields.forEach((field: ScreenField) => {
+        requiredFields.forEach((field: FieldUI) => {
             if (e[field.key] === undefined || (e[field.key].length < 1)) {
                 errs[field.key] = 'EMPTY';
             }
@@ -481,7 +481,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                     <SectionMessage
                                         appearance="confirmation"
                                         title="Issue Created">
-                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
                                     </SectionMessage>
                                 </div>
                             }
@@ -590,7 +590,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         );
     }
 
-    getFieldMarkup(field: ScreenField): any {
+    getFieldMarkup(field: FieldUI): any {
         switch (field.uiType) {
             case UIType.Textarea: {
                 let validateFunc = field.required ? FieldValidators.validateString : undefined;
@@ -623,7 +623,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case UIType.Input: {
                 let validateFunc = undefined;
-                let valType = (field as InputScreenField).valueType;
+                let valType = (field as InputFieldUI).valueType;
                 switch (valType) {
                     case InputValueType.Number: {
                         validateFunc = (value: any, state: any) => {
@@ -674,7 +674,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case UIType.Checkbox: {
                 let checkboxItems: any[] = [];
-                const checkField = field as OptionableScreenField;
+                const checkField = field as OptionableFieldUI;
                 checkField.allowedValues.forEach(value => {
                     checkboxItems.push(
                         <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
@@ -696,7 +696,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case UIType.Radio: {
                 let radioItems: any[] = [];
-                const radioField = field as OptionableScreenField;
+                const radioField = field as OptionableFieldUI;
                 radioField.allowedValues.forEach(value => {
                     radioItems.push({ name: field.key, label: value.value, value: value.id });
                 });
@@ -777,7 +777,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case UIType.User: {
                 let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
-                const selectField = field as SelectScreenField;
+                const selectField = field as SelectFieldUI;
                 return (
                     <Field label={field.name}
                         isRequired={field.required}
@@ -815,7 +815,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 );
             }
             case UIType.Select: {
-                const selectField = field as SelectScreenField;
+                const selectField = field as SelectFieldUI;
                 if (selectField.isCreateable) {
                     return this.createableSelect(selectField);
                 }
@@ -877,7 +877,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                 );
             }
             case UIType.IssueLink: {
-                const selectField = field as SelectScreenField;
+                const selectField = field as SelectFieldUI;
 
                 let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
                 return (
@@ -1152,7 +1152,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         );
     }
 
-    createableSelect(field: SelectScreenField): any {
+    createableSelect(field: SelectFieldUI): any {
         let validateFunc = undefined;
         if (field.required) {
             validateFunc = (field.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;

@@ -13,9 +13,9 @@ import {
 } from 'vscode';
 import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { Container } from '../container';
-import { Project } from 'src/jira/jiraModel';
 import { DetailedSiteInfo, AccessibleResourceV1 } from 'src/atlclients/authInfo';
 import { WorkingProject } from './model';
+import { Project } from '../jira/jira-client/model/entities';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.

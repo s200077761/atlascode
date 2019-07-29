@@ -1,28 +1,28 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import { isArray } from 'util';
-import { IssueLinkType, User } from '../jiraCommon';
-import { IssueCreateMetadata, readIssueCreateMetadata } from './issueCreateMetadata';
-import { Version, readVersion } from './version';
-import { Component, readComponent } from './component';
-import { CreatedIssue, readCreatedIssue } from './createdIssue';
-import { IssuePickerResult } from './issuePickerResult';
-import { Field, readField } from './field';
-import { JiraProjectManager } from '../projectManager';
-import { Project } from '../jiraProject';
+import { Field, readField } from './model/fieldMetadata';
+import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, MinimalIssue } from './model/entities';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
 const issueExpand = "names,transitions,renderedFields";
 const API_VERSION = 2;
 
+// JiraClient provides methods to invoke Jira REST API endpoints
+//
+// NOTE: Ensure there are not transitive dependencies to 'vscode' as that will
+// prevent importing this file from webviews
 export class JiraClient {
     readonly baseUrl: string;
+    readonly site: DetailedSiteInfo;
     readonly agent: any | undefined;
     private _token: string | undefined;
 
-    constructor(baseUrl: string, agent?: any) {
-        this.baseUrl = baseUrl;
+    constructor(site: DetailedSiteInfo, agent?: any) {
+        this.site = site;
+        this.baseUrl = site.baseApiUrl;
         this.agent = agent;
-        //JiraClient({ baseUrl: site.baseApiUrl, options: extraOptions });
     }
 
     public authenticateUsingToken(token: string) {
@@ -40,9 +40,8 @@ export class JiraClient {
         return readCreatedIssue(result);
     }
 
-    public async getIssue(issueIdOrKey: string, fields: string[]): Promise<any> {
+    public async getIssue(issueIdOrKey: string, fields: string[]): Promise<MinimalIssue> {
         const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: issueExpand, fields: fields });
-
         return res;
     }
 
@@ -87,10 +86,17 @@ export class JiraClient {
         return readIssueCreateMetadata(res);
     }
 
-    public async getIssuePickerSuggestions(query: string): Promise<IssuePickerResult> {
+    public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
         const res = await this.getFromJira('issue/picker', { query: query });
 
-        return res;
+        const result: IssuePickerResult = res as IssuePickerResult;
+
+        let suggestions: IssuePickerIssue[] = [];
+        if (Array.isArray(result.sections)) {
+            suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
+        }
+
+        return suggestions;
     }
 
     // Project
@@ -107,8 +113,8 @@ export class JiraClient {
         }
         const res = await this.getFromJira('project/search', queryValues);
 
-        if (isArray(res.values)) {
-            return JiraProjectManager.readProjects(res.values);
+        if (Array.isArray(res.values)) {
+            return readProjects(res.values);
         }
         return [];
     }
@@ -123,7 +129,7 @@ export class JiraClient {
     public async getFieldAutoCompleteSuggestions(fieldName: string, fieldValue: string): Promise<AutoCompleteSuggestion[]> {
         const res = await this.getFromJira('jql/autocompletedata/suggestions', { fieldName: fieldName, fieldValue: fieldValue });
 
-        if (isArray(res)) {
+        if (Array.isArray(res)) {
             return res.map((s: any) => readAutoCompleteSuggestion(s));
         }
 
@@ -169,7 +175,7 @@ export class JiraClient {
     // Field
     public async getFields(params: any): Promise<Field[]> {
         const res = await this.getFromJira('field');
-        if (isArray(res)) {
+        if (Array.isArray(res)) {
             return res.map(f => readField(f));
         }
 
@@ -219,9 +225,7 @@ export class JiraClient {
             agent: this.agent
         });
         var j: any = {};
-        if (res.size > 0) {
-            j = await res.json();
-        }
+        j = await res.json();
         return j;
     }
 
@@ -238,9 +242,7 @@ export class JiraClient {
             agent: this.agent
         });
         var j: any = {};
-        if (res.size > 0) {
-            j = await res.json();
-        }
+        j = await res.json();
         return j;
     }
 }

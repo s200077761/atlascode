@@ -4,7 +4,7 @@ export interface Field {
     readonly key: string;
     readonly name: string;
     readonly custom: boolean;
-    readonly schema: FieldSchema | undefined;
+    readonly schema: FieldSchemaMeta | undefined;
 }
 
 export function readField(props: any) {
@@ -21,7 +21,7 @@ export function readField(props: any) {
 // There doesn't seem to be any actual documentation on this, the shape has been 
 // determined by the shape it's required to have for our purposes.
 export interface FieldMeta {
-    readonly schema: FieldSchema;
+    readonly schema: FieldSchemaMeta;
     readonly id: string;
     readonly name: string;
     readonly key: string;
@@ -42,16 +42,19 @@ export function readFieldMeta(props: any): FieldMeta {
     };
 }
 
-export interface FieldSchema {
+// TODO: [VSCODE-555] use field meta type/items to map types for input valuess
+export interface FieldSchemaMeta {
     readonly type: string;
     readonly custom: string | undefined;
     readonly system: string | undefined;
+    readonly items: string | undefined;
 }
 
-function readFieldSchema(props: any): FieldSchema {
+function readFieldSchema(props: any): FieldSchemaMeta {
     return {
         type: props.type,
         custom: props.custom,
-        system: props.system
+        system: props.system,
+        items: props.items
     };
 }

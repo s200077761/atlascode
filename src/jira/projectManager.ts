@@ -2,9 +2,9 @@ import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscod
 import { Container } from "../container";
 import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } from "../config/configuration";
 import { ProductJira } from "../atlclients/authInfo";
-import { Project, isProject, projectFromJsonObject } from "./jiraModel";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { Logger } from "../logger";
+import { Project } from "./jira-client/model/entities";
 
 
 export type JiraAvailableProjectsUpdateEvent = {
@@ -64,17 +64,6 @@ export class JiraProjectManager extends Disposable {
         this._projectsAvailable = resp;
 
         return this._projectsAvailable;
-    }
-
-    public static readProjects(projects: any[] | undefined): Project[] {
-
-        if (projects) {
-            return projects
-                .filter(project => isProject(project))
-                .map(project => projectFromJsonObject(project));
-        }
-
-        return [];
     }
 
     public get workingProjectOrEmpty(): WorkingProject {

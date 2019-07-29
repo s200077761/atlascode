@@ -2,7 +2,7 @@ import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { IssueNode } from "../../views/nodes/issueNode";
 import { currentUserJira } from "./currentUser";
-import { MinimalIssue, isMinimalIssue } from "../../jira/jiraModel";
+import { MinimalIssue, isMinimalIssue } from "../../jira/jira-client/model/entities";
 
 export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: string) {
   const issue = isMinimalIssue(param) ? param : param.issue;

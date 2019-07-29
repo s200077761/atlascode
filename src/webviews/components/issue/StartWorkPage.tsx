@@ -10,13 +10,6 @@ import { CreatableSelect } from '@atlaskit/select';
 import { WebviewComponent } from "../WebviewComponent";
 import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import {
-  Transition,
-  emptyTransition,
-  emptyMinimalIssue,
-  isMinimalIssue,
-  MinimalIssue,
-} from "../../../jira/jiraModel";
-import {
   StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction, RefreshIssueAction
 } from "../../../ipc/issueActions";
 import { TransitionMenu } from "./TransitionMenu";
@@ -31,6 +24,8 @@ import Offline from "../Offline";
 import { StartWorkOnBitbucketIssueData, isStartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/bitbucketIssueActions";
 import { BitbucketIssue } from "../../../bitbucket/model";
+import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-client/model/entities";
+import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
@@ -279,9 +274,9 @@ export default class StartWorkPage extends WebviewComponent<
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
               {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.parentKey! })} />} />
               }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.key })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
             </BreadcrumbsStateless>
           }
         >
