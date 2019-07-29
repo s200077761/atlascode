@@ -172,6 +172,15 @@ export class FieldTransformer {
                     advanced: this.isAdvanced(field, commonFields)
                 };
             }
+            case UIType.Attachment: {
+                return {
+                    required: field.required,
+                    name: field.name,
+                    key: field.key,
+                    uiType: UIType.Attachment,
+                    advanced: this.isAdvanced(field, commonFields)
+                };
+            }
         }
     }
 

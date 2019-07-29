@@ -19,6 +19,7 @@ import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { epicsDisabled } from '../../../jira/jiraCommon';
 import { UIType, SelectFieldUI, FieldUI, InputFieldUI, InputValueType, OptionableFieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { JiraClient } from '../../../jira/jira-client/client';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -73,7 +74,7 @@ const emptyState: ViewState = {
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
     </Option>
 );
 
@@ -88,7 +89,7 @@ const UserOption = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </Option>
     );
 };
@@ -97,20 +98,20 @@ const UserValue = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.SingleValue {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.SingleValue>
     );
 };
 
 const IssueSuggestionOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }} dangerouslySetInnerHTML={{ __html: props.data.summary }} /></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }} dangerouslySetInnerHTML={{ __html: props.data.summary }} /></div>
     </Option>
 );
 
 const IssueSuggestionValue = (props: any) => (
     <components.MultiValueLabel {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
     </components.MultiValueLabel>
 
 );
@@ -131,6 +132,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
     private issueSuggestions: any[] | undefined = undefined;
     private jqlOptions: any[] | undefined = undefined;
     private newOption: any;
+    private fileUpload: HTMLInputElement | null;
 
     constructor(props: any) {
         super(props);
@@ -234,7 +236,9 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             }
             case 'issueCreated': {
                 if (isIssueCreated(e)) {
-                    this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
+                    this.submitAttachment(e.issueData)
+                        .catch((err) => this.onMessageReceived({ type: 'error', reason: `error uploading attachment: ${err}` }))
+                        .then(() => this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } }));
                 }
                 break;
             }
@@ -417,7 +421,24 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
         });
     }
 
-    handleSubmit = (e: any) => {
+    submitAttachment = async (issueData: any) => {
+        const formdata = new FormData();
+        if (!this.fileUpload || !this.fileUpload.files) {
+            return;
+        }
+        for (var i = 0; i < this.fileUpload.files.length; i++) {
+            const file = this.fileUpload.files[i];
+            formdata.append('file', file);
+        }
+
+        const client = new JiraClient(issueData.site);
+        client.authenticateUsingToken(issueData.token);
+        await client.addAttachment(issueData.key, formdata);
+
+        this.fileUpload.value = '';
+    }
+
+    handleSubmit = async (e: any) => {
         let requiredFields = this.state.issueTypeScreens[this.state.selectedIssueTypeId!].fields.filter(field => { return field.required; });
         let errs = {};
         requiredFields.forEach((field: FieldUI) => {
@@ -1128,6 +1149,22 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     </React.Fragment>
                 );
             }
+            case UIType.Attachment:
+                return (
+                    <Field label='Add attachment' name='attachment'>
+                        {
+                            // Not using fieldArgs here as we handle attachments separately
+                            () =>
+                                <div className='ac-vpadding'>
+                                    <input
+                                        multiple
+                                        type="file"
+                                        id="attachment" name="attachment"
+                                        ref={(ref) => this.fileUpload = ref} />
+                                </div>
+                        }
+                    </Field>
+                );
         }
 
         // catch-all for unknown field types
