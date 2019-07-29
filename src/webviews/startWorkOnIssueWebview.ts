@@ -98,7 +98,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                             const authInfo = await Container.authManager.getAuthInfo(issue.siteDetails);
                             const currentUserId = authInfo!.user.id;
                             await assignIssue(issue, currentUserId);
-                            if (e.setupJira) {
+                            if (e.setupJira && issue.status.id !== e.transition.to.id) {
                                 await transitionIssue(issue, e.transition);
                             }
                             this.postMessage({
