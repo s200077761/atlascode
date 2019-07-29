@@ -25,7 +25,6 @@ export class IssueHoverProvider implements HoverProvider {
     let summaryText = issue.summary ? issue.summary : "";
     let statusText = issue.status.name;
     let descriptionText = issue.description ? issue.description : "*No description*";
-    let issueUrl = `${issue.siteDetails.baseLinkUrl}/browse/${key}`;
     let header =
       `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
        | -                                                      | -                      |
@@ -37,11 +36,15 @@ export class IssueHoverProvider implements HoverProvider {
     text.push(new vscode.MarkdownString(descriptionText));
     let encodedKey = encodeURIComponent(JSON.stringify([key]));
 
-    text.push(new vscode.MarkdownString(`[Open Issue View](command:${Commands.ShowIssue}?${encodedKey} "View Issue")`));
+    let showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
+    let issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
+    let spaceString = '&nbsp; '.repeat(46);
+    let issueLinksTable = 
+     `| [Open Issue View]${showIssueCommandString} | ${spaceString} [Open In Browser]${issueUrlString}  |
+      | ---                                        | ---:                                               |`;
+      
+    text.push(new vscode.MarkdownString(issueLinksTable));
     text[text.length - 1].isTrusted = true;
-    
-    text.push(new vscode.MarkdownString(`[Open In Browser](${issueUrl})`));
-    
 
     viewScreenEvent('issueHover', issue.siteDetails.id).then(e => { Container.analyticsClient.sendScreenEvent(e); });
 
