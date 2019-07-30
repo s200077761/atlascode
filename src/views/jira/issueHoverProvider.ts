@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { HoverProvider } from "vscode";
+import TurnDownService from "turndown";
 import { fetchMinimalIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
@@ -22,10 +23,15 @@ export class IssueHoverProvider implements HoverProvider {
     // e.g. if the issue key is in a different site, or is completely made up, we shouldn't fetch.
     const issue = await fetchMinimalIssue(key, Container.siteManager.effectiveSite(ProductJira));
 
-    let summaryText = issue.summary ? issue.summary : "";
-    let statusText = issue.status.name;
-    let descriptionText = issue.description ? issue.description : "*No description*";
-    let header =
+    const summaryText = issue.summary ? issue.summary : "";
+    const statusText = issue.status.name;
+
+    //Use the TurnDown library to convert Jira's html to standard markdown
+    let turnDownService = new TurnDownService();
+    let descriptionText = turnDownService.turndown(issue.descriptionHtml);
+    descriptionText = descriptionText ? descriptionText : "*No description*";
+
+    const header =
       `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
        | -                                                      | -                      |
        | ![](${issue.priority.iconUrl.replace(".svg", ".png")}) | ${issue.priority.name} |
@@ -34,11 +40,11 @@ export class IssueHoverProvider implements HoverProvider {
     let text = [];
     text.push(new vscode.MarkdownString(header));
     text.push(new vscode.MarkdownString(descriptionText));
-    let encodedKey = encodeURIComponent(JSON.stringify([key]));
+    const encodedKey = encodeURIComponent(JSON.stringify([key]));
 
-    let showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
-    let issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
-    let issueLinksLine = 
+    const showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
+    const issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
+    const issueLinksLine = 
      `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;
     text.push(new vscode.MarkdownString(issueLinksLine));
     text[text.length - 1].isTrusted = true;
