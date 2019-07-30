@@ -27,9 +27,8 @@ export class IssueHoverProvider implements HoverProvider {
     const statusText = issue.status.name;
 
     //Use the TurnDown library to convert Jira's html to standard markdown
-    let turnDownService = new TurnDownService();
-    let descriptionText = turnDownService.turndown(issue.descriptionHtml);
-    descriptionText = descriptionText ? descriptionText : "*No description*";
+    const turnDownService = new TurnDownService();
+    const descriptionText = issue.descriptionHtml ? turnDownService.turndown(issue.descriptionHtml) : "*No description*";
 
     const header =
       `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
