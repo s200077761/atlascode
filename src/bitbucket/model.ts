@@ -144,11 +144,17 @@ export interface PaginatedFileChanges {
 export interface PaginatedBitbucketIssues {
     repository: Repository;
     remote: Remote;
-    data: Bitbucket.Schema.Issue[];
+    data: BitbucketIssue[];
     next?: string;
 }
 
-export type BitbucketIssue = Bitbucket.Schema.Issue;
+export type BitbucketIssue = {
+    repository: Repository;
+    remote: Remote;
+    data: BitbucketIssueData;
+};
+
+export type BitbucketIssueData = Bitbucket.Schema.Issue;
 export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
 
 export interface PullRequestApi {
@@ -179,4 +185,7 @@ export interface RepositoriesApi {
     getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]>;
 }
 
-export function getSupportedRepositores() { }
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
+}

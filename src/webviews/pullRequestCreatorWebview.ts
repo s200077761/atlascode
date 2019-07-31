@@ -3,11 +3,11 @@ import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { RefType } from '../typings/git';
+import { RefType, Repository, Remote } from '../typings/git';
 import { CreatePRData, RepoData, CommitsResult, FetchIssueResult, FetchUsersResult } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
 import { Commands } from '../commands';
-import { PullRequest, BitbucketIssue } from '../bitbucket/model';
+import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../commands/jira/transitionIssue';
@@ -198,7 +198,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
-        let issue: MinimalIssue | BitbucketIssue | undefined = undefined;
+        let issue: MinimalIssue | BitbucketIssueData | undefined = undefined;
         if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
@@ -212,7 +212,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             if (bbIssueKeys.length > 0) {
                 const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
                 if (bbIssues.length > 0) {
-                    issue = bbIssues[0];
+                    issue = bbIssues[0].data;
                 }
             }
         }
@@ -223,7 +223,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         });
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
+    private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue | BitbucketIssueData) {
         if (!issue) {
             return;
         }
@@ -231,7 +231,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {
-            await BitbucketIssuesApi.postChange(issue, issue.state!);
+            await BitbucketIssuesApi.postChange({ repository: repo, remote: remote, data: issue }, issue.state!);
         }
     }
 
@@ -265,7 +265,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                 prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
             });
 
-        await this.updateIssue(issue);
+        await this.updateIssue(repo, remote, issue);
         this.hide();
     }
 }

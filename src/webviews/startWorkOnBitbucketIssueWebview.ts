@@ -69,7 +69,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 }
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._state.links!.html!.href!;
+                    const linkUrl = this._state.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -120,7 +120,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         this._state = issue;
 
         if (this._panel) {
-            this._panel.title = `Start work on Bitbucket issue #${issue.id}`;
+            this._panel.title = `Start work on Bitbucket issue #${issue.data.id}`;
         }
 
         const repoData: RepoData[] = [];
@@ -159,7 +159,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
 
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
-            issue: issue,
+            issue: issue.data,
             repoData: repoData
         };
         this.postMessage(msg);

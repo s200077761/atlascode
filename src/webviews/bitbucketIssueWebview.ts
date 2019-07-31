@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
-import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
+import { BitbucketIssueMessageData } from "../ipc/bitbucketIssueMessaging";
 import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
 import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
-import { BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssueData, BitbucketIssue } from "../bitbucket/model";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -52,7 +52,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
         this.isRefeshing = true;
 
-        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.id}`; }
+        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.data.id}`; }
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -60,8 +60,6 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
 
         try {
-
-
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
                 Container.bitbucketContext.currentUser(issue.repository!),
                 BitbucketIssuesApi.refetch(issue),
@@ -75,12 +73,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 changes.data.find(change => change.id! === comment.id!) || comment);
             const msg = {
                 type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-                issue: issueLatest,
+                issueData: issueLatest.data,
                 currentUser: currentUser,
                 comments: updatedComments,
                 hasMore: !!comments.next || !!changes.next,
                 showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
-            } as BitbucketIssueData;
+            } as BitbucketIssueMessageData;
 
             this.postMessage(msg);
         } catch (e) {
@@ -104,7 +102,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._issue!.links!.html!.href!;
+                    const linkUrl = this._issue!.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -163,7 +161,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'createJiraIssue': {
                     if (isCreateJiraIssueAction(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.CreateIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.CreateIssue, this._issue);
                     }
                     break;
                 }

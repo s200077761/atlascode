@@ -31,8 +31,8 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
         return;
     } else if (isBBIssueData(data)) {
         const partialIssue = {
-            summary: `BB #${data.id} - ${data.title}`,
-            description: `created from Bitbucket issue: ${data.links!.html!.href!}`,
+            summary: `BB #${data.data.id} - ${data.data.title}`,
+            description: `created from Bitbucket issue: ${data.data.links!.html!.href!}`,
             bbIssue: data,
             onCreated: updateBBIssue,
         };
@@ -50,7 +50,7 @@ function isTodoIssueData(a: any): a is TodoIssueData {
 }
 
 function isBBIssueData(a: any): a is BitbucketIssue {
-    return a && (<BitbucketIssue>a).title !== undefined;
+    return a && (<BitbucketIssue>a).data !== undefined && (<BitbucketIssue>a).data.title !== undefined;
 }
 
 function isUri(a: any): a is Uri {
@@ -68,10 +68,10 @@ async function updateBBIssue(data: BBData) {
 
     BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
 
-    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!.links!.html!.href!);
+    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
-        if (injiraComp && data.bbIssue.component !== injiraComp) {
+        if (injiraComp && data.bbIssue.data.component !== injiraComp) {
             BitbucketIssuesApi.postNewComponent(data.bbIssue, injiraComp.name!);
         }
     }

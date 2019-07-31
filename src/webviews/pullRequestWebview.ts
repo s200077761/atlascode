@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssue } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -247,22 +247,20 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
         this._state.prData = {
             ...this._state.prData,
-            ...{
-                type: 'update',
-                commits: commits.data,
-                comments: comments.data,
-                relatedJiraIssues: relatedJiraIssues,
-                relatedBitbucketIssues: relatedBitbucketIssues,
-                mainIssue: mainIssue,
-                buildStatuses: buildStatuses,
-                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
-            }
+            type: 'update',
+            commits: commits.data,
+            comments: comments.data,
+            relatedJiraIssues: relatedJiraIssues,
+            relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
+            mainIssue: mainIssue,
+            buildStatuses: buildStatuses,
+            errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
         };
 
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssueData | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -277,7 +275,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
             const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, bbIssueKeys);
             if (bbIssues.length > 0) {
-                return bbIssues[0];
+                return bbIssues[0].data;
             }
         }
         catch (e) {
@@ -333,7 +331,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssueData) {
         if (!issue) {
             return;
         }
@@ -341,7 +339,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {
-            await BitbucketIssuesApi.postChange(issue, issue.state!);
+            await BitbucketIssuesApi.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);
         }
     }
 

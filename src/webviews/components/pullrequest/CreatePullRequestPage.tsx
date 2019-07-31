@@ -27,7 +27,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
-import { Reviewer, Commit, BitbucketIssue } from '../../../bitbucket/model';
+import { Reviewer, Commit, BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
@@ -50,7 +50,7 @@ interface MyState {
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue | BitbucketIssueData;
     commits: Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -247,7 +247,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     handleBitbucketIssueStatusChange = (item: string) => {
         this.setState({
-            issue: { ...this.state.issue, state: item } as BitbucketIssue
+            issue: { ...this.state.issue, state: item } as BitbucketIssueData
         });
     }
 
@@ -385,7 +385,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
-                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: this.state.issue as BitbucketIssue })} />
+                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: this.state.issue as BitbucketIssueData })} />
                         </div>
                     }
                 </div>
@@ -397,7 +397,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             <label>Select new status</label>
                             {isMinimalIssue(this.state.issue)
                                 ? <TransitionMenu issue={this.state.issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
-                                : <StatusMenu issue={this.state.issue as BitbucketIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                : <StatusMenu issue={this.state.issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>
                     </div>

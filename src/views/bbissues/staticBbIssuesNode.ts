@@ -28,7 +28,7 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             if (issues.length === 0) {
                 return [new SimpleNode('No issues found')];
             }
-            this._children = issues.map(i => new SimpleNode(`#${i.id} ${i.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
+            this._children = issues.map(i => new SimpleNode(`#${i.data.id} ${i.data.title!}`, { command: Commands.ShowBitbucketIssue, title: 'Open bitbucket issue', arguments: [i] }));
         }
         return this._children;
     }

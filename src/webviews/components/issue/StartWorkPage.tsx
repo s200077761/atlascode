@@ -23,7 +23,7 @@ import ErrorBanner from "../ErrorBanner";
 import Offline from "../Offline";
 import { StartWorkOnBitbucketIssueData, isStartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/bitbucketIssueActions";
-import { BitbucketIssue } from "../../../bitbucket/model";
+import { BitbucketIssueData } from "../../../bitbucket/model";
 import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-client/model/entities";
 import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
 
@@ -286,7 +286,7 @@ export default class StartWorkPage extends WebviewComponent<
       </GridColumn>;
     }
     else if (this.state.issueType === 'bitbucketIssue') {
-      const bbIssue = issue as BitbucketIssue;
+      const bbIssue = issue as BitbucketIssueData;
       pageHeader = <GridColumn medium={8}>
         <em><p>Start work on:</p></em>
         <PageHeader

@@ -56,13 +56,13 @@ export class BitbucketIssueNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const treeItem = new vscode.TreeItem(`#${this.issue.id} ${this.issue.title!}`);
+        const treeItem = new vscode.TreeItem(`#${this.issue.data.id} ${this.issue.data.title!}`);
         treeItem.command = {
             command: Commands.ShowBitbucketIssue,
             title: 'Open bitbucket issue', arguments: [this.issue]
         };
         treeItem.contextValue = 'bitbucketIssue';
-        treeItem.resourceUri = vscode.Uri.parse(this.issue.links!.html!.href!);
+        treeItem.resourceUri = vscode.Uri.parse(this.issue.data.links!.html!.href!);
         return treeItem;
     }
 

@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssueData } from "../bitbucket/model";
 
 export interface CopyBitbucketIssueLink extends Action {
     action: 'copyBitbucketIssueLink';
@@ -43,7 +43,7 @@ export function isCreateBitbucketIssueAction(a: Action): a is CreateBitbucketIss
 
 export interface OpenBitbucketIssueAction extends Action {
     action: 'openBitbucketIssue';
-    issue: BitbucketIssue;
+    issue: BitbucketIssueData;
 }
 
 export function isOpenBitbucketIssueAction(a: Action): a is OpenBitbucketIssueAction {
@@ -52,7 +52,7 @@ export function isOpenBitbucketIssueAction(a: Action): a is OpenBitbucketIssueAc
 
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
-    issue: BitbucketIssue;
+    issue: BitbucketIssueData;
 }
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
@@ -61,7 +61,7 @@ export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageActi
 
 export interface CreateJiraIssueAction extends Action {
     action: 'createJiraIssue';
-    issue: BitbucketIssue;
+    issue: BitbucketIssueData;
 }
 
 export function isCreateJiraIssueAction(a: Action): a is CreateJiraIssueAction {
