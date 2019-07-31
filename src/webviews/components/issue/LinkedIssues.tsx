@@ -22,7 +22,7 @@ const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <p style={{ display: "inline" }}><em style={{ position: 'absolute', bottom: '2.25em' }}>{data.linkDescription}</em></p>
         <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueKey: data.issue.key })}>
+        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
             {data.issue.key}
         </Button>
     </div>;

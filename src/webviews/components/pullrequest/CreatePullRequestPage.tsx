@@ -381,7 +381,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     {isMinimalIssue(this.state.issue)
                         ? <div className='ac-flex'>
                             <h4>Transition Jira issue - </h4>
-                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: (this.state.issue as MinimalIssue).key })} />
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: (this.state.issue as MinimalIssue) })} />
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>

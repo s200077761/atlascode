@@ -34,7 +34,7 @@ import LinkedIssues from "./LinkedIssues";
 import PMFBBanner from "../pmfBanner";
 import { emptySiteInfo } from "../../../atlclients/authInfo";
 import { emptyStatus, emptyPriority, emptyIssueType, emptyUser } from "../../../jira/jira-client/model/emptyEntities";
-import { User, Transition } from "../../../jira/jira-client/model/entities";
+import { User, Transition, MinimalIssueOrKey } from "../../../jira/jira-client/model/entities";
 import { IdName, DetailedIssue } from "../../../jira/jira-client/model/detailedJiraIssue";
 
 type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
@@ -219,10 +219,10 @@ export default class JiraIssuePage extends WebviewComponent<
     });
   }
 
-  handleOpenIssue = (issueKey: string) => {
+  handleOpenIssue = (issueOrKey: MinimalIssueOrKey) => {
     this.postMessage({
       action: "openJiraIssue",
-      issueKey: issueKey
+      issueOrKey: issueOrKey
     });
   }
 

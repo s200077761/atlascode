@@ -2,11 +2,11 @@ import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, MinimalIssue } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
-const issueExpand = "names,transitions,renderedFields";
+const issueExpand = "transitions,renderedFields,transitions.fields";
 const API_VERSION = 2;
 
 // JiraClient provides methods to invoke Jira REST API endpoints
@@ -40,8 +40,8 @@ export class JiraClient {
         return readCreatedIssue(result);
     }
 
-    public async getIssue(issueIdOrKey: string, fields: string[]): Promise<MinimalIssue> {
-        const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: issueExpand, fields: fields });
+    public async getIssue(issueIdOrKey: string, fields: string[], expand: string = issueExpand): Promise<any> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: expand, fields: fields });
         return res;
     }
 

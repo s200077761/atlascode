@@ -17,10 +17,15 @@ import { PullRequestData } from '../bitbucket/model';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
+import { IssueKeyAndSite } from '../jira/jira-client/model/entities';
+import { fetchEditIssueUI } from '../jira/fetchIssue';
+import { showIssue } from '../commands/jira/showIssue';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
-export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
+export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<IssueKeyAndSite> {
     private _state: DetailedIssue = emptyIssue;
+    private _issueAndSite: IssueKeyAndSite | undefined;
+
     private _currentUserId?: string;
 
     constructor(extensionPath: string) {
@@ -34,7 +39,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
         return "viewIssueScreen";
     }
 
-    async initialize(issueKey: string) {
+    async initialize(issueAndSite: IssueKeyAndSite) {
+
+        this._issueAndSite = issueAndSite;
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -224,7 +231,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
+                        showIssue(msg.issueOrKey);
                         break;
                     }
                 }
@@ -318,8 +325,9 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
     }
 
     private async forceUpdateIssue() {
-        if (this._state.key !== "") {
+        if (this._issueAndSite) {
             try {
+                await fetchEditIssueUI(this._issueAndSite.issueKey, this._issueAndSite.site);
                 // let issue = await fetchDetailedIssue(this._state.key, this._state.siteDetails);
                 // await this.updateIssue(issue);
             }

@@ -1,6 +1,11 @@
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 
-export type minimalIssueOrKey = MinimalIssue | string;
+export type MinimalIssueOrKey = MinimalIssue | string;
+
+export interface IssueKeyAndSite {
+    issueKey: string;
+    site: DetailedSiteInfo;
+}
 
 export interface MinimalIssue {
     key: string;

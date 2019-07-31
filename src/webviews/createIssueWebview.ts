@@ -17,6 +17,7 @@ import { User } from '../jira/jira-client/model/entities';
 import { IssuePickerIssue } from '../jira/jira-client/model/responses';
 import { CreateMetaTransformerResult } from '../jira/jira-client/model/createIssueUI';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
+import { showIssue } from '../commands/jira/showIssue';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -379,7 +380,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'openJiraIssue': {
                     handled = true;
                     if (isOpenJiraIssue(e)) {
-                        commands.executeCommand(Commands.ShowIssue, e.issueKey);
+                        showIssue(e.issueOrKey);
                     }
                     break;
                 }

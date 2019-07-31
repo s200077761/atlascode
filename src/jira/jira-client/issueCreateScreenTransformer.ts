@@ -1,5 +1,5 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { ProjectIssueCreateMetadata, IssueTypeIssueCreateMetadata } from "./model/issueCreateMetadata";
+import { ProjectIssueCreateMetadata, IssueTypeIssueCreateMetadata, readIssueTypeIssueCreateMetadata } from "./model/issueCreateMetadata";
 import { CreateMetaTransformerProblems, CreateMetaTransformerResult, IssueTypeProblem, IssueTypeUI } from "./model/createIssueUI";
 import { FieldTransformerResult } from "./model/fieldUI";
 import { Container } from "../../container";
@@ -15,7 +15,7 @@ const defaultCommonFields: string[] = [
     , 'labels'
 ];
 
-const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
+const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter', 'statuscategorychangedate', 'lastViewed'];
 
 export class IssueCreateScreenTransformer {
 
@@ -40,7 +40,7 @@ export class IssueCreateScreenTransformer {
             firstIssueType = this.metaIssueTypeToIssueType(project.issueTypes[0]);
 
             for (let i = 0; i < project.issueTypes.length; i++) {
-                const issueType: IssueTypeIssueCreateMetadata = project.issueTypes[i];
+                const issueType: IssueTypeIssueCreateMetadata = readIssueTypeIssueCreateMetadata(project.issueTypes[i]);
 
                 const issueTypeUI: IssueTypeUI = {
                     name: issueType.name,
@@ -49,7 +49,7 @@ export class IssueCreateScreenTransformer {
                     fields: []
                 };
 
-                if (issueType.fields && Object.keys.length > 0) {
+                if (issueType.fields && Object.keys(issueType.fields).length > 0) {
                     let issueTypeFieldFilters = [...defaultFieldFilters];
 
                     // if it's an Epic type, we need to filter out the epic link field (epics can't belong to other epics)
@@ -57,7 +57,7 @@ export class IssueCreateScreenTransformer {
                         issueTypeFieldFilters.push(epicFieldInfo.epicLink.id);
                     }
 
-                    const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(issueType.fields, project.key, issueTypeFieldFilters, commonFields);
+                    const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(issueType.fields, { id: project.id, key: project.key }, commonFields, true, issueTypeFieldFilters);
 
                     if (fieldResult.nonRenderableFields.length > 0) {
                         this.addIssueTypeProblem({

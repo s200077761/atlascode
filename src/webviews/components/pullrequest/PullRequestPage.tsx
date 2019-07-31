@@ -36,7 +36,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssue } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
+import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKey } from '../../../jira/jira-client/model/entities';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -114,10 +114,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleIssueClicked = (issueKey: string) => {
+    handleIssueClicked = (issueOrKey: MinimalIssueOrKey) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issueKey: issueKey
+            issueOrKey: issueOrKey
         });
     }
 
@@ -237,7 +237,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     ? <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
-                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.key })} />
+                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>

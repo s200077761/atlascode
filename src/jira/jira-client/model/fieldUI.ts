@@ -2,20 +2,44 @@ export enum UIType {
     Select = 'select',
     Checkbox = 'checkbox',
     Radio = 'radio',
-    Textarea = 'textarea',
     Input = 'input',
     Date = 'date',
     DateTime = 'datetime',
-    User = 'user',
     IssueLink = 'issuelink',
     Timetracking = 'timetracking',
-    Worklog = 'worklog'
+    Worklog = 'worklog',
+    Comments = 'comments',
+    Watches = 'watches',
+    Votes = 'votes',
+    NonEditable = 'noneditable'
 }
 
-export enum InputValueType {
+export enum ValueType {
     String = 'string',
     Number = 'number',
-    Url = 'url'
+    Url = 'url',
+    DateTime = 'datetime',
+    Option = 'option', // as type: single select or radio, as array items: multi-select or checkboxes (also check schema), {id, value}
+    OptionWithChild = 'option-with-child', // cascading select, {id, value, children[{id, value}]}
+    Resolution = 'resolution', // single select, {id, name}
+    Priority = 'priority', // single select, {id, name, iconUrl}
+    User = 'user', // single select, {key, accountId, accountType, name, emailAddress, avatarUrls{'48x48'...}, displayName, active, timeZone, locale}
+    Status = 'status', // {description, iconUrl, name, id, statusCategory{id, key, colorName, name}}
+    Progress = 'progress', //part of time tracking methinks
+    Date = 'date',
+    Votes = 'votes', // for display: {votes:number, hasVoted:boolean}, not sure yet for edit
+    IssueType = 'issuetype', // single select, {id, description, iconUrl, name, subtask:boolean, avatarId}
+    Project = 'project', //single select, { id, key, name, projectTypeKey, simplified:boolean, avatarUrls{ '48x48'... }}
+    Watches = 'watches', // mutli-user picker for edit, for display: {watchCount:number, isWatching:boolean, self:url } delf contains url to get the user details for watchers
+    Timetracking = 'timetracking', //timetracking UI
+    CommentsPage = 'comments-page', // textarea, system schema will be 'comment'
+    Version = 'version', // multi-select, {id, name, archived:boolean, released:boolean}
+    // issuelinks: multi-issue picker {id, type:{id,name,inward,outward}, outwardIssue:{id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}}
+    // subtasks (issuelinks type) {id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}
+    IssueLinks = 'issuelinks',
+    Component = 'component', // mutli-select, {id, name}
+    Worklog = 'worklog',
+    Attachment = 'attachment',
 }
 
 export interface FieldUI {
@@ -24,26 +48,31 @@ export interface FieldUI {
     key: string;
     uiType: UIType;
     advanced: boolean;
+    valueType: ValueType;
+    initialValue: any;
+}
+
+export interface NonEditableFieldUI extends FieldUI {
+    isList: boolean;
 }
 
 export interface InputFieldUI extends FieldUI {
-    valueType: InputValueType;
+    isMultiline: boolean;
 }
 
 export interface OptionableFieldUI extends FieldUI {
     allowedValues: any[];
 }
-
-export interface UserFieldUI extends FieldUI {
-    isMulti: boolean;
-}
-
 export interface SelectFieldUI extends OptionableFieldUI {
     isMulti: boolean;
     isCascading: boolean;
     isCreateable: boolean;
     autoCompleteUrl: string;
     autoCompleteJql: string;
+}
+
+export interface IssueLinksUI extends SelectFieldUI {
+    isSubtasks: boolean;
 }
 
 export interface FieldTransformerResult {
@@ -60,48 +89,6 @@ export interface FieldProblem {
     schema: string;
 }
 
-export const defaultFieldFilters: string[] = [];
-
-export const knownSystemSchemas: string[] = [
-    'summary'
-    , 'issuetype'
-    , 'components'
-    , 'description'
-    , 'project'
-    , 'reporter'
-    , 'fixVersions'
-    , 'priority'
-    , 'resolution'
-    , 'labels'
-    , 'timetracking'
-    , 'worklog'
-    , 'environment'
-    //,'attachment'
-    , 'versions'
-    , 'duedate'
-    , 'issuelinks'
-    , 'assignee'
-];
-
-export const knownCustomSchemas: string[] = [
-    'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:select'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:textarea'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:textfield'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:url'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:datepicker'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:userpicker'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:datetime'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:labels'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:float'
-    , 'com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons'
-    , 'com.pyxis.greenhopper.jira:gh-epic-label'
-    , 'com.pyxis.greenhopper.jira:gh-epic-link'
-    //,'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect' // TODO: handle cascading selects in UI
-];
-
 export const multiSelectSchemas: string[] = [
     'components'
     , 'fixVersions'
@@ -109,7 +96,9 @@ export const multiSelectSchemas: string[] = [
     , 'com.atlassian.jira.plugin.system.customfieldtypes:labels'
     , 'versions'
     , 'issuelinks'
+    , 'subtasks'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
+    , 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker'
 ];
 
 export const createableSelectSchemas: string[] = [
@@ -120,50 +109,51 @@ export const createableSelectSchemas: string[] = [
     , 'versions'
 ];
 
-export const schemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
-    [['summary', UIType.Input]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:textfield', UIType.Input]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:float', UIType.Input]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:url', UIType.Input]
-        , ['description', UIType.Textarea]
-        , ['environment', UIType.Textarea]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:textarea', UIType.Textarea]
-        , ['issuetype', UIType.Select]
-        , ['components', UIType.Select]
-        , ['project', UIType.Select]
-        , ['fixVersions', UIType.Select]
-        , ['priority', UIType.Select]
-        , ['resolution', UIType.Select]
-        , ['labels', UIType.Select]
-        , ['timetracking', UIType.Timetracking]
-        , ['worklog', UIType.Worklog]
-        , ['versions', UIType.Select]
-        , ['issuelinks', UIType.IssueLink]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect', UIType.Select]
+export const multiLineStringSchemas: string[] = [
+    'description'
+    , 'environment'
+    , 'com.atlassian.jira.plugin.system.customfieldtypes:textarea'
+];
+
+export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
+    [[ValueType.DateTime, UIType.DateTime]
+        , [ValueType.String, UIType.Input]
+        //'option-with-child', // cascading select, {id, value, children[{id, value}]}
+        , ['array', UIType.Select]// multi-select, inspect items prop for element type
+        , [ValueType.Resolution, UIType.Select] // single select, {id, name}
+        , [ValueType.Priority, UIType.Select] // single select, {id, name, iconUrl}
+        , [ValueType.Number, UIType.Input]
+        , [ValueType.User, UIType.Select]// single select, {key, accountId, accountType, name, emailAddress, avatarUrls{'48x48'...}, displayName, active, timeZone, locale}
+        //'progress', //part of time tracking methinks
+        , [ValueType.Date, UIType.Date]
+        , [ValueType.Votes, UIType.Votes]// for display: {votes:number, hasVoted:boolean}, not sure yet for edit
+        , [ValueType.IssueType, UIType.Select]// single select, {id, description, iconUrl, name, subtask:boolean, avatarId}
+        , [ValueType.Project, UIType.Select]//single select, { id, key, name, projectTypeKey, simplified:boolean, avatarUrls{ '48x48'... }}
+        , [ValueType.Watches, UIType.Watches]// mutli-user picker for edit, for display: {watchCount:number, isWatching:boolean, self:url } delf contains url to get the user details for watchers
+        , [ValueType.Timetracking, UIType.Timetracking]//timetracking UI
+        , [ValueType.CommentsPage, UIType.Comments] // textarea, system schema will be 'comment'
+        // the following are usually array items
+        , [ValueType.Version, UIType.Select]// multi-select, {id, name, archived:boolean, released:boolean}
+        // issuelinks: multi-issue picker {id, type:{id,name,inward,outward}, outwardIssue:{id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}}
+        // subtasks (issuelinks type) {id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}
+        , [ValueType.IssueLinks, UIType.IssueLink]
+        , [ValueType.Component, UIType.Select] // mutli-select, {id, name}
+        , [ValueType.Worklog, UIType.Worklog]
+        //,['attachment',]
+    ]
+);
+
+export const schemaOptionToUIMap: Map<string, UIType> = new Map<string, UIType>(
+    [['com.atlassian.jira.plugin.system.customfieldtypes:select', UIType.Select]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:multiselect', UIType.Select]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:select', UIType.Select]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:labels', UIType.Select]
-        , ['reporter', UIType.User]
-        , ['assignee', UIType.User]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:userpicker', UIType.User]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker', UIType.User]
-        , ['duedate', UIType.Date]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:datepicker', UIType.Date]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:datetime', UIType.DateTime]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes', UIType.Checkbox]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons', UIType.Radio]
-        , ['com.pyxis.greenhopper.jira:gh-epic-link', UIType.Select]
+    ]
+);
+
+export const customSchemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
+    [['com.pyxis.greenhopper.jira:gh-epic-link', UIType.Select]
         , ['com.pyxis.greenhopper.jira:gh-epic-label', UIType.Input]
     ]
 );
-
-export const schemaToInputValueMap: Map<string, InputValueType> = new Map<string, InputValueType>(
-    [['summary', InputValueType.String]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:textfield', InputValueType.String]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:float', InputValueType.Number]
-        , ['com.atlassian.jira.plugin.system.customfieldtypes:url', InputValueType.Url]
-    ]
-);
-
-
 

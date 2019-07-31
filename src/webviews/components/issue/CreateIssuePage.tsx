@@ -481,7 +481,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                     <SectionMessage
                                         appearance="confirmation"
                                         title="Issue Created">
-                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueKey: this.state.createdIssue.key }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue }); }}>{this.state.createdIssue.key}</Button> has been created.
                                     </SectionMessage>
                                 </div>
                             }

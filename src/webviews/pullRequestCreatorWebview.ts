@@ -21,6 +21,7 @@ import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUt
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
+import { showIssue } from '../commands/jira/showIssue';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
 export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
@@ -156,7 +157,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        commands.executeCommand(Commands.ShowIssue, e.issueKey);
+                        showIssue(e.issueOrKey);
                         break;
                     }
                 }

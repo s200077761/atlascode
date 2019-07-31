@@ -1,44 +1,74 @@
 // JIRA.Schema.FieldBean
+export type Fields = { [k: string]: Field };
+
+export type FieldOrFieldMeta = Field | FieldMeta;
+export type EditMetaDescriptor = { [key: string]: FieldOrFieldMeta };
 export interface Field {
     readonly id: string;
     readonly key: string;
     readonly name: string;
+    readonly schema?: FieldSchemaMeta;
+    currentValue: any | undefined;
     readonly custom: boolean;
-    readonly schema: FieldSchemaMeta | undefined;
+    readonly clauseNames: string[];
 }
 
-export function readField(props: any) {
+export function readField(props: any, fieldValue?: any) {
     return {
         id: props.id,
         key: props.key,
         name: props.name,
         custom: props.custom,
-        schema: props.schema ? readFieldSchema(props.schema) : undefined
+        clauseNames: props.clauseNames,
+        schema: props.schema ? readFieldSchema(props.schema) : undefined,
+        currentValue: fieldValue
     };
+}
+
+export function isField(f: any): f is Field {
+    return f && (<Field>f).clauseNames !== undefined;
 }
 
 // FieldMetaBean
 // There doesn't seem to be any actual documentation on this, the shape has been 
 // determined by the shape it's required to have for our purposes.
 export interface FieldMeta {
-    readonly schema: FieldSchemaMeta;
     readonly id: string;
-    readonly name: string;
     readonly key: string;
+    readonly name: string;
+    readonly schema: FieldSchemaMeta;
+    readonly currentValue: any | undefined;
     readonly autoCompleteUrl: string | undefined;
     readonly required: boolean;
-    readonly allowedValues: string[];
+    readonly allowedValues: any[] | undefined;
 }
 
-export function readFieldMeta(props: any): FieldMeta {
+export function isFieldMeta(f: any): f is FieldMeta {
+    return f && (<FieldMeta>f).required !== undefined;
+}
+
+export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k: string]: any }): { [k: string]: FieldMeta } {
+    let metaFields: { [k: string]: FieldMeta } = {};
+
+    Object.keys(fields).forEach(key => {
+        const fieldValue: any = fieldValues ? fieldValues[key] : undefined;
+
+        metaFields[key] = readFieldMeta(key, fields[key], fieldValue);
+    });
+
+    return metaFields;
+}
+
+export function readFieldMeta(key: string, props: any, fieldValue?: any): FieldMeta {
     return {
         schema: readFieldSchema(props.schema),
         id: props.id,
         name: props.name,
-        key: props.key,
+        key: props.key ? props.key : key,
         autoCompleteUrl: props.autoCompleteUrl,
         required: props.required,
-        allowedValues: props.allowedValues
+        allowedValues: props.allowedValues,
+        currentValue: fieldValue
     };
 }
 

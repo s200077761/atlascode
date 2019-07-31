@@ -1,6 +1,6 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, MinimalIssueOrKey } from "../jira/jira-client/model/entities";
 import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
 
 export interface RefreshIssueAction extends Action {
@@ -37,7 +37,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueKey: string;
+    issueOrKey: MinimalIssueOrKey;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
@@ -102,7 +102,7 @@ export function isIssueAssign(a: Action): a is IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
 }
 export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
-    return (<OpenJiraIssueAction>a).issueKey !== undefined;
+    return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
 export function isFetchQuery(a: Action): a is FetchQueryAction {

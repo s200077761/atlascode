@@ -23,6 +23,7 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { PullRequestProvider } from '../bitbucket/prProvider';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
+import { showIssue } from '../commands/jira/showIssue';
 
 interface PRState {
     prData: PRData;
@@ -148,7 +149,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
+                        showIssue(msg.issueOrKey);
                         break;
                     }
                 }

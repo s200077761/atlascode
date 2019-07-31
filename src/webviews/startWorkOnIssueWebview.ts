@@ -6,7 +6,6 @@ import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../commands';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
@@ -16,11 +15,12 @@ import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUt
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
-import { minimalIssueOrKey, MinimalIssue } from '../jira/jira-client/model/entities';
+import { MinimalIssueOrKey, MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
+import { showIssue } from '../commands/jira/showIssue';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<minimalIssueOrKey> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<MinimalIssueOrKey> {
     private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 
@@ -75,7 +75,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueKey);
+                        showIssue(e.issueOrKey);
                         break;
                     }
                 }
