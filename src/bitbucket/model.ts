@@ -1,5 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import Bitbucket from 'bitbucket';
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export type User = {
     accountId: string;
@@ -151,6 +152,7 @@ export type BitbucketIssue = Bitbucket.Schema.Issue;
 export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
 
 export interface PullRequestApi {
+    getCurrentUser(site: DetailedSiteInfo): Promise<User>;
     getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
     getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests>;
     getListToReview(repository: Repository): Promise<PaginatedPullRequests>;

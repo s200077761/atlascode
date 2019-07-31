@@ -1,9 +1,10 @@
 import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi } from './model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
 import { getBitbucketRemotes, parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -15,6 +16,18 @@ export const defaultPagelen = 25;
 const dummyRemote = { name: '', isReadOnly: true };
 
 export class CloudPullRequestApi implements PullRequestApi {
+
+    async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
+        const bbreq = await clientForHostname(site.hostname) as Bitbucket;
+
+        const { data } = await bbreq.user.get('');
+        return {
+            accountId: data.account_id!,
+            avatarUrl: data.links!.avatar!.href!,
+            displayName: data.display_name!,
+            url: data.links!.html!.href!
+        };
+    }
 
     async  getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
         let remotes = getBitbucketRemotes(repository);

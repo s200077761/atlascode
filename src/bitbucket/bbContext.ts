@@ -1,8 +1,6 @@
-import { Disposable, EventEmitter, Event, commands, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import { Repository, API as GitApi } from "../typings/git";
-import { Commands } from '../commands';
 import { Container } from '../container';
-import { currentUserBitbucket } from '../commands/bitbucket/currentUser';
 import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
@@ -43,8 +41,7 @@ export class BitbucketContext extends Disposable {
                         this._onDidChangeBitbucketContext.fire();
                     }
                 }
-            }),
-            commands.registerCommand(Commands.CurrentUserBitbucket, currentUserBitbucket),
+            })
         );
 
         this.prCommentController = new PullRequestCommentController(Container.context);
@@ -72,8 +69,7 @@ export class BitbucketContext extends Disposable {
         if (site) {
             let foundUser = this._currentUsers.get(site.hostname);
             if (!foundUser) {
-                //@ts-ignore
-                foundUser = site.isCloud ? await currentUserBitbucket(site) : await PullRequestProvider.forRepository(repo as Repository).getCurrentUser(site)!;
+                foundUser = await PullRequestProvider.forRepository(repo as Repository).getCurrentUser(site)!;
             }
 
             if (foundUser) {

@@ -255,9 +255,9 @@ export class ClientManager implements Disposable {
     return newSite;
   }
 
-  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit> {
+  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit | BitbucketServer> {
 
-    return this.getClient<BitbucketKit>(
+    return this.getClient<BitbucketKit | BitbucketServer>(
       site,
       info => {
         let extraOptions = {};
