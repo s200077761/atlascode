@@ -1,17 +1,17 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Repository } from '../../typings/git';
-import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
+import { Repository, Remote } from '../../typings/git';
 import { PaginatedBitbucketIssues, BitbucketIssue } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { Commands } from '../../commands';
 import { SimpleNode } from '../nodes/simpleNode';
+import { clientForRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
 
-    constructor(private repository: Repository, private expand?: boolean) {
+    constructor(private repository: Repository, private remote: Remote, private expand?: boolean) {
         super();
     }
 
@@ -39,7 +39,8 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            let issues = await BitbucketIssuesApi.getList(this.repository);
+            const bbApi = await clientForRemote(this.remote);
+            let issues = await bbApi.issues!.getList(this.repository);
             if (issues.data.length === 0) {
                 return [new SimpleNode('No open issues for this repository')];
             }

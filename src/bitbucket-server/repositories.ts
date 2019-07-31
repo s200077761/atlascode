@@ -1,18 +1,19 @@
 import { Remote } from "../typings/git";
-import { parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "../bitbucket/model";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
 
+    constructor(private _client: BitbucketServer) { }
+
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getRepository({
+        const { data } = await this._client.repos.getRepository({
             projectKey: parsed.owner,
             repositorySlug: parsed.name
         });
 
-        const defaultBranch = await bb.repos.getDefaultBranch({
+        const defaultBranch = await this._client.repos.getDefaultBranch({
             projectKey: parsed.owner,
             repositorySlug: parsed.name
         });
@@ -22,8 +23,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getBranchModel({
+        const { data } = await this._client.repos.getBranchModel({
             projectKey: parsed.owner,
             repositorySlug: parsed.name
         });
@@ -35,8 +35,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getBranchModel({
+        const { data } = await this._client.repos.getBranchModel({
             projectKey: parsed.owner,
             repositorySlug: parsed.name
         });
@@ -52,8 +51,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getCommits({
+        const { data } = await this._client.repos.getCommits({
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
             until: includeRef,

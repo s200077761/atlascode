@@ -3,6 +3,7 @@ import { ProductBitbucket, DetailedSiteInfo } from "../atlclients/authInfo";
 import * as gup from 'git-url-parse';
 import { Container } from "../container";
 import { bbAPIConnectivityError } from "../constants";
+import { BitbucketApi } from "./model";
 
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
@@ -27,7 +28,7 @@ export function urlForRemote(remote: Remote): string {
     return remote.fetchUrl! || remote.pushUrl!;
 }
 
-export async function clientForRemote(remote: Remote): Promise<Bitbucket | BitbucketServer> {
+export async function clientForRemote(remote: Remote): Promise<BitbucketApi> {
     let site = siteDetailsForRemote(remote);
 
     if (site) {
@@ -37,7 +38,7 @@ export async function clientForRemote(remote: Remote): Promise<Bitbucket | Bitbu
     return Promise.reject(bbAPIConnectivityError);
 }
 
-export async function clientForHostname(hostname: string): Promise<Bitbucket | BitbucketServer> {
+export async function clientForHostname(hostname: string): Promise<BitbucketApi> {
     let site = Container.siteManager.getSiteForHostname(ProductBitbucket, hostname);
 
     if (site) {

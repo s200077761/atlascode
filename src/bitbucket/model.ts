@@ -1,6 +1,8 @@
 import { Repository, Remote } from "../typings/git";
 import Bitbucket from 'bitbucket';
 import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { BitbucketIssuesApiImpl } from "./bbIssues";
+import { PipelineApiImpl } from "../pipelines/pipelines";
 
 export type User = {
     accountId: string;
@@ -183,6 +185,14 @@ export interface RepositoriesApi {
     getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
     getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]>;
+}
+
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
+    issues?: BitbucketIssuesApiImpl;
+    pipelines?: PipelineApiImpl;
+    _rawApi: any;
 }
 
 export interface BitbucketApi {

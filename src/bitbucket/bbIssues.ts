@@ -1,7 +1,6 @@
 import { Repository, Remote } from "../typings/git";
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, clientForHostname } from "./bbUtils";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote } from "./bbUtils";
 import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "./model";
-import { RepositoryProvider } from "./repoProvider";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -10,7 +9,9 @@ export const maxItemsSupported = {
 };
 const dummyRemote = { name: '', isReadOnly: true };
 
-class BitbucketIssuesApiImpl {
+export class BitbucketIssuesApiImpl {
+
+    constructor(private _client: Bitbucket) { }
 
     // ---- BEGIN - Actions NOT on a specific issue ----
     // ---- => ensure Bitbucket Issues are enabled for the repo
@@ -22,9 +23,8 @@ class BitbucketIssuesApiImpl {
         }
 
         let parsed = parseGitUrl(urlForRemote(remotes[0]));
-        const bb: Bitbucket = await clientForRemote(remotes[0]) as Bitbucket;
 
-        const { data } = await bb.repositories.listIssues({
+        const { data } = await this._client.repositories.listIssues({
             repo_slug: parsed.name,
             username: parsed.owner,
             pagelen: defaultPageLength,
@@ -38,9 +38,8 @@ class BitbucketIssuesApiImpl {
 
     async getAvailableComponents(repositoryHref: string): Promise<Bitbucket.Schema.Component[] | undefined> {
         let parsed = parseGitUrl(repositoryHref);
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
 
-        const resp = await bb.repositories.listComponents({
+        const resp = await this._client.repositories.listComponents({
             repo_slug: parsed.name,
             username: parsed.owner,
             pagelen: defaultPageLength
@@ -56,10 +55,9 @@ class BitbucketIssuesApiImpl {
         }
 
         let parsed = parseGitUrl(urlForRemote(remotes[0]));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
-        const results = await Promise.all(keyNumbers.map(key => bb.repositories.getIssue({
+        const results = await Promise.all(keyNumbers.map(key => this._client.repositories.getIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: key
@@ -74,8 +72,7 @@ class BitbucketIssuesApiImpl {
         }
 
         let parsed = parseGitUrl(urlForRemote(remotes[0]));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listIssues({
+        const { data } = await this._client.repositories.listIssues({
             repo_slug: parsed.name,
             username: parsed.owner,
             pagelen: 2,
@@ -89,7 +86,8 @@ class BitbucketIssuesApiImpl {
     }
 
     async bitbucketIssuesEnabled(remote: Remote): Promise<boolean> {
-        return !!(await RepositoryProvider.forRemote(remote).get(remote)).issueTrackerEnabled;
+        const bbClient = await clientForRemote(remote);
+        return !!(await bbClient.repositories.get(remote)).issueTrackerEnabled;
     }
 
     // ---- END - Actions NOT on a specific issue ----
@@ -100,8 +98,7 @@ class BitbucketIssuesApiImpl {
 
     async refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.getIssue({
+        const { data } = await this._client.repositories.getIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString()
@@ -112,8 +109,7 @@ class BitbucketIssuesApiImpl {
 
     async getComments(issue: BitbucketIssue): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listIssueComments({
+        const { data } = await this._client.repositories.listIssueComments({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -147,8 +143,7 @@ class BitbucketIssuesApiImpl {
 
     async getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listIssueChanges({
+        const { data } = await this._client.repositories.listIssueChanges({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -215,8 +210,7 @@ class BitbucketIssuesApiImpl {
 
     async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        await bb.repositories.createIssueChange({
+        await this._client.repositories.createIssueChange({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -236,8 +230,7 @@ class BitbucketIssuesApiImpl {
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        await bb.repositories.createIssueChange({
+        await this._client.repositories.createIssueChange({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -254,8 +247,7 @@ class BitbucketIssuesApiImpl {
 
     async postComment(issue: BitbucketIssue, content: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        await bb.repositories.createIssueComment({
+        await this._client.repositories.createIssueComment({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -270,8 +262,7 @@ class BitbucketIssuesApiImpl {
 
     async assign(issue: BitbucketIssue, account_id: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        await bb.repositories.updateIssue({
+        await this._client.repositories.updateIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
             issue_id: issue.data.id!.toString(),
@@ -287,9 +278,8 @@ class BitbucketIssuesApiImpl {
 
     async create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
         let parsed = parseGitUrl(href);
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
 
-        const { data } = await bb.repositories.createIssue({
+        const { data } = await this._client.repositories.createIssue({
             repo_slug: parsed.name,
             username: parsed.owner,
             _body: {
@@ -307,8 +297,7 @@ class BitbucketIssuesApiImpl {
     }
 
     async nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        const bb: Bitbucket = await clientForRemote(remote) as Bitbucket;
-        const { data } = await bb.getNextPage({ next: next });
+        const { data } = await this._client.getNextPage({ next: next });
         //@ts-ignore
         return { repository: repository, remote: remote, data: data.values || [], next: data.next };
     }
@@ -316,5 +305,3 @@ class BitbucketIssuesApiImpl {
     // ---- END - Issue specific actions ----
 
 }
-
-export const BitbucketIssuesApi = new BitbucketIssuesApiImpl();

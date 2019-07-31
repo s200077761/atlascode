@@ -2,7 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
-import { parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
+import { parseGitUrl, urlForRemote } from "./bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -17,10 +17,11 @@ const dummyRemote = { name: '', isReadOnly: true };
 
 export class CloudPullRequestApi implements PullRequestApi {
 
-    async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
-        const bbreq = await clientForHostname(site.hostname) as Bitbucket;
+    constructor(private _client: Bitbucket) { }
 
-        const { data } = await bbreq.user.get('');
+    async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
+
+        const { data } = await this._client.user.get('');
         return {
             accountId: data.account_id!,
             avatarUrl: data.links!.avatar!.href!,
@@ -31,8 +32,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
         let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listPullRequests({
+        const { data } = await this._client.repositories.listPullRequests({
             ...{
                 username: parsed.owner,
                 repo_slug: parsed.name,
@@ -65,8 +65,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async  nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        const bb = await clientForRemote(remote) as Bitbucket;
-        const { data } = await bb.getNextPage({ next: next });
+        const { data } = await this._client.getNextPage({ next: next });
         //@ts-ignore
         const prs = (data as Bitbucket.Schema.Pullrequest).values!.map(pr => { return { repository: repository, remote: remote, data: this.toPullRequestData(pr) }; });
         return { repository: repository, remote: remote, data: prs, next: data.next };
@@ -88,8 +87,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  get(pr: PullRequest): Promise<PullRequest> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        let { data } = await bb.repositories.getPullRequest({
+        let { data } = await this._client.repositories.getPullRequest({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
             username: parsed.owner
@@ -107,8 +105,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        let { data } = await bb.pullrequests.getDiffStat({
+        let { data } = await this._client.pullrequests.getDiffStat({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner
@@ -128,8 +125,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        let { data } = await bb.pullrequests.listCommits({
+        let { data } = await this._client.pullrequests.listCommits({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -159,8 +155,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        let { data } = await bb.pullrequests.listComments({
+        let { data } = await this._client.pullrequests.listComments({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -173,7 +168,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as Bitbucket.Schema.PullrequestComment[];
         while (data.next) {
-            const nextPage = await bb.getNextPage({ next: data.next });
+            const nextPage = await this._client.getNextPage({ next: data.next });
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -242,8 +237,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.pullrequests.listStatuses({
+        const { data } = await this._client.pullrequests.listStatuses({
             pull_request_id: pr.data.id!,
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -261,8 +255,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.pullrequests.listDefaultReviewers({
+        const { data } = await this._client.pullrequests.listDefaultReviewers({
             repo_slug: parsed.name,
             username: parsed.owner,
             pagelen: maxItemsSupported.reviewers
@@ -304,8 +297,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
 
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.pullrequests.create({
+        const { data } = await this._client.pullrequests.create({
             repo_slug: parsed.name,
             username: parsed.owner,
             _body: prBody
@@ -316,14 +308,13 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
         approved
-            ? await bb.pullrequests.createApproval({
+            ? await this._client.pullrequests.createApproval({
                 pull_request_id: String(pr.data.id!),
                 repo_slug: parsed.name,
                 username: parsed.owner
             })
-            : await bb.pullrequests.deleteApproval({
+            : await this._client.pullrequests.deleteApproval({
                 pull_request_id: String(pr.data.id!),
                 repo_slug: parsed.name,
                 username: parsed.owner
@@ -332,13 +323,12 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async  merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
 
         let body = Object.create({});
         body = closeSourceBranch ? { ...body, close_source_branch: closeSourceBranch } : body;
         body = mergeStrategy ? { ...body, merge_strategy: mergeStrategy } : body;
 
-        await bb.pullrequests.merge({
+        await this._client.pullrequests.merge({
             pull_request_id: String(pr.data.id!),
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -353,10 +343,9 @@ export class CloudPullRequestApi implements PullRequestApi {
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as Bitbucket;
         prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
-        const { data } = await bb.pullrequests.createComment({
+        const { data } = await this._client.pullrequests.createComment({
             pull_request_id: prId,
             repo_slug: parsed.name,
             username: parsed.owner,

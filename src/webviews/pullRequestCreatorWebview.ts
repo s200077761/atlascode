@@ -11,15 +11,12 @@ import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../commands/jira/transitionIssue';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { getBitbucketRemotes, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { PullRequestProvider } from '../bitbucket/clientProvider';
-import { RepositoryProvider } from '../bitbucket/repoProvider';
+import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
@@ -65,11 +62,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                 // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
                 const remote = remotes.find(r => r.name === 'origin') || remotes[0];
 
+                const bbApi = await clientForRemote(remote);
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
                     r.fetch(),
-                    RepositoryProvider.forRemote(remote).get(remote),
-                    RepositoryProvider.forRemote(remote).getDevelopmentBranch(remote),
-                    PullRequestProvider.forRemote(remote).getDefaultReviewers(remote)
+                    bbApi.repositories.get(remote),
+                    bbApi.repositories.getDevelopmentBranch(remote),
+                    bbApi.pullrequests.getDefaultReviewers(remote)
                 ]);
 
                 const currentUser = { accountId: (await Container.authManager.getAuthInfo(siteDetailsForRemote(remote)!))!.user.id };
@@ -147,7 +145,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     if (isFetchUsers(e)) {
                         handled = true;
                         try {
-                            const reviewers = await PullRequestProvider.forRemote(e.remote).getDefaultReviewers(e.remote, e.query);
+                            const bbApi = await clientForRemote(e.remote);
+                            const reviewers = await bbApi.pullrequests.getDefaultReviewers(e.remote, e.query);
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
@@ -193,7 +192,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
-        const result = await RepositoryProvider.forRemote(remote).getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
+        const bbApi = await clientForRemote(remote);
+        const result = await bbApi.repositories.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
         this.postMessage({
             type: 'commitsResult',
             commits: result
@@ -213,7 +213,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         if (!issue) {
             const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
             if (bbIssueKeys.length > 0) {
-                const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
+                const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
+                const remotes = getBitbucketRemotes(repo);
+                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                const bbApi = await clientForRemote(remote);
+                const bbIssues = await bbApi.issues!.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
                 if (bbIssues.length > 0) {
                     issue = bbIssues[0].data;
                 }
@@ -234,7 +238,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {
-            await BitbucketIssuesApi.postChange({ repository: repo, remote: remote, data: issue }, issue.state!);
+            const bbApi = await clientForRemote(remote);
+            await bbApi.issues!.postChange({ repository: repo, remote: remote, data: issue }, issue.state!);
         }
     }
 
@@ -249,7 +254,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        await PullRequestProvider.forRemote(remote)
+        const bbApi = await clientForRemote(remote);
+
+        await bbApi.pullrequests
             .create(
                 repo,
                 remote,

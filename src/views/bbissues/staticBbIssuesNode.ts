@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { Resources } from '../../resources';
 import { Repository } from '../../typings/git';
-import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
 import { Commands } from '../../commands';
 import { SimpleNode } from '../nodes/simpleNode';
+import { getBitbucketRemotes, clientForRemote } from '../../bitbucket/bbUtils';
 
 export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
@@ -24,7 +24,11 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            let issues = await BitbucketIssuesApi.getIssuesForKeys(this.repository, this.issueKeys);
+            const remotes = getBitbucketRemotes(this.repository);
+            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            const bbApi = await clientForRemote(remote);
+
+            let issues = await bbApi.issues!.getIssuesForKeys(this.repository, this.issueKeys);
             if (issues.length === 0) {
                 return [new SimpleNode('No issues found')];
             }

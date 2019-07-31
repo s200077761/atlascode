@@ -5,10 +5,10 @@ import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
+import { getBitbucketRemotes, clientForRemote } from '../bitbucket/bbUtils';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -21,7 +21,8 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         super();
         this._disposable = Disposable.from(
             commands.registerCommand(Commands.BitbucketIssuesNextPage, async (issues: PaginatedBitbucketIssues) => {
-                const result = await BitbucketIssuesApi.nextPage(issues);
+                const bbApi = await clientForRemote(issues.remote);
+                const result = await bbApi.issues!.nextPage(issues);
                 this.addItems(result);
                 bbIssuesPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
@@ -39,7 +40,9 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         const repos = this.ctx.getBitbucketRepositores();
         const expand = repos.length === 1;
         repos.forEach(repo => {
-            this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, expand));
+            const remotes = getBitbucketRemotes(repo);
+            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, remote, expand));
         });
     }
 

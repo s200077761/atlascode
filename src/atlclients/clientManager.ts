@@ -23,6 +23,13 @@ import { OAuthRefesher } from "./oauthRefresher";
 import BitbucketServer from "@atlassian/bitbucket-server";
 import { JiraCloudClient } from "../jira/jira-client/cloudClient";
 import { JiraServerClient } from "../jira/jira-client/serverClient";
+import { BitbucketApi } from "../bitbucket/model";
+import { CloudPullRequestApi } from "../bitbucket/pullRequests";
+import { CloudRepositoriesApi } from "../bitbucket/repositories";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+import { ServerRepositoriesApi } from "../bitbucket-server/repositories";
+import { ServerPullRequestApi } from "../bitbucket-server/pullRequests";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bbIssues";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -255,9 +262,9 @@ export class ClientManager implements Disposable {
     return newSite;
   }
 
-  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit | BitbucketServer> {
+  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketApi> {
 
-    return this.getClient<BitbucketKit | BitbucketServer>(
+    return this.getClient<BitbucketApi>(
       site,
       info => {
         let extraOptions = {};
@@ -265,22 +272,35 @@ export class ClientManager implements Disposable {
           extraOptions = { agent: this._agent };
         }
 
+        let result: BitbucketApi;
         let bbclient: BitbucketKit | BitbucketServer;
         if (site.isCloud) {
           bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+          if (isOAuthInfo(info)) {
+            bbclient.authenticate({ type: "token", token: info.access });
+          }
+          result = {
+            repositories: new CloudRepositoriesApi(bbclient),
+            pullrequests: new CloudPullRequestApi(bbclient),
+            issues: new BitbucketIssuesApiImpl(bbclient),
+            pipelines: new PipelineApiImpl(bbclient),
+            _rawApi: bbclient
+          };
         } else {
           bbclient = new BitbucketServer({ baseUrl: site.baseApiUrl, options: extraOptions, headers: { 'X-Atlassian-Token': 'no-check' } });
+          if (isBasicAuthInfo(info)) {
+            bbclient.authenticate({ type: "basic", username: info.username, password: info.password });
+          }
+          result = {
+            repositories: new ServerRepositoriesApi(bbclient),
+            pullrequests: new ServerPullRequestApi(bbclient),
+            issues: undefined,
+            pipelines: undefined,
+            _rawApi: bbclient
+          };
         }
 
-        if (isOAuthInfo(info)) {
-          bbclient.authenticate({ type: "token", token: info.access });
-        }
-
-        if (isBasicAuthInfo(info)) {
-          bbclient.authenticate({ type: "basic", username: info.username, password: info.password });
-        }
-
-        return bbclient;
+        return result;
       }
     );
 

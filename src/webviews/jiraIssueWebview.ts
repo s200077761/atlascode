@@ -14,9 +14,9 @@ import { issueUrlCopiedEvent } from '../analytics';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
-import { PullRequestProvider } from '../bitbucket/clientProvider';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
+import { clientForRemote } from '../bitbucket/bbUtils';
 
 type Emit = IssueData | UserList | LabelList | JqlOptionsList | CreatedSomething | HostErrorMessage;
 export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<string> {
@@ -248,7 +248,8 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
-                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestProvider.forRemote(pr.remote).get(pr));
+                            const bbApi = await clientForRemote(pr.remote);
+                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
                             this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}` });

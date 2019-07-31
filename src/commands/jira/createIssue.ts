@@ -3,8 +3,7 @@ import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { startIssueCreationEvent } from '../../analytics';
 import { CommentData, BBData } from '../../webviews/createIssueWebview';
-import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
-import { getBitbucketRemotes, parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketIssue } from '../../bitbucket/model';
 
 export interface TodoIssueData {
@@ -65,14 +64,14 @@ function annotateComment(data: CommentData) {
 }
 
 async function updateBBIssue(data: BBData) {
+    const bbApi = await clientForRemote(data.bbIssue.remote);
+    await bbApi.issues!.postComment(data.bbIssue, `linked to:${data.issueKey}`);
 
-    BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
-
-    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
+    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
         if (injiraComp && data.bbIssue.data.component !== injiraComp) {
-            BitbucketIssuesApi.postNewComponent(data.bbIssue, injiraComp.name!);
+            await bbApi.issues!.postNewComponent(data.bbIssue, injiraComp.name!);
         }
     }
 }

@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
-import { PipelineApi } from "../pipelines/pipelines";
 import { Pipeline, PipelineStep } from "../pipelines/model";
 import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
+import { clientForRemote } from '../bitbucket/bbUtils';
 
 type Emit = PipelineData | StepMessageData | HostErrorMessage;
 
@@ -46,8 +46,10 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
         }
 
         this.isRefeshing = true;
+
+        const bbApi = await clientForRemote(this._pipelineInfo.remote);
         try {
-            let pipeline = await PipelineApi.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let pipeline = await bbApi.pipelines!.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
@@ -57,11 +59,11 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
         }
 
         try {
-            let steps = await PipelineApi.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let steps = await bbApi.pipelines!.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updateSteps(steps);
 
             steps.map(step => {
-                PipelineApi.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
+                bbApi.pipelines!.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
                     const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
                     logs.map((log, ix) => {
                         if (ix < commands.length) {

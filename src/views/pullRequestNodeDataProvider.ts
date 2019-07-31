@@ -11,8 +11,7 @@ import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { PullRequestProvider } from '../bitbucket/clientProvider';
-import { getBitbucketRemotes } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, clientForRemote } from '../bitbucket/bbUtils';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -20,7 +19,10 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
-    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getList.call(PullRequestProvider.forRemote(remote), repo, remote);
+    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = async (repo: Repository, remote: Remote) => {
+        const bbApi = await clientForRemote(remote);
+        return await bbApi.pullrequests.getList(repo, remote);
+    }
 
     static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
@@ -30,22 +32,32 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
-                const result = await PullRequestProvider.forRemote(prs.remote).nextPage(prs);
+                const bbApi = await clientForRemote(prs.remote);
+                const result = await bbApi.pullrequests.nextPage(prs);
                 this.addItems(result);
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getList.call(PullRequestProvider.forRemote(remote), repo, remote);
+                this._fetcher = async (repo: Repository, remote: Remote) => {
+                    const bbApi = await clientForRemote(remote);
+                    return await bbApi.pullrequests.getList(repo, remote);
+                };
                 headerNode.description = 'showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getListCreatedByMe.call(PullRequestProvider.forRemote(remote), repo, remote);
+                this._fetcher = async (repo: Repository, remote: Remote) => {
+                    const bbApi = await clientForRemote(remote);
+                    return await bbApi.pullrequests.getListCreatedByMe(repo, remote);
+                };
                 headerNode.description = 'showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getListToReview.call(PullRequestProvider.forRemote(remote), repo, remote);
+                this._fetcher = async (repo: Repository, remote: Remote) => {
+                    const bbApi = await clientForRemote(remote);
+                    return await bbApi.pullrequests.getListToReview(repo, remote);
+                };
                 headerNode.description = 'showing pull requests to review';
                 this.refresh();
             }),

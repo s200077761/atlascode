@@ -7,9 +7,8 @@ import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer'
 import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
-import { getBitbucketRemotes, siteDetailsForRemote } from './bbUtils';
+import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
-import { PullRequestProvider } from './clientProvider';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -62,7 +61,8 @@ export class BitbucketContext extends Disposable {
         if (site) {
             let foundUser = this._currentUsers.get(site.hostname);
             if (!foundUser) {
-                foundUser = await PullRequestProvider.forRemote(remote).getCurrentUser(site)!;
+                const bbClient = await clientForRemote(remote);
+                foundUser = await bbClient.pullrequests.getCurrentUser(site)!;
             }
 
             if (foundUser) {
@@ -78,7 +78,8 @@ export class BitbucketContext extends Disposable {
             const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => {
                 const remotes = getBitbucketRemotes(repo);
                 const remote = remotes.find(r => r.name === 'origin') || remotes[0];
-                return (await PullRequestProvider.forRemote(remote).getRecentAllStatus(repo, remote)).data;
+                const bbClient = await clientForRemote(remote);
+                return (await bbClient.pullrequests.getRecentAllStatus(repo, remote)).data;
             }));
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);

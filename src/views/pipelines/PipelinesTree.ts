@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands, ConfigurationChangeEvent } from "vscode";
-import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
 import { Repository, Remote } from "../../typings/git";
 import { Container } from "../../container";
@@ -13,13 +12,14 @@ import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { shouldDisplay } from "./Helpers";
-import { parseGitUrl, getBitbucketRemotes, urlForRemote, clientForHostname, siteDetailsForRemote } from '../../bitbucket/bbUtils';
+import { parseGitUrl, getBitbucketRemotes, urlForRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
     pipelineUuid: string;
     repo: Repository;
+    remote: Remote;
 }
 export class PipelinesTree extends BaseTreeDataProvider {
     private _disposable: Disposable;
@@ -129,7 +129,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             if ([...this._pipelines.values()].every(results => results.length === 0)) {
                 return [new SimpleNode("No Pipelines results for this repository")];
             }
-            const nodes: AbstractBaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._pipelines.get(b)));
+            const nodes: AbstractBaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._remote, this._pipelines.get(b)));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }
@@ -137,11 +137,11 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         } else if (element instanceof BranchNode) {
             const branchPipelines = this._pipelines.get(element.branchName);
             if (branchPipelines) {
-                return branchPipelines.map((p: any) => new PipelineNode(this, p, element.repo));
+                return branchPipelines.map((p: any) => new PipelineNode(this, p, element.repo, element.remote));
             } else {
                 return this.fetchPipelinesForBranch(element.branchName)
                     .then(pipelines => {
-                        return pipelines.map(p => new PipelineNode(this, p, element.repo));
+                        return pipelines.map(p => new PipelineNode(this, p, element.repo, element.remote));
                     });
             }
         } else if (element instanceof PipelineNode) {
@@ -153,23 +153,20 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     private async fetchBranches(): Promise<string[]> {
         var branches: string[] = [];
         var morePages = false;
-        const remotes = getBitbucketRemotes(this._repo);
-        if (remotes.length > 0) {
-            const parsed = parseGitUrl(urlForRemote(remotes[0]));
-            const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-            const branchesResponse = await bb.refs.listBranches({
-                repo_slug: parsed.name,
-                username: parsed.owner,
-                page: `${this._page}`,
-                pagelen: defaultPageLength,
-                sort: '-target.date'
-            });
-            branchesResponse.data.values!.forEach(v => {
-                branches.push(v.name!);
-            });
-            if (branchesResponse.data.next) {
-                morePages = true;
-            }
+        const parsed = parseGitUrl(urlForRemote(this._remote));
+        const bbApi = await clientForRemote(this._remote);
+        const branchesResponse = await (bbApi._rawApi as Bitbucket).refs.listBranches({
+            repo_slug: parsed.name,
+            username: parsed.owner,
+            page: `${this._page}`,
+            pagelen: defaultPageLength,
+            sort: '-target.date'
+        });
+        branchesResponse.data.values!.forEach(v => {
+            branches.push(v.name!);
+        });
+        if (branchesResponse.data.next) {
+            morePages = true;
         }
         this._morePages = morePages;
         return this.fetchPipelinesForBranches(branches);
@@ -200,7 +197,8 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             return [];
         }
 
-        const pipelines = await PipelineApi.getList(this._repo, branchName);
+        const bbApi = await clientForRemote(this._remote);
+        const pipelines = await bbApi.pipelines!.getList(this._repo, branchName);
         if (!Container.config.bitbucket.pipelines.hideEmpty || pipelines.length > 0) {
             this._pipelines.set(branchName, pipelines);
         }
@@ -260,7 +258,7 @@ function statusForPipeline(pipeline: Pipeline): string {
 }
 
 export class PipelineNode extends AbstractBaseNode {
-    constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline, private _repo: Repository) {
+    constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline, private _repo: Repository, private _remote: Remote) {
         super();
     }
 
@@ -272,7 +270,7 @@ export class PipelineNode extends AbstractBaseNode {
         label += ` ${statusForPipeline(this.pipeline)}`;
         const item = new TreeItem(label);
         item.contextValue = PipelineBuildContextValue;
-        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo }] };
+        item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo, remote: this._remote }] };
         item.iconPath = iconUriForPipeline(this.pipeline);
         item.resourceUri = Uri.parse(`${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`);
         return item;
@@ -284,7 +282,7 @@ export class PipelineNode extends AbstractBaseNode {
 }
 
 export class BranchNode extends AbstractBaseNode {
-    constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly pipelines?: Pipeline[]) {
+    constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly remote: Remote, readonly pipelines?: Pipeline[]) {
         super();
     }
 

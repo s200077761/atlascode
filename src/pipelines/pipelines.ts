@@ -3,11 +3,14 @@ import { Container } from "../container";
 import fetch from 'node-fetch';
 import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
-import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/repositories";
 
-class PipelineApiImpl {
+export class PipelineApiImpl {
+
+  constructor(private _client: Bitbucket) { }
+
   async getList(
     repository: Repository,
     branchName: string
@@ -31,8 +34,7 @@ class PipelineApiImpl {
     if (remotes.length > 0) {
       const remote = remotes.find(r => r.name === 'origin') || remotes[0];
       let parsed = parseGitUrl(urlForRemote(remote));
-      const bb = await clientForHostname(parsed.resource) as Bitbucket;
-      return bb.pipelines.create({
+      return this._client.pipelines.create({
         //@ts-ignore
         _body: {
           target: {
@@ -52,8 +54,7 @@ class PipelineApiImpl {
     if (remotes.length > 0) {
       const remote = remotes.find(r => r.name === 'origin') || remotes[0];
       let parsed = parseGitUrl(urlForRemote(remote));
-      const bb = await clientForHostname(parsed.resource) as Bitbucket;
-      return bb.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
+      return this._client.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return PipelineApiImpl.pipelineForPipeline(remote, res.data);
         });
@@ -66,8 +67,7 @@ class PipelineApiImpl {
     if (remotes.length > 0) {
       const remote = remotes.find(r => r.name === 'origin') || remotes[0];
       let parsed = parseGitUrl(urlForRemote(remote));
-      const bb = await clientForHostname(parsed.resource) as Bitbucket;
-      return bb.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
+      return this._client.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
           return res.data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
         });
@@ -144,8 +144,7 @@ class PipelineApiImpl {
     pipelineUuid: string,
     stepUuid: string): Promise<string[]> {
     let parsed = parseGitUrl(urlForRemote(remote));
-    const bb = await clientForHostname(parsed.resource) as Bitbucket;
-    return bb.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
+    return this._client.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
       return PipelineApiImpl.splitLogs(r.data.toString());
     }).catch((err: any) => {
       // If we get a 404 it's probably just that there aren't logs yet.
@@ -258,5 +257,3 @@ class PipelineApiImpl {
     });
   }
 }
-
-export const PipelineApi = new PipelineApiImpl();

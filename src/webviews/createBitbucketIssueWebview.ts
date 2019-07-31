@@ -1,16 +1,14 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { Commands } from '../commands';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
-import { getBitbucketRemotes } from '../bitbucket/bbUtils';
-import { RepositoryProvider } from '../bitbucket/repoProvider';
+import { getBitbucketRemotes, clientForRemote } from '../bitbucket/bbUtils';
 
 type Emit = CreateBitbucketIssueData | HostErrorMessage;
 export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
@@ -45,12 +43,14 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
             const repos = Container.bitbucketContext.getBitbucketRepositores();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const bbRemotes = getBitbucketRemotes(r);
-                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
+                const remotes = getBitbucketRemotes(r);
+                if (Array.isArray(remotes) && remotes.length === 0) {
                     continue;
                 }
+                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
 
-                const repo = await RepositoryProvider.forRemote(bbRemotes[0]).get(bbRemotes[0]);
+                const bbApi = await clientForRemote(remote);
+                const repo = await bbApi.repositories.get(remote);
                 if (!repo.issueTrackerEnabled) {
                     continue;
                 }
@@ -59,7 +59,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                     uri: r.rootUri.toString(),
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
-                    remotes: bbRemotes,
+                    remotes: remotes,
                     defaultReviewers: [],
                     localBranches: [],
                     remoteBranches: [],
@@ -113,7 +113,12 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
         const { href, title, description, kind, priority } = createIssueAction;
 
-        let issue = await BitbucketIssuesApi.create(href, title, description, kind, priority);
+        // TODO [VSCODE-568] Add remote to create bitbucket issue action
+        const repo = Container.bitbucketContext.getRepository(Uri.parse(href));
+        const remotes = getBitbucketRemotes(repo!);
+        const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+        const bbApi = await clientForRemote(remote);
+        let issue = await bbApi.issues!.create(href, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
         bbIssueCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });

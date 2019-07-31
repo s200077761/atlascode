@@ -2,13 +2,13 @@ import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
 import { BitbucketIssueMessageData } from "../ipc/bitbucketIssueMessaging";
-import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
 import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
 import { BitbucketIssueData, BitbucketIssue } from "../bitbucket/model";
+import { clientForRemote } from "../bitbucket/bbUtils";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -60,11 +60,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
 
         try {
+            const bbApi = await clientForRemote(this._issue!.remote);
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
                 Container.bitbucketContext.currentUser(issue.remote),
-                BitbucketIssuesApi.refetch(issue),
-                BitbucketIssuesApi.getComments(issue),
-                BitbucketIssuesApi.getChanges(issue)]
+                bbApi.issues!.refetch(issue),
+                bbApi.issues!.getComments(issue),
+                bbApi.issues!.getChanges(issue)]
             );
 
             //@ts-ignore
@@ -111,7 +112,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.remote)).accountId!);
+                        const bbApi = await clientForRemote(this._issue!.remote);
+                        await bbApi.issues!.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.remote)).accountId!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
@@ -124,7 +126,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostComment(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postComment(this._issue!, e.content);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
                             bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
@@ -139,8 +142,9 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostChange(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
-                            this._issue = await BitbucketIssuesApi.refetch(this._issue!);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
+                            this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
                             bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {

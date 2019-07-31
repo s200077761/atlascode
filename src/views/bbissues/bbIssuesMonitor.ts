@@ -1,9 +1,9 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { Commands } from "../../commands";
-import { BitbucketIssuesApi } from "../../bitbucket/bbIssues";
 import { Repository } from "../../typings/git";
 import { BitbucketIssue } from '../../bitbucket/model';
+import { getBitbucketRemotes, clientForRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   private _lastCheckedTime = new Map<String, Date>();
@@ -13,8 +13,12 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   }
 
   async checkForNewActivity() {
-    const promises = this._repos.map(repo => {
-      return BitbucketIssuesApi.getLatest(repo).then(issuesList => {
+    const promises = this._repos.map(async repo => {
+      const remotes = getBitbucketRemotes(repo);
+      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      const bbApi = await clientForRemote(remote);
+
+      return bbApi.issues!.getLatest(repo).then(issuesList => {
         const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
           ? this._lastCheckedTime.get(repo.rootUri.toString())!
           : new Date();

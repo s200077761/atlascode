@@ -1,14 +1,15 @@
 import { Remote } from "../typings/git";
 import { maxItemsSupported } from "./pullRequests";
-import { parseGitUrl, clientForHostname, urlForRemote } from "./bbUtils";
+import { parseGitUrl, urlForRemote } from "./bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "./model";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
 
+    constructor(private _client: Bitbucket) { }
+
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.get({
+        const { data } = await this._client.repositories.get({
             repo_slug: parsed.name,
             username: parsed.owner
         });
@@ -18,10 +19,9 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
         const [repo, branchingModel] = await Promise.all([
             this.get(remote),
-            bb.repositories.getBranchingModel({
+            this._client.repositories.getBranchingModel({
                 repo_slug: parsed.name,
                 username: parsed.owner
             })
@@ -34,8 +34,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        return bb.repositories.getBranchingModel({
+        return this._client.repositories.getBranchingModel({
             repo_slug: parsed.name,
             username: parsed.owner
         }).then(res => res.data);
@@ -43,8 +42,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listCommits({
+        const { data } = await this._client.repositories.listCommits({
             repo_slug: parsed.name,
             username: parsed.owner,
             include: includeRef,
@@ -72,8 +70,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
 
     async getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb: Bitbucket = await clientForHostname(parsed.resource) as Bitbucket;
-        const { data } = await bb.repositories.listPullrequestsForCommit({
+        const { data } = await this._client.repositories.listPullrequestsForCommit({
             repo_slug: parsed.name,
             username: parsed.owner,
             commit: commitHash
