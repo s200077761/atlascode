@@ -58,7 +58,7 @@ class PipelineApiImpl {
       const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
-          return PipelineApiImpl.pipelineForPipeline(res.data);
+          return PipelineApiImpl.pipelineForPipeline(remotes[0], res.data);
         });
     }
     return Promise.reject();
@@ -131,7 +131,7 @@ class PipelineApiImpl {
       .then((res: Bitbucket.Schema.PaginatedPipelines) => {
         if (res.values) {
           return res.values.map(pipeline => {
-            return PipelineApiImpl.pipelineForPipeline(pipeline);
+            return PipelineApiImpl.pipelineForPipeline(remote, pipeline);
           });
         }
         return [];
@@ -185,7 +185,7 @@ class PipelineApiImpl {
     return splitLogs;
   }
 
-  private static pipelineForPipeline(pipeline: Bitbucket.Schema.Pipeline): Pipeline {
+  private static pipelineForPipeline(remote: Remote, pipeline: Bitbucket.Schema.Pipeline): Pipeline {
     var name = undefined;
     var avatar = undefined;
     if (pipeline.creator) {
@@ -197,6 +197,7 @@ class PipelineApiImpl {
 
     return {
       repository: CloudRepositoriesApi.toRepo(pipeline.repository!),
+      remote: remote,
       build_number: pipeline.build_number!,
       created_on: pipeline.created_on!,
       creator_name: name,
