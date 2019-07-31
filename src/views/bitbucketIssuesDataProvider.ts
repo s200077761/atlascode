@@ -8,7 +8,7 @@ import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { getBitbucketRemotes, clientForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -40,8 +40,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         const repos = this.ctx.getBitbucketRepositores();
         const expand = repos.length === 1;
         repos.forEach(repo => {
-            const remotes = getBitbucketRemotes(repo);
-            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            const remote = firstBitbucketRemote(repo);
             this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, remote, expand));
         });
     }

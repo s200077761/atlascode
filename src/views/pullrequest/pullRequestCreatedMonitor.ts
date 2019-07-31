@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from "vscode";
 import { BitbucketContext } from "../../bitbucket/bbContext";
 import { Commands } from "../../commands";
-import { getBitbucketRemotes, clientForRemote } from '../../bitbucket/bbUtils';
+import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
@@ -13,8 +13,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
 
     checkForNewActivity() {
         const promises = this._bbCtx.getBitbucketRepositores().map(async repo => {
-            const remotes = getBitbucketRemotes(repo);
-            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            const remote = firstBitbucketRemote(repo);
             const bbApi = await clientForRemote(remote);
 
             return bbApi.pullrequests.getLatest(repo, remote).then(prList => {

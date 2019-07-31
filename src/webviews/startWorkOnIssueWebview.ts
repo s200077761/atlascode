@@ -12,7 +12,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
-import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { minimalIssueOrKey, MinimalIssue } from '../jira/jira-client/model/entities';
@@ -164,20 +164,17 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 let isCloud = false;
                 let branchingModel: BitbucketBranchingModel | undefined = undefined;
                 if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                    const remotes = getBitbucketRemotes(r);
-                    if (remotes.length > 0) {
-                        const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                    const remote = firstBitbucketRemote(r);
 
-                        const bbApi = await clientForRemote(remote);
-                        [, repo, developmentBranch, branchingModel] = await Promise.all(
-                            [r.fetch(),
-                            bbApi.repositories.get(remotes[0]),
-                            bbApi.repositories.getDevelopmentBranch(remotes[0]),
-                            bbApi.repositories.getBranchingModel(remotes[0])
-                            ]);
-                        href = repo.url;
-                        isCloud = siteDetailsForRemote(remote)!.isCloud;
-                    }
+                    const bbApi = await clientForRemote(remote);
+                    [, repo, developmentBranch, branchingModel] = await Promise.all(
+                        [r.fetch(),
+                        bbApi.repositories.get(remotes[0]),
+                        bbApi.repositories.getDevelopmentBranch(remotes[0]),
+                        bbApi.repositories.getBranchingModel(remotes[0])
+                        ]);
+                    href = repo.url;
+                    isCloud = siteDetailsForRemote(remote)!.isCloud;
                 }
 
                 await repoData.push({

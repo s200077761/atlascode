@@ -16,7 +16,7 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 
 type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
@@ -54,13 +54,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const remotes = getBitbucketRemotes(r);
-                if (Array.isArray(remotes) && remotes.length === 0) {
-                    continue;
-                }
 
                 // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
-                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                const remote = firstBitbucketRemote(r);
 
                 const bbApi = await clientForRemote(remote);
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
@@ -214,8 +210,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
             if (bbIssueKeys.length > 0) {
                 const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
-                const remotes = getBitbucketRemotes(repo);
-                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                const remote = firstBitbucketRemote(repo);
                 const bbApi = await clientForRemote(remote);
                 const bbIssues = await bbApi.issues!.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
                 if (bbIssues.length > 0) {

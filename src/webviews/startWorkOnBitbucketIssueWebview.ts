@@ -11,7 +11,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
@@ -139,14 +139,11 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
             let href = undefined;
             let isCloud = false;
             if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                const remotes = getBitbucketRemotes(r);
-                if (remotes.length > 0) {
-                    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
-                    const bbApi = await clientForRemote(remote);
-                    [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
-                    href = repo.url;
-                    isCloud = siteDetailsForRemote(remote)!.isCloud;
-                }
+                const remote = firstBitbucketRemote(r);
+                const bbApi = await clientForRemote(remote);
+                [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
+                href = repo.url;
+                isCloud = siteDetailsForRemote(remote)!.isCloud;
             }
 
             await repoData.push({

@@ -4,7 +4,7 @@ import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { shouldDisplay } from "./Helpers";
 import { Commands } from "../../commands";
-import { getBitbucketRemotes, clientForRemote } from "../../bitbucket/bbUtils";
+import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -20,8 +20,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       const repo = this._repositories[i];
       const previousResults = this._previousResults[repo.rootUri.path];
 
-      const remotes = getBitbucketRemotes(repo);
-      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      const remote = firstBitbucketRemote(repo);
       const bbApi = await clientForRemote(remote);
 
       bbApi.pipelines!.getRecentActivity(repo).then(newResults => {

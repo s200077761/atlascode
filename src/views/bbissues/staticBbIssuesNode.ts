@@ -4,7 +4,7 @@ import { Resources } from '../../resources';
 import { Repository } from '../../typings/git';
 import { Commands } from '../../commands';
 import { SimpleNode } from '../nodes/simpleNode';
-import { getBitbucketRemotes, clientForRemote } from '../../bitbucket/bbUtils';
+import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
@@ -24,8 +24,7 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            const remotes = getBitbucketRemotes(this.repository);
-            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            const remote = firstBitbucketRemote(this.repository);
             const bbApi = await clientForRemote(remote);
 
             let issues = await bbApi.issues!.getIssuesForKeys(this.repository, this.issueKeys);

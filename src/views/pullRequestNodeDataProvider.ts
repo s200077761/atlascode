@@ -11,7 +11,7 @@ import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { getBitbucketRemotes, clientForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -104,8 +104,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         // add nodes for newly added repos
         for (const repo of repos) {
             const repoUri = repo.rootUri.toString();
-            const remotes = getBitbucketRemotes(repo);
-            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+            const remote = firstBitbucketRemote(repo);
             this._childrenMap!.has(repoUri)
                 ? await this._childrenMap!.get(repoUri)!.refresh()
                 : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, repo, remote, expand));

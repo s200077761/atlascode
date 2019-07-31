@@ -47,3 +47,10 @@ export async function clientForHostname(hostname: string): Promise<BitbucketApi>
 
     return Promise.reject(bbAPIConnectivityError);
 }
+
+// Use only for bitbucket repositories
+export function firstBitbucketRemote(repo: Repository): Remote {
+    const remotes = getBitbucketRemotes(repo);
+    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+    return remote;
+}

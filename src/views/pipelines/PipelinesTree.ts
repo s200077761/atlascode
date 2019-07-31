@@ -12,7 +12,7 @@ import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { shouldDisplay } from "./Helpers";
-import { parseGitUrl, getBitbucketRemotes, urlForRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
+import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 
 const defaultPageLength = 25;
@@ -69,8 +69,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
         if (this._childrenMap.size === 0) {
             repos.forEach(repo => {
-                const remotes = getBitbucketRemotes(repo);
-                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                const remote = firstBitbucketRemote(repo);
                 this._childrenMap.set(repo.rootUri.toString(), new PipelinesRepoNode(repo, remote, expand));
             });
         }

@@ -4,7 +4,7 @@ import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProv
 import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import { CommandBase } from '../command/command-base';
 import { Container } from '../../container';
-import { getBitbucketRemotes, clientForRemote } from '../../bitbucket/bbUtils';
+import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class GitBackend extends Backend {
   public static root = 'git rev-parse --show-toplevel';
@@ -60,9 +60,9 @@ export class GitBackend extends Backend {
     const repo = Container.bitbucketContext.getRepository(Uri.file(this.root));
     const remotes = getBitbucketRemotes(repo!);
     if (remotes.length > 0) {
-      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      const remote = firstBitbucketRemote(repo!);
       const bbApi = await clientForRemote(remote);
-      const prs = await bbApi.repositories.getPullRequestsForCommit(remotes[0], targetRevision);
+      const prs = await bbApi.repositories.getPullRequestsForCommit(remote, targetRevision);
       if (prs.length > 0) {
         return prs[0].id!;
       }
