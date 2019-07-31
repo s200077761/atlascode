@@ -6,12 +6,13 @@ import { PaginatedPullRequests } from '../bitbucket/model';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { Repository } from '../typings/git';
+import { Repository, Remote } from '../typings/git';
 import { prPaginationEvent } from '../analytics';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { PullRequestProvider } from '../bitbucket/prProvider';
+import { PullRequestProvider } from '../bitbucket/clientProvider';
+import { getBitbucketRemotes } from '../bitbucket/bbUtils';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -19,7 +20,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
-    private _fetcher: (repo: Repository) => Promise<PaginatedPullRequests> = (repo: Repository) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo);
+    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo, remote);
 
     static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
@@ -34,17 +35,17 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo, remote);
                 headerNode.description = 'showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListCreatedByMe.call(PullRequestProvider.forRepository(repo), repo);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getListCreatedByMe.call(PullRequestProvider.forRepository(repo), repo, remote);
                 headerNode.description = 'showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = (repo: Repository) => PullRequestProvider.forRepository(repo).getListToReview.call(PullRequestProvider.forRepository(repo), repo);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getListToReview.call(PullRequestProvider.forRepository(repo), repo, remote);
                 headerNode.description = 'showing pull requests to review';
                 this.refresh();
             }),
@@ -91,9 +92,11 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         // add nodes for newly added repos
         for (const repo of repos) {
             const repoUri = repo.rootUri.toString();
+            const remotes = getBitbucketRemotes(repo);
+            const remote = remotes.find(r => r.name === 'origin') || remotes[0];
             this._childrenMap!.has(repoUri)
                 ? await this._childrenMap!.get(repoUri)!.refresh()
-                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, repo, expand));
+                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, repo, remote, expand));
         }
     }
 

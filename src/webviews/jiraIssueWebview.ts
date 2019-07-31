@@ -14,7 +14,7 @@ import { issueUrlCopiedEvent } from '../analytics';
 import { isOpenPullRequest } from '../ipc/prActions';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { PullRequestData } from '../bitbucket/model';
-import { PullRequestProvider } from '../bitbucket/prProvider';
+import { PullRequestProvider } from '../bitbucket/clientProvider';
 import { AutoCompleteSuggestion } from '../jira/jira-client/client';
 import { DetailedIssue, emptyIssue } from '../jira/jira-client/model/detailedJiraIssue';
 

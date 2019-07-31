@@ -1,7 +1,7 @@
 import BitbucketServer from '@atlassian/bitbucket-server';
 import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../bitbucket/model';
 import { Remote, Repository } from '../typings/git';
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForHostname, siteDetailsForRepository, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { parseGitUrl, urlForRemote, clientForHostname, siteDetailsForRepository, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { Container } from '../container';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
@@ -10,10 +10,7 @@ const dummyRemote = { name: '', isReadOnly: true };
 
 export class ServerPullRequestApi implements PullRequestApi {
 
-    async getList(repository: Repository, queryParams?: { q?: any, limit?: number }): Promise<PaginatedPullRequests> {
-
-        const remote = getBitbucketRemotes(repository)[0];
-
+    async getList(repository: Repository, remote: Remote, queryParams?: { q?: any, limit?: number }): Promise<PaginatedPullRequests> {
         let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
         const bb = await clientForHostname(parsed.resource) as BitbucketServer;
 
@@ -32,10 +29,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
-    async  getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
         return this.getList(
             repository,
+            remote,
             {
                 q: {
                     'username.1': currentUser,
@@ -45,10 +43,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
         return this.getList(
             repository,
+            remote,
             {
                 q: {
                     'username.1': currentUser,
@@ -62,10 +61,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: remote, data: [], next: undefined };
     }
 
-    async  getLatest(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
         return this.getList(
             repository,
+            remote,
             {
                 q: {
                     'username.1': currentUser,
@@ -76,9 +76,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
+            remote,
             {
                 q: {
                     'state': 'ALL'

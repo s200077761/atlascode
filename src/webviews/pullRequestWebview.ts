@@ -20,7 +20,7 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
-import { PullRequestProvider } from '../bitbucket/prProvider';
+import { PullRequestProvider } from '../bitbucket/clientProvider';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 

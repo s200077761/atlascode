@@ -159,12 +159,12 @@ export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
-    getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
-    getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests>;
-    getListToReview(repository: Repository): Promise<PaginatedPullRequests>;
+    getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
-    getLatest(repository: Repository): Promise<PaginatedPullRequests>;
-    getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests>;
+    getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;

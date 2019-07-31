@@ -2,7 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from './model';
 import { Container } from "../container";
 import { prCommentEvent } from '../analytics';
-import { getBitbucketRemotes, parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
+import { parseGitUrl, clientForHostname, clientForRemote, urlForRemote } from "./bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -29,41 +29,38 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
-        let remotes = getBitbucketRemotes(repository);
-
-        for (let i = 0; i < remotes.length; i++) {
-            let remote = remotes[i];
-            let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
-            const bb = await clientForHostname(parsed.resource) as Bitbucket;
-            const { data } = await bb.repositories.listPullRequests({
-                ...{
-                    username: parsed.owner,
-                    repo_slug: parsed.name,
-                    pagelen: defaultPagelen
-                },
-                ...queryParams
-            });
-            const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; });
-            const next = data.next;
-            // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
-            if (prs.length > 0) {
-                return { repository: repository, remote: remote, data: prs, next: next };
-            }
+    async  getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
+        let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
+        const bb = await clientForHostname(parsed.resource) as Bitbucket;
+        const { data } = await bb.repositories.listPullRequests({
+            ...{
+                username: parsed.owner,
+                repo_slug: parsed.name,
+                pagelen: defaultPagelen
+            },
+            ...queryParams
+        });
+        const prs: PullRequest[] = data.values!.map((pr: Bitbucket.Schema.Pullrequest) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; });
+        const next = data.next;
+        // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
+        if (prs.length > 0) {
+            return { repository: repository, remote: remote, data: prs, next: next };
         }
 
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
-    async  getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
+            remote,
             { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
-    async  getListToReview(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
+            remote,
             { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
@@ -75,15 +72,17 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: remote, data: prs, next: data.next };
     }
 
-    async  getLatest(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
+            remote,
             { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
     }
 
-    async  getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests> {
+    async  getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
+            remote,
             { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 

@@ -9,7 +9,7 @@ import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { getBitbucketRemotes, siteDetailsForRepository, parseGitUrl } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
-import { PullRequestProvider } from './prProvider';
+import { PullRequestProvider } from './clientProvider';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -86,7 +86,11 @@ export class BitbucketContext extends Disposable {
 
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
-            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => (await PullRequestProvider.forRepository(repo).getRecentAllStatus(repo)).data));
+            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => {
+                const remotes = getBitbucketRemotes(repo);
+                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                return (await PullRequestProvider.forRepository(repo).getRecentAllStatus(repo, remote)).data;
+            }));
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
         }

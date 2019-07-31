@@ -18,7 +18,7 @@ import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
-import { PullRequestProvider } from '../bitbucket/prProvider';
+import { PullRequestProvider } from '../bitbucket/clientProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 

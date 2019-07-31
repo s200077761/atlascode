@@ -1,17 +1,22 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Repository } from '../../typings/git';
+import { Repository, Remote } from '../../typings/git';
 import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
 import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
 import { SimpleNode } from '../nodes/simpleNode';
 import { Container } from '../../container';
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 
 export class RepositoriesNode extends AbstractBaseNode {
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
 
-    constructor(public fetcher: (repo: Repository) => Promise<PaginatedPullRequests>, private repository: Repository, private expand?: boolean) {
+    constructor(
+        public fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests>,
+        private repository: Repository,
+        private remote: Remote,
+        private expand?: boolean
+    ) {
         super();
         this.disposables.push(({
             dispose: () => {
@@ -32,7 +37,7 @@ export class RepositoriesNode extends AbstractBaseNode {
             .filter(child => child instanceof PullRequestTitlesNode)
             .map(child => (child as PullRequestTitlesNode).prHref);
 
-        let prs = await this.fetcher(this.repository);
+        let prs = await this.fetcher(this.repository, this.remote);
         this._children = prs.data.map(pr => this.createChildNode(pr));
         if (prs.next) { this._children!.push(new NextPageNode(prs)); }
 
@@ -64,14 +69,11 @@ export class RepositoriesNode extends AbstractBaseNode {
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = this.repository.rootUri.fsPath;
         item.contextValue = PullRequestContextValue;
-        const remotes = getBitbucketRemotes(this.repository);
-        if (remotes.length > 0) {
-            const repoName = parseGitUrl(urlForRemote(remotes[0])).full_name;
-            const site = siteDetailsForRemote(remotes[0]);
+        const repoName = parseGitUrl(urlForRemote(this.remote)).full_name;
+        const site = siteDetailsForRemote(this.remote);
 
-            if (site) {
-                item.resourceUri = vscode.Uri.parse(`${site.baseLinkUrl}/${repoName}/pull-requests`);
-            }
+        if (site) {
+            item.resourceUri = vscode.Uri.parse(`${site.baseLinkUrl}/${repoName}/pull-requests`);
         }
 
         return item;

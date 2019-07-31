@@ -4,7 +4,7 @@ import { Commands } from '../../commands';
 import { FileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
-import { PullRequestProvider } from '../../bitbucket/prProvider';
+import { PullRequestProvider } from '../../bitbucket/clientProvider';
 
 const turndownService = new TurndownService();
 

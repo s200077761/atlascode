@@ -10,7 +10,7 @@ import { Logger } from '../../logger';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { PullRequestCommentController } from './prCommentController';
 import { SimpleNode } from '../nodes/simpleNode';
-import { PullRequestProvider } from '../../bitbucket/prProvider';
+import { PullRequestProvider } from '../../bitbucket/clientProvider';
 
 export const PullRequestContextValue = 'pullrequest';
 
