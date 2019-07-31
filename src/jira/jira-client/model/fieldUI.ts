@@ -9,7 +9,8 @@ export enum UIType {
     User = 'user',
     IssueLink = 'issuelink',
     Timetracking = 'timetracking',
-    Worklog = 'worklog'
+    Worklog = 'worklog',
+    Attachment = 'attachment'
 }
 
 export enum InputValueType {
@@ -76,7 +77,7 @@ export const knownSystemSchemas: string[] = [
     , 'timetracking'
     , 'worklog'
     , 'environment'
-    //,'attachment'
+    , 'attachment'
     , 'versions'
     , 'duedate'
     , 'issuelinks'
@@ -139,6 +140,7 @@ export const schemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , ['worklog', UIType.Worklog]
         , ['versions', UIType.Select]
         , ['issuelinks', UIType.IssueLink]
+        , ['attachment', UIType.Attachment]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect', UIType.Select]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:multiselect', UIType.Select]
         , ['com.atlassian.jira.plugin.system.customfieldtypes:select', UIType.Select]

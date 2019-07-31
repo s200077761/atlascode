@@ -189,6 +189,25 @@ export class JiraClient {
         return res;
     }
 
+    // Attachment
+    public async addAttachment(issuekey: string, params: any): Promise<any> {
+        const url = `${this.baseUrl}/api/${API_VERSION}/issue/${issuekey}/attachments`;
+
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                Authorization: `Bearer ${this._token}`,
+                "X-Atlassian-Token": "no-check"
+            },
+            body: params,
+            agent: this.agent
+        });
+        var j: any = {};
+        j = await res.json();
+        return j;
+    }
+
     private async getFromJira(url: string, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {

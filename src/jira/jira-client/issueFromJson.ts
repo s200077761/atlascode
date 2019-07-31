@@ -56,8 +56,8 @@ export function issueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInf
     });
 
     let attachments: Attachment[] = [];
-    if (issueJson.fields.attachments) {
-        attachments = issueJson.fields.attachments.map((attachmentJson: any) => {
+    if (issueJson.fields.attachment) {
+        attachments = issueJson.fields.attachment.map((attachmentJson: any) => {
             if (isAttachment(attachmentJson)) { return attachmentJson; }
 
             return emptyAttachment;
