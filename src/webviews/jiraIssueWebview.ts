@@ -248,7 +248,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
-                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestProvider.forRepository(pr.repository).get(pr));
+                            vscode.commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await PullRequestProvider.forRemote(pr.remote).get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
                             this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}` });

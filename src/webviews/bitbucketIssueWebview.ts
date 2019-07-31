@@ -61,7 +61,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
         try {
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
-                Container.bitbucketContext.currentUser(issue.repository!),
+                Container.bitbucketContext.currentUser(issue.remote),
                 BitbucketIssuesApi.refetch(issue),
                 BitbucketIssuesApi.getComments(issue),
                 BitbucketIssuesApi.getChanges(issue)]
@@ -111,7 +111,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.repository!)).accountId!);
+                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.remote)).accountId!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));

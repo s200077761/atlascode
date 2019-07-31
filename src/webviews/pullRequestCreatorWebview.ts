@@ -17,7 +17,7 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { PullRequestProvider } from '../bitbucket/clientProvider';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
@@ -57,19 +57,22 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const bbRemotes = getBitbucketRemotes(r);
-                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
+                const remotes = getBitbucketRemotes(r);
+                if (Array.isArray(remotes) && remotes.length === 0) {
                     continue;
                 }
 
+                // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
+                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
                     r.fetch(),
-                    RepositoryProvider.forRemote(bbRemotes[0]).get(bbRemotes[0]),
-                    RepositoryProvider.forRemote(bbRemotes[0]).getDevelopmentBranch(bbRemotes[0]),
-                    PullRequestProvider.forRepository(r).getDefaultReviewers(bbRemotes[0])
+                    RepositoryProvider.forRemote(remote).get(remote),
+                    RepositoryProvider.forRemote(remote).getDevelopmentBranch(remote),
+                    PullRequestProvider.forRemote(remote).getDefaultReviewers(remote)
                 ]);
 
-                const currentUser = { accountId: (await Container.authManager.getAuthInfo(await siteDetailsForRepository(r)!))!.user.id };
+                const currentUser = { accountId: (await Container.authManager.getAuthInfo(siteDetailsForRemote(remote)!))!.user.id };
 
                 await state.push({
                     uri: r.rootUri.toString(),
@@ -87,7 +90,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     ),
                     developmentBranch: developmentBranch,
                     hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
-                    isCloud: siteDetailsForRepository(r)!.isCloud
+                    isCloud: siteDetailsForRemote(remote)!.isCloud
                 });
             }
 
@@ -246,7 +249,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        await PullRequestProvider.forRepository(repo)
+        await PullRequestProvider.forRemote(remote)
             .create(
                 repo,
                 remote,

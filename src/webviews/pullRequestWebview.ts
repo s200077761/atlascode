@@ -208,7 +208,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postInitialState(pr: PullRequest) {
-        const currentUser = await Container.bitbucketContext.currentUser(pr.repository);
+        const currentUser = await Container.bitbucketContext.currentUser(pr.remote);
         this._state = {
             repository: pr.repository,
             remote: pr.remote,
@@ -232,9 +232,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async postAugmentedState(pr: PullRequest) {
         const prDetailsPromises = Promise.all([
-            PullRequestProvider.forRepository(pr.repository!).getCommits(pr),
-            PullRequestProvider.forRepository(pr.repository!).getComments(pr),
-            PullRequestProvider.forRepository(pr.repository!).getBuildStatuses(pr)
+            PullRequestProvider.forRemote(pr.remote).getCommits(pr),
+            PullRequestProvider.forRemote(pr.remote).getComments(pr),
+            PullRequestProvider.forRemote(pr.remote).getBuildStatuses(pr)
         ]);
         const [commits, comments, buildStatuses] = await prDetailsPromises;
 
@@ -313,13 +313,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async approve(approved: boolean) {
-        await PullRequestProvider.forRepository(this._state.repository!).updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
+        await PullRequestProvider.forRemote(this._state.remote!).updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
         prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }
 
     private async merge(m: Merge) {
-        await PullRequestProvider.forRepository(this._state.repository!).merge(
+        await PullRequestProvider.forRemote(this._state.remote!).merge(
             { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
             m.closeSourceBranch,
             m.mergeStrategy
@@ -373,13 +373,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequestProvider.forRepository(this._state.repository!).postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        await PullRequestProvider.forRemote(this._state.remote!).postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
         await this.forceUpdateComments();
     }
 
     private async forceUpdatePullRequest() {
         try {
-            const result = await PullRequestProvider.forRepository(this._state.repository!).get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+            const result = await PullRequestProvider.forRemote(this._state.remote!).get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
             this._state.prData.pr = result.data;
             this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
             await this.updatePullRequest(result);
@@ -393,7 +393,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async forceUpdateComments() {
         const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
-        const paginatedComments = await PullRequestProvider.forRepository(this._state.repository!).getComments(pr);
+        const paginatedComments = await PullRequestProvider.forRemote(this._state.remote!).getComments(pr);
         this._state.prData.comments = paginatedComments.data;
         await this.updatePullRequest(pr);
     }

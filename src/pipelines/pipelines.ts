@@ -3,7 +3,7 @@ import { Container } from "../container";
 import fetch from 'node-fetch';
 import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
-import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRepository } from "../bitbucket/bbUtils";
+import { getBitbucketRemotes, parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/repositories";
 
@@ -13,28 +13,24 @@ class PipelineApiImpl {
     branchName: string
   ): Promise<Pipeline[]> {
     const remotes = getBitbucketRemotes(repository);
-    const accessToken = await this.getValidPipelinesAccessToken(repository);
-    return Promise.all(remotes.map(remote => {
-      return this.getListForRemote(remote, branchName, accessToken);
-    })).then(arrays => {
-      return [].concat.apply([], arrays);
-    });
+    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+
+    const accessToken = await this.getValidPipelinesAccessToken(remote);
+    return this.getListForRemote(remote, branchName, accessToken);
   }
 
   async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
     const remotes = getBitbucketRemotes(repository);
-    const accessToken = await this.getValidPipelinesAccessToken(repository);
-    return Promise.all(remotes.map(remote => {
-      return this.getPipelineResults(remote, accessToken);
-    })).then(arrays => {
-      return [].concat.apply([], arrays);
-    });
+    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+    const accessToken = await this.getValidPipelinesAccessToken(remote);
+    return this.getPipelineResults(remote, accessToken);
   }
 
   async startPipeline(repository: Repository, branchName: string): Promise<Pipeline> {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
-      let parsed = parseGitUrl(urlForRemote(remotes[0]));
+      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      let parsed = parseGitUrl(urlForRemote(remote));
       const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.create({
         //@ts-ignore
@@ -54,11 +50,12 @@ class PipelineApiImpl {
   async getPipeline(repository: Repository, uuid: string): Promise<Pipeline> {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
-      let parsed = parseGitUrl(urlForRemote(remotes[0]));
+      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      let parsed = parseGitUrl(urlForRemote(remote));
       const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
-          return PipelineApiImpl.pipelineForPipeline(remotes[0], res.data);
+          return PipelineApiImpl.pipelineForPipeline(remote, res.data);
         });
     }
     return Promise.reject();
@@ -67,7 +64,8 @@ class PipelineApiImpl {
   async getSteps(repository: Repository, uuid: string): Promise<PipelineStep[]> {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
-      let parsed = parseGitUrl(urlForRemote(remotes[0]));
+      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+      let parsed = parseGitUrl(urlForRemote(remote));
       const bb = await clientForHostname(parsed.resource) as Bitbucket;
       return bb.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
         .then((res: Bitbucket.Schema.PaginatedPipelines) => {
@@ -80,14 +78,14 @@ class PipelineApiImpl {
   async getStepLog(repository: Repository, pipelineUuid: string, stepUuid: string): Promise<string[]> {
     const remotes = getBitbucketRemotes(repository);
     if (remotes.length > 0) {
-      const remote = remotes[0];
+      const remote = remotes.find(r => r.name === 'origin') || remotes[0];
       return this.getPipelineLog(remote, pipelineUuid, stepUuid);
     }
     return Promise.reject();
   }
 
-  async getValidPipelinesAccessToken(repository: Repository): Promise<string> {
-    let site = siteDetailsForRepository(repository);
+  async getValidPipelinesAccessToken(remote: Remote): Promise<string> {
+    let site = siteDetailsForRemote(remote);
 
     if (site && site.isCloud) {
       const token = await Container.clientManager.getValidAccessToken(site);

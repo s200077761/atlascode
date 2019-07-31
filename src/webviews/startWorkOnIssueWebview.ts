@@ -12,7 +12,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
-import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
@@ -162,10 +162,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 let repo: Repo | undefined = undefined;
                 let developmentBranch = undefined;
                 let href = undefined;
+                let isCloud = false;
                 let branchingModel: BitbucketBranchingModel | undefined = undefined;
                 if (Container.bitbucketContext.isBitbucketRepo(r)) {
                     const remotes = getBitbucketRemotes(r);
                     if (remotes.length > 0) {
+                        const remote = remotes.find(r => r.name === 'origin') || remotes[0];
                         [, repo, developmentBranch, branchingModel] = await Promise.all(
                             [r.fetch(),
                             RepositoryProvider.forRemote(remotes[0]).get(remotes[0]),
@@ -173,6 +175,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                             RepositoryProvider.forRemote(remotes[0]).getBranchingModel(remotes[0])
                             ]);
                         href = repo.url;
+                        isCloud = siteDetailsForRemote(remote)!.isCloud;
                     }
                 }
 
@@ -185,7 +188,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                     remoteBranches: [],
                     developmentBranch: developmentBranch,
                     branchingModel: branchingModel,
-                    isCloud: siteDetailsForRepository(r)!.isCloud
+                    isCloud: isCloud
                 });
             }
 

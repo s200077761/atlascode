@@ -17,7 +17,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             const remotes = getBitbucketRemotes(repo);
             const remote = remotes.find(r => r.name === 'origin') || remotes[0];
 
-            return PullRequestProvider.forRepository(repo).getLatest(repo, remote).then(prList => {
+            return PullRequestProvider.forRemote(remote).getLatest(repo, remote).then(prList => {
                 const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
                     ? this._lastCheckedTime.get(repo.rootUri.toString())!
                     : new Date();

@@ -2,7 +2,7 @@ import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands, ConfigurationChangeEvent } from "vscode";
 import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline, statusForState, Status } from "../../pipelines/model";
-import { Repository } from "../../typings/git";
+import { Repository, Remote } from "../../typings/git";
 import { Container } from "../../container";
 import { distanceInWordsToNow } from "date-fns";
 import { Resources } from "../../resources";
@@ -13,7 +13,7 @@ import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { shouldDisplay } from "./Helpers";
-import { siteDetailsForRepository, parseGitUrl, getBitbucketRemotes, urlForRemote, clientForHostname } from '../../bitbucket/bbUtils';
+import { parseGitUrl, getBitbucketRemotes, urlForRemote, clientForHostname, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 
 const defaultPageLength = 25;
@@ -69,7 +69,9 @@ export class PipelinesTree extends BaseTreeDataProvider {
 
         if (this._childrenMap.size === 0) {
             repos.forEach(repo => {
-                this._childrenMap.set(repo.rootUri.toString(), new PipelinesRepoNode(repo, expand));
+                const remotes = getBitbucketRemotes(repo);
+                const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+                this._childrenMap.set(repo.rootUri.toString(), new PipelinesRepoNode(repo, remote, expand));
             });
         }
 
@@ -94,7 +96,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     private _morePages = true;
     private _pipelines: Map<string, Pipeline[]> = new Map();
 
-    constructor(private _repo: Repository, private expand?: boolean) {
+    constructor(private _repo: Repository, private _remote: Remote, private expand?: boolean) {
         super();
     }
 
@@ -117,7 +119,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!siteDetailsForRepository(this._repo)) {
+        if (!siteDetailsForRemote(this._remote)) {
             return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.ShowConfigPage, title: "Login to Bitbucket", arguments: [ProductBitbucket] })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {

@@ -54,14 +54,14 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
+            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
     async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
+            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
     async  nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -76,7 +76,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(repository)).accountId}"` });
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
     async  getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {

@@ -20,7 +20,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
-    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo, remote);
+    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getList.call(PullRequestProvider.forRemote(remote), repo, remote);
 
     static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
@@ -30,22 +30,22 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
-                const result = await PullRequestProvider.forRepository(prs.repository).nextPage(prs);
+                const result = await PullRequestProvider.forRemote(prs.remote).nextPage(prs);
                 this.addItems(result);
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getList.call(PullRequestProvider.forRepository(repo), repo, remote);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getList.call(PullRequestProvider.forRemote(remote), repo, remote);
                 headerNode.description = 'showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getListCreatedByMe.call(PullRequestProvider.forRepository(repo), repo, remote);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getListCreatedByMe.call(PullRequestProvider.forRemote(remote), repo, remote);
                 headerNode.description = 'showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRepository(repo).getListToReview.call(PullRequestProvider.forRepository(repo), repo, remote);
+                this._fetcher = (repo: Repository, remote: Remote) => PullRequestProvider.forRemote(remote).getListToReview.call(PullRequestProvider.forRemote(remote), repo, remote);
                 headerNode.description = 'showing pull requests to review';
                 this.refresh();
             }),

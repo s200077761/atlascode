@@ -51,9 +51,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             this.pr = await this.hydratePullRequest(this.pr);
 
             let promises = Promise.all([
-                PullRequestProvider.forRepository(this.pr.repository).getChangedFiles(this.pr),
-                PullRequestProvider.forRepository(this.pr.repository).getCommits(this.pr),
-                PullRequestProvider.forRepository(this.pr.repository).getComments(this.pr)
+                PullRequestProvider.forRemote(this.pr.remote).getChangedFiles(this.pr),
+                PullRequestProvider.forRemote(this.pr.remote).getCommits(this.pr),
+                PullRequestProvider.forRemote(this.pr.remote).getComments(this.pr)
             ]);
 
             return promises.then(
@@ -78,7 +78,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
     // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
     private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
-        return await PullRequestProvider.forRepository(pr.repository).get(pr);
+        return await PullRequestProvider.forRemote(pr.remote).get(pr);
     }
 
     private async createRelatedJiraIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {

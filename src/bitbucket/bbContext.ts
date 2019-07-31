@@ -1,13 +1,13 @@
 import { Disposable, EventEmitter, Event, Uri } from 'vscode';
-import { Repository, API as GitApi } from "../typings/git";
+import { Repository, API as GitApi, Remote } from "../typings/git";
 import { Container } from '../container';
-import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
-import { getBitbucketRemotes, siteDetailsForRepository, parseGitUrl } from './bbUtils';
+import { getBitbucketRemotes, siteDetailsForRemote } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
 import { PullRequestProvider } from './clientProvider';
 
@@ -56,20 +56,13 @@ export class BitbucketContext extends Disposable {
         this.refreshRepos();
     }
 
-    public async currentUser(repo: Repository | Bitbucket.Schema.Repository): Promise<User> {
-        let site: DetailedSiteInfo | undefined = undefined;
-
-        if (this.isSchemaRepository(repo)) {
-            let parsed = parseGitUrl(repo.links!.html!.href!);
-            site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
-        } else {
-            site = siteDetailsForRepository(repo);
-        }
+    public async currentUser(remote: Remote): Promise<User> {
+        const site = siteDetailsForRemote(remote);
 
         if (site) {
             let foundUser = this._currentUsers.get(site.hostname);
             if (!foundUser) {
-                foundUser = await PullRequestProvider.forRepository(repo as Repository).getCurrentUser(site)!;
+                foundUser = await PullRequestProvider.forRemote(remote).getCurrentUser(site)!;
             }
 
             if (foundUser) {
@@ -80,16 +73,12 @@ export class BitbucketContext extends Disposable {
         return Promise.reject(bbAPIConnectivityError);
     }
 
-    private isSchemaRepository(a: any): a is Bitbucket.Schema.Repository {
-        return a && (<Bitbucket.Schema.Repository>a).links !== undefined;
-    }
-
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
             const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => {
                 const remotes = getBitbucketRemotes(repo);
                 const remote = remotes.find(r => r.name === 'origin') || remotes[0];
-                return (await PullRequestProvider.forRepository(repo).getRecentAllStatus(repo, remote)).data;
+                return (await PullRequestProvider.forRemote(remote).getRecentAllStatus(repo, remote)).data;
             }));
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);

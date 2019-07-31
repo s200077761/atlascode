@@ -1,7 +1,7 @@
 import BitbucketServer from '@atlassian/bitbucket-server';
 import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../bitbucket/model';
 import { Remote, Repository } from '../typings/git';
-import { parseGitUrl, urlForRemote, clientForHostname, siteDetailsForRepository, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { parseGitUrl, urlForRemote, clientForHostname, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { Container } from '../container';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { RepositoryProvider } from '../bitbucket/repoProvider';
@@ -30,7 +30,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async  getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
             remote,
@@ -44,7 +44,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
             remote,
@@ -62,7 +62,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async  getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRepository(repository)!))!.user.id;
+        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
             remote,
@@ -283,7 +283,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             projectKey: parsed.owner,
             repositorySlug: parsed.name,
             pullRequestId: pr.data.id,
-            userSlug: (await Container.authManager.getAuthInfo(await siteDetailsForRepository(pr.repository)!))!.user.id,
+            userSlug: (await Container.authManager.getAuthInfo(await siteDetailsForRemote(pr.remote)!))!.user.id,
             body: {
                 status: approved ? 'APPROVED' : 'UNAPPROVED'
             }

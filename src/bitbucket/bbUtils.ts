@@ -23,21 +23,6 @@ export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefin
     return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
 }
 
-export function siteDetailsForRepository(repository: Repository): DetailedSiteInfo | undefined {
-    let foundSite = undefined;
-
-    for (const remote of repository.state.remotes) {
-        if (remote.pushUrl || remote.fetchUrl) {
-            foundSite = siteDetailsForRemote(remote);
-            if (foundSite) {
-                break;
-            }
-        }
-    }
-
-    return foundSite;
-}
-
 export function urlForRemote(remote: Remote): string {
     return remote.fetchUrl! || remote.pushUrl!;
 }
