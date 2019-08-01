@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
-import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
+import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector } from "../pipelines/model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/repositories";
@@ -112,9 +112,14 @@ export class PipelineApiImpl {
       }
     );
 
-    return (data.values || []).map((pipeline: any) => {
-      return PipelineApiImpl.pipelineForPipeline(remote, pipeline);
-    });
+    if (data.values) {
+      let cleanedPipelines: Pipeline[] = [];
+      for(let i = 0; i < data.values.length; i++){
+        cleanedPipelines.push(PipelineApiImpl.pipelineForPipeline(remote, data.values[i]));
+      }
+      return cleanedPipelines;
+    }
+    return [];
   }
 
   async getPipelineLog(remote: Remote,
@@ -173,10 +178,16 @@ export class PipelineApiImpl {
         avatar = pipeline.creator.links.avatar.href;
       }
     }
+    //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
+    const selector: PipelineSelector = {pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type};
+    let target: PipelineTarget = {selector: selector, triggerName: pipeline.trigger!.name};
+    if(pipeline.target!.ref_name){
+      target.ref_name = pipeline.target!.ref_name;
+    }
 
-    return {
-      repository: CloudRepositoriesApi.toRepo(pipeline.repository!),
+    const cleanedPipeline: Pipeline = {
       remote: remote,
+      repository: CloudRepositoriesApi.toRepo(pipeline.repository!),
       build_number: pipeline.build_number!,
       created_on: pipeline.created_on!,
       creator_name: name,
@@ -188,12 +199,11 @@ export class PipelineApiImpl {
         result: PipelineApiImpl.resultForResult(pipeline.state!.result),
         stage: PipelineApiImpl.resultForResult(pipeline.state!.stage)
       },
-      target: {
-        ref_name: pipeline.target!.ref_name
-      },
+      target: target,
       duration_in_seconds: pipeline.duration_in_seconds,
-      uuid: pipeline.uuid!,
+      uuid: pipeline.uuid!
     };
+    return cleanedPipeline;
   }
 
   private static resultForResult(result?: any): PipelineResult | undefined {

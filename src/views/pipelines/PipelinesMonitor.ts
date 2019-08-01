@@ -1,5 +1,5 @@
 import { window, commands } from "vscode";
-import { Pipeline } from "../../pipelines/model";
+import { Pipeline, PipelineTarget } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { shouldDisplay } from "./Helpers";
@@ -25,7 +25,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
 
       bbApi.pipelines!.getRecentActivity(repo).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
-        diffs = diffs.filter(p => shouldDisplay(p.target!.ref_name));
+        diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
         const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
         if (diffs.length > 0) {
           window.showInformationMessage(
@@ -44,6 +44,11 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
         this._previousResults[repo.rootUri.path] = newResults;
       });
     }
+  }
+
+  private shouldDisplayTarget(target: PipelineTarget): boolean {
+    //If there's no branch associated with this pipe, don't filter it
+    return !target.ref_name || shouldDisplay(target.ref_name);
   }
 
   private diffResults(oldResults: Pipeline[],
@@ -83,19 +88,50 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     } else if (newResults.length === 2) {
       return `${this.descriptionForState(newResults[0])} and ${this.descriptionForState(newResults[1])}.`;
     } else if (newResults.length === 3) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name
-        }, and ${newResults[2].target!.ref_name}.`;
-    } else if (newResults.length === 4) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name
-        }, ${newResults[2].target!.ref_name} and 1 other build.`;
-    } else if (newResults.length > 4) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name}, ${newResults[2].target!.ref_name} and ${
-        newResults.length - 3} other builds.`;
+      return `New build statuses for ${this.generatePipelineTitle(newResults[0])}, ${
+        this.generatePipelineTitle(newResults[1])
+      }, and 1 other build.`;
+    } else if (newResults.length > 3) {
+      return `New build statuses for ${this.generatePipelineTitle(newResults[0])}, ${
+        this.generatePipelineTitle(newResults[1])
+      }, and ${newResults.length - 2} other builds.`;
     }
     return "";
+  }
+
+  private generatePipelineTitle(pipeline: Pipeline): string {
+    let description = "";
+    const pattern = pipeline.target.selector.pattern;
+    const type = pipeline.target.selector.type;
+    const ref_name = pipeline.target.ref_name;
+    const triggerType = pipeline.target.triggerName;
+    const buildNumber = pipeline.build_number;
+
+    //Make sure every case is covered so that a meaningful message is displayed back
+    if(type === "custom"){
+      if(ref_name){
+        description = `Pipeline ${pattern}(${type}) on branch ${ref_name}`;
+      } else {
+        description = `Pipeline ${pattern}(${type})`;
+      }
+    } else if(triggerType === "MANUAL"){
+      if(ref_name && pattern){
+        description = `Pipeline ${pattern}(manual) on branch ${ref_name}`;
+      } else if(ref_name && buildNumber){
+        description = `Pipeline #${buildNumber}(manual) on branch ${ref_name}`;
+      } else if(buildNumber){
+        description = `Pipeline #${buildNumber}(manual)`;
+      } else {
+        description = `Pipeline(manual)`;
+      }
+    } else if(ref_name) {
+      description = `Pipeline on branch ${ref_name}`;
+    } else if(buildNumber) {
+      description = `Pipeline #${buildNumber}`; 
+    } else {
+      description = "Unknown Pipeline";
+    }
+    return description;
   }
 
   private descriptionForState(result: Pipeline): string {
@@ -118,6 +154,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
         words = "is pending";
     }
 
-    return `${result.target!.ref_name} ${words}`;
+    const descriptionString = `${this.generatePipelineTitle(result)} ${words}`;
+    return descriptionString;
   }
 }
