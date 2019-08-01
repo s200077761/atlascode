@@ -27,7 +27,7 @@ export class FieldTransformer {
         const isskey: string = issueKey ? issueKey : "";
 
         const result: FieldTransformerResult = {
-            fields: [],
+            fields: {},
             nonRenderableFields: [],
             hasRequiredNonRenderables: false,
         };
@@ -47,7 +47,7 @@ export class FieldTransformer {
         Object.keys(fields).forEach(k => {
             const field: FieldOrFieldMeta = fields[k];
             if (this.shouldRender(field, filterFieldKeys, problemCollector)) {
-                result.fields.push(this.transformField(field, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete));
+                result.fields[field.key] = this.transformField(field, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
             }
         });
 
@@ -236,6 +236,17 @@ export class FieldTransformer {
                     name: field.name,
                     key: field.key,
                     uiType: UIType.NonEditable,
+                    valueType: this.valueTypeForField(field),
+                    initialValue: field.currentValue,
+                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                };
+            }
+            case UIType.Attachment: {
+                return {
+                    required: required,
+                    name: field.name,
+                    key: field.key,
+                    uiType: UIType.Attachment,
                     valueType: this.valueTypeForField(field),
                     initialValue: field.currentValue,
                     advanced: this.isAdvanced(field, commonFields, requiredAsCommon)

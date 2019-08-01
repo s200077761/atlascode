@@ -88,7 +88,7 @@ export default class StartWorkPage extends WebviewComponent<
     };
   }
 
-  public onMessageReceived(e: any) {
+  public onMessageReceived(e: any): boolean {
     switch (e.type) {
       case 'error': {
         this.setState({ isStartButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -148,6 +148,8 @@ export default class StartWorkPage extends WebviewComponent<
       }
 
     }
+
+    return true;
 
   }
 

@@ -1,10 +1,8 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { FieldTransformerResult, FieldUI, FieldProblem } from "./model/fieldUI";
+import { FieldTransformerResult } from "./model/fieldUI";
 import { Container } from "../../container";
 import { FieldTransformer, ProjectIdAndKey } from "./fieldTransformer";
 import { EditMetaDescriptor } from "./model/fieldMetadata";
-import { EditMetaTransformerResult, CommonFields } from "./model/editIssueUI";
-
 
 const defaultCommonFields: string[] = [
     'summary'
@@ -36,13 +34,15 @@ export class IssueEditMetaTransformer {
         this._fieldTransformer = new FieldTransformer(site);
     }
 
-    public async transformDescriptor(descriptor: EditMetaDescriptor): Promise<EditMetaTransformerResult> {
+    public async transformDescriptor(descriptor: EditMetaDescriptor): Promise<FieldTransformerResult> {
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
         const commonFields = [...defaultCommonFields, epicFieldInfo.epicName.id, epicFieldInfo.epicLink.id];
         const descriptorKeys: string[] = Object.keys(descriptor);
-        const commonResults: CommonFields = {};
-        const advancedResults: FieldUI[] = [];
-        let problems: FieldProblem[] = [];
+        let fieldResult: FieldTransformerResult = {
+            fields: {},
+            hasRequiredNonRenderables: false,
+            nonRenderableFields: []
+        };
 
         if (descriptorKeys.length > 0) {
             let fieldFilters = [...defaultFieldFilters];
@@ -59,22 +59,9 @@ export class IssueEditMetaTransformer {
                 project.key = descriptor['project'].key;
             }
 
-            const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(descriptor, project, commonFields, false, fieldFilters);
-            problems = fieldResult.nonRenderableFields;
-
-            fieldResult.fields.forEach(result => {
-                if (result.advanced) {
-                    advancedResults.push(result);
-                } else {
-                    commonResults[result.key] = result;
-                }
-            });
+            fieldResult = await this._fieldTransformer.transformFields(descriptor, project, commonFields, false, fieldFilters);
         }
 
-        return {
-            problems: problems,
-            commonFields: commonResults,
-            advancedFields: advancedResults
-        };
+        return fieldResult;
     }
 }

@@ -8,7 +8,7 @@ import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.hostname}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.hostname}</span></div>
     </Option>
 );
 

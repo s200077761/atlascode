@@ -309,7 +309,8 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     handled = true;
                     if (isCreateIssue(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                            const site = Container.siteManager.effectiveSite(ProductJira);
+                            let client = await Container.clientManager.jirarequest(site);
                             if (client) {
                                 const issuelinks: any[] = [];
                                 const formLinks = e.issueData.issuelinks;
@@ -361,8 +362,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                                     });
                                 }
 
-
-                                this.postMessage({ type: 'issueCreated', issueData: resp });
+                                this.postMessage({ type: 'issueCreated', issueData: { ...resp, site: site, token: await Container.clientManager.getValidAccessToken(Container.siteManager.effectiveSite(ProductJira)) } });
                                 issueCreatedEvent(resp.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 commands.executeCommand(Commands.RefreshJiraExplorer);
                                 this.fireCallback(resp.key);

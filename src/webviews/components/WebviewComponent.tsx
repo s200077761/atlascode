@@ -94,7 +94,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
         this.onMessageReceived(msg);
     }
 
-    abstract onMessageReceived(e: R): void;
+    abstract onMessageReceived(e: R): boolean;
 
     protected postMessage(e: A) {
         this._api.postMessage(e);

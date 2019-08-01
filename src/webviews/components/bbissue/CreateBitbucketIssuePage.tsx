@@ -41,7 +41,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isSubmitButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -62,6 +62,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                 break;
             }
         }
+        return true;
     }
 
     handleDismissError = () => {

@@ -11,6 +11,7 @@ export enum UIType {
     Comments = 'comments',
     Watches = 'watches',
     Votes = 'votes',
+    Attachment = 'attachment',
     NonEditable = 'noneditable'
 }
 
@@ -107,8 +108,10 @@ export interface IssueLinksUI extends SelectFieldUI {
     isSubtasks: boolean;
 }
 
+export type FieldUIs = { [key: string]: FieldUI };
+
 export interface FieldTransformerResult {
-    fields: FieldUI[];
+    fields: FieldUIs;
     nonRenderableFields: FieldProblem[];
     hasRequiredNonRenderables: boolean;
 }
@@ -172,7 +175,7 @@ export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , [ValueType.IssueLinks, UIType.IssueLink]
         , [ValueType.Component, UIType.Select] // mutli-select, {id, name}
         , [ValueType.Worklog, UIType.Worklog]
-        //,['attachment',]
+        , ['attachment', UIType.Attachment]
     ]
 );
 

@@ -8,8 +8,7 @@ import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTra
 import { Logger } from "../logger";
 import { FieldMeta, readFieldsMeta, Fields, EditMetaDescriptor } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
-import { EditMetaTransformerResult } from "./jira-client/model/editIssueUI";
-
+import { FieldTransformerResult } from "./jira-client/model/fieldUI";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
   const client = await Container.clientManager.jirarequest(siteDetails);
@@ -43,7 +42,7 @@ export async function fetchEditIssueUI(issueKey: string, siteDetails?: DetailedS
 
   //console.log(JSON.stringify(fieldDescriptor));
   const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(site);
-  const result: EditMetaTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
+  const result: FieldTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
 
   console.log(JSON.stringify(result));
 

@@ -136,7 +136,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -178,6 +178,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 break;
             }
         }
+
+        return true;
     }
 
     handleDismissError = () => {

@@ -63,7 +63,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isProjectsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -79,6 +79,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 break;
             }
         }
+
+        return true;
 
     }
 

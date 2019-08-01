@@ -292,7 +292,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         });
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isCreateButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -349,6 +349,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 break;
             }
         }
+
+        return true;
     }
 
     handleDismissError = () => {

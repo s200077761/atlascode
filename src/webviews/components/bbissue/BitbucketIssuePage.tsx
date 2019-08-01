@@ -101,7 +101,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isStatusButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -121,7 +121,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 break;
             }
         }
-
+        return true;
     }
 
     handleCopyLink = () => this.postMessage({ action: 'copyBitbucketIssueLink' });
