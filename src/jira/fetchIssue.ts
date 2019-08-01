@@ -7,6 +7,8 @@ import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
 import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
 import { Logger } from "../logger";
 import { FieldMeta, readFieldsMeta, Fields, EditMetaDescriptor } from "./jira-client/model/fieldMetadata";
+import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
+import { EditMetaTransformerResult } from "./jira-client/model/editIssueUI";
 
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
@@ -39,7 +41,12 @@ export async function fetchEditIssueUI(issueKey: string, siteDetails?: DetailedS
 
   const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issueKey, site);
 
-  console.log(JSON.stringify(fieldDescriptor));
+  //console.log(JSON.stringify(fieldDescriptor));
+  const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(site);
+  const result: EditMetaTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
+
+  console.log(JSON.stringify(result));
+
   // const edite: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
 
   // Logger.debug('loading creat meta', projectKey);

@@ -62,13 +62,13 @@ export class IssueCreateScreenTransformer {
                     if (fieldResult.nonRenderableFields.length > 0) {
                         this.addIssueTypeProblem({
                             issueType: this.metaIssueTypeToIssueType(issueType),
-                            isRenderable: !fieldResult.hasRequireNonRenderables,
+                            isRenderable: !fieldResult.hasRequiredNonRenderables,
                             nonRenderableFields: fieldResult.nonRenderableFields,
                             message: "Issue Type contains non-renderable fields"
                         }, problems);
                     }
 
-                    if (!fieldResult.hasRequireNonRenderables) {
+                    if (!fieldResult.hasRequiredNonRenderables) {
                         issueTypeUI.fields = fieldResult.fields;
                         renderableIssueTypes.push(issueType);
                         issueTypeUIList[issueType.id] = issueTypeUI;

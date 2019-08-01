@@ -1,5 +1,5 @@
 
-import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas } from "./model/fieldUI";
+import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
 import { IssueLinkType } from "./model/entities";
@@ -29,7 +29,7 @@ export class FieldTransformer {
         const result: FieldTransformerResult = {
             fields: [],
             nonRenderableFields: [],
-            hasRequireNonRenderables: false,
+            hasRequiredNonRenderables: false,
         };
 
         const problemCollector: ProblemCollector = { problems: [], hasRequiredNonRenderables: false };
@@ -52,7 +52,7 @@ export class FieldTransformer {
         });
 
         result.nonRenderableFields = problemCollector.problems;
-        result.hasRequireNonRenderables = problemCollector.hasRequiredNonRenderables;
+        result.hasRequiredNonRenderables = problemCollector.hasRequiredNonRenderables;
 
         return result;
     }
@@ -151,6 +151,7 @@ export class FieldTransformer {
                     isCreateable: createableSelectSchemas.includes(schemaName),
                     autoCompleteUrl: autoCompleteUrl,
                     autoCompleteJql: autoCompleteJql,
+                    createUrl: this.createUrlForField(field),
                     valueType: this.valueTypeForField(field),
                     initialValue: field.currentValue,
                     advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
@@ -163,8 +164,10 @@ export class FieldTransformer {
                     key: field.key,
                     uiType: UIType.IssueLink,
                     autoCompleteUrl: autoCompleteUrl,
+                    autoCompleteJql: "",
+                    createUrl: this.createUrlForField(field),
                     allowedValues: issueLinkTypes,
-                    isCreateable: (schemaName === 'subtasks'),
+                    isCreateable: createableSelectSchemas.includes(schemaName),
                     isSubtasks: (schemaName === 'subtasks'),
                     isMulti: multiSelectSchemas.includes(schemaName),
                     valueType: this.valueTypeForField(field),
@@ -346,12 +349,23 @@ export class FieldTransformer {
 
         if (field.schema) {
             const schemaType: string = field.schema.type !== 'array' ? field.schema.type : field.schema.items!;
-            if (Object.keys(ValueType).includes(schemaType)) {
-                return ValueType[schemaType];
-            }
+            return valueTypeForString(schemaType);
         }
 
         return ValueType.String;
+    }
+
+    private createUrlForField(field: FieldOrFieldMeta): string {
+        const schemaName: string = this.schemaName(field);
+
+        switch (schemaName) {
+            case 'components': return `${this._site.baseApiUrl}/component`;
+            case 'fixVersions': return `${this._site.baseApiUrl}/version`;
+            case 'versions': return `${this._site.baseApiUrl}/version`;
+            case 'subtasks': return `${this._site.baseApiUrl}/issue`;
+            default: return "";
+        }
+
     }
 
     private addFieldProblem(problem: FieldProblem, collector: ProblemCollector) {

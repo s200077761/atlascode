@@ -10,7 +10,7 @@ import { RadioGroup } from '@atlaskit/radio';
 import { Checkbox } from '@atlaskit/checkbox';
 import Button from '@atlaskit/button';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
-import Avatar from '@atlaskit/avatar';
+//import Avatar from '@atlaskit/avatar';
 import Panel from '@atlaskit/panel';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SectionMessage from '@atlaskit/section-message';
@@ -18,7 +18,7 @@ import { FieldValidators, chain } from '../fieldValidators';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
 import { epicsDisabled } from '../../../jira/jiraCommon';
-import { UIType, SelectFieldUI, FieldUI, InputFieldUI, InputValueType, OptionableFieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { UIType, SelectFieldUI, FieldUI, InputFieldUI, ValueType, OptionableFieldUI } from '../../../jira/jira-client/model/fieldUI';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -84,23 +84,23 @@ const IconValue = (props: any) => (
 
 );
 
-const UserOption = (props: any) => {
-    let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
-    return (
-        <Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
-        </Option>
-    );
-};
+// const UserOption = (props: any) => {
+//     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+//     return (
+//         <Option {...props}>
+//             <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+//         </Option>
+//     );
+// };
 
-const UserValue = (props: any) => {
-    let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
-    return (
-        <components.SingleValue {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
-        </components.SingleValue>
-    );
-};
+// const UserValue = (props: any) => {
+//     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
+//     return (
+//         <components.SingleValue {...props}>
+//             <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+//         </components.SingleValue>
+//     );
+// };
 
 const IssueSuggestionOption = (props: any) => (
     <Option {...props}>
@@ -592,40 +592,11 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
 
     getFieldMarkup(field: FieldUI): any {
         switch (field.uiType) {
-            case UIType.Textarea: {
-                let validateFunc = field.required ? FieldValidators.validateString : undefined;
-                return (
-                    <Field defaultValue={this.state.fieldValues[field.key]} label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
-                        {
-                            (fieldArgs: any) => {
-                                let errDiv = <span />;
-                                if (fieldArgs.error === 'EMPTY') {
-                                    errDiv =
-                                        <ErrorMessage>
-                                            {field.name} is required
-                                </ErrorMessage>;
-                                }
-                                return (
-                                    <div>
-                                        <textarea {...fieldArgs.fieldProps}
-                                            style={{ width: '100%', display: 'block' }}
-                                            className='ac-textarea'
-                                            rows={5}
-                                            disabled={this.state.isSomethingLoading}
-                                        />
-                                        {errDiv}
-                                    </div>
-                                );
-                            }
-                        }
-                    </Field>
-                );
-            }
             case UIType.Input: {
                 let validateFunc = undefined;
                 let valType = (field as InputFieldUI).valueType;
                 switch (valType) {
-                    case InputValueType.Number: {
+                    case ValueType.Number: {
                         validateFunc = (value: any, state: any) => {
                             if (field.required) {
                                 return FieldValidators.validateRequiredNumber(value, state);
@@ -636,7 +607,7 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
 
                         break;
                     }
-                    case InputValueType.Url: {
+                    case ValueType.Url: {
                         validateFunc = (field.required) ? FieldValidators.validateRequiredUrl : FieldValidators.validateUrl;
                         break;
                     }
@@ -661,9 +632,14 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                                 } else if (fieldArgs.error === 'NOT_URL') {
                                     errDiv = <ErrorMessage>{field.name} must be a url</ErrorMessage>;
                                 }
+
+                                let markup = <input {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' disabled={this.state.isSomethingLoading} />;
+                                if ((field as InputFieldUI).isMultiline) {
+                                    markup = <textarea {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-textarea' rows={5} disabled={this.state.isSomethingLoading} />;
+                                }
                                 return (
                                     <div>
-                                        <input {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' disabled={this.state.isSomethingLoading} />
+                                        {markup}
                                         {errDiv}
                                     </div>
                                 );
@@ -775,45 +751,45 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
                     </Field>
                 );
             }
-            case UIType.User: {
-                let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
-                const selectField = field as SelectFieldUI;
-                return (
-                    <Field label={field.name}
-                        isRequired={field.required}
-                        id={field.key}
-                        name={field.key}
-                        validate={validateFunc}>
-                        {
-                            (fieldArgs: any) => {
-                                let errDiv = <span />;
-                                if (fieldArgs.error === 'EMPTY') {
-                                    errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
-                                }
+            // case UIType.User: {
+            //     let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
+            //     const selectField = field as SelectFieldUI;
+            //     return (
+            //         <Field label={field.name}
+            //             isRequired={field.required}
+            //             id={field.key}
+            //             name={field.key}
+            //             validate={validateFunc}>
+            //             {
+            //                 (fieldArgs: any) => {
+            //                     let errDiv = <span />;
+            //                     if (fieldArgs.error === 'EMPTY') {
+            //                         errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+            //                     }
 
-                                return (
-                                    <div>
-                                        <AsyncSelect
-                                            {...fieldArgs.fieldProps}
-                                            className="ac-select-container"
-                                            classNamePrefix="ac-select"
-                                            loadOptions={this.loadUserOptions}
-                                            getOptionLabel={(option: any) => option.name}
-                                            getOptionValue={(option: any) => option.accountId}
-                                            placeholder="Search for a User"
-                                            isLoading={this.state.loadingField === field.key}
-                                            isDisabled={this.state.isSomethingLoading}
-                                            isMulti={selectField.isMulti}
-                                            components={{ Option: UserOption, SingleValue: UserValue }}
-                                        />
-                                        {errDiv}
-                                    </div>
-                                );
-                            }
-                        }
-                    </Field>
-                );
-            }
+            //                     return (
+            //                         <div>
+            //                             <AsyncSelect
+            //                                 {...fieldArgs.fieldProps}
+            //                                 className="ac-select-container"
+            //                                 classNamePrefix="ac-select"
+            //                                 loadOptions={this.loadUserOptions}
+            //                                 getOptionLabel={(option: any) => option.name}
+            //                                 getOptionValue={(option: any) => option.accountId}
+            //                                 placeholder="Search for a User"
+            //                                 isLoading={this.state.loadingField === field.key}
+            //                                 isDisabled={this.state.isSomethingLoading}
+            //                                 isMulti={selectField.isMulti}
+            //                                 components={{ Option: UserOption, SingleValue: UserValue }}
+            //                             />
+            //                             {errDiv}
+            //                         </div>
+            //                     );
+            //                 }
+            //             }
+            //         </Field>
+            //     );
+            // }
             case UIType.Select: {
                 const selectField = field as SelectFieldUI;
                 if (selectField.isCreateable) {

@@ -42,6 +42,37 @@ export enum ValueType {
     Attachment = 'attachment',
 }
 
+// Note: Typescript doesn't include reverse mappings for string enums, so we need this method.
+// see: https://mariusschulz.com/blog/string-enums-in-typescript#no-reverse-mapping-for-string-valued-enum-members
+export function valueTypeForString(s: string): ValueType {
+    switch (s) {
+        case 'string': return ValueType.String;
+        case 'number': return ValueType.Number;
+        case 'url': return ValueType.Url;
+        case 'datetime': return ValueType.DateTime;
+        case 'option': return ValueType.Option;
+        case 'option-with-child': return ValueType.OptionWithChild;
+        case 'resolution': return ValueType.Resolution;
+        case 'priority': return ValueType.Priority;
+        case 'user': return ValueType.User;
+        case 'status': return ValueType.Status;
+        case 'progress': return ValueType.Progress;
+        case 'date': return ValueType.Date;
+        case 'votes': return ValueType.Votes;
+        case 'issuetype': return ValueType.IssueType;
+        case 'project': return ValueType.Project;
+        case 'watches': return ValueType.Watches;
+        case 'timetracking': return ValueType.Timetracking;
+        case 'comments-page': return ValueType.CommentsPage;
+        case 'version': return ValueType.Version;
+        case 'issuelinks': return ValueType.IssueLinks;
+        case 'component': return ValueType.Component;
+        case 'worklog': return ValueType.Worklog;
+        case 'attachment': return ValueType.Attachment;
+        default: return ValueType.String;
+    }
+}
+
 export interface FieldUI {
     required: boolean;
     name: string;
@@ -69,6 +100,7 @@ export interface SelectFieldUI extends OptionableFieldUI {
     isCreateable: boolean;
     autoCompleteUrl: string;
     autoCompleteJql: string;
+    createUrl: string;
 }
 
 export interface IssueLinksUI extends SelectFieldUI {
@@ -78,7 +110,7 @@ export interface IssueLinksUI extends SelectFieldUI {
 export interface FieldTransformerResult {
     fields: FieldUI[];
     nonRenderableFields: FieldProblem[];
-    hasRequireNonRenderables: boolean;
+    hasRequiredNonRenderables: boolean;
 }
 
 export interface FieldProblem {
@@ -107,6 +139,7 @@ export const createableSelectSchemas: string[] = [
     , 'labels'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:labels'
     , 'versions'
+    , 'subtasks'
 ];
 
 export const multiLineStringSchemas: string[] = [

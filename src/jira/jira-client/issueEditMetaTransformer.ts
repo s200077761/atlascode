@@ -1,12 +1,9 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { IssueTypeIssueCreateMetadata, readIssueTypeIssueCreateMetadata } from "./model/issueCreateMetadata";
-import { CreateMetaTransformerProblems, IssueTypeProblem, IssueTypeUI } from "./model/createIssueUI";
-import { FieldTransformerResult } from "./model/fieldUI";
+import { FieldTransformerResult, FieldUI, FieldProblem } from "./model/fieldUI";
 import { Container } from "../../container";
-import { FieldTransformer } from "./fieldTransformer";
-import { IssueType } from "./model/entities";
+import { FieldTransformer, ProjectIdAndKey } from "./fieldTransformer";
 import { EditMetaDescriptor } from "./model/fieldMetadata";
-import { EditMetaTransformerResult } from "./model/editIssueUI";
+import { EditMetaTransformerResult, CommonFields } from "./model/editIssueUI";
 
 
 const defaultCommonFields: string[] = [
@@ -43,6 +40,9 @@ export class IssueEditMetaTransformer {
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
         const commonFields = [...defaultCommonFields, epicFieldInfo.epicName.id, epicFieldInfo.epicLink.id];
         const descriptorKeys: string[] = Object.keys(descriptor);
+        const commonResults: CommonFields = {};
+        const advancedResults: FieldUI[] = [];
+        let problems: FieldProblem[] = [];
 
         if (descriptorKeys.length > 0) {
             let fieldFilters = [...defaultFieldFilters];
@@ -52,54 +52,29 @@ export class IssueEditMetaTransformer {
                 fieldFilters.push(epicFieldInfo.epicLink.id);
             }
 
-            const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(issueType.fields, project.key, issueTypeFieldFilters, commonFields);
+            const project: ProjectIdAndKey = { id: "", key: "" };
 
-            if (fieldResult.nonRenderableFields.length > 0) {
-                this.addIssueTypeProblem({
-                    issueType: this.metaIssueTypeToIssueType(issueType),
-                    isRenderable: !fieldResult.hasRequireNonRenderables,
-                    nonRenderableFields: fieldResult.nonRenderableFields,
-                    message: "Issue Type contains non-renderable fields"
-                }, problems);
+            if (Object.keys(descriptor).includes('project')) {
+                project.id = descriptor['project'].id;
+                project.key = descriptor['project'].key;
             }
 
-            if (!fieldResult.hasRequireNonRenderables) {
-                issueTypeUI.fields = fieldResult.fields;
-                renderableIssueTypes.push(issueType);
-                issueTypeUIList[issueType.id] = issueTypeUI;
-            }
-        } else {
-            this.addIssueTypeProblem({
-                issueType: this.metaIssueTypeToIssueType(issueType),
-                isRenderable: false,
-                nonRenderableFields: [],
-                message: "No fields found in issue type"
-            }, problems);
+            const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(descriptor, project, commonFields, false, fieldFilters);
+            problems = fieldResult.nonRenderableFields;
+
+            fieldResult.fields.forEach(result => {
+                if (result.advanced) {
+                    advancedResults.push(result);
+                } else {
+                    commonResults[result.key] = result;
+                }
+            });
         }
 
-
-        if (!firstIssueType || (!renderableIssueTypes.find(it => it.id === firstIssueType!.id))) {
-            firstIssueType = this.metaIssueTypeToIssueType(renderableIssueTypes[0]);
-        }
-
-        return { selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
-    }
-
-    private addIssueTypeProblem(problem: IssueTypeProblem, problems: CreateMetaTransformerProblems) {
-        if (!problems[problem.issueType.id]) {
-            problems[problem.issueType.id] = problem;
-        }
-    }
-
-    private metaIssueTypeToIssueType(issueType: IssueTypeIssueCreateMetadata): IssueType {
         return {
-            description: issueType.description,
-            iconUrl: issueType.iconUrl,
-            id: issueType.id,
-            name: issueType.name,
-            subtask: issueType.subtask,
-            avatarId: issueType.avatarId,
-            self: issueType.self
+            problems: problems,
+            commonFields: commonResults,
+            advancedFields: advancedResults
         };
     }
 }
