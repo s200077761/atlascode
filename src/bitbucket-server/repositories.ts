@@ -1,32 +1,40 @@
 import { Remote } from "../typings/git";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "../bitbucket/model";
+import { Client } from "./httpClient";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
+    private client: Client;
 
-    constructor(private _client: BitbucketServer) { }
+    constructor(site: DetailedSiteInfo, username: string, password: string, agent: any) {
+        this.client = new Client(
+            site.baseApiUrl,
+            `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
+            agent
+        );
+    }
 
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repos.getRepository({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
 
-        const defaultBranch = await this._client.repos.getDefaultBranch({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}`
+        );
+
+        const { data: defaultBranch } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
+        );
 
         return ServerRepositoriesApi.toRepo(data, defaultBranch.data.id);
     }
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repos.getBranchModel({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+
+        const { data } = await this.client.get(
+            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+        );
 
         return data.development
             ? data.development.displayId
@@ -35,10 +43,10 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repos.getBranchModel({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+
+        const { data } = await this.client.get(
+            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+        );
 
         return {
             type: 'branching_model',
@@ -51,12 +59,14 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repos.getCommits({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name,
-            until: includeRef,
-            since: excludeRef
-        });
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/commits`,
+            {
+                until: includeRef,
+                since: excludeRef
+            }
+        );
 
         const commits: any[] = data.values || [];
 
