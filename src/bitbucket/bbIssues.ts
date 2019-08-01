@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../typings/git";
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote } from "./bbUtils";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "./bbUtils";
 import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "./model";
 
 const defaultPageLength = 25;
@@ -18,11 +18,15 @@ export class BitbucketIssuesApiImpl {
 
     async getList(repository: Repository): Promise<PaginatedBitbucketIssues> {
         let remotes = getBitbucketRemotes(repository);
-        if (remotes.length === 0 || !await this.bitbucketIssuesEnabled(remotes[0])) {
+        if (remotes.length === 0) {
+            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+        }
+        const remote = firstBitbucketRemote(repository);
+        if (!await this.bitbucketIssuesEnabled(remote)) {
             return { repository: repository, remote: dummyRemote, data: [], next: undefined };
         }
 
-        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        let parsed = parseGitUrl(urlForRemote(remote));
 
         const { data } = await this._client.repositories.listIssues({
             repo_slug: parsed.name,
@@ -31,9 +35,9 @@ export class BitbucketIssuesApiImpl {
             q: 'state="new" OR state="open" OR state="on hold"'
         });
 
-        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remotes[0], data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remote, data: val }));
 
-        return { repository: repository, remote: remotes[0], data: issues, next: data.next };
+        return { repository: repository, remote: remote, data: issues, next: data.next };
     }
 
     async getAvailableComponents(repositoryHref: string): Promise<Bitbucket.Schema.Component[] | undefined> {
@@ -50,11 +54,16 @@ export class BitbucketIssuesApiImpl {
 
     async getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<BitbucketIssue[]> {
         let remotes = getBitbucketRemotes(repository);
-        if (remotes.length === 0 || !await this.bitbucketIssuesEnabled(remotes[0])) {
+        if (remotes.length === 0) {
+            return [];
+        }
+        const remote = firstBitbucketRemote(repository);
+
+        if (!await this.bitbucketIssuesEnabled(remote)) {
             return [];
         }
 
-        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        let parsed = parseGitUrl(urlForRemote(remote));
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
         const results = await Promise.all(keyNumbers.map(key => this._client.repositories.getIssue({
@@ -62,16 +71,21 @@ export class BitbucketIssuesApiImpl {
             username: parsed.owner,
             issue_id: key
         })));
-        return results.filter(result => !!result).map(result => ({ repository: repository, remote: remotes[0], data: result.data }));
+        return results.filter(result => !!result).map(result => ({ repository: repository, remote: remote, data: result.data }));
     }
 
     async getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {
         let remotes = getBitbucketRemotes(repository);
-        if (remotes.length === 0 || !await this.bitbucketIssuesEnabled(remotes[0])) {
+
+        if (remotes.length === 0) {
+            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+        }
+        const remote = firstBitbucketRemote(repository);
+        if (!await this.bitbucketIssuesEnabled(remote)) {
             return { repository: repository, remote: dummyRemote, data: [], next: undefined };
         }
 
-        let parsed = parseGitUrl(urlForRemote(remotes[0]));
+        let parsed = parseGitUrl(urlForRemote(remote));
         const { data } = await this._client.repositories.listIssues({
             repo_slug: parsed.name,
             username: parsed.owner,
@@ -80,9 +94,9 @@ export class BitbucketIssuesApiImpl {
             sort: '-created_on'
         });
 
-        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remotes[0], data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remote, data: val }));
 
-        return { repository: repository, remote: remotes[0], data: issues, next: data.next };
+        return { repository: repository, remote: remote, data: issues, next: data.next };
     }
 
     async bitbucketIssuesEnabled(remote: Remote): Promise<boolean> {

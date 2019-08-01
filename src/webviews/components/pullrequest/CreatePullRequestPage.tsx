@@ -145,7 +145,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
-        this.resetRepoAndRemoteState(newValue.value, newValue.value.remotes[0]);
+        this.resetRepoAndRemoteState(
+            newValue.value,
+            newValue.value.remotes.find(r => r.name === 'origin') || newValue.value.remotes[0]
+        );
     }
 
     handleRemoteChange = (newValue: { label: string, value: Remote }) => {
@@ -304,7 +307,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                     if (this.state.repo === undefined && e.repositories.length > 0) {
                         const firstRepo = e.repositories[0];
-                        const firstRemote = firstRepo.remotes[0];
+                        const firstRemote = firstRepo.remotes.find(r => r.name === 'origin') || firstRepo.remotes[0];
                         this.resetRepoAndRemoteState(firstRepo, firstRemote);
                     }
                 }

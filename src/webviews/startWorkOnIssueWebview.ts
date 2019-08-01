@@ -169,9 +169,9 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                     const bbApi = await clientForRemote(remote);
                     [, repo, developmentBranch, branchingModel] = await Promise.all(
                         [r.fetch(),
-                        bbApi.repositories.get(remotes[0]),
-                        bbApi.repositories.getDevelopmentBranch(remotes[0]),
-                        bbApi.repositories.getBranchingModel(remotes[0])
+                        bbApi.repositories.get(remote),
+                        bbApi.repositories.getDevelopmentBranch(remote),
+                        bbApi.repositories.getBranchingModel(remote)
                         ]);
                     href = repo.url;
                     isCloud = siteDetailsForRemote(remote)!.isCloud;

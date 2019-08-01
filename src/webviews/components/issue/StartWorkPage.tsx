@@ -238,7 +238,11 @@ export default class StartWorkPage extends WebviewComponent<
     }
     const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.developmentBranch!) !== -1) || repo.value.localBranches[0];
     const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
-    const remote = this.state.remote || repo.value.remotes.length === 0 ? this.state.remote : { label: repo.value.remotes[0].name, value: repo.value.remotes[0].name };
+    let remote = this.state.remote;
+    if (repo.value.remotes.length >= 0) {
+      const firstRemote = repo.value.remotes.find(r => r.name === 'origin') || repo.value.remotes[0];
+      remote = { label: firstRemote.name, value: firstRemote.name };
+    }
     this.setState({
       data: data,
       issueType: issueType,
