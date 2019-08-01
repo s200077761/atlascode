@@ -91,12 +91,19 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
         this.isRefeshing = true;
         try {
+
+            let effProject = project;
+
+            if (!effProject) {
+                effProject = await Container.jiraProjectManager.getEffectiveProject();
+            }
+
             const site: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
 
             const availableProjects = await Container.jiraProjectManager.getProjects();
             let projectChanged = false;
 
-            if (project && project !== this._currentProject) {
+            if (effProject !== this._currentProject) {
                 projectChanged = true;
                 this._currentProject = project;
             }

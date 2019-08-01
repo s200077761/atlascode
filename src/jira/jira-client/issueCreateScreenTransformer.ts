@@ -46,7 +46,7 @@ export class IssueCreateScreenTransformer {
                     name: issueType.name,
                     id: issueType.id,
                     iconUrl: (issueType.iconUrl !== undefined) ? issueType.iconUrl : '',
-                    fields: []
+                    fields: {}
                 };
 
                 if (issueType.fields && Object.keys(issueType.fields).length > 0) {

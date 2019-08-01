@@ -1,5 +1,5 @@
 import { IssueType } from "./entities";
-import { FieldProblem, FieldUI, FieldUIs } from "./fieldUI";
+import { FieldProblem, FieldUIs } from "./fieldUI";
 
 export interface CreateMetaTransformerProblems { [k: string]: IssueTypeProblem; }
 export interface CreateMetaTransformerResult {

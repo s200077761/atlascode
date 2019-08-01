@@ -110,8 +110,11 @@ export interface IssueLinksUI extends SelectFieldUI {
 
 export type FieldUIs = { [key: string]: FieldUI };
 
+export type FieldValues = { [key: string]: any };
+
 export interface FieldTransformerResult {
     fields: FieldUIs;
+    fieldValues: FieldValues;
     nonRenderableFields: FieldProblem[];
     hasRequiredNonRenderables: boolean;
 }

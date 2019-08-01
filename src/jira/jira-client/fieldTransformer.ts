@@ -11,6 +11,11 @@ interface ProblemCollector {
     hasRequiredNonRenderables: boolean;
 }
 
+interface FieldAndValue {
+    field: any;
+    value: any;
+}
+
 export interface ProjectIdAndKey {
     id: string;
     key: string;
@@ -28,6 +33,7 @@ export class FieldTransformer {
 
         const result: FieldTransformerResult = {
             fields: {},
+            fieldValues: {},
             nonRenderableFields: [],
             hasRequiredNonRenderables: false,
         };
@@ -47,7 +53,12 @@ export class FieldTransformer {
         Object.keys(fields).forEach(k => {
             const field: FieldOrFieldMeta = fields[k];
             if (this.shouldRender(field, filterFieldKeys, problemCollector)) {
-                result.fields[field.key] = this.transformField(field, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
+                let fieldAndValue: FieldAndValue = this.transformField(field, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
+
+                result.fields[field.key] = fieldAndValue.field;
+                if (fieldAndValue.value && fieldAndValue.value !== null) {
+                    result.fieldValues[field.key] = fieldAndValue.value;
+                }
             }
         });
 
@@ -57,7 +68,7 @@ export class FieldTransformer {
         return result;
     }
 
-    private transformField(field: FieldOrFieldMeta, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): any {
+    private transformField(field: FieldOrFieldMeta, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): FieldAndValue {
         // when updating for FeildORFieldMeta, check items and if it's issuelinks, always return an editable UI.
         const required: boolean = isFieldMeta(field) ? field.required : false;
         const allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
@@ -77,60 +88,70 @@ export class FieldTransformer {
         switch (this.uiTypeForField(field)) {
             case UIType.Input: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Input,
-                    initialValue: field.currentValue,
-                    valueType: this.valueTypeForField(field),
-                    isMultiline: multiLineStringSchemas.includes(schemaName),
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Input,
+                        initialValue: field.currentValue,
+                        valueType: this.valueTypeForField(field),
+                        isMultiline: multiLineStringSchemas.includes(schemaName),
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Checkbox: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Checkbox,
-                    allowedValues: allowedValues,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Checkbox,
+                        allowedValues: allowedValues,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Radio: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Radio,
-                    allowedValues: allowedValues,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Radio,
+                        allowedValues: allowedValues,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Date: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Date,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Date,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.DateTime: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.DateTime,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.DateTime,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Select: {
@@ -141,115 +162,133 @@ export class FieldTransformer {
                 }
 
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Select,
-                    allowedValues: allowedValues,
-                    isMulti: multiSelectSchemas.includes(schemaName),
-                    isCascading: (schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
-                    isCreateable: createableSelectSchemas.includes(schemaName),
-                    autoCompleteUrl: autoCompleteUrl,
-                    autoCompleteJql: autoCompleteJql,
-                    createUrl: this.createUrlForField(field),
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Select,
+                        allowedValues: allowedValues,
+                        isMulti: multiSelectSchemas.includes(schemaName),
+                        isCascading: (schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
+                        isCreateable: createableSelectSchemas.includes(schemaName),
+                        autoCompleteUrl: autoCompleteUrl,
+                        autoCompleteJql: autoCompleteJql,
+                        createUrl: this.createUrlForField(field),
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.IssueLink: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.IssueLink,
-                    autoCompleteUrl: autoCompleteUrl,
-                    autoCompleteJql: "",
-                    createUrl: this.createUrlForField(field),
-                    allowedValues: issueLinkTypes,
-                    isCreateable: createableSelectSchemas.includes(schemaName),
-                    isSubtasks: (schemaName === 'subtasks'),
-                    isMulti: multiSelectSchemas.includes(schemaName),
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.IssueLink,
+                        autoCompleteUrl: autoCompleteUrl,
+                        autoCompleteJql: "",
+                        createUrl: this.createUrlForField(field),
+                        allowedValues: issueLinkTypes,
+                        isCreateable: createableSelectSchemas.includes(schemaName),
+                        isSubtasks: (schemaName === 'subtasks'),
+                        isMulti: multiSelectSchemas.includes(schemaName),
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Timetracking: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Timetracking,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Timetracking,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Worklog: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Worklog,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Worklog,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Comments: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Comments,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Comments,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Watches: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Worklog,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Worklog,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Votes: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Worklog,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Worklog,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.NonEditable: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.NonEditable,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.NonEditable,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
             case UIType.Attachment: {
                 return {
-                    required: required,
-                    name: field.name,
-                    key: field.key,
-                    uiType: UIType.Attachment,
-                    valueType: this.valueTypeForField(field),
-                    initialValue: field.currentValue,
-                    advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Attachment,
+                        valueType: this.valueTypeForField(field),
+                        initialValue: field.currentValue,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: field.currentValue
                 };
             }
         }
@@ -303,7 +342,7 @@ export class FieldTransformer {
     private isAdvanced(field: FieldOrFieldMeta, commonFields: string[], requiredAsCommon: boolean): boolean {
         let advanced: boolean = false;
         if (!commonFields.includes(field.key)) {
-            if ((!requiredAsCommon) && (isFieldMeta(field) && !field.required)) {
+            if (requiredAsCommon && (isFieldMeta(field) && !field.required)) {
                 advanced = true;
             }
         }

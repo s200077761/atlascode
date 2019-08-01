@@ -40,6 +40,7 @@ export class IssueEditMetaTransformer {
         const descriptorKeys: string[] = Object.keys(descriptor);
         let fieldResult: FieldTransformerResult = {
             fields: {},
+            fieldValues: {},
             hasRequiredNonRenderables: false,
             nonRenderableFields: []
         };
