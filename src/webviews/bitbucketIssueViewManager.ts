@@ -7,8 +7,8 @@ export class BitbucketIssueViewManager extends AbstractMultiViewManager<Bitbucke
         super(extensionPath);
     }
 
-    dataKey(data: BitbucketIssue): string {
-        return (data.links!.self!.href!);
+    dataKey(issue: BitbucketIssue): string {
+        return (issue.data.links!.self!.href!);
     }
 
     createView(extensionPath: string) {

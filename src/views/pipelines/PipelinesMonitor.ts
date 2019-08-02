@@ -1,10 +1,10 @@
 import { window, commands } from "vscode";
-import { PipelineApi } from "../../pipelines/pipelines";
 import { Pipeline } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
 import { shouldDisplay } from "./Helpers";
 import { Commands } from "../../commands";
+import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -19,7 +19,11 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     for (var i = 0; i < this._repositories.length; i++) {
       const repo = this._repositories[i];
       const previousResults = this._previousResults[repo.rootUri.path];
-      PipelineApi.getRecentActivity(repo).then(newResults => {
+
+      const remote = firstBitbucketRemote(repo);
+      const bbApi = await clientForRemote(remote);
+
+      bbApi.pipelines!.getRecentActivity(repo).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
         diffs = diffs.filter(p => shouldDisplay(p.target!.ref_name));
         const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
@@ -30,7 +34,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
           ).then((selection) => {
             if (selection) {
               if (diffs.length === 1) {
-                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo });
+                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo, remote: remote });
               } else {
                 commands.executeCommand("workbench.view.extension.atlascode-drawer");
               }

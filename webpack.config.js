@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack')
 
 module.exports = env => [
     {
@@ -32,7 +33,8 @@ module.exports = env => [
             libraryTarget: "commonjs",
             devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
         },
-        externals: ['vscode']
+        externals: ['vscode'],
+        plugins: [new webpack.IgnorePlugin(/iconv-loader\.js/)]
     },
     {
         name: 'uninstall',

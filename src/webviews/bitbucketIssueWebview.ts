@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
-import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
-import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
+import { BitbucketIssueMessageData } from "../ipc/bitbucketIssueMessaging";
 import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
-import { BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssueData, BitbucketIssue } from "../bitbucket/model";
+import { clientForRemote } from "../bitbucket/bbUtils";
 
 type Emit = BitbucketIssueData | HostErrorMessage;
 
@@ -52,7 +52,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
         this.isRefeshing = true;
 
-        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.id}`; }
+        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.data.id}`; }
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -60,13 +60,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
 
         try {
-
-
+            const bbApi = await clientForRemote(this._issue!.remote);
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
-                Container.bitbucketContext.currentUser(issue.repository!),
-                BitbucketIssuesApi.refetch(issue),
-                BitbucketIssuesApi.getComments(issue),
-                BitbucketIssuesApi.getChanges(issue)]
+                Container.bitbucketContext.currentUser(issue.remote),
+                bbApi.issues!.refetch(issue),
+                bbApi.issues!.getComments(issue),
+                bbApi.issues!.getChanges(issue)]
             );
 
             //@ts-ignore
@@ -75,12 +74,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 changes.data.find(change => change.id! === comment.id!) || comment);
             const msg = {
                 type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-                issue: issueLatest,
+                issueData: issueLatest.data,
                 currentUser: currentUser,
                 comments: updatedComments,
                 hasMore: !!comments.next || !!changes.next,
                 showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
-            } as BitbucketIssueData;
+            } as BitbucketIssueMessageData;
 
             this.postMessage(msg);
         } catch (e) {
@@ -104,7 +103,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._issue!.links!.html!.href!;
+                    const linkUrl = this._issue!.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -113,7 +112,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.repository!)).accountId!);
+                        const bbApi = await clientForRemote(this._issue!.remote);
+                        await bbApi.issues!.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.remote)).accountId!);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
@@ -126,7 +126,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostComment(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postComment(this._issue!, e.content);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
                             bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
@@ -141,8 +142,9 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostChange(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
-                            this._issue = await BitbucketIssuesApi.refetch(this._issue!);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
+                            this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
                             bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
                         } catch (e) {
@@ -163,7 +165,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'createJiraIssue': {
                     if (isCreateJiraIssueAction(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.CreateIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.CreateIssue, this._issue);
                     }
                     break;
                 }

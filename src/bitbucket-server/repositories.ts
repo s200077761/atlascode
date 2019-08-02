@@ -1,32 +1,51 @@
-import { Remote } from "../typings/git";
-import { parseGitUrl, clientForHostname, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "../bitbucket/model";
+import { Remote, Repository } from "../typings/git";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../bitbucket/model";
+import { Client } from "./httpClient";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
+    private client: Client;
+
+    constructor(site: DetailedSiteInfo, username: string, password: string, agent: any) {
+        this.client = new Client(
+            site.baseApiUrl,
+            `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
+            agent
+        );
+    }
 
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getRepository({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
 
-        const defaultBranch = await bb.repos.getDefaultBranch({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}`
+        );
 
-        return ServerRepositoriesApi.toRepo(data, defaultBranch.data.id);
+        const { data: defaultBranch } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
+        );
+
+        return ServerRepositoriesApi.toRepo(data, defaultBranch.id);
+    }
+
+    async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches`,
+            queryParams
+        );
+
+        return { data: (data.values || []).map((v: any) => v.name), next: data.next };
     }
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getBranchModel({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+
+        const { data } = await this.client.get(
+            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+        );
 
         return data.development
             ? data.development.displayId
@@ -35,11 +54,10 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getBranchModel({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name
-        });
+
+        const { data } = await this.client.get(
+            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+        );
 
         return {
             type: 'branching_model',
@@ -52,13 +70,14 @@ export class ServerRepositoriesApi implements RepositoriesApi {
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const bb = await clientForHostname(parsed.resource) as BitbucketServer;
-        const { data } = await bb.repos.getCommits({
-            projectKey: parsed.owner,
-            repositorySlug: parsed.name,
-            until: includeRef,
-            since: excludeRef
-        });
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/commits`,
+            {
+                until: includeRef,
+                since: excludeRef
+            }
+        );
 
         const commits: any[] = data.values || [];
 
@@ -78,7 +97,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
+    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
         return [];
     }
 

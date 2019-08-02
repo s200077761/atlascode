@@ -105,6 +105,7 @@ const emptyPipeline: PipelineData = {
     avatarUrl: '',
     issueTrackerEnabled: false
   },
+  remote: { name: 'dummy_remote', isReadOnly: true },
   type: "",
   build_number: 0,
   uuid: "",

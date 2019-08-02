@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { currentUserJira } from './commands//jira/currentUser';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
@@ -27,8 +26,6 @@ export enum Commands {
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
-    CurrentUserBitbucket = 'atlascode.bb.me',
-    currentUserJira = 'atlascode.jira.me',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
     CreateIssue = 'atlascode.jira.createIssue',
@@ -56,7 +53,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
         vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
-        vscode.commands.registerCommand(Commands.currentUserJira, currentUserJira),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),

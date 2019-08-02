@@ -10,11 +10,9 @@ import { Repository, RefType } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { getBitbucketRemotes, siteDetailsForRepository } from '../bitbucket/bbUtils';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
-import { RepositoryProvider } from '../bitbucket/repoProvider';
 
 type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
@@ -69,7 +67,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 }
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._state.links!.html!.href!;
+                    const linkUrl = this._state.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -83,7 +81,10 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                             if (e.setupBitbucket) {
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            await BitbucketIssuesApi.assign(issue, (await Container.bitbucketContext.currentUser(repo)).accountId!);
+                            const remote = repo.state.remotes.find(r => r.name === e.remote);
+
+                            const bbApi = await clientForRemote(remote!);
+                            await bbApi.issues!.assign(issue, (await Container.bitbucketContext.currentUser(remote!)).accountId!);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
@@ -120,7 +121,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
         this._state = issue;
 
         if (this._panel) {
-            this._panel.title = `Start work on Bitbucket issue #${issue.id}`;
+            this._panel.title = `Start work on Bitbucket issue #${issue.data.id}`;
         }
 
         const repoData: RepoData[] = [];
@@ -136,13 +137,13 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
             let repo: Repo | undefined = undefined;
             let developmentBranch = undefined;
             let href = undefined;
+            let isCloud = false;
             if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                const remotes = getBitbucketRemotes(r);
-                if (remotes.length > 0) {
-                    const remote = remotes[0];
-                    [, repo, developmentBranch] = await Promise.all([r.fetch(), RepositoryProvider.forRemote(remote).get(remote), RepositoryProvider.forRemote(remote).getDevelopmentBranch(remote)]);
-                    href = repo.url;
-                }
+                const remote = firstBitbucketRemote(r);
+                const bbApi = await clientForRemote(remote);
+                [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
+                href = repo.url;
+                isCloud = siteDetailsForRemote(remote)!.isCloud;
             }
 
             await repoData.push({
@@ -153,13 +154,13 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],
                 developmentBranch: developmentBranch,
-                isCloud: siteDetailsForRepository(r)!.isCloud
+                isCloud: isCloud
             });
         }
 
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
-            issue: issue,
+            issue: issue.data,
             repoData: repoData
         };
         this.postMessage(msg);
@@ -172,7 +173,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit,
 
         this.isRefeshing = true;
         try {
-            const updatedIssue = await BitbucketIssuesApi.refetch(this._state);
+            const bbApi = await clientForRemote(this._state.remote);
+            const updatedIssue = await bbApi.issues!.refetch(this._state);
             this.updateIssue(updatedIssue);
         }
         catch (e) {

@@ -1,7 +1,9 @@
 import { Repo } from "../bitbucket/model";
+import { Remote } from "../typings/git";
 
 export interface Pipeline {
     repository: Repo;
+    remote: Remote;
     build_number: number;
     created_on: string;
     creator_name?: string;
