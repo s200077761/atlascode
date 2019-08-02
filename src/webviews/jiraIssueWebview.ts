@@ -126,7 +126,7 @@ export class JiraIssueWebview extends AbstractReactWebview<Emit, Action> impleme
                         handled = true;
                         try {
                             const client = await Container.clientManager.jirarequest(this._state.siteDetails);
-                            const users = await client.findUsersAssignableToIssues(this._state.key, msg.query);
+                            const users = await client.findUsersAssignableToIssue(this._state.key, msg.query);
                             this.postMessage({ type: 'userList', users: users });
                         }
                         catch (e) {

@@ -1,4 +1,4 @@
-import { FieldMeta } from './fieldMetadata';
+import { FieldMeta, readFieldsMeta } from './fieldMetadata';
 
 //CreateMetaBean
 export interface IssueCreateMetadata {
@@ -54,7 +54,7 @@ export function readIssueTypeIssueCreateMetadata(params: any): IssueTypeIssueCre
         subtask: params.subtask,
         avatarId: params.avatarId,
         entityId: params.entityId,
-        fields: params.fields ? params.fields : {}
+        fields: params.fields ? readFieldsMeta(params.fields) : {}
     };
 }
 

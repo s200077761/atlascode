@@ -212,7 +212,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                         try {
                             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
-                                let res: User[] = await client.findUsersAssignableToIssues(e.project, e.query);
+                                let res: User[] = await client.findUsersAssignableToProject(e.project, e.query);
 
                                 this.postMessage({ type: 'userList', users: res });
 

@@ -27,22 +27,32 @@ export interface FieldMeta {
     readonly key: string;
     readonly autoCompleteUrl: string | undefined;
     readonly required: boolean;
-    readonly allowedValues: string[];
+    readonly allowedValues: any[];
 }
 
-export function readFieldMeta(props: any): FieldMeta {
+export function readFieldsMeta(fields: { [k: string]: any }): { [k: string]: FieldMeta } {
+    let metaFields: { [k: string]: FieldMeta } = {};
+
+    Object.keys(fields).forEach(key => {
+        metaFields[key] = readFieldMeta(key, fields[key]);
+    });
+
+    return metaFields;
+}
+
+export function readFieldMeta(key: string, props: any): FieldMeta {
     return {
         schema: readFieldSchema(props.schema),
         id: props.id,
         name: props.name,
-        key: props.key,
+        key: props.key ? props.key : key,
         autoCompleteUrl: props.autoCompleteUrl,
         required: props.required,
-        allowedValues: props.allowedValues
+        allowedValues: props.allowedValues ? props.allowedValues : []
     };
 }
 
-// TODO: [VSCODE-555] use field meta type/items to map types for input valuess
+// TODO: [VSCODE-555] use field meta type/items to map types for input values
 export interface FieldSchemaMeta {
     readonly type: string;
     readonly custom: string | undefined;

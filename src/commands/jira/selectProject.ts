@@ -44,7 +44,7 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
   const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
 
   if (client) {
-    const res = await client.getProjectsPaginated(value);
+    const res = await client.getProjects(value);
     const projectObjects = res;
     if (projectObjects) {
       return projectObjects

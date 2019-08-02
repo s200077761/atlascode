@@ -21,6 +21,8 @@ import { cannotGetClientFor } from "../constants";
 import fetch from 'node-fetch';
 import { OAuthRefesher } from "./oauthRefresher";
 import BitbucketServer from "@atlassian/bitbucket-server";
+import { JiraCloudClient } from "../jira/jira-client/cloudClient";
+import { JiraServerClient } from "../jira/jira-client/serverClient";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -134,7 +136,7 @@ export class ClientManager implements Disposable {
               isCloud: false,
               avatarUrl: `https://${site.hostname}/images/fav-jcore.png`,
               hostname: site.hostname,
-              baseApiUrl: `https://${site.hostname}/rest/api/2`,
+              baseApiUrl: `https://${site.hostname}/rest`,
               baseLinkUrl: `https://${site.hostname}`,
               id: site.hostname,
               name: site.hostname
@@ -288,14 +290,12 @@ export class ClientManager implements Disposable {
     return this.getClient<JiraClient>(
       site,
       info => {
-        const client = new JiraClient(site, this._agent);
+        let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          client.authenticateUsingToken(info.access);
-        }
-
-        if (isBasicAuthInfo(info)) {
-          client.authenticateUsingBasic(info.username, info.password);
+          client = new JiraCloudClient(info.access, site, this._agent);
+        } else if (isBasicAuthInfo(info)) {
+          client = new JiraServerClient(info.username, info.password, site, this._agent);
         }
 
         return client;

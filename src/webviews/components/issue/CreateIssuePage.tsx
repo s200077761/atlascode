@@ -20,6 +20,8 @@ import Offline from '../Offline';
 import { epicsDisabled } from '../../../jira/jiraCommon';
 import { UIType, SelectFieldUI, FieldUI, InputFieldUI, InputValueType, OptionableFieldUI } from '../../../jira/jira-client/model/fieldUI';
 import { JiraClient } from '../../../jira/jira-client/client';
+import { isOAuthInfo } from '../../../atlclients/authInfo';
+import { JiraCloudClient } from '../../../jira/jira-client/cloudClient';
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -431,9 +433,16 @@ export default class CreateIssuePage extends WebviewComponent<Emit, Accept, {}, 
             formdata.append('file', file);
         }
 
-        const client = new JiraClient(issueData.site);
-        client.authenticateUsingToken(issueData.token);
-        await client.addAttachment(issueData.key, formdata);
+        let client: JiraClient | undefined = undefined;
+        if (isOAuthInfo(issueData.site)) {
+            client = new JiraCloudClient(issueData.token, issueData.site);
+        } else {
+            // TODO: [VSCODE-572] Handle authing with jira within a webview in a better way.
+        }
+
+        if (client) {
+            await client.addAttachment(issueData.key, formdata);
+        }
 
         this.fileUpload.value = '';
     }
