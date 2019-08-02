@@ -1,23 +1,29 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
-import fetch from 'node-fetch';
-import { Logger } from "../logger";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/repositories";
+import { Client } from "../bitbucket-server/httpClient";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export class PipelineApiImpl {
+  private client: Client;
 
-  constructor(private _client: Bitbucket) { }
+  constructor(site: DetailedSiteInfo, token: string, agent: any) {
+    this.client = new Client(
+      site.baseApiUrl,
+      `Bearer ${token}`,
+      agent
+    );
+  }
 
   async getList(
     repository: Repository,
     branchName: string
   ): Promise<Pipeline[]> {
     const remote = firstBitbucketRemote(repository);
-    const accessToken = await this.getValidPipelinesAccessToken(remote);
-    return this.getListForRemote(remote, branchName, accessToken);
+    return this.getListForRemote(remote, branchName);
   }
 
   async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
@@ -29,35 +35,41 @@ export class PipelineApiImpl {
   async startPipeline(repository: Repository, branchName: string): Promise<Pipeline> {
     const remote = firstBitbucketRemote(repository);
     let parsed = parseGitUrl(urlForRemote(remote));
-    return this._client.pipelines.create({
-      //@ts-ignore
-      _body: {
+
+    const { data } = await this.client.post(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
+      {
         target: {
           ref_type: "branch",
           type: "pipeline_ref_target",
           ref_name: branchName
         }
-      }, repo_slug: parsed.name, username: parsed.owner
-    }).
-      then((res: Bitbucket.Response<Bitbucket.Schema.Pipeline>) => res.data);
+      }
+    );
+
+    return data;
   }
 
   async getPipeline(repository: Repository, uuid: string): Promise<Pipeline> {
     const remote = firstBitbucketRemote(repository);
     let parsed = parseGitUrl(urlForRemote(remote));
-    return this._client.pipelines.get({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
-      .then((res: Bitbucket.Schema.PaginatedPipelines) => {
-        return PipelineApiImpl.pipelineForPipeline(remote, res.data);
-      });
+
+    const { data } = await this.client.get(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${uuid}`
+    );
+
+    return PipelineApiImpl.pipelineForPipeline(remote, data);
   }
 
   async getSteps(repository: Repository, uuid: string): Promise<PipelineStep[]> {
     const remote = firstBitbucketRemote(repository);
     let parsed = parseGitUrl(urlForRemote(remote));
-    return this._client.pipelines.listSteps({ pipeline_uuid: uuid, repo_slug: parsed.name, username: parsed.owner })
-      .then((res: Bitbucket.Schema.PaginatedPipelines) => {
-        return res.data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
-      });
+
+    const { data } = await this.client.get(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${uuid}/steps/`
+    );
+
+    return data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
   }
 
   async getStepLog(repository: Repository, pipelineUuid: string, stepUuid: string): Promise<string[]> {
@@ -80,60 +92,49 @@ export class PipelineApiImpl {
 
   async getListForRemote(
     remote: Remote,
-    branchName: string,
-    accessToken: string
+    branchName: string
   ): Promise<Pipeline[]> {
-    return this.getPipelineResults(remote, accessToken, `target.branch=${encodeURIComponent(branchName)}`);
+    return this.getPipelineResults(remote, { 'target.branch': branchName });
   }
 
   async getPipelineResults(
     remote: Remote,
-    accessToken: string,
-    query?: string
+    query?: any
   ): Promise<Pipeline[]> {
     // TODO: [VSCODE-502] use site info and convert to async await with try/catch
     let parsed = parseGitUrl(urlForRemote(remote));
-    const bbBase = "https://api.bitbucket.org/";
-    const pipelinesPath = `2.0/repositories/${parsed.owner}/${parsed.name}/pipelines/`;
-    var queryParameters = "sort=-created_on";
-    if (query) {
-      queryParameters = `${query}&sort=-created_on`;
-    }
-    return fetch(`${bbBase}${pipelinesPath}?${queryParameters}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`
+
+    const { data } = await this.client.get(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
+      {
+        ...query,
+        sort: '-created_on',
       }
-    })
-      .then(res => res.json())
-      .then((res: Bitbucket.Schema.PaginatedPipelines) => {
-        if (res.values) {
-          return res.values.map(pipeline => {
-            return PipelineApiImpl.pipelineForPipeline(remote, pipeline);
-          });
-        }
-        return [];
-      })
-      .catch((err: any) => {
-        Logger.error(new Error(`Error getting pipelines ${err}`));
-        return Promise.reject();
-      });
+    );
+
+    return (data.values || []).map((pipeline: any) => {
+      return PipelineApiImpl.pipelineForPipeline(remote, pipeline);
+    });
   }
 
   async getPipelineLog(remote: Remote,
     pipelineUuid: string,
     stepUuid: string): Promise<string[]> {
     let parsed = parseGitUrl(urlForRemote(remote));
-    return this._client.pipelines.getStepLog({ pipeline_uuid: pipelineUuid, repo_slug: parsed.name, step_uuid: stepUuid, username: parsed.owner }).then((r: Bitbucket.Response<Bitbucket.Schema.PipelineVariable>) => {
-      return PipelineApiImpl.splitLogs(r.data.toString());
-    }).catch((err: any) => {
-      // If we get a 404 it's probably just that there aren't logs yet.
-      if (err.code !== 404) {
-        Logger.error(new Error(`Error fetching pipeline logs: ${err}`));
-      }
-      return [];
-    });
+
+    const { data } = await this.client.getOctetStream(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`
+    );
+
+    return PipelineApiImpl.splitLogs(data.toString());
+
+    // .catch((err: any) => {
+    //   // If we get a 404 it's probably just that there aren't logs yet.
+    //   if (err.code !== 404) {
+    //     Logger.error(new Error(`Error fetching pipeline logs: ${ err }`));
+    //   }
+    //   return [];
+    // });
   }
 
   private static splitLogs(logText: string): string[] {
@@ -163,7 +164,7 @@ export class PipelineApiImpl {
     return splitLogs;
   }
 
-  private static pipelineForPipeline(remote: Remote, pipeline: Bitbucket.Schema.Pipeline): Pipeline {
+  private static pipelineForPipeline(remote: Remote, pipeline: any): Pipeline {
     var name = undefined;
     var avatar = undefined;
     if (pipeline.creator) {

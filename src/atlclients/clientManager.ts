@@ -4,7 +4,6 @@ import {
   ExtensionContext,
   Disposable,
 } from "vscode";
-import * as BitbucketKit from "bitbucket";
 import { JiraClient } from "../jira/jira-client/client";
 import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, AccessibleResource } from "./authInfo";
 import { Container } from "../container";
@@ -266,23 +265,21 @@ export class ClientManager implements Disposable {
     return this.getClient<BitbucketApi>(
       site,
       info => {
-        let extraOptions = {};
-        if (this._agent) {
-          extraOptions = { agent: this._agent };
-        }
-
         let result: BitbucketApi;
         if (site.isCloud) {
-          const bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
-          if (isOAuthInfo(info)) {
-            bbclient.authenticate({ type: "token", token: info.access });
-          }
           result = {
-            repositories: new CloudRepositoriesApi(bbclient),
-            pullrequests: new CloudPullRequestApi(bbclient),
-            issues: new BitbucketIssuesApiImpl(bbclient),
-            pipelines: new PipelineApiImpl(bbclient),
-            _rawApi: bbclient
+            repositories: isOAuthInfo(info)
+              ? new CloudRepositoriesApi(site, info.access, this._agent)
+              : undefined!,
+            pullrequests: isOAuthInfo(info)
+              ? new CloudPullRequestApi(site, info.access, this._agent)
+              : undefined!,
+            issues: isOAuthInfo(info)
+              ? new BitbucketIssuesApiImpl(site, info.access, this._agent)
+              : undefined!,
+            pipelines: isOAuthInfo(info)
+              ? new PipelineApiImpl(site, info.access, this._agent)
+              : undefined!
           };
         } else {
           result = {
@@ -293,8 +290,7 @@ export class ClientManager implements Disposable {
               ? new ServerPullRequestApi(site, info.username, info.password, this._agent)
               : undefined!,
             issues: undefined,
-            pipelines: undefined,
-            _rawApi: undefined
+            pipelines: undefined
           };
         }
 

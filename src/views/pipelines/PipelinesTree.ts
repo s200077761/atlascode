@@ -12,7 +12,7 @@ import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { shouldDisplay } from "./Helpers";
-import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
 
 const defaultPageLength = 25;
@@ -152,19 +152,17 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     private async fetchBranches(): Promise<string[]> {
         var branches: string[] = [];
         var morePages = false;
-        const parsed = parseGitUrl(urlForRemote(this._remote));
         const bbApi = await clientForRemote(this._remote);
-        const branchesResponse = await (bbApi._rawApi as Bitbucket).refs.listBranches({
-            repo_slug: parsed.name,
-            username: parsed.owner,
+
+        const paginatedBranches = await bbApi.repositories.getBranches(this._remote, {
             page: `${this._page}`,
             pagelen: defaultPageLength,
             sort: '-target.date'
         });
-        branchesResponse.data.values!.forEach(v => {
-            branches.push(v.name!);
-        });
-        if (branchesResponse.data.next) {
+
+        branches = paginatedBranches.data;
+
+        if (paginatedBranches.next) {
             morePages = true;
         }
         this._morePages = morePages;

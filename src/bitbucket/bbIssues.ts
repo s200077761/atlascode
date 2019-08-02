@@ -1,6 +1,8 @@
 import { Repository, Remote } from "../typings/git";
 import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "./bbUtils";
 import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "./model";
+import { Client } from "../bitbucket-server/httpClient";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -10,8 +12,15 @@ export const maxItemsSupported = {
 const dummyRemote = { name: '', isReadOnly: true };
 
 export class BitbucketIssuesApiImpl {
+    private client: Client;
 
-    constructor(private _client: Bitbucket) { }
+    constructor(site: DetailedSiteInfo, token: string, agent: any) {
+        this.client = new Client(
+            site.baseApiUrl,
+            `Bearer ${token}`,
+            agent
+        );
+    }
 
     // ---- BEGIN - Actions NOT on a specific issue ----
     // ---- => ensure Bitbucket Issues are enabled for the repo
@@ -28,28 +37,30 @@ export class BitbucketIssuesApiImpl {
 
         let parsed = parseGitUrl(urlForRemote(remote));
 
-        const { data } = await this._client.repositories.listIssues({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            pagelen: defaultPageLength,
-            q: 'state="new" OR state="open" OR state="on hold"'
-        });
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            {
+                pagelen: defaultPageLength,
+                q: 'state="new" OR state="open" OR state="on hold"'
+            }
+        );
 
-        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remote, data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
 
         return { repository: repository, remote: remote, data: issues, next: data.next };
     }
 
-    async getAvailableComponents(repositoryHref: string): Promise<Bitbucket.Schema.Component[] | undefined> {
+    async getAvailableComponents(repositoryHref: string): Promise<any[] | undefined> {
         let parsed = parseGitUrl(repositoryHref);
 
-        const resp = await this._client.repositories.listComponents({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            pagelen: defaultPageLength
-        });
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/components`,
+            {
+                pagelen: defaultPageLength
+            }
+        );
 
-        return resp.data.values;
+        return data.values;
     }
 
     async getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<BitbucketIssue[]> {
@@ -66,11 +77,11 @@ export class BitbucketIssuesApiImpl {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
-        const results = await Promise.all(keyNumbers.map(key => this._client.repositories.getIssue({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: key
-        })));
+
+        const results = await Promise.all(keyNumbers.map(key => this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${key}`
+        )));
+
         return results.filter(result => !!result).map(result => ({ repository: repository, remote: remote, data: result.data }));
     }
 
@@ -86,15 +97,17 @@ export class BitbucketIssuesApiImpl {
         }
 
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repositories.listIssues({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            pagelen: 2,
-            q: '(state="new" OR state="open" OR state="on hold")',
-            sort: '-created_on'
-        });
 
-        const issues: BitbucketIssue[] = (data.values || []).map(val => ({ repository: repository, remote: remote, data: val }));
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            {
+                pagelen: 2,
+                q: '(state="new" OR state="open" OR state="on hold")',
+                sort: '-created_on'
+            }
+        );
+
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
 
         return { repository: repository, remote: remote, data: issues, next: data.next };
     }
@@ -112,27 +125,28 @@ export class BitbucketIssuesApiImpl {
 
     async refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const { data } = await this._client.repositories.getIssue({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString()
-        });
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}`,
+        );
 
         return { ...issue, data: data };
     }
 
     async getComments(issue: BitbucketIssue): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const { data } = await this._client.repositories.listIssueComments({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            pagelen: maxItemsSupported.comments,
-            sort: '-created_on'
-        });
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/comments`,
+            {
+                issue_id: issue.data.id!.toString(),
+                pagelen: maxItemsSupported.comments,
+                sort: '-created_on'
+            }
+        );
 
         return {
-            data: (data.values || []).reverse().map(comment => ({
+            data: (data.values || []).reverse().map((comment: any) => ({
                 id: comment.id!,
                 parentId: comment.parent ? comment.parent.id! : undefined,
                 htmlContent: comment.content!.html!,
@@ -157,17 +171,18 @@ export class BitbucketIssuesApiImpl {
 
     async getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        const { data } = await this._client.repositories.listIssueChanges({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            pagelen: maxItemsSupported.changes,
-            sort: '-created_on'
-        });
 
-        const changes: Bitbucket.Schema.IssueChange[] = (data.values || []).reverse();
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            {
+                pagelen: maxItemsSupported.changes,
+                sort: '-created_on'
+            }
+        );
 
-        const updatedChanges: Bitbucket.Schema.IssueChange[] = changes
+        const changes: any[] = (data.values || []).reverse();
+
+        const updatedChanges: any[] = changes
             .map(change => {
                 let content = '';
                 if (change.changes!.state) {
@@ -224,11 +239,10 @@ export class BitbucketIssuesApiImpl {
 
     async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        await this._client.repositories.createIssueChange({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            _body: {
+
+        await this.client.post(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            {
                 type: 'issue_change',
                 changes: {
                     state: {
@@ -239,16 +253,15 @@ export class BitbucketIssuesApiImpl {
                     raw: content
                 }
             }
-        });
+        );
     }
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        await this._client.repositories.createIssueChange({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            _body: {
+
+        await this.client.post(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            {
                 type: 'issue_change',
                 changes: {
                     component: {
@@ -256,47 +269,44 @@ export class BitbucketIssuesApiImpl {
                     }
                 }
             }
-        });
+        );
     }
 
     async postComment(issue: BitbucketIssue, content: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        await this._client.repositories.createIssueComment({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            _body: {
+
+        await this.client.post(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/comments`,
+            {
                 type: 'issue_comment',
                 content: {
                     raw: content
                 }
             }
-        });
+        );
     }
 
     async assign(issue: BitbucketIssue, account_id: string): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
-        await this._client.repositories.updateIssue({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            issue_id: issue.data.id!.toString(),
-            _body: {
+
+        await this.client.put(
+            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}`,
+            {
                 type: 'issue',
                 assignee: {
                     type: 'user',
                     account_id: account_id
                 }
             }
-        });
+        );
     }
 
     async create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
         let parsed = parseGitUrl(href);
 
-        const { data } = await this._client.repositories.createIssue({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            _body: {
+        const { data } = await this.client.post(
+            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            {
                 type: 'issue',
                 title: title,
                 content: {
@@ -305,14 +315,14 @@ export class BitbucketIssuesApiImpl {
                 //@ts-ignore
                 kind: kind, priority: priority
             }
-        });
+        );
 
         return data;
     }
 
     async nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        const { data } = await this._client.getNextPage({ next: next });
-        //@ts-ignore
+        const { data } = await this.client.get(next!);
+
         return { repository: repository, remote: remote, data: data.values || [], next: data.next };
     }
 

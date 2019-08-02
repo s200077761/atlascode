@@ -23,7 +23,11 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const { data } = await this.client.get(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests`,
-            queryParams
+            {
+                markup: true,
+                avatarSize: 64,
+                ...queryParams
+            }
         );
         const prs: PullRequest[] = data.values!.map((pr: any) => this.toPullRequestModel(repository, remote, pr, 0));
         const next = data.next;
@@ -97,7 +101,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}`
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
         );
 
         const taskCount = await this.getTaskCount(pr);
@@ -108,7 +116,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
         );
 
         const diffStats: any[] = data.values || [];
@@ -143,7 +155,11 @@ export class ServerPullRequestApi implements PullRequestApi {
     async  getCurrentUser(site: DetailedSiteInfo): Promise<User> {
         const userSlug = (await Container.authManager.getAuthInfo(site))!.user.id;
         const { data } = await this.client.get(
-            `/rest/api/1.0/users/${userSlug}`
+            `/rest/api/1.0/users/${userSlug}`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
         );
 
         return this.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
@@ -153,7 +169,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
         );
 
         return {
@@ -173,7 +193,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/activities`
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/activities`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
         );
 
         const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
@@ -222,6 +246,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             let { data } = await this.client.get(
                 `/rest/default-reviewers/1.0/projects/${parsed.owner}/repos/${parsed.name}/reviewers`,
                 {
+                    markup: true,
+                    avatarSize: 64,
                     sourceRepoId: Number(repo.id),
                     targetRepoId: Number(repo.id),
                     sourceRefId: repo.mainbranch!,
@@ -234,6 +260,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             const { data } = await this.client.get(
                 `/rest/api/1.0/users`,
                 {
+                    markup: true,
+                    avatarSize: 64,
                     'permission.1': 'REPO_READ',
                     'permission.1.projectKey': parsed.owner,
                     'permission.1.repositorySlug': parsed.name,

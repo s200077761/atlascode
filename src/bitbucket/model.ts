@@ -1,5 +1,4 @@
 import { Repository, Remote } from "../typings/git";
-import Bitbucket from 'bitbucket';
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { BitbucketIssuesApiImpl } from "./bbIssues";
 import { PipelineApiImpl } from "../pipelines/pipelines";
@@ -150,14 +149,19 @@ export interface PaginatedBitbucketIssues {
     next?: string;
 }
 
+export interface PaginatedBranchNames {
+    data: string[];
+    next?: string;
+}
+
 export type BitbucketIssue = {
     repository: Repository;
     remote: Remote;
     data: BitbucketIssueData;
 };
 
-export type BitbucketIssueData = Bitbucket.Schema.Issue;
-export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
+export type BitbucketIssueData = any;
+export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
@@ -181,10 +185,11 @@ export interface PullRequestApi {
 
 export interface RepositoriesApi {
     get(remote: Remote): Promise<Repo>;
+    getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
     getDevelopmentBranch(remote: Remote): Promise<string>;
     getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]>;
+    getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]>;
 }
 
 export interface BitbucketApi {
@@ -192,7 +197,6 @@ export interface BitbucketApi {
     pullrequests: PullRequestApi;
     issues?: BitbucketIssuesApiImpl;
     pipelines?: PipelineApiImpl;
-    _rawApi: any;
 }
 
 export interface BitbucketApi {

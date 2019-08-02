@@ -1,6 +1,6 @@
-import { Remote } from "../typings/git";
+import { Remote, Repository } from "../typings/git";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "../bitbucket/model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../bitbucket/model";
 import { Client } from "./httpClient";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -26,7 +26,18 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
         );
 
-        return ServerRepositoriesApi.toRepo(data, defaultBranch.data.id);
+        return ServerRepositoriesApi.toRepo(data, defaultBranch.id);
+    }
+
+    async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches`,
+            queryParams
+        );
+
+        return { data: (data.values || []).map((v: any) => v.name), next: data.next };
     }
 
     async getDevelopmentBranch(remote: Remote): Promise<string> {
@@ -86,7 +97,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
+    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
         return [];
     }
 

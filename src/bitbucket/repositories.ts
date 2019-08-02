@@ -1,56 +1,77 @@
-import { Remote } from "../typings/git";
-import { maxItemsSupported } from "./pullRequests";
+import { Remote, Repository } from "../typings/git";
+import { maxItemsSupported, CloudPullRequestApi } from "./pullRequests";
 import { parseGitUrl, urlForRemote } from "./bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi } from "./model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "./model";
+import { Client } from "../bitbucket-server/httpClient";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
+    private client: Client;
 
-    constructor(private _client: Bitbucket) { }
+    constructor(site: DetailedSiteInfo, token: string, agent: any) {
+        this.client = new Client(
+            site.baseApiUrl,
+            `Bearer ${token}`,
+            agent
+        );
+    }
 
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repositories.get({
-            repo_slug: parsed.name,
-            username: parsed.owner
-        });
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}`
+        );
 
         return CloudRepositoriesApi.toRepo(data);
     }
 
-    async getDevelopmentBranch(remote: Remote): Promise<string> {
+    async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
         let parsed = parseGitUrl(urlForRemote(remote));
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/refs/branches`,
+            queryParams
+        );
+
+        return { data: (data.values || []).map((v: any) => v.name), next: data.next };
+    }
+
+    async getDevelopmentBranch(remote: Remote): Promise<string> {
+
         const [repo, branchingModel] = await Promise.all([
             this.get(remote),
-            this._client.repositories.getBranchingModel({
-                repo_slug: parsed.name,
-                username: parsed.owner
-            })
+            this.getBranchingModel(remote)
         ]);
 
-        return branchingModel.data.development && branchingModel.data.development.branch
-            ? branchingModel.data.development.branch.name!
+        return branchingModel.development && branchingModel.development.branch
+            ? branchingModel.development.branch.name!
             : repo.mainbranch!;
     }
 
     async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        return this._client.repositories.getBranchingModel({
-            repo_slug: parsed.name,
-            username: parsed.owner
-        }).then(res => res.data);
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/branching-model`
+        );
+
+        return data;
     }
 
     async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repositories.listCommits({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            include: includeRef,
-            exclude: excludeRef,
-            pagelen: maxItemsSupported.commits
-        });
 
-        const commits: Bitbucket.Schema.Commit[] = data.values || [];
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/commits`,
+            {
+                include: includeRef,
+                exclude: excludeRef,
+                pagelen: maxItemsSupported.commits
+            }
+        );
+
+        const commits: any[] = data.values || [];
 
         return commits.map(commit => ({
             hash: commit.hash!,
@@ -68,18 +89,17 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]> {
+    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        const { data } = await this._client.repositories.listPullrequestsForCommit({
-            repo_slug: parsed.name,
-            username: parsed.owner,
-            commit: commitHash
-        });
 
-        return data.values || [];
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/commit/${commitHash}/pullrequests`
+        );
+
+        return data.values!.map((pr: any) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; }) || [];
     }
 
-    static toRepo(bbRepo: Bitbucket.Schema.Repository): Repo {
+    static toRepo(bbRepo: any): Repo {
         return {
             id: bbRepo.uuid!,
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,

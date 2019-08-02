@@ -62,9 +62,9 @@ export class GitBackend extends Backend {
     if (remotes.length > 0) {
       const remote = firstBitbucketRemote(repo!);
       const bbApi = await clientForRemote(remote);
-      const prs = await bbApi.repositories.getPullRequestsForCommit(remote, targetRevision);
+      const prs = await bbApi.repositories.getPullRequestsForCommit(repo!, remote, targetRevision);
       if (prs.length > 0) {
-        return prs[0].id!;
+        return prs[0].data.id!;
       }
     }
 
