@@ -1,14 +1,31 @@
 import * as React from 'react';
-import { AbstractIssueEditor, CommonEditorViewState, CommonEditorEmit, CommonEditorAccept } from "./AbstractIssueEditor";
+import { CommonEditorPageEmit, CommonEditorPageAccept, CommonEditorViewState, AbstractIssueEditorPage } from './AbstractIssueEditorPage';
+import { EditIssueData } from '../../../ipc/issueMessaging';
 
-type Emit = CommonEditorEmit;
-type Accept = CommonEditorAccept;
-interface ViewState extends CommonEditorViewState {
+type Emit = CommonEditorPageEmit;
+type Accept = CommonEditorPageAccept | EditIssueData;
+interface ViewState extends CommonEditorViewState, EditIssueData {
     isCreateBannerOpen: boolean;
     createdIssue: any;
 }
 
-export default class JiraIssuePage extends AbstractIssueEditor<Emit, Accept, {}, ViewState> {
+export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
+
+    onMessageReceived(e: any): boolean {
+        let handled = super.onMessageReceived(e);
+
+        if (!handled) {
+            switch (e.type) {
+                case 'update': {
+                    const issueData = e as EditIssueData;
+                    this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
+                    break;
+                }
+            }
+        }
+
+        return handled;
+    }
 
     public render() {
         return (

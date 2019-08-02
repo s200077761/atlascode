@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AbstractIssueEditor, CommonEditorAccept, CommonEditorEmit, CommonEditorViewState, emptyCommonEditorState } from "./AbstractIssueEditor";
+import { AbstractIssueEditorPage, CommonEditorPageAccept, CommonEditorPageEmit, CommonEditorViewState, emptyCommonEditorState } from "./AbstractIssueEditorPage";
 import { CreateIssueData, PreliminaryIssueData } from "../../../ipc/issueMessaging";
 import { emptyWorkingProject } from '../../../config/model';
 import { epicsDisabled } from "../../../jira/jiraCommon";
@@ -11,9 +11,10 @@ import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
 
-type Emit = CommonEditorEmit | OpenJiraIssueAction;
-type Accept = CommonEditorAccept | CreateIssueData;
+type Emit = CommonEditorPageEmit | OpenJiraIssueAction;
+type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     isCreateBannerOpen: boolean;
     createdIssue: any;
@@ -69,7 +70,7 @@ const emptyState: ViewState = {
 */
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
-export default class CreateIssuePage extends AbstractIssueEditor<Emit, Accept, {}, ViewState> {
+export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
     // private issueTypes: any[] = [];
 
     constructor(props: any) {
@@ -130,17 +131,20 @@ export default class CreateIssuePage extends AbstractIssueEditor<Emit, Accept, {
     public render() {
         let renderableFields: any[] = [];
         let advancedFields: any[] = [];
-
         if (this.state.selectedIssueTypeId && this.state.selectedIssueTypeId !== '') {
 
             const screen = this.state.issueTypeScreens[this.state.selectedIssueTypeId];
             if (screen && screen.fields && Object.keys(screen.fields).length > 0) {
                 renderableFields = [];
                 advancedFields = [];
-                Object.values(screen.fields).forEach(field => {
+                const orderedValues: FieldUI[] = this.sortFieldValues(screen.fields);
+
+                orderedValues.forEach(field => {
                     (field.advanced) ? advancedFields.push(this.getFieldMarkup(field)) : renderableFields.push(this.getFieldMarkup(field));
 
                 });
+                console.log('screen fields', screen.fields);
+
             } else {
                 this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.selectedIssueTypeId}` });
             }

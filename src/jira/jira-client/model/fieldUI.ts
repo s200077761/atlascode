@@ -81,7 +81,7 @@ export interface FieldUI {
     uiType: UIType;
     advanced: boolean;
     valueType: ValueType;
-    initialValue: any;
+    displayOrder: number;
 }
 
 export interface NonEditableFieldUI extends FieldUI {

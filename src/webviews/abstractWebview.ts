@@ -159,13 +159,15 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         return result;
     }
 
-    private onPanelDisposed() {
+    protected onPanelDisposed() {
+        console.log('webview panel disposed');
         if (this._disposablePanel) { this._disposablePanel.dispose(); }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
     }
 
     public dispose() {
+        console.log('webview disposed');
         if (this._disposablePanel) {
             this._disposablePanel.dispose();
         }

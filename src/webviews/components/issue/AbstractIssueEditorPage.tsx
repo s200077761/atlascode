@@ -2,12 +2,12 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSomething, LabelList, UserList } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
 
-export type CommonEditorEmit = Action;
-export type CommonEditorAccept = CreatedSomething | LabelList | UserList | HostErrorMessage;
+export type CommonEditorPageEmit = Action;
+export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage;
 
 export interface CommonEditorViewState extends Message {
     fieldValues: FieldValues;
@@ -28,7 +28,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     errorDetails: undefined,
 };
 
-export abstract class AbstractIssueEditor<A extends Action, R, P, S extends CommonEditorViewState> extends WebviewComponent<A, R, P, S> {
+export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends CommonEditorViewState> extends WebviewComponent<A, R, P, S> {
 
     onMessageReceived(e: any): boolean {
         return false;
@@ -36,6 +36,14 @@ export abstract class AbstractIssueEditor<A extends Action, R, P, S extends Comm
 
     protected handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    }
+
+    protected sortFieldValues(fields: FieldUIs): FieldUI[] {
+        return Object.values(fields).sort((left: FieldUI, right: FieldUI) => {
+            if (left.displayOrder < right.displayOrder) { return -1; }
+            if (left.displayOrder > right.displayOrder) { return 1; }
+            return 0;
+        });
     }
 
     // refreshSelectFields(issueTypeId: string | undefined, issueData: CreateIssueData): Object {

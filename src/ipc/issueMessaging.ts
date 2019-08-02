@@ -2,18 +2,17 @@ import { Message } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
-import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
 import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
 import { EpicFieldInfo } from "../jira/jiraCommon";
 import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
+import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
-export interface IssueData extends Message { }
-export interface IssueData extends DetailedIssue {
+export interface EditIssueData extends Message { }
+export interface EditIssueData extends EditIssueUI {
     currentUserId: string;
-    childIssues: MinimalIssue[];
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
 }

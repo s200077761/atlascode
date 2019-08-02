@@ -122,6 +122,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
             }
 
             if (this._screenData) {
+                console.log('screendata', this._screenData);
                 const createData: CreateIssueData = {
                     type: 'screenRefresh',
                     selectedProject: this._currentProject,

@@ -9,6 +9,8 @@ import { Logger } from "../logger";
 import { FieldMeta, readFieldsMeta, Fields, EditMetaDescriptor } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
+import { EditIssueUI } from "./jira-client/model/editIssueUI";
+import { EpicFieldInfo } from "./jiraCommon";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
   const client = await Container.clientManager.jirarequest(siteDetails);
@@ -31,38 +33,35 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
   return minimalIssueFromJsonObject(res, siteDetails, await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails));
 }
 
-export async function fetchEditIssueUI(issueKey: string, siteDetails?: DetailedSiteInfo): Promise<void> {
-  let site = siteDetails;
+export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI> {
+  const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issue);
 
-  if (!site) {
-    site = Container.siteManager.effectiveSite(ProductJira);
-  }
-
-  const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issueKey, site);
-
-  //console.log(JSON.stringify(fieldDescriptor));
-  const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(site);
+  const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(issue.siteDetails);
   const result: FieldTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
 
-  console.log(JSON.stringify(result));
+  const ui: EditIssueUI = {
+    ...result,
+    key: issue.key,
+    id: issue.id,
+    self: issue.self,
+    siteDetails: issue.siteDetails,
+    isEpic: issue.isEpic,
+    epicChildren: issue.epicChildren,
 
-  // const edite: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
+  };
 
-  // Logger.debug('loading creat meta', projectKey);
-  // const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
-  // Logger.debug('got meta', meta);
-
-  // Logger.debug('transforming meta...');
-  // return await createIssueTransformer.transformIssueScreens(meta.projects[0]);
+  console.log('edit issue ui', ui);
+  return ui;
 
 }
 
-async function fetchMetadataForEditUi(issueKey: string, site: DetailedSiteInfo): Promise<EditMetaDescriptor> {
-  const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(site);
+async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDescriptor> {
+  const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails);
+
   const allFieldKeys: string[] = Object.keys(allFields);
 
-  const client = await Container.clientManager.jirarequest(site);
-  const res = await client.getIssue(issueKey, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
+  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
   const metaFields: { [k: string]: FieldMeta } = readFieldsMeta(res.editmeta.fields, res.fields);
 
   const metaFieldKeys: string[] = Object.keys(metaFields);
@@ -77,4 +76,5 @@ async function fetchMetadataForEditUi(issueKey: string, site: DetailedSiteInfo):
   });
 
   return { ...metaFields, ...filteredFields };
+
 }

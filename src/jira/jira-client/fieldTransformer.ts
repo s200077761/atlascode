@@ -49,11 +49,24 @@ export class FieldTransformer {
             filterFieldKeys.push('issuelinks');
         }
 
+        let nextIndex: number = commonFields.length;
+        let displayOrder: number = 0;
+
         // transform the fields
         Object.keys(fields).forEach(k => {
             const field: FieldOrFieldMeta = fields[k];
             if (this.shouldRender(field, filterFieldKeys, problemCollector)) {
-                let fieldAndValue: FieldAndValue = this.transformField(field, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
+
+
+                let commonIndex: number = commonFields.indexOf(k);
+                if (commonIndex < 0) {
+                    displayOrder = nextIndex;
+                    nextIndex++;
+                } else {
+                    displayOrder = commonIndex;
+                }
+
+                let fieldAndValue: FieldAndValue = this.transformField(field, displayOrder, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
 
                 result.fields[field.key] = fieldAndValue.field;
                 if (fieldAndValue.value && fieldAndValue.value !== null) {
@@ -68,7 +81,7 @@ export class FieldTransformer {
         return result;
     }
 
-    private transformField(field: FieldOrFieldMeta, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): FieldAndValue {
+    private transformField(field: FieldOrFieldMeta, displayOrder: number, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): FieldAndValue {
         // when updating for FeildORFieldMeta, check items and if it's issuelinks, always return an editable UI.
         const required: boolean = isFieldMeta(field) ? field.required : false;
         const allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
@@ -93,7 +106,7 @@ export class FieldTransformer {
                         name: field.name,
                         key: field.key,
                         uiType: UIType.Input,
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         valueType: this.valueTypeForField(field),
                         isMultiline: multiLineStringSchemas.includes(schemaName),
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
@@ -109,7 +122,7 @@ export class FieldTransformer {
                         uiType: UIType.Checkbox,
                         allowedValues: allowedValues,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -123,7 +136,7 @@ export class FieldTransformer {
                         uiType: UIType.Radio,
                         allowedValues: allowedValues,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -136,7 +149,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Date,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -149,7 +162,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.DateTime,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -175,7 +188,7 @@ export class FieldTransformer {
                         autoCompleteJql: autoCompleteJql,
                         createUrl: this.createUrlForField(field),
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -195,7 +208,7 @@ export class FieldTransformer {
                         isSubtasks: (schemaName === 'subtasks'),
                         isMulti: multiSelectSchemas.includes(schemaName),
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -208,7 +221,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Timetracking,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -221,7 +234,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Worklog,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -234,7 +247,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Comments,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -247,7 +260,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Worklog,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -260,7 +273,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Worklog,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -273,7 +286,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.NonEditable,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };
@@ -286,7 +299,7 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Attachment,
                         valueType: this.valueTypeForField(field),
-                        initialValue: field.currentValue,
+                        displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
                     }, value: field.currentValue
                 };

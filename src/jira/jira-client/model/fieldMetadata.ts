@@ -51,6 +51,7 @@ export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k:
     let metaFields: { [k: string]: FieldMeta } = {};
 
     Object.keys(fields).forEach(key => {
+        console.log(key);
         const fieldValue: any = fieldValues ? fieldValues[key] : undefined;
 
         metaFields[key] = readFieldMeta(key, fields[key], fieldValue);

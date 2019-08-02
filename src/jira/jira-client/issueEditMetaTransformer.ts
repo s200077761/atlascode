@@ -55,7 +55,7 @@ export class IssueEditMetaTransformer {
 
             const project: ProjectIdAndKey = { id: "", key: "" };
 
-            if (Object.keys(descriptor).includes('project')) {
+            if (descriptorKeys.includes('project')) {
                 project.id = descriptor['project'].id;
                 project.key = descriptor['project'].key;
             }

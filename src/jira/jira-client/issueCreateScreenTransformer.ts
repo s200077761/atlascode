@@ -1,5 +1,5 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { ProjectIssueCreateMetadata, IssueTypeIssueCreateMetadata, readIssueTypeIssueCreateMetadata } from "./model/issueCreateMetadata";
+import { IssueTypeIssueCreateMetadata, ProjectIssueCreateMetadata } from "./model/issueCreateMetadata";
 import { CreateMetaTransformerProblems, CreateMetaTransformerResult, IssueTypeProblem, IssueTypeUI } from "./model/createIssueUI";
 import { FieldTransformerResult } from "./model/fieldUI";
 import { Container } from "../../container";
@@ -29,18 +29,18 @@ export class IssueCreateScreenTransformer {
 
     public async transformIssueScreens(project: ProjectIssueCreateMetadata): Promise<CreateMetaTransformerResult> {
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
-        const commonFields = [...defaultCommonFields, epicFieldInfo.epicName.id];
+        const commonFields = [epicFieldInfo.epicName.id, ...defaultCommonFields];
 
         const issueTypeUIList = {};
         let firstIssueType: IssueType | undefined;
         let problems: CreateMetaTransformerProblems = {};
         const renderableIssueTypes: IssueTypeIssueCreateMetadata[] = [];
 
-        if (Array.isArray(project.issueTypes) && project.issueTypes.length > 0) {
-            firstIssueType = this.metaIssueTypeToIssueType(project.issueTypes[0]);
+        if (Array.isArray(project.issuetypes) && project.issuetypes.length > 0) {
+            firstIssueType = this.metaIssueTypeToIssueType(project.issuetypes[0]);
 
-            for (let i = 0; i < project.issueTypes.length; i++) {
-                const issueType: IssueTypeIssueCreateMetadata = readIssueTypeIssueCreateMetadata(project.issueTypes[i]);
+            for (let i = 0; i < project.issuetypes.length; i++) {
+                const issueType: IssueTypeIssueCreateMetadata = project.issuetypes[i];
 
                 const issueTypeUI: IssueTypeUI = {
                     name: issueType.name,
@@ -87,6 +87,8 @@ export class IssueCreateScreenTransformer {
         if (!firstIssueType || (!renderableIssueTypes.find(it => it.id === firstIssueType!.id))) {
             firstIssueType = this.metaIssueTypeToIssueType(renderableIssueTypes[0]);
         }
+
+        console.log(issueTypeUIList);
 
         return { selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
     }
