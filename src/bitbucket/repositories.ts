@@ -2,8 +2,9 @@ import { Remote, Repository } from "../typings/git";
 import { maxItemsSupported, CloudPullRequestApi } from "./pullRequests";
 import { parseGitUrl, urlForRemote } from "./bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "./model";
-import { Client } from "../bitbucket-server/httpClient";
+import { Client, ClientError } from "../bitbucket-server/httpClient";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Response } from "node-fetch";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -12,7 +13,20 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent
+            agent,
+            async (response: Response): Promise<Error> => {
+                let errString = 'Unknown error';
+                try {
+                    const errJson = await response.json();
+
+                    if (errJson.error && errJson.error.message) {
+                        errString = errJson.error.message;
+                    }
+                } catch (_) {
+                    errString = await response.text();
+                }
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 

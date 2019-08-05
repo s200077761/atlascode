@@ -1,11 +1,12 @@
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 
 export class Client {
 
     constructor(
         private baseUrl: string,
         private authHeader: string,
-        private agent: any
+        private agent: any,
+        private errorHandler: (errJson: Response) => Promise<Error>
     ) { }
 
     async get(urlSlug: string, queryParams?: any) {
@@ -20,6 +21,11 @@ export class Client {
             },
             agent: this.agent
         });
+
+        if (!res.ok && this.errorHandler) {
+            return Promise.reject(await this.errorHandler(res));
+        }
+
         const responseObject = await res.json();
         return { data: responseObject, headers: res.headers };
     }
@@ -37,6 +43,11 @@ export class Client {
             },
             agent: this.agent
         });
+
+        if (!res.ok && this.errorHandler) {
+            return Promise.reject(await this.errorHandler(res));
+        }
+
         const responseObject = await res.text();
         return { data: responseObject, headers: res.headers };
     }
@@ -54,6 +65,11 @@ export class Client {
             body: JSON.stringify(body),
             agent: this.agent
         });
+
+        if (!res.ok && this.errorHandler) {
+            return Promise.reject(await this.errorHandler(res));
+        }
+
         const responseObject = await res.json();
         return { data: responseObject, headers: res.headers };
     }
@@ -71,6 +87,11 @@ export class Client {
             body: JSON.stringify(body),
             agent: this.agent
         });
+
+        if (!res.ok && this.errorHandler) {
+            return Promise.reject(await this.errorHandler(res));
+        }
+
         const responseObject = await res.json();
         return { data: responseObject, headers: res.headers };
     }
@@ -88,6 +109,11 @@ export class Client {
             body: JSON.stringify(body),
             agent: this.agent
         });
+
+        if (!res.ok && this.errorHandler) {
+            return Promise.reject(await this.errorHandler(res));
+        }
+
         const responseObject = await res.json();
         return { data: responseObject, headers: res.headers };
     }
@@ -103,5 +129,20 @@ export class Client {
         }
 
         return result;
+    }
+}
+
+// ClientError wraps Error with a toJSON() method so that it can be passed as 
+// part of a message to the webviews because Error fields are not enumerable
+// by default
+export class ClientError implements Error {
+
+    constructor(public name: string, public message: string) { }
+
+    toJSON() {
+        return {
+            name: this.name,
+            message: this.message
+        };
     }
 }
