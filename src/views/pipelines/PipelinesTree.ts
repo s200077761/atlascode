@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposable, commands, ConfigurationChangeEvent } from "vscode";
-import { Pipeline, statusForState, Status } from "../../pipelines/model";
+import { Pipeline } from "../../pipelines/model";
 import { Repository, Remote } from "../../typings/git";
 import { Container } from "../../container";
 import { distanceInWordsToNow } from "date-fns";
@@ -11,11 +11,11 @@ import { BaseTreeDataProvider } from "../Explorer";
 import { emptyBitbucketNodes } from "../nodes/bitbucketEmptyNodeList";
 import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
-import { shouldDisplay } from "./Helpers";
-import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
+import { firstBitbucketRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
+import { descriptionForState, iconUriForPipeline } from "./Helpers";
 
-const defaultPageLength = 25;
+//const defaultPageLength = 25;
 export interface PipelineInfo {
     pipelineUuid: string;
     repo: Repository;
@@ -90,10 +90,9 @@ export class PipelinesTree extends BaseTreeDataProvider {
 }
 
 export class PipelinesRepoNode extends AbstractBaseNode {
-    private _branches: string[];
+    private _pipelines: Pipeline[];
     private _page = 1;
     private _morePages = true;
-    private _pipelines: Map<string, Pipeline[]> = new Map();
 
     constructor(private _repo: Repository, private _remote: Remote, private expand?: boolean) {
         super();
@@ -110,11 +109,11 @@ export class PipelinesRepoNode extends AbstractBaseNode {
         if (this._page) {
             this._page++;
         }
-        if (!this._branches) {
-            this._branches = [];
+        if (!this._pipelines) {
+            this._pipelines = [];
         }
-        const newBranches = await this.fetchBranches();
-        this._branches = this._branches.concat(newBranches);
+        const newPipelines = await this.fetchPipelines();
+        this._pipelines = this._pipelines.concat(newPipelines);
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
@@ -122,137 +121,55 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             return Promise.resolve([new SimpleNode(`Please login to ${ProductBitbucket.name}`, { command: Commands.ShowConfigPage, title: "Login to Bitbucket", arguments: [ProductBitbucket] })]);
         }
         if (!element || element instanceof PipelinesRepoNode) {
-            if (!this._branches) {
-                this._branches = await this.fetchBranches();
+            if (!this._pipelines) {
+                this._pipelines = await this.fetchPipelines();
             }
-            if ([...this._pipelines.values()].every(results => results.length === 0)) {
+            if (this._pipelines.length === 0) {
                 return [new SimpleNode("No Pipelines results for this repository")];
             }
-            const nodes: AbstractBaseNode[] = this._branches.map((b) => new BranchNode(this, b, this._repo, this._remote, this._pipelines.get(b)));
+            
+            const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }
             return nodes;
-        } else if (element instanceof BranchNode) {
-            const branchPipelines = this._pipelines.get(element.branchName);
-            if (branchPipelines) {
-                return branchPipelines.map((p: any) => new PipelineNode(this, p, element.repo, element.remote));
-            } else {
-                return this.fetchPipelinesForBranch(element.branchName)
-                    .then(pipelines => {
-                        return pipelines.map(p => new PipelineNode(this, p, element.repo, element.remote));
-                    });
-            }
         } else if (element instanceof PipelineNode) {
             return Promise.resolve([]);
         }
         return Promise.resolve([]);
     }
 
-    private async fetchBranches(): Promise<string[]> {
-        var branches: string[] = [];
-        var morePages = false;
-        const bbApi = await clientForRemote(this._remote);
+    private async fetchPipelines(): Promise<Pipeline[]> {
+       var pipelines: Pipeline[] = [];
+       var morePages = false;
+       //const remotes = getBitbucketRemotes(this._repo); // May need to do something with other remotes
 
-        const paginatedBranches = await bbApi.repositories.getBranches(this._remote, {
-            page: `${this._page}`,
-            pagelen: defaultPageLength,
-            sort: '-target.date'
-        });
+       const remote = firstBitbucketRemote(this._repo);
+       if (remote) {
+           this._remote = remote;
+           const bbApi = await clientForRemote(this._remote);
+           const accessToken = await bbApi.pipelines!.getValidPipelinesAccessToken(this._remote);
+           const pipelinesResponse = await bbApi.pipelines!.getRawPipelineResults(remote, accessToken);
+           pipelinesResponse.values!.forEach(
+               (pipeline: any) => pipelines.push(bbApi.pipelines!.cleanPipelineData(this._remote, pipeline))
+           );
 
-        branches = paginatedBranches.data;
-
-        if (paginatedBranches.next) {
-            morePages = true;
-        }
-        this._morePages = morePages;
-        return this.fetchPipelinesForBranches(branches);
-    }
-
-    private async fetchPipelinesForBranches(branches: string[]): Promise<string[]> {
-        await Promise.all(branches.map(b => this.fetchPipelinesForBranch(b)));
-        branches = [...this._pipelines.keys()];
-        branches.sort((a, b) => {
-            const pa = this._pipelines.get(a);
-            const pb = this._pipelines.get(b);
-            if (!pa || pa.length === 0) {
-                return -1;
-            }
-            if (!pb || pb.length === 0) {
-                return 1;
-            }
-            if (pa[0].created_on! < pb[0]!.created_on!) {
-                return 1;
-            }
-            return -1;
-        });
-        return branches;
-    }
-
-    private async fetchPipelinesForBranch(branchName: string): Promise<Pipeline[]> {
-        if (!shouldDisplay(branchName)) {
-            return [];
-        }
-
-        const bbApi = await clientForRemote(this._remote);
-        const pipelines = await bbApi.pipelines!.getList(this._repo, branchName);
-        if (!Container.config.bitbucket.pipelines.hideEmpty || pipelines.length > 0) {
-            this._pipelines.set(branchName, pipelines);
-        }
-        return pipelines;
+           if (pipelinesResponse.next) {
+               morePages = true;
+           }
+       }
+       this._morePages = morePages;
+       return pipelines;
     }
 
     public refresh() {
-        this._branches = [];
         this._page = 1;
-        this._pipelines.clear();
+        this._pipelines = [];
     }
 }
 
 const PipelineBranchContextValue = 'pipelineBranch';
 const PipelineBuildContextValue = 'pipelineBuild';
-
-function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
-    switch (statusForState(pipeline.state)) {
-        case Status.Pending:
-            return Resources.icons.get('pending');
-        case Status.InProgress:
-            return Resources.icons.get('building');
-        case Status.Paused:
-            return Resources.icons.get('paused');
-        case Status.Stopped:
-            return Resources.icons.get('stopped');
-        case Status.Successful:
-            return Resources.icons.get('success');
-        case Status.Error:
-            return Resources.icons.get('failed');
-        case Status.Failed:
-            return Resources.icons.get('failed');
-        default:
-            return undefined;
-    }
-}
-
-function statusForPipeline(pipeline: Pipeline): string {
-    switch (statusForState(pipeline.state)) {
-        case Status.Pending:
-            return 'Pending';
-        case Status.InProgress:
-            return 'Building';
-        case Status.Paused:
-            return 'Success';
-        case Status.Stopped:
-            return 'Stopped';
-        case Status.Successful:
-            return 'Success';
-        case Status.Error:
-            return 'Error';
-        case Status.Failed:
-            return 'Failed';
-        default:
-            return 'Error';
-    }
-}
 
 export class PipelineNode extends AbstractBaseNode {
     constructor(private _repoNode: PipelinesRepoNode, readonly pipeline: Pipeline, private _repo: Repository, private _remote: Remote) {
@@ -260,11 +177,10 @@ export class PipelineNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        var label = "";
+        var label = `${descriptionForState(this.pipeline)}`;
         if (this.pipeline.created_on) {
-            label = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;
+            label += ` ${distanceInWordsToNow(this.pipeline.created_on)} ago`;
         }
-        label += ` ${statusForPipeline(this.pipeline)}`;
         const item = new TreeItem(label);
         item.contextValue = PipelineBuildContextValue;
         item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo, remote: this._remote }] };

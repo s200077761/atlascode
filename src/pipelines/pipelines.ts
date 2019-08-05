@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
-import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector } from "../pipelines/model";
+import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector } from "./model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
@@ -29,14 +29,6 @@ export class PipelineApiImpl {
         return new ClientError(response.statusText, errString);
       }
     );
-  }
-
-  async getList(
-    repository: Repository,
-    branchName: string
-  ): Promise<Pipeline[]> {
-    const remote = firstBitbucketRemote(repository);
-    return this.getListForRemote(remote, branchName);
   }
 
   async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
@@ -71,7 +63,7 @@ export class PipelineApiImpl {
       `/repositories/${parsed.owner}/${parsed.name}/pipelines/${uuid}`
     );
 
-    return PipelineApiImpl.pipelineForPipeline(remote, data);
+    return this.cleanPipelineData(remote, data);
   }
 
   async getSteps(repository: Repository, uuid: string): Promise<PipelineStep[]> {
@@ -110,13 +102,11 @@ export class PipelineApiImpl {
     return this.getPipelineResults(remote, { 'target.branch': branchName });
   }
 
-  async getPipelineResults(
+  async getRawPipelineResults(
     remote: Remote,
     query?: any
-  ): Promise<Pipeline[]> {
-    // TODO: [VSCODE-502] use site info and convert to async await with try/catch
+  ): Promise<any> {
     let parsed = parseGitUrl(urlForRemote(remote));
-
     const { data } = await this.client.get(
       `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
       {
@@ -125,10 +115,20 @@ export class PipelineApiImpl {
       }
     );
 
-    if (data.values) {
+    return data;
+  }
+
+  async getPipelineResults(
+    remote: Remote,
+    query?: any
+  ): Promise<Pipeline[]> {
+    // TODO: [VSCODE-502] use site info and convert to async await with try/catch
+    const rawPipelines = await this.getRawPipelineResults(remote, query);
+
+    if (rawPipelines.values) {
       let cleanedPipelines: Pipeline[] = [];
-      for (let i = 0; i < data.values.length; i++) {
-        cleanedPipelines.push(PipelineApiImpl.pipelineForPipeline(remote, data.values[i]));
+      for(let i = 0; i < rawPipelines.values.length; i++){
+        cleanedPipelines.push(this.cleanPipelineData(remote, rawPipelines.values[i]));
       }
       return cleanedPipelines;
     }
@@ -174,7 +174,7 @@ export class PipelineApiImpl {
     return splitLogs;
   }
 
-  private static pipelineForPipeline(remote: Remote, pipeline: any): Pipeline {
+  cleanPipelineData(remote: Remote, pipeline: any): Pipeline {
     var name = undefined;
     var avatar = undefined;
     if (pipeline.creator) {
@@ -189,7 +189,6 @@ export class PipelineApiImpl {
     if (pipeline.target!.ref_name) {
       target.ref_name = pipeline.target!.ref_name;
     }
-
     const cleanedPipeline: Pipeline = {
       remote: remote,
       repository: CloudRepositoriesApi.toRepo(pipeline.repository!),

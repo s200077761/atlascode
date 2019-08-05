@@ -2,7 +2,7 @@ import { window, commands } from "vscode";
 import { Pipeline, PipelineTarget } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
-import { shouldDisplay } from "./Helpers";
+import { shouldDisplay, descriptionForState, generatePipelineTitle } from "./Helpers";
 import { Commands } from "../../commands";
 import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
 
@@ -84,77 +84,18 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
   private composeMessage(newResults: Pipeline[]): string {
     if (newResults.length === 1) {
       const result = newResults[0];
-      return `${this.descriptionForState(result)}.`;
+      return `${descriptionForState(result)}.`;
     } else if (newResults.length === 2) {
-      return `${this.descriptionForState(newResults[0])} and ${this.descriptionForState(newResults[1])}.`;
+      return `${descriptionForState(newResults[0])} and ${descriptionForState(newResults[1])}.`;
     } else if (newResults.length === 3) {
-      return `New build statuses for ${this.generatePipelineTitle(newResults[0])}, ${
-        this.generatePipelineTitle(newResults[1])
+      return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
+        generatePipelineTitle(newResults[1])
       }, and 1 other build.`;
     } else if (newResults.length > 3) {
-      return `New build statuses for ${this.generatePipelineTitle(newResults[0])}, ${
-        this.generatePipelineTitle(newResults[1])
+      return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
+        generatePipelineTitle(newResults[1])
       }, and ${newResults.length - 2} other builds.`;
     }
     return "";
-  }
-
-  private generatePipelineTitle(pipeline: Pipeline): string {
-    let description = "";
-    const pattern = pipeline.target.selector.pattern;
-    const type = pipeline.target.selector.type;
-    const ref_name = pipeline.target.ref_name;
-    const triggerType = pipeline.target.triggerName;
-    const buildNumber = pipeline.build_number;
-
-    //Make sure every case is covered so that a meaningful message is displayed back
-    if(type === "custom"){
-      if(ref_name){
-        description = `Pipeline ${pattern}(${type}) on branch ${ref_name}`;
-      } else {
-        description = `Pipeline ${pattern}(${type})`;
-      }
-    } else if(triggerType === "MANUAL"){
-      if(ref_name && pattern){
-        description = `Pipeline ${pattern}(manual) on branch ${ref_name}`;
-      } else if(ref_name && buildNumber){
-        description = `Pipeline #${buildNumber}(manual) on branch ${ref_name}`;
-      } else if(buildNumber){
-        description = `Pipeline #${buildNumber}(manual)`;
-      } else {
-        description = `Pipeline(manual)`;
-      }
-    } else if(ref_name) {
-      description = `Pipeline on branch ${ref_name}`;
-    } else if(buildNumber) {
-      description = `Pipeline #${buildNumber}`; 
-    } else {
-      description = "Unknown Pipeline";
-    }
-    return description;
-  }
-
-  private descriptionForState(result: Pipeline): string {
-    const descriptionForResult = {
-      pipeline_state_completed_successful: "was successful",
-      pipeline_state_completed_failed: "has failed",
-      pipeline_state_completed_error: "has failed",
-      pipeline_state_completed_stopped: "has been stopped"
-    };
-
-    var words = "has done something";
-    switch (result.state!.type) {
-      case "pipeline_state_completed":
-        words = descriptionForResult[result.state!.result!.type];
-        break;
-      case "pipeline_state_in_progress":
-        words = "is building";
-        break;
-      case "pipeline_state_pending":
-        words = "is pending";
-    }
-
-    const descriptionString = `${this.generatePipelineTitle(result)} ${words}`;
-    return descriptionString;
   }
 }
