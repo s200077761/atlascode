@@ -3,6 +3,7 @@ import { ProductBitbucket, DetailedSiteInfo } from "../atlclients/authInfo";
 import * as gup from 'git-url-parse';
 import { Container } from "../container";
 import { bbAPIConnectivityError } from "../constants";
+import { BitbucketApi } from "./model";
 
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
@@ -23,26 +24,11 @@ export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefin
     return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
 }
 
-export function siteDetailsForRepository(repository: Repository): DetailedSiteInfo | undefined {
-    let foundSite = undefined;
-
-    for (const remote of repository.state.remotes) {
-        if (remote.pushUrl || remote.fetchUrl) {
-            foundSite = siteDetailsForRemote(remote);
-            if (foundSite) {
-                break;
-            }
-        }
-    }
-
-    return foundSite;
-}
-
 export function urlForRemote(remote: Remote): string {
     return remote.fetchUrl! || remote.pushUrl!;
 }
 
-export async function clientForRemote(remote: Remote): Promise<Bitbucket | BitbucketServer> {
+export async function clientForRemote(remote: Remote): Promise<BitbucketApi> {
     let site = siteDetailsForRemote(remote);
 
     if (site) {
@@ -52,7 +38,7 @@ export async function clientForRemote(remote: Remote): Promise<Bitbucket | Bitbu
     return Promise.reject(bbAPIConnectivityError);
 }
 
-export async function clientForHostname(hostname: string): Promise<Bitbucket | BitbucketServer> {
+export async function clientForHostname(hostname: string): Promise<BitbucketApi> {
     let site = Container.siteManager.getSiteForHostname(ProductBitbucket, hostname);
 
     if (site) {
@@ -60,4 +46,11 @@ export async function clientForHostname(hostname: string): Promise<Bitbucket | B
     }
 
     return Promise.reject(bbAPIConnectivityError);
+}
+
+// Use only for bitbucket repositories
+export function firstBitbucketRemote(repo: Repository): Remote {
+    const remotes = getBitbucketRemotes(repo);
+    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
+    return remote;
 }

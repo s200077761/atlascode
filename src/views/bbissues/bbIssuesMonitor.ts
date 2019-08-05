@@ -1,8 +1,9 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { Commands } from "../../commands";
-import { BitbucketIssuesApi } from "../../bitbucket/bbIssues";
 import { Repository } from "../../typings/git";
+import { BitbucketIssue } from '../../bitbucket/model';
+import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   private _lastCheckedTime = new Map<String, Date>();
@@ -12,14 +13,17 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   }
 
   async checkForNewActivity() {
-    const promises = this._repos.map(repo => {
-      return BitbucketIssuesApi.getLatest(repo).then(issuesList => {
+    const promises = this._repos.map(async repo => {
+      const remote = firstBitbucketRemote(repo);
+      const bbApi = await clientForRemote(remote);
+
+      return bbApi.issues!.getLatest(repo).then(issuesList => {
         const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
           ? this._lastCheckedTime.get(repo.rootUri.toString())!
           : new Date();
         this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
 
-        let newIssues = issuesList.data.filter(i => Date.parse(i.created_on!) > lastChecked.getTime());
+        let newIssues = issuesList.data.filter(i => Date.parse(i.data.created_on!) > lastChecked.getTime());
 
         if (newIssues.length > 0) {
           let repoName = path.basename(repo.rootUri.fsPath);
@@ -32,8 +36,8 @@ export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
       .then(result => result.reduce((prev, curr) => prev.concat(curr), []))
       .then(notifiableRepos => {
         if (notifiableRepos.length === 1 && notifiableRepos[0].issues.length === 1) {
-          let issue: Bitbucket.Schema.Issue = notifiableRepos[0].issues[0];
-          vscode.window.showInformationMessage(`New Bitbucket issue "${issue.title}" was created for repo "${notifiableRepos[0].repo}"`, 'Show')
+          let issue: BitbucketIssue = notifiableRepos[0].issues[0];
+          vscode.window.showInformationMessage(`New Bitbucket issue "${issue.data.title}" was created for repo "${notifiableRepos[0].repo}"`, 'Show')
             .then(usersChoice => {
               if (usersChoice === 'Show') {
                 vscode.commands.executeCommand(Commands.ShowBitbucketIssue, issue);

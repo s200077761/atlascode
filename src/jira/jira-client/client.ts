@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
-import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
+import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
@@ -13,23 +13,15 @@ const API_VERSION = 2;
 //
 // NOTE: Ensure there are not transitive dependencies to 'vscode' as that will
 // prevent importing this file from webviews
-export class JiraClient {
+export abstract class JiraClient {
     readonly baseUrl: string;
     readonly site: DetailedSiteInfo;
     readonly agent: any | undefined;
-    private _token: string | undefined;
 
     constructor(site: DetailedSiteInfo, agent?: any) {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
         this.agent = agent;
-    }
-
-    public authenticateUsingToken(token: string) {
-        this._token = token;
-    }
-
-    public authenticateUsingBasic(username: string, password: string) {
 
     }
 
@@ -45,11 +37,7 @@ export class JiraClient {
         return res;
     }
 
-    public async assignIssue(issueIdOrKey: string, accountId: string | undefined): Promise<any> {
-        const res = await this.putToJira(`issue/${issueIdOrKey}/assignee`, { accountId: accountId });
-
-        return res;
-    }
+    public abstract async assignIssue(issueIdOrKey: string, accountId: string | undefined): Promise<any>;
 
     public async editIssue(issueIdOrKey: string, fields: any): Promise<any> {
         const res = await this.putToJira(`issue/${issueIdOrKey}`, { fields: fields });
@@ -64,8 +52,6 @@ export class JiraClient {
     }
 
     public async transitionIssue(issueIdOrKey: string, transitionId: string): Promise<any> {
-        //{ issueIdOrKey: issue.key, body: { transition: { id: transition.id } } }
-
         const res = await this.postToJira(`issue/${issueIdOrKey}/transitions`, { transition: { id: transitionId } });
 
         return res;
@@ -100,28 +86,16 @@ export class JiraClient {
     }
 
     // Project
-    public async getProjectsPaginated(query?: string, orderBy?: string): Promise<Project[]> {
-        let queryValues: any | undefined = undefined;
-        if (query || orderBy) {
-            queryValues = {};
-            if (query) {
-                queryValues.query = query;
-            }
-            if (orderBy) {
-                queryValues.orderBy = orderBy;
-            }
-        }
-        const res = await this.getFromJira('project/search', queryValues);
-
-        if (Array.isArray(res.values)) {
-            return readProjects(res.values);
-        }
-        return [];
-    }
+    public abstract async getProjects(query?: string, orderBy?: string): Promise<Project[]>;
 
     // User
-    public async findUsersAssignableToIssues(issueKey: string, query: string): Promise<User[]> {
+    public async findUsersAssignableToIssue(issueKey: string, query: string): Promise<User[]> {
         const res = this.getFromJira('user/assignable/search', { issueKey: issueKey, query: query });
+        return res;
+    }
+
+    public async findUsersAssignableToProject(project: string, query: string): Promise<User[]> {
+        const res = this.getFromJira('user/assignable/search', { project: project, query: query });
         return res;
     }
 
@@ -191,24 +165,14 @@ export class JiraClient {
 
     // Attachment
     public async addAttachment(issuekey: string, params: any): Promise<any> {
-        const url = `${this.baseUrl}/api/${API_VERSION}/issue/${issuekey}/attachments`;
+        const res = this.postToJira(`issue/${issuekey}/attachments`, params);
 
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                Authorization: `Bearer ${this._token}`,
-                "X-Atlassian-Token": "no-check"
-            },
-            body: params,
-            agent: this.agent
-        });
-        var j: any = {};
-        j = await res.json();
-        return j;
+        return res;
     }
 
-    private async getFromJira(url: string, queryParams?: any): Promise<any> {
+    protected abstract authorization(): string;
+
+    protected async getFromJira(url: string, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {
             const sp = new URLSearchParams();
@@ -222,7 +186,7 @@ export class JiraClient {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${this._token}`
+                Authorization: this.authorization()
             },
             agent: this.agent
         });
@@ -231,14 +195,14 @@ export class JiraClient {
         return responseObject;
     }
 
-    private async postToJira(url: string, params: any): Promise<any> {
+    protected async postToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
 
         const res = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${this._token}`
+                Authorization: this.authorization()
             },
             body: JSON.stringify(params),
             agent: this.agent
@@ -248,14 +212,14 @@ export class JiraClient {
         return j;
     }
 
-    private async putToJira(url: string, params: any): Promise<any> {
+    protected async putToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
 
         const res = await fetch(url, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${this._token}`
+                Authorization: this.authorization()
             },
             body: JSON.stringify(params),
             agent: this.agent
@@ -272,7 +236,7 @@ export interface AutoCompleteSuggestion {
     readonly displayName: string;
 }
 
-function readAutoCompleteSuggestion(params: any): AutoCompleteSuggestion {
+export function readAutoCompleteSuggestion(params: any): AutoCompleteSuggestion {
     return {
         value: params.value,
         displayName: params.displayName

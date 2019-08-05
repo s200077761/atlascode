@@ -1,5 +1,7 @@
 import { Repository, Remote } from "../typings/git";
-import Bitbucket from 'bitbucket';
+import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { BitbucketIssuesApiImpl } from "./bbIssues";
+import { PipelineApiImpl } from "../pipelines/pipelines";
 
 export type User = {
     accountId: string;
@@ -143,20 +145,32 @@ export interface PaginatedFileChanges {
 export interface PaginatedBitbucketIssues {
     repository: Repository;
     remote: Remote;
-    data: Bitbucket.Schema.Issue[];
+    data: BitbucketIssue[];
     next?: string;
 }
 
-export type BitbucketIssue = Bitbucket.Schema.Issue;
-export type BitbucketBranchingModel = Bitbucket.Schema.BranchingModel;
+export interface PaginatedBranchNames {
+    data: string[];
+    next?: string;
+}
+
+export type BitbucketIssue = {
+    repository: Repository;
+    remote: Remote;
+    data: BitbucketIssueData;
+};
+
+export type BitbucketIssueData = any;
+export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
-    getList(repository: Repository, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
-    getListCreatedByMe(repository: Repository): Promise<PaginatedPullRequests>;
-    getListToReview(repository: Repository): Promise<PaginatedPullRequests>;
+    getCurrentUser(site: DetailedSiteInfo): Promise<User>;
+    getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
-    getLatest(repository: Repository): Promise<PaginatedPullRequests>;
-    getRecentAllStatus(repository: Repository): Promise<PaginatedPullRequests>;
+    getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;
@@ -171,10 +185,21 @@ export interface PullRequestApi {
 
 export interface RepositoriesApi {
     get(remote: Remote): Promise<Repo>;
+    getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
     getDevelopmentBranch(remote: Remote): Promise<string>;
     getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestsForCommit(remote: Remote, commitHash: string): Promise<Bitbucket.Schema.Pullrequest[]>;
+    getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]>;
 }
 
-export function getSupportedRepositores() { }
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
+    issues?: BitbucketIssuesApiImpl;
+    pipelines?: PipelineApiImpl;
+}
+
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
+}

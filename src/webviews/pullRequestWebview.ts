@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssue } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
 import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -12,7 +12,6 @@ import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueK
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
 import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -20,7 +19,6 @@ import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { transitionIssue } from '../commands/jira/transitionIssue';
-import { PullRequestProvider } from '../bitbucket/prProvider';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
@@ -163,7 +161,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 case 'openPipelineBuild': {
                     if (isOpenPipelineBuild(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: msg.pipelineUUID } as PipelineInfo);
+                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: msg.pipelineUUID, remote: this._state.remote! } as PipelineInfo);
                         break;
                     }
                 }
@@ -209,7 +207,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postInitialState(pr: PullRequest) {
-        const currentUser = await Container.bitbucketContext.currentUser(pr.repository);
+        const currentUser = await Container.bitbucketContext.currentUser(pr.remote);
         this._state = {
             repository: pr.repository,
             remote: pr.remote,
@@ -232,6 +230,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postAugmentedState(pr: PullRequest) {
+        const bbApi = await clientForRemote(pr.remote);
+
         const prDetailsPromises = Promise.all([
             PullRequestProvider.forRepository(pr.repository!).getCommits(pr),
             PullRequestProvider.forRepository(pr.repository!).getComments(pr),
@@ -248,22 +248,20 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
         this._state.prData = {
             ...this._state.prData,
-            ...{
-                type: 'update',
-                commits: commits.data,
-                comments: comments.data,
-                relatedJiraIssues: relatedJiraIssues,
-                relatedBitbucketIssues: relatedBitbucketIssues,
-                mainIssue: mainIssue,
-                buildStatuses: buildStatuses,
-                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
-            }
+            type: 'update',
+            commits: commits.data,
+            comments: comments.data,
+            relatedJiraIssues: relatedJiraIssues,
+            relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
+            mainIssue: mainIssue,
+            buildStatuses: buildStatuses,
+            errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
         };
 
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssueData | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -276,9 +274,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             }
 
             const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
-            const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, bbIssueKeys);
+            const bbApi = await clientForRemote(pr.remote);
+            const bbIssues = await bbApi.issues!.getIssuesForKeys(pr.repository, bbIssueKeys);
             if (bbIssues.length > 0) {
-                return bbIssues[0];
+                return bbIssues[0].data;
             }
         }
         catch (e) {
@@ -306,7 +305,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
-            result = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, issueKeys);
+            const bbApi = await clientForRemote(pr.remote);
+            result = await bbApi.issues!.getIssuesForKeys(pr.repository, issueKeys);
         }
         catch (e) {
             result = [];
@@ -316,13 +316,15 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async approve(approved: boolean) {
-        await PullRequestProvider.forRepository(this._state.repository!).updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
         prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.forceUpdatePullRequest();
     }
 
     private async merge(m: Merge) {
-        await PullRequestProvider.forRepository(this._state.repository!).merge(
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.merge(
             { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
             m.closeSourceBranch,
             m.mergeStrategy
@@ -334,7 +336,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         await this.forceUpdatePullRequest();
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssueData) {
         if (!issue) {
             return;
         }
@@ -342,7 +344,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
             await transitionIssue(issue, transition);
         } else {
-            await BitbucketIssuesApi.postChange(issue, issue.state!);
+            const bbApi = await clientForRemote(this._state.remote!);
+            await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);
         }
     }
 
@@ -376,13 +379,15 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequestProvider.forRepository(this._state.repository!).postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
         await this.forceUpdateComments();
     }
 
     private async forceUpdatePullRequest() {
         try {
-            const result = await PullRequestProvider.forRepository(this._state.repository!).get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
+            const bbApi = await clientForRemote(this._state.remote!);
+            const result = await bbApi.pullrequests.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
             this._state.prData.pr = result.data;
             this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
             await this.updatePullRequest(result);
@@ -395,8 +400,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async forceUpdateComments() {
+        const bbApi = await clientForRemote(this._state.remote!);
         const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
-        const paginatedComments = await PullRequestProvider.forRepository(this._state.repository!).getComments(pr);
+        const paginatedComments = await bbApi.pullrequests.getComments(pr);
         this._state.prData.comments = paginatedComments.data;
         await this.updatePullRequest(pr);
     }

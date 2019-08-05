@@ -3,8 +3,7 @@ import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { startIssueCreationEvent } from '../../analytics';
 import { CommentData, BBData } from '../../webviews/createIssueWebview';
-import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
-import { getBitbucketRemotes, parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketIssue } from '../../bitbucket/model';
 
 export interface TodoIssueData {
@@ -31,8 +30,8 @@ export function createIssue(data: Uri | TodoIssueData | BitbucketIssue | undefin
         return;
     } else if (isBBIssueData(data)) {
         const partialIssue = {
-            summary: `BB #${data.id} - ${data.title}`,
-            description: `created from Bitbucket issue: ${data.links!.html!.href!}`,
+            summary: `BB #${data.data.id} - ${data.data.title}`,
+            description: `created from Bitbucket issue: ${data.data.links!.html!.href!}`,
             bbIssue: data,
             onCreated: updateBBIssue,
         };
@@ -50,7 +49,7 @@ function isTodoIssueData(a: any): a is TodoIssueData {
 }
 
 function isBBIssueData(a: any): a is BitbucketIssue {
-    return a && (<BitbucketIssue>a).title !== undefined;
+    return a && (<BitbucketIssue>a).data !== undefined && (<BitbucketIssue>a).data.title !== undefined;
 }
 
 function isUri(a: any): a is Uri {
@@ -65,14 +64,14 @@ function annotateComment(data: CommentData) {
 }
 
 async function updateBBIssue(data: BBData) {
+    const bbApi = await clientForRemote(data.bbIssue.remote);
+    await bbApi.issues!.postComment(data.bbIssue, `linked to:${data.issueKey}`);
 
-    BitbucketIssuesApi.postComment(data.bbIssue, `linked to:${data.issueKey}`);
-
-    const comps = await BitbucketIssuesApi.getAvailableComponents(data.bbIssue.repository!.links!.html!.href!);
+    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
-        if (injiraComp && data.bbIssue.component !== injiraComp) {
-            BitbucketIssuesApi.postNewComponent(data.bbIssue, injiraComp.name!);
+        if (injiraComp && data.bbIssue.data.component !== injiraComp) {
+            await bbApi.issues!.postNewComponent(data.bbIssue, injiraComp.name!);
         }
     }
 }

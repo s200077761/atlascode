@@ -1,6 +1,6 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
-import { Reviewer, BitbucketIssue } from "../bitbucket/model";
+import { Reviewer, BitbucketIssueData } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 
 export interface PostComment extends Action {
@@ -29,7 +29,7 @@ export interface Merge extends Action {
     action: 'merge';
     mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward';
     closeSourceBranch?: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue | BitbucketIssueData;
 }
 
 export function isMerge(a: Action): a is Merge {
@@ -66,7 +66,7 @@ export interface CreatePullRequest extends Action {
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue | BitbucketIssueData;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {

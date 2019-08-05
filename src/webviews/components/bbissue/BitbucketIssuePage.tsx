@@ -17,7 +17,7 @@ import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
 import TaskIcon from '@atlaskit/icon/glyph/task';
 import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
 import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
-import { BitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
+import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
 import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
 import Comments from "../pullrequest/Comments";
@@ -31,7 +31,7 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import { RefreshIssueAction } from "../../../ipc/issueActions";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
-import { BitbucketIssue } from "../../../bitbucket/model";
+import { BitbucketIssueData } from "../../../bitbucket/model";
 
 type SizeMetrics = {
     width: number;
@@ -61,10 +61,10 @@ type Emit = PostComment
     | OpenStartWorkPageAction
     | CreateJiraIssueAction;
 
-type Receive = BitbucketIssueData | HostErrorMessage;
+type Receive = BitbucketIssueMessageData | HostErrorMessage;
 
 type MyState = {
-    data: BitbucketIssueData;
+    data: BitbucketIssueMessageData;
     isStatusButtonLoading: boolean;
     isAnyCommentLoading: boolean;
     isErrorBannerOpen: boolean;
@@ -74,7 +74,7 @@ type MyState = {
 
 const emptyIssueData = {
     type: "updateBitbucketIssue",
-    issue: { type: "" },
+    issueData: { type: "" },
     currentUser: {
         accountId: '',
         displayName: '',
@@ -141,7 +141,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    renderDetails(issue: BitbucketIssue) {
+    renderDetails(issue: BitbucketIssueData) {
         return <div style={{ padding: '2em' }}>
             <h3>Status</h3>
             <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
@@ -173,7 +173,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        const issue = this.state.data.issue as BitbucketIssue;
+        const issue = this.state.data.issueData as BitbucketIssueData;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;

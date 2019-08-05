@@ -10,7 +10,7 @@ import { Logger } from '../../logger';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
 import { PullRequestCommentController } from './prCommentController';
 import { SimpleNode } from '../nodes/simpleNode';
-import { PullRequestProvider } from '../../bitbucket/prProvider';
+import { clientForRemote } from '../../bitbucket/bbUtils';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -50,10 +50,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
             this.pr = await this.hydratePullRequest(this.pr);
 
+            const bbApi = await clientForRemote(this.pr.remote);
             let promises = Promise.all([
-                PullRequestProvider.forRepository(this.pr.repository).getChangedFiles(this.pr),
-                PullRequestProvider.forRepository(this.pr.repository).getCommits(this.pr),
-                PullRequestProvider.forRepository(this.pr.repository).getComments(this.pr)
+                bbApi.pullrequests.getChangedFiles(this.pr),
+                bbApi.pullrequests.getCommits(this.pr),
+                bbApi.pullrequests.getComments(this.pr)
             ]);
 
             return promises.then(
@@ -78,7 +79,8 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
     // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
     private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
-        return await PullRequestProvider.forRepository(pr.repository).get(pr);
+        const bbApi = await clientForRemote(this.pr.remote);
+        return await bbApi.pullrequests.get(pr);
     }
 
     private async createRelatedJiraIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {

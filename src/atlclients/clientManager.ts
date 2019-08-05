@@ -4,7 +4,6 @@ import {
   ExtensionContext,
   Disposable,
 } from "vscode";
-import * as BitbucketKit from "bitbucket";
 import { JiraClient } from "../jira/jira-client/client";
 import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, AccessibleResource } from "./authInfo";
 import { Container } from "../container";
@@ -20,7 +19,15 @@ import { Logger } from "../logger";
 import { cannotGetClientFor } from "../constants";
 import fetch from 'node-fetch';
 import { OAuthRefesher } from "./oauthRefresher";
-import BitbucketServer from "@atlassian/bitbucket-server";
+import { JiraCloudClient } from "../jira/jira-client/cloudClient";
+import { JiraServerClient } from "../jira/jira-client/serverClient";
+import { BitbucketApi } from "../bitbucket/model";
+import { CloudPullRequestApi } from "../bitbucket/pullRequests";
+import { CloudRepositoriesApi } from "../bitbucket/repositories";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+import { ServerRepositoriesApi } from "../bitbucket-server/repositories";
+import { ServerPullRequestApi } from "../bitbucket-server/pullRequests";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bbIssues";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -134,7 +141,7 @@ export class ClientManager implements Disposable {
               isCloud: false,
               avatarUrl: `https://${site.hostname}/images/fav-jcore.png`,
               hostname: site.hostname,
-              baseApiUrl: `https://${site.hostname}/rest/api/2`,
+              baseApiUrl: `https://${site.hostname}/rest`,
               baseLinkUrl: `https://${site.hostname}`,
               id: site.hostname,
               name: site.hostname
@@ -253,32 +260,41 @@ export class ClientManager implements Disposable {
     return newSite;
   }
 
-  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketKit> {
+  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketApi> {
 
-    return this.getClient<BitbucketKit>(
+    return this.getClient<BitbucketApi>(
       site,
       info => {
-        let extraOptions = {};
-        if (this._agent) {
-          extraOptions = { agent: this._agent };
-        }
-
-        let bbclient: BitbucketKit | BitbucketServer;
+        let result: BitbucketApi;
         if (site.isCloud) {
-          bbclient = new BitbucketKit({ baseUrl: site.baseApiUrl, options: extraOptions });
+          result = {
+            repositories: isOAuthInfo(info)
+              ? new CloudRepositoriesApi(site, info.access, this._agent)
+              : undefined!,
+            pullrequests: isOAuthInfo(info)
+              ? new CloudPullRequestApi(site, info.access, this._agent)
+              : undefined!,
+            issues: isOAuthInfo(info)
+              ? new BitbucketIssuesApiImpl(site, info.access, this._agent)
+              : undefined!,
+            pipelines: isOAuthInfo(info)
+              ? new PipelineApiImpl(site, info.access, this._agent)
+              : undefined!
+          };
         } else {
-          bbclient = new BitbucketServer({ baseUrl: site.baseApiUrl, options: extraOptions, headers: { 'X-Atlassian-Token': 'no-check' } });
+          result = {
+            repositories: isBasicAuthInfo(info)
+              ? new ServerRepositoriesApi(site, info.username, info.password, this._agent)
+              : undefined!,
+            pullrequests: isBasicAuthInfo(info)
+              ? new ServerPullRequestApi(site, info.username, info.password, this._agent)
+              : undefined!,
+            issues: undefined,
+            pipelines: undefined
+          };
         }
 
-        if (isOAuthInfo(info)) {
-          bbclient.authenticate({ type: "token", token: info.access });
-        }
-
-        if (isBasicAuthInfo(info)) {
-          bbclient.authenticate({ type: "basic", username: info.username, password: info.password });
-        }
-
-        return bbclient;
+        return result;
       }
     );
 
@@ -288,14 +304,12 @@ export class ClientManager implements Disposable {
     return this.getClient<JiraClient>(
       site,
       info => {
-        const client = new JiraClient(site, this._agent);
+        let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          client.authenticateUsingToken(info.access);
-        }
-
-        if (isBasicAuthInfo(info)) {
-          client.authenticateUsingBasic(info.username, info.password);
+          client = new JiraCloudClient(info.access, site, this._agent);
+        } else if (isBasicAuthInfo(info)) {
+          client = new JiraServerClient(info.username, info.password, site, this._agent);
         }
 
         return client;

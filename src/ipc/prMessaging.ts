@@ -1,6 +1,6 @@
 import { Message } from "./messaging";
 import { Branch, Remote } from "../typings/git";
-import { User, Reviewer, Comment, Commit, BitbucketIssue, BitbucketBranchingModel, BuildStatus, PullRequestData } from "../bitbucket/model";
+import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 
 
@@ -12,8 +12,8 @@ export interface PRData extends Message {
     commits?: Commit[];
     comments?: Comment[];
     relatedJiraIssues?: MinimalIssue[];
-    relatedBitbucketIssues?: BitbucketIssue[];
-    mainIssue?: MinimalIssue | BitbucketIssue;
+    relatedBitbucketIssues?: BitbucketIssueData[];
+    mainIssue?: MinimalIssue | BitbucketIssueData;
     buildStatuses?: BuildStatus[];
     errors?: string;
 }
@@ -58,7 +58,7 @@ export interface CommitsResult extends Message {
 
 export interface FetchIssueResult extends Message {
     type: 'fetchIssueResult';
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue | BitbucketIssueData;
 }
 
 export interface FetchUsersResult extends Message {

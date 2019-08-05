@@ -1,17 +1,17 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Repository } from '../../typings/git';
-import { BitbucketIssuesApi } from '../../bitbucket/bbIssues';
+import { Repository, Remote } from '../../typings/git';
 import { PaginatedBitbucketIssues, BitbucketIssue } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { Commands } from '../../commands';
 import { SimpleNode } from '../nodes/simpleNode';
+import { clientForRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
 
-    constructor(private repository: Repository, private expand?: boolean) {
+    constructor(private repository: Repository, private remote: Remote, private expand?: boolean) {
         super();
     }
 
@@ -39,7 +39,8 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            let issues = await BitbucketIssuesApi.getList(this.repository);
+            const bbApi = await clientForRemote(this.remote);
+            let issues = await bbApi.issues!.getList(this.repository);
             if (issues.data.length === 0) {
                 return [new SimpleNode('No open issues for this repository')];
             }
@@ -56,13 +57,13 @@ export class BitbucketIssueNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const treeItem = new vscode.TreeItem(`#${this.issue.id} ${this.issue.title!}`);
+        const treeItem = new vscode.TreeItem(`#${this.issue.data.id} ${this.issue.data.title!}`);
         treeItem.command = {
             command: Commands.ShowBitbucketIssue,
             title: 'Open bitbucket issue', arguments: [this.issue]
         };
         treeItem.contextValue = 'bitbucketIssue';
-        treeItem.resourceUri = vscode.Uri.parse(this.issue.links!.html!.href!);
+        treeItem.resourceUri = vscode.Uri.parse(this.issue.data.links!.html!.href!);
         return treeItem;
     }
 

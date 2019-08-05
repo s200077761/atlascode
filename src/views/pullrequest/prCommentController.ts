@@ -4,7 +4,7 @@ import { Commands } from '../../commands';
 import { FileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
-import { PullRequestProvider } from '../../bitbucket/prProvider';
+import { clientForRemote } from '../../bitbucket/bbUtils';
 
 const turndownService = new TurndownService();
 
@@ -45,7 +45,8 @@ export class PullRequestCommentController implements vscode.Disposable {
             path: path
         };
         const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
-        const data = await PullRequestProvider.forRemote(remote).postComment(remote, prId, reply.text, commentThreadId, inline);
+        const bbApi = await clientForRemote(remote);
+        const data = await bbApi.pullrequests.postComment(remote, prId, reply.text, commentThreadId, inline);
 
         const comments = [
             ...reply.thread.comments,

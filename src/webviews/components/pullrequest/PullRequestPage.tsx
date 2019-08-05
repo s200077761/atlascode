@@ -35,7 +35,7 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
-import { BitbucketIssue } from '../../../bitbucket/model';
+import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKey } from '../../../jira/jira-client/model/entities';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
@@ -198,7 +198,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssue }
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssueData }
         });
     }
 
@@ -250,11 +250,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     : <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
-                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as BitbucketIssue })} />
+                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as BitbucketIssueData })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as BitbucketIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                <StatusMenu issue={issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
