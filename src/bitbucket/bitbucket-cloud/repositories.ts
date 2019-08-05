@@ -1,9 +1,9 @@
-import { Remote, Repository } from "../typings/git";
+import { Remote, Repository } from "../../typings/git";
 import { maxItemsSupported, CloudPullRequestApi } from "./pullRequests";
-import { parseGitUrl, urlForRemote } from "./bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "./model";
-import { Client, ClientError } from "../bitbucket-server/httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { parseGitUrl, urlForRemote } from "../bbUtils";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Response } from "node-fetch";
 
 export class CloudRepositoriesApi implements RepositoriesApi {

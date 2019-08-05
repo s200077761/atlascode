@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketIssuesApiImpl } from "./bbIssues";
+import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
 import { PipelineApiImpl } from "../pipelines/pipelines";
 
 export type User = {

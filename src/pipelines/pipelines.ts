@@ -3,8 +3,8 @@ import { Container } from "../container";
 import { Pipeline, PipelineResult, PipelineStep, PipelineCommand } from "../pipelines/model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
-import { CloudRepositoriesApi } from "../bitbucket/repositories";
-import { Client, ClientError } from "../bitbucket-server/httpClient";
+import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
+import { Client, ClientError } from "../bitbucket/httpClient";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Response } from "node-fetch";
 
@@ -141,14 +141,6 @@ export class PipelineApiImpl {
     );
 
     return PipelineApiImpl.splitLogs(data.toString());
-
-    // .catch((err: any) => {
-    //   // If we get a 404 it's probably just that there aren't logs yet.
-    //   if (err.code !== 404) {
-    //     Logger.error(new Error(`Error fetching pipeline logs: ${ err }`));
-    //   }
-    //   return [];
-    // });
   }
 
   private static splitLogs(logText: string): string[] {

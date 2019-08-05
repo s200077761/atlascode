@@ -22,12 +22,12 @@ import { OAuthRefesher } from "./oauthRefresher";
 import { JiraCloudClient } from "../jira/jira-client/cloudClient";
 import { JiraServerClient } from "../jira/jira-client/serverClient";
 import { BitbucketApi } from "../bitbucket/model";
-import { CloudPullRequestApi } from "../bitbucket/pullRequests";
-import { CloudRepositoriesApi } from "../bitbucket/repositories";
+import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
+import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { PipelineApiImpl } from "../pipelines/pipelines";
-import { ServerRepositoriesApi } from "../bitbucket-server/repositories";
-import { ServerPullRequestApi } from "../bitbucket-server/pullRequests";
-import { BitbucketIssuesApiImpl } from "../bitbucket/bbIssues";
+import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
+import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;

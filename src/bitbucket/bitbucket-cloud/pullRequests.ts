@@ -1,11 +1,11 @@
-import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from './model';
-import { Container } from "../container";
-import { prCommentEvent } from '../analytics';
-import { parseGitUrl, urlForRemote } from "./bbUtils";
+import { Repository, Remote } from "../../typings/git";
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { Container } from "../../container";
+import { prCommentEvent } from '../../analytics';
+import { parseGitUrl, urlForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Client, ClientError } from "../bitbucket-server/httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Client, ClientError } from "../httpClient";
 import { Response } from "node-fetch";
 
 export const maxItemsSupported = {

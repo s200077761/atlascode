@@ -1,8 +1,8 @@
-import { Remote, Repository } from "../typings/git";
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../bitbucket/model";
-import { Client, ClientError } from "./httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Remote, Repository } from "../../typings/git";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Response } from "node-fetch";
 
 export class ServerRepositoriesApi implements RepositoriesApi {

@@ -1,8 +1,8 @@
-import { Repository, Remote } from "../typings/git";
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "./bbUtils";
-import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "./model";
-import { Client, ClientError } from "../bitbucket-server/httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Repository, Remote } from "../../typings/git";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "../bbUtils";
+import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Response } from "node-fetch";
 
 const defaultPageLength = 25;

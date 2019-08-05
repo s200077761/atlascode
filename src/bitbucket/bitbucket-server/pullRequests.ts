@@ -1,9 +1,9 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../bitbucket/model';
-import { Remote, Repository } from '../typings/git';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
-import { Container } from '../container';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { Client, ClientError } from './httpClient';
+import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../model';
+import { Remote, Repository } from '../../typings/git';
+import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
+import { Container } from '../../container';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Client, ClientError } from '../httpClient';
 import { Response } from 'node-fetch';
 
 const dummyRemote = { name: '', isReadOnly: true };
