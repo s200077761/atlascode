@@ -184,6 +184,15 @@
                 "command": "atlascode.bb.addComment",
                 "title": "Add comment",
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.toggleCommentsVisibility",
+                "title": "Show/hide comments",
+                "icon": {
+                    "dark": "resources/dark/comment.svg",
+                    "light": "resources/light/comment.svg"
+                },
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -220,6 +229,13 @@
             ]
         },
         "menus": {
+            "editor/title": [
+                {
+                    "command": "atlascode.bb.toggleCommentsVisibility",
+                    "when": "resourceScheme == atlascode.bbpr",
+                    "group": "navigation"
+                }
+            ],
             "editor/context": [
                 {
                     "command": "atlascode.jira.createIssue",
@@ -250,6 +266,11 @@
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                },
+                {
+                    "command": "atlascode.bb.toggleCommentsVisibility",
+                    "group": "atlascode",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "view/title": [
@@ -381,6 +402,10 @@
                 },
                 {
                     "command": "atlascode.bb.addComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "false"
                 }
             ]

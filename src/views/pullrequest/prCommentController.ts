@@ -23,6 +23,9 @@ export class PullRequestCommentController implements vscode.Disposable {
         ctx.subscriptions.push(
             vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
                 this.addComment(reply);
+            }),
+            vscode.commands.registerCommand(Commands.BitbucketToggleCommentsVisibility, (input: vscode.Uri) => {
+                this.toggleCommentsVisibility(input);
             })
         );
         this._commentController.commentingRangeProvider = {
@@ -35,6 +38,20 @@ export class PullRequestCommentController implements vscode.Disposable {
                 return [new vscode.Range(0, 0, lineCount - 1, 0)];
             }
         };
+    }
+
+    async toggleCommentsVisibility(uri: vscode.Uri) {
+        const { prHref } = JSON.parse(uri.query) as FileDiffQueryParams;
+
+        if (!this._commentsCache.has(prHref)) {
+            return;
+        }
+
+        const prCommentCache = this._commentsCache.get(prHref)!;
+        prCommentCache.forEach(thread =>
+            thread.collapsibleState = thread.collapsibleState === vscode.CommentThreadCollapsibleState.Collapsed
+                ? vscode.CommentThreadCollapsibleState.Expanded
+                : vscode.CommentThreadCollapsibleState.Collapsed);
     }
 
     async addComment(reply: vscode.CommentReply) {
