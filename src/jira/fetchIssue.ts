@@ -1,5 +1,5 @@
 import { Container } from "../container";
-import { DetailedSiteInfo, ProductJira } from "../atlclients/authInfo";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { MinimalIssue } from "./jira-client/model/entities";
 import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
 import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
@@ -10,7 +10,6 @@ import { FieldMeta, readFieldsMeta, Fields, EditMetaDescriptor } from "./jira-cl
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
 import { EditIssueUI } from "./jira-client/model/editIssueUI";
-import { EpicFieldInfo } from "./jiraCommon";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
   const client = await Container.clientManager.jirarequest(siteDetails);

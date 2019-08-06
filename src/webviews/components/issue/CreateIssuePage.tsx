@@ -10,10 +10,9 @@ import ErrorBanner from '../ErrorBanner';
 import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
 
-type Emit = CommonEditorPageEmit | OpenJiraIssueAction;
+type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     isCreateBannerOpen: boolean;
@@ -165,7 +164,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     <SectionMessage
                                         appearance="confirmation"
                                         title="Issue Created">
-                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.postMessage({ action: 'openJiraIssue', issueOrKey: this.state.createdIssue }); }}>{this.state.createdIssue.key}</Button> has been created.
+                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.handleOpenIssue(this.state.createdIssue); }}>{this.state.createdIssue.key}</Button> has been created.
                                     </SectionMessage>
                                 </div>
                             }

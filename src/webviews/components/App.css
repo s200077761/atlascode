@@ -1,6 +1,6 @@
 /*-------------------- BEGIN - general containers --------------------*/
 
-p {
+p, .ac-inline-edit-p {
   color: var(--vscode-foreground);
 }
 
@@ -101,6 +101,24 @@ pre {
 }
 
 /*-------------------- END - general containers --------------------*/
+
+/*----------------- BEGIN - inline edit containers -----------------*/
+
+.ac-inline-edit-view:hover .ac-inline-edit-button {
+  visibility: visible;
+}
+
+.ac-inline-edit-button {
+  visibility: hidden;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-inline-edit-button:before {
+  content: '\270E';
+  margin: 3px;
+}
+
+/*------------------ END - inline edit containers ------------------*/
 
 /*-------------------- BEGIN - page header --------------------*/
 

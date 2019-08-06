@@ -1,4 +1,4 @@
-import { DetailedSiteInfo } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
 import { MinimalIssue } from "./entities";
 import { FieldTransformerResult } from "./fieldUI";
 
@@ -10,3 +10,16 @@ export interface EditIssueUI extends FieldTransformerResult {
     isEpic: boolean;
     epicChildren: MinimalIssue[];
 }
+
+export const emptyEditIssueUI: EditIssueUI = {
+    key: "",
+    id: "",
+    self: "",
+    siteDetails: emptySiteInfo,
+    isEpic: false,
+    epicChildren: [],
+    fields: {},
+    fieldValues: {},
+    nonRenderableFields: [],
+    hasRequiredNonRenderables: false,
+};

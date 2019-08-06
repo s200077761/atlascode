@@ -19,7 +19,7 @@ export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends R
 // P = the type of react properties
 // S = the type of react state
 export abstract class WebviewComponent<A extends Action, R, P, S> extends React.Component<P, S> {
-    private readonly _api: VsCodeApi;
+    protected readonly _api: VsCodeApi;
 
     constructor(props: Readonly<P>) {
         super(props);

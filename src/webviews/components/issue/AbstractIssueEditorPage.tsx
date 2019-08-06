@@ -5,8 +5,14 @@ import { CreatedSomething, LabelList, UserList } from "../../../ipc/issueMessagi
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
+import { MinimalIssueOrKey } from '../../../jira/jira-client/model/entities';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import EdiText, { EdiTextType } from 'react-editext';
 
-export type CommonEditorPageEmit = Action;
+type Func = (...args: any[]) => any;
+type FuncOrUndefined = Func | undefined;
+
+export type CommonEditorPageEmit = Action | OpenJiraIssueAction;
 export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage;
 
 export interface CommonEditorViewState extends Message {
@@ -28,14 +34,14 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     errorDetails: undefined,
 };
 
-export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends CommonEditorViewState> extends WebviewComponent<A, R, P, S> {
+export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
 
     onMessageReceived(e: any): boolean {
         return false;
     }
 
-    protected handleDismissError = () => {
-        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    postMessage<T extends CommonEditorPageEmit>(e: T) {
+        this._api.postMessage(e);
     }
 
     protected sortFieldValues(fields: FieldUIs): FieldUI[] {
@@ -44,6 +50,21 @@ export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends 
             if (left.displayOrder > right.displayOrder) { return 1; }
             return 0;
         });
+    }
+
+    protected handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    }
+
+    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKey) => {
+        this.postMessage({
+            action: "openJiraIssue",
+            issueOrKey: issueOrKey
+        } as OpenJiraIssueAction);
+    }
+
+    protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
+
     }
 
     // refreshSelectFields(issueTypeId: string | undefined, issueData: CreateIssueData): Object {
@@ -95,34 +116,44 @@ export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends 
     //     return opts;
     // }
 
-    protected getFieldMarkup(field: FieldUI): any {
+    protected getFieldMarkup(field: FieldUI, inline: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
-                let validateFunc = undefined;
+                let validateFunc = this.getValidateFunction(field, inline);
+                let validationFailMessage = "";
                 let valType = field.valueType;
                 switch (valType) {
                     case ValueType.Number: {
-                        validateFunc = (value: any, state: any) => {
-                            if (field.required) {
-                                return FieldValidators.validateRequiredNumber(value, state);
-                            }
-
-                            return FieldValidators.validateNumber(value, state);
-                        };
-
+                        validationFailMessage = `${field.name} must be a number`;
                         break;
                     }
                     case ValueType.Url: {
-                        validateFunc = (field.required) ? FieldValidators.validateRequiredUrl : FieldValidators.validateUrl;
+                        validationFailMessage = `${field.name} must be a URL`;
                         break;
                     }
                     default: {
                         if (field.required) {
-                            validateFunc = FieldValidators.validateString;
+                            validationFailMessage = `${field.name} is required`;
                             break;
                         }
                         break;
                     }
+                }
+
+                if (inline) {
+                    return (
+                        <EdiText
+                            type={this.inlineEditTypeForValueType(field.valueType)}
+                            value={this.state.fieldValues[field.key]}
+                            onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
+                            validation={validateFunc}
+                            validationMessage={validationFailMessage}
+                            viewContainerClassName='ac-inline-edit-view'
+                            inputProps={{ className: 'ac-inputField' }}
+                            viewProps={{ className: 'ac-inline-edit-p' }}
+                            editButtonClassName="ac-inline-edit-button"
+                        />
+                    );
                 }
 
                 return (
@@ -130,15 +161,11 @@ export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends 
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;
-                                if (fieldArgs.error === 'EMPTY') {
-                                    errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
-                                } else if (fieldArgs.error === 'NOT_NUMBER') {
-                                    errDiv = <ErrorMessage>{field.name} must be a number</ErrorMessage>;
-                                } else if (fieldArgs.error === 'NOT_URL') {
-                                    errDiv = <ErrorMessage>{field.name} must be a url</ErrorMessage>;
+                                if (fieldArgs.error !== undefined) {
+                                    errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
-                                let markup = <input {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' disabled={this.state.isSomethingLoading} />;
+                                let markup = <input  {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' disabled={this.state.isSomethingLoading} />;
                                 if ((field as InputFieldUI).isMultiline) {
                                     markup = <textarea {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-textarea' rows={5} disabled={this.state.isSomethingLoading} />;
                                 }
@@ -176,4 +203,49 @@ export abstract class AbstractIssueEditorPage<A extends Action, R, P, S extends 
             </Field>
         );
     }
+
+    private getValidateFunction(field: FieldUI, inline: boolean = false): FuncOrUndefined {
+        let valType = field.valueType;
+        let valfunc = undefined;
+
+        switch (valType) {
+            case ValueType.Number: {
+                if (inline) {
+                    valfunc = (field.required) ? FieldValidators.validateRequiredNumber : FieldValidators.validateNumber;
+                } else {
+                    valfunc = (field.required) ? FieldValidators.isValidRequiredNumber : FieldValidators.isValidNumber;
+                }
+                break;
+            }
+            case ValueType.Url: {
+                if (inline) {
+                    valfunc = (field.required) ? FieldValidators.isValidRequiredUrl : FieldValidators.isValidUrl;
+                } else {
+                    valfunc = (field.required) ? FieldValidators.validateRequiredUrl : FieldValidators.validateUrl;
+                }
+                break;
+            }
+
+            default: {
+                if (field.required) {
+                    valfunc = (inline) ? FieldValidators.isValidString : FieldValidators.validateString;
+                    break;
+                }
+            }
+        }
+
+        return valfunc;
+    }
+
+    private inlineEditTypeForValueType(vt: ValueType): EdiTextType {
+        switch (vt) {
+            case ValueType.Url:
+                return "url";
+            case ValueType.Number:
+                return "number";
+            default:
+                return "text";
+        }
+    }
+
 }

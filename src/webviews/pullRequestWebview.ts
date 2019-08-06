@@ -22,6 +22,7 @@ import { transitionIssue } from '../commands/jira/transitionIssue';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
+import { clientForRemote } from '../bitbucket/bbUtils';
 
 interface PRState {
     prData: PRData;
@@ -233,9 +234,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         const bbApi = await clientForRemote(pr.remote);
 
         const prDetailsPromises = Promise.all([
-            PullRequestProvider.forRepository(pr.repository!).getCommits(pr),
-            PullRequestProvider.forRepository(pr.repository!).getComments(pr),
-            PullRequestProvider.forRepository(pr.repository!).getBuildStatuses(pr)
+            bbApi.pullrequests.getCommits(pr),
+            bbApi.pullrequests.getComments(pr),
+            bbApi.pullrequests.getBuildStatuses(pr)
         ]);
         const [commits, comments, buildStatuses] = await prDetailsPromises;
 

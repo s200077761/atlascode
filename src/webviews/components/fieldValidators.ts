@@ -2,7 +2,7 @@
 export const chain = (...fns: any[]) => (...args: any[]) => fns.forEach(fn => fn(...args));
 
 export namespace FieldValidators {
-    export function validateSingleSelect(value: string, state: any): string | undefined {
+    export function validateSingleSelect(value: string, state?: any): string | undefined {
         return (value !== undefined) ? undefined : "EMPTY";
     }
 
@@ -11,11 +11,15 @@ export namespace FieldValidators {
         //return (value !== undefined && value.length > 0) ? undefined : "EMPTY";
     }
 
-    export function validateString(value: string, state: any): string | undefined {
+    export function validateString(value: string, state?: any): string | undefined {
         return (value === undefined || value.length < 1) ? 'EMPTY' : undefined;
     }
 
-    export function validateNumber(value: any, state: any): string | undefined {
+    export function isValidString(value: string): boolean {
+        return validateString(value) === undefined;
+    }
+
+    export function validateNumber(value: any, state?: any): string | undefined {
         let err = undefined;
 
         if (value !== undefined && value.length > 0) {
@@ -26,7 +30,11 @@ export namespace FieldValidators {
         return err;
     }
 
-    export function validateUrl(value: string, state: any): string | undefined {
+    export function isValidNumber(value: string): boolean {
+        return validateNumber(value) === undefined;
+    }
+
+    export function validateUrl(value: string, state?: any): string | undefined {
         let err = undefined;
 
         try {
@@ -41,7 +49,11 @@ export namespace FieldValidators {
         return err;
     }
 
-    export function validateRequiredNumber(value: any, state: any): string | undefined {
+    export function isValidUrl(value: string): boolean {
+        return validateUrl(value) === undefined;
+    }
+
+    export function validateRequiredNumber(value: any, state?: any): string | undefined {
         let err = validateString(value, state);
 
         if (err === undefined) {
@@ -51,7 +63,11 @@ export namespace FieldValidators {
         return err;
     }
 
-    export function validateRequiredUrl(value: string, state: any): string | undefined {
+    export function isValidRequiredNumber(value: string): boolean {
+        return validateRequiredNumber(value) === undefined;
+    }
+
+    export function validateRequiredUrl(value: string, state?: any): string | undefined {
         let err = validateString(value, state);
 
         if (err === undefined) {
@@ -60,4 +76,9 @@ export namespace FieldValidators {
 
         return err;
     }
+
+    export function isValidRequiredUrl(value: string): boolean {
+        return validateRequiredUrl(value) === undefined;
+    }
+
 }

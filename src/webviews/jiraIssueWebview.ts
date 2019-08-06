@@ -46,6 +46,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
         if (this.isRefeshing) {
             return;
         }
+        console.log('force updating issue');
         if (this._issue) {
             this.isRefeshing = true;
             try {

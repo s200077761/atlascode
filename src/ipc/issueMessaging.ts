@@ -5,7 +5,7 @@ import { PullRequestData } from "../bitbucket/model";
 import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
 import { EpicFieldInfo } from "../jira/jiraCommon";
 import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
-import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -16,6 +16,14 @@ export interface EditIssueData extends EditIssueUI {
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
 }
+
+export const emptyEditIssueData: EditIssueData = {
+    type: "",
+    ...emptyEditIssueUI,
+    currentUserId: "",
+    workInProgress: false,
+    recentPullRequests: [],
+};
 
 export interface IssueProblemsData extends Message {
     problems: CreateMetaTransformerProblems;
