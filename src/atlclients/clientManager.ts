@@ -17,7 +17,7 @@ import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { OAuthRefesher } from "./oauthRefresher";
 import { JiraCloudClient } from "../jira/jira-client/cloudClient";
 import { JiraServerClient } from "../jira/jira-client/serverClient";
@@ -127,14 +127,14 @@ export class ClientManager implements Disposable {
         if (isBasicAuthInfo(authInfo)) {
           let authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
           try {
-            const res = await fetch(`https://${site.hostname}/rest/api/2/myself`, {
+            const res = await axios(`https://${site.hostname}/rest/api/2/myself`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
               }
             });
-            const json = await res.json();
+            const json = res.data;
 
             siteDetails = {
               product: site.product,
@@ -168,14 +168,14 @@ export class ClientManager implements Disposable {
 
 
           try {
-            const res = await fetch(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
+            const res = await axios(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
               }
             });
-            const json = await res.json();
+            const json = res.data;
 
             siteDetails = {
               product: site.product,

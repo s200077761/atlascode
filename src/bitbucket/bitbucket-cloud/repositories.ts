@@ -4,7 +4,7 @@ import { parseGitUrl, urlForRemote } from "../bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Response } from "node-fetch";
+import { AxiosResponse } from "axios";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -14,17 +14,16 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             site.baseApiUrl,
             `Bearer ${token}`,
             agent,
-            async (response: Response): Promise<Error> => {
+            async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
-                try {
-                    const errJson = await response.json();
+                const errJson = response.data;
 
-                    if (errJson.error && errJson.error.message) {
-                        errString = errJson.error.message;
-                    }
-                } catch (_) {
-                    errString = await response.text();
+                if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
                 }
+
                 return new ClientError(response.statusText, errString);
             }
         );

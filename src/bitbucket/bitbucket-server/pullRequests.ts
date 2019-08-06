@@ -4,7 +4,7 @@ import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from
 import { Container } from '../../container';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
-import { Response } from 'node-fetch';
+import { AxiosResponse } from 'axios';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -16,18 +16,17 @@ export class ServerPullRequestApi implements PullRequestApi {
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
             agent,
-            async (response: Response): Promise<Error> => {
+            async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
-                try {
-                    const errJson = await response.json();
+                const errJson = response.data;
 
-                    if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
-                        const e = errJson.errors[0];
-                        errString = e.message || errString;
-                    }
-                } catch (_) {
-                    errString = await response.text();
+                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+                    const e = errJson.errors[0];
+                    errString = e.message || errString;
+                } else {
+                    errString = errJson;
                 }
+
                 return new ClientError(response.statusText, errString);
             }
         );

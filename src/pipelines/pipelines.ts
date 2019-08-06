@@ -6,7 +6,7 @@ import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { Client, ClientError } from "../bitbucket/httpClient";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Response } from "node-fetch";
+import { AxiosResponse } from "axios";
 
 export class PipelineApiImpl {
   private client: Client;
@@ -16,17 +16,16 @@ export class PipelineApiImpl {
       site.baseApiUrl,
       `Bearer ${token}`,
       agent,
-      async (response: Response): Promise<Error> => {
+      async (response: AxiosResponse): Promise<Error> => {
         let errString = 'Unknown error';
-        try {
-          const errJson = await response.json();
+        const errJson = await response.data;
 
-          if (errJson.error && errJson.error.message) {
-            errString = errJson.error.message;
-          }
-        } catch (_) {
-          errString = await response.text();
+        if (errJson.error && errJson.error.message) {
+          errString = errJson.error.message;
+        } else {
+          errString = errJson;
         }
+
         return new ClientError(response.statusText, errString);
       }
     );
@@ -128,7 +127,7 @@ export class PipelineApiImpl {
 
     if (data.values) {
       let cleanedPipelines: Pipeline[] = [];
-      for(let i = 0; i < data.values.length; i++){
+      for (let i = 0; i < data.values.length; i++) {
         cleanedPipelines.push(PipelineApiImpl.pipelineForPipeline(remote, data.values[i]));
       }
       return cleanedPipelines;
@@ -185,9 +184,9 @@ export class PipelineApiImpl {
       }
     }
     //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
-    const selector: PipelineSelector = {pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type};
-    let target: PipelineTarget = {selector: selector, triggerName: pipeline.trigger!.name};
-    if(pipeline.target!.ref_name){
+    const selector: PipelineSelector = { pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type };
+    let target: PipelineTarget = { selector: selector, triggerName: pipeline.trigger!.name };
+    if (pipeline.target!.ref_name) {
       target.ref_name = pipeline.target!.ref_name;
     }
 

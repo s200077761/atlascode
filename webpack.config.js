@@ -22,7 +22,7 @@ module.exports = env => [
         resolve: {
             extensions: ['.tsx', '.ts', '.js'],
             alias: {
-                "node-fetch": path.resolve(__dirname, 'node_modules/node-fetch/lib/index.js'),
+                "axios": path.resolve(__dirname, 'node_modules/axios/lib/axios.js'),
                 "handlebars": path.resolve(__dirname, 'node_modules/handlebars/dist/handlebars.js')
             }
         },

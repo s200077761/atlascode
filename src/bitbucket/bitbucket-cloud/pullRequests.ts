@@ -6,7 +6,7 @@ import { parseGitUrl, urlForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
-import { Response } from "node-fetch";
+import { AxiosResponse } from "axios";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -25,17 +25,16 @@ export class CloudPullRequestApi implements PullRequestApi {
             site.baseApiUrl,
             `Bearer ${token}`,
             agent,
-            async (response: Response): Promise<Error> => {
+            async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
-                try {
-                    const errJson = await response.json();
+                const errJson = response.data;
 
-                    if (errJson.error && errJson.error.message) {
-                        errString = errJson.error.message;
-                    }
-                } catch (_) {
-                    errString = await response.text();
+                if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
                 }
+
                 return new ClientError(response.statusText, errString);
             }
         );

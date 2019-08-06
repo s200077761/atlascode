@@ -5,7 +5,7 @@ import { Logger } from "../logger";
 import { Time } from "./time";
 import pAny from "p-any";
 import pTimeout from "p-timeout";
-import fetch from 'node-fetch';
+import axios from 'axios';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -76,11 +76,11 @@ export class OnlineDetector extends Disposable {
     private async runOnlineChecks(): Promise<boolean> {
         const promise = pAny([
             (async () => {
-                await fetch(`http://atlassian.com`, { method: "HEAD" });
+                await axios(`http://atlassian.com`, { method: "HEAD" });
                 return true;
             })(),
             (async () => {
-                await fetch(`https://bitbucket.org`, { method: "HEAD" });
+                await axios(`https://bitbucket.org`, { method: "HEAD" });
                 return true;
             })()
         ]);
