@@ -164,7 +164,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     <SectionMessage
                                         appearance="confirmation"
                                         title="Issue Created">
-                                        Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.handleOpenIssue(this.state.createdIssue); }}>{this.state.createdIssue.key}</Button> has been created.
+                                        <p>Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.handleOpenIssue(this.state.createdIssue); }}>{this.state.createdIssue.key}</Button> has been created.</p>
                                     </SectionMessage>
                                 </div>
                             }
