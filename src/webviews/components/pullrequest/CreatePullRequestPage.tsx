@@ -255,8 +255,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     loadUserOptions = (input: string): Promise<any> => {
-        if (!this.state.remote || !this.state.repo || this.state.repo.value.isCloud) {
-            return Promise.resolve(this.state.repo!.value.defaultReviewers);
+        if (!this.state.remote || !this.state.repo) {
+            return Promise.resolve([]);
         }
         return new Promise(resolve => {
             this.userSuggestions = undefined;
@@ -527,11 +527,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                                     getOptionLabel={(option: any) => option.display_name}
                                                                     getOptionValue={(option: any) => option.accountId}
                                                                     placeholder={repo.value.isCloud
-                                                                        ? "This extension only supports selecting from default reviewers"
+                                                                        ? "Start typing bitbucket username to search for reviewers"
                                                                         : "Start typing to search for reviewers"
                                                                     }
                                                                     noOptionsMessage={() => repo.value.isCloud
-                                                                        ? "No options (This extension only supports selecting from default reviewers)"
+                                                                        ? "No options (Start typing bitbucket username to search for reviewers)"
                                                                         : "No options"
                                                                     }
                                                                     defaultOptions={repo.value.defaultReviewers}
