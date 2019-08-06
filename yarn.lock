@@ -103,15 +103,6 @@
     "@atlaskit/theme" "^9.0.3"
     "@babel/runtime" "^7.0.0"
 
-"@atlaskit/css-reset@^5.0.1":
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/css-reset/-/css-reset-5.0.1.tgz#eeabaf6a7ea3a05517e8f898ad90e73dc7fb0385"
-  integrity sha512-DSNz9zs3tqPmi1YFznkfU+mZRidALPOcSFQyuOvZ/oKRBhGSTykeYWPXIqcAfwAwQRQfnbMgVpvjdVEWfjUOUw==
-  dependencies:
-    "@atlaskit/theme" "^9.0.0"
-    fbjs "^1.0.0"
-    mkdirp "^0.5.1"
-
 "@atlaskit/datetime-picker@^8.0.5":
   version "8.0.5"
   resolved "https://registry.yarnpkg.com/@atlaskit/datetime-picker/-/datetime-picker-8.0.5.tgz#60baffc26d1bbb9cfa0b0be54673824b9e32b58a"
@@ -819,13 +810,6 @@
   version "5.2.6"
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-5.2.6.tgz#b8622d50557dd155e9f2f634b7d68fd38de5e94b"
   integrity sha512-1axi39YdtBI7z957vdqXI4Ac25e7YihYQtJa+Clnxg1zTJEaIRbndt71O3sP4GAMgiAm0pY26/b9BrY4MR/PMw==
-
-"@types/node-fetch@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.5.0.tgz#1c55616a4591bdd15a389fbd0da4a55b9502add5"
-  integrity sha512-TLFRywthBgL68auWj+ziWu+vnmmcHCDFC/sqCOQf1xTz4hRq8cu79z8CtHU9lncExGBsB8fXA4TiLDLt6xvMzw==
-  dependencies:
-    "@types/node" "*"
 
 "@types/node@*":
   version "11.9.4"
@@ -7836,11 +7820,6 @@ node-fetch@^1.0.1:
     encoding "^0.1.11"
     is-stream "^1.0.1"
 
-node-fetch@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
-  integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
-
 node-forge@0.7.5:
   version "0.7.5"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.5.tgz#6c152c345ce11c52f465c2abd957e8639cd674df"
@@ -9366,10 +9345,10 @@ react-dom@^16.8.6:
     prop-types "^15.6.2"
     scheduler "^0.13.6"
 
-react-editext@^3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/react-editext/-/react-editext-3.3.1.tgz#3bf750af81d38fe15ff9ba1701b4b2602b060357"
-  integrity sha512-qEoALN+ITvQyUtIYL+u61kzZMOq95nDxFoMMX+/LOdBiwu0jlZApyUinw8ZPPZxomLzTxEof+5qX2ogdR6MX3Q==
+react-editext@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/react-editext/-/react-editext-3.4.0.tgz#dc635beb5d483f409835b0cd93eb410e54f14c75"
+  integrity sha512-5nWw+aOB9O5h1k0E4L0NuYEHgT0MtT32CjwEdzG/FonxIYKTjV9lC+ndYai4LDxTHqL8M+iWxPabKKO45OVqpQ==
   dependencies:
     classnames "^2.2.6"
 

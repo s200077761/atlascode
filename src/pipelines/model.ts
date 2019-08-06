@@ -10,7 +10,7 @@ export interface Pipeline {
     creator_avatar?: string;
     state: PipelineState;
     uuid: string;
-    target?: PipelineTarget;
+    target: PipelineTarget;
     completed_on?: string;
     duration_in_seconds?: number;
 }
@@ -43,8 +43,15 @@ export interface PipelineStage {
     type: string;
 }
 
+export interface PipelineSelector{
+    pattern: string;
+    type: string;
+}
+
 export interface PipelineTarget {
-    ref_name: string;
+    ref_name?: string;
+    selector: PipelineSelector;
+    triggerName: string; 
 }
 
 export interface PipelineStep {

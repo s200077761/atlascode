@@ -2,7 +2,7 @@ import {
     CompletionItemProvider, TextDocument, Position, CompletionItem, CompletionItemKind, SnippetString
 } from 'vscode';
 
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { Logger } from '../../logger';
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
@@ -95,13 +95,13 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
     }
 
     private loadPipes(): void {
-        fetch(BB_PIPES_URL, {
+        axios(BB_PIPES_URL, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json"
             }
         })
-            .then(res => res.json())
+            .then(res => res.data)
             .then((res: PipeMeta[]) => {
                 if (res) {
                     this.knownPipes = res;

@@ -17,17 +17,17 @@ import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { OAuthRefesher } from "./oauthRefresher";
 import { JiraCloudClient } from "../jira/jira-client/cloudClient";
 import { JiraServerClient } from "../jira/jira-client/serverClient";
 import { BitbucketApi } from "../bitbucket/model";
-import { CloudPullRequestApi } from "../bitbucket/pullRequests";
-import { CloudRepositoriesApi } from "../bitbucket/repositories";
+import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
+import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { PipelineApiImpl } from "../pipelines/pipelines";
-import { ServerRepositoriesApi } from "../bitbucket-server/repositories";
-import { ServerPullRequestApi } from "../bitbucket-server/pullRequests";
-import { BitbucketIssuesApiImpl } from "../bitbucket/bbIssues";
+import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
+import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -127,14 +127,14 @@ export class ClientManager implements Disposable {
         if (isBasicAuthInfo(authInfo)) {
           let authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
           try {
-            const res = await fetch(`https://${site.hostname}/rest/api/2/myself`, {
+            const res = await axios(`https://${site.hostname}/rest/api/2/myself`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
               }
             });
-            const json = await res.json();
+            const json = res.data;
 
             siteDetails = {
               product: site.product,
@@ -168,14 +168,14 @@ export class ClientManager implements Disposable {
 
 
           try {
-            const res = await fetch(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
+            const res = await axios(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
               }
             });
-            const json = await res.json();
+            const json = res.data;
 
             siteDetails = {
               product: site.product,

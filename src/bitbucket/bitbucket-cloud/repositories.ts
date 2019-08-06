@@ -1,9 +1,10 @@
-import { Remote, Repository } from "../typings/git";
+import { Remote, Repository } from "../../typings/git";
 import { maxItemsSupported, CloudPullRequestApi } from "./pullRequests";
-import { parseGitUrl, urlForRemote } from "./bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "./model";
-import { Client } from "../bitbucket-server/httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { parseGitUrl, urlForRemote } from "../bbUtils";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { AxiosResponse } from "axios";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -12,7 +13,19 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent
+            agent,
+            async (response: AxiosResponse): Promise<Error> => {
+                let errString = 'Unknown error';
+                const errJson = response.data;
+
+                if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
+                }
+
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 

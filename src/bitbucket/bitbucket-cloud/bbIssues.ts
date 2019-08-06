@@ -1,8 +1,9 @@
-import { Repository, Remote } from "../typings/git";
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "./bbUtils";
-import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "./model";
-import { Client } from "../bitbucket-server/httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Repository, Remote } from "../../typings/git";
+import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "../bbUtils";
+import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { AxiosResponse } from 'axios';
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -18,7 +19,19 @@ export class BitbucketIssuesApiImpl {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent
+            agent,
+            async (response: AxiosResponse): Promise<Error> => {
+                let errString = 'Unknown error';
+                const errJson = response.data;
+
+                if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
+                }
+
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 

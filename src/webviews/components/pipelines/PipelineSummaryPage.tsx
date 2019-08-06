@@ -116,7 +116,11 @@ const emptyPipeline: PipelineData = {
     result: { name: "", type: "" },
     stage: { name: "PENDING", type: "pipeline_step_state_pending_pending" }
   },
-  target: { ref_name: "" }
+  target: { 
+    ref_name: "", 
+    selector: {pattern: "", type: ""}, 
+    triggerName: "" 
+  }
 };
 
 export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline, Properties, State> {

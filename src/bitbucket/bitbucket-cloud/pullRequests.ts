@@ -1,11 +1,12 @@
-import { Repository, Remote } from "../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from './model';
-import { Container } from "../container";
-import { prCommentEvent } from '../analytics';
-import { parseGitUrl, urlForRemote } from "./bbUtils";
+import { Repository, Remote } from "../../typings/git";
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { Container } from "../../container";
+import { prCommentEvent } from '../../analytics';
+import { parseGitUrl, urlForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Client } from "../bitbucket-server/httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Client, ClientError } from "../httpClient";
+import { AxiosResponse } from "axios";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -23,7 +24,19 @@ export class CloudPullRequestApi implements PullRequestApi {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent
+            agent,
+            async (response: AxiosResponse): Promise<Error> => {
+                let errString = 'Unknown error';
+                const errJson = response.data;
+
+                if (errJson.error && errJson.error.message) {
+                    errString = errJson.error.message;
+                } else {
+                    errString = errJson;
+                }
+
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 
@@ -40,7 +53,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
+    async getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
         let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
 
         const { data } = await this.client.get(
@@ -61,42 +74,42 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
-    async  getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
             { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
-    async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
             { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
-    async  nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
+    async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         const { data } = await this.client.get(next!);
 
         const prs = (data).values!.map((pr: any) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; });
         return { repository: repository, remote: remote, data: prs, next: data.next };
     }
 
-    async  getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
             { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
     }
 
-    async  getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
             { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 
-    async  get(pr: PullRequest): Promise<PullRequest> {
+    async get(pr: PullRequest): Promise<PullRequest> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
@@ -114,7 +127,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: CloudPullRequestApi.toPullRequestData(data) };
     }
 
-    async  getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
+    async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
@@ -133,7 +146,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getCommits(pr: PullRequest): Promise<PaginatedCommits> {
+    async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
@@ -164,7 +177,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getComments(pr: PullRequest): Promise<PaginatedComments> {
+    async getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -247,7 +260,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return result;
     }
 
-    async  getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
+    async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
@@ -266,17 +279,25 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async  getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
+    async getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
-        const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/default-reviewers`,
-            {
-                pagelen: maxItemsSupported.reviewers
-            }
-        );
+        let reviewers: any[] = [];
+        if (!query) {
+            const { data } = await this.client.get(
+                `/repositories/${parsed.owner}/${parsed.name}/default-reviewers`,
+                {
+                    pagelen: maxItemsSupported.reviewers
+                }
+            );
+            reviewers = data.values || [];
+        } else {
+            const { data } = await this.client.get(
+                `/teams/${parsed.owner}/members?q=nickname~"${query}"`
+            );
+            reviewers = data.values || [];
+        }
 
-        const reviewers: any[] = data.values || [];
         return reviewers.map(reviewer => ({
             accountId: reviewer.account_id!,
             displayName: reviewer.display_name!,
@@ -287,7 +308,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async  create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
+    async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
         let prBody = {
             type: 'pullrequest',
             title: createPrData.title,
@@ -321,7 +342,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(data) };
     }
 
-    async  updateApproval(pr: PullRequest, approved: boolean) {
+    async updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
         approved
             ? await this.client.post(
@@ -334,7 +355,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             );
     }
 
-    async  merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
+    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let body = Object.create({});
@@ -347,7 +368,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  postComment(
+    async postComment(
         remote: Remote,
         prId: number, text: string,
         parentCommentId?: number,
