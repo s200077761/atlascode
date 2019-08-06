@@ -15,7 +15,7 @@ import { firstBitbucketRemote, siteDetailsForRemote, clientForRemote } from '../
 import { ProductBitbucket } from '../../atlclients/authInfo';
 import { descriptionForState, iconUriForPipeline } from "./Helpers";
 
-//const defaultPageLength = 25;
+const defaultPageLength = 25;
 export interface PipelineInfo {
     pipelineUuid: string;
     repo: Repository;
@@ -148,13 +148,13 @@ export class PipelinesRepoNode extends AbstractBaseNode {
        if (remote) {
            this._remote = remote;
            const bbApi = await clientForRemote(this._remote);
-           const accessToken = await bbApi.pipelines!.getValidPipelinesAccessToken(this._remote);
-           const pipelinesResponse = await bbApi.pipelines!.getRawPipelineResults(remote, accessToken);
-           pipelinesResponse.values!.forEach(
-               (pipeline: any) => pipelines.push(bbApi.pipelines!.cleanPipelineData(this._remote, pipeline))
-           );
-
-           if (pipelinesResponse.next) {
+           const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
+                page: `${this._page}`,
+                pagelen: defaultPageLength,
+            });
+           pipelines = paginatedPipelines.values;
+           const numPages = paginatedPipelines.size/paginatedPipelines.pagelen;
+           if (paginatedPipelines.page < numPages) {
                morePages = true;
            }
        }

@@ -1,6 +1,15 @@
 import { Repo } from "../bitbucket/model";
 import { Remote } from "../typings/git";
 
+export interface PaginatedPipelines {
+    // Repeating repository and remote fields although they are available from
+    // individual pull requests for 1) convenience and 2) handle case when `data` is empty.
+    values: Pipeline[];
+    page: number;
+    size: number;
+    pagelen: number;
+}
+
 export interface Pipeline {
     repository: Repo;
     remote: Remote;
@@ -51,7 +60,7 @@ export interface PipelineSelector{
 export interface PipelineTarget {
     ref_name?: string;
     selector: PipelineSelector;
-    triggerName: string; 
+    triggerName?: string; 
 }
 
 export interface PipelineStep {

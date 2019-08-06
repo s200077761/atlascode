@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
-import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector } from "./model";
+import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector, PaginatedPipelines } from "./model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
@@ -34,7 +34,7 @@ export class PipelineApiImpl {
   async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
     const remote = firstBitbucketRemote(repository);
     const accessToken = await this.getValidPipelinesAccessToken(remote);
-    return this.getPipelineResults(remote, accessToken);
+    return this.getSinglepagePipelines(remote, accessToken);
   }
 
   async startPipeline(repository: Repository, branchName: string): Promise<Pipeline> {
@@ -99,40 +99,49 @@ export class PipelineApiImpl {
     remote: Remote,
     branchName: string
   ): Promise<Pipeline[]> {
-    return this.getPipelineResults(remote, { 'target.branch': branchName });
+    return this.getSinglepagePipelines(remote, { 'target.branch': branchName });
   }
 
-  async getRawPipelineResults(
-    remote: Remote,
-    query?: any
-  ): Promise<any> {
-    let parsed = parseGitUrl(urlForRemote(remote));
-    const { data } = await this.client.get(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
-      {
-        ...query,
-        sort: '-created_on',
-      }
-    );
-
-    return data;
-  }
-
-  async getPipelineResults(
+  // A simplified version of getPaginatedPipelines() which assumes you just want some pipelines 
+  async getSinglepagePipelines(
     remote: Remote,
     query?: any
   ): Promise<Pipeline[]> {
-    // TODO: [VSCODE-502] use site info and convert to async await with try/catch
-    const rawPipelines = await this.getRawPipelineResults(remote, query);
+    const firstPaginatedPage = await this.getPaginatedPipelines(remote, query);
+    return firstPaginatedPage.values;
+  }
 
-    if (rawPipelines.values) {
-      let cleanedPipelines: Pipeline[] = [];
-      for(let i = 0; i < rawPipelines.values.length; i++){
-        cleanedPipelines.push(this.cleanPipelineData(remote, rawPipelines.values[i]));
+  // Returns a paginated pipeline which contains information like page length and page number
+  async getPaginatedPipelines(
+    remote: Remote,
+    query?: any
+  ): Promise<PaginatedPipelines> {
+    // TODO: [VSCODE-502] use site info and convert to async await with try/catch
+    let parsed = parseGitUrl(urlForRemote(remote));
+    const response = await this.client.get(
+      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
+      {
+        ...query,
+        sort: '-created_on'
       }
-      return cleanedPipelines;
+    );
+
+    //Take the response and clean it up; in particular, clean up the pipelines it sends back
+    const responseBody = response.data;
+    let cleanedPipelines: Pipeline[] = [];
+    if (responseBody.values) {
+      for(let i = 0; i < responseBody.values.length; i++){
+        cleanedPipelines.push(this.cleanPipelineData(remote, responseBody.values[i]));
+      }
     }
-    return [];
+
+    let cleanedPaginatedPipelines: PaginatedPipelines = {
+      pagelen: responseBody.pagelen,
+      page: responseBody.page,
+      size: responseBody.size,
+      values: cleanedPipelines
+    };
+    return cleanedPaginatedPipelines;
   }
 
   async getPipelineLog(remote: Remote,
