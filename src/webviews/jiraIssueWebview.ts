@@ -7,6 +7,7 @@ import { Container } from "../container";
 import { fetchEditIssueUI } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData } from "../ipc/issueMessaging";
+import { EditIssueAction } from "../ipc/issueActions";
 
 type Emit = CommonEditorWebviewEmit | EditIssueUI;
 export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> implements InitializingWebview<MinimalIssue> {
@@ -88,5 +89,30 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                 this.isRefeshing = false;
             }
         }
+    }
+
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
+
+        if (!handled) {
+            switch (msg.action) {
+                case 'editIssue': {
+                    handled = true;
+
+                    try {
+                        const client = await Container.clientManager.jirarequest(this._issue!.siteDetails);
+                        await client.editIssue(this._issue!.key, (msg as EditIssueAction).fields);
+                        this.forceUpdateIssue();
+                    }
+                    catch (e) {
+                        Logger.error(new Error(`error updating issue: ${e}`));
+                        this.postMessage({ type: 'error', reason: e });
+                    }
+                    break;
+                }
+            }
+        }
+
+        return handled;
     }
 }

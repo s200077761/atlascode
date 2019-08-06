@@ -9,6 +9,7 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
+import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -50,6 +51,37 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return handled;
     }
 
+    handleCopyIssueLink = () => {
+        this.postMessage({
+            action: 'copyJiraIssueLink'
+        });
+    }
+
+    protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
+        this.handleEditIssue(field.key, newValue);
+    }
+
+    handleEditIssue = (fieldKey: string, newValue: any) => {
+        this.postMessage({
+            action: 'editIssue',
+            fields: {
+                [fieldKey]: newValue
+            }
+        });
+    }
+    /*
+    editIssue = (fieldName: string, value: any) => {
+    const editedIssueData = { ...this.state.data, [fieldName]: value };
+    this.setState({ data: editedIssueData });
+
+    this.postMessage({
+      action: 'editIssue',
+      fields: {
+        [fieldName]: editedIssueData[fieldName]
+      }
+    });
+  }
+  */
     getMainPanelMarkup(): any {
         if (Object.keys(this.state.fields).length < 1) {
             return <div>Loading Data...</div>;
@@ -79,7 +111,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             {this.state.fieldValues['parentKey'] &&
                                 <BreadcrumbsItem component={() => <NavItem text={`${this.state.fieldValues['parentKey']}`} onItemClick={() => this.handleOpenIssue('')} />} />
                             }
-                            {/* <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.siteDetails.baseLinkUrl}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} /> */}
+                            <BreadcrumbsItem component={() => <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />} />
                         </BreadcrumbsStateless>
                     }>
                     {this.getFieldMarkup(this.state.fields['summary'], true)}

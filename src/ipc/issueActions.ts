@@ -2,6 +2,7 @@ import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { MinimalIssue, Transition, MinimalIssueOrKey } from "../jira/jira-client/model/entities";
 import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
+import { Fields } from "../jira/jira-client/model/fieldMetadata";
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
@@ -9,7 +10,7 @@ export interface RefreshIssueAction extends Action {
 
 export interface EditIssueAction extends Action {
     action: 'editIssue';
-    fields: any;
+    fields: Fields;
 }
 
 export interface TransitionIssueAction extends Action {
