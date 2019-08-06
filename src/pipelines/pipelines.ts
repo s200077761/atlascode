@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../typings/git";
 import { Container } from "../container";
-import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PipelineSelector, PaginatedPipelines } from "./model";
+import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PaginatedPipelines } from "./model";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
 import { bbAPIConnectivityError } from "../constants";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
@@ -130,9 +130,7 @@ export class PipelineApiImpl {
     const responseBody = response.data;
     let cleanedPipelines: Pipeline[] = [];
     if (responseBody.values) {
-      for(let i = 0; i < responseBody.values.length; i++){
-        cleanedPipelines.push(this.cleanPipelineData(remote, responseBody.values[i]));
-      }
+      cleanedPipelines = responseBody.values.map((pipeline: any) => this.cleanPipelineData(remote, pipeline));
     }
 
     let cleanedPaginatedPipelines: PaginatedPipelines = {
@@ -193,11 +191,13 @@ export class PipelineApiImpl {
       }
     }
     //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
-    const selector: PipelineSelector = { pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type };
-    let target: PipelineTarget = { selector: selector, triggerName: pipeline.trigger!.name };
-    if (pipeline.target!.ref_name) {
-      target.ref_name = pipeline.target!.ref_name;
-    }
+    //const selector: PipelineSelector = {pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type};
+    let target: PipelineTarget = {
+      ref_name: pipeline.target!.ref_name, 
+      selector: pipeline.target!.selector, 
+      triggerName: pipeline.trigger!.name
+    };
+
     const cleanedPipeline: Pipeline = {
       remote: remote,
       repository: CloudRepositoriesApi.toRepo(pipeline.repository!),

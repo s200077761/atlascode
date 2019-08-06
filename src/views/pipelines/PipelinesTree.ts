@@ -177,7 +177,7 @@ export class PipelineNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        var label = `${descriptionForState(this.pipeline)}`;
+        var label = `${descriptionForState(this.pipeline, true)}`;
         if (this.pipeline.created_on) {
             label += ` ${distanceInWordsToNow(this.pipeline.created_on)} ago`;
         }

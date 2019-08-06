@@ -19,7 +19,7 @@ export function shouldDisplay(branchName: string): boolean {
     return regex.test(branchName);
 }
 
-export function descriptionForState(result: Pipeline): string {
+export function descriptionForState(result: Pipeline, excludePipelinePrefix?: boolean): string {
     const descriptionForResult = {
         pipeline_state_completed_successful: "was successful",
         pipeline_state_completed_failed: "has failed",
@@ -39,46 +39,46 @@ export function descriptionForState(result: Pipeline): string {
         words = "is pending";
     }
 
-    const descriptionString = `${generatePipelineTitle(result)} ${words}`;
+    const descriptionString = `${generatePipelineTitle(result, excludePipelinePrefix)} ${words}`;
     return descriptionString;
 }
 
-export function generatePipelineTitle(pipeline: Pipeline): string {
+export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?: boolean): string {
     let description = "";
-    const pattern = pipeline.target.selector.pattern;
-    const type = pipeline.target.selector.type;
+    const {pattern, type} = pipeline.target.selector;
     const ref_name = pipeline.target.ref_name;
     const triggerType = pipeline.target.triggerName;
     const buildNumber = pipeline.build_number;
+    const prefix = excludePipelinePrefix ? "" : "Pipeline ";
 
     //Make sure every case is covered so that a meaningful message is displayed back
     if(type === "custom"){
       if(ref_name){
-        description = `Pipeline ${pattern}(${type}) on branch ${ref_name}`;
+        description = `${prefix}${pattern}(${type}) on branch ${ref_name}`;
       } else {
-        description = `Pipeline ${pattern}(${type})`;
+        description = `${prefix}${pattern}(${type})`;
       }
     } else if(triggerType === "MANUAL"){
       if(ref_name && pattern){
-        description = `Pipeline ${pattern}(manual) on branch ${ref_name}`;
+        description = `${prefix}${pattern}(manual) on branch ${ref_name}`;
       } else if(ref_name && buildNumber){
-        description = `Pipeline #${buildNumber}(manual) on branch ${ref_name}`;
+        description = `${prefix}#${buildNumber}(manual) on branch ${ref_name}`;
       } else if(buildNumber){
-        description = `Pipeline #${buildNumber}(manual)`;
+        description = `${prefix}#${buildNumber}(manual)`;
       } else {
-        description = `Pipeline(manual)`;
+        description = `${prefix}(manual)`;
       }
     } else if(ref_name) {
-      description = `Pipeline on branch ${ref_name}`;
+      description = `${prefix}on branch ${ref_name}`;
     } else if(buildNumber) {
-      description = `Pipeline #${buildNumber}`; 
+      description = `${prefix}#${buildNumber}`; 
     } else {
       description = "Unknown Pipeline";
     }
     return description;
   }
 
-  export function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
+export function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
     switch (statusForState(pipeline.state)) {
         case Status.Pending:
             return Resources.icons.get('pending');
