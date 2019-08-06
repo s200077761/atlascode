@@ -280,17 +280,25 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getDefaultReviewers(remote: Remote): Promise<Reviewer[]> {
+    async getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
-        const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/default-reviewers`,
-            {
-                pagelen: maxItemsSupported.reviewers
-            }
-        );
+        let reviewers: any[] = [];
+        if (!query) {
+            const { data } = await this.client.get(
+                `/repositories/${parsed.owner}/${parsed.name}/default-reviewers`,
+                {
+                    pagelen: maxItemsSupported.reviewers
+                }
+            );
+            reviewers = data.values || [];
+        } else {
+            const { data } = await this.client.get(
+                `/teams/${parsed.owner}/members?q=nickname~"${query}"`
+            );
+            reviewers = data.values || [];
+        }
 
-        const reviewers: any[] = data.values || [];
         return reviewers.map(reviewer => ({
             accountId: reviewer.account_id!,
             displayName: reviewer.display_name!,
