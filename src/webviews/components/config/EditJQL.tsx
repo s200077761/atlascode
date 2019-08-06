@@ -9,6 +9,7 @@ import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
+import axios from "axios";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -54,15 +55,14 @@ export default class EditJQL extends PureComponent<{
     const fullUrl = `https://api.atlassian.com/ex/jira/${
       this.state.selectedSite.id
       }/rest/api/2/${endpoint}`;
-    const r = new Request(fullUrl, {
+
+    return axios(fullUrl, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${this.props.jiraAccessToken}`,
         "Content-Type": "application/json"
       }
-    });
-    return fetch(r).then((res: Response) => {
-      return res.json();
-    });
+    }).then(res => { return res.data; });
   }
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {

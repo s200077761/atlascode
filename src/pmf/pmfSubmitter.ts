@@ -2,7 +2,7 @@ import { PMFData } from "../ipc/messaging";
 import { AuthInfo, ProductJira, ProductBitbucket, isOAuthInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { format } from 'date-fns';
-import fetch from 'node-fetch';
+import axios from 'axios';
 
 const devPMF = {
     collectorId: "235854834",
@@ -129,13 +129,13 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
             });
         }
 
-        fetch(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
+        axios(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${pmfIds.pmf}`
             },
-            body: JSON.stringify(payload)
+            data: JSON.stringify(payload)
 
         });
     }

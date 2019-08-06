@@ -3,7 +3,7 @@ import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
 import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Response } from "node-fetch";
+import { AxiosResponse } from "axios";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -13,18 +13,17 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
             agent,
-            async (response: Response): Promise<Error> => {
+            async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
-                try {
-                    const errJson = await response.json();
+                const errJson = await response.data;
 
-                    if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
-                        const e = errJson.errors[0];
-                        errString = e.message || errString;
-                    }
-                } catch (_) {
-                    errString = await response.text();
+                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+                    const e = errJson.errors[0];
+                    errString = e.message || errString;
+                } else {
+                    errString = errJson;
                 }
+
                 return new ClientError(response.statusText, errString);
             }
         );

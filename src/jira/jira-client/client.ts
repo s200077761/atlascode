@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
@@ -181,51 +181,48 @@ export abstract class JiraClient {
             url = `${url}?${sp.toString()}`;
         }
 
-        const res = await fetch(url, {
+        const res = await axios(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            agent: this.agent
+            httpsAgent: this.agent
         });
-        const responseObject = await res.json();
 
-        return responseObject;
+        return res.data;
     }
 
     protected async postToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
 
-        const res = await fetch(url, {
+        const res = await axios(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            body: JSON.stringify(params),
-            agent: this.agent
+            data: JSON.stringify(params),
+            httpsAgent: this.agent
         });
-        var j: any = {};
-        j = await res.json();
-        return j;
+
+        return res.data;
     }
 
     protected async putToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
 
-        const res = await fetch(url, {
+        const res = await axios(url, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            body: JSON.stringify(params),
-            agent: this.agent
+            data: JSON.stringify(params),
+            httpsAgent: this.agent
         });
-        var j: any = {};
-        j = await res.json();
-        return j;
+
+        return res.data;
     }
 }
 
