@@ -1,9 +1,10 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../bitbucket/model';
-import { Remote, Repository } from '../typings/git';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bitbucket/bbUtils';
-import { Container } from '../container';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
-import { Client } from './httpClient';
+import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../model';
+import { Remote, Repository } from '../../typings/git';
+import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
+import { Container } from '../../container';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Client, ClientError } from '../httpClient';
+import { Response } from 'node-fetch';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -14,7 +15,21 @@ export class ServerPullRequestApi implements PullRequestApi {
         this.client = new Client(
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            agent
+            agent,
+            async (response: Response): Promise<Error> => {
+                let errString = 'Unknown error';
+                try {
+                    const errJson = await response.json();
+
+                    if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+                        const e = errJson.errors[0];
+                        errString = e.message || errString;
+                    }
+                } catch (_) {
+                    errString = await response.text();
+                }
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 
@@ -39,7 +54,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { repository: repository, remote: dummyRemote, data: [], next: undefined };
     }
 
-    async  getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
@@ -53,7 +68,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
@@ -67,11 +82,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
+    async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         return { repository: repository, remote: remote, data: [], next: undefined };
     }
 
-    async  getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
         return this.getList(
             repository,
@@ -86,7 +101,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
@@ -97,7 +112,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             });
     }
 
-    async  get(pr: PullRequest): Promise<PullRequest> {
+    async get(pr: PullRequest): Promise<PullRequest> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const { data } = await this.client.get(
@@ -112,7 +127,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.toPullRequestModel(pr.repository, pr.remote, data, taskCount);
     }
 
-    async  getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
+    async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -152,7 +167,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getCurrentUser(site: DetailedSiteInfo): Promise<User> {
+    async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
         const userSlug = (await Container.authManager.getAuthInfo(site))!.user.id;
         const { data } = await this.client.get(
             `/rest/api/1.0/users/${userSlug}`,
@@ -165,7 +180,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
     }
 
-    async  getCommits(pr: PullRequest): Promise<PaginatedCommits> {
+    async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -189,7 +204,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getComments(pr: PullRequest): Promise<PaginatedComments> {
+    async getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -230,11 +245,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async  getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
+    async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
         return [];
     }
 
-    async  getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
+    async getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let users: any[] = [];
@@ -276,7 +291,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return users.map(val => ({ ...this.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
     }
 
-    async  create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
+    async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         const { data } = await this.client.post(
@@ -301,12 +316,12 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.toPullRequestModel(repository, remote, data, 0);
     }
 
-    async  updateApproval(pr: PullRequest, approved: boolean) {
+    async updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const userSlug = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(pr.remote)!))!.user.id;
 
-        await this.client.post(
+        await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
                 status: approved ? 'APPROVED' : 'UNAPPROVED'
@@ -314,7 +329,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async  merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
+    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         await this.client.post(

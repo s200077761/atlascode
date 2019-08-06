@@ -1,8 +1,9 @@
-import { Remote, Repository } from "../typings/git";
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../bitbucket/model";
-import { Client } from "./httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Remote, Repository } from "../../typings/git";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Client, ClientError } from "../httpClient";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Response } from "node-fetch";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -11,7 +12,21 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         this.client = new Client(
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            agent
+            agent,
+            async (response: Response): Promise<Error> => {
+                let errString = 'Unknown error';
+                try {
+                    const errJson = await response.json();
+
+                    if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+                        const e = errJson.errors[0];
+                        errString = e.message || errString;
+                    }
+                } catch (_) {
+                    errString = await response.text();
+                }
+                return new ClientError(response.statusText, errString);
+            }
         );
     }
 
