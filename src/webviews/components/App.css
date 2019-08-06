@@ -1,8 +1,40 @@
-/*-------------------- BEGIN - general containers --------------------*/
+/*-------------------- BEGIN - fix css-reset --------------------*/
 
-p {
-  color: var(--vscode-foreground);
+body {
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    margin: 0;
+    padding: 0 20px;
 }
+
+a {
+    color: var(--vscode-textLink-foreground);
+}
+
+a:hover {
+    color: var(--vscode-textLink-activeForeground);
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 1px solid -webkit-focus-ring-color;
+    outline-offset: -1px;
+}
+
+p, h1, h2, h3, h4, h5, h6, label, span {
+  color: var(--vscode-editor-foreground);
+  margin: 0px;
+}
+
+/*-------------------- END - fix css-reset --------------------*/
+
+
+/*-------------------- BEGIN - general containers --------------------*/
 
 hr {
   height: 1px;
@@ -102,27 +134,14 @@ pre {
 
 /*-------------------- END - general containers --------------------*/
 
-/*-------------------- BEGIN - page header --------------------*/
-
-[class^=styled__StyledTitle-] p {
-  margin: 0px;
-  color: var(--vscode-editor-foreground);
-}
-
-[class^=styled__StyledTitle-] {
-  margin: 0px;
-}
-
-/*-------------------- END - page header --------------------*/
-
 /*-------------------- BEGIN - panels --------------------*/
 
 [class^=styledPanel__PanelHeader] h3 {
   margin: 5px;
 }
 
-[class^=styledPanel__PanelHeader] {
-  left: 0px;
+[class^=styledPanel__PanelHeader] h4 {
+  margin: 5px;
 }
 
 .vscode-dark [class^=styledPanel__PanelHeader] {
@@ -262,17 +281,21 @@ div#empty-jql-row {
 
 /*-------------------- BEGIN - section messages --------------------*/
 
-section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
-  color: #4c4c4c !important;
-  margin: 6px;
+section p, section span {
+  color: #4c4c4c;
+}
+
+section button span {
+  color: var(--vscode-textLink-foreground);
 }
 
 /*-------------------- END - section messages --------------------*/
 
 /*-------------------- BEGIN - inline dialog --------------------*/
 
-.ac-inline-dialog [class^=styled__Container-] {
-  background: var(--vscode-editor-background--lighten-05);
+.ac-inline-dialog div {
+  background-color: var(--vscode-editor-background--lighten-05);
+  color: var(--vscode-editor-foreground);
 }
 
 /*-------------------- END - inline dialog --------------------*/
@@ -320,12 +343,12 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - links --------------------*/
 
-.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button>span {
-  color: var(--vscode-textlink-foreground) !important
+.ac-link-button span {
+  color: var(--vscode-textLink-foreground);
 }
 
-.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
-  color: var(--vscode-foreground) !important
+.ac-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
 }
 
 .ac-link-button>button {
@@ -340,6 +363,14 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .ac-banner-link-button>button {
   padding: 0 !important
+}
+
+.ac-banner-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
+
+.ac-banner-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
 }
 
 /*-------------------- END - links --------------------*/
@@ -416,6 +447,10 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 .ac-select__multi-value__label {
   background: var(--vscode-dropdown-foreground) !important;
   font-size: 100% !important;
+}
+
+.ac-select__multi-value__label span {
+  color: var(--vscode-editor-foreground--darken-10) !important
 }
 
 .ac-select__option {
@@ -533,10 +568,11 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .ac-branch-lozenge, .ac-branch-lozenge__Text {
   -webkit-box-sizing: border-box;
-  box-sizing: border-box
+  box-sizing: border-box;
 }
 
 .ac-branch-lozenge__Text {
+  color: var(--vscode-button-foreground);
   display: inline-block;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
