@@ -168,7 +168,6 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 }
 
-const PipelineBranchContextValue = 'pipelineBranch';
 const PipelineBuildContextValue = 'pipelineBuild';
 
 export class PipelineNode extends AbstractBaseNode {
@@ -177,39 +176,21 @@ export class PipelineNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        var label = `${descriptionForState(this.pipeline, true)}`;
+        //Labels show up before descriptions, and descriptions are grayed out
+        const label = `${descriptionForState(this.pipeline, true)}`;
+        let description = "";
         if (this.pipeline.created_on) {
-            label += ` ${distanceInWordsToNow(this.pipeline.created_on)} ago`;
+            description = `${distanceInWordsToNow(this.pipeline.created_on)} ago`;
         }
+
         const item = new TreeItem(label);
+        item.description = description;
         item.contextValue = PipelineBuildContextValue;
+        item.tooltip = label;
         item.command = { command: Commands.ShowPipeline, title: "Show Pipeline", arguments: [{ pipelineUuid: this.pipeline.uuid, repo: this._repo, remote: this._remote }] };
         item.iconPath = iconUriForPipeline(this.pipeline);
         item.resourceUri = Uri.parse(`${this.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.pipeline.build_number}`);
         return item;
-    }
-
-    getChildren(element: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        return this._repoNode.getChildren(element);
-    }
-}
-
-export class BranchNode extends AbstractBaseNode {
-    constructor(private _repoNode: PipelinesRepoNode, readonly branchName: string, readonly repo: Repository, readonly remote: Remote, readonly pipelines?: Pipeline[]) {
-        super();
-    }
-
-    getTreeItem() {
-        const treeItem = new TreeItem(this.branchName);
-        treeItem.collapsibleState = TreeItemCollapsibleState.Collapsed;
-        treeItem.contextValue = PipelineBranchContextValue;
-        if (this.pipelines && this.pipelines.length > 0) {
-            const iconPath = iconUriForPipeline(this.pipelines[0]);
-            if (iconPath) {
-                treeItem.iconPath = iconPath;
-            }
-        }
-        return treeItem;
     }
 
     getChildren(element: AbstractBaseNode): Promise<AbstractBaseNode[]> {

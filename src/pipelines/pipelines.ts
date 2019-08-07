@@ -191,7 +191,6 @@ export class PipelineApiImpl {
       }
     }
     //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
-    //const selector: PipelineSelector = {pattern: pipeline.target!.selector.pattern, type: pipeline.target!.selector.type};
     let target: PipelineTarget = {
       ref_name: pipeline.target!.ref_name, 
       selector: pipeline.target!.selector, 

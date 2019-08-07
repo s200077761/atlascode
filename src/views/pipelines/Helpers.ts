@@ -52,28 +52,24 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
     const prefix = excludePipelinePrefix ? "" : "Pipeline ";
 
     //Make sure every case is covered so that a meaningful message is displayed back
-    if(type === "custom"){
-      if(ref_name){
-        description = `${prefix}${pattern}(${type}) on branch ${ref_name}`;
+    if(type === "custom") { //This is a custom pipeline
+      if(ref_name) { //Pipeline is on a branch
+        description = `${prefix}#${buildNumber} ${pattern}(${type}) on branch ${ref_name}`;
       } else {
-        description = `${prefix}${pattern}(${type})`;
+        description = `${prefix}#${buildNumber} ${pattern}(${type})`;
       }
-    } else if(triggerType === "MANUAL"){
-      if(ref_name && pattern){
-        description = `${prefix}${pattern}(manual) on branch ${ref_name}`;
-      } else if(ref_name && buildNumber){
-        description = `${prefix}#${buildNumber}(manual) on branch ${ref_name}`;
-      } else if(buildNumber){
+    } else if(triggerType === "MANUAL") { //Pipeline is not custom but was manually triggered
+      if(ref_name && pattern) { //Pipeline on a branch and pipeline is not default
+        description = `${prefix}#${buildNumber}(manual) ${pattern} on branch ${ref_name}`;
+      } else if(ref_name) { //Pipeline on a branch
+        description = `${prefix}#${buildNumber}(manual) on branch ${ref_name}`; 
+      } else { 
         description = `${prefix}#${buildNumber}(manual)`;
-      } else {
-        description = `${prefix}(manual)`;
       }
-    } else if(ref_name) {
-      description = `${prefix}on branch ${ref_name}`;
-    } else if(buildNumber) {
-      description = `${prefix}#${buildNumber}`; 
+    } else if(ref_name) { //Pipeline is on a branch
+        description = `${prefix}#${buildNumber} on branch ${ref_name}`;
     } else {
-      description = "Unknown Pipeline";
+        description = `${prefix}#${buildNumber}`; //Fallback case (All pipelines must have build numbers)
     }
     return description;
   }
