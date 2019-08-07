@@ -10,8 +10,9 @@ import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { EditIssueAction } from '../../../ipc/issueActions';
 
-type Emit = CommonEditorPageEmit;
+type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
 type SizeMetrics = {
@@ -38,16 +39,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         let handled = super.onMessageReceived(e);
 
         if (!handled) {
-            console.log('ui got message', e);
             switch (e.type) {
                 case 'update': {
                     const issueData = e as EditIssueData;
                     this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
                     break;
                 }
+                case 'fieldValueUpdate': {
+                    this.setState({ fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
+                    break;
+                }
             }
         }
-
         return handled;
     }
 
@@ -58,7 +61,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
-        this.handleEditIssue(field.key, newValue);
+        //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
+        this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
+            this.handleEditIssue(field.key, newValue);
+        });
     }
 
     handleEditIssue = (fieldKey: string, newValue: any) => {
@@ -69,19 +75,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             }
         });
     }
-    /*
-    editIssue = (fieldName: string, value: any) => {
-    const editedIssueData = { ...this.state.data, [fieldName]: value };
-    this.setState({ data: editedIssueData });
 
-    this.postMessage({
-      action: 'editIssue',
-      fields: {
-        [fieldName]: editedIssueData[fieldName]
-      }
-    });
-  }
-  */
     getMainPanelMarkup(): any {
         if (Object.keys(this.state.fields).length < 1) {
             return <div>Loading Data...</div>;

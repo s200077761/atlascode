@@ -9345,10 +9345,10 @@ react-dom@^16.8.6:
     prop-types "^15.6.2"
     scheduler "^0.13.6"
 
-react-editext@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/react-editext/-/react-editext-3.4.0.tgz#dc635beb5d483f409835b0cd93eb410e54f14c75"
-  integrity sha512-5nWw+aOB9O5h1k0E4L0NuYEHgT0MtT32CjwEdzG/FonxIYKTjV9lC+ndYai4LDxTHqL8M+iWxPabKKO45OVqpQ==
+react-editext@^3.4.1:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/react-editext/-/react-editext-3.4.1.tgz#6eac43eeba790fb0ef121e354ce08af1e828df88"
+  integrity sha512-Q7RXUml0XfE21y+CbyUMUXj9o3CFCfxYSe2DrQs/k/jJhzC6HTP3z1hoX7lccCDauM/4MO/P09x1XhrFUwHvrA==
   dependencies:
     classnames "^2.2.6"
 

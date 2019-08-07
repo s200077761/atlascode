@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreatedSomething, LabelList, UserList } from "../../../ipc/issueMessaging";
+import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError } from "../../../ipc/issueMessaging";
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
@@ -13,7 +13,7 @@ type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
 
 export type CommonEditorPageEmit = Action | OpenJiraIssueAction;
-export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage;
+export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage | IssueEditError;
 
 export interface CommonEditorViewState extends Message {
     fieldValues: FieldValues;
@@ -37,7 +37,20 @@ export const emptyCommonEditorState: CommonEditorViewState = {
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
 
     onMessageReceived(e: any): boolean {
-        return false;
+        let handled: boolean = false;
+        switch (e.type) {
+            case 'error': {
+                if (isIssueEditError(e)) {
+                    this.setState({ isSomethingLoading: false, isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
+                } else {
+                    this.setState({ isSomethingLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                }
+                handled = true;
+                break;
+            }
+        }
+
+        return handled;
     }
 
     postMessage<T extends CommonEditorPageEmit>(e: T) {
@@ -59,8 +72,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKey) => {
         this.postMessage({
             action: "openJiraIssue",
-            issueOrKey: issueOrKey
-        } as OpenJiraIssueAction);
+            issueOrKey: issueOrKey,
+        });
     }
 
     protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
@@ -148,10 +161,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
-                            viewContainerClassName='ac-inline-edit-view'
                             inputProps={{ className: 'ac-inputField' }}
-                            viewProps={{ className: 'ac-inline-edit-p' }}
-                            editButtonClassName="ac-inline-edit-button"
+                            viewProps={{ className: 'ac-inline-input-view-p' }}
+                            editButtonClassName='ac-inline-edit-button'
+                            cancelButtonClassName='ac-inline-cancel-button'
+                            saveButtonClassName='ac-inline-save-button'
+                            editOnViewClick={true}
                         />
                     );
                 }

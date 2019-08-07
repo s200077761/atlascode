@@ -1,4 +1,4 @@
-import { Message } from "./messaging";
+import { Message, HostErrorMessage } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
@@ -6,6 +6,7 @@ import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
 import { EpicFieldInfo } from "../jira/jiraCommon";
 import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
 import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { FieldValues } from "../jira/jira-client/model/fieldUI";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -24,6 +25,18 @@ export const emptyEditIssueData: EditIssueData = {
     workInProgress: false,
     recentPullRequests: [],
 };
+
+export interface IssueEditError extends HostErrorMessage {
+    fieldValues: FieldValues;
+}
+
+export function isIssueEditError(m: Message): m is IssueEditError {
+    return (<IssueEditError>m).fieldValues !== undefined;
+}
+export interface FieldValueUpdate extends Message {
+    type: 'fieldValueUpdate';
+    fieldValues: FieldValues;
+}
 
 export interface IssueProblemsData extends Message {
     problems: CreateMetaTransformerProblems;

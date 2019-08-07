@@ -1,0 +1,58 @@
+diff --git a/node_modules/react-editext/dist/index.es.js b/node_modules/react-editext/dist/index.es.js
+index 1249480..6428c32 100644
+--- a/node_modules/react-editext/dist/index.es.js
++++ b/node_modules/react-editext/dist/index.es.js
+@@ -178,7 +178,7 @@ var classnames = createCommonjsModule(function (module) {
+ 		return classes.join(' ');
+ 	}
+ 
+-	if (module.exports) {
++	if ( module.exports) {
+ 		classNames.default = classNames;
+ 		module.exports = classNames;
+ 	} else {
+@@ -337,6 +337,15 @@ function (_Component) {
+   }
+ 
+   _createClass(EdiText, [{
++    key: "componentWillReceiveProps",
++    value: function componentWillReceiveProps(nextProps) {
++      if (nextProps.value) {
++        this.setState({
++          value: nextProps.value
++        });
++      }
++    }
++  }, {
+     key: "_renderInput",
+     value: function _renderInput() {
+       if (this.props.type === 'textarea') {
+diff --git a/node_modules/react-editext/dist/index.js b/node_modules/react-editext/dist/index.js
+index 5cb22c4..a57e08b 100644
+--- a/node_modules/react-editext/dist/index.js
++++ b/node_modules/react-editext/dist/index.js
+@@ -183,7 +183,7 @@ var classnames = createCommonjsModule(function (module) {
+ 		return classes.join(' ');
+ 	}
+ 
+-	if (module.exports) {
++	if ( module.exports) {
+ 		classNames.default = classNames;
+ 		module.exports = classNames;
+ 	} else {
+@@ -342,6 +342,15 @@ function (_Component) {
+   }
+ 
+   _createClass(EdiText, [{
++    key: "componentWillReceiveProps",
++    value: function componentWillReceiveProps(nextProps) {
++      if (nextProps.value) {
++        this.setState({
++          value: nextProps.value
++        });
++      }
++    }
++  }, {
+     key: "_renderInput",
+     value: function _renderInput() {
+       if (this.props.type === 'textarea') {
