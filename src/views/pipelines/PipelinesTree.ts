@@ -146,17 +146,15 @@ export class PipelinesRepoNode extends AbstractBaseNode {
 
        const remote = firstBitbucketRemote(this._repo);
        if (remote) {
-           this._remote = remote;
-           const bbApi = await clientForRemote(this._remote);
-           const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
-                page: `${this._page}`,
-                pagelen: defaultPageLength,
-            });
-           pipelines = paginatedPipelines.values;
-           const numPages = paginatedPipelines.size/paginatedPipelines.pagelen;
-           if (paginatedPipelines.page < numPages) {
-               morePages = true;
-           }
+            this._remote = remote;
+            const bbApi = await clientForRemote(this._remote);
+            const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
+                 page: `${this._page}`,
+                 pagelen: defaultPageLength,
+             });
+            pipelines = paginatedPipelines.values;
+            const numPages = paginatedPipelines.size/defaultPageLength;
+            morePages = paginatedPipelines.page < numPages;  
        }
        this._morePages = morePages;
        return pipelines;

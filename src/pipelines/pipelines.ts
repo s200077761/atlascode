@@ -118,7 +118,7 @@ export class PipelineApiImpl {
   ): Promise<PaginatedPipelines> {
     // TODO: [VSCODE-502] use site info and convert to async await with try/catch
     let parsed = parseGitUrl(urlForRemote(remote));
-    const response = await this.client.get(
+    const {data: responseBody} = await this.client.get(
       `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
       {
         ...query,
@@ -127,7 +127,6 @@ export class PipelineApiImpl {
     );
 
     //Take the response and clean it up; in particular, clean up the pipelines it sends back
-    const responseBody = response.data;
     let cleanedPipelines: Pipeline[] = [];
     if (responseBody.values) {
       cleanedPipelines = responseBody.values.map((pipeline: any) => this.cleanPipelineData(remote, pipeline));
