@@ -29,13 +29,13 @@ export class NewIssueMonitor {
     const ts = format(this._timestamp, "YYYY-MM-DD HH:mm");
     try {
       let newIssues = await issuesForJQL(`project = ${this._workingProject.id} AND created > "${ts}"`);
-      newIssues = newIssues.filter(issue => issue.created > this._timestamp);
+      newIssues = newIssues.filter(issue => issue.created! > this._timestamp);
 
       if (newIssues.length > 0) {
         this.showNotification(newIssues);
         newIssues.forEach(issue => {
-          if (issue.created > this._timestamp) {
-            this._timestamp = issue.created;
+          if (issue.created! > this._timestamp) {
+            this._timestamp = issue.created!;
           }
         });
       }

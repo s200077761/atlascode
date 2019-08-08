@@ -8,20 +8,20 @@ export interface Field {
     readonly key: string;
     readonly name: string;
     readonly schema?: FieldSchemaMeta;
-    currentValue: any | undefined;
+    currentValue?: any;
+    renderedValue?: any;
     readonly custom: boolean;
     readonly clauseNames: string[];
 }
 
-export function readField(props: any, fieldValue?: any) {
+export function readField(props: any) {
     return {
         id: props.id,
         key: props.key,
         name: props.name,
         custom: props.custom,
         clauseNames: props.clauseNames,
-        schema: props.schema ? readFieldSchema(props.schema) : undefined,
-        currentValue: fieldValue
+        schema: props.schema ? readFieldSchema(props.schema) : undefined
     };
 }
 
@@ -37,7 +37,8 @@ export interface FieldMeta {
     readonly key: string;
     readonly name: string;
     readonly schema: FieldSchemaMeta;
-    readonly currentValue: any | undefined;
+    currentValue?: any;
+    renderedValue?: any;
     readonly autoCompleteUrl: string | undefined;
     readonly required: boolean;
     readonly allowedValues: any[] | undefined;
@@ -47,20 +48,21 @@ export function isFieldMeta(f: any): f is FieldMeta {
     return f && (<FieldMeta>f).required !== undefined;
 }
 
-export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k: string]: any }): { [k: string]: FieldMeta } {
+export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k: string]: any }, renderedFields?: { [k: string]: any }): { [k: string]: FieldMeta } {
     let metaFields: { [k: string]: FieldMeta } = {};
 
     Object.keys(fields).forEach(key => {
         console.log(key);
         const fieldValue: any = fieldValues ? fieldValues[key] : undefined;
+        const fieldRenderedValue: any = (renderedFields && renderedFields[key]) ? renderedFields[key] : undefined;
 
-        metaFields[key] = readFieldMeta(key, fields[key], fieldValue);
+        metaFields[key] = readFieldMeta(key, fields[key], fieldValue, fieldRenderedValue);
     });
 
     return metaFields;
 }
 
-export function readFieldMeta(key: string, props: any, fieldValue?: any): FieldMeta {
+export function readFieldMeta(key: string, props: any, fieldValue?: any, renderedValue?: any): FieldMeta {
     return {
         schema: readFieldSchema(props.schema),
         id: props.id,
@@ -69,7 +71,8 @@ export function readFieldMeta(key: string, props: any, fieldValue?: any): FieldM
         autoCompleteUrl: props.autoCompleteUrl,
         required: props.required,
         allowedValues: props.allowedValues,
-        currentValue: fieldValue
+        currentValue: fieldValue,
+        renderedValue: renderedValue
     };
 }
 

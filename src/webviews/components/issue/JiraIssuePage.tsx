@@ -11,6 +11,7 @@ import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
 import { EditIssueAction } from '../../../ipc/issueActions';
+import { Comments } from './Comments';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -46,7 +47,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     break;
                 }
                 case 'fieldValueUpdate': {
-                    this.setState({ fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
+                    console.log('fieldValueUpdate', e);
+                    this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
                 }
             }
@@ -76,6 +78,27 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
+    handleAddComment = (comment: string) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'comment' });
+        this.postMessage({
+            action: "comment",
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            comment: comment
+        });
+    }
+
+    /*
+    , 'fixVersions'
+    , 'components'
+    , 'labels'
+    , 'assignee'
+    , 'reporter'
+    , 'priority'
+    , 'status'
+    , 'issuetype'
+    , 'attachment'
+    , 'comment'
+    */
     getMainPanelMarkup(): any {
         if (Object.keys(this.state.fields).length < 1) {
             return <div>Loading Data...</div>;
@@ -110,7 +133,37 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     }>
                     {this.getFieldMarkup(this.state.fields['summary'], true)}
                 </PageHeader>
-                {/* <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} /> */}
+                {this.state.fields['description'] &&
+                    <div>
+                        <label className='ac-field-label' htmlFor={this.state.fields['description'].key}>{this.state.fields['description'].name}</label>
+                        {this.getFieldMarkup(this.state.fields['description'], true)}
+                    </div>
+                }
+                {this.state.fields['environment'] &&
+                    <div>
+                        <label className='ac-field-label' htmlFor={this.state.fields['environment'].key}>{this.state.fields['environment'].name}</label>
+                        {this.getFieldMarkup(this.state.fields['environment'], true)}
+                    </div>
+                }
+
+                {this.state.fields['subtasks'] &&
+                    <div>
+                        <label className='ac-field-label' htmlFor={this.state.fields['subtasks'].key}>{this.state.fields['subtasks'].name}</label>
+                        {this.getFieldMarkup(this.state.fields['subtasks'], true)}
+                    </div>
+                }
+                {this.state.fields['issuelinks'] &&
+                    <div>
+                        <label className='ac-field-label' htmlFor={this.state.fields['issuelinks'].key}>{this.state.fields['issuelinks'].name}</label>
+                        {this.getFieldMarkup(this.state.fields['issuelinks'], true)}
+                    </div>
+                }
+                {this.state.fields['comment'] &&
+                    <div>
+                        <label className='ac-field-label' htmlFor={this.state.fields['comment'].key}>{this.state.fields['comment'].name}</label>
+                        <Comments comments={this.state.fieldValues['comment.rendered'].comments} loading={this.state.loadingField === 'comment'} onAddComment={this.handleAddComment} />
+                    </div>
+                }
             </div>
         );
     }

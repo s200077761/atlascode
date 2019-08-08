@@ -61,7 +61,7 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   const client = await Container.clientManager.jirarequest(issue.siteDetails);
   const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
-  const metaFields: { [k: string]: FieldMeta } = readFieldsMeta(res.editmeta.fields, res.fields);
+  const metaFields: { [k: string]: FieldMeta } = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
 
   const metaFieldKeys: string[] = Object.keys(metaFields);
 
@@ -71,6 +71,10 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
     if (res.fields[fkey] !== null && !metaFieldKeys.includes(fkey) && allFieldKeys.includes(fkey)) {
       filteredFields[fkey] = allFields[fkey];
       filteredFields[fkey].currentValue = res.fields[fkey];
+
+      if (res.renderedFields[fkey] && res.renderedFields[fkey] !== null) {
+        filteredFields[fkey].renderedValue = res.renderedFields[fkey];
+      }
     }
   });
 

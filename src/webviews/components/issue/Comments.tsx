@@ -3,24 +3,24 @@ import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
 import Spinner from '@atlaskit/spinner';
-import { DetailedIssue } from "../../../jira/jira-client/model/detailedJiraIssue";
 import { Comment as JiraComment } from "../../../jira/jira-client/model/entities";
 
-export class Comments extends React.Component<
-  {
-    issue: DetailedIssue;
-    isCommentLoading: boolean;
-    onSave: (issue: DetailedIssue, comment: string) => void;
-  },
-  { commentInput: string }
-  > {
+type Props = {
+  loading: boolean;
+  comments: JiraComment[];
+  onAddComment: (comment: string) => void;
+};
+
+type State = { comments: JiraComment[], loading: boolean, commentInput: string };
+
+export class Comments extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
-    this.state = { commentInput: "" };
+    this.state = { loading: props.loading, comments: props.comments, commentInput: "" };
   }
 
   handleSave = (e: any) => {
-    this.props.onSave(this.props.issue, this.state.commentInput);
+    this.props.onAddComment(this.state.commentInput);
     this.setState({ commentInput: "" });
   }
 
@@ -32,11 +32,22 @@ export class Comments extends React.Component<
     this.setState({ commentInput: e.target.value });
   }
 
-  comments(): any[] {
-    const issue = this.props.issue;
+  componentWillReceiveProps(nextProps: any) {
+    if (nextProps.loading !== undefined) {
+      this.setState({ loading: nextProps.loading });
+    }
+
+    if (nextProps.comments !== undefined) {
+      this.setState({ comments: nextProps.comments });
+    }
+  }
+
+  commentList(): any[] {
+    //const issue = this.props.issue;
 
     let result: any[] = [];
-    issue.comments.forEach((comment: JiraComment) => {
+    this.state.comments.forEach((comment: JiraComment) => {
+      const created = (isNaN(Date.parse(comment.created))) ? comment.created : new Date(comment.created).toLocaleString();
       const commentMarkup = (
         <Comment
           avatar={
@@ -47,7 +58,7 @@ export class Comments extends React.Component<
             />
           }
           author={<CommentAuthor><div className="jira-comment-author">{comment.author.displayName}</div></CommentAuthor>}
-          time={<CommentTime>{new Date(comment.created).toLocaleString()}</CommentTime>}
+          time={<CommentTime>{created}</CommentTime>}
           content={<div className="jira-comment"><p dangerouslySetInnerHTML={{ __html: comment.body }} /></div>}
         />
       );
@@ -59,7 +70,7 @@ export class Comments extends React.Component<
   commentForm(): any {
     return (
       <div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
-        {this.props.isCommentLoading && <Spinner size='large' />}
+        {this.state.loading && <Spinner size='large' />}
         <textarea
           className='ac-textarea'
           rows={3}
@@ -78,7 +89,7 @@ export class Comments extends React.Component<
   render() {
     return (
       <React.Fragment>
-        {this.comments()}
+        {this.commentList()}
         {this.commentForm()}
       </React.Fragment>
     );

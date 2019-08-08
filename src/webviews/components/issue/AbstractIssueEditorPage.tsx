@@ -2,12 +2,14 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, IssueLinksUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
-import { MinimalIssueOrKey } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
+import IssueList from './IssueList';
+import LinkedIssues from './LinkedIssues';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -69,7 +71,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKey) => {
+    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => {
         this.postMessage({
             action: "openJiraIssue",
             issueOrKey: issueOrKey,
@@ -154,21 +156,30 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 }
 
                 if (inline) {
-                    return (
-                        <EdiText
+                    let markup: React.ReactNode = <p></p>;
+
+                    if ((field as InputFieldUI).isMultiline) {
+                        if (this.state.fieldValues[`${field.key}.rendered`] !== undefined) {
+                            markup = <p id={field.key} dangerouslySetInnerHTML={{ __html: this.state.fieldValues[`${field.key}.rendered`] }} />;
+                        } else {
+                            markup = <p id={field.key} >{this.state.fieldValues[field.key]}</p>;
+                        }
+                    } else {
+                        markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
                             value={this.state.fieldValues[field.key]}
                             onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
                             inputProps={{ className: 'ac-inputField' }}
-                            viewProps={{ className: 'ac-inline-input-view-p' }}
+                            viewProps={{ id: field.key, className: 'ac-inline-input-view-p' }}
                             editButtonClassName='ac-inline-edit-button'
                             cancelButtonClassName='ac-inline-cancel-button'
                             saveButtonClassName='ac-inline-save-button'
                             editOnViewClick={true}
-                        />
-                    );
+                        />;
+                    }
+                    return markup;
                 }
 
                 return (
@@ -194,6 +205,15 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         }
                     </Field>
                 );
+            }
+            case UIType.IssueLink: {
+                if (inline) {
+                    let markup = ((field as IssueLinksUI).isSubtasks) ?
+                        <IssueList issues={this.state.fieldValues[field.key]} onIssueClick={this.handleOpenIssue} />
+                        : <LinkedIssues issuelinks={this.state.fieldValues[field.key]} onIssueClick={this.handleOpenIssue} />;
+
+                    return markup;
+                }
             }
         }
 

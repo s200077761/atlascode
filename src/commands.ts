@@ -12,7 +12,8 @@ import { viewScreenEvent, Registry } from './analytics';
 import { showIssue } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { BitbucketIssue } from './bitbucket/model';
-import { MinimalIssue, isMinimalIssue, MinimalIssueOrKey } from './jira/jira-client/model/entities';
+import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from './jira/jira-client/model/entities';
+import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -58,10 +59,10 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
-        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKey: MinimalIssueOrKey) => await showIssue(issueOrKey)),
+        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => await showIssue(issueOrKey)),
         vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
-        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => Container.startWorkOnIssueWebview.createOrShowIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
+        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, vscode.Uri, vscode.Uri, string]) => {

@@ -14,12 +14,12 @@ import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
-import { MinimalIssueOrKey, MinimalIssue } from '../jira/jira-client/model/entities';
+import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
 
 type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<MinimalIssueOrKey> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 

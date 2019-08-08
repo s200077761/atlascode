@@ -46,7 +46,7 @@ export abstract class JiraClient {
     }
 
     public async addComment(issueIdOrKey: string, comment: string): Promise<any> {
-        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment });
+        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment }, { expand: 'renderedBody' });
 
         return res;
     }
@@ -143,7 +143,7 @@ export abstract class JiraClient {
 
     public async getIssueLinkTypes(): Promise<IssueLinkType[]> {
         const res = await this.getFromJira('issueLinkType');
-        return res;
+        return (res.issueLinkTypes) ? res.issueLinkTypes : [];
     }
 
     // Field
@@ -194,8 +194,15 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async postToJira(url: string, params: any): Promise<any> {
+    protected async postToJira(url: string, params: any, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
+        }
 
         const res = await axios(url, {
             method: "POST",

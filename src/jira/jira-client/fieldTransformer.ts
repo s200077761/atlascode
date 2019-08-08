@@ -2,7 +2,7 @@
 import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
-import { IssueLinkType } from "./model/entities";
+import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
 
@@ -14,6 +14,7 @@ interface ProblemCollector {
 interface FieldAndValue {
     field: any;
     value: any;
+    renderedValue?: any;
 }
 
 export interface ProjectIdAndKey {
@@ -72,6 +73,9 @@ export class FieldTransformer {
                 if (fieldAndValue.value && fieldAndValue.value !== null) {
                     result.fieldValues[field.key] = fieldAndValue.value;
                 }
+                if (fieldAndValue.renderedValue && fieldAndValue.renderedValue !== null) {
+                    result.fieldValues[`${field.key}.rendered`] = fieldAndValue.renderedValue;
+                }
             }
         });
 
@@ -82,7 +86,6 @@ export class FieldTransformer {
     }
 
     private transformField(field: FieldOrFieldMeta, displayOrder: number, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): FieldAndValue {
-        // when updating for FeildORFieldMeta, check items and if it's issuelinks, always return an editable UI.
         const required: boolean = isFieldMeta(field) ? field.required : false;
         const allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
         const schema: FieldSchemaMeta = field.schema!;
@@ -100,6 +103,8 @@ export class FieldTransformer {
 
         switch (this.uiTypeForField(field)) {
             case UIType.Input: {
+                const isMulti: boolean = multiLineStringSchemas.includes(schemaName);
+                const renderedValue = (isMulti && field.renderedValue) ? field.renderedValue : undefined;
                 return {
                     field: {
                         required: required,
@@ -108,9 +113,9 @@ export class FieldTransformer {
                         uiType: UIType.Input,
                         displayOrder: displayOrder,
                         valueType: this.valueTypeForField(field),
-                        isMultiline: multiLineStringSchemas.includes(schemaName),
+                        isMultiline: isMulti,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: field.currentValue, renderedValue: renderedValue
                 };
             }
             case UIType.Checkbox: {
@@ -142,6 +147,7 @@ export class FieldTransformer {
                 };
             }
             case UIType.Date: {
+                const renderedValue = (field.renderedValue) ? field.renderedValue : undefined;
                 return {
                     field: {
                         required: required,
@@ -151,10 +157,11 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: field.currentValue, renderedValue: renderedValue
                 };
             }
             case UIType.DateTime: {
+                const renderedValue = (field.renderedValue) ? field.renderedValue : undefined;
                 return {
                     field: {
                         required: required,
@@ -164,7 +171,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: field.currentValue, renderedValue: renderedValue
                 };
             }
             case UIType.Select: {
@@ -194,6 +201,17 @@ export class FieldTransformer {
                 };
             }
             case UIType.IssueLink: {
+                const isSubtasks: boolean = (schemaName === 'subtasks');
+
+                let currentVal = undefined;
+                if (field.currentValue) {
+                    if (isSubtasks) {
+                        currentVal = readIssueLinkIssues(field.currentValue, this._site);
+                    } else {
+                        currentVal = readMinimalIssueLinks(field.currentValue, this._site);
+                    }
+                }
+
                 return {
                     field: {
                         required: required,
@@ -210,7 +228,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: currentVal
                 };
             }
             case UIType.Timetracking: {
@@ -240,6 +258,7 @@ export class FieldTransformer {
                 };
             }
             case UIType.Comments: {
+                const renderedValue = (field.renderedValue) ? field.renderedValue : field.currentValue;
                 return {
                     field: {
                         required: required,
@@ -249,7 +268,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: field.currentValue, renderedValue: renderedValue
                 };
             }
             case UIType.Watches: {
@@ -379,7 +398,12 @@ export class FieldTransformer {
             }
 
         } else if (isField(field)) {
-            foundType = UIType.NonEditable;
+            // issue links are always editable
+            if (field.schema && field.schema.items && field.schema.items === 'issuelinks') {
+                foundType = UIType.IssueLink;
+            } else {
+                foundType = UIType.NonEditable;
+            }
         } else {
             foundType = UIType.Input;
         }

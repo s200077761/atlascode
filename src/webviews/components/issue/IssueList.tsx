@@ -3,11 +3,9 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import { MinimalIssue } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSiteOrKey, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
 
-
-type ItemData = { issue: MinimalIssue, postMessage: (e: OpenJiraIssueAction) => void };
+type ItemData = { issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void };
 
 const colorToLozengeAppearanceMap = {
     neutral: 'default',
@@ -20,8 +18,8 @@ const colorToLozengeAppearanceMap = {
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
-        <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
+        <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issuetype.name}><img src={data.issue.issuetype.iconUrl} /></Tooltip></div>
+        <Button appearance="subtle-link" onClick={() => data.onIssueClick(data.issue.key)}>
             {data.issue.key}
         </Button>
     </div>;
@@ -29,7 +27,7 @@ const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
 const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}><Lozenge appearence={colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName]}>{data.issue.status.name}</Lozenge></p>;
 
-export default class IssueList extends React.Component<{ issues: MinimalIssue[], postMessage: (e: OpenJiraIssueAction) => void }, {}> {
+export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -44,7 +42,7 @@ export default class IssueList extends React.Component<{ issues: MinimalIssue[],
                         id: issue.key,
                         content: {
                             issue: issue,
-                            postMessage: this.props.postMessage
+                            postMessage: this.props.onIssueClick
                         }
                     };
                 })}

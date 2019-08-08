@@ -7,9 +7,10 @@ import { Container } from "../container";
 import { fetchEditIssueUI } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, FieldValueUpdate, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
+import { postComment } from "../commands/jira/postComment";
 
 type Emit = CommonEditorWebviewEmit | EditIssueUI | FieldValueUpdate;
 export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> implements InitializingWebview<MinimalIssue> {
@@ -126,8 +127,22 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                     }
                     catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        const reason = this.formatErrorReason(e, 'Error updating issue');
-                        this.postMessage({ type: 'error', reason: reason, fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)) });
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error updating issue'), fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)) });
+                    }
+                    break;
+                }
+                case 'comment': {
+                    if (isIssueComment(msg)) {
+                        handled = true;
+                        try {
+                            const res = await postComment(msg.issue, msg.comment);
+                            this._editUIData.fieldValues['comment.rendered'].comments.push(res);
+                            this.postMessage({ type: 'fieldValueUpdate', fieldValues: { 'comment.rendered': this._editUIData.fieldValues['comment.rendered'] } });
+                        }
+                        catch (e) {
+                            Logger.error(new Error(`error posting comment: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment') });
+                        }
                     }
                     break;
                 }

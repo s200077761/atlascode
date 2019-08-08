@@ -1,7 +1,6 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition, MinimalIssueOrKey } from "../jira/jira-client/model/entities";
-import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
 
 export interface RefreshIssueAction extends Action {
@@ -21,7 +20,7 @@ export interface TransitionIssueAction extends Action {
 
 export interface IssueCommentAction extends Action {
     action: 'comment';
-    issue: DetailedIssue;
+    issue: IssueKeyAndSite;
     comment: string;
 }
 
@@ -38,7 +37,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueOrKey: MinimalIssueOrKey;
+    issueOrKey: MinimalIssueOrKeyAndSiteOrKey;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {

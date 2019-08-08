@@ -282,7 +282,7 @@ export default class StartWorkPage extends WebviewComponent<
               {issue.parentKey &&
                 <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
               }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
             </BreadcrumbsStateless>
           }
         >

@@ -13,7 +13,7 @@ export async function transitionIssue(param: MinimalIssue | IssueNode, transitio
 
   if (isMinimalIssue(param)) {
     issue = param;
-  } else {
+  } else if (isMinimalIssue(param.issue)) {
     issue = param.issue;
   }
   if (!issue.transitions) {

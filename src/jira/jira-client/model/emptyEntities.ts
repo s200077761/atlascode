@@ -69,7 +69,7 @@ export const emptyMinimalIssue: MinimalIssue = {
     summary: '',
     status: emptyStatus,
     priority: emptyPriority,
-    issueType: emptyIssueType,
+    issuetype: emptyIssueType,
     subtasks: [],
     issuelinks: [],
     transitions: [],
