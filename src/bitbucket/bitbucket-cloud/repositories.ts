@@ -109,10 +109,23 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             `/repositories/${parsed.owner}/${parsed.name}/commit/${commitHash}/pullrequests`
         );
 
-        return data.values!.map((pr: any) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; }) || [];
+        return data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr)) || [];
     }
 
     static toRepo(bbRepo: any): Repo {
+        if (!bbRepo) {
+            return {
+                id: 'REPO_NOT_FOUND',
+                name: 'REPO_NOT_FOUND',
+                displayName: 'REPO_NOT_FOUND',
+                fullName: 'REPO_NOT_FOUND',
+                url: '',
+                avatarUrl: '',
+                mainbranch: undefined,
+                issueTrackerEnabled: false
+            };
+        }
+
         return {
             id: bbRepo.uuid!,
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,

@@ -5,6 +5,7 @@ import { Container } from '../../container';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
+import { ServerRepositoriesApi } from './repositories';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -43,7 +44,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 ...queryParams
             }
         );
-        const prs: PullRequest[] = data.values!.map((pr: any) => this.toPullRequestModel(repository, remote, pr, 0));
+        const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(repository, remote, pr, 0));
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
@@ -123,7 +124,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
 
         const taskCount = await this.getTaskCount(pr);
-        return this.toPullRequestModel(pr.repository, pr.remote, data, taskCount);
+        return ServerPullRequestApi.toPullRequestModel(pr.repository, pr.remote, data, taskCount);
     }
 
     async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -176,7 +177,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
+        return ServerPullRequestApi.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
     }
 
     async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
@@ -192,7 +193,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return {
             data: data.values.map((commit: any) => ({
-                author: this.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
+                author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
                 ts: commit.authorTimestamp,
                 hash: commit.id,
                 message: commit.message,
@@ -238,7 +239,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
                 : undefined,
             user: comment.author
-                ? this.toUser(siteDetailsForRemote(remote)!, comment.author)
+                ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, comment.author)
                 : UnknownUser,
             children: (comment.comments || []).map((c: any) => this.toCommentModel(c, commentAnchor, comment.id, remote))
         };
@@ -287,7 +288,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             users = data.values || [];
         }
 
-        return users.map(val => ({ ...this.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
+        return users.map(val => ({ ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -312,7 +313,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.toPullRequestModel(repository, remote, data, 0);
+        return ServerPullRequestApi.toPullRequestModel(repository, remote, data, 0);
     }
 
     async updateApproval(pr: PullRequest, approved: boolean) {
@@ -366,7 +367,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return {
             id: data.id,
             parentId: data.parentId,
-            user: this.toUser(siteDetailsForRemote(remote)!, data.author),
+            user: ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author),
             htmlContent: data.html,
             rawContent: data.text,
             ts: data.createdDate,
@@ -393,23 +394,33 @@ export class ServerPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    getBitbucketRemotes(repository: Repository): Remote[] {
-        return [];
-    }
-
-    toUser(site: DetailedSiteInfo, input: any): User {
+    static toUser(site: DetailedSiteInfo, input: any): User {
         return {
             accountId: input.slug!,
             displayName: input.displayName!,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
-            avatarUrl: this.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
+            avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
         };
     }
 
-    toPullRequestModel(repository: Repository, remote: Remote, data: any, taskCount: number): PullRequest {
+    static toPullRequestModel(repository: Repository, remote: Remote, data: any, taskCount: number): PullRequest {
         const site = siteDetailsForRemote(remote)!;
+
+        const source = ServerPullRequestApi.toPullRequestRepo(remote, data.fromRef, undefined!);
+        const destination = ServerPullRequestApi.toPullRequestRepo(remote, data.toRef, undefined!);
+        let sourceRemote = undefined;
+        if (source.repo.url !== '' && source.repo.url !== destination.repo.url) {
+            const parsed = parseGitUrl(urlForRemote(remote));
+            sourceRemote = {
+                fetchUrl: parseGitUrl(source.repo.url).toString(parsed.protocol),
+                name: source.repo.fullName,
+                isReadOnly: true
+            };
+        }
+
         return {
             remote: remote,
+            sourceRemote: sourceRemote,
             repository: repository,
             data: {
                 id: data.id,
@@ -424,34 +435,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                         approved: reviewer.approved
                     }
                 )),
-                source: {
-                    repo: {
-                        id: data.fromRef.repository.id,
-                        name: data.fromRef.repository.slug,
-                        displayName: data.fromRef.repository.name,
-                        fullName: `${data.fromRef.repository.project.key} / ${data.fromRef.repository.slug}`,
-                        url: data.fromRef.repository.links.self[0].href,
-                        avatarUrl: this.patchAvatarUrl(site.baseLinkUrl, data.fromRef.repository.avatarUrl),
-                        mainbranch: undefined,
-                        issueTrackerEnabled: false
-                    },
-                    branchName: data.fromRef.displayId,
-                    commitHash: data.fromRef.latestCommit
-                },
-                destination: {
-                    repo: {
-                        id: data.toRef.repository.id,
-                        name: data.toRef.repository.slug,
-                        displayName: data.toRef.repository.name,
-                        fullName: `${data.toRef.repository.project.key} / ${data.fromRef.repository.slug}`,
-                        url: data.toRef.repository.links.self[0].href,
-                        avatarUrl: this.patchAvatarUrl(site.baseLinkUrl, data.toRef.repository.avatarUrl),
-                        mainbranch: undefined,
-                        issueTrackerEnabled: false
-                    },
-                    branchName: data.toRef.displayId,
-                    commitHash: data.toRef.latestCommit
-                },
+                source: source,
+                destination: destination,
                 title: data.title,
                 htmlSummary: data.descriptionAsHtml,
                 rawSummary: data.description,
@@ -465,11 +450,27 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    patchAvatarUrl(baseUrl: string, avatarUrl: string): string {
+    static patchAvatarUrl(baseUrl: string, avatarUrl: string): string {
         if (avatarUrl && !/^http/.test(avatarUrl)) {
             return `${baseUrl}${avatarUrl}`;
         }
         return avatarUrl;
+    }
+
+    static toPullRequestRepo(remote: Remote, prRepo: any, defaultBranch: string) {
+        const repo = ServerRepositoriesApi.toRepo(remote, prRepo.repository, defaultBranch);
+        const branchName = prRepo && prRepo.displayId
+            ? prRepo.displayId
+            : 'BRANCH_NOT_FOUND';
+        const commitHash = prRepo && prRepo.latestCommit
+            ? prRepo.latestCommit
+            : 'COMMIT_HASH_NOT_FOUND';
+
+        return {
+            repo: repo,
+            branchName: branchName,
+            commitHash: commitHash
+        };
     }
 }
 

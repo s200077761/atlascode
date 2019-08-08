@@ -40,7 +40,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
         );
 
-        return ServerRepositoriesApi.toRepo(data, defaultBranch.id);
+        return ServerRepositoriesApi.toRepo(remote, data, defaultBranch.id);
     }
 
     async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
@@ -122,14 +122,27 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return avatarUrl;
     }
 
-    static toRepo(bbRepo: any, defaultBranch: string): Repo {
+    static toRepo(remote: Remote, bbRepo: any, defaultBranch: string): Repo {
+        if (!bbRepo) {
+            return {
+                id: 'REPO_NOT_FOUND',
+                name: 'REPO_NOT_FOUND',
+                displayName: 'REPO_NOT_FOUND',
+                fullName: 'REPO_NOT_FOUND',
+                url: '',
+                avatarUrl: '',
+                mainbranch: undefined,
+                issueTrackerEnabled: false
+            };
+        }
+
         return {
             id: bbRepo.id,
             name: bbRepo.slug,
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
             url: bbRepo.links.self[0].href,
-            avatarUrl: bbRepo.avatarUrl,
+            avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
             issueTrackerEnabled: false
         };
