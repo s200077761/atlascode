@@ -11,7 +11,7 @@ import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
-import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
+import { isOpenBuildStatus } from '../ipc/prActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -158,10 +158,15 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     }
                     break;
                 }
-                case 'openPipelineBuild': {
-                    if (isOpenPipelineBuild(msg)) {
+                case 'openBuildStatus': {
+                    if (isOpenBuildStatus(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: msg.pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                        if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
+                            const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                        } else {
+                            vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
+                        }
                         break;
                     }
                 }

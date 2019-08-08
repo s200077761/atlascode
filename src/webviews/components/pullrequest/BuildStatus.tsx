@@ -5,14 +5,14 @@ import ErrorIcon from '@atlaskit/icon/glyph/error';
 import InlineDialog from '@atlaskit/inline-dialog';
 import Tooltip from '@atlaskit/tooltip';
 import Button from '@atlaskit/button';
-import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
+import { OpenBuildStatusAction } from '../../../ipc/prActions';
 import { BuildStatus as BitbucketBuildStatus } from '../../../bitbucket/model';
 
 const successIcon = <CheckCircleIcon primaryColor='green' label='build successful' />;
 const inprogressIcon = <RecentIcon primaryColor='blue' label='build in progress' />;
 const errorIcon = <ErrorIcon primaryColor='red' label='build failure' />;
 
-export default class BuildStatus extends React.Component<{ buildStatuses?: BitbucketBuildStatus[], postMessage: (e: OpenPipelineBuildAction) => void }, { dialogOpen: boolean }> {
+export default class BuildStatus extends React.Component<{ buildStatuses?: BitbucketBuildStatus[], postMessage: (e: OpenBuildStatusAction) => void }, { dialogOpen: boolean }> {
     constructor(props: any) {
         super(props);
         this.state = { dialogOpen: false };
@@ -40,7 +40,7 @@ export default class BuildStatus extends React.Component<{ buildStatuses?: Bitbu
                 content={this.props.buildStatuses.map(status =>
                     <Button
                         appearance='link'
-                        onClick={() => { this.props.postMessage({ action: 'openPipelineBuild', pipelineUUID: status.url!.substring(status.url!.lastIndexOf('/') + 1) }); }}
+                        onClick={() => { this.props.postMessage({ action: 'openBuildStatus', buildStatusUri: status.url }); }}
                         iconBefore={status.state === 'INPROGRESS'
                             ? inprogressIcon
                             : status.state === 'SUCCESSFUL'
