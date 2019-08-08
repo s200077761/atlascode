@@ -15,15 +15,25 @@ export function readCreatedIssue(params: any): CreatedIssue {
     };
 }
 
-export interface ErrorCollection {
-    readonly status: number;
+export interface ErrorWithMessages {
     readonly errorMessages: string[];
-    readonly errors: any;
+}
+
+export interface ErrorCollection extends ErrorWithMessages {
+    readonly errors: { [key: string]: string };
+}
+
+export function isErrorCollection(a: any): a is ErrorCollection {
+    return a && (<ErrorCollection>a).errorMessages !== undefined
+        && (<ErrorCollection>a).errors !== undefined;
+}
+
+export function isErrorWithMessages(a: any): a is ErrorCollection {
+    return a && (<ErrorCollection>a).errorMessages !== undefined;
 }
 
 export function readErrorCollection(params: any): ErrorCollection {
     return {
-        status: params.status,
         errorMessages: Array.isArray(params.errorMessages) ? params.errorMessages : [],
         errors: params.errors
     };

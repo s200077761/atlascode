@@ -151,6 +151,18 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         return false;
     }
 
+    protected formatErrorReason(e: any, title?: string): any {
+        if (e.response) {
+            if (e.response.data && e.response.data !== "") {
+                return (title) ? { ...e.response.data, ...{ title: title } } : e.response.data;
+            }
+        } else if (e.message) {
+            return (title) ? { title: title, errorMessages: [e.message] } : e.message;
+        }
+
+        return (title) ? { title: title, errorMessages: [`${e}`] } : e;
+    }
+
     protected postMessage(message: S | OnlineStatusMessage | PMFMessage) {
         if (this._panel === undefined) { return false; }
 

@@ -6,5 +6,4 @@ export type CommonEditorWebviewEmit = CreatedSomething | IssueCreated | IssueEdi
 
 export abstract class AbstractIssueEditorWebview<S, R extends Action> extends AbstractReactWebview<S, R> {
 
-
 }

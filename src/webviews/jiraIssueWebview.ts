@@ -126,7 +126,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                     }
                     catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        this.postMessage({ type: 'error', reason: `error updating issue: ${e}`, fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)) });
+                        const reason = this.formatErrorReason(e, 'Error updating issue');
+                        this.postMessage({ type: 'error', reason: reason, fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)) });
                     }
                     break;
                 }
