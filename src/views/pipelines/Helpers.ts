@@ -45,7 +45,12 @@ export function descriptionForState(result: Pipeline, excludePipelinePrefix?: bo
 
 export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?: boolean): string {
     let description = "";
-    const {pattern, type} = pipeline.target.selector;
+    let pattern = undefined;
+    let type = undefined;
+    if(pipeline.target.selector){ //Apparently some pipelines may be missing a selector entirely
+        pattern = pipeline.target.selector.pattern;
+        type = pipeline.target.selector.type;
+    }
     const ref_name = pipeline.target.ref_name;
     const triggerType = pipeline.target.triggerName;
     const buildNumber = pipeline.build_number;
@@ -53,10 +58,12 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
 
     //Make sure every case is covered so that a meaningful message is displayed back
     if(type === "custom") { //This is a custom pipeline
-      if(ref_name) { //Pipeline is on a branch
+      if(ref_name && pattern) { //Pipeline is on a branch
         description = `${prefix}#${buildNumber} ${pattern}(${type}) on branch ${ref_name}`;
-      } else {
+      } else if (pattern) {
         description = `${prefix}#${buildNumber} ${pattern}(${type})`;
+      } else {
+        description = `${prefix}#${buildNumber}(${type})`;
       }
     } else if(triggerType === "MANUAL") { //Pipeline is not custom but was manually triggered
       if(ref_name && pattern) { //Pipeline on a branch and pipeline is not default

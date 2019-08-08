@@ -51,13 +51,13 @@ export interface PipelineStage {
 }
 
 export interface PipelineSelector{
-    pattern: string;
+    pattern?: string;
     type: string;
 }
 
 export interface PipelineTarget {
     ref_name?: string;
-    selector: PipelineSelector;
+    selector?: PipelineSelector;
     triggerName: string; 
 }
 
