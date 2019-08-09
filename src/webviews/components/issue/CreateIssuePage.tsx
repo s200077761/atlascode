@@ -139,7 +139,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 const orderedValues: FieldUI[] = this.sortFieldValues(screen.fields);
 
                 orderedValues.forEach(field => {
-                    (field.advanced) ? advancedFields.push(this.getFieldMarkup(field)) : renderableFields.push(this.getFieldMarkup(field));
+                    (field.advanced) ? advancedFields.push(this.getInputMarkup(field)) : renderableFields.push(this.getInputMarkup(field));
 
                 });
                 console.log('screen fields', screen.fields);

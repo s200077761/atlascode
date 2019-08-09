@@ -2,14 +2,15 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, IssueLinksUI } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
-import IssueList from './IssueList';
-import LinkedIssues from './LinkedIssues';
+import Spinner from '@atlaskit/spinner';
+import { ButtonGroup } from '@atlaskit/button';
+import { Button } from '@atlaskit/button/components/Button';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -24,6 +25,7 @@ export interface CommonEditorViewState extends Message {
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
+    commentInputValue: string;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -34,6 +36,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isOnline: true,
     isErrorBannerOpen: false,
     errorDetails: undefined,
+    commentInputValue: '',
 };
 
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
@@ -59,6 +62,20 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this._api.postMessage(e);
     }
 
+    private handleCommentInput = (e: any) => {
+        const val: string = e.target.value.trim();
+        this.setState({ commentInputValue: val });
+    }
+
+    private handleCommentSaveClick = (e: any) => {
+        this.handleCommentSave(this.state.commentInputValue);
+        this.setState({ commentInputValue: "" });
+    }
+
+    private handleCommentCancelClick = (e: any) => {
+        this.setState({ commentInputValue: "" });
+    }
+
     protected sortFieldValues(fields: FieldUIs): FieldUI[] {
         return Object.values(fields).sort((left: FieldUI, right: FieldUI) => {
             if (left.displayOrder < right.displayOrder) { return -1; }
@@ -79,6 +96,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
+
+    }
+
+    protected handleCommentSave = (newValue: string) => {
 
     }
 
@@ -131,10 +152,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     //     return opts;
     // }
 
-    protected getFieldMarkup(field: FieldUI, inline: boolean = false): any {
+    protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
-                let validateFunc = this.getValidateFunction(field, inline);
+                let validateFunc = this.getValidateFunction(field, editmode);
                 let validationFailMessage = "";
                 let valType = field.valueType;
                 switch (valType) {
@@ -155,7 +176,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     }
                 }
 
-                if (inline) {
+                if (editmode) {
                     let markup: React.ReactNode = <p></p>;
 
                     if ((field as InputFieldUI).isMultiline) {
@@ -206,14 +227,49 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     </Field>
                 );
             }
-            case UIType.IssueLink: {
-                if (inline) {
-                    let markup = ((field as IssueLinksUI).isSubtasks) ?
-                        <IssueList issues={this.state.fieldValues[field.key]} onIssueClick={this.handleOpenIssue} />
-                        : <LinkedIssues issuelinks={this.state.fieldValues[field.key]} onIssueClick={this.handleOpenIssue} />;
+            case UIType.Subtasks: {
+                let markup = <div></div>;
+                if (editmode) {
+                    markup = <EdiText
+                        type='text'
+                        value=''
+                        onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
+                        validation={FieldValidators.isValidString}
+                        validationMessage='sub-task summary is required'
+                        inputProps={{ className: 'ac-inputField', placeholder: 'What needs to be done?' }}
+                        viewProps={{ id: field.key, className: 'ac-inline-input-view-p' }}
+                        editButtonClassName='ac-inline-edit-button'
+                        cancelButtonClassName='ac-inline-cancel-button'
+                        saveButtonClassName='ac-inline-save-button'
+                        editing={true}
 
-                    return markup;
+                    />;
+                } else {
+
                 }
+                return markup;
+            }
+
+            case UIType.IssueLinks: {
+                let markup = <div></div>;
+
+                return markup;
+            }
+            case UIType.Comments: {
+                return (<div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
+                    {this.state.loadingField === field.key && <Spinner size='large' />}
+                    <textarea
+                        className='ac-textarea'
+                        rows={5}
+                        placeholder='Add a comment'
+                        value={this.state.commentInputValue}
+                        onChange={this.handleCommentInput}
+                    />
+                    <ButtonGroup>
+                        <Button className='ac-button' onClick={this.handleCommentSaveClick} isDisabled={this.state.commentInputValue === ''}>Save</Button>
+                        <Button appearance="default" onClick={this.handleCommentCancelClick}>Cancel</Button>
+                    </ButtonGroup>
+                </div>);
             }
         }
 
@@ -239,13 +295,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         );
     }
 
-    private getValidateFunction(field: FieldUI, inline: boolean = false): FuncOrUndefined {
+    private getValidateFunction(field: FieldUI, editmode: boolean = false): FuncOrUndefined {
         let valType = field.valueType;
         let valfunc = undefined;
 
         switch (valType) {
             case ValueType.Number: {
-                if (inline) {
+                if (editmode) {
                     valfunc = (field.required) ? FieldValidators.validateRequiredNumber : FieldValidators.validateNumber;
                 } else {
                     valfunc = (field.required) ? FieldValidators.isValidRequiredNumber : FieldValidators.isValidNumber;
@@ -253,7 +309,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 break;
             }
             case ValueType.Url: {
-                if (inline) {
+                if (editmode) {
                     valfunc = (field.required) ? FieldValidators.isValidRequiredUrl : FieldValidators.isValidUrl;
                 } else {
                     valfunc = (field.required) ? FieldValidators.validateRequiredUrl : FieldValidators.validateUrl;
@@ -263,7 +319,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
             default: {
                 if (field.required) {
-                    valfunc = (inline) ? FieldValidators.isValidString : FieldValidators.validateString;
+                    valfunc = (editmode) ? FieldValidators.isValidString : FieldValidators.validateString;
                     break;
                 }
             }

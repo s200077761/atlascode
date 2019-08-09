@@ -1,8 +1,13 @@
+
 // JIRA.Schema.FieldBean
 export type Fields = { [k: string]: Field };
-
+export type MetaFields = { [k: string]: FieldMeta };
 export type FieldOrFieldMeta = Field | FieldMeta;
-export type EditMetaDescriptor = { [key: string]: FieldOrFieldMeta };
+export type EditMetaDescriptor = {
+    issueKey: string,
+    fields: { [key: string]: FieldOrFieldMeta },
+};
+
 export interface Field {
     readonly id: string;
     readonly key: string;
@@ -48,8 +53,8 @@ export function isFieldMeta(f: any): f is FieldMeta {
     return f && (<FieldMeta>f).required !== undefined;
 }
 
-export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k: string]: any }, renderedFields?: { [k: string]: any }): { [k: string]: FieldMeta } {
-    let metaFields: { [k: string]: FieldMeta } = {};
+export function readFieldsMeta(fields: { [k: string]: any }, fieldValues?: { [k: string]: any }, renderedFields?: { [k: string]: any }): MetaFields {
+    let metaFields: MetaFields = {};
 
     Object.keys(fields).forEach(key => {
         console.log(key);

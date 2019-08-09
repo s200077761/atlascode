@@ -6,7 +6,7 @@ import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
 import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
 import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
 import { Logger } from "../logger";
-import { FieldMeta, readFieldsMeta, Fields, EditMetaDescriptor } from "./jira-client/model/fieldMetadata";
+import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
 import { EditIssueUI } from "./jira-client/model/editIssueUI";
@@ -61,7 +61,7 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   const client = await Container.clientManager.jirarequest(issue.siteDetails);
   const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
-  const metaFields: { [k: string]: FieldMeta } = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
+  const metaFields: MetaFields = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
 
   const metaFieldKeys: string[] = Object.keys(metaFields);
 
@@ -78,6 +78,9 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
     }
   });
 
-  return { ...metaFields, ...filteredFields };
+  return {
+    issueKey: issue.key,
+    fields: { ...metaFields, ...filteredFields }
+  };
 
 }

@@ -44,7 +44,7 @@ export default class LinkedIssues extends React.Component<{ issuelinks: MinimalI
                         content: {
                             linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
                             issue: issuelink.inwardIssue || issuelink.outwardIssue,
-                            postMessage: this.props.onIssueClick
+                            onIssueClick: this.props.onIssueClick
                         }
                     };
                 })}

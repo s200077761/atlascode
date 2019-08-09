@@ -1,8 +1,8 @@
 
-import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString } from "./model/fieldUI";
+import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
-import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks } from "./model/entities";
+import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
 
@@ -29,7 +29,7 @@ export class FieldTransformer {
         this._site = site;
     }
 
-    public async transformFields(fields: { [k: string]: FieldOrFieldMeta }, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, filterFieldKeys: string[] = [], issueKey?: string): Promise<FieldTransformerResult> {
+    public async transformFields(fields: { [k: string]: FieldOrFieldMeta }, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, filterFieldKeys: string[], issueKey?: string, inlineSubtaskTypes: IssueType[] = []): Promise<FieldTransformerResult> {
         const isskey: string = issueKey ? issueKey : "";
 
         const result: FieldTransformerResult = {
@@ -67,14 +67,23 @@ export class FieldTransformer {
                     displayOrder = commonIndex;
                 }
 
-                let fieldAndValue: FieldAndValue = this.transformField(field, displayOrder, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete);
+                let fieldAndValue: FieldAndValue = this.transformField(field, displayOrder, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete, inlineSubtaskTypes);
 
                 result.fields[field.key] = fieldAndValue.field;
                 if (fieldAndValue.value && fieldAndValue.value !== null) {
                     result.fieldValues[field.key] = fieldAndValue.value;
                 }
                 if (fieldAndValue.renderedValue && fieldAndValue.renderedValue !== null) {
-                    result.fieldValues[`${field.key}.rendered`] = fieldAndValue.renderedValue;
+                    if ((fieldAndValue.field as FieldUI).uiType === UIType.Comments) {
+                        const comments: any[] = result.fieldValues[field.key].comments;
+                        comments.forEach((comment, idx) => {
+                            const rcomment = fieldAndValue.renderedValue.comments.find((renderedComment: any) => renderedComment.id === comment.id);
+                            result.fieldValues[field.key].comments[idx].renderedBody = rcomment.body;
+
+                        });
+                    } else {
+                        result.fieldValues[`${field.key}.rendered`] = fieldAndValue.renderedValue;
+                    }
                 }
             }
         });
@@ -85,7 +94,7 @@ export class FieldTransformer {
         return result;
     }
 
-    private transformField(field: FieldOrFieldMeta, displayOrder: number, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string): FieldAndValue {
+    private transformField(field: FieldOrFieldMeta, displayOrder: number, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string, inlineSubtaskTypes: IssueType[] = []): FieldAndValue {
         const required: boolean = isFieldMeta(field) ? field.required : false;
         const allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
         const schema: FieldSchemaMeta = field.schema!;
@@ -101,7 +110,8 @@ export class FieldTransformer {
             autoCompleteUrl = defaultILAutocomplete;
         }
 
-        switch (this.uiTypeForField(field)) {
+        const uiType: UIType = this.uiTypeForField(field);
+        switch (uiType) {
             case UIType.Input: {
                 const isMulti: boolean = multiLineStringSchemas.includes(schemaName);
                 const renderedValue = (isMulti && field.renderedValue) ? field.renderedValue : undefined;
@@ -200,31 +210,60 @@ export class FieldTransformer {
                     }, value: field.currentValue
                 };
             }
-            case UIType.IssueLink: {
-                const isSubtasks: boolean = (schemaName === 'subtasks');
-
-                let currentVal = undefined;
-                if (field.currentValue) {
-                    if (isSubtasks) {
-                        currentVal = readIssueLinkIssues(field.currentValue, this._site);
-                    } else {
-                        currentVal = readMinimalIssueLinks(field.currentValue, this._site);
-                    }
-                }
+            case UIType.IssueLinks: {
+                const currentVal = readMinimalIssueLinks(field.currentValue, this._site);
 
                 return {
                     field: {
                         required: required,
                         name: field.name,
                         key: field.key,
-                        uiType: UIType.IssueLink,
+                        uiType: UIType.IssueLinks,
                         autoCompleteUrl: autoCompleteUrl,
                         autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
                         allowedValues: issueLinkTypes,
                         isCreateable: createableSelectSchemas.includes(schemaName),
-                        isSubtasks: (schemaName === 'subtasks'),
                         isMulti: multiSelectSchemas.includes(schemaName),
+                        valueType: this.valueTypeForField(field),
+                        displayOrder: displayOrder,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: currentVal
+                };
+            }
+            case UIType.Subtasks: {
+
+                const currentVal = readIssueLinkIssues(field.currentValue, this._site);
+
+                return {
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Subtasks,
+                        createUrl: this.createUrlForField(field),
+                        allowedValues: inlineSubtaskTypes,
+                        valueType: this.valueTypeForField(field),
+                        displayOrder: displayOrder,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: currentVal
+                };
+            }
+            case UIType.IssueLink: {
+                // Note: this is used for parent links for sub-tasks
+                const currentVal = readIssueLinkIssue(field.currentValue, this._site);
+                return {
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.IssueLink,
+                        autoCompleteUrl: `${this._site.baseApiUrl}/issue/picker?currentProjectId=${project.id}&showSubTasks=false&query=`,
+                        autoCompleteJql: "",
+                        createUrl: this.createUrlForField(field),
+                        allowedValues: [],
+                        isCreateable: false,
+                        isMulti: false,
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
@@ -386,7 +425,16 @@ export class FieldTransformer {
         const schemaName = this.schemaName(field);
         let foundType: UIType | undefined = undefined;
 
-        if (isFieldMeta(field)) {
+        if (field.schema && field.schema.items && field.schema.items === 'issuelinks') {
+            foundType = (schemaName === 'subtasks') ? UIType.Subtasks : UIType.IssueLinks;
+        }
+
+        if (!foundType && schemaName === 'parent') {
+            foundType = UIType.IssueLink;
+        }
+
+        if (!foundType && isFieldMeta(field)) {
+
             foundType = schemaTypeToUIMap.get(field.schema.type);
 
             if (!foundType && field.schema.type === 'option') {
@@ -397,14 +445,9 @@ export class FieldTransformer {
                 foundType = customSchemaToUIMap.get(schemaName);
             }
 
-        } else if (isField(field)) {
-            // issue links are always editable
-            if (field.schema && field.schema.items && field.schema.items === 'issuelinks') {
-                foundType = UIType.IssueLink;
-            } else {
-                foundType = UIType.NonEditable;
-            }
-        } else {
+        } else if (!foundType && isField(field)) {
+            foundType = UIType.NonEditable;
+        } else if (!foundType) {
             foundType = UIType.Input;
         }
 

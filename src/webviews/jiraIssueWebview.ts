@@ -136,8 +136,12 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                         handled = true;
                         try {
                             const res = await postComment(msg.issue, msg.comment);
-                            this._editUIData.fieldValues['comment.rendered'].comments.push(res);
-                            this.postMessage({ type: 'fieldValueUpdate', fieldValues: { 'comment.rendered': this._editUIData.fieldValues['comment.rendered'] } });
+                            this._editUIData.fieldValues['comment'].comments.push(res);
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'comment': this._editUIData.fieldValues['comment'] }
+                            });
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));

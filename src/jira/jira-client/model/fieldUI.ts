@@ -5,7 +5,9 @@ export enum UIType {
     Input = 'input',
     Date = 'date',
     DateTime = 'datetime',
+    IssueLinks = 'issuelinks',
     IssueLink = 'issuelink',
+    Subtasks = 'subtasks',
     Timetracking = 'timetracking',
     Worklog = 'worklog',
     Comments = 'comments',
@@ -38,6 +40,7 @@ export enum ValueType {
     // issuelinks: multi-issue picker {id, type:{id,name,inward,outward}, outwardIssue:{id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}}
     // subtasks (issuelinks type) {id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}
     IssueLinks = 'issuelinks',
+    IssueLink = 'issuelink', // used for subtask parent link
     Component = 'component', // mutli-select, {id, name}
     Worklog = 'worklog',
     Attachment = 'attachment',
@@ -67,6 +70,7 @@ export function valueTypeForString(s: string): ValueType {
         case 'comments-page': return ValueType.CommentsPage;
         case 'version': return ValueType.Version;
         case 'issuelinks': return ValueType.IssueLinks;
+        case 'issuelink': return ValueType.IssueLink;
         case 'component': return ValueType.Component;
         case 'worklog': return ValueType.Worklog;
         case 'attachment': return ValueType.Attachment;
@@ -95,17 +99,17 @@ export interface InputFieldUI extends FieldUI {
 export interface OptionableFieldUI extends FieldUI {
     allowedValues: any[];
 }
-export interface SelectFieldUI extends OptionableFieldUI {
+
+export interface CreatableFieldUI extends OptionableFieldUI {
+    createUrl: string;
+}
+
+export interface SelectFieldUI extends CreatableFieldUI {
     isMulti: boolean;
     isCascading: boolean;
     isCreateable: boolean;
     autoCompleteUrl: string;
     autoCompleteJql: string;
-    createUrl: string;
-}
-
-export interface IssueLinksUI extends SelectFieldUI {
-    isSubtasks: boolean;
 }
 
 export type FieldUIs = { [key: string]: FieldUI };

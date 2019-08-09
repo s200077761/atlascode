@@ -151,6 +151,7 @@ export interface IssueLinkType {
 export interface Comment {
     author: User;
     body: string;
+    renderedBody?: string;
     created: string;
     id: string;
     self: string;
