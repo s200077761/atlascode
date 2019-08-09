@@ -4,11 +4,12 @@ import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
 import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey } from "../../constants";
-import { ProductJira, AuthInfoEvent } from "../../atlclients/authInfo";
+import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
 import { MinimalORIssueLink } from "../../jira/jira-client/model/entities";
+import { SitesAvailableUpdateEvent } from "../../siteManager";
 
 export class JiraContext extends Disposable {
 
@@ -25,7 +26,7 @@ export class JiraContext extends Disposable {
         this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             this._refreshTimer
         );
 
@@ -87,10 +88,9 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor.checkForNewIssues();
     }
 
-    async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.site.product.key === ProductJira.key) {
-
-            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
+    async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductJira.key) {
+            const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }

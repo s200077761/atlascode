@@ -1,7 +1,6 @@
 import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
-import { Container } from '../../container';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
@@ -55,7 +54,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -69,7 +68,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -87,7 +86,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -168,7 +167,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
-        const userSlug = (await Container.authManager.getAuthInfo(site))!.user.id;
+        const userSlug = site.userId;
         const { data } = await this.client.get(
             `/rest/api/1.0/users/${userSlug}`,
             {
@@ -319,7 +318,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     async updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
-        const userSlug = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(pr.remote)!))!.user.id;
+        const userSlug = (await siteDetailsForRemote(pr.remote)!).userId;
 
         await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/participants/${userSlug}`,

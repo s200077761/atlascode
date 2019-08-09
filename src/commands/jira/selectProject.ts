@@ -41,7 +41,7 @@ export async function showProjectSelectionDialog() {
 }
 
 async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickItem[] | undefined> {
-  const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+  const client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
 
   if (client) {
     const res = await client.getProjects(value);

@@ -7,8 +7,6 @@ export enum AuthChangeType {
 }
 export interface AuthInfoEvent {
     type: AuthChangeType;
-    authInfo: AuthInfo | undefined;
-    site: SiteInfo;
 }
 
 export interface UpdateAuthInfoEvent extends AuthInfoEvent {
@@ -18,6 +16,8 @@ export interface UpdateAuthInfoEvent extends AuthInfoEvent {
 
 export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
+    product: Product;
+    userId: string;
 }
 
 export interface Product {
@@ -68,7 +68,6 @@ export interface AuthInfo {
 export interface OAuthInfo extends AuthInfo {
     access: string;
     refresh: string;
-    provider: OAuthProvider;
 }
 
 export interface BasicAuthInfo extends AuthInfo {
@@ -93,6 +92,7 @@ export interface DetailedSiteInfo extends SiteInfo {
     baseLinkUrl: string;
     baseApiUrl: string;
     isCloud: boolean;
+    userId: string;
 }
 
 export interface AccessibleResourceV1 {
@@ -130,6 +130,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     baseApiUrl: 'empty',
     product: emptyProduct,
     isCloud: true,
+    userId: 'empty',
 };
 
 export const emptyAccessibleResource: AccessibleResource = {
@@ -158,8 +159,7 @@ export function isUpdateAuthEvent(a: AuthInfoEvent): a is UpdateAuthInfoEvent {
 }
 
 export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
-    return a && (<RemoveAuthInfoEvent>a).type === AuthChangeType.Remove
-        && (<RemoveAuthInfoEvent>a).site !== undefined;
+    return a && (<RemoveAuthInfoEvent>a).type === AuthChangeType.Remove;
 }
 
 export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {

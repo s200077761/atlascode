@@ -1,7 +1,7 @@
 import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import { Repository, API as GitApi, Remote } from "../typings/git";
 import { Container } from '../container';
-import { ProductBitbucket } from '../atlclients/authInfo';
+import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
 import { CacheMap, Interval } from '../util/cachemap';
@@ -33,12 +33,9 @@ export class BitbucketContext extends Disposable {
         this._currentUsers = new Map<string, User>();
 
         Container.context.subscriptions.push(
-            Container.authManager.onDidAuthChange((e) => {
-                if (e.site.product.key === ProductBitbucket.key) {
-                    const wasDeleted = this._currentUsers.delete(e.site.hostname);
-                    if (wasDeleted) {
-                        this._onDidChangeBitbucketContext.fire();
-                    }
+            Container.siteManager.onDidSitesAvailableChange((e) => {
+                if (e.product.key === ProductBitbucket.key) {
+                    this.updateUsers(e.sites);
                 }
             })
         );
@@ -99,6 +96,19 @@ export class BitbucketContext extends Disposable {
             this._repoMap.set(repo.rootUri.toString(), repo);
         }));
         this._onDidChangeBitbucketContext.fire();
+    }
+
+    private updateUsers(sites: DetailedSiteInfo[]) {
+        const removed: string[] = [];
+        this._currentUsers.forEach((_, hostname) => {
+            if (!sites.some(s => s.hostname === hostname)) {
+                removed.push(hostname);
+            }
+        });
+        removed.forEach(hostname => this._currentUsers.delete(hostname));
+        if (removed.length > 0) {
+            this._onDidChangeBitbucketContext.fire();
+        }
     }
 
     public getAllRepositores(): Repository[] {

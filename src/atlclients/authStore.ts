@@ -1,27 +1,23 @@
-import { AuthInfoV1, AuthInfo, Product, SiteInfo, OAuthProvider, AccessibleResourceV1, ProductJira, ProductBitbucket, OAuthInfo, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, isDetailedSiteInfo, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent } from './authInfo';
+import { AuthInfo, Product, OAuthProvider, ProductJira, ProductBitbucket, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent, oauthProviderForSite, isOAuthInfo } from './authInfo';
 import { keychain } from '../util/keychain';
-import { window, Disposable, EventEmitter, Event, Memento } from 'vscode';
+import { window, Disposable, EventEmitter, Event } from 'vscode';
 import { Logger } from '../logger';
 import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
-import { Container } from '../container';
 import debounce from 'lodash.debounce';
-//import { getJiraCloudBaseUrl } from './serverInfo';
-import { configuration } from '../config/configuration';
 import { OAuthRefesher } from './oauthRefresher';
+import { AnalyticsClient } from '../analytics-node-client/src';
 
-const keychainServiceNameV1 = "atlascode-authinfo";
 const keychainServiceNameV2 = "atlascode-authinfoV2";
 
-interface HostToAuthInfo { [k: string]: AuthInfo; }
+interface UserIdToAuthInfo { [k: string]: AuthInfo; }
 
-export class AuthManager implements Disposable {
+export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
     private _debouncedKeychain = new Object();
-    private _globalStore: Memento;
+    private _refresher = new OAuthRefesher();
 
-    constructor(globalStore: Memento) {
-        this._globalStore = globalStore;
+    constructor(private _analyticsClient: AnalyticsClient) {
         this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
         this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
     }
@@ -36,19 +32,6 @@ export class AuthManager implements Disposable {
         this._onDidAuthChange.dispose();
     }
 
-    private async getJsonAuthInfoFromKeychain(product: Product, serviceName?: string): Promise<string | null> {
-        let svcName = keychainServiceNameV2;
-
-        if (serviceName) {
-            svcName = serviceName;
-        }
-
-        if (!this._debouncedKeychain[product.key]) {
-            this._debouncedKeychain[product.key] = debounce(async () => await keychain!.getPassword(svcName, product.key), 500, { leading: true });
-        }
-        return await this._debouncedKeychain[product.key]();
-    }
-
     public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
         let foundInfo: AuthInfo | undefined = undefined;
 
@@ -61,9 +44,9 @@ export class AuthManager implements Disposable {
 
         if (!foundInfo && keychain) {
             try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(product) || undefined;
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(product.key) || undefined;
                 if (infoEntry) {
-                    let infos: HostToAuthInfo = JSON.parse(infoEntry);
+                    let infos: UserIdToAuthInfo = JSON.parse(infoEntry);
                     if (infos) {
                         let entry = Object.entries(infos).values().next().value;
 
@@ -83,16 +66,67 @@ export class AuthManager implements Disposable {
         return foundInfo;
     }
 
-    public async getAuthInfo(site: SiteInfo): Promise<AuthInfo | undefined> {
-        let foundInfo: AuthInfo | undefined = undefined;
+    public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
+        return this.getAuthInfoForProductAndUserId(site.product.key, site.userId);
+    }
+
+    public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
+        const oldInfo = await this.getAuthInfo(site);
+
         let productAuths = this._memStore.get(site.product.key);
 
-        if (productAuths && productAuths.has(site.hostname)) {
-            foundInfo = productAuths.get(site.hostname);
+        if (!productAuths) {
+            productAuths = new Map<string, AuthInfo>();
+        }
+
+        this._memStore.set(site.product.key, productAuths.set(site.userId, info));
+
+        const hasNewInfo = (!oldInfo || (oldInfo && getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)));
+
+        if (hasNewInfo) {
+            const cmdctx = this.commandContextFor(site.product);
+            if (cmdctx !== undefined) {
+                setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
+            }
+
+            if (keychain) {
+                try {
+                    let credentialsForProduct: UserIdToAuthInfo = {};
+                    let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
+                    if (infoEntry) {
+                        credentialsForProduct = JSON.parse(infoEntry);
+                    }
+                    credentialsForProduct[site.userId] = info;
+
+                    await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(credentialsForProduct));
+                }
+                catch (e) {
+                    Logger.debug("error saving auth info to keychain: ", e);
+                }
+
+                const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
+                this._onDidAuthChange.fire(updateEvent);
+            }
+        }
+    }
+
+    private async getAuthInfoForProductAndUserId(productKey: string, userId: string): Promise<AuthInfo | undefined> {
+        Logger.debug('trying to get authInfo for userId', userId);
+        let foundInfo: AuthInfo | undefined = undefined;
+        let productAuths = this._memStore.get(productKey);
+
+        Logger.debug('productAuths', productAuths);
+
+        if (productAuths && productAuths.has(userId)) {
+            foundInfo = productAuths.get(userId);
+
+            Logger.debug('mem found info', foundInfo);
+>>>>>>> VSCODE-593 Authenticating with arbitrary site
         }
 
         if (!foundInfo && keychain) {
             try {
+<<<<<<< HEAD
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
                 if (infoEntry) {
                     let infos: HostToAuthInfo = JSON.parse(infoEntry);
@@ -101,6 +135,21 @@ export class AuthManager implements Disposable {
 
                     if (info && productAuths) {
                         this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
+=======
+                Logger.debug('getting info from keychain');
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
+                if (infoEntry) {
+                    Logger.debug(`found info entry for ${productKey}`);
+                    let infoForProduct: UserIdToAuthInfo = JSON.parse(infoEntry);
+
+                    Logger.debug(`infos`, infoForProduct);
+                    let info = infoForProduct[userId];
+
+                    Logger.debug(`info for user ${userId}`, info);
+                    if (info && productAuths) {
+                        Logger.debug(`setting info in memstore`);
+                        this._memStore.set(productKey, productAuths.set(userId, info));
+>>>>>>> VSCODE-593 Authenticating with arbitrary site
 
                         foundInfo = info;
                     }
@@ -115,61 +164,52 @@ export class AuthManager implements Disposable {
         //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
-    public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
-        const oldInfo = await this.getAuthInfo(site);
+    private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
+        let svcName = keychainServiceNameV2;
 
-        let productAuths = this._memStore.get(site.product.key);
-
-        if (!productAuths) {
-            productAuths = new Map<string, AuthInfo>();
+        if (serviceName) {
+            svcName = serviceName;
         }
 
-        this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
-
-        const hasNewInfo = (!oldInfo || (oldInfo && getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)));
-
-        if (hasNewInfo) {
-            const cmdctx = this.commandContextFor(site.product);
-            if (cmdctx !== undefined) {
-                setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
-            }
-
-            if (keychain) {
-                try {
-                    let infos: HostToAuthInfo = {};
-                    let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
-                    if (infoEntry) {
-                        infos = JSON.parse(infoEntry);
-                        infos[site.hostname] = info;
-                    }
-
-                    await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
-                }
-                catch (e) {
-                    Logger.debug("error saving auth info to keychain: ", e);
-                }
-
-                const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site, authInfo: info };
-                this._onDidAuthChange.fire(updateEvent);
-            }
+        if (!this._debouncedKeychain[productKey]) {
+            this._debouncedKeychain[productKey] = debounce(async () => await keychain!.getPassword(svcName, productKey), 500, { leading: true });
         }
+        return await this._debouncedKeychain[productKey]();
     }
 
-    public async removeAuthInfo(site: SiteInfo): Promise<boolean> {
+    public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
+        const credentials = await this.getAuthInfo(site);
+        if (!isOAuthInfo(credentials)) {
+            return undefined;
+        }
+
+        const provider: OAuthProvider | undefined = oauthProviderForSite(site);
+        let newAccessToken = undefined;
+        if (provider && credentials) {
+            newAccessToken = await this._refresher.getNewAccessToken(provider, credentials.refresh);
+            if (newAccessToken) {
+                credentials.access = newAccessToken;
+                this.saveAuthInfo(site, credentials);
+            }
+        }
+        return newAccessToken;
+    }
+
+    public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
         let productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
         let wasMemDeleted = false;
         if (productAuths) {
-            wasMemDeleted = productAuths.delete(site.hostname);
+            wasMemDeleted = productAuths.delete(site.userId);
             this._memStore.set(site.product.key, productAuths);
         }
 
         if (keychain) {
-            let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
+            let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
             if (infoEntry) {
-                let infos: HostToAuthInfo = JSON.parse(infoEntry);
-                wasKeyDeleted = Object.keys(infos).includes(site.hostname);
-                delete infos[site.hostname];
+                let infos: UserIdToAuthInfo = JSON.parse(infoEntry);
+                wasKeyDeleted = Object.keys(infos).includes(site.userId);
+                delete infos[site.userId];
 
                 await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
             }
@@ -181,14 +221,14 @@ export class AuthManager implements Disposable {
                 setCommandContext(cmdctx, false);
             }
 
-            let name = isDetailedSiteInfo(site) ? site.name : site.hostname;
+            let name = site.name;
 
-            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, authInfo: undefined, site: site };
+            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, product: site.product, userId: site.userId };
             this._onDidAuthChange.fire(removeEvent);
 
             window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);
 
-            loggedOutEvent(site.product.name).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+            loggedOutEvent(site.product.name).then(e => { this._analyticsClient.sendTrackEvent(e); });
             return true;
         }
 
@@ -204,6 +244,7 @@ export class AuthManager implements Disposable {
         }
         return undefined;
     }
+<<<<<<< HEAD
 
     public async removeV1AuthInfo(provider: string) {
         this._memStore.delete(provider);
@@ -384,4 +425,6 @@ export class AuthManager implements Disposable {
         catch { }
         return isDebugging;
     }
+=======
+>>>>>>> VSCODE-593 Authenticating with arbitrary site
 }

@@ -66,7 +66,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     bbApi.pullrequests.getDefaultReviewers(remote)
                 ]);
 
-                const currentUser = { accountId: (await Container.authManager.getAuthInfo(siteDetailsForRemote(remote)!))!.user.id };
+                const currentUser = { accountId: (await siteDetailsForRemote(remote)!).userId };
 
                 await state.push({
                     uri: r.rootUri.toString(),

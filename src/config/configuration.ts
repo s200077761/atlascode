@@ -107,7 +107,7 @@ export class Configuration extends Disposable {
         // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
         const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);
         if (inspect && !inspect.workspaceFolderValue) {
-            this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
+            await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
         }
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
             id: project.id,

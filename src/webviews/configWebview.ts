@@ -3,7 +3,7 @@ import { IConfig } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
-import { ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isBasicAuthInfo } from '../atlclients/authInfo';
+import { ProductJira, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isBasicAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -24,7 +24,7 @@ export class ConfigWebview extends AbstractReactWebview {
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
             Container.jiraProjectManager.onDidProjectsAvailableChange(this.onProjectsAvailableChange, this),
         );
@@ -47,26 +47,21 @@ export class ConfigWebview extends AbstractReactWebview {
             const config: IConfig = await configuration.get<IConfig>();
             config.jira.defaultSite = Container.siteManager.effectiveSite(ProductJira);
 
-            var authInfo = await Container.authManager.getAuthInfo(config.jira.defaultSite);
-            if (!authInfo) {
-                authInfo = emptyAuthInfo;
-            }
-
-            const isJiraAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
-            const isBBAuthed = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
+            const isJiraConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
+            const isBBConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
 
             let jiraSitesAvailable: DetailedSiteInfo[] = [];
             let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
             let stagingEnabled = false;
             let projects: Project[] = [];
 
-            if (isJiraAuthed) {
+            if (isJiraConfigured) {
                 jiraSitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
                 stagingEnabled = false;
                 projects = await Container.jiraProjectManager.getProjects();
             }
 
-            if (isBBAuthed) {
+            if (isBBConfigured) {
                 bitbucketSitesAvailable = await Container.siteManager.getSitesAvailable(ProductBitbucket);
             }
 
@@ -76,9 +71,9 @@ export class ConfigWebview extends AbstractReactWebview {
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 projects: projects,
-                isJiraAuthenticated: isJiraAuthed,
+                isJiraAuthenticated: isJiraConfigured,
                 isJiraStagingAuthenticated: false,
-                isBitbucketAuthenticated: isBBAuthed,
+                isBitbucketAuthenticated: isBBConfigured,
                 jiraAccessToken: "FIXME!",
                 jiraStagingAccessToken: "REMOVEME!",
                 isStagingEnabled: stagingEnabled
