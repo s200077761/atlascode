@@ -30,6 +30,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     abstract explorerEnabledConfiguration(): string;
+    bitbucketEnabledConfiguration(): string {
+        return 'bitbucket.enabled';
+    }
+
     abstract monitorEnabledConfiguration(): string;
     abstract refreshConfiguation(): string;
 
@@ -55,7 +59,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
         if (this.treeDataProvder) {
             this.treeDataProvder.refresh();
         }
-        if (this.monitor) {
+        if (this.monitor && configuration.get<boolean>(this.bitbucketEnabledConfiguration())) {
             this.monitor.checkForNewActivity();
         }
     }

@@ -1,4 +1,4 @@
-import { Disposable, EventEmitter, Event, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri, ConfigurationChangeEvent } from 'vscode';
 import { Repository, API as GitApi, Remote } from "../typings/git";
 import { Container } from '../container';
 import { ProductBitbucket } from '../atlclients/authInfo';
@@ -8,7 +8,8 @@ import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from './bbUtils';
-import { bbAPIConnectivityError } from '../constants';
+import { bbAPIConnectivityError, setCommandContext, CommandContext } from '../constants';
+import { configuration } from '../config/configuration';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -52,7 +53,21 @@ export class BitbucketContext extends Disposable {
             this.prCommentController
         );
 
+        //Register this class as a listener to configuration events, and then force an
+        //initial configuration event
+        Container.context.subscriptions.push(
+            configuration.onDidChange(this.onConfigurationChanged)
+        );
+        void this.onConfigurationChanged(configuration.initializingChangeEvent);
+
         this.refreshRepos();
+    }
+
+    async onConfigurationChanged(e: ConfigurationChangeEvent){
+        const initializing = configuration.initializing(e);
+        if (initializing || configuration.changed(e, 'bitbucket.enabled')){
+            setCommandContext(CommandContext.BitbucketEnabled, Container.config.bitbucket.enabled);
+        }
     }
 
     public async currentUser(remote: Remote): Promise<User> {

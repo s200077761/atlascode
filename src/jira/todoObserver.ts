@@ -10,7 +10,7 @@ interface LensMatch {
 }
 
 export function provideCodeLenses(document: TextDocument, token: CancellationToken): CodeLens[] {
-    if (!Container.config.jira.todoIssues.enabled) {
+    if (!Container.config.jira.todoIssues.enabled || !Container.config.jira.enabled) {
         return [];
     }
 

@@ -5,6 +5,8 @@ export const extensionOutputChannelName = 'Atlassian';
 export const JiraWorkingSiteConfigurationKey = 'jira.workingSite';
 export const JiraDefaultSiteConfigurationKey = 'jira.defaultSite';
 export const JiraWorkingProjectConfigurationKey = "jira.workingProject";
+export const JiraEnabledKey = "jira.enabled";
+export const BitbucketEnabledKey = "bitbucket.enabled";
 export const CustomJQLKey = "jira.customJql";
 export const JiraHoverProviderConfigurationKey = 'jira.hover.enabled';
 export const BitbucketRelatedIssuesConfigurationKey = 'bitbucket.explorer.relatedJiraIssues.enabled';
@@ -32,6 +34,8 @@ export enum CommandContext {
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',
     IsJiraAuthenticated = 'atlascode:isJiraAuthenticated',
     IsBBAuthenticated = 'atlascode:isBBAuthenticated',
+    BitbucketEnabled = 'atlascode:bitbucketEnabled',
+    JiraEnabled = 'atlascode:jiraEnabled'
 }
 
 export function setCommandContext(key: CommandContext | string, value: any) {
