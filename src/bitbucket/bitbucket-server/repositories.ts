@@ -1,6 +1,6 @@
 import { Remote, Repository } from "../../typings/git";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranchNames } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
@@ -111,7 +111,23 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
+    /**
+     * This method then uses `git show` and scans the commit message for an 
+     * explicit mention of a pull request, which is populated by default in the
+     * Bitbucket UI.
+     *
+     * This won't work if the author of the PR wrote a custom commit message
+     * without mentioning the PR.
+     */
+    async getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]> {
+        const mergeBase = await repository.getMergeBase(commitHash, 'master');
+        const { message } = await repository.getCommit(mergeBase);
+
+        const match = message.match(/pull request #(\d+)/);
+        if (match) {
+            return [parseInt(match[1], 10)];
+        }
+
         return [];
     }
 
