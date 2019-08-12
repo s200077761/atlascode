@@ -27,6 +27,7 @@ export interface MinimalIssue {
 
 export type IssueKeyAndSite = Pick<MinimalIssue, 'siteDetails' | 'key'>;
 export type IssueLinkIssue = Pick<MinimalIssue, 'siteDetails' | 'id' | 'self' | 'key' | 'created' | 'summary' | 'status' | 'priority' | 'issuetype'>;
+export const IssueLinkIssueKeys: string[] = ['id', 'self', 'key', 'created', 'summary', 'status', 'priority', 'issuetype'];
 export type MinimalORIssueLink = MinimalIssue | IssueLinkIssue;
 
 export function readIssueLinkIssues(values: any[], siteDetails: DetailedSiteInfo): IssueLinkIssue[] {

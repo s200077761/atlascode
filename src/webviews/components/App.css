@@ -132,6 +132,17 @@ pre {
 
 /*----------------- BEGIN - inline edit containers -----------------*/
 
+.ac-field-label {
+  font-weight: bold;
+}
+
+.ac-inline-edit-main_container-left-margin {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+  width: 70%;
+}
+
 .ac-inline-input-view-p {
   width: 100%;
   color: var(--vscode-editor-foreground);
@@ -148,7 +159,7 @@ pre {
   visibility: hidden;
 }
 
-.ac-inline-cancel-button, .ac-inline-save-button {
+.ac-inline-cancel-button, .ac-inline-save-button, .ac-inline-add-button {
   background: var(--vscode-button-background)!important;
   color: var(--vscode-button-foreground)!important;
   border-width: 0px;
@@ -158,11 +169,11 @@ pre {
   margin-right: 3px;
 }
 
-.ac-inline-cancel-button:hover, .ac-inline-save-button:hover {
+.ac-inline-cancel-button:hover, .ac-inline-save-button:hover, .ac-inline-add-button:hover {
   background: var(--vscode-button-hoverBackground) !important
 }
 
-.ac-inline-cancel-button:active, .ac-inline-save-button:active {
+.ac-inline-cancel-button:active, .ac-inline-save-button:active, .ac-inline-add-button:active {
   background: var(--vscode-button-background--darken-05) !important;
   color: var(--vscode-button-foreground) !important
 }
@@ -175,6 +186,20 @@ pre {
 .ac-inline-cancel-button:before {
   content: '\2715';
   margin: 3px;
+}
+
+.label-and-button {
+  width: 100%;
+  display: inline-flex;
+}
+
+.ac-inline-add-button {
+  margin-left: auto;
+}
+
+.ac-inline-add-button:before {
+  content: '\002B';
+  margin: 2px;
 }
 
 /*------------------ END - inline edit containers ------------------*/

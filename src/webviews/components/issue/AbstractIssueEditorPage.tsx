@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
@@ -11,6 +11,7 @@ import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
 import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/components/Button';
+import InlineSubtaskEditor from './InlineSubtaskEditor';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -22,6 +23,7 @@ export interface CommonEditorViewState extends Message {
     fieldValues: FieldValues;
     isSomethingLoading: boolean;
     loadingField: string;
+    editingField: string;
     isOnline: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
@@ -33,6 +35,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     fieldValues: {},
     isSomethingLoading: false,
     loadingField: '',
+    editingField: '',
     isOnline: true,
     isErrorBannerOpen: false,
     errorDetails: undefined,
@@ -95,9 +98,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
+    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
 
     }
+
+
 
     protected handleCommentSave = (newValue: string) => {
 
@@ -189,7 +194,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
                             value={this.state.fieldValues[field.key]}
-                            onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
+                            onSave={(val: string) => { this.handleInlineEdit(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
                             inputProps={{ className: 'ac-inputField' }}
@@ -230,19 +235,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             case UIType.Subtasks: {
                 let markup = <div></div>;
                 if (editmode) {
-                    markup = <EdiText
-                        type='text'
-                        value=''
-                        onSave={(val: string) => { this.handleInlineEditTextfield(field, val); }}
-                        validation={FieldValidators.isValidString}
-                        validationMessage='sub-task summary is required'
-                        inputProps={{ className: 'ac-inputField', placeholder: 'What needs to be done?' }}
-                        viewProps={{ id: field.key, className: 'ac-inline-input-view-p' }}
-                        editButtonClassName='ac-inline-edit-button'
-                        cancelButtonClassName='ac-inline-cancel-button'
-                        saveButtonClassName='ac-inline-save-button'
-                        editing={true}
-
+                    markup = <InlineSubtaskEditor
+                        label={field.name}
+                        subtaskTypes={(field as OptionableFieldUI).allowedValues}
+                        onSave={(val: any) => { this.handleInlineEdit(field, val); }}
+                        isLoading={this.state.loadingField === field.key}
                     />;
                 } else {
 

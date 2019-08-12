@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CommonEditorPageEmit, CommonEditorPageAccept, CommonEditorViewState, AbstractIssueEditorPage, emptyCommonEditorState } from './AbstractIssueEditorPage';
-import { EditIssueData, emptyEditIssueData } from '../../../ipc/issueMessaging';
+import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import Offline from '../Offline';
 import ErrorBanner from '../ErrorBanner';
 import PageHeader from '@atlaskit/page-header';
@@ -53,6 +53,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
                 }
+                case 'issueCreated': {
+                    if (isIssueCreated(e)) {
+                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                    }
+                    break;
+                }
             }
         }
         return handled;
@@ -71,9 +77,22 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
-    protected handleInlineEditTextfield = (field: FieldUI, newValue: string) => {
+    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
         if (field.uiType === UIType.Subtasks) {
+            /* newValue will be:
+            {
+                summary: string;
+                issuetype: {id:number}
+            }
+            */
+            this.setState({ isSomethingLoading: true, loadingField: 'subtasks' });
+            const payload: any = newValue;
+            payload.project = { key: this.state.key.substring(0, this.state.key.indexOf('-')) };
+            payload.parent = { key: this.state.key };
 
+            console.log('subtask edit', payload);
+
+            this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
         } else {
             //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
             this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
@@ -146,35 +165,34 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {this.getInputMarkup(this.state.fields['summary'], true)}
                 </PageHeader>
                 {this.state.fields['description'] &&
-                    <div>
-                        <label className='ac-field-label' htmlFor={this.state.fields['description'].key}>{this.state.fields['description'].name}</label>
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='description'>{this.state.fields['description'].name}</label>
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
                 {this.state.fields['environment'] &&
-                    <div>
-                        <label className='ac-field-label' htmlFor={this.state.fields['environment'].key}>{this.state.fields['environment'].name}</label>
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='environment'>{this.state.fields['environment'].name}</label>
                         {this.getInputMarkup(this.state.fields['environment'], true)}
                     </div>
                 }
 
                 {this.state.fields['subtasks'] &&
-                    <div>
-                        <label className='ac-field-label' htmlFor={this.state.fields['subtasks'].key}>{this.state.fields['subtasks'].name}</label>
+                    <div className='ac-vpadding'>
                         {this.getInputMarkup(this.state.fields['subtasks'], true)}
                         <IssueList issues={this.state.fieldValues['subtasks']} onIssueClick={this.handleOpenIssue} />
                     </div>
                 }
                 {this.state.fields['issuelinks'] &&
-                    <div>
-                        <label className='ac-field-label' htmlFor={this.state.fields['issuelinks'].key}>{this.state.fields['issuelinks'].name}</label>
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='issuelinks'>{this.state.fields['issuelinks'].name}</label>
                         {this.getInputMarkup(this.state.fields['issuelinks'], true)}
-                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />;
+                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
                     </div>
                 }
                 {this.state.fields['comment'] &&
-                    <div>
-                        <label className='ac-field-label' htmlFor={this.state.fields['comment'].key}>{this.state.fields['comment'].name}</label>
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='comment'>{this.state.fields['comment'].name}</label>
                         <CommentList comments={this.state.fieldValues['comment'].comments} />
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>

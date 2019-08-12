@@ -1,16 +1,19 @@
 import { AbstractIssueEditorWebview, CommonEditorWebviewEmit } from "./abstractIssueEditorWebview";
 import { InitializingWebview } from "./abstractWebview";
-import { MinimalIssue } from "../jira/jira-client/model/entities";
+import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue } from "../jira/jira-client/model/entities";
 import { Action, onlineStatus } from "../ipc/messaging";
 import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { Container } from "../container";
 import { fetchEditIssueUI } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, FieldValueUpdate, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
+import { commands } from "vscode";
+import { Commands } from "../commands";
+import { issueCreatedEvent } from "../analytics";
 
 type Emit = CommonEditorWebviewEmit | EditIssueUI | FieldValueUpdate;
 export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> implements InitializingWebview<MinimalIssue> {
@@ -147,6 +150,32 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment') });
                         }
+                    }
+                    break;
+                }
+                case 'createIssue': {
+                    if (isCreateIssue(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            const resp = await client.createIssue(msg.issueData);
+
+                            const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys);
+                            const picked = readIssueLinkIssue(createdIssue, msg.site);
+
+                            this._editUIData.fieldValues['subtasks'].push(picked);
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'subtasks': this._editUIData.fieldValues['subtasks'] }
+                            });
+                            issueCreatedEvent(resp.key, msg.site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                        } catch (e) {
+                            Logger.error(new Error(`error creating issue: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
+                        }
+
                     }
                     break;
                 }

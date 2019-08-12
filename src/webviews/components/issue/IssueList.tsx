@@ -44,7 +44,7 @@ export default class IssueList extends React.Component<{ issues: IssueLinkIssue[
                             issue: issue,
                             onIssueClick: this.props.onIssueClick
                         }
-                    };
+                    }
                 })}
             />
         );

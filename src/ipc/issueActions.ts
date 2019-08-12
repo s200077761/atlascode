@@ -2,6 +2,7 @@ import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
@@ -67,6 +68,7 @@ export interface CreateSomethingAction extends Action {
 }
 
 export interface CreateIssueAction extends Action {
+    site: DetailedSiteInfo;
     issueData: any;
 }
 
@@ -128,7 +130,8 @@ export function isCreateSomething(a: Action): a is CreateSomethingAction {
 }
 
 export function isCreateIssue(a: Action): a is CreateIssueAction {
-    return (<CreateIssueAction>a).issueData !== undefined;
+    return a && (<CreateIssueAction>a).issueData !== undefined
+        && (<CreateIssueAction>a).site !== undefined;
 }
 
 export function isStartWork(a: Action): a is StartWorkAction {
