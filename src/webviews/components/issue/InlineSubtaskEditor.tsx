@@ -25,6 +25,7 @@ interface State {
     isLoading: boolean;
     selectedIssueType: IssueType;
     inputValue: string;
+    editorContainerClassname: string | undefined;
 }
 
 const { Option } = components;
@@ -51,6 +52,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
             isEditing: false,
             isLoading: false,
             inputValue: '',
+            editorContainerClassname: 'ac-hidden',
             selectedIssueType: (props.subtaskTypes.length > 0) ? props.subtaskTypes[0] : emptyIssueType
         };
     }
@@ -76,11 +78,11 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
     }
 
     handleOpenInlineEditor = (e: any) => {
-        this.setState({ isEditing: true });
+        this.setState({ isEditing: true, editorContainerClassname: 'ac-flex-space-between' });
     }
 
     handleCancelInlineEdit = (value: string) => {
-        this.setState({ isEditing: false });
+        this.setState({ isEditing: false, editorContainerClassname: 'ac-hidden' });
     }
 
     handleIssueTypeChange = (newType: IssueType) => {
@@ -90,7 +92,8 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
     }
 
     handleSave = (val: string) => {
-        this.setState({ inputValue: " ", isEditing: false });
+        this.setState({ inputValue: "", isEditing: false, editorContainerClassname: 'ac-hidden' });
+
         this.props.onSave(
             {
                 summary: val,
@@ -105,12 +108,15 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
             <React.Fragment>
                 <div className='label-and-button'>
                     <label className='ac-field-label' htmlFor='subtasks-editor'>{this.props.label}</label>
-                    <button className='ac-inline-add-button' onClick={this.handleOpenInlineEditor} />
+                    <button className='ac-inline-add-button'
+                        onClick={this.handleOpenInlineEditor}
+                        disabled={this.state.isEditing || this.state.isLoading}
+                    />
                 </div>
-                <div className='ac-flex-space-between'>
-                    {this.state.isLoading &&
-                        <Spinner size="small" />
-                    }
+                {this.state.isLoading &&
+                    <Spinner size="small" />
+                }
+                <div className={this.state.editorContainerClassname}>
                     {this.state.isEditing &&
                         <div style={{ width: '30%' }}>
                             <Select
@@ -134,9 +140,8 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
                         validation={FieldValidators.isValidString}
                         validationMessage='sub-task summary is required'
                         inputProps={{ className: 'ac-inputField', placeholder: 'What needs to be done?', style: { width: '100%' } }}
-                        viewProps={{ id: 'subtasks-editor', className: 'ac-inline-input-view-p' }}
                         mainContainerClassName='ac-inline-edit-main_container-left-margin'
-                        editButtonClassName='ac-inline-edit-button'
+                        editButtonClassName='ac-hidden'
                         cancelButtonClassName='ac-inline-cancel-button'
                         saveButtonClassName='ac-inline-save-button'
                         editing={this.state.isEditing}

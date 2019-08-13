@@ -193,13 +193,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     } else {
                         markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
-                            value={this.state.fieldValues[field.key]}
+                            value='testing'
                             onSave={(val: string) => { this.handleInlineEdit(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
                             inputProps={{ className: 'ac-inputField' }}
                             viewProps={{ id: field.key, className: 'ac-inline-input-view-p' }}
-                            editButtonClassName='ac-inline-edit-button'
+                            editButtonClassName='ac-hidden'
                             cancelButtonClassName='ac-inline-cancel-button'
                             saveButtonClassName='ac-inline-save-button'
                             editOnViewClick={true}

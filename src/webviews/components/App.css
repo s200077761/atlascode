@@ -155,7 +155,7 @@ pre {
   /* color: var(--vscode-input-foreground) !important; */
 }
 
-.ac-inline-edit-button {
+.ac-hidden {
   visibility: hidden;
 }
 
@@ -200,6 +200,10 @@ pre {
 .ac-inline-add-button:before {
   content: '\002B';
   margin: 2px;
+}
+
+.ac-inline-add-button:disabled {
+  background: var(--vscode-button-background--50) !important;
 }
 
 /*------------------ END - inline edit containers ------------------*/
