@@ -5,6 +5,7 @@ import { BitbucketContext } from "../bitbucket/bbContext";
 import { ProductBitbucket } from "../atlclients/authInfo";
 import { RefreshTimer } from "./RefreshTimer";
 import { Explorer, BaseTreeDataProvider } from "./Explorer";
+import { BitbucketEnabledKey } from "../constants";
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;
@@ -31,7 +32,7 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
 
     abstract explorerEnabledConfiguration(): string;
     bitbucketEnabledConfiguration(): string {
-        return 'bitbucket.enabled';
+        return BitbucketEnabledKey;
     }
 
     abstract monitorEnabledConfiguration(): string;

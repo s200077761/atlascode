@@ -68,10 +68,6 @@ export class JiraContext extends Disposable {
             const project = await Container.jiraProjectManager.getEffectiveProject();
             this._newIssueMonitor.setProject(project);
         }
-
-        if (initializing || configuration.changed(e, 'jira.enabled')){
-            setCommandContext(CommandContext.JiraEnabled, Container.config.jira.enabled);
-        }
     }
 
     dispose() {
