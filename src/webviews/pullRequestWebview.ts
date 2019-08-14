@@ -71,6 +71,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
         if (this._state.repository && this._state.remote && this._state.prData.pr) {
             this.forceUpdatePullRequest();
+            await this.forceUpdateComments();
         } else if (this._pr !== undefined) {
             await this.postInitialState(this._pr);
             await this.postAugmentedState(this._pr);
