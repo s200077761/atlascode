@@ -1,8 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { Backend } from '../backend/backend-base';
-import { GitBackend } from '../backend/backend-git';
+import { Backend } from '../backend/backend';
 import { Shell } from '../../util/shell';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
@@ -37,7 +36,7 @@ export abstract class CommandBase {
   protected async getBackend(): Promise<Backend> {
     const workingDirectory = this.getDirectory();
     const shell = new Shell(workingDirectory);
-    for (const backend of [GitBackend]) {
+    for (const backend of [Backend]) {
       const { code, stdout } = await shell.exec(backend.root);
       if (code === 0) {
         return new backend(stdout.trim());
