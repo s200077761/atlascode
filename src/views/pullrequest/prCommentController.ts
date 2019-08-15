@@ -5,8 +5,17 @@ import { FileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
 import { clientForRemote } from '../../bitbucket/bbUtils';
+import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 
 const turndownService = new TurndownService();
+turndownService.addRule('mention', {
+    filter: function (node) {
+        return node.classList.contains('ap-mention');
+    },
+    replacement: function (content, _, options) {
+        return `${options.emDelimiter}${content}${options.emDelimiter}`;
+    }
+});
 
 interface PullRequestComment extends vscode.Comment {
     prCommentThreadId?: number;
@@ -21,6 +30,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     constructor(ctx: vscode.ExtensionContext) {
         ctx.subscriptions.push(
+            vscode.languages.registerCompletionItemProvider({ scheme: 'comment' }, new BitbucketMentionsCompletionProvider(), '@'),
             vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
                 this.addComment(reply);
             }),

@@ -32,7 +32,9 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import { RefreshIssueAction } from "../../../ipc/issueActions";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
-import { BitbucketIssueData } from "../../../bitbucket/model";
+import { BitbucketIssueData, UnknownUser } from "../../../bitbucket/model";
+import { FetchUsersResult } from "../../../ipc/prMessaging";
+import { FetchUsers } from "../../../ipc/prActions";
 
 type SizeMetrics = {
     width: number;
@@ -60,9 +62,10 @@ type Emit = PostComment
     | AssignToMe
     | RefreshIssueAction
     | OpenStartWorkPageAction
-    | CreateJiraIssueAction;
+    | CreateJiraIssueAction
+    | FetchUsers;
 
-type Receive = BitbucketIssueMessageData | HostErrorMessage;
+type Receive = BitbucketIssueMessageData | FetchUsersResult | HostErrorMessage;
 
 type MyState = {
     data: BitbucketIssueMessageData;
@@ -76,12 +79,8 @@ type MyState = {
 const emptyIssueData = {
     type: "updateBitbucketIssue",
     issueData: { type: "" },
-    currentUser: {
-        accountId: '',
-        displayName: '',
-        url: '',
-        avatarUrl: ''
-    },
+    remote: { name: 'dummy_remote', isReadOnly: true },
+    currentUser: UnknownUser,
     comments: [],
     hasMore: false,
     showJiraButton: false,
@@ -97,6 +96,8 @@ const emptyState = {
 };
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private userSuggestions: any;
+
     constructor(props: any) {
         super(props);
         this.state = emptyState;
@@ -110,6 +111,10 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
             }
             case 'updateBitbucketIssue': {
                 this.setState({ data: e, isStatusButtonLoading: false, isAnyCommentLoading: false });
+                break;
+            }
+            case 'fetchUsersResult': {
+                this.userSuggestions = e.users;
                 break;
             }
             case 'onlineStatus': {
@@ -141,6 +146,27 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
+
+    loadUserOptions = (input: string): Promise<any> => {
+        return new Promise(resolve => {
+            this.userSuggestions = undefined;
+            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.data.remote });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.userSuggestions === undefined) {
+                        this.userSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
+    }
+
 
     renderDetails(issue: BitbucketIssueData) {
         return <div style={{ padding: '2em' }}>
@@ -225,7 +251,12 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                         </div>
                                     }
                                     <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={undefined} />
-                                    <CommentForm currentUser={this.state.data!.currentUser!} visible={true} isAnyCommentLoading={this.state.isAnyCommentLoading} onSave={this.handlePostComment} />
+                                    <CommentForm
+                                        currentUser={this.state.data!.currentUser!}
+                                        visible={true}
+                                        isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                        onSave={this.handlePostComment}
+                                        loadUserOptions={this.loadUserOptions} />
                                 </Panel>
                             </GridColumn>
 

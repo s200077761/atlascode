@@ -7,6 +7,7 @@ import { MinimalIssue } from "../jira/jira-client/model/entities";
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
     pr?: PullRequestData;
+    remote: Remote;
     currentUser?: User;
     currentBranch: string;
     commits?: Commit[];
