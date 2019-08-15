@@ -4,7 +4,7 @@ import { Commands } from "../commands";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
-import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from "../constants";
+import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, BitbucketEnabledKey, JiraEnabledKey } from "../constants";
 
 export class AuthStatusBar extends Disposable {
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -28,26 +28,27 @@ export class AuthStatusBar extends Disposable {
     this.updateAuthenticationStatusBar(e.site.product, e.authInfo);
   }
 
+  async generateStatusbarItem(product: Product): Promise<void> {    
+      const itemInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(product));
+      await this.updateAuthenticationStatusBar(product, itemInfo);
+  }
+
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
-    if (initializing || configuration.changed(e, 'jira.statusbar') || configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey)) {
-      const jiraItem = this.ensureStatusItem(ProductJira);
-      const jiraInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductJira));
-      this.updateAuthenticationStatusBar(ProductJira, jiraInfo);
-
-      if (!Container.config.jira.statusbar.enabled) {
-        jiraItem.hide();
-      }
+    if (initializing || 
+        configuration.changed(e, 'jira.statusbar') || 
+        configuration.changed(e, JiraDefaultSiteConfigurationKey) || 
+        configuration.changed(e, JiraWorkingProjectConfigurationKey) ||
+        configuration.changed(e, JiraEnabledKey)) 
+    {
+      await this.generateStatusbarItem(ProductJira);
     }
 
-    if (initializing || configuration.changed(e, 'bitbucket.statusbar')) {
-      const bitbucketItem = this.ensureStatusItem(ProductBitbucket);
-      const bitbucketInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(ProductBitbucket));
-      this.updateAuthenticationStatusBar(ProductBitbucket, bitbucketInfo);
-
-      if (!Container.config.bitbucket.statusbar.enabled) {
-        bitbucketItem.hide();
-      }
+    if (initializing || 
+        configuration.changed(e, 'bitbucket.statusbar') || 
+        configuration.changed(e, BitbucketEnabledKey)) 
+    {
+      await this.generateStatusbarItem(ProductBitbucket);
     }
   }
   dispose() {
@@ -73,7 +74,14 @@ export class AuthStatusBar extends Disposable {
     info: AuthInfo | undefined
   ): Promise<void> {
     const statusBarItem = this.ensureStatusItem(product);
-    await this.updateStatusBarItem(statusBarItem, product, info);
+    if((product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) || 
+        (product.name === 'Bitbucket' && Container.config.bitbucket.enabled && Container.config.bitbucket.statusbar.enabled))
+    {
+      const statusBarItem = this.ensureStatusItem(product);
+      await this.updateStatusBarItem(statusBarItem, product, info);
+    } else {
+      statusBarItem.hide();
+    }
   }
 
   private async updateStatusBarItem(
