@@ -167,8 +167,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </ButtonGroup>}
                     breadcrumbs={
                         <BreadcrumbsStateless onExpand={() => { }}>
-                            {(this.state.fieldValues['epicLink'] && this.state.fieldValues['epicLink'] !== '') &&
-                                <BreadcrumbsItem component={() => <NavItem text={`${this.state.fieldValues['epicLink']}`} onItemClick={() => this.handleOpenIssue('')} />} />
+                            {(this.state.fieldValues[this.state.epicFieldInfo.epicLink.id] && this.state.fieldValues[this.state.epicFieldInfo.epicLink.id] !== '') &&
+                                <BreadcrumbsItem component={() => <NavItem text={this.state.fieldValues[this.state.epicFieldInfo.epicLink.id]} onItemClick={() => this.handleOpenIssue(this.state.fieldValues[this.state.epicFieldInfo.epicLink.id])} />} />
                             }
                             {this.state.fieldValues['parent'] &&
                                 <BreadcrumbsItem component={() => <NavItem
@@ -187,9 +187,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
-                {this.state.fields['environment']
-                    && !this.state.isEpic
-                    && !this.state.fieldValues['issuetype'].subtask
+                {this.state.fieldValues['environment']
+                    && this.state.fieldValues['environment'].trim() !== ''
                     &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label' htmlFor='environment'>{this.state.fields['environment'].name}</label>

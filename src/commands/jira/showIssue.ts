@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { Container } from "../../container";
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSiteOrKey, isIssueKeyAndSite } from "../../jira/jira-client/model/entities";
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from "../../atlclients/authInfo";
-import { fetchMinimalIssue } from "../../jira/fetchIssue";
+import { fetchMinimalIssue, getCachedOrFetchMinimalIssue } from "../../jira/fetchIssue";
 
 export async function showIssue(issueOrKey: MinimalIssueOrKeyAndSiteOrKey | undefined) {
   let issueKey: string = "";
@@ -25,7 +25,14 @@ export async function showIssue(issueOrKey: MinimalIssueOrKeyAndSiteOrKey | unde
       issueKey = issueOrKey;
       site = Container.siteManager.effectiveSite(ProductJira);
     }
-    issue = await fetchMinimalIssue(issueKey, site);
+
+    // Note: we try to get the cached issue first because it will contain epic child info we need
+    const cachedOrFetched = await getCachedOrFetchMinimalIssue(issueKey, site);
+    if (cachedOrFetched && isMinimalIssue(cachedOrFetched)) {
+      issue = cachedOrFetched;
+    } else {
+      issue = await fetchMinimalIssue(issueKey, site);
+    }
   }
 
   Container.jiraIssueViewManager.createOrShow(issue);

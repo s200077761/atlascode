@@ -56,6 +56,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI
     siteDetails: issue.siteDetails,
     isEpic: issue.isEpic,
     epicChildren: issue.epicChildren,
+    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails)
 
   };
 

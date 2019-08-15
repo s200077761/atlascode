@@ -103,9 +103,15 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => {
+        let issueObj = issueOrKey;
+
+        if (typeof issueOrKey === 'string') {
+            issueObj = { key: issueOrKey, siteDetails: this.state.siteDetails };
+        }
+
         this.postMessage({
             action: "openJiraIssue",
-            issueOrKey: issueOrKey,
+            issueOrKey: issueObj,
         });
     }
 

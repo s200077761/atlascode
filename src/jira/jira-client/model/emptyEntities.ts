@@ -1,5 +1,6 @@
 import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project, Comment, IssueLinkIssue, IssueLinkType } from "./entities";
 import { emptySiteInfo } from "../../../atlclients/authInfo";
+import { EpicFieldInfo } from "../../jiraCommon";
 
 export const emptyAvatars: Avatars = { '48x48': '', '24x24': '', '16x16': '', '32x32': '' };
 
@@ -117,4 +118,11 @@ export const emptyComment: Comment = {
     created: '',
     id: '',
     self: ''
+};
+
+export const emptyEpicFieldInfo: EpicFieldInfo = {
+    epicLink: { id: "", name: "", cfid: -1 },
+    epicName: { id: "", name: "", cfid: -1 },
+    epicsEnabled: false,
+
 };
