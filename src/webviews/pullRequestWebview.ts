@@ -69,22 +69,10 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             return;
         }
 
-        if (this._state.repository && this._state.remote && this._state.prData.pr) {
-            this.forceUpdatePullRequest();
-            await this.forceUpdateComments();
-        } else if (this._pr !== undefined) {
-            await this.postInitialState(this._pr);
-            await this.postAugmentedState(this._pr);
+        if (this._pr !== undefined) {
+            //await this.postInitialState(this._pr);
+            await this.postCompleteState(this._pr);
         }
-    }
-
-    private validatePRState(s: PRState): boolean {
-        return !!s.repository
-            && !!s.remote
-            && !!s.prData.pr
-            && !!s.prData.currentUser
-            && !!s.prData.commits
-            && !!s.prData.comments;
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
@@ -187,17 +175,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         try {
 
             if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
-
-            if (this.validatePRState(this._state)) {
-                this._state.prData.type = 'update';
-                this._state.prData.currentBranch = pr.repository.state.HEAD!.name!;
-                this.postMessage(this._state.prData);
-                this.isRefeshing = false;
-                return;
-            }
-
-            await this.postInitialState(pr);
-            await this.postAugmentedState(pr);
+            await this.postCompleteState(pr);
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             Logger.error(err);
@@ -207,30 +185,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
     }
 
-    private async postInitialState(pr: PullRequest) {
-        const currentUser = await Container.bitbucketContext.currentUser(pr.remote);
-        this._state = {
-            repository: pr.repository,
-            remote: pr.remote,
-            sourceRemote: pr.sourceRemote || pr.remote,
-            prData: {
-                type: 'update',
-                pr: pr.data,
-                currentUser: currentUser,
-                currentBranch: pr.repository.state.HEAD!.name!,
-                commits: undefined,
-                comments: undefined,
-                relatedJiraIssues: undefined,
-                relatedBitbucketIssues: undefined,
-                mainIssue: undefined,
-                errors: undefined
-            }
-        };
-
-        this.postMessage(this._state.prData);
-    }
-
-    private async postAugmentedState(pr: PullRequest) {
+    private async postCompleteState(pr: PullRequest) {
         const bbApi = await clientForRemote(pr.remote);
 
         const prDetailsPromises = Promise.all([
@@ -246,9 +201,12 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             this.fetchMainIssue(pr)
         ]);
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
+        const currentUser = await Container.bitbucketContext.currentUser(pr.remote);
 
         this._state.prData = {
-            ...this._state.prData,
+            pr: pr.data,
+            currentUser: currentUser,
+            currentBranch: pr.repository.state.HEAD!.name!,
             type: 'update',
             commits: commits.data,
             comments: comments.data,
@@ -256,7 +214,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
             mainIssue: mainIssue,
             buildStatuses: buildStatuses,
-            errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
+            errors: (commits.next || comments.next) ? 'You may not be seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
         };
 
         this.postMessage(this._state.prData);
