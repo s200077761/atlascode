@@ -48,6 +48,7 @@ export interface CopyJiraIssueLinkAction extends Action {
 export interface FetchQueryAction extends Action {
     query: string;
     site: DetailedSiteInfo;
+    autocompleteUrl?: string;
 }
 
 export interface FetchByProjectQueryAction extends Action {

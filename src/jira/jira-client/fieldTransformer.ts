@@ -5,6 +5,7 @@ import { EpicFieldInfo } from "../jiraCommon";
 import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
+import { API_VERSION } from "../jira-client/client";
 
 interface ProblemCollector {
     problems: FieldProblem[];
@@ -42,7 +43,8 @@ export class FieldTransformer {
         const problemCollector: ProblemCollector = { problems: [], hasRequiredNonRenderables: false };
         const epicFieldInfo: EpicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
         const issuelinkTypes: IssueLinkType[] = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
-        const defaultIssueLinkAutocomplete: string = `${this._site.baseApiUrl}/issue/picker?currentProjectId=${project.id}&showSubTaskParent=true&showSubTasks=true&currentIssueKey=${isskey}&query=`;
+        const ilJQL: string = `project = "${project.key}" AND project in projectsWhereUserHasPermission("Link Issues") AND resolution = Unresolved ORDER BY priority DESC, updated DESC`;
+        const defaultIssueLinkAutocomplete: string = `${this._site.baseApiUrl}/api/${API_VERSION}/issue/picker?showSubTaskParent=true&showSubTasks=true&currentIssueKey=${isskey}&currentJQL=${ilJQL}&query=`;
 
         // if we don't have issueLinkTypes, filter out the issue links
         if (!Array.isArray(issuelinkTypes) || issuelinkTypes.length < 1) {
@@ -263,7 +265,7 @@ export class FieldTransformer {
                         name: field.name,
                         key: field.key,
                         uiType: UIType.IssueLink,
-                        autoCompleteUrl: `${this._site.baseApiUrl}/issue/picker?currentProjectId=${project.id}&showSubTasks=false&query=`,
+                        autoCompleteUrl: "",
                         autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
                         allowedValues: [],
@@ -494,10 +496,10 @@ export class FieldTransformer {
         const schemaName: string = this.schemaName(field);
 
         switch (schemaName) {
-            case 'components': return `${this._site.baseApiUrl}/component`;
-            case 'fixVersions': return `${this._site.baseApiUrl}/version`;
-            case 'versions': return `${this._site.baseApiUrl}/version`;
-            case 'subtasks': return `${this._site.baseApiUrl}/issue`;
+            case 'components': return `${this._site.baseApiUrl}/api/${API_VERSION}/component`;
+            case 'fixVersions': return `${this._site.baseApiUrl}/api/${API_VERSION}/version`;
+            case 'versions': return `${this._site.baseApiUrl}/api/${API_VERSION}/version`;
+            case 'subtasks': return `${this._site.baseApiUrl}/api/${API_VERSION}/issue`;
             default: return "";
         }
 

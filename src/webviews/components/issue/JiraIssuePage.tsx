@@ -184,14 +184,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
-                {this.state.fields['environment'] &&
+                {this.state.fields['environment'] && !this.state.isEpic &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label' htmlFor='environment'>{this.state.fields['environment'].name}</label>
                         {this.getInputMarkup(this.state.fields['environment'], true)}
                     </div>
                 }
 
-                {this.state.fields['subtasks'] &&
+                {this.state.isEpic &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='epicchildren'>Issues in this epic</label>
+                        <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
+                    </div>
+                }
+
+                {this.state.fields['subtasks'] && !this.state.isEpic &&
                     <div className='ac-vpadding'>
                         {this.getInputMarkup(this.state.fields['subtasks'], true)}
                         <IssueList issues={this.state.fieldValues['subtasks']} onIssueClick={this.handleOpenIssue} />

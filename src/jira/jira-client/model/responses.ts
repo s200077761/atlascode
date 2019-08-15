@@ -55,6 +55,12 @@ export class IssuePickerIssue {
     summaryText: string;
 }
 
+export function isIssuePickerIssue(a: any): a is IssuePickerIssue {
+    return a && a.key !== undefined
+        && a.summary !== undefined
+        && a.img !== undefined;
+}
+
 export interface SearchResults {
     readonly issues: MinimalIssue[];
     readonly maxResults: number;

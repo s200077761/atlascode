@@ -7,7 +7,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
-const API_VERSION = 2;
+export const API_VERSION = 2;
 
 // JiraClient provides methods to invoke Jira REST API endpoints
 //
@@ -70,6 +70,19 @@ export abstract class JiraClient {
         });
 
         return readIssueCreateMetadata(res);
+    }
+
+    public async getAutocompleteDataFromUrl(url: string): Promise<any> {
+        const res = await axios(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            httpsAgent: this.agent
+        });
+
+        return res.data;
     }
 
     public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {

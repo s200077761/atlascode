@@ -2,7 +2,7 @@ import { AbstractReactWebview } from "./abstractWebview";
 import { isAction } from "../ipc/messaging";
 import { isFetchQuery } from "../ipc/issueActions";
 import { Container } from "../container";
-import { IssuePickerIssue } from "../jira/jira-client/model/responses";
+import { IssuePickerIssue, IssuePickerResult } from "../jira/jira-client/model/responses";
 import { Logger } from "../logger";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
@@ -18,7 +18,17 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         if (isFetchQuery(msg)) {
                             try {
                                 let client = await Container.clientManager.jirarequest(msg.site);
-                                const suggestions: IssuePickerIssue[] = await client.getIssuePickerSuggestions(msg.query);
+                                let suggestions: IssuePickerIssue[] = [];
+                                suggestions = await client.getIssuePickerSuggestions(msg.query);
+                                if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
+                                    const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + msg.query);
+                                    if (Array.isArray(result.sections)) {
+                                        suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
+                                    }
+                                } else {
+                                    suggestions = await client.getIssuePickerSuggestions(msg.query);
+                                }
+
                                 this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
                             } catch (e) {
                                 Logger.error(new Error(`error posting comment: ${e}`));

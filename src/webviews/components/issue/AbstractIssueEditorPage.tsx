@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, OptionableFieldUI, SelectFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
@@ -119,10 +119,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     }
 
-    protected loadIssueOptions = (input: string): Promise<IssuePickerIssue[]> => {
+    protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
             this.issueSuggestions = undefined;
-            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails });
+            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -287,7 +287,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         linkTypes={(field as OptionableFieldUI).allowedValues}
                         onSave={(val: any) => { this.handleInlineEdit(field, val); }}
                         isLoading={this.state.loadingField === field.key}
-                        onFetchIssues={this.loadIssueOptions}
+                        onFetchIssues={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
                     />;
                 } else {
 
