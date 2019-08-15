@@ -78,6 +78,8 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
   let filteredFields: Fields = {};
 
   Object.keys(res.fields).forEach(fkey => {
+
+    // get all the fields that DO NOT exist in editMeta but have schemas in allFields
     if (res.fields[fkey] !== null && !metaFieldKeys.includes(fkey) && allFieldKeys.includes(fkey)) {
       filteredFields[fkey] = allFields[fkey];
       filteredFields[fkey].currentValue = res.fields[fkey];
@@ -86,6 +88,25 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
         filteredFields[fkey].renderedValue = res.renderedFields[fkey];
       }
     }
+    // 'parent' (of sub-tasks) is a special field that never shows up in editmeta OR allfields.
+    if (fkey === 'parent') {
+      filteredFields[fkey] = {
+        id: "parent",
+        name: "Parent",
+        key: "parent",
+        clauseNames: [],
+        currentValue: res.fields[fkey],
+        custom: false,
+        renderedValue: undefined,
+        schema: {
+          type: "issuelink",
+          system: "parent",
+          custom: undefined,
+          items: undefined,
+        },
+      };
+    }
+
   });
 
   return {

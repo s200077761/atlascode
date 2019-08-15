@@ -170,8 +170,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             {(this.state.fieldValues['epicLink'] && this.state.fieldValues['epicLink'] !== '') &&
                                 <BreadcrumbsItem component={() => <NavItem text={`${this.state.fieldValues['epicLink']}`} onItemClick={() => this.handleOpenIssue('')} />} />
                             }
-                            {this.state.fieldValues['parentKey'] &&
-                                <BreadcrumbsItem component={() => <NavItem text={`${this.state.fieldValues['parentKey']}`} onItemClick={() => this.handleOpenIssue('')} />} />
+                            {this.state.fieldValues['parent'] &&
+                                <BreadcrumbsItem component={() => <NavItem
+                                    text={this.state.fieldValues['parent'].key}
+                                    iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
+                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />} />
                             }
                             <BreadcrumbsItem component={() => <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />} />
                         </BreadcrumbsStateless>
@@ -184,7 +187,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
-                {this.state.fields['environment'] && !this.state.isEpic &&
+                {this.state.fields['environment']
+                    && !this.state.isEpic
+                    && !this.state.fieldValues['issuetype'].subtask
+                    &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label' htmlFor='environment'>{this.state.fields['environment'].name}</label>
                         {this.getInputMarkup(this.state.fields['environment'], true)}
@@ -198,7 +204,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 }
 
-                {this.state.fields['subtasks'] && !this.state.isEpic &&
+                {this.state.fields['subtasks']
+                    && !this.state.isEpic
+                    && !this.state.fieldValues['issuetype'].subtask
+                    &&
                     <div className='ac-vpadding'>
                         {this.getInputMarkup(this.state.fields['subtasks'], true)}
                         <IssueList issues={this.state.fieldValues['subtasks']} onIssueClick={this.handleOpenIssue} />

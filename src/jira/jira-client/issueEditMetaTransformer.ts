@@ -8,6 +8,7 @@ import { IssueCreateMetadata } from "./model/issueCreateMetadata";
 
 const defaultCommonFields: string[] = [
     'summary'
+    , 'parent'
     , 'description'
     , 'fixVersions'
     , 'components'

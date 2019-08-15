@@ -1,9 +1,10 @@
 import { AbstractReactWebview } from "./abstractWebview";
 import { isAction } from "../ipc/messaging";
-import { isFetchQuery } from "../ipc/issueActions";
+import { isFetchQuery, isOpenJiraIssue } from "../ipc/issueActions";
 import { Container } from "../container";
 import { IssuePickerIssue, IssuePickerResult } from "../jira/jira-client/model/responses";
 import { Logger } from "../logger";
+import { showIssue } from "../commands/jira/showIssue";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
@@ -14,6 +15,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             if (isAction(msg)) {
                 switch (msg.action) {
                     case 'fetchIssues': {
+                        //TODO: [VSCODE-588] Add nonce handling
                         handled = true;
                         if (isFetchQuery(msg)) {
                             try {
@@ -34,6 +36,13 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 Logger.error(new Error(`error posting comment: ${e}`));
                                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues') });
                             }
+                        }
+                        break;
+                    }
+                    case 'openJiraIssue': {
+                        handled = true;
+                        if (isOpenJiraIssue(msg)) {
+                            showIssue(msg.issueOrKey);
                         }
                         break;
                     }

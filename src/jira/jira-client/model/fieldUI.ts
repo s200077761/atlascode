@@ -181,7 +181,8 @@ export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , [ValueType.Version, UIType.Select]// multi-select, {id, name, archived:boolean, released:boolean}
         // issuelinks: multi-issue picker {id, type:{id,name,inward,outward}, outwardIssue:{id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}}
         // subtasks (issuelinks type) {id, key,fields:{summary, status:{}, priority:{}, issueType:{}}}
-        , [ValueType.IssueLinks, UIType.IssueLink]
+        , [ValueType.IssueLinks, UIType.IssueLinks]
+        , [ValueType.IssueLink, UIType.IssueLink]
         , [ValueType.Component, UIType.Select] // mutli-select, {id, name}
         , [ValueType.Worklog, UIType.Worklog]
         , ['attachment', UIType.Attachment]
