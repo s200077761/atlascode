@@ -1,6 +1,6 @@
 import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { MinimalIssue } from "./jira-client/model/entities";
+import { MinimalIssue, MinimalORIssueLink } from "./jira-client/model/entities";
 import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
 import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
 import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
@@ -22,6 +22,16 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
   Logger.debug('transforming meta...');
   return await createIssueTransformer.transformIssueScreens(meta.projects[0]);
 
+}
+
+export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink> {
+  let foundIssue = await Container.jiraExplorer.findIssue(issueKey);
+
+  if (!foundIssue) {
+    foundIssue = await fetchMinimalIssue(issueKey, siteDetails);
+  }
+
+  return foundIssue;
 }
 
 export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {

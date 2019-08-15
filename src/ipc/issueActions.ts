@@ -1,7 +1,7 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
-import { FieldValues } from "../jira/jira-client/model/fieldUI";
+import { FieldValues, IssueLinkTypeSelectOption } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface RefreshIssueAction extends Action {
@@ -47,6 +47,7 @@ export interface CopyJiraIssueLinkAction extends Action {
 
 export interface FetchQueryAction extends Action {
     query: string;
+    site: DetailedSiteInfo;
 }
 
 export interface FetchByProjectQueryAction extends Action {
@@ -70,6 +71,12 @@ export interface CreateSomethingAction extends Action {
 export interface CreateIssueAction extends Action {
     site: DetailedSiteInfo;
     issueData: any;
+}
+
+export interface CreateIssueLinkAction extends Action {
+    site: DetailedSiteInfo;
+    issueLinkData: any;
+    issueLinkType: IssueLinkTypeSelectOption;
 }
 
 export interface StartWorkAction extends Action {
@@ -108,7 +115,8 @@ export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
 }
 
 export function isFetchQuery(a: Action): a is FetchQueryAction {
-    return (<FetchQueryAction>a).query !== undefined;
+    return a && (<FetchQueryAction>a).query !== undefined
+        && (<FetchQueryAction>a).site !== undefined;
 }
 
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
@@ -132,6 +140,12 @@ export function isCreateSomething(a: Action): a is CreateSomethingAction {
 export function isCreateIssue(a: Action): a is CreateIssueAction {
     return a && (<CreateIssueAction>a).issueData !== undefined
         && (<CreateIssueAction>a).site !== undefined;
+}
+
+export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {
+    return a && (<CreateIssueLinkAction>a).issueLinkData !== undefined
+        && (<CreateIssueLinkAction>a).site !== undefined
+        && (<CreateIssueLinkAction>a).issueLinkType !== undefined;
 }
 
 export function isStartWork(a: Action): a is StartWorkAction {

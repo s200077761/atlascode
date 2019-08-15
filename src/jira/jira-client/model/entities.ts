@@ -38,6 +38,19 @@ export function readIssueLinkIssues(values: any[], siteDetails: DetailedSiteInfo
 
 export function readIssueLinkIssue(value: any, siteDetails: DetailedSiteInfo): IssueLinkIssue {
 
+    if (isMinimalIssue(value)) {
+        return {
+            id: value.id,
+            key: value.key,
+            self: value.self,
+            summary: value.summary,
+            status: value.status,
+            priority: value.priority,
+            issuetype: value.issuetype,
+            siteDetails: siteDetails
+        };
+    }
+
     return {
         id: value.id,
         key: value.key,

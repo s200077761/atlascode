@@ -1,4 +1,4 @@
-import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project, Comment } from "./entities";
+import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project, Comment, IssueLinkIssue, IssueLinkType } from "./entities";
 import { emptySiteInfo } from "../../../atlclients/authInfo";
 
 export const emptyAvatars: Avatars = { '48x48': '', '24x24': '', '16x16': '', '32x32': '' };
@@ -23,6 +23,13 @@ export const emptyIssueType: IssueType = {
     name: '',
     self: '',
     subtask: false
+};
+
+export const emptyIssueLinkType: IssueLinkType = {
+    id: '',
+    name: '',
+    inward: '',
+    outward: '',
 };
 
 export const emptyStatusCategory: StatusCategory = {
@@ -78,6 +85,18 @@ export const emptyMinimalIssue: MinimalIssue = {
     epicChildren: [],
     epicName: '',
     epicLink: ''
+};
+
+export const emptyIssueLinkIssue: IssueLinkIssue = {
+    key: '',
+    id: '',
+    self: '',
+    created: new Date(0),
+    summary: '',
+    status: emptyStatus,
+    priority: emptyPriority,
+    issuetype: emptyIssueType,
+    siteDetails: emptySiteInfo,
 };
 
 export const emptyProject: Project = {

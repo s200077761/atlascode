@@ -1,17 +1,15 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { commands, Uri } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { Commands } from '../commands';
-import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
 import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 
-type Emit = CreateBitbucketIssueData | HostErrorMessage;
-export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
+export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);

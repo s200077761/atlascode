@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { IConfig } from '../config/model';
-import { Action, HostErrorMessage } from '../ipc/messaging';
+import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
 import { ProductJira, emptyAuthInfo, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isBasicAuthInfo } from '../atlclients/authInfo';
@@ -11,16 +11,13 @@ import { ConfigData } from '../ipc/configMessaging';
 import { submitFeedback } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
-import { ProjectList } from '../ipc/issueMessaging';
 import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import { Project } from '../jira/jira-client/model/entities';
 
-type Emit = ConfigData | ProjectList | HostErrorMessage;
-
-export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
+export class ConfigWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);

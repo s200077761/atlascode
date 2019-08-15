@@ -1,8 +1,8 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList, JqlOptionsList } from '../ipc/issueMessaging';
+import { CreateIssueData, PreliminaryIssueData } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
@@ -38,8 +38,8 @@ export interface BBData {
     bbIssue: BitbucketIssue;
     issueKey: string;
 }
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
-export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
+
+export class CreateIssueWebview extends AbstractReactWebview {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: WorkingProject | undefined;
     private _screenData: CreateMetaTransformerResult | undefined;

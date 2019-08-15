@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError } from "../../../ipc/issueMessaging";
+import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
@@ -12,6 +12,9 @@ import Spinner from '@atlaskit/spinner';
 import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/components/Button';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
+import InlineIssueLinksEditor from './InlineIssueLinkEditor';
+import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
+import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -20,6 +23,7 @@ export type CommonEditorPageEmit = Action | OpenJiraIssueAction;
 export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage | IssueEditError;
 
 export interface CommonEditorViewState extends Message {
+    siteDetails: DetailedSiteInfo;
     fieldValues: FieldValues;
     isSomethingLoading: boolean;
     loadingField: string;
@@ -32,6 +36,7 @@ export interface CommonEditorViewState extends Message {
 
 export const emptyCommonEditorState: CommonEditorViewState = {
     type: '',
+    siteDetails: emptySiteInfo,
     fieldValues: {},
     isSomethingLoading: false,
     loadingField: '',
@@ -43,17 +48,23 @@ export const emptyCommonEditorState: CommonEditorViewState = {
 };
 
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
+    private issueSuggestions: IssuePickerIssue[] | undefined = undefined;
 
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
         switch (e.type) {
             case 'error': {
                 if (isIssueEditError(e)) {
-                    this.setState({ isSomethingLoading: false, isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
+                    this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 } else {
-                    this.setState({ isSomethingLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                    this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason });
                 }
                 handled = true;
+                break;
+            }
+            case 'issueSuggestionsList': {
+                handled = true;
+                this.issueSuggestions = (e as IssueSuggestionsList).issues;
                 break;
             }
         }
@@ -106,6 +117,27 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     protected handleCommentSave = (newValue: string) => {
 
+    }
+
+    protected loadIssueOptions = (input: string): Promise<IssuePickerIssue[]> => {
+        return new Promise(resolve => {
+            this.issueSuggestions = undefined;
+            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.issueSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.issueSuggestions === undefined) {
+                        this.issueSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(this.issueSuggestions);
+                }
+            }, 100);
+        });
     }
 
     // refreshSelectFields(issueTypeId: string | undefined, issueData: CreateIssueData): Object {
@@ -249,7 +281,17 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
             case UIType.IssueLinks: {
                 let markup = <div></div>;
+                if (editmode) {
+                    markup = <InlineIssueLinksEditor
+                        label={field.name}
+                        linkTypes={(field as OptionableFieldUI).allowedValues}
+                        onSave={(val: any) => { this.handleInlineEdit(field, val); }}
+                        isLoading={this.state.loadingField === field.key}
+                        onFetchIssues={this.loadIssueOptions}
+                    />;
+                } else {
 
+                }
                 return markup;
             }
             case UIType.Comments: {

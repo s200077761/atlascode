@@ -12,8 +12,8 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
     this.setJql(this.jqlEntry.query);
   }
 
-  async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-    return super.getChildren(undefined);
+  async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
+    return super.getChildren(undefined, allowFetch);
   }
 
   getTreeItem(): TreeItem {

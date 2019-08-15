@@ -132,6 +132,11 @@ pre {
 
 /*----------------- BEGIN - inline edit containers -----------------*/
 
+.ac-inline-edit-buttons-container {
+  display: flex;
+  margin-left: 5px;
+}
+
 .ac-field-label {
   font-weight: bold;
 }
@@ -202,7 +207,7 @@ pre {
   margin: 2px;
 }
 
-.ac-inline-add-button:disabled {
+.ac-inline-add-button:disabled, .ac-inline-save-button:disabled {
   background: var(--vscode-button-background--50) !important;
 }
 

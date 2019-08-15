@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
-import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { PRData, } from '../ipc/prMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval } from '../ipc/prActions';
@@ -32,8 +32,8 @@ interface PRState {
 }
 
 const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
-type Emit = PRData | CheckoutResult | HostErrorMessage;
-export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
+
+export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
 

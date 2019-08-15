@@ -1,10 +1,10 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType, Repository, Remote } from '../typings/git';
-import { CreatePRData, RepoData, CommitsResult, FetchIssueResult, FetchUsersResult } from '../ipc/prMessaging';
+import { RepoData } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
@@ -20,8 +20,7 @@ import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 
-type Emit = CreatePRData | CommitsResult | FetchIssueResult | FetchUsersResult | HostErrorMessage;
-export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
+export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);

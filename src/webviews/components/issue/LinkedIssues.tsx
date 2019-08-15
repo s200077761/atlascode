@@ -33,6 +33,7 @@ export default class LinkedIssues extends React.Component<{ issuelinks: MinimalI
         super(props);
     }
 
+    // TODO: [VSCODE-585] Add ability to delete issuelinsk from LinkedIssues list component
     render() {
         return (
             <TableTree

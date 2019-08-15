@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
@@ -18,8 +18,7 @@ import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
 
-type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<MinimalIssue> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 

@@ -13,13 +13,13 @@ import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
 import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
-import { JQLTreeDataProvider } from "./jqlTreeDataProvider";
+import { IssueNode } from "../nodes/issueNode";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
   private _disposable: Disposable;
   private _jqlList: JQLEntry[];
-  private _children: JQLTreeDataProvider[];
+  private _children: CustomJQLTree[];
   private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
   public get onDidChangeTreeData(): Event<AbstractBaseNode> {
     return this._onDidChangeTreeData.event;
@@ -52,13 +52,17 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     return element.getTreeItem();
   }
 
-  async getChildren(element: AbstractBaseNode | undefined) {
+  async getChildren(element: IssueNode | undefined) {
     if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
       return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })]);
     }
 
     if (element) {
       return element.getChildren();
+    }
+
+    if (this._children.length > 0) {
+      return this._children;
     }
 
     return this._jqlList.map((jql: JQLEntry) => {
@@ -69,6 +73,8 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   refresh() {
+    this._children.forEach(child => child.dispose());
+    this._children = [];
     this._jqlList = this.customJqlForWorkingSite();
     setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
 

@@ -1,3 +1,5 @@
+import { IssueLinkType } from "./entities";
+
 export enum UIType {
     Select = 'select',
     Checkbox = 'checkbox',
@@ -199,4 +201,9 @@ export const customSchemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , ['com.pyxis.greenhopper.jira:gh-epic-label', UIType.Input]
     ]
 );
+
+export interface IssueLinkTypeSelectOption extends IssueLinkType {
+    name: string;
+    type: 'inward' | 'outward';
+}
 

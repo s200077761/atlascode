@@ -1,5 +1,5 @@
 
-import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI } from "./model/fieldUI";
+import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI, IssueLinkTypeSelectOption } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
 import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue } from "./model/entities";
@@ -41,8 +41,7 @@ export class FieldTransformer {
 
         const problemCollector: ProblemCollector = { problems: [], hasRequiredNonRenderables: false };
         const epicFieldInfo: EpicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
-        const issueLinkTypes: IssueLinkType[] = [];
-        const issuelinkTypes = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
+        const issuelinkTypes: IssueLinkType[] = await Container.jiraSettingsManager.getIssueLinkTypes(this._site);
         const defaultIssueLinkAutocomplete: string = `${this._site.baseApiUrl}/issue/picker?currentProjectId=${project.id}&showSubTaskParent=true&showSubTasks=true&currentIssueKey=${isskey}&query=`;
 
         // if we don't have issueLinkTypes, filter out the issue links
@@ -67,7 +66,7 @@ export class FieldTransformer {
                     displayOrder = commonIndex;
                 }
 
-                let fieldAndValue: FieldAndValue = this.transformField(field, displayOrder, project, commonFields, requiredAsCommon, epicFieldInfo, issueLinkTypes, defaultIssueLinkAutocomplete, inlineSubtaskTypes);
+                let fieldAndValue: FieldAndValue = this.transformField(field, displayOrder, project, commonFields, requiredAsCommon, epicFieldInfo, issuelinkTypes, defaultIssueLinkAutocomplete, inlineSubtaskTypes);
 
                 result.fields[field.key] = fieldAndValue.field;
                 if (fieldAndValue.value && fieldAndValue.value !== null) {
@@ -212,6 +211,12 @@ export class FieldTransformer {
             }
             case UIType.IssueLinks: {
                 const currentVal = readMinimalIssueLinks(field.currentValue, this._site);
+                const linkTypeOptions: IssueLinkTypeSelectOption[] = [];
+
+                issueLinkTypes.forEach(opt => {
+                    linkTypeOptions.push({ ...opt, name: opt.inward, type: 'inward' });
+                    linkTypeOptions.push({ ...opt, name: opt.outward, type: 'outward' });
+                });
 
                 return {
                     field: {
@@ -222,7 +227,7 @@ export class FieldTransformer {
                         autoCompleteUrl: autoCompleteUrl,
                         autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
-                        allowedValues: issueLinkTypes,
+                        allowedValues: linkTypeOptions,
                         isCreateable: createableSelectSchemas.includes(schemaName),
                         isMulti: multiSelectSchemas.includes(schemaName),
                         valueType: this.valueTypeForField(field),

@@ -78,6 +78,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
+        console.log(field.uiType);
         if (field.uiType === UIType.Subtasks) {
             /* newValue will be:
             {
@@ -89,10 +90,23 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             const payload: any = newValue;
             payload.project = { key: this.state.key.substring(0, this.state.key.indexOf('-')) };
             payload.parent = { key: this.state.key };
-
-            console.log('subtask edit', payload);
-
             this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
+
+        } else if (field.uiType === UIType.IssueLinks) {
+            this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+
+            this.postMessage({
+                action: 'createIssueLink'
+                , site: this.state.siteDetails
+                , issueLinkData: {
+                    type: {
+                        id: newValue.type.id
+                    },
+                    inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
+                    outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+                }
+                , issueLinkType: newValue.type
+            });
         } else {
             //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
             this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
@@ -185,7 +199,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 {this.state.fields['issuelinks'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='issuelinks'>{this.state.fields['issuelinks'].name}</label>
                         {this.getInputMarkup(this.state.fields['issuelinks'], true)}
                         <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
                     </div>

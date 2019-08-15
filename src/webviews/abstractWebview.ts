@@ -11,7 +11,7 @@ import {
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable, OnlineStatusMessage, isPMFSubmitAction, PMFMessage } from '../ipc/messaging';
+import { isAlertable, isPMFSubmitAction, isAction } from '../ipc/messaging';
 import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
@@ -42,7 +42,7 @@ export function isInitializable(object: any): object is InitializingWebview<any>
 // Generic Types:
 // S = the type of ipc.Message to send to react
 // R = the type of ipc.Action to receive from react
-export abstract class AbstractReactWebview<S, R extends Action> implements ReactWebview {
+export abstract class AbstractReactWebview implements ReactWebview {
     private _disposablePanel: Disposable | undefined;
     protected _panel: WebviewPanel | undefined;
     private readonly _extensionPath: string;
@@ -81,7 +81,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         this._panel.dispose();
     }
 
-    async createOrShow(column?: ViewColumn): Promise<void> {
+    public async createOrShow(column?: ViewColumn): Promise<void> {
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(
                 AbstractReactWebview.viewType,
@@ -124,28 +124,30 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         }
     }
 
-    protected async onMessageReceived(a: R): Promise<boolean> {
-        switch (a.action) {
-            case 'alertError': {
-                if (isAlertable(a)) {
-                    window.showErrorMessage(a.message);
+    protected async onMessageReceived(a: any): Promise<boolean> {
+        if (isAction(a)) {
+            switch (a.action) {
+                case 'alertError': {
+                    if (isAlertable(a)) {
+                        window.showErrorMessage(a.message);
+                    }
+                    return true;
                 }
-                return true;
-            }
-            case 'pmfLater': {
-                Container.pmfStats.snoozeSurvey();
-                return true;
-            }
-            case 'pmfNever': {
-                Container.pmfStats.touchSurveyed();
-                return true;
-            }
-            case 'pmfSubmit': {
-                if (isPMFSubmitAction(a)) {
-                    submitPMF(a.pmfData);
+                case 'pmfLater': {
+                    Container.pmfStats.snoozeSurvey();
+                    return true;
                 }
-                Container.pmfStats.touchSurveyed();
-                return true;
+                case 'pmfNever': {
+                    Container.pmfStats.touchSurveyed();
+                    return true;
+                }
+                case 'pmfSubmit': {
+                    if (isPMFSubmitAction(a)) {
+                        submitPMF(a.pmfData);
+                    }
+                    Container.pmfStats.touchSurveyed();
+                    return true;
+                }
             }
         }
         return false;
@@ -163,7 +165,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         return (title) ? { title: title, errorMessages: [`${e}`] } : e;
     }
 
-    protected postMessage(message: S | OnlineStatusMessage | PMFMessage) {
+    protected postMessage(message: any) {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);

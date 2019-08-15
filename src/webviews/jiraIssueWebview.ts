@@ -1,13 +1,13 @@
-import { AbstractIssueEditorWebview, CommonEditorWebviewEmit } from "./abstractIssueEditorWebview";
+import { AbstractIssueEditorWebview } from "./abstractIssueEditorWebview";
 import { InitializingWebview } from "./abstractWebview";
 import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue } from "../jira/jira-client/model/entities";
 import { Action, onlineStatus } from "../ipc/messaging";
 import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { Container } from "../container";
-import { fetchEditIssueUI } from "../jira/fetchIssue";
+import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
-import { EditIssueData, FieldValueUpdate, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue } from "../ipc/issueActions";
+import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
@@ -15,8 +15,7 @@ import { commands } from "vscode";
 import { Commands } from "../commands";
 import { issueCreatedEvent } from "../analytics";
 
-type Emit = CommonEditorWebviewEmit | EditIssueUI | FieldValueUpdate;
-export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> implements InitializingWebview<MinimalIssue> {
+export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
     private _editUIData: EditIssueData;
     private _currentUserId: string | undefined;
@@ -174,6 +173,39 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview<Emit, Action> i
                         } catch (e) {
                             Logger.error(new Error(`error creating issue: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'createIssueLink': {
+                    if (isCreateIssueLink(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.createIssueLink(msg.issueLinkData);
+
+                            const linkedIssueKey: string = (msg.issueLinkType.type === 'inward') ? msg.issueLinkData.inwardIssue.key : msg.issueLinkData.outwardIssue.key;
+
+                            const issue = await getCachedOrFetchMinimalIssue(linkedIssueKey, msg.site);
+                            const picked = readIssueLinkIssue(issue, msg.site);
+
+                            this._editUIData.fieldValues['issuelinks'].push({
+                                id: "",
+                                inwardIssue: msg.issueLinkType.type === 'inward' ? picked : undefined,
+                                outwardIssue: msg.issueLinkType.type === 'outward' ? picked : undefined,
+                                type: msg.issueLinkType
+                            });
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
+                            });
+
+                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                        } catch (e) {
+                            Logger.error(new Error(`error creating issue link: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link') });
                         }
 
                     }
