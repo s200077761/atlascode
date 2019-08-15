@@ -1,9 +1,10 @@
+import * as path from 'path';
 import { BitbucketSite } from './bitbucket-site-base';
-import { parseGitUrl } from '../../bitbucket/bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Remote } from '../../typings/git';
+import { parseGitUrl } from '../../bitbucket/bbUtils';
 
-export class BitbucketServerHost extends BitbucketSite {
+export class BitbucketCloudHost extends BitbucketSite {
 
   constructor(site: DetailedSiteInfo, remote: Remote) {
     super(site, remote);
@@ -11,18 +12,19 @@ export class BitbucketServerHost extends BitbucketSite {
 
   public getChangeSetUrl(revision: string, filePath: string): string {
     const { project, repo } = this.parseRepo();
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/commits/${revision}#${encodeURIComponent(filePath)}`;
+    return `${this.site.baseLinkUrl}/${project}/${repo}/commits/${revision}#chg-${filePath}`;
   }
 
-  public getSourceUrl(revision: string, filePath: string, lineRanges: string[]): string {
+  public getSourceUrl(revision: string, filePath: string, lineRanges: string[]) {
+    const ranges = lineRanges.join(',');
+    const hash = `${encodeURIComponent(path.basename(filePath))}-${ranges}`;
     const { project, repo } = this.parseRepo();
-    const hash = lineRanges.map(range => range.replace(':', '-')).join(',');
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}#${hash}`;
+    return `${this.site.baseLinkUrl}/${project}/${repo}/src/${revision}/${filePath}#${hash}`;
   }
 
   public getPullRequestUrl(id: number, filePath: string): string {
     const { project, repo } = this.parseRepo();
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
+    return `${this.site.baseLinkUrl}/${project}/${repo}/pull-requests/${id}/diff#chg-${filePath}`;
   }
 
   private parseRepo(): { project: string; repo: string } {
@@ -30,5 +32,4 @@ export class BitbucketServerHost extends BitbucketSite {
 
     return { project: parsed.owner, repo: parsed.name };
   }
-
 }

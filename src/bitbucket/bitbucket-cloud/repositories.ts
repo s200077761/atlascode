@@ -1,7 +1,7 @@
 import { Remote, Repository } from "../../typings/git";
-import { maxItemsSupported, CloudPullRequestApi } from "./pullRequests";
+import { maxItemsSupported } from "./pullRequests";
 import { parseGitUrl, urlForRemote } from "../bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranchNames } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
@@ -102,14 +102,14 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
+    async getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         const { data } = await this.client.get(
             `/repositories/${parsed.owner}/${parsed.name}/commit/${commitHash}/pullrequests`
         );
 
-        return data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr)) || [];
+        return data.values!.map((pr: any) => pr.id) || [];
     }
 
     static toRepo(bbRepo: any): Repo {
