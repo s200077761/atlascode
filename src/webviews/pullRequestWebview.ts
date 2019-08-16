@@ -182,7 +182,6 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     }
 
     private async postCompleteState() {
-        
         if(!this._pr){
             return;
         }
@@ -191,13 +190,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
         const bbApi = await clientForRemote(this._pr.remote);
         const prDetailsPromises = Promise.all([
-            bbApi.pullrequests.get({ repository: this._pr.repository, remote: this._pr.remote, sourceRemote: this._pr.sourceRemote || this._pr.remote, data: this._pr.data }),
+            bbApi.pullrequests.get(this._pr),
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
-        const [basicState, commits, comments, buildStatuses] = await prDetailsPromises;
-
+        const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
+        this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
             this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
@@ -207,11 +206,11 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
         const currentUser = await Container.bitbucketContext.currentUser(this._pr.remote);
         this._state = {
-            ...basicState,
+            ...this._pr,
             prData: {
-                pr: basicState.data,
+                pr: this._pr.data,
                 currentUser: currentUser,
-                currentBranch: basicState.repository.state.HEAD!.name!,
+                currentBranch: this._pr.repository.state.HEAD!.name!,
                 type: 'update',
                 commits: commits.data,
                 comments: comments.data,
