@@ -202,11 +202,13 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
             this.fetchMainIssue(this._pr)
         ]);
-
+    
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
         const currentUser = await Container.bitbucketContext.currentUser(this._pr.remote);
         this._state = {
-            ...this._pr,
+            remote: this._pr.remote,
+            sourceRemote: this._pr.sourceRemote,
+            repository: this._pr.repository,
             prData: {
                 pr: this._pr.data,
                 currentUser: currentUser,
