@@ -212,9 +212,8 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
-        const [updatedPR, commits, rawComments, buildStatuses] = await prDetailsPromises;
-        let comments = rawComments;
-        comments.data = rawComments.data.filter(comment => this.shouldDisplayComment(comment));
+        const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
+        comments.data = comments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
