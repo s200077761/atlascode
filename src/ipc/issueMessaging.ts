@@ -78,6 +78,11 @@ export interface JqlOptionsList extends Message {
     fieldId: string;
 }
 
+export interface SelectOptionsList extends Message {
+    options: any[];
+    fieldId: string;
+}
+
 export interface CreatedSelectOption extends Message {
     fieldValues: FieldValues;
     selectFieldOptions: SelectFieldOptions;

@@ -16,8 +16,7 @@ import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
 import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { SelectFieldHelper } from '../selectFieldHelper';
-// import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
-import Select, { CreatableSelect } from '@atlaskit/select';
+import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -61,14 +60,31 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
 };
 
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
-    private issueSuggestions: IssuePickerIssue[] | undefined = undefined;
+    private selectSuggestions: any[] | undefined = undefined;
     private waitForCreateOptionResponse: boolean = false;
 
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
     protected handleCommentSave = (newValue: string) => { };
-    protected handleSelectChange = (field: SelectFieldUI, newValue: any) => { };
+
+    protected handleSelectChange = (field: SelectFieldUI, newValue: any) => {
+        let val = newValue;
+        if (field.valueType === ValueType.String && typeof newValue !== 'string') {
+            if (Array.isArray(newValue)) {
+                val = newValue.map(aryValue => {
+                    if (typeof aryValue !== 'string') {
+                        return aryValue.value;
+                    }
+                    return aryValue;
+                });
+            } else {
+                val = newValue.value;
+            }
+        }
+
+        this.handleInlineEdit(field, val);
+    }
 
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
@@ -85,7 +101,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             }
             case 'issueSuggestionsList': {
                 handled = true;
-                this.issueSuggestions = (e as IssueSuggestionsList).issues;
+                this.selectSuggestions = (e as IssueSuggestionsList).issues;
+                break;
+            }
+            case 'selectOptionsList': {
+                handled = true;
+                this.selectSuggestions = e.options;
                 break;
             }
             case 'optionCreated': {
@@ -107,6 +128,16 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     postMessage<T extends CommonEditorPageEmit>(e: T) {
         this._api.postMessage(e);
+    }
+
+    protected isClearableSelect = (field: SelectFieldUI): boolean => {
+        if (!field.required) { return true; }
+
+        if (field.isMulti && this.state.fieldValues[field.key] && this.state.fieldValues[field.key].length > 0) {
+            return true;
+        }
+
+        return false;
     }
 
     private handleCommentInput = (e: any) => {
@@ -150,20 +181,42 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
-            this.issueSuggestions = undefined;
+            this.selectSuggestions = undefined;
             this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.issueSuggestions !== undefined || (end - start) > 2000) {
-                    if (this.issueSuggestions === undefined) {
-                        this.issueSuggestions = [];
+                if (this.selectSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.selectSuggestions === undefined) {
+                        this.selectSuggestions = [];
                     }
 
                     clearInterval(timer);
                     this.setState({ isSomethingLoading: false, loadingField: '' });
-                    resolve(this.issueSuggestions);
+                    resolve(this.selectSuggestions);
+                }
+            }, 100);
+        });
+    }
+
+    protected loadSelectOptions = (field: SelectFieldUI, input: string): Promise<any[]> => {
+        this.setState({ isSomethingLoading: true, loadingField: field.key });
+        return new Promise(resolve => {
+            this.selectSuggestions = undefined;
+            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.selectSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.selectSuggestions === undefined) {
+                        this.selectSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    this.setState({ isSomethingLoading: false, loadingField: '' });
+                    resolve(this.selectSuggestions);
                 }
             }, 100);
         });
@@ -323,7 +376,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
                 const commonProps = {
                     isMulti: selectField.isMulti,
-                    isClearable: (!field.required && selectField.isMulti),
                     className: "ac-select-container",
                     classNamePrefix: "ac-select",
                     getOptionLabel: SelectFieldHelper.labelFuncForValueType(selectField.valueType),
@@ -344,6 +396,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             return (
                                 <Select
                                     {...commonProps}
+                                    isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
@@ -370,6 +423,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 <Select
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
+                                                    isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isDisabled={this.state.isSomethingLoading}
                                                     onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
@@ -389,10 +443,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             return (
                                 <CreatableSelect
                                     {...commonProps}
+                                    isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
                                     isLoading={this.state.loadingField === field.key}
                                     isValidNewOption={shouldShowCreateOption}
+                                    placeholder='Type to create new option'
                                     onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                 />
@@ -418,6 +474,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 <CreatableSelect
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
+                                                    placeholder='Type to create new option'
+                                                    isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isDisabled={this.state.isSomethingLoading}
                                                     isLoading={this.state.loadingField === field.key}
@@ -437,15 +495,16 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     case SelectFieldHelper.SelectComponentType.Async: {
                         if (editmode) {
                             return (
-                                <div>async select</div>
-                                // <CreatableSelect
-                                //     {...commonProps}
-                                //     options={this.state.selectFieldOptions[field.key]}
-                                //     isDisabled={this.state.isSomethingLoading}
-                                //     isLoading={this.state.loadingField === field.key}
-                                //     isValidNewOption={shouldShowCreateOption}
-                                //     onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
-                                // />
+                                <AsyncSelect
+                                    {...commonProps}
+                                    placeholder='Type to search'
+                                    isClearable={this.isClearableSelect(selectField)}
+                                    options={this.state.selectFieldOptions[field.key]}
+                                    isLoading={this.state.loadingField === field.key}
+                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                    isMulti={selectField.isMulti}
+                                />
                             );
                         }
 
@@ -465,6 +524,17 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                         }
                                         return (
                                             <React.Fragment>
+                                                <AsyncSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    placeholder='Type to search'
+                                                    isClearable={this.isClearableSelect(selectField)}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                                    isMulti={selectField.isMulti}
+                                                />
                                                 {errDiv}
                                             </React.Fragment>
                                         );
@@ -475,9 +545,31 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     }
 
                     case SelectFieldHelper.SelectComponentType.AsyncCreatable: {
+                        let onCreateFunc: any = undefined;
+                        let newDataFunc: any = undefined;
+
+                        if (selectField.createUrl.trim() !== '') {
+                            onCreateFunc = (input: any): void => { this.handleSelectOptionCreate(selectField, input); };
+                        } else {
+                            newDataFunc = (inputValue: any, optionLabel: any) => { return { label: optionLabel, value: inputValue }; };
+                        }
+
                         if (editmode) {
                             return (
-                                <div>async creatable select</div>
+                                <AsyncCreatableSelect
+                                    {...commonProps}
+                                    placeholder='Type to search'
+                                    isClearable={this.isClearableSelect(selectField)}
+                                    options={this.state.selectFieldOptions[field.key]}
+                                    isLoading={this.state.loadingField === field.key}
+                                    isValidNewOption={shouldShowCreateOption}
+                                    onCreateOption={onCreateFunc}
+                                    getNewOptionData={newDataFunc}
+                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                    isMulti={selectField.isMulti}
+                                >
+                                </AsyncCreatableSelect>
                             );
                         }
 
@@ -497,6 +589,21 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                         }
                                         return (
                                             <React.Fragment>
+                                                <AsyncCreatableSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    placeholder='Type to search'
+                                                    isClearable={this.isClearableSelect(selectField)}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    isValidNewOption={shouldShowCreateOption}
+                                                    onCreateOption={onCreateFunc}
+                                                    getNewOptionData={newDataFunc}
+                                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                                    isMulti={selectField.isMulti}
+                                                >
+                                                </AsyncCreatableSelect>
                                                 {errDiv}
                                             </React.Fragment>
                                         );

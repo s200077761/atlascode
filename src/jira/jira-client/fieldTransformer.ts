@@ -110,6 +110,11 @@ export class FieldTransformer {
         if (isFieldMeta(field)) {
             if (field.autoCompleteUrl) {
                 autoCompleteUrl = field.autoCompleteUrl;
+
+                //we need to fix up bad autocomplete urls from jira
+                if (autoCompleteUrl.includes('suggest?')) {
+                    autoCompleteUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.key}&fieldValue=`;
+                }
             }
             // if this is an issuelinks field we always want it to be editable no matter what
         } else if (schema.items && schema.items === 'issuelinks') {
@@ -191,7 +196,7 @@ export class FieldTransformer {
                 };
             }
             case UIType.Select: {
-                let autoCompleteJql = '';
+                let autoCompleteJql = ``;
 
                 if (field.key === epicFieldInfo.epicLink.id) {
                     autoCompleteJql = `project = "${project.key}" and cf[${epicFieldInfo.epicName.cfid}] != ""  and resolution = EMPTY`;

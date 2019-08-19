@@ -7,7 +7,31 @@ import Lozenge from "@atlaskit/lozenge";
 type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
 
-const returnOptionFunc = (option: any) => { return option; };
+const returnOptionOrValueFunc = (option: any) => {
+    let value = option;
+    if (typeof option === 'object') {
+        if (option.value) {
+            value = option.value;
+        } else {
+            value = JSON.stringify(option);
+        }
+    }
+
+    return value;
+};
+
+const returnOptionOrLabelFunc = (option: any) => {
+    let value = option;
+    if (typeof option === 'object') {
+        if (option.label) {
+            value = option.label;
+        } else {
+            value = JSON.stringify(option);
+        }
+    }
+
+    return value;
+};
 const returnIdFunc = (option: any) => { return option.id; };
 const returnNameFunc = (option: any) => { return option.name; };
 const returnValueFunc = (option: any) => { return option.value; };
@@ -86,10 +110,51 @@ const MultiAvatarValue = (props: any) => {
 };
 
 const LabelOption = (props: any) => {
+    let label = props.label;
+    if (typeof props.label === 'object') {
+        if (props.label.label) {
+            label = props.label.label;
+        } else if (props.label.value) {
+            label = props.label.value;
+        }
+    }
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }}>{props.label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }} dangerouslySetInnerHTML={{ __html: label }} /></div>
         </components.Option>
+    );
+};
+
+const LabelValue = (props: any) => {
+    let value = props.data;
+    if (typeof props.data === 'object') {
+        if (props.data.value) {
+            value = props.data.value;
+        } else {
+            value = JSON.stringify(props.data);
+        }
+    }
+    return (
+        <components.Option {...props}>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span>{value}</span></div>
+        </components.Option>
+    );
+};
+
+const MultiLabelValue = (props: any) => {
+    let value = props.data;
+    console.log('props', props);
+    if (typeof props.data === 'object') {
+        if (props.data.value) {
+            value = props.data.value;
+        } else {
+            value = JSON.stringify(props.data);
+        }
+    }
+    return (
+        <components.MultiValueLabel {...props}>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span>{value}</span></div>
+        </components.MultiValueLabel>
     );
 };
 
@@ -150,7 +215,7 @@ export namespace SelectFieldHelper {
     export function labelFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
             case ValueType.String: {
-                return returnOptionFunc;
+                return returnOptionOrLabelFunc;
             }
             case ValueType.Component:
             case ValueType.Version:
@@ -171,7 +236,7 @@ export namespace SelectFieldHelper {
             }
 
             default: {
-                return returnOptionFunc;
+                return returnOptionOrLabelFunc;
             }
         }
     }
@@ -179,7 +244,7 @@ export namespace SelectFieldHelper {
     export function valueFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
             case ValueType.String: {
-                return returnOptionFunc;
+                return returnOptionOrValueFunc;
             }
             case ValueType.Component:
             case ValueType.Version:
@@ -197,7 +262,7 @@ export namespace SelectFieldHelper {
             }
 
             default: {
-                return returnOptionFunc;
+                return returnOptionOrValueFunc;
             }
         }
     }
@@ -258,7 +323,10 @@ export namespace SelectFieldHelper {
             }
 
             default: {
-                return {};
+                return {
+                    SingleValue: LabelValue,
+                    MultiValueLabel: MultiLabelValue
+                }
             }
         }
     }

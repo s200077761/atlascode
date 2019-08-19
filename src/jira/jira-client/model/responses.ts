@@ -43,8 +43,28 @@ export class IssuePickerResult {
     public readonly sections: Section[];
 }
 
+export function isIssuePickerResult(a: any): a is IssuePickerResult {
+    return a && a.sections !== undefined;
+}
+
 export class Section {
     public readonly issues: IssuePickerIssue[];
+}
+
+export class AutocompleteSuggestionsResult {
+    public readonly results: AutocompleteSuggestion[];
+}
+
+export function isAutocompleteSuggestionsResult(a: any): a is AutocompleteSuggestionsResult {
+    return a && a.results !== undefined
+        && Array.isArray(a.results)
+        && a.results.length > 0
+        && a.results[0].displayName !== undefined;
+}
+
+export class AutocompleteSuggestion {
+    public readonly value: string;
+    public readonly displayName: string;
 }
 
 export class IssuePickerIssue {
