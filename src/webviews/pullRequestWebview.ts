@@ -186,6 +186,18 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
     }
 
+    private shouldDisplayComment(comment: any): boolean {
+        if(comment.children.length === 0){
+            return !comment.deleted;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
+    }
+
     private async postCompleteState() {
         if(!this._pr){
             return;
@@ -200,7 +212,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
+        const [updatedPR, commits, rawComments, buildStatuses] = await prDetailsPromises;
+        let comments = rawComments;
+        comments.data = rawComments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
