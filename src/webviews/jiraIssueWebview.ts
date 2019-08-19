@@ -7,13 +7,14 @@ import { Container } from "../container";
 import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
 import { Commands } from "../commands";
 import { issueCreatedEvent } from "../analytics";
+import { transitionIssue } from "../jira/transitionIssue";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
@@ -97,7 +98,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             let msg = this._editUIData;
 
             msg.type = 'update';
-            this.postMessage(msg);
+            this.
+                postMessage(msg);
 
             //const relatedPrs = await this.recentPullRequests();
             // if (relatedPrs.length > 0) {
@@ -111,6 +113,17 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         } finally {
             this.isRefeshing = false;
         }
+    }
+
+    handleSelectOptionCreated(fieldKey: string, newValue: any): void {
+        this._editUIData.fieldValues[fieldKey].comments.push(newValue);
+        this._editUIData.selectFieldOptions[fieldKey].push(newValue);
+        this.postMessage({
+            type: 'optionCreated',
+            fieldValues: { [fieldKey]: this._editUIData.fieldValues[fieldKey] },
+            selectFieldOptions: { [fieldKey]: this._editUIData.selectFieldOptions[fieldKey] },
+            fieldKey: fieldKey
+        });
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
@@ -206,6 +219,28 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         } catch (e) {
                             Logger.error(new Error(`error creating issue link: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'transitionIssue': {
+                    if (isTransitionIssue(msg)) {
+                        handled = true;
+                        try {
+                            await transitionIssue(msg.issue, msg.transition);
+
+                            this._editUIData.fieldValues['status'] = msg.transition.to;
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'status': this._editUIData.fieldValues['status'] }
+                            });
+
+                            commands.executeCommand(Commands.RefreshJiraExplorer);
+
+                        } catch (e) {
+                            Logger.error(new Error(`error transitioning issue: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error transitioning issue') });
                         }
 
                     }

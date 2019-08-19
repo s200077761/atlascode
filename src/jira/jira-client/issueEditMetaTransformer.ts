@@ -19,6 +19,7 @@ const defaultCommonFields: string[] = [
     , 'subtasks'
     , 'priority'
     , 'status'
+    , 'transitions'
     , 'issuetype'
     , 'attachment'
     , 'comment'
@@ -44,6 +45,7 @@ export class IssueEditMetaTransformer {
         let fieldResult: FieldTransformerResult = {
             fields: {},
             fieldValues: {},
+            selectFieldOptions: {},
             hasRequiredNonRenderables: false,
             nonRenderableFields: []
         };

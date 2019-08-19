@@ -4,7 +4,7 @@ import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData, PreliminaryIssueData } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { issueCreatedEvent } from '../analytics';
@@ -282,36 +282,36 @@ export class CreateIssueWebview extends AbstractReactWebview {
                     }
                     break;
                 }
-                case 'createOption': {
-                    handled = true;
-                    if (isCreateSomething(e)) {
-                        try {
+                // case 'createOption': {
+                //     handled = true;
+                //     if (isCreateSelectOption(e)) {
+                //         try {
 
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
-                            if (client) {
-                                switch (e.createData.fieldKey) {
-                                    case 'fixVersions':
-                                    case 'versions': {
-                                        let resp = await client.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp });
+                //             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                //             if (client) {
+                //                 switch (e.createData.fieldKey) {
+                //                     case 'fixVersions':
+                //                     case 'versions': {
+                //                         let resp = await client.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
+                //                         this.postMessage({ type: 'optionCreated', createdData: resp });
 
-                                        break;
-                                    }
-                                    case 'components': {
-                                        let resp = await client.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp });
+                //                         break;
+                //                     }
+                //                     case 'components': {
+                //                         let resp = await client.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
+                //                         this.postMessage({ type: 'optionCreated', createdData: resp });
 
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            Logger.error(new Error(`error creating option: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
-                        }
-                    }
-                    break;
-                }
+                //                         break;
+                //                     }
+                //                 }
+                //             }
+                //         } catch (e) {
+                //             Logger.error(new Error(`error creating option: ${e}`));
+                //             this.postMessage({ type: 'error', reason: e });
+                //         }
+                //     }
+                //     break;
+                // }
 
                 case 'createIssue': {
                     handled = true;

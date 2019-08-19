@@ -6,7 +6,7 @@ import { MinimalIssue, Project } from "../jira/jira-client/model/entities";
 import { EpicFieldInfo } from "../jira/jiraCommon";
 import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
 import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
-import { FieldValues } from "../jira/jira-client/model/fieldUI";
+import { FieldValues, SelectFieldOptions } from "../jira/jira-client/model/fieldUI";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -78,8 +78,10 @@ export interface JqlOptionsList extends Message {
     fieldId: string;
 }
 
-export interface CreatedSomething extends Message {
-    createdData: any;
+export interface CreatedSelectOption extends Message {
+    fieldValues: FieldValues;
+    selectFieldOptions: SelectFieldOptions;
+    fieldKey: string;
 }
 
 export interface IssueCreated extends Message {
@@ -97,8 +99,10 @@ export interface StartWorkOnIssueResult extends Message {
     error?: string;
 }
 
-export function isCreatedSomething(m: Message): m is CreatedSomething {
-    return (<CreatedSomething>m).createdData !== undefined;
+export function isCreatedSelectOption(m: Message): m is CreatedSelectOption {
+    return m && (<CreatedSelectOption>m).fieldValues !== undefined
+        && (<CreatedSelectOption>m).selectFieldOptions !== undefined
+        && (<CreatedSelectOption>m).fieldKey !== undefined;
 }
 
 export function isIssueCreated(m: Message): m is IssueCreated {

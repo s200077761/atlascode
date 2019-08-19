@@ -401,7 +401,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         <div style={{ margin: 10 }}>
                             <label>Select new status</label>
                             {isMinimalIssue(this.state.issue)
-                                ? <TransitionMenu issue={this.state.issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                ? <TransitionMenu transitions={(this.state.issue as MinimalIssue).transitions} currentStatus={(this.state.issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                                 : <StatusMenu issue={this.state.issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>

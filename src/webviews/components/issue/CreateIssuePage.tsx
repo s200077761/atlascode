@@ -70,6 +70,9 @@ const emptyState: ViewState = {
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
+    getProjectKey(): string {
+        throw new Error("Method not implemented.");
+    }
     // private issueTypes: any[] = [];
 
     constructor(props: any) {

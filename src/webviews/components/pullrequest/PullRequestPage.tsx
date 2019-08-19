@@ -243,7 +243,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                             </div>
                         </div>
                     </div>

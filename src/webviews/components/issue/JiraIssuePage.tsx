@@ -14,6 +14,8 @@ import { EditIssueAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import LinkedIssues from './LinkedIssues';
+import { TransitionMenu } from './TransitionMenu';
+import { Transition } from '../../../jira/jira-client/model/entities';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -36,6 +38,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     constructor(props: any) {
         super(props);
         this.state = emptyState;
+    }
+
+    getProjectKey = (): string => {
+        return this.state.key.substring(0, this.state.key.indexOf('-'));
     }
 
     onMessageReceived(e: any): boolean {
@@ -88,7 +94,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             */
             this.setState({ isSomethingLoading: true, loadingField: 'subtasks' });
             const payload: any = newValue;
-            payload.project = { key: this.state.key.substring(0, this.state.key.indexOf('-')) };
+            payload.project = { key: this.getProjectKey() };
             payload.parent = { key: this.state.key };
             this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
 
@@ -133,6 +139,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
+    handleStatusChange = (transition: Transition) => {
+        console.log('status change', transition);
+        this.setState({ isSomethingLoading: true, loadingField: 'status' });
+        this.postMessage({
+            action: "transitionIssue",
+            transition: transition,
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails }
+        });
+    }
+
     /*
     , 'fixVersions'
     , 'components'
@@ -145,10 +161,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     , 'attachment'
     */
     getMainPanelMarkup(): any {
-        if (Object.keys(this.state.fields).length < 1) {
-            return <div>Loading Data...</div>;
-        }
-
         return (
             <div>
                 {!this.state.isOnline &&
@@ -229,7 +241,26 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         );
     }
 
+    commonSidebar(): any {
+        return (
+            <React.Fragment>
+                <div className='ac-vpadding'>
+                    <label className='ac-field-label' htmlFor='status'>Status</label>
+                    <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
+                </div>
+            </React.Fragment>
+        );
+    }
+
+    advancedSidebar(): any {
+
+    }
+
     public render() {
+        if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            return <div>Loading Data...</div>;
+        }
+
         return (
             <Page>
                 <SizeDetector>
@@ -238,6 +269,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             return (
                                 <div>
                                     {this.getMainPanelMarkup()}
+                                    {this.commonSidebar()}
+                                    {this.advancedSidebar()}
                                 </div>
                             );
                         }
@@ -246,6 +279,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <Grid layout="fluid">
                                     <GridColumn medium={8}>
                                         {this.getMainPanelMarkup()}
+                                    </GridColumn>
+                                    <GridColumn medium={4}>
+                                        {this.commonSidebar()}
+                                        {this.advancedSidebar()}
                                     </GridColumn>
                                 </Grid>
                             </div>

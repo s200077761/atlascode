@@ -30,6 +30,7 @@ export enum ValueType {
     Priority = 'priority', // single select, {id, name, iconUrl}
     User = 'user', // single select, {key, accountId, accountType, name, emailAddress, avatarUrls{'48x48'...}, displayName, active, timeZone, locale}
     Status = 'status', // {description, iconUrl, name, id, statusCategory{id, key, colorName, name}}
+    Transition = 'transition', // array of transitions
     Progress = 'progress', //part of time tracking methinks
     Date = 'date',
     Votes = 'votes', // for display: {votes:number, hasVoted:boolean}, not sure yet for edit
@@ -76,6 +77,7 @@ export function valueTypeForString(s: string): ValueType {
         case 'component': return ValueType.Component;
         case 'worklog': return ValueType.Worklog;
         case 'attachment': return ValueType.Attachment;
+        case 'transition': return ValueType.Transition;
         default: return ValueType.String;
     }
 }
@@ -114,13 +116,23 @@ export interface SelectFieldUI extends CreatableFieldUI {
     autoCompleteJql: string;
 }
 
+export function isSelectFieldUI(f: FieldUI): f is SelectFieldUI {
+    return f && (<SelectFieldUI>f).isMulti !== undefined
+        && (<SelectFieldUI>f).isCascading !== undefined
+        && (<SelectFieldUI>f).isCreateable !== undefined
+        && (<SelectFieldUI>f).autoCompleteUrl !== undefined
+        && (<SelectFieldUI>f).autoCompleteJql !== undefined;
+}
+
 export type FieldUIs = { [key: string]: FieldUI };
 
 export type FieldValues = { [key: string]: any };
+export type SelectFieldOptions = { [key: string]: any[] };
 
 export interface FieldTransformerResult {
     fields: FieldUIs;
     fieldValues: FieldValues;
+    selectFieldOptions: SelectFieldOptions;
     nonRenderableFields: FieldProblem[];
     hasRequiredNonRenderables: boolean;
 }
@@ -185,7 +197,9 @@ export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , [ValueType.IssueLink, UIType.IssueLink]
         , [ValueType.Component, UIType.Select] // mutli-select, {id, name}
         , [ValueType.Worklog, UIType.Worklog]
-        , ['attachment', UIType.Attachment]
+        , [ValueType.Attachment, UIType.Attachment]
+        , [ValueType.Status, UIType.NonEditable]
+        , [ValueType.Transition, UIType.Select]
     ]
 );
 

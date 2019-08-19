@@ -9,7 +9,6 @@ import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
@@ -17,6 +16,7 @@ import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
+import { transitionIssue } from '../jira/transitionIssue';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;

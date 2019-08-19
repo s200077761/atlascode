@@ -81,11 +81,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.transitionIssue",
-                "title": "Transition Issue",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Issue to Me",
                 "category": "Atlassian"
@@ -319,11 +314,6 @@
                 }
             ],
             "view/item/context": [
-                {
-                    "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
-                    "group": "jiraContextMenuGroup1"
-                },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",

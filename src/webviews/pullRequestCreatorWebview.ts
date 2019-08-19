@@ -10,7 +10,6 @@ import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
@@ -19,6 +18,7 @@ import { issuesForJQL } from '../jira/issuesForJql';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
+import { transitionIssue } from '../jira/transitionIssue';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
 
@@ -231,7 +231,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
         if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
-            await transitionIssue(issue, transition);
+            if (transition) {
+                await transitionIssue(issue, transition);
+            }
         } else {
             const bbApi = await clientForRemote(remote);
             await bbApi.issues!.postChange({ repository: repo, remote: remote, data: issue }, issue.state!);

@@ -153,7 +153,7 @@ export default class StartWorkPage extends WebviewComponent<
 
   }
 
-  onHandleStatusChange = (item: Transition) => {
+  handleStatusChange = (item: Transition) => {
     if (isStartWorkOnIssueData(this.state.data)) {
       this.setState({
         // there must be a better way to update the transition dropdown!!
@@ -353,7 +353,7 @@ export default class StartWorkPage extends WebviewComponent<
                 <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                   <div style={{ margin: 10 }}>
                     <label>Select new status</label>
-                    <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
+                    <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
                   </div>
                 </div>
               }

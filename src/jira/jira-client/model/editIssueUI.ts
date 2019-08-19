@@ -24,6 +24,7 @@ export const emptyEditIssueUI: EditIssueUI = {
     epicFieldInfo: emptyEpicFieldInfo,
     fields: {},
     fieldValues: {},
+    selectFieldOptions: {},
     nonRenderableFields: [],
     hasRequiredNonRenderables: false,
 };

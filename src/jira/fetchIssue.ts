@@ -78,6 +78,23 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   let filteredFields: Fields = {};
 
+  // transitions do not exist in issue.fields, editmeta or all /fields, so we need to manually include them
+  metaFields['transitions'] = {
+    id: "transitions",
+    name: "Status",
+    key: "transitions",
+    required: false,
+    allowedValues: issue.transitions,
+    autoCompleteUrl: undefined,
+    currentValue: (res.fields['status']) ? issue.transitions.find(transition => transition.to.id === res.fields['status'].id) : undefined,
+    schema: {
+      type: "array",
+      system: "transitions",
+      custom: undefined,
+      items: 'transition',
+    },
+  };
+
   Object.keys(res.fields).forEach(fkey => {
 
     // get all the fields that DO NOT exist in editMeta but have schemas in allFields
@@ -89,7 +106,9 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
         filteredFields[fkey].renderedValue = res.renderedFields[fkey];
       }
     }
-    // 'parent' (of sub-tasks) is a special field that never shows up in editmeta OR allfields.
+
+    // These are fields that are not in editmeta OR all /fields data, but need to be included
+    // 'parent' is the parent issuekey for sub-tasks
     if (fkey === 'parent') {
       filteredFields[fkey] = {
         id: "parent",
@@ -102,6 +121,24 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
         schema: {
           type: "issuelink",
           system: "parent",
+          custom: undefined,
+          items: undefined,
+        },
+      };
+    }
+
+    if (fkey === 'status') {
+      filteredFields[fkey] = {
+        id: "status",
+        name: "Staus",
+        key: "status",
+        clauseNames: [],
+        currentValue: res.fields[fkey],
+        custom: false,
+        renderedValue: undefined,
+        schema: {
+          type: "status",
+          system: "status",
           custom: undefined,
           items: undefined,
         },

@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
-import { transitionIssue } from './commands/jira/transitionIssue';
 import { assignIssue } from './commands/jira/assignIssue';
 import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
@@ -35,7 +34,6 @@ export enum Commands {
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowWelcomePage = 'atlascode.showWelcomePage',
-    TransitionIssue = 'atlascode.jira.transitionIssue',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
@@ -60,7 +58,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
         vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => await showIssue(issueOrKey)),
-        vscode.commands.registerCommand(Commands.TransitionIssue, (issue) => transitionIssue(issue)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),

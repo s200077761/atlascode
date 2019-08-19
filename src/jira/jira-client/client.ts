@@ -85,6 +85,20 @@ export abstract class JiraClient {
         return res.data;
     }
 
+    public async postCreateUrl(url: string, data: any): Promise<any> {
+        const res = await axios(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            data: JSON.stringify(data),
+            httpsAgent: this.agent
+        });
+
+        return res.data;
+    }
+
     public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
         const res = await this.getFromJira('issue/picker', { query: query });
 

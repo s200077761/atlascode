@@ -18,11 +18,11 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote } from '../bitbucket/bbUtils';
+import { transitionIssue } from '../jira/transitionIssue';
 
 interface PRState {
     prData: PRData;
@@ -343,7 +343,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
         if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
-            await transitionIssue(issue, transition);
+            if (transition) {
+                await transitionIssue(issue, transition);
+            }
         } else {
             const bbApi = await clientForRemote(this._state.remote!);
             await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);

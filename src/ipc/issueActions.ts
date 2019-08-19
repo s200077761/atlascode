@@ -15,7 +15,7 @@ export interface EditIssueAction extends Action {
 
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
-    issue: MinimalIssue;
+    issue: MinimalIssueOrKeyAndSiteOrKey;
     transition: Transition;
 }
 
@@ -65,8 +65,14 @@ export interface ScreensForProjectsAction extends Action {
     project: WorkingProject;
 }
 
-export interface CreateSomethingAction extends Action {
-    createData: any;
+export interface CreateSelectOptionAction extends Action {
+    fieldKey: string;
+    siteDetails: DetailedSiteInfo;
+    createUrl: string;
+    createData: {
+        name: string;
+        project: string;
+    };
 }
 
 export interface CreateIssueAction extends Action {
@@ -134,8 +140,8 @@ export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
 }
 
-export function isCreateSomething(a: Action): a is CreateSomethingAction {
-    return (<CreateSomethingAction>a).createData !== undefined;
+export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
+    return a && (<CreateSelectOptionAction>a).createData !== undefined;
 }
 
 export function isCreateIssue(a: Action): a is CreateIssueAction {

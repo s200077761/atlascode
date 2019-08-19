@@ -16,6 +16,7 @@ interface FieldAndValue {
     field: any;
     value: any;
     renderedValue?: any;
+    selectOptions?: any[];
 }
 
 export interface ProjectIdAndKey {
@@ -36,6 +37,7 @@ export class FieldTransformer {
         const result: FieldTransformerResult = {
             fields: {},
             fieldValues: {},
+            selectFieldOptions: {},
             nonRenderableFields: [],
             hasRequiredNonRenderables: false,
         };
@@ -86,6 +88,9 @@ export class FieldTransformer {
                         result.fieldValues[`${field.key}.rendered`] = fieldAndValue.renderedValue;
                     }
                 }
+                if (fieldAndValue.selectOptions) {
+                    result.selectFieldOptions[field.key] = fieldAndValue.selectOptions;
+                }
             }
         });
 
@@ -97,7 +102,7 @@ export class FieldTransformer {
 
     private transformField(field: FieldOrFieldMeta, displayOrder: number, project: ProjectIdAndKey, commonFields: string[], requiredAsCommon: boolean, epicFieldInfo: EpicFieldInfo, issueLinkTypes: IssueLinkType[], defaultILAutocomplete: string, inlineSubtaskTypes: IssueType[] = []): FieldAndValue {
         const required: boolean = isFieldMeta(field) ? field.required : false;
-        const allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
+        let allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
         const schema: FieldSchemaMeta = field.schema!;
         const schemaName: string = this.schemaName(field);
         let autoCompleteUrl: string = '';
@@ -192,23 +197,34 @@ export class FieldTransformer {
                     autoCompleteJql = `project = "${project.key}" and cf[${epicFieldInfo.epicName.cfid}] != ""  and resolution = EMPTY`;
                 }
 
+                const vt = this.valueTypeForField(field);
+                if (vt === ValueType.Version) {
+                    let unreleasedOpts = allowedValues.filter(opt => { return !opt.released && !opt.archived; });
+                    let releasedOpts = allowedValues.filter(opt => { return opt.released && !opt.archived; });
+
+                    allowedValues = [
+                        { label: 'Unreleased Versions', options: unreleasedOpts }
+                        , { label: 'Released Versions', options: releasedOpts }
+                    ];
+                }
+
                 return {
                     field: {
                         required: required,
                         name: field.name,
                         key: field.key,
                         uiType: UIType.Select,
-                        allowedValues: allowedValues,
+                        allowedValues: [],
                         isMulti: multiSelectSchemas.includes(schemaName),
                         isCascading: (schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
                         isCreateable: createableSelectSchemas.includes(schemaName),
                         autoCompleteUrl: autoCompleteUrl,
                         autoCompleteJql: autoCompleteJql,
                         createUrl: this.createUrlForField(field),
-                        valueType: this.valueTypeForField(field),
+                        valueType: vt,
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: field.currentValue, selectOptions: allowedValues
                 };
             }
             case UIType.IssueLinks: {
@@ -229,13 +245,13 @@ export class FieldTransformer {
                         autoCompleteUrl: autoCompleteUrl,
                         autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
-                        allowedValues: linkTypeOptions,
+                        allowedValues: [],
                         isCreateable: createableSelectSchemas.includes(schemaName),
                         isMulti: multiSelectSchemas.includes(schemaName),
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal
+                    }, value: currentVal, selectOptions: linkTypeOptions
                 };
             }
             case UIType.Subtasks: {
@@ -249,11 +265,11 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.Subtasks,
                         createUrl: this.createUrlForField(field),
-                        allowedValues: inlineSubtaskTypes,
+                        allowedValues: [],
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal
+                    }, value: currentVal, selectOptions: inlineSubtaskTypes
                 };
             }
             case UIType.IssueLink: {

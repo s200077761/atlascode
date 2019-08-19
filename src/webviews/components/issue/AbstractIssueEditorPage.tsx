@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreatedSomething, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, OptionableFieldUI, SelectFieldUI } from "../../../jira/jira-client/model/fieldUI";
-import { FieldValidators } from "../fieldValidators";
+import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList, isCreatedSelectOption } from "../../../ipc/issueMessaging";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI } from "../../../jira/jira-client/model/fieldUI";
+import { FieldValidators, chain } from "../fieldValidators";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -15,16 +15,21 @@ import InlineSubtaskEditor from './InlineSubtaskEditor';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
 import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { SelectFieldHelper } from '../selectFieldHelper';
+// import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect, components } from '@atlaskit/select';
+import Select, { CreatableSelect } from '@atlaskit/select';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
 
+
 export type CommonEditorPageEmit = Action | OpenJiraIssueAction;
-export type CommonEditorPageAccept = CreatedSomething | LabelList | UserList | HostErrorMessage | IssueEditError;
+export type CommonEditorPageAccept = CreatedSelectOption | LabelList | UserList | HostErrorMessage | IssueEditError;
 
 export interface CommonEditorViewState extends Message {
     siteDetails: DetailedSiteInfo;
     fieldValues: FieldValues;
+    selectFieldOptions: { [k: string]: any[] };
     isSomethingLoading: boolean;
     loadingField: string;
     editingField: string;
@@ -38,6 +43,7 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     type: '',
     siteDetails: emptySiteInfo,
     fieldValues: {},
+    selectFieldOptions: {},
     isSomethingLoading: false,
     loadingField: '',
     editingField: '',
@@ -47,13 +53,28 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     commentInputValue: '',
 };
 
+const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
+    if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
+        return false;
+    }
+    return true;
+};
+
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
     private issueSuggestions: IssuePickerIssue[] | undefined = undefined;
+    private waitForCreateOptionResponse: boolean = false;
+
+    abstract getProjectKey(): string;
+
+    protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
+    protected handleCommentSave = (newValue: string) => { };
+    protected handleSelectChange = (field: SelectFieldUI, newValue: any) => { };
 
     onMessageReceived(e: any): boolean {
         let handled: boolean = false;
         switch (e.type) {
             case 'error': {
+                this.waitForCreateOptionResponse = false;
                 if (isIssueEditError(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 } else {
@@ -65,6 +86,18 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             case 'issueSuggestionsList': {
                 handled = true;
                 this.issueSuggestions = (e as IssueSuggestionsList).issues;
+                break;
+            }
+            case 'optionCreated': {
+                if (isCreatedSelectOption(e)) {
+                    this.setState(
+                        {
+                            isSomethingLoading: false,
+                            loadingField: '',
+                            fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
+                            selectFieldOptions: { ...this.state.selectFieldOptions, ...e.selectFieldOptions },
+                        });
+                }
                 break;
             }
         }
@@ -115,16 +148,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
-
-    }
-
-
-
-    protected handleCommentSave = (newValue: string) => {
-
-    }
-
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
             this.issueSuggestions = undefined;
@@ -146,54 +169,28 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    // refreshSelectFields(issueTypeId: string | undefined, issueData: CreateIssueData): Object {
-    //     let fieldOptions = {};
-    //     if (issueTypeId) {
-    //         let selectFields = issueData.issueTypeScreens[issueTypeId].fields.filter(field => { return field.uiType === UIType.Select || field.uiType === UIType.IssueLink; });
+    handleSelectOptionCreate = (field: SelectFieldUI, input: string): void => {
+        if (field.createUrl.trim() !== '') {
+            this.waitForCreateOptionResponse = true;
+            this.setState({ isSomethingLoading: true, loadingField: field.key });
+            this.postMessage({
+                action: 'createOption',
+                fieldKey: field.key,
+                siteDetails: this.state.siteDetails,
+                createUrl: field.createUrl,
+                createData: { name: input, project: this.getProjectKey() }
 
-    //         selectFields.forEach(field => {
-    //             fieldOptions[field.key] = this.getSelectOptions(issueTypeId, field.key, issueData);
-    //         });
-    //     }
-    //     return fieldOptions;
-    // }
+            });
 
-    // getSelectOptions(issueTypeId: string | undefined, fieldKey: string, issueData: CreateIssueData): any[] {
-    //     let opts: any[] = new Array();
-
-    //     if (issueTypeId) {
-    //         const field: SelectFieldUI | undefined = issueData.issueTypeScreens[issueTypeId].fields.find(field => field.key === fieldKey) as SelectFieldUI | undefined;
-    //         if (field && field.allowedValues && field.allowedValues.length > 0) {
-    //             switch (fieldKey) {
-    //                 case 'fixVersions':
-    //                 case 'versions': {
-    //                     let unreleasedOpts = field.allowedValues.filter(opt => { return !opt.released && !opt.archived; });
-    //                     let releasedOpts = field.allowedValues.filter(opt => { return opt.released && !opt.archived; });
-
-    //                     opts = [
-    //                         { label: 'Unreleased Versions', options: unreleasedOpts }
-    //                         , { label: 'Released Versions', options: releasedOpts }
-    //                     ];
-    //                     break;
-    //                 }
-    //                 case 'issuelinks': {
-    //                     field.allowedValues.forEach(opt => {
-    //                         opts.push({ ...opt, name: opt.inward, type: 'inward' });
-    //                         opts.push({ ...opt, name: opt.outward, type: 'outward' });
-    //                     });
-    //                     break;
-    //                 }
-
-    //                 default: {
-    //                     field.allowedValues.forEach(opt => { opts.push(opt); });
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     return opts;
-    // }
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (!this.waitForCreateOptionResponse || (end - start) > 2000) {
+                    clearInterval(timer);
+                }
+            }, 100);
+        }
+    }
 
     protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
@@ -275,7 +272,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 if (editmode) {
                     markup = <InlineSubtaskEditor
                         label={field.name}
-                        subtaskTypes={(field as OptionableFieldUI).allowedValues}
+                        subtaskTypes={this.state.selectFieldOptions[field.key]}
                         onSave={(val: any) => { this.handleInlineEdit(field, val); }}
                         isLoading={this.state.loadingField === field.key}
                     />;
@@ -290,7 +287,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 if (editmode) {
                     markup = <InlineIssueLinksEditor
                         label={field.name}
-                        linkTypes={(field as OptionableFieldUI).allowedValues}
+                        linkTypes={this.state.selectFieldOptions[field.key]}
                         onSave={(val: any) => { this.handleInlineEdit(field, val); }}
                         isLoading={this.state.loadingField === field.key}
                         onFetchIssues={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
@@ -315,6 +312,200 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         <Button appearance="default" onClick={this.handleCommentCancelClick}>Cancel</Button>
                     </ButtonGroup>
                 </div>);
+            }
+            case UIType.Select: {
+                const selectField = field as SelectFieldUI;
+
+                let validateFunc = undefined;
+                if (field.required) {
+                    validateFunc = (selectField.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;
+                }
+
+                const commonProps = {
+                    isMulti: selectField.isMulti,
+                    isClearable: (!field.required && selectField.isMulti),
+                    className: "ac-select-container",
+                    classNamePrefix: "ac-select",
+                    getOptionLabel: SelectFieldHelper.labelFuncForValueType(selectField.valueType),
+                    getOptionValue: SelectFieldHelper.valueFuncForValueType(selectField.valueType),
+                    components: SelectFieldHelper.getComponentsForValueType(selectField.valueType),
+                };
+
+                if (editmode) {
+                    commonProps['label'] = field.name;
+                    commonProps['id'] = field.key;
+                    commonProps['name'] = field.key;
+                    commonProps['defaultValue'] = this.state.fieldValues[field.key];
+                }
+
+                switch (SelectFieldHelper.selectComponentType(selectField)) {
+                    case SelectFieldHelper.SelectComponentType.Select: {
+                        if (editmode) {
+                            return (
+                                <Select
+                                    {...commonProps}
+                                    options={this.state.selectFieldOptions[field.key]}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                />
+                            );
+                        }
+
+                        // create mode
+                        return (
+                            <Field label={field.name}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={this.state.fieldValues[field.key]}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <React.Fragment>
+                                                <Select
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isDisabled={this.state.isSomethingLoading}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                />
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        );
+
+                    }
+
+                    case SelectFieldHelper.SelectComponentType.Creatable: {
+                        if (editmode) {
+                            return (
+                                <CreatableSelect
+                                    {...commonProps}
+                                    options={this.state.selectFieldOptions[field.key]}
+                                    isDisabled={this.state.isSomethingLoading}
+                                    isLoading={this.state.loadingField === field.key}
+                                    isValidNewOption={shouldShowCreateOption}
+                                    onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
+                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                />
+                            );
+                        }
+
+                        //create mode
+                        return (
+                            <Field label={field.name}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={this.state.fieldValues[field.key]}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <React.Fragment>
+                                                <CreatableSelect
+                                                    {...fieldArgs.fieldProps}
+                                                    {...commonProps}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    isDisabled={this.state.isSomethingLoading}
+                                                    isLoading={this.state.loadingField === field.key}
+                                                    isValidNewOption={shouldShowCreateOption}
+                                                    onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                />
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        );
+                    }
+
+                    case SelectFieldHelper.SelectComponentType.Async: {
+                        if (editmode) {
+                            return (
+                                <div>async select</div>
+                                // <CreatableSelect
+                                //     {...commonProps}
+                                //     options={this.state.selectFieldOptions[field.key]}
+                                //     isDisabled={this.state.isSomethingLoading}
+                                //     isLoading={this.state.loadingField === field.key}
+                                //     isValidNewOption={shouldShowCreateOption}
+                                //     onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
+                                // />
+                            );
+                        }
+
+                        //create mode
+                        return (
+                            <Field label={field.name}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={this.state.fieldValues[field.key]}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <React.Fragment>
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        );
+                    }
+
+                    case SelectFieldHelper.SelectComponentType.AsyncCreatable: {
+                        if (editmode) {
+                            return (
+                                <div>async creatable select</div>
+                            );
+                        }
+
+                        //create mode
+                        return (
+                            <Field label={field.name}
+                                isRequired={field.required}
+                                id={field.key}
+                                name={field.key}
+                                validate={validateFunc}
+                                defaultValue={this.state.fieldValues[field.key]}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <React.Fragment>
+                                                {errDiv}
+                                            </React.Fragment>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        );
+                    }
+                }
             }
         }
 
@@ -383,5 +574,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 return "text";
         }
     }
+
 
 }
