@@ -439,9 +439,13 @@ section button span {
   border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-input-foreground) !important;
+.ac-select__indicator,.ac-select__input,.ac-select__menu,.ac-select__menu-list {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-input-foreground)!important;
+}
+
+.ac-select__single-value {
+  color: var(--vscode-input-foreground)!important;
 }
 
 .ac-select__multi-value__label {
