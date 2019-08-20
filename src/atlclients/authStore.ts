@@ -1,6 +1,6 @@
 import { AuthInfo, Product, OAuthProvider, ProductJira, ProductBitbucket, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent, oauthProviderForSite, isOAuthInfo } from './authInfo';
 import { keychain } from '../util/keychain';
-import { window, Disposable, EventEmitter, Event } from 'vscode';
+import { window, Disposable, EventEmitter, Event, version } from 'vscode';
 import { Logger } from '../logger';
 import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
@@ -8,9 +8,9 @@ import debounce from 'lodash.debounce';
 import { OAuthRefesher } from './oauthRefresher';
 import { AnalyticsClient } from '../analytics-node-client/src';
 
-const keychainServiceNameV2 = "atlascode-authinfoV2";
+const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
 
-interface UserIdToAuthInfo { [k: string]: AuthInfo; }
+interface CredentialIdToAuthInfo { [k: string]: AuthInfo; }
 
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
@@ -46,7 +46,7 @@ export class CredentialManager implements Disposable {
             try {
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(product.key) || undefined;
                 if (infoEntry) {
-                    let infos: UserIdToAuthInfo = JSON.parse(infoEntry);
+                    let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
                     if (infos) {
                         let entry = Object.entries(infos).values().next().value;
 
@@ -67,7 +67,7 @@ export class CredentialManager implements Disposable {
     }
 
     public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
-        return this.getAuthInfoForProductAndUserId(site.product.key, site.userId);
+        return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId);
     }
 
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
@@ -79,7 +79,7 @@ export class CredentialManager implements Disposable {
             productAuths = new Map<string, AuthInfo>();
         }
 
-        this._memStore.set(site.product.key, productAuths.set(site.userId, info));
+        this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
         const hasNewInfo = (!oldInfo || (oldInfo && getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)));
 
@@ -91,12 +91,12 @@ export class CredentialManager implements Disposable {
 
             if (keychain) {
                 try {
-                    let credentialsForProduct: UserIdToAuthInfo = {};
+                    let credentialsForProduct: CredentialIdToAuthInfo = {};
                     let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
                     if (infoEntry) {
                         credentialsForProduct = JSON.parse(infoEntry);
                     }
-                    credentialsForProduct[site.userId] = info;
+                    credentialsForProduct[site.credentialId] = info;
 
                     await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(credentialsForProduct));
                 }
@@ -110,15 +110,15 @@ export class CredentialManager implements Disposable {
         }
     }
 
-    private async getAuthInfoForProductAndUserId(productKey: string, userId: string): Promise<AuthInfo | undefined> {
-        Logger.debug('trying to get authInfo for userId', userId);
+    private async getAuthInfoForProductAndCredentialId(productKey: string, credentialId: string): Promise<AuthInfo | undefined> {
+        Logger.debug('trying to get authInfo for credentialId', credentialId);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(productKey);
 
         Logger.debug('productAuths', productAuths);
 
-        if (productAuths && productAuths.has(userId)) {
-            foundInfo = productAuths.get(userId);
+        if (productAuths && productAuths.has(credentialId)) {
+            foundInfo = productAuths.get(credentialId);
 
             Logger.debug('mem found info', foundInfo);
 >>>>>>> VSCODE-593 Authenticating with arbitrary site
@@ -140,16 +140,15 @@ export class CredentialManager implements Disposable {
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
                 if (infoEntry) {
                     Logger.debug(`found info entry for ${productKey}`);
-                    let infoForProduct: UserIdToAuthInfo = JSON.parse(infoEntry);
+                    let infoForProduct: CredentialIdToAuthInfo = JSON.parse(infoEntry);
 
                     Logger.debug(`infos`, infoForProduct);
-                    let info = infoForProduct[userId];
+                    let info = infoForProduct[credentialId];
 
-                    Logger.debug(`info for user ${userId}`, info);
+                    Logger.debug(`info for user ${credentialId}`, info);
                     if (info && productAuths) {
                         Logger.debug(`setting info in memstore`);
-                        this._memStore.set(productKey, productAuths.set(userId, info));
->>>>>>> VSCODE-593 Authenticating with arbitrary site
+                        this._memStore.set(productKey, productAuths.set(credentialId, info));
 
                         foundInfo = info;
                     }
@@ -200,16 +199,16 @@ export class CredentialManager implements Disposable {
         let wasKeyDeleted = false;
         let wasMemDeleted = false;
         if (productAuths) {
-            wasMemDeleted = productAuths.delete(site.userId);
+            wasMemDeleted = productAuths.delete(site.credentialId);
             this._memStore.set(site.product.key, productAuths);
         }
 
         if (keychain) {
             let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
             if (infoEntry) {
-                let infos: UserIdToAuthInfo = JSON.parse(infoEntry);
-                wasKeyDeleted = Object.keys(infos).includes(site.userId);
-                delete infos[site.userId];
+                let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
+                wasKeyDeleted = Object.keys(infos).includes(site.credentialId);
+                delete infos[site.credentialId];
 
                 await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
             }
@@ -223,7 +222,7 @@ export class CredentialManager implements Disposable {
 
             let name = site.name;
 
-            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, product: site.product, userId: site.userId };
+            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, product: site.product, credentialId: site.credentialId };
             this._onDidAuthChange.fire(removeEvent);
 
             window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);

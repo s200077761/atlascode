@@ -98,7 +98,8 @@ export class V1toV2Migrator {
                 name: resource.name,
                 product: ProductJira,
                 isCloud: true,
-                userId: info.user.id
+                userId: info.user.id,
+                credentialId: info.user.id,
             };
 
             await this._credentialManager.saveAuthInfo(newSite, newInfo);
@@ -145,6 +146,7 @@ export class V1toV2Migrator {
             product: ProductBitbucket,
             isCloud: true,
             userId: info.user.id,
+            credentialId: info.user.id,
         };
 
         this._siteManager.addSites([newSite]);

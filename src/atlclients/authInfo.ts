@@ -17,7 +17,7 @@ export interface UpdateAuthInfoEvent extends AuthInfoEvent {
 export interface RemoveAuthInfoEvent extends AuthInfoEvent {
     type: AuthChangeType.Remove;
     product: Product;
-    userId: string;
+    credentialId: string;
 }
 
 export interface Product {
@@ -93,6 +93,7 @@ export interface DetailedSiteInfo extends SiteInfo {
     baseApiUrl: string;
     isCloud: boolean;
     userId: string;
+    credentialId: string;
 }
 
 export interface AccessibleResourceV1 {
@@ -131,6 +132,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     product: emptyProduct,
     isCloud: true,
     userId: 'empty',
+    credentialId: 'emtpy',
 };
 
 export const emptyAccessibleResource: AccessibleResource = {

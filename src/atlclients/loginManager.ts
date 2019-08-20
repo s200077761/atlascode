@@ -34,7 +34,7 @@ export class LoginManager {
                 user: resp.user,
             };
 
-            const siteDetails = await this.getNewOAuthSiteDetails(site.product, provider, resp.user.id, resp.accessibleResources);
+            const siteDetails = await this.getOAuthSiteDetails(site.product, provider, resp.user.id, resp.accessibleResources);
 
             if (siteDetails.length > 0) {
                 await this._credentialManager.saveAuthInfo(siteDetails[0], oauthInfo);
@@ -53,16 +53,15 @@ export class LoginManager {
         }
     }
 
-    private async getNewOAuthSiteDetails(product: Product, provider: OAuthProvider, userId: string, resources: AccessibleResource[]): Promise<DetailedSiteInfo[]> {
+    private async getOAuthSiteDetails(product: Product, provider: OAuthProvider, userId: string, resources: AccessibleResource[]): Promise<DetailedSiteInfo[]> {
         const knownSites = this._siteManager.getSitesAvailable(product);
-        let newResource: AccessibleResource | undefined = undefined;
         let newSites: DetailedSiteInfo[] = [];
 
         switch (product.key) {
             case ProductBitbucket.key:
                 const bbResources = resources.filter(resource => !knownSites.some(site => resource.url.endsWith(site.hostname)));
                 if (bbResources.length > 0) {
-                    newResource = bbResources[0];
+                    let resource = bbResources[0];
                     const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
                     const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
                     const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
@@ -71,25 +70,24 @@ export class LoginManager {
                     newSites = [{
                         avatarUrl: "",
                         baseApiUrl: baseApiUrl,
-                        baseLinkUrl: newResource.url,
+                        baseLinkUrl: resource.url,
                         hostname: hostname,
-                        id: newResource.id,
+                        id: resource.id,
                         name: siteName,
                         product: ProductBitbucket,
                         isCloud: true,
                         userId: userId,
+                        credentialId: userId,
                     }];
                 }
                 break;
             case ProductJira.key:
-                const newResources = resources.filter(resource => knownSites.find(site => site.id === resource.id) === undefined);
-
                 let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
 
                 //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                 //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
-                newSites = newResources.map(r => {
+                newSites = resources.map(r => {
                     return {
                         avatarUrl: r.avatarUrl,
                         baseApiUrl: `https://${apiUri}/ex/jira/${r.id}/rest`,
@@ -100,6 +98,7 @@ export class LoginManager {
                         product: ProductJira,
                         isCloud: true,
                         userId: userId,
+                        credentialId: userId,
                     };
                 });
                 break;
@@ -160,12 +159,13 @@ export class LoginManager {
             baseLinkUrl: `https://${site.hostname}`,
             id: site.hostname,
             name: site.hostname,
-            userId: fakeId,
+            userId: json.id,
+            credentialId: fakeId,
         };
 
         credentials.user = {
             displayName: json.displayName,
-            id: fakeId,
+            id: json.id,
         };
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
