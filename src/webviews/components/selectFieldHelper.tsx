@@ -33,9 +33,9 @@ const returnOptionOrLabelFunc = (option: any) => {
     return value;
 };
 const returnIdFunc = (option: any) => { return option.id; };
-const returnNameFunc = (option: any) => { return option.name; };
+const returnNameFunc = (option: any) => { return (option.label) ? option.label : option.name; };
 const returnValueFunc = (option: any) => { return option.value; };
-const returnDisplayNameFunc = (option: any) => { return option.displayName; };
+const returnDisplayNameFunc = (option: any) => { return (option.label) ? option.label : option.displayName; };
 const returnAccountIdFunc = (option: any) => { return option.accountId; };
 
 const IconOption = (props: any) => {
@@ -120,19 +120,23 @@ const LabelOption = (props: any) => {
     }
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }} dangerouslySetInnerHTML={{ __html: label }} /></div>
+            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'fleisSelectFieldUIx', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }} dangerouslySetInnerHTML={{ __html: label }} /></div>
         </components.Option>
     );
 };
 
 const LabelValue = (props: any) => {
     let value = props.data;
+
+    if (typeof props.data === 'string') { value = props.data; }
+
     if (typeof props.data === 'object') {
-        if (props.data.value) {
-            value = props.data.value;
-        } else {
-            value = JSON.stringify(props.data);
-        }
+        if (props.data.name) { value = props.data.name; }
+        if (props.data.displayName) { value = props.data.displayName; }
+    } else if (typeof props.data === 'string') {
+        value = props.data;
+    } else {
+        value = JSON.stringify(props.data);
     }
     return (
         <components.Option {...props}>
@@ -143,13 +147,13 @@ const LabelValue = (props: any) => {
 
 const MultiLabelValue = (props: any) => {
     let value = props.data;
-    console.log('props', props);
     if (typeof props.data === 'object') {
-        if (props.data.value) {
-            value = props.data.value;
-        } else {
-            value = JSON.stringify(props.data);
-        }
+        if (props.data.name) { value = props.data.name; }
+        if (props.data.displayName) { value = props.data.displayName; }
+    } else if (typeof props.data === 'string') {
+        value = props.data;
+    } else {
+        value = JSON.stringify(props.data);
     }
     return (
         <components.MultiValueLabel {...props}>

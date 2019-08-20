@@ -56,6 +56,7 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
     if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
         return false;
     }
+
     return true;
 };
 
@@ -111,6 +112,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             }
             case 'optionCreated': {
                 if (isCreatedSelectOption(e)) {
+                    this.waitForCreateOptionResponse = false;
                     this.setState(
                         {
                             isSomethingLoading: false,
@@ -222,26 +224,31 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    handleSelectOptionCreate = (field: SelectFieldUI, input: string): void => {
-        if (field.createUrl.trim() !== '') {
-            this.waitForCreateOptionResponse = true;
-            this.setState({ isSomethingLoading: true, loadingField: field.key });
-            this.postMessage({
-                action: 'createOption',
-                fieldKey: field.key,
-                siteDetails: this.state.siteDetails,
-                createUrl: field.createUrl,
-                createData: { name: input, project: this.getProjectKey() }
+    handleSelectOptionCreate(field: SelectFieldUI, input: string): void {
+        // react-select is dumb and doesn't stop propagation on click events when you provide
+        // a custom option component.  e.g. it calls this twice, so we have to do this first check.
+        if (!this.waitForCreateOptionResponse) {
+            if (field.createUrl.trim() !== '') {
+                this.waitForCreateOptionResponse = true;
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                this.postMessage({
+                    action: 'createOption',
+                    fieldKey: field.key,
+                    siteDetails: this.state.siteDetails,
+                    createUrl: field.createUrl,
+                    createData: { name: input, project: this.getProjectKey() }
 
-            });
+                });
 
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if (!this.waitForCreateOptionResponse || (end - start) > 2000) {
-                    clearInterval(timer);
-                }
-            }, 100);
+                const start = Date.now();
+                let timer = setInterval(() => {
+                    const end = Date.now();
+                    if (!this.waitForCreateOptionResponse || (end - start) > 2000) {
+                        this.waitForCreateOptionResponse = false;
+                        clearInterval(timer);
+                    }
+                }, 100);
+            }
         }
     }
 
@@ -374,7 +381,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     validateFunc = (selectField.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;
                 }
 
-                const commonProps = {
+                const commonProps: any = {
                     isMulti: selectField.isMulti,
                     className: "ac-select-container",
                     classNamePrefix: "ac-select",
@@ -384,10 +391,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 };
 
                 if (editmode) {
-                    commonProps['label'] = field.name;
-                    commonProps['id'] = field.key;
-                    commonProps['name'] = field.key;
-                    commonProps['defaultValue'] = this.state.fieldValues[field.key];
+                    commonProps.label = field.name;
+                    commonProps.id = field.key;
+                    commonProps.name = field.key;
+                    commonProps.defaultValue = this.state.fieldValues[field.key];
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {
@@ -443,6 +450,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             return (
                                 <CreatableSelect
                                     {...commonProps}
+                                    value={this.state.fieldValues[field.key]}
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
@@ -474,6 +482,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 <CreatableSelect
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
+                                                    value={this.state.fieldValues[field.key]}
                                                     placeholder='Type to create new option'
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
@@ -558,6 +567,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             return (
                                 <AsyncCreatableSelect
                                     {...commonProps}
+                                    value={this.state.fieldValues[field.key]}
                                     placeholder='Type to search'
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}

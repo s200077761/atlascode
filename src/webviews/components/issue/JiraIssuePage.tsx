@@ -114,9 +114,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 , issueLinkType: newValue.type
             });
         } else {
-            console.log('newVal', newValue);
             //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
-            this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
+            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
                 this.handleEditIssue(field.key, newValue);
             });
         }
@@ -152,14 +151,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     /*
-    , 'fixVersions'
-    , 'components'
-    , 'labels'
-    , 'assignee'
-    , 'reporter'
-    , 'priority'
-    , 'status'
-    , 'issuetype'
     , 'attachment'
     */
     getMainPanelMarkup(): any {
@@ -266,6 +257,24 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className='ac-vpadding'>
                         <label className='ac-field-label' htmlFor='labels'>{this.state.fields['labels'].name}</label>
                         {this.getInputMarkup(this.state.fields['labels'], true)}
+                    </div>
+                }
+                {this.state.fields['priority'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='priority'>{this.state.fields['priority'].name}</label>
+                        {this.getInputMarkup(this.state.fields['priority'], true)}
+                    </div>
+                }
+                {this.state.fields['components'] &&
+                    <div className='ac-vpadding' onClick={(e: any) => e.stopPropagation()}>
+                        <label className='ac-field-label'>{this.state.fields['components'].name}</label>
+                        {this.getInputMarkup(this.state.fields['components'], true)}
+                    </div>
+                }
+                {this.state.fields['fixVersions'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label' htmlFor='fixVersions'>{this.state.fields['fixVersions'].name}</label>
+                        {this.getInputMarkup(this.state.fields['fixVersions'], true)}
                     </div>
                 }
             </React.Fragment>

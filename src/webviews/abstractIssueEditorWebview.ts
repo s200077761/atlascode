@@ -8,7 +8,7 @@ import { showIssue } from "../commands/jira/showIssue";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
-    abstract handleSelectOptionCreated(fieldKey: string, newValue: any): void;
+    abstract async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void>;
 
     protected formatSelectOptions(result: any): any[] {
         let suggestions: any[] = [];
@@ -90,7 +90,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                             try {
                                 let client = await Container.clientManager.jirarequest(msg.siteDetails);
                                 const result = await client.postCreateUrl(msg.createUrl, msg.createData);
-                                this.handleSelectOptionCreated(msg.fieldKey, result);
+                                await this.handleSelectOptionCreated(msg.fieldKey, result);
                             } catch (e) {
                                 Logger.error(new Error(`error creating select option: ${e}`));
                                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating select option') });

@@ -9,7 +9,7 @@ import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
 import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
-import { FieldValues } from "../jira/jira-client/model/fieldUI";
+import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
 import { Commands } from "../commands";
@@ -98,8 +98,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             let msg = this._editUIData;
 
             msg.type = 'update';
-            this.
-                postMessage(msg);
+            this.postMessage(msg);
 
             //const relatedPrs = await this.recentPullRequests();
             // if (relatedPrs.length > 0) {
@@ -115,15 +114,37 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         }
     }
 
-    handleSelectOptionCreated(fieldKey: string, newValue: any): void {
-        this._editUIData.fieldValues[fieldKey].comments.push(newValue);
-        this._editUIData.selectFieldOptions[fieldKey].push(newValue);
-        this.postMessage({
+    async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void> {
+        if (!Array.isArray(this._editUIData.fieldValues[fieldKey])) {
+            this._editUIData.fieldValues[fieldKey] = [];
+        }
+
+        if (!Array.isArray(this._editUIData.selectFieldOptions[fieldKey])) {
+            this._editUIData.selectFieldOptions[fieldKey] = [];
+        }
+
+        if (this._editUIData.fields[fieldKey].valueType === ValueType.Version) {
+            if (this._editUIData.selectFieldOptions[fieldKey][0].options) {
+                this._editUIData.selectFieldOptions[fieldKey][0].options.push(newValue);
+            }
+        } else {
+            this._editUIData.selectFieldOptions[fieldKey].push(newValue);
+            this._editUIData.selectFieldOptions[fieldKey] = this._editUIData.selectFieldOptions[fieldKey].sort();
+        }
+
+        this._editUIData.fieldValues[fieldKey].push(newValue);
+
+        const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+        await client.editIssue(this._issue!.key, { [fieldKey]: this._editUIData.fieldValues[fieldKey] });
+
+        let optionMessage = {
             type: 'optionCreated',
             fieldValues: { [fieldKey]: this._editUIData.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: this._editUIData.selectFieldOptions[fieldKey] },
             fieldKey: fieldKey
-        });
+        };
+
+        this.postMessage(optionMessage);
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
