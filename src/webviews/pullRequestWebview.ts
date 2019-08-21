@@ -5,7 +5,7 @@ import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -110,6 +110,17 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                             await this.postComment(msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteComment': {
+                    if (isDeleteComment(msg)){
+                        try {
+                            this.deleteComment(msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
                     }
@@ -351,6 +362,12 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
     private async postComment(text: string, parentId?: number) {
         const bbApi = await clientForRemote(this._state.remote!);
         await bbApi.pullrequests.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        this.updatePullRequest();
+    }
+
+    private async deleteComment(commentId?: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.deleteComment(this._pr!, commentId);
         this.updatePullRequest();
     }
 

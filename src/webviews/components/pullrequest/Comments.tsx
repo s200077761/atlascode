@@ -4,10 +4,26 @@ import CommentComponent, { CommentAuthor, CommentTime, CommentAction } from '@at
 import CommentForm from './CommentForm';
 import { User, Comment } from '../../../bitbucket/model';
 
-class NestedComment extends React.Component<{ node: Comment, currentUser: User, isCommentLoading: boolean, onSave?: (content: string, parentCommentId?: number) => void }, { showCommentForm: boolean }> {
+class NestedComment extends React.Component<
+    { 
+        node: Comment, 
+        currentUser: User, 
+        isCommentLoading: boolean, 
+        onSave?: (content: string, parentCommentId?: number) => void,
+        onDelete?: (commentId?: number) => void 
+    }, 
+    { showCommentForm: boolean }> {
+
     constructor(props: any) {
         super(props);
         this.state = { showCommentForm: false };
+    }
+
+    handleDelete = () => {
+        if(this.props.onDelete) {
+            this.props.onDelete(this.props.node.id);
+            this.setState({showCommentForm: false});
+        }
     }
 
     handleReplyClick = () => {
@@ -42,19 +58,41 @@ class NestedComment extends React.Component<{ node: Comment, currentUser: User, 
                         visible={this.state.showCommentForm}
                         isAnyCommentLoading={this.props.isCommentLoading}
                         onSave={(content: string) => this.handleSave(content, node.id)}
+                        onDelete={() => this.handleDelete()}
                         onCancel={this.handleCancel} />
                 </React.Fragment>
             }
             actions={[
-                this.props.onSave && !this.state.showCommentForm && <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>
+                this.props.onSave && 
+                !this.state.showCommentForm && 
+                <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>,
+                <CommentAction onClick={this.handleDelete}>Delete</CommentAction>
             ]}
         >
-            {node.children && node.children.map(child => <NestedComment node={child} currentUser={currentUser} isCommentLoading={this.props.isCommentLoading} onSave={this.props.onSave} />)}
+            {   node.children && 
+                node.children.map(
+                    child => <NestedComment 
+                                node={child} 
+                                currentUser={currentUser} 
+                                isCommentLoading={this.props.isCommentLoading} 
+                                onSave={this.props.onSave}
+                                onDelete={this.props.onDelete}
+                            />
+                )
+            }
         </CommentComponent>;
     }
 }
 
-export default class Comments extends React.Component<{ comments: Comment[], currentUser: User, isAnyCommentLoading: boolean, onComment?: (content: string, parentCommentId?: number) => void }, {}> {
+export default class Comments extends React.Component<
+    { 
+        comments: Comment[], 
+        currentUser: User, 
+        isAnyCommentLoading: boolean, 
+        onComment?: (content: string, parentCommentId?: number) => void,
+        onDelete?:  (commentId: number) => void
+    }, 
+    {}> {
     constructor(props: any) {
         super(props);
     }
@@ -64,7 +102,7 @@ export default class Comments extends React.Component<{ comments: Comment[], cur
             return null;
         }
         const result = this.props.comments.filter(comment => !comment.inline).map((comment) =>
-            <NestedComment node={comment} currentUser={this.props.currentUser!} isCommentLoading={this.props.isAnyCommentLoading} onSave={this.props.onComment} />);
+            <NestedComment node={comment} currentUser={this.props.currentUser!} isCommentLoading={this.props.isAnyCommentLoading} onSave={this.props.onComment} onDelete={this.props.onDelete}/>);
         return <div className='ac-comments'>{result}</div>;
     }
 }

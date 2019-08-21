@@ -19,7 +19,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest } from '../../../ipc/prActions';
+import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -39,7 +39,7 @@ import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -103,6 +103,15 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             mergeStrategy: this.state.mergeStrategy.value,
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
+        });
+    }
+
+    handleDeleteComment = (commentId?: number) => {
+        this.setState({ isAnyCommentLoading: true });
+        console.log(commentId);
+        this.postMessage({
+            action: 'deleteComment',
+            commentId: commentId
         });
     }
 
@@ -371,8 +380,19 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                            <Comments comments={this.state.pr.comments!} currentUser={this.state.pr.currentUser!} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={this.handlePostComment} />
-                                            <CommentForm currentUser={this.state.pr.currentUser!} visible={true} isAnyCommentLoading={this.state.isAnyCommentLoading} onSave={this.handlePostComment} />
+                                            <Comments 
+                                                comments={this.state.pr.comments!} 
+                                                currentUser={this.state.pr.currentUser!} 
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
+                                                onComment={this.handlePostComment} 
+                                                onDelete={this.handleDeleteComment} 
+                                            />
+                                            <CommentForm 
+                                                currentUser={this.state.pr.currentUser!} 
+                                                visible={true} 
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
+                                                onSave={this.handlePostComment} 
+                                            />
                                         </Panel>
                                     </React.Fragment>
                             }

@@ -9,6 +9,7 @@ export default class CommentForm extends React.Component<{
     visible: boolean,
     isAnyCommentLoading: boolean,
     onSave?: (content: string) => void,
+    onDelete?: (commentId: number) => void,
     onCancel?: () => void
 }, { commentInput: string, isThisCommentLoading: boolean }> {
     constructor(props: any) {

@@ -204,6 +204,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
+    async deleteComment(pr: PullRequest, commentId?: number){
+        return; //TODO NEED TO CHANGE THIS
+    }
+
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
