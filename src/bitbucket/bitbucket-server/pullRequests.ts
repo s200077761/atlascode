@@ -177,7 +177,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return ServerPullRequestApi.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
+        return ServerPullRequestApi.toUser(site, data);
     }
 
     async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
@@ -205,7 +205,18 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async deleteComment(pr: PullRequest, commentId?: number){
-        return; //TODO NEED TO CHANGE THIS
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        if(commentId){
+            let { data } = await this.client.get(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/comments/${commentId}`
+            )
+
+            await this.client.delete(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/comments/${commentId}`,
+                {},
+                {version: data.version}
+            );
+        }
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
