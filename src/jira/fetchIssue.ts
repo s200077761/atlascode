@@ -5,7 +5,6 @@ import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
 import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
 import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
 import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
-import { Logger } from "../logger";
 import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
@@ -46,9 +45,6 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
 export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI> {
   const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issue);
 
-  // FOR DEBUGGING
-  const client = await Container.clientManager.jirarequest(issue.siteDetails);
-  client.postCreateUrl('https://localhost/editMetaDescriptor', fieldDescriptor);
   const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(issue.siteDetails);
   const result: FieldTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
 

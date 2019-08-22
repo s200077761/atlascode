@@ -3,7 +3,6 @@ import { Container } from "../container";
 import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } from "../config/configuration";
 import { ProductJira } from "../atlclients/authInfo";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
-import { Logger } from "../logger";
 import { Project } from "./jira-client/model/entities";
 
 

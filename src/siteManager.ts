@@ -2,8 +2,6 @@ import { Disposable, EventEmitter, Event, Memento } from "vscode";
 import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, isUpdateAuthEvent, emptySiteInfo, isEmptySiteInfo, SiteInfo } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
-import { Logger } from "./logger";
-
 
 
 export type SitesAvailableUpdateEvent = {
