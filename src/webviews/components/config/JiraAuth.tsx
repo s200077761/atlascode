@@ -40,7 +40,6 @@ export default class JiraAuth extends React.Component<
     }
 
     handleSave = (site: SiteInfo, auth: AuthInfo) => {
-        console.log('jira saving site', site);
         this.props.handleSaveSite(site, auth);
         this.setState({ addingSite: false });
     }

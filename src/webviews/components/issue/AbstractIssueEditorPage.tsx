@@ -71,7 +71,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     protected handleCommentSave = (newValue: string) => { };
 
     protected handleSelectChange = (field: SelectFieldUI, newValue: any) => {
-        console.log('new select value', newValue);
         let val = newValue;
         if (field.valueType === ValueType.String && typeof newValue !== 'string') {
             if (Array.isArray(newValue)) {

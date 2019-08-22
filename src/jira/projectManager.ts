@@ -58,9 +58,7 @@ export class JiraProjectManager extends Disposable {
 
         const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
         const order = orderBy !== undefined ? orderBy : 'key';
-        Logger.debug('calling getProjectsPaginated');
         const resp = await client.getProjects(query, order);
-        Logger.debug('got response', resp);
         this._projectsAvailable = resp;
 
         return this._projectsAvailable;

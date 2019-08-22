@@ -107,10 +107,8 @@ export class SiteManager extends Disposable {
         let defaultSite = emptySiteInfo;
         switch (product.key) {
             case ProductJira.key:
-                Logger.debug(`getting siteInfo for ${product.key}`);
                 const configSite = Container.config.jira.defaultSite;
                 if (configSite && !isEmptySiteInfo(configSite)) {
-                    Logger.debug(`got site from config`, configSite);
                     defaultSite = configSite;
                 } else {
                     const sites = this.getSitesAvailable(product);

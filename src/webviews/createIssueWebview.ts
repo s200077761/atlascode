@@ -62,14 +62,12 @@ export class CreateIssueWebview extends AbstractReactWebview {
         this._partialIssue = data;
 
         if (data) {
-            Logger.debug('got create partial data', data);
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
 
             if (data.bbIssue) {
                 this._relatedBBIssue = data.bbIssue;
             }
 
-            Logger.debug('sending create partial data', pd);
             this.postMessage(pd);
         }
     }
@@ -122,7 +120,6 @@ export class CreateIssueWebview extends AbstractReactWebview {
             }
 
             if (this._screenData) {
-                console.log('screendata', this._screenData);
                 const createData: CreateIssueData = {
                     type: 'screenRefresh',
                     selectedProject: this._currentProject,

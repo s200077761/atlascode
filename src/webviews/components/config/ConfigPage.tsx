@@ -89,7 +89,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
-        console.log('config posting saving site', site);
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     }
 

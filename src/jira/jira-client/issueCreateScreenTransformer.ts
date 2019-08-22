@@ -88,8 +88,6 @@ export class IssueCreateScreenTransformer {
             firstIssueType = this.metaIssueTypeToIssueType(renderableIssueTypes[0]);
         }
 
-        console.log(issueTypeUIList);
-
         return { selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
     }
 

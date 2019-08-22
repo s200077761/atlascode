@@ -84,7 +84,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
-        console.log(field.uiType);
         if (field.uiType === UIType.Subtasks) {
             /* newValue will be:
             {
@@ -141,7 +140,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     handleStatusChange = (transition: Transition) => {
-        console.log('status change', transition);
         this.setState({ isSomethingLoading: true, loadingField: 'status' });
         this.postMessage({
             action: "transitionIssue",

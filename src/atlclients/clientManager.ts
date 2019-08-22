@@ -321,25 +321,19 @@ export class ClientManager implements Disposable {
     let client: T | undefined = this._clients.getItem<T>(site.hostname);
 
     if (!client) {
-      Logger.debug('trying to build new client', site);
       const info = await Container.authManager.getAuthInfo(site);
-
-      Logger.debug('got authInfo', info);
 
       if (isOAuthInfo(info)) {
         try {
           const provider: OAuthProvider | undefined = oauthProviderForSite(site);
-          Logger.debug('got authProvider', provider);
           if (provider) {
             const newAccessToken = await this._refresher.getNewAccessToken(provider, info.refresh);
-            Logger.debug('got newAccessToken', newAccessToken);
             if (newAccessToken) {
               info.access = newAccessToken;
               await Container.authManager.saveAuthInfo(site, info);
 
               client = factory(info);
 
-              Logger.debug('got new client', client);
               this._clients.setItem(site.hostname, client, oauthTTL);
             }
           }
@@ -354,20 +348,16 @@ export class ClientManager implements Disposable {
     }
 
     if (this._agentChanged) {
-      Logger.debug('agent changed, getting authInfo');
       let info = await Container.authManager.getAuthInfo(site);
-      Logger.debug('got authInfo', info);
 
       if (info) {
         client = factory(info);
-        Logger.debug('got new client', client);
 
         this._clients.updateItem(site.hostname, client);
       }
       this._agentChanged = false;
     }
 
-    Logger.debug('got client?', client);
     return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
   }
 

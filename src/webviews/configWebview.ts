@@ -63,9 +63,7 @@ export class ConfigWebview extends AbstractReactWebview {
             if (isJiraAuthed) {
                 jiraSitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
                 stagingEnabled = false;
-                Logger.debug('trying to load projects for config screen');
                 projects = await Container.jiraProjectManager.getProjects();
-                Logger.debug('got projects', projects);
             }
 
             if (isBBAuthed) {

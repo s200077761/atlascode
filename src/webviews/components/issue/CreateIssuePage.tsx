@@ -145,7 +145,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     (field.advanced) ? advancedFields.push(this.getInputMarkup(field)) : renderableFields.push(this.getInputMarkup(field));
 
                 });
-                console.log('screen fields', screen.fields);
 
             } else {
                 this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.selectedIssueTypeId}` });
@@ -167,7 +166,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     <SectionMessage
                                         appearance="confirmation"
                                         title="Issue Created">
-                                        <p>Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { console.log('sending open issue', this.state.createdIssue.key); this.handleOpenIssue(this.state.createdIssue); }}>{this.state.createdIssue.key}</Button> has been created.</p>
+                                        <p>Issue <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { this.handleOpenIssue(this.state.createdIssue); }}>{this.state.createdIssue.key}</Button> has been created.</p>
                                     </SectionMessage>
                                 </div>
                             }

@@ -15,11 +15,8 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
   const client = await Container.clientManager.jirarequest(siteDetails);
   const createIssueTransformer: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
 
-  Logger.debug('loading creat meta', projectKey);
   const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
-  Logger.debug('got meta', meta);
 
-  Logger.debug('transforming meta...');
   return await createIssueTransformer.transformIssueScreens(meta.projects[0]);
 
 }
@@ -49,6 +46,9 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
 export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI> {
   const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issue);
 
+  // FOR DEBUGGING
+  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  client.postCreateUrl('https://localhost/editMetaDescriptor', fieldDescriptor);
   const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(issue.siteDetails);
   const result: FieldTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
 
@@ -64,7 +64,6 @@ export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI
 
   };
 
-  console.log('edit issue ui', ui);
   return ui;
 
 }

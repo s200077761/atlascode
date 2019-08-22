@@ -45,7 +45,6 @@ export default class AuthForm extends PureComponent<{
                 FieldValidators.validateString(this.state.username, undefined) === undefined
                 && FieldValidators.validateString(this.state.password, undefined) === undefined;
         }
-        console.log('creds are goo', credsAreGood);
         return (
             FieldValidators.validateRequiredUrl(this.state.baseUrl, undefined) === undefined
             && credsAreGood
@@ -56,7 +55,6 @@ export default class AuthForm extends PureComponent<{
         if (FieldValidators.validateRequiredUrl(e.target.value, undefined) === undefined) {
             const url = new URL(e.target.value);
             const needsCreds = !this.isCloudUrl(url);
-            console.log('ready to save', this.readyToSave(needsCreds));
             this.setState({
                 baseUrl: e.target.value,
                 requiresCredentials: needsCreds,
@@ -89,7 +87,6 @@ export default class AuthForm extends PureComponent<{
         };
 
         if (!this.state.requiresCredentials) {
-            console.log('saving oauth site', siteInfo);
             this.props.onSave(siteInfo, emptyAuthInfo);
         } else {
             const authInfo: BasicAuthInfo = {

@@ -35,7 +35,6 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 break;
             }
             case 'screenRefresh': {
-                console.log('got problems?', e.problems);
                 this.setState({ problems: e.problems, project: e.project, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }

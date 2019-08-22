@@ -123,7 +123,6 @@ const LabelOption = (props: any) => {
         label = props.label;
     }
 
-    console.log('final label', label);
     return (
         <components.Option {...props}>
             <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
