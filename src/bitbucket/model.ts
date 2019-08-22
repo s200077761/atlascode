@@ -189,7 +189,7 @@ export interface RepositoriesApi {
     getDevelopmentBranch(remote: Remote): Promise<string>;
     getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]>;
+    getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]>;
 }
 
 export interface BitbucketApi {

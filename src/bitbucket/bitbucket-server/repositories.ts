@@ -1,6 +1,6 @@
 import { Remote, Repository } from "../../typings/git";
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PullRequest, PaginatedBranchNames } from "../model";
+import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranchNames } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
@@ -40,7 +40,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
         );
 
-        return ServerRepositoriesApi.toRepo(data, defaultBranch.id);
+        return ServerRepositoriesApi.toRepo(remote, data, defaultBranch.id);
     }
 
     async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
@@ -111,7 +111,23 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<PullRequest[]> {
+    /**
+     * This method then uses `git show` and scans the commit message for an 
+     * explicit mention of a pull request, which is populated by default in the
+     * Bitbucket UI.
+     *
+     * This won't work if the author of the PR wrote a custom commit message
+     * without mentioning the PR.
+     */
+    async getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]> {
+        const mergeBase = await repository.getMergeBase(commitHash, 'master');
+        const { message } = await repository.getCommit(mergeBase);
+
+        const match = message.match(/pull request #(\d+)/);
+        if (match) {
+            return [parseInt(match[1], 10)];
+        }
+
         return [];
     }
 
@@ -122,14 +138,27 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return avatarUrl;
     }
 
-    static toRepo(bbRepo: any, defaultBranch: string): Repo {
+    static toRepo(remote: Remote, bbRepo: any, defaultBranch: string): Repo {
+        if (!bbRepo) {
+            return {
+                id: 'REPO_NOT_FOUND',
+                name: 'REPO_NOT_FOUND',
+                displayName: 'REPO_NOT_FOUND',
+                fullName: 'REPO_NOT_FOUND',
+                url: '',
+                avatarUrl: '',
+                mainbranch: undefined,
+                issueTrackerEnabled: false
+            };
+        }
+
         return {
             id: bbRepo.id,
             name: bbRepo.slug,
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
             url: bbRepo.links.self[0].href,
-            avatarUrl: bbRepo.avatarUrl,
+            avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
             issueTrackerEnabled: false
         };

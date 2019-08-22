@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as path from 'path';
+import uuid from 'uuid';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
@@ -129,6 +130,7 @@ const UserValue = (props: any) => {
 };
 
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private nonce: string;
     private userSuggestions: any[] | undefined = undefined;
 
     constructor(props: any) {
@@ -260,12 +262,13 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         }
         return new Promise(resolve => {
             this.userSuggestions = undefined;
-            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.remote!.value });
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.remote!.value });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
                     if (this.userSuggestions === undefined) {
                         this.userSuggestions = [];
                     }
@@ -336,6 +339,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             }
             case 'fetchUsersResult': {
                 this.userSuggestions = e.users;
+                this.nonce = e.nonce;
                 break;
             }
             case 'onlineStatus': {

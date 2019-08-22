@@ -3,10 +3,8 @@ import { showProjectSelectionDialog } from './commands/jira/selectProject';
 import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { assignIssue } from './commands/jira/assignIssue';
-import { startPipeline } from './commands/bitbucket/startPipeline';
 import { IssueNode } from './views/nodes/issueNode';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
-import { BranchNode } from './views/pipelines/PipelinesTree';
 import { viewScreenEvent, Registry } from './analytics';
 import { showIssue } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
@@ -61,7 +59,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
-        vscode.commands.registerCommand(Commands.StartPipeline, (node: BranchNode) => startPipeline(node)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, vscode.Uri, vscode.Uri, string]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             diffArgs[0]();

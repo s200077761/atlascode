@@ -1,4 +1,5 @@
 import * as React from 'react';
+import uuid from 'uuid';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
@@ -56,6 +57,7 @@ const emptyState: ViewState = {
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
+    private nonce: string;
     private newProjects: WorkingProject[] = [];
 
     constructor(props: any) {
@@ -76,6 +78,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             }
             case 'projectList': {
                 this.newProjects = (e as ProjectList).availableProjects;
+                this.nonce = e.nonce;
                 break;
             }
         }
@@ -116,11 +119,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isProjectsLoading: true });
         return new Promise(resolve => {
             this.newProjects = [];
-            this.postMessage({ action: 'fetchProjects', query: input });
+
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchProjects', query: input, nonce: nonce });
+
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.newProjects.length > 0 || (end - start) > 2000) {
+                if ((this.newProjects.length > 0 && this.nonce === nonce) || (end - start) > 2000) {
                     this.setState({ isProjectsLoading: false });
                     clearInterval(timer);
                     resolve(this.newProjects);

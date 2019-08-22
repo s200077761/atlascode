@@ -19,6 +19,7 @@ import RecentIcon from "@atlaskit/icon/glyph/recent";
 import ErrorIcon from "@atlaskit/icon/glyph/error";
 import CalendarIcon from "@atlaskit/icon/glyph/calendar";
 import Avatar from "@atlaskit/avatar";
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import { colors } from "@atlaskit/theme";
 import { distanceInWordsToNow } from "date-fns";
 import Offline from "../Offline";
@@ -27,6 +28,7 @@ import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from "../issue/NavItem";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
+import { Button } from "@atlaskit/button/components/Button";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -339,6 +341,9 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         <Page>
           <Grid spacing="comfortable" layout="fixed">
             <GridColumn medium={12}>
+              <Button className='ac-button' style={{float: "right"}} onClick={() => this.postMessage({ action: 'refresh' })}>
+                  <RefreshIcon label="refresh" size="small"></RefreshIcon>
+              </Button>
               <PageHeader
                 breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                   <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.url} />} />
@@ -351,7 +356,6 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
               >
                 <p>Pipeline #{this.state.pipeline.build_number}</p>
               </PageHeader>
-
               <div
                 className="pipeline-head"
                 style={{

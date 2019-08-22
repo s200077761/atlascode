@@ -13,6 +13,7 @@ import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
 import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import Reviewers from './Reviewers';
 import Commits from './Commits';
 import Comments from './Comments';
@@ -25,7 +26,7 @@ import BranchInfo from './BranchInfo';
 import IssueList from '../issue/IssueList';
 import BuildStatus from './BuildStatus';
 import NavItem from '../issue/NavItem';
-import { OpenPipelineBuildAction } from '../../../ipc/pipelinesActions';
+import { OpenBuildStatusAction } from '../../../ipc/prActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
 import Offline from '../Offline';
@@ -38,7 +39,7 @@ import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenPipelineBuildAction | RefreshPullRequest;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -304,6 +305,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
                     </InlineDialog>
                 </div>
+                <Button className='ac-button' style={{float: "right"}} onClick={() => this.postMessage({ action: 'refreshPR' })}>
+                  <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                </Button>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
                 }
@@ -343,7 +347,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branchName === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branchName)}>
                                         {pr.source!.branchName === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
                                     </Button>
-                                    <BuildStatus buildStatuses={this.state.pr.buildStatuses} postMessage={(e: OpenPipelineBuildAction) => this.postMessage(e)} />
+                                    <BuildStatus buildStatuses={this.state.pr.buildStatuses} postMessage={(e: OpenBuildStatusAction) => this.postMessage(e)} />
                                 </div>
                             </div>
                             <Panel isDefaultExpanded header={<h3>Summary</h3>}>

@@ -143,7 +143,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                         try {
                             const bbApi = await clientForRemote(e.remote);
                             const reviewers = await bbApi.pullrequests.getDefaultReviewers(e.remote, e.query);
-                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
                             this.postMessage({ type: 'error', reason: e });

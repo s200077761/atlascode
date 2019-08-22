@@ -17,6 +17,7 @@ import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
 import TaskIcon from '@atlaskit/icon/glyph/task';
 import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
 import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
 import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
@@ -195,11 +196,15 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                 }
                                 <PageHeader
-                                    actions={<ButtonGroup>
+                                    actions={
+                                    <ButtonGroup>
                                         <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
                                         {this.state.data.showJiraButton &&
                                             <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
                                         }
+                                        <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
+                                            <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                                        </Button>
                                     </ButtonGroup>}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                                         <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />

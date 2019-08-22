@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, PullRequestData, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote } from "../bbUtils";
@@ -64,7 +64,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        const prs: PullRequest[] = data.values!.map((pr: any) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; });
+        const prs: PullRequest[] = data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
@@ -91,7 +91,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
         const { data } = await this.client.get(next!);
 
-        const prs = (data).values!.map((pr: any) => { return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(pr) }; });
+        const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
         return { repository: repository, remote: remote, data: prs, next: data.next };
     }
 
@@ -116,15 +116,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}`,
         );
 
-        let sourceRemote: Remote | undefined = undefined;
-        if (data.source!.repository!.links!.html!.href! !== data.destination!.repository!.links!.html!.href!) {
-            sourceRemote = {
-                fetchUrl: parseGitUrl(data.source!.repository!.links!.html!.href!).toString(parsed.protocol),
-                name: data.source!.repository!.full_name!,
-                isReadOnly: true
-            };
-        }
-        return { repository: pr.repository, remote: pr.remote, sourceRemote: sourceRemote, data: CloudPullRequestApi.toPullRequestData(data) };
+        return CloudPullRequestApi.toPullRequestData(pr.repository, pr.remote, data);
     }
 
     async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -339,7 +331,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             prBody
         );
 
-        return { repository: repository, remote: remote, data: CloudPullRequestApi.toPullRequestData(data) };
+        return CloudPullRequestApi.toPullRequestData(repository, remote, data);
     }
 
     async updateApproval(pr: PullRequest, approved: boolean) {
@@ -409,44 +401,70 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    static toPullRequestData(pr: any): PullRequestData {
+    static toPullRequestData(repository: Repository, remote: Remote, pr: any): PullRequest {
+
+        const source = CloudPullRequestApi.toPullRequestRepo(pr.source);
+        const destination = CloudPullRequestApi.toPullRequestRepo(pr.destination);
+        let sourceRemote = undefined;
+        if (source.repo.url !== '' && source.repo.url !== destination.repo.url) {
+            const parsed = parseGitUrl(urlForRemote(remote));
+            sourceRemote = {
+                fetchUrl: parseGitUrl(source.repo.url).toString(parsed.protocol),
+                name: source.repo.fullName,
+                isReadOnly: true
+            };
+        }
+
         return {
-            id: pr.id!,
-            version: -1,
-            url: pr.links!.html!.href!,
-            author: {
-                accountId: pr.author!.account_id,
-                displayName: pr.author!.display_name!,
-                url: pr.author!.links!.html!.href!,
-                avatarUrl: pr.author!.links!.avatar!.href!
-            },
-            reviewers: [],
-            participants: (pr.participants || [])!.map((participant: any) => ({
-                accountId: participant.user!.account_id!,
-                displayName: participant.user!.display_name!,
-                url: participant.user!.links!.html!.href!,
-                avatarUrl: participant.user!.links!.avatar!.href!,
-                role: participant.role!,
-                approved: !!participant.approved
-            })),
-            source: {
-                repo: CloudRepositoriesApi.toRepo(pr.source!.repository!),
-                branchName: pr.source!.branch!.name!,
-                commitHash: pr.source!.commit!.hash!
-            },
-            destination: {
-                repo: CloudRepositoriesApi.toRepo(pr.destination!.repository!),
-                branchName: pr.destination!.branch!.name!,
-                commitHash: pr.destination!.commit!.hash!
-            },
-            title: pr.title!,
-            htmlSummary: pr.summary ? pr.summary.html! : undefined,
-            rawSummary: pr.summary ? pr.summary!.raw! : undefined,
-            ts: pr.created_on!,
-            updatedTs: pr.updated_on!,
-            state: pr.state!,
-            closeSourceBranch: !!pr.close_source_branch,
-            taskCount: pr.task_count || 0
+            repository: repository,
+            remote: remote,
+            sourceRemote: sourceRemote,
+            data: {
+                id: pr.id!,
+                version: -1,
+                url: pr.links!.html!.href!,
+                author: {
+                    accountId: pr.author!.account_id,
+                    displayName: pr.author!.display_name!,
+                    url: pr.author!.links!.html!.href!,
+                    avatarUrl: pr.author!.links!.avatar!.href!
+                },
+                reviewers: [],
+                participants: (pr.participants || [])!.map((participant: any) => ({
+                    accountId: participant.user!.account_id!,
+                    displayName: participant.user!.display_name!,
+                    url: participant.user!.links!.html!.href!,
+                    avatarUrl: participant.user!.links!.avatar!.href!,
+                    role: participant.role!,
+                    approved: !!participant.approved
+                })),
+                source: source,
+                destination: destination,
+                title: pr.title!,
+                htmlSummary: pr.summary ? pr.summary.html! : undefined,
+                rawSummary: pr.summary ? pr.summary!.raw! : undefined,
+                ts: pr.created_on!,
+                updatedTs: pr.updated_on!,
+                state: pr.state!,
+                closeSourceBranch: !!pr.close_source_branch,
+                taskCount: pr.task_count || 0
+            }
+        };
+    }
+
+    static toPullRequestRepo(prRepo: any) {
+        const repo = CloudRepositoriesApi.toRepo(prRepo.repository);
+        const branchName = prRepo && prRepo.branch && prRepo.branch.name
+            ? prRepo.branch.name
+            : 'BRANCH_NOT_FOUND';
+        const commitHash = prRepo && prRepo.commit && prRepo.commit.hash
+            ? prRepo.commit.hash
+            : 'COMMIT_HASH_NOT_FOUND';
+
+        return {
+            repo: repo,
+            branchName: branchName,
+            commitHash: commitHash
         };
     }
 }

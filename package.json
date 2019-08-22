@@ -204,22 +204,22 @@
                 {
                     "id": "atlascode.views.jira.customJql",
                     "name": "Jira Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled"
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
-                    "when": "atlascode:pipelineExplorerEnabled"
+                    "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.issuesTreeView",
                     "name": "Bitbucket issues",
-                    "when": "atlascode:bitbucketIssuesExplorerEnabled"
+                    "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
                 }
             ]
         },
@@ -235,37 +235,37 @@
                 {
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.jira.enabled"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.openInBitbucket",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.openChangeset",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.viewPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "group": "atlascode",
-                    "when": "resourceScheme == atlascode.bbpr"
+                    "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
             "view/title": [
@@ -379,24 +379,24 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.jira.showIssue",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.selectProject",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.selectSite",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
                     "command": "atlascode.bb.addComment",
                     "when": "false"
                 },
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.showIssue",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.selectProject",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
+                },
+                {
+                    "command": "atlascode.jira.selectSite",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ]
         },

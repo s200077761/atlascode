@@ -108,3 +108,12 @@ export interface FetchUsers extends Action {
 export function isFetchUsers(a: Action): a is FetchUsers {
     return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
 }
+
+export interface OpenBuildStatusAction extends Action {
+    action: 'openBuildStatus';
+    buildStatusUri: string;
+}
+
+export function isOpenBuildStatus(a: Action): a is OpenBuildStatusAction {
+    return (<OpenBuildStatusAction>a).buildStatusUri !== undefined;
+}
