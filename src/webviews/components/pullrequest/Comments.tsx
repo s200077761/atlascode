@@ -19,6 +19,8 @@ class NestedComment extends React.Component<
         this.state = { showCommentForm: false };
     }
 
+    commentBelongsToUser = () => this.props.node.user.accountId === this.props.currentUser.accountId;
+
     handleDelete = () => {
         if(this.props.onDelete) {
             this.props.onDelete(this.props.node.id);
@@ -39,6 +41,17 @@ class NestedComment extends React.Component<
 
     handleCancel = () => {
         this.setState({ showCommentForm: false });
+    }
+
+    generateActionsList = () => {
+        let actionList = [];
+        if(this.props.onSave && !this.state.showCommentForm){
+            actionList.push(<CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>);
+        }
+        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser()){
+            actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
+        }
+        return actionList;
     }
 
     render(): any {
@@ -62,12 +75,7 @@ class NestedComment extends React.Component<
                         onCancel={this.handleCancel} />
                 </React.Fragment>
             }
-            actions={[
-                this.props.onSave && 
-                !this.state.showCommentForm && 
-                <CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>,
-                <CommentAction onClick={this.handleDelete}>Delete</CommentAction>
-            ]}
+            actions={this.generateActionsList()}
         >
             {   node.children && 
                 node.children.map(
