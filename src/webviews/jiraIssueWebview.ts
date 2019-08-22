@@ -13,7 +13,7 @@ import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
 import { Commands } from "../commands";
-import { issueCreatedEvent, issueCommentEvent } from "../analytics";
+import { issueCreatedEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
@@ -197,7 +197,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             let client = await Container.clientManager.jirarequest(msg.site);
                             const resp = await client.createIssue(msg.issueData);
 
-                            const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys);
+                            const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
 
                             this._editUIData.fieldValues['subtasks'].push(picked);

@@ -225,7 +225,12 @@ export function readProject(projectJson: any): Project {
 
 export function isMinimalIssue(a: any): a is MinimalIssue {
     return a && (<MinimalIssue>a).key !== undefined
-        && (<MinimalIssue>a).transitions !== undefined;
+        && (<MinimalIssue>a).transitions !== undefined
+        && (<MinimalIssue>a).id !== undefined
+        && (<MinimalIssue>a).summary !== undefined
+        && (<MinimalIssue>a).status !== undefined
+        && (<MinimalIssue>a).issuetype !== undefined;
+
 }
 
 export function isIssueKeyAndSite(a: any): a is IssueKeyAndSite {
