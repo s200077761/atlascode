@@ -110,15 +110,15 @@ export class FieldTransformer {
         if (isFieldMeta(field)) {
             if (field.autoCompleteUrl) {
                 autoCompleteUrl = field.autoCompleteUrl;
-
-                //we need to fix up bad autocomplete urls from jira
-                if (autoCompleteUrl.includes('suggest?')) {
-                    autoCompleteUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.key}&fieldValue=`;
-                }
             }
             // if this is an issuelinks field we always want it to be editable no matter what
         } else if (schema.items && schema.items === 'issuelinks') {
             autoCompleteUrl = defaultILAutocomplete;
+        }
+
+        //we need to fix up bad autocomplete urls from jira
+        if (autoCompleteUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id) {
+            autoCompleteUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
         }
 
         const uiType: UIType = this.uiTypeForField(field);
@@ -196,12 +196,6 @@ export class FieldTransformer {
                 };
             }
             case UIType.Select: {
-                let autoCompleteJql = ``;
-
-                if (field.key === epicFieldInfo.epicLink.id) {
-                    autoCompleteJql = `project = "${project.key}" and cf[${epicFieldInfo.epicName.cfid}] != ""  and resolution = EMPTY`;
-                }
-
                 const vt = this.valueTypeForField(field);
                 if (vt === ValueType.Version) {
                     let unreleasedOpts = allowedValues.filter(opt => { return !opt.released && !opt.archived; });
@@ -224,7 +218,6 @@ export class FieldTransformer {
                         isCascading: (schema.custom === 'com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect') ? true : false,
                         isCreateable: createableSelectSchemas.includes(schemaName),
                         autoCompleteUrl: autoCompleteUrl,
-                        autoCompleteJql: autoCompleteJql,
                         createUrl: this.createUrlForField(field),
                         valueType: vt,
                         displayOrder: displayOrder,
@@ -248,7 +241,6 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.IssueLinks,
                         autoCompleteUrl: autoCompleteUrl,
-                        autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
                         allowedValues: [],
                         isCreateable: createableSelectSchemas.includes(schemaName),
@@ -287,7 +279,6 @@ export class FieldTransformer {
                         key: field.key,
                         uiType: UIType.IssueLink,
                         autoCompleteUrl: "",
-                        autoCompleteJql: "",
                         createUrl: this.createUrlForField(field),
                         allowedValues: [],
                         isCreateable: false,
@@ -441,7 +432,7 @@ export class FieldTransformer {
     private isAdvanced(field: FieldOrFieldMeta, commonFields: string[], requiredAsCommon: boolean): boolean {
         let advanced: boolean = false;
         if (!commonFields.includes(field.key)) {
-            if (requiredAsCommon && (isFieldMeta(field) && !field.required)) {
+            if (!requiredAsCommon || (requiredAsCommon && (isFieldMeta(field) && !field.required))) {
                 advanced = true;
             }
         }
@@ -463,14 +454,14 @@ export class FieldTransformer {
 
         if (!foundType && isFieldMeta(field)) {
 
-            foundType = schemaTypeToUIMap.get(field.schema.type);
+            foundType = customSchemaToUIMap.get(schemaName);
+
+            if (!foundType) {
+                foundType = schemaTypeToUIMap.get(field.schema.type);
+            }
 
             if (!foundType && field.schema.type === 'option') {
                 foundType = schemaOptionToUIMap.get(schemaName);
-            }
-
-            if (!foundType) {
-                foundType = customSchemaToUIMap.get(schemaName);
             }
 
         } else if (!foundType && isField(field)) {

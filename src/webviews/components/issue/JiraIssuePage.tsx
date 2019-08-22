@@ -154,6 +154,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     , 'attachment'
     */
     getMainPanelMarkup(): any {
+        const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
+        let epicLinkKey: string = '';
+
+        if (epicLinkValue) {
+            if (typeof epicLinkValue === 'object' && epicLinkValue.value) {
+                epicLinkKey = epicLinkValue.value;
+            } else if (typeof epicLinkValue === 'string') {
+                epicLinkKey = epicLinkValue;
+            }
+        }
+
         return (
             <div>
                 {!this.state.isOnline &&
@@ -172,8 +183,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </ButtonGroup>}
                     breadcrumbs={
                         <BreadcrumbsStateless onExpand={() => { }}>
-                            {(this.state.fieldValues[this.state.epicFieldInfo.epicLink.id] && this.state.fieldValues[this.state.epicFieldInfo.epicLink.id] !== '') &&
-                                <BreadcrumbsItem component={() => <NavItem text={this.state.fieldValues[this.state.epicFieldInfo.epicLink.id]} onItemClick={() => this.handleOpenIssue(this.state.fieldValues[this.state.epicFieldInfo.epicLink.id])} />} />
+                            {(epicLinkValue && epicLinkKey !== '') &&
+                                <BreadcrumbsItem component={() => <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />} />
                             }
                             {this.state.fieldValues['parent'] &&
                                 <BreadcrumbsItem component={() => <NavItem
@@ -188,7 +199,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 </PageHeader>
                 {this.state.fields['description'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='description'>{this.state.fields['description'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['description'].name}</label>
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
@@ -196,14 +207,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     && this.state.fieldValues['environment'].trim() !== ''
                     &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='environment'>{this.state.fields['environment'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['environment'].name}</label>
                         {this.getInputMarkup(this.state.fields['environment'], true)}
                     </div>
                 }
 
                 {this.state.isEpic &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='epicchildren'>Issues in this epic</label>
+                        <label className='ac-field-label'>Issues in this epic</label>
                         <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
                     </div>
                 }
@@ -225,7 +236,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 {this.state.fields['comment'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='comment'>{this.state.fields['comment'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['comment'].name}</label>
                         <CommentList comments={this.state.fieldValues['comment'].comments} />
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>
@@ -238,30 +249,30 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return (
             <React.Fragment>
                 <div className='ac-vpadding'>
-                    <label className='ac-field-label' htmlFor='status'>{this.state.fields['status'].name}</label>
+                    <label className='ac-field-label'>{this.state.fields['status'].name}</label>
                     <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
                 </div>
                 {this.state.fields['assignee'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='assignee'>{this.state.fields['assignee'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['assignee'].name}</label>
                         {this.getInputMarkup(this.state.fields['assignee'], true)}
                     </div>
                 }
                 {this.state.fields['reporter'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='reporter'>{this.state.fields['reporter'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['reporter'].name}</label>
                         {this.getInputMarkup(this.state.fields['reporter'], true)}
                     </div>
                 }
                 {this.state.fields['labels'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='labels'>{this.state.fields['labels'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['labels'].name}</label>
                         {this.getInputMarkup(this.state.fields['labels'], true)}
                     </div>
                 }
                 {this.state.fields['priority'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='priority'>{this.state.fields['priority'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['priority'].name}</label>
                         {this.getInputMarkup(this.state.fields['priority'], true)}
                     </div>
                 }
@@ -273,16 +284,32 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 {this.state.fields['fixVersions'] &&
                     <div className='ac-vpadding'>
-                        <label className='ac-field-label' htmlFor='fixVersions'>{this.state.fields['fixVersions'].name}</label>
+                        <label className='ac-field-label'>{this.state.fields['fixVersions'].name}</label>
                         {this.getInputMarkup(this.state.fields['fixVersions'], true)}
                     </div>
                 }
+
             </React.Fragment>
         );
     }
 
     advancedSidebar(): any {
+        const orderedValues: FieldUI[] = this.sortFieldValues(this.state.fields);
+        let markups: any[] = [];
 
+        orderedValues.forEach(field => {
+            if (field.advanced) {
+                markups.push(
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        {this.getInputMarkup(field, true)}
+                    </div>
+                );
+            }
+
+        });
+
+        return markups;
     }
 
     public render() {

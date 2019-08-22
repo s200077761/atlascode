@@ -113,15 +113,13 @@ export interface SelectFieldUI extends CreatableFieldUI {
     isCascading: boolean;
     isCreateable: boolean;
     autoCompleteUrl: string;
-    autoCompleteJql: string;
 }
 
 export function isSelectFieldUI(f: FieldUI): f is SelectFieldUI {
     return f && (<SelectFieldUI>f).isMulti !== undefined
         && (<SelectFieldUI>f).isCascading !== undefined
         && (<SelectFieldUI>f).isCreateable !== undefined
-        && (<SelectFieldUI>f).autoCompleteUrl !== undefined
-        && (<SelectFieldUI>f).autoCompleteJql !== undefined;
+        && (<SelectFieldUI>f).autoCompleteUrl !== undefined;
 }
 
 export type FieldUIs = { [key: string]: FieldUI };
@@ -214,6 +212,7 @@ export const schemaOptionToUIMap: Map<string, UIType> = new Map<string, UIType>(
 export const customSchemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
     [['com.pyxis.greenhopper.jira:gh-epic-link', UIType.Select]
         , ['com.pyxis.greenhopper.jira:gh-epic-label', UIType.Input]
+        , [ValueType.Worklog, UIType.Worklog]
     ]
 );
 

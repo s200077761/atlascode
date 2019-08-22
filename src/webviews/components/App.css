@@ -546,7 +546,8 @@ section button span {
 }
 
 .ac-select__option {
-  cursor: pointer !important
+  cursor: pointer !important;
+  width: auto!important;
 }
 
 .ac-select__placeholder {

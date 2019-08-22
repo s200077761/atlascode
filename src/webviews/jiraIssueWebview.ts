@@ -13,7 +13,7 @@ import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
 import { Commands } from "../commands";
-import { issueCreatedEvent } from "../analytics";
+import { issueCreatedEvent, issueCommentEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
@@ -160,6 +160,9 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         await client.editIssue(this._issue!.key, newFieldValues);
                         this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                         this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues });
+
+                        // TODO: [VSCODE-601] add a new analytic event for issue updates
+                        commands.executeCommand(Commands.RefreshJiraExplorer);
                     }
                     catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
@@ -178,6 +181,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'comment': this._editUIData.fieldValues['comment'] }
                             });
+
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
@@ -235,6 +239,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
                             });
 
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
                         } catch (e) {

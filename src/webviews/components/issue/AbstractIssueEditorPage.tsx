@@ -17,6 +17,7 @@ import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
 import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { SelectFieldHelper } from '../selectFieldHelper';
 import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
+import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -70,6 +71,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     protected handleCommentSave = (newValue: string) => { };
 
     protected handleSelectChange = (field: SelectFieldUI, newValue: any) => {
+        console.log('new select value', newValue);
         let val = newValue;
         if (field.valueType === ValueType.String && typeof newValue !== 'string') {
             if (Array.isArray(newValue)) {
@@ -288,7 +290,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     } else {
                         markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
-                            value='testing'
+                            value={this.state.fieldValues[field.key]}
                             onSave={(val: string) => { this.handleInlineEdit(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
@@ -319,6 +321,111 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 return (
                                     <div>
                                         {markup}
+                                        {errDiv}
+                                    </div>
+                                );
+                            }
+                        }
+                    </Field>
+                );
+            }
+            case UIType.Date: {
+                let markup = <div></div>;
+                let validateFunc = this.getValidateFunction(field, editmode);
+                if (editmode) {
+                    markup = <DatePicker
+                        id={field.key}
+                        name={field.key}
+                        isLoading={this.state.loadingField === field.key}
+                        defaultValue={this.state.fieldValues[field.key]}
+                        isDisabled={this.state.isSomethingLoading}
+                        className="ac-select-container"
+                        selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                        onChange={(val: string) => {
+                            // DatePicker re-opens when it gains focus with no way to turn that off.
+                            // this is why we have to blur so a re-render doesn't re-open it.
+                            (document.activeElement as HTMLElement).blur();
+                            this.handleInlineEdit(field, val);
+                        }}
+                    />;
+
+                    return markup;
+                }
+
+                return (
+                    <Field
+                        label={field.name}
+                        isRequired={field.required}
+                        id={field.key}
+                        name={field.key}
+                        validate={validateFunc}
+                    >
+                        {
+                            (fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error === 'EMPTY') {
+                                    errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                }
+                                return (
+                                    <div>
+                                        <DatePicker
+                                            {...fieldArgs.fieldProps}
+                                            className="ac-select-container"
+                                            selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                        />
+                                        {errDiv}
+                                    </div>
+                                );
+                            }
+                        }
+                    </Field>
+                );
+            }
+            case UIType.DateTime: {
+                let markup = <div></div>;
+                let validateFunc = this.getValidateFunction(field, editmode);
+                if (editmode) {
+                    markup = <DateTimePicker
+                        id={field.key}
+                        name={field.key}
+                        defaultValue={this.state.fieldValues[field.key]}
+                        isDisabled={this.state.isSomethingLoading}
+                        className="ac-select-container"
+                        datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                        timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                        onChange={(val: string) => {
+                            // DatePicker re-opens when it gains focus with no way to turn that off.
+                            // this is why we have to blur so a re-render doesn't re-open it.
+                            (document.activeElement as HTMLElement).blur();
+                            this.handleInlineEdit(field, val);
+                        }}
+                    />;
+
+                    return markup;
+                }
+
+                return (
+                    <Field
+                        label={field.name}
+                        isRequired={field.required}
+                        id={field.key}
+                        name={field.key}
+                        validate={validateFunc}
+                    >
+                        {
+                            (fieldArgs: any) => {
+                                let errDiv = <span />;
+                                if (fieldArgs.error === 'EMPTY') {
+                                    errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                }
+                                return (
+                                    <div>
+                                        <DateTimePicker
+                                            {...fieldArgs.fieldProps}
+                                            className="ac-select-container"
+                                            datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                            timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                        />
                                         {errDiv}
                                     </div>
                                 );
@@ -394,7 +501,17 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     commonProps.label = field.name;
                     commonProps.id = field.key;
                     commonProps.name = field.key;
-                    commonProps.defaultValue = this.state.fieldValues[field.key];
+
+                    // Note: react-select doesn't let you set an initial value as a string.
+                    // it must be an object or an array (ugh.)
+                    if (typeof this.state.fieldValues[field.key] === 'string') {
+                        const val = this.state.fieldValues[field.key];
+
+                        commonProps.defaultValue = { label: val, value: val };
+                    } else {
+                        commonProps.defaultValue = this.state.fieldValues[field.key];
+                    }
+
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {
@@ -512,7 +629,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     isLoading={this.state.loadingField === field.key}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                     loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
-                                    isMulti={selectField.isMulti}
                                 />
                             );
                         }
@@ -542,7 +658,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     isLoading={this.state.loadingField === field.key}
                                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                                     loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
-                                                    isMulti={selectField.isMulti}
                                                 />
                                                 {errDiv}
                                             </React.Fragment>
@@ -577,7 +692,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     getNewOptionData={newDataFunc}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                     loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
-                                    isMulti={selectField.isMulti}
                                 >
                                 </AsyncCreatableSelect>
                             );
@@ -611,7 +725,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     getNewOptionData={newDataFunc}
                                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                                     loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
-                                                    isMulti={selectField.isMulti}
                                                 >
                                                 </AsyncCreatableSelect>
                                                 {errDiv}
@@ -628,6 +741,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
         // catch-all for unknown field types
         let validateFunc = field.required ? FieldValidators.validateString : undefined;
+
+        if (editmode) {
+            return (
+                <div>Unknown field type - {field.key} : {field.uiType}</div>
+            );
+        }
         return (
             <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
                 {

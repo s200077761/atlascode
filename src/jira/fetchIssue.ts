@@ -25,13 +25,17 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
 }
 
 export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink> {
-  let foundIssue = await Container.jiraExplorer.findIssue(issueKey);
+  let foundIssue = await getCachedIssue(issueKey);
 
   if (!foundIssue) {
     foundIssue = await fetchMinimalIssue(issueKey, siteDetails);
   }
 
   return foundIssue;
+}
+
+export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
+  return await Container.jiraExplorer.findIssue(issueKey);
 }
 
 export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {
@@ -149,6 +153,8 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   return {
     issueKey: issue.key,
+    isSubtask: issue.issuetype.subtask,
+    isEpic: issue.isEpic,
     fields: { ...metaFields, ...filteredFields }
   };
 

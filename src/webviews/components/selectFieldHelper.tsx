@@ -8,28 +8,30 @@ type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
 
 const returnOptionOrValueFunc = (option: any) => {
-    let value = option;
+    let value: string = '';
     if (typeof option === 'object') {
         if (option.value) {
             value = option.value;
         } else {
             value = JSON.stringify(option);
         }
+    } else if (typeof option === 'string') {
+        value = option;
     }
-
     return value;
 };
 
 const returnOptionOrLabelFunc = (option: any) => {
-    let value = option;
+    let value: string = '';
     if (typeof option === 'object') {
         if (option.label) {
             value = option.label;
         } else {
             value = JSON.stringify(option);
         }
+    } else if (typeof option === 'string') {
+        value = option;
     }
-
     return value;
 };
 const returnIdFunc = (option: any) => { return option.id; };
@@ -110,43 +112,49 @@ const MultiAvatarValue = (props: any) => {
 };
 
 const LabelOption = (props: any) => {
-    let label = props.label;
+    let label: string = '';
     if (typeof props.label === 'object') {
         if (props.label.label) {
             label = props.label.label;
         } else if (props.label.value) {
             label = props.label.value;
         }
+    } else if (typeof props.label === 'string') {
+        label = props.label;
     }
+
+    console.log('final label', label);
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'fleisSelectFieldUIx', 'align-items': 'center' }}><span style={{ marginLeft: '4px' }} dangerouslySetInnerHTML={{ __html: label }} /></div>
+            <div ref={props.innerRef} {...props.innerProps} dangerouslySetInnerHTML={{ __html: label }} />
         </components.Option>
     );
 };
 
 const LabelValue = (props: any) => {
-    let value = props.data;
-
+    let value: string = '';
     if (typeof props.data === 'string') { value = props.data; }
 
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         if (props.data.displayName) { value = props.data.displayName; }
+        if (props.data.label) { value = props.data.label; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {
         value = JSON.stringify(props.data);
     }
+
+    value = value.replace('<b>', '').replace('</b>', '');
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span>{value}</span></div>
+            <div ref={props.innerRef} {...props.innerProps}>{value}</div>
         </components.Option>
     );
 };
 
 const MultiLabelValue = (props: any) => {
-    let value = props.data;
+    let value: string = '';
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         if (props.data.displayName) { value = props.data.displayName; }
@@ -157,7 +165,7 @@ const MultiLabelValue = (props: any) => {
     }
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><span>{value}</span></div>
+            <div ref={props.innerRef} {...props.innerProps}>{value}</div>
         </components.MultiValueLabel>
     );
 };
@@ -201,7 +209,7 @@ export namespace SelectFieldHelper {
     }
 
     export function selectComponentType(field: SelectFieldUI): SelectComponentType {
-        if (field.isCreateable && (field.autoCompleteUrl.trim() !== '' || field.autoCompleteJql.trim() !== '')) {
+        if (field.isCreateable && (field.autoCompleteUrl.trim() !== '')) {
             return SelectComponentType.AsyncCreatable;
         }
 
@@ -209,7 +217,7 @@ export namespace SelectFieldHelper {
             return SelectComponentType.Creatable;
         }
 
-        if (field.autoCompleteUrl.trim() !== '' || field.autoCompleteJql.trim() !== '') {
+        if (field.autoCompleteUrl.trim() !== '') {
             return SelectComponentType.Async;
         }
 
@@ -330,7 +338,7 @@ export namespace SelectFieldHelper {
                 return {
                     SingleValue: LabelValue,
                     MultiValueLabel: MultiLabelValue
-                }
+                };
             }
         }
     }

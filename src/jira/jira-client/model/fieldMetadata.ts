@@ -5,6 +5,8 @@ export type MetaFields = { [k: string]: FieldMeta };
 export type FieldOrFieldMeta = Field | FieldMeta;
 export type EditMetaDescriptor = {
     issueKey: string,
+    isSubtask: boolean,
+    isEpic: boolean,
     fields: { [key: string]: FieldOrFieldMeta },
 };
 
