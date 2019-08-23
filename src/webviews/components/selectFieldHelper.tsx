@@ -138,6 +138,7 @@ const LabelValue = (props: any) => {
         if (props.data.name) { value = props.data.name; }
         if (props.data.displayName) { value = props.data.displayName; }
         if (props.data.label) { value = props.data.label; }
+        if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {

@@ -401,7 +401,7 @@ export class FieldTransformer {
         if (field.schema) {
             let schemaType: string = field.schema.type === 'array' ? field.schema.items! : field.schema.type;
 
-            if (schemaTypeToUIMap.has(schemaType) || customSchemaToUIMap.has(schemaName)) {
+            if (schemaTypeToUIMap.has(schemaType) || customSchemaToUIMap.has(schemaName) || schemaOptionToUIMap.has(schemaName)) {
                 hasKnownType = true;
                 if (schemaType === 'option' && !schemaOptionToUIMap.has(schemaName)) {
                     hasKnownType = false;
