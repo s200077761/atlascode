@@ -456,12 +456,12 @@ export class FieldTransformer {
 
             foundType = customSchemaToUIMap.get(schemaName);
 
-            if (!foundType) {
-                foundType = schemaTypeToUIMap.get(field.schema.type);
-            }
-
             if (!foundType && field.schema.type === 'option') {
                 foundType = schemaOptionToUIMap.get(schemaName);
+            }
+
+            if (!foundType) {
+                foundType = schemaTypeToUIMap.get(field.schema.type);
             }
 
         } else if (!foundType && isField(field)) {

@@ -98,6 +98,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             let msg = this._editUIData;
 
             msg.type = 'update';
+            // TODO: 
             this.postMessage(msg);
 
             //const relatedPrs = await this.recentPullRequests();

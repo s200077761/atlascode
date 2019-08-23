@@ -9,13 +9,14 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
-import { FieldUI, UIType } from '../../../jira/jira-client/model/fieldUI';
+import { FieldUI, UIType, InputFieldUI } from '../../../jira/jira-client/model/fieldUI';
 import { EditIssueAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import LinkedIssues from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
 import { Transition } from '../../../jira/jira-client/model/entities';
+import Panel from '@atlaskit/panel';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -26,14 +27,18 @@ type SizeMetrics = {
 };
 
 interface ViewState extends CommonEditorViewState, EditIssueData {
+    showMore: boolean;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyEditIssueData,
+    showMore: false,
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
+    private advancedSidebarFields: FieldUI[] = [];
+    private advancedMainFields: FieldUI[] = [];
 
     constructor(props: any) {
         super(props);
@@ -51,6 +56,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             switch (e.type) {
                 case 'update': {
                     const issueData = e as EditIssueData;
+                    this.updateInternals(issueData);
                     this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
                     break;
                 }
@@ -68,6 +74,22 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             }
         }
         return handled;
+    }
+
+    updateInternals(data: EditIssueData) {
+        const orderedValues: FieldUI[] = this.sortFieldValues(data.fields);
+        this.advancedMainFields = [];
+        this.advancedSidebarFields = [];
+
+        orderedValues.forEach(field => {
+            if (field.advanced) {
+                if (field.uiType === UIType.Input && (field as InputFieldUI).isMultiline) {
+                    this.advancedMainFields.push(field);
+                } else {
+                    this.advancedSidebarFields.push(field);
+                }
+            }
+        });
     }
 
     handleCopyIssueLink = () => {
@@ -232,6 +254,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
                     </div>
                 }
+                {
+                    this.advancedMain()
+                }
                 {this.state.fields['comment'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['comment'].name}</label>
@@ -292,10 +317,27 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     advancedSidebar(): any {
-        const orderedValues: FieldUI[] = this.sortFieldValues(this.state.fields);
         let markups: any[] = [];
 
-        orderedValues.forEach(field => {
+        this.advancedSidebarFields.forEach(field => {
+            if (field.advanced) {
+                markups.push(
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        {this.getInputMarkup(field, true)}
+                    </div>
+                );
+            }
+
+        });
+
+        return markups;
+    }
+
+    advancedMain(): any {
+        let markups: any[] = [];
+
+        this.advancedMainFields.forEach(field => {
             if (field.advanced) {
                 markups.push(
                     <div className='ac-vpadding'>
@@ -324,7 +366,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <div>
                                     {this.getMainPanelMarkup()}
                                     {this.commonSidebar()}
-                                    {this.advancedSidebar()}
+                                    <Panel isDefaultExpanded={false} header={<label className='ac-field-label'>show more</label>}>
+                                        {this.advancedSidebar()}
+                                    </Panel>
+                                    <div className='ac-issue-created-updated'>
+                                        {this.state.fieldValues['created'] &&
+                                            <div>Created {this.state.fieldValues['created']}</div>
+                                        }
+                                        {this.state.fieldValues['updated'] &&
+                                            <div>Updated {this.state.fieldValues['updated']}</div>
+                                        }
+                                    </div>
                                 </div>
                             );
                         }
@@ -336,7 +388,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     </GridColumn>
                                     <GridColumn medium={4}>
                                         {this.commonSidebar()}
-                                        {this.advancedSidebar()}
+                                        <Panel isDefaultExpanded={false} header={<label className='ac-field-label'>show more</label>}>
+                                            {this.advancedSidebar()}
+                                        </Panel>
+                                        <div className='ac-issue-created-updated'>
+                                            {this.state.fieldValues['created'] &&
+                                                <div>Created {this.state.fieldValues['created']}</div>
+                                            }
+                                            {this.state.fieldValues['updated'] &&
+                                                <div>Updated {this.state.fieldValues['updated']}</div>
+                                            }
+                                        </div>
                                     </GridColumn>
                                 </Grid>
                             </div>

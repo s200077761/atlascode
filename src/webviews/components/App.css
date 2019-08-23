@@ -128,6 +128,10 @@ pre {
   align-items: center;
 }
 
+.ac-issue-created-updated {
+  color: var(--vscode-editorCodeLens-foreground);
+}
+
 /*-------------------- END - general containers --------------------*/
 
 /*----------------- BEGIN - inline edit containers -----------------*/
@@ -531,7 +535,7 @@ section button span {
   border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator,.ac-select__input,.ac-select__menu,.ac-select__menu-list {
+.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list {
   background: var(--vscode-dropdown-background)!important;
   color: var(--vscode-input-foreground)!important;
 }
