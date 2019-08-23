@@ -9,14 +9,17 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
-import { FieldUI, UIType, InputFieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { EditIssueAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import LinkedIssues from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
 import { Transition } from '../../../jira/jira-client/model/entities';
-import Panel from '@atlaskit/panel';
+
+// NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
+// which totally screws up react-select when select boxes are in an initially hidden panel.
+import Collapsible from 'react-collapsible';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -135,9 +138,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 , issueLinkType: newValue.type
             });
         } else {
+            let typedVal = newValue;
+
+            if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                typedVal = parseFloat(newValue);
+            }
             //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
-            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValue } } }, () => {
-                this.handleEditIssue(field.key, newValue);
+            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
+                this.handleEditIssue(field.key, typedVal);
             });
         }
     }
@@ -366,9 +374,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <div>
                                     {this.getMainPanelMarkup()}
                                     {this.commonSidebar()}
-                                    <Panel isDefaultExpanded={false} header={<label className='ac-field-label'>show more</label>}>
+                                    <Collapsible
+                                        trigger='show more'
+                                        triggerWhenOpen='show less'
+                                        triggerClassName='ac-collapsible-trigger'
+                                        triggerOpenedClassName='ac-collapsible-trigger'
+                                        triggerTagName='label'
+                                        easing='ease-out'
+                                        transitionTime={150}
+                                    >
                                         {this.advancedSidebar()}
-                                    </Panel>
+                                    </Collapsible>
                                     <div className='ac-issue-created-updated'>
                                         {this.state.fieldValues['created'] &&
                                             <div>Created {this.state.fieldValues['created']}</div>
@@ -388,9 +404,17 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     </GridColumn>
                                     <GridColumn medium={4}>
                                         {this.commonSidebar()}
-                                        <Panel isDefaultExpanded={false} header={<label className='ac-field-label'>show more</label>}>
+                                        <Collapsible
+                                            trigger='show more'
+                                            triggerWhenOpen='show less'
+                                            triggerClassName='ac-collapsible-trigger'
+                                            triggerOpenedClassName='ac-collapsible-trigger'
+                                            triggerTagName='label'
+                                            easing='ease-out'
+                                            transitionTime={150}
+                                        >
                                             {this.advancedSidebar()}
-                                        </Panel>
+                                        </Collapsible>
                                         <div className='ac-issue-created-updated'>
                                             {this.state.fieldValues['created'] &&
                                                 <div>Created {this.state.fieldValues['created']}</div>

@@ -773,9 +773,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         switch (valType) {
             case ValueType.Number: {
                 if (editmode) {
-                    valfunc = (field.required) ? FieldValidators.validateRequiredNumber : FieldValidators.validateNumber;
-                } else {
                     valfunc = (field.required) ? FieldValidators.isValidRequiredNumber : FieldValidators.isValidNumber;
+                } else {
+                    valfunc = (field.required) ? FieldValidators.validateRequiredNumber : FieldValidators.validateNumber;
                 }
                 break;
             }

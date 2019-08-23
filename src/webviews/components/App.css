@@ -1000,3 +1000,28 @@ img::after is triggered only if img loading fails */
 .react-tabs__tab-panel--selected {
   display: block;
 }
+
+.ac-collapsible-trigger {
+  color: var(--vscode-textLink-foreground);
+  display: block;
+  margin: 5px;
+  cursor: pointer;
+}
+
+/* .ac-collapsible-trigger::after {
+  font-family: 'FontAwesome';
+  content: '\f107';
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: block;
+  transition: transform 300ms;
+}
+
+.ac-collapsible-trigger.is-open::after {
+  transform: rotateZ(180deg);
+} */
+
+.ac-collapsible-trigger:hover {
+  color: var(--vscode-textLink-activeForeground);
+}

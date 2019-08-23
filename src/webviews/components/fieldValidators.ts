@@ -23,7 +23,15 @@ export namespace FieldValidators {
         let err = undefined;
 
         if (value !== undefined && value.length > 0) {
-            err = (isNaN(value)) ? 'NOT_NUMBER' : undefined;
+            let numVal: number = NaN;
+
+            if (typeof value === 'number') {
+                numVal = value;
+            } else {
+                numVal = parseFloat(value);
+            }
+
+            err = (isNaN(numVal)) ? 'NOT_NUMBER' : undefined;
         }
 
 
@@ -57,7 +65,7 @@ export namespace FieldValidators {
         let err = validateString(value, state);
 
         if (err === undefined) {
-            err = (isNaN(value)) ? 'NOT_NUMBER' : undefined;
+            err = validateNumber(value);
         }
 
         return err;
