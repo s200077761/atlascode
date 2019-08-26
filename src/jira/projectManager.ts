@@ -4,6 +4,7 @@ import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } f
 import { ProductJira } from "../atlclients/authInfo";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { Project } from "./jira-client/model/entities";
+import { Logger } from "../logger";
 
 
 export type JiraAvailableProjectsUpdateEvent = {

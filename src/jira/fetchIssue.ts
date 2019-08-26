@@ -69,7 +69,7 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   const allFieldKeys: string[] = Object.keys(allFields);
 
-  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
   const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
   const metaFields: MetaFields = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
 

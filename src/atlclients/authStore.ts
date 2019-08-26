@@ -121,33 +121,17 @@ export class CredentialManager implements Disposable {
             foundInfo = productAuths.get(credentialId);
 
             Logger.debug('mem found info', foundInfo);
->>>>>>> VSCODE-593 Authenticating with arbitrary site
         }
 
         if (!foundInfo && keychain) {
             try {
-<<<<<<< HEAD
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
-                if (infoEntry) {
-                    let infos: HostToAuthInfo = JSON.parse(infoEntry);
-
-                    let info = infos[site.hostname];
-
-                    if (info && productAuths) {
-                        this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
-=======
-                Logger.debug('getting info from keychain');
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
                 if (infoEntry) {
-                    Logger.debug(`found info entry for ${productKey}`);
                     let infoForProduct: CredentialIdToAuthInfo = JSON.parse(infoEntry);
 
-                    Logger.debug(`infos`, infoForProduct);
                     let info = infoForProduct[credentialId];
 
-                    Logger.debug(`info for user ${credentialId}`, info);
                     if (info && productAuths) {
-                        Logger.debug(`setting info in memstore`);
                         this._memStore.set(productKey, productAuths.set(credentialId, info));
 
                         foundInfo = info;
@@ -243,187 +227,4 @@ export class CredentialManager implements Disposable {
         }
         return undefined;
     }
-<<<<<<< HEAD
-
-    public async removeV1AuthInfo(provider: string) {
-        this._memStore.delete(provider);
-
-        if (keychain) {
-            await keychain.deletePassword(keychainServiceNameV1, provider);
-        }
-    }
-
-    public async convertLegacyAuthInfo(defaultSite?: AccessibleResourceV1) {
-        let jiraInfo: HostToAuthInfo | undefined = undefined;
-        let bbInfo: HostToAuthInfo | undefined = undefined;
-
-        const _refresher = new OAuthRefesher();
-        let jiraSites: DetailedSiteInfo[] = [];
-        let bbSites: DetailedSiteInfo[] = [];
-        if (keychain) {
-            for (const provider of Object.values(OAuthProvider)) {
-                try {
-                    let infoEntry = await this.getJsonAuthInfoFromKeychain({ key: provider, name: 'legacy' }, keychainServiceNameV1) || undefined;
-                    if (infoEntry) {
-                        let info: AuthInfoV1 = JSON.parse(infoEntry);
-
-                        if (provider.startsWith('jira')) {
-                            const newAccess = await _refresher.getNewAccessToken(provider, info.refresh);
-                            if (!newAccess) {
-                                continue;
-                            }
-                            if (info.accessibleResources) {
-                                for (const resource of info.accessibleResources) {
-                                    if (jiraInfo === undefined) {
-                                        jiraInfo = {};
-                                    }
-
-                                    let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-
-                                    // TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
-                                    //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${resource.id}/rest/2`, newAccess);
-
-                                    const baseUrlString = provider === OAuthProvider.JiraCloudStaging ? `https://${resource.name}.jira-dev.com` : `https://${resource.name}.atlassian.net`;
-
-                                    const baseUrl: URL = new URL(baseUrlString);
-
-                                    const newInfo: OAuthInfo = {
-                                        access: newAccess,
-                                        refresh: info.refresh,
-                                        provider: info.user.provider,
-                                        user: {
-                                            displayName: info.user.displayName,
-                                            id: info.user.id
-                                        }
-                                    };
-                                    jiraInfo[baseUrl.hostname] = newInfo;
-
-
-                                    let newSite: DetailedSiteInfo = {
-                                        avatarUrl: resource.avatarUrl,
-                                        baseApiUrl: `https://${apiUri}/ex/jira/${resource.id}/rest`,
-                                        baseLinkUrl: baseUrlString,
-                                        hostname: baseUrl.hostname,
-                                        id: resource.id,
-                                        name: resource.name,
-                                        product: ProductJira,
-                                        isCloud: true,
-                                    };
-
-                                    jiraSites.push(newSite);
-
-
-                                    if (defaultSite && defaultSite.id === resource.id) {
-                                        const oldProject = Container.config.jira.workingProject;
-                                        await configuration.setDefaultSite(newSite);
-                                        await configuration.setWorkingProject(oldProject);
-
-                                        if (!this.isDebugging) {
-                                            configuration.setWorkingSite(undefined);
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            if (bbInfo === undefined) {
-                                bbInfo = {};
-                            }
-
-                            const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-                            const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
-                            const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
-                            const newInfo: OAuthInfo = {
-                                access: info.access,
-                                refresh: info.refresh,
-                                provider: provider,
-                                user: {
-                                    displayName: info.user.displayName,
-                                    id: info.user.id
-                                }
-                            };
-
-                            bbInfo[hostname] = newInfo;
-
-                            // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
-                            bbSites.push({
-                                avatarUrl: "",
-                                baseApiUrl: baseApiUrl,
-                                baseLinkUrl: `https://${hostname}`,
-                                hostname: hostname,
-                                id: provider,
-                                name: siteName,
-                                product: ProductBitbucket,
-                                isCloud: true,
-                            });
-                        }
-                    }
-
-                    if (!this.isDebugging) {
-                        await this.removeV1AuthInfo(provider);
-                    }
-                } catch (e) {
-                    Logger.error(e, 'error converting legacy auth info!');
-                }
-            }
-        }
-
-        if (jiraSites.length > 0) {
-            this._globalStore.update(`${ProductJira.key}Sites`, jiraSites);
-        }
-
-        if (bbSites.length > 0) {
-            this._globalStore.update(`${ProductBitbucket.key}Sites`, bbSites);
-        }
-
-        if (jiraInfo !== undefined) {
-            this._memStore.set(ProductJira.key, new Map(Object.entries(jiraInfo)));
-
-            if (keychain) {
-                try {
-                    if (this.isDebugging()) {
-                        const infoEntry = await this.getJsonAuthInfoFromKeychain(ProductJira);
-                        if (infoEntry) {
-                            let infos: HostToAuthInfo = JSON.parse(infoEntry);
-                            jiraInfo = { ...jiraInfo, ...infos };
-                        }
-                    }
-
-                    await keychain.setPassword(keychainServiceNameV2, ProductJira.key, JSON.stringify(jiraInfo));
-                }
-                catch (e) {
-                    Logger.debug("error saving jira auth info to keychain: ", e);
-                }
-            }
-        }
-
-        if (bbInfo !== undefined) {
-            this._memStore.set(ProductBitbucket.key, new Map(Object.entries(bbInfo)));
-            if (keychain) {
-                try {
-                    const infoEntry = await this.getJsonAuthInfoFromKeychain(ProductBitbucket);
-                    if (infoEntry) {
-                        let infos: HostToAuthInfo = JSON.parse(infoEntry);
-                        bbInfo = { ...bbInfo, ...infos };
-                    }
-
-                    await keychain.setPassword(keychainServiceNameV2, ProductBitbucket.key, JSON.stringify(bbInfo));
-                }
-                catch (e) {
-                    Logger.debug("error saving bitbucket auth info to keychain: ", e);
-                }
-            }
-        }
-    }
-
-    private isDebugging(): boolean {
-        let isDebugging = false;
-        try {
-            const args = process.execArgv;
-            isDebugging = args ? args.some(arg => /^--(debug|inspect)\b(-brk\b|(?!-))=?/.test(arg)) : false;
-        }
-        catch { }
-        return isDebugging;
-    }
-=======
->>>>>>> VSCODE-593 Authenticating with arbitrary site
 }

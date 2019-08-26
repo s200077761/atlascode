@@ -35,7 +35,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSiteOrKey,
 
 async function performTranstion(issueKey: string, transition: Transition, site: DetailedSiteInfo) {
     try {
-        const client = await Container.clientManager.jirarequest(site);
+        const client = await Container.clientManager.jiraClient(site);
         await client.transitionIssue(issueKey, transition.id);
 
         vscode.commands.executeCommand(Commands.RefreshJiraExplorer)

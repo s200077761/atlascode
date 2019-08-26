@@ -284,7 +284,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                 //     if (isCreateSelectOption(e)) {
                 //         try {
 
-                //             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                //             let client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
                 //             if (client) {
                 //                 switch (e.createData.fieldKey) {
                 //                     case 'fixVersions':
