@@ -204,19 +204,19 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async deleteComment(pr: PullRequest, commentId?: number){
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+    async deleteComment(remote: Remote, prId: number, commentId?: number): Promise<void>{
+        let parsed = parseGitUrl(urlForRemote(remote));
         if(commentId){
             /*
             The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
             In order to get the comment's version, a call must be made to the Bitbucket Server API.
             */
             let { data } = await this.client.get(
-                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/comments/${commentId}`
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
             );
 
             await this.client.delete(
-                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/comments/${commentId}`,
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
                 {},
                 {version: data.version}
             );
@@ -383,6 +383,10 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
+        return this.convertDataToComment(data, remote);
+    }
+
+    private convertDataToComment(data: any, remote: Remote): Comment {
         return {
             id: data.id,
             parentId: data.parentId,

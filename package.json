@@ -67,6 +67,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.deleteComment",
+                "title": "Delete",
+                "icon": {
+                    "dark": "resources/light/delete.svg",
+                    "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh",
                 "icon": {
@@ -359,6 +368,12 @@
                     "group": "inline"
                 }
             ],
+            "comments/comment/title": [
+                {
+                    "command": "atlascode.bb.deleteComment",
+                    "when": "true"
+                }
+            ],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
@@ -390,6 +405,10 @@
                 },
                 {
                     "command": "atlascode.bb.addComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.deleteComment",
                     "when": "false"
                 },
                 {

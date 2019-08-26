@@ -175,7 +175,7 @@ export interface PullRequestApi {
     getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
-    deleteComment(pr: PullRequest, commentId?: number): Promise<void>;
+    deleteComment(remote: Remote, prId: number, commentId?: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;

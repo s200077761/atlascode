@@ -169,11 +169,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async deleteComment(pr: PullRequest, commentId?: number): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+    async deleteComment(remote: Remote, prId: number, commentId?: number): Promise<void> {
+        let parsed = parseGitUrl(urlForRemote(remote));
         if(commentId){
             await this.client.delete(
-                `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/comments/${commentId}`,
+                `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
                 {}
             );
         }
@@ -390,6 +390,10 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
+        return this.convertDataToComment(data);
+    }
+
+    private convertDataToComment(data: any): Comment {
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,

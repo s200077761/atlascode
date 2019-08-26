@@ -367,7 +367,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async deleteComment(commentId?: number) {
         const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.deleteComment(this._pr!, commentId);
+        await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
         this.updatePullRequest();
     }
 

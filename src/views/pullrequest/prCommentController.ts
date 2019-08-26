@@ -24,6 +24,9 @@ export class PullRequestCommentController implements vscode.Disposable {
             vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
                 this.addComment(reply);
             }),
+            vscode.commands.registerCommand(Commands.BitbucketDeleteComment, (arg: any) => {
+                this.deleteComment(arg);
+            }),
             vscode.commands.registerCommand(Commands.BitbucketToggleCommentsVisibility, (input: vscode.Uri) => {
                 this.toggleCommentsVisibility(input);
             })
@@ -75,6 +78,16 @@ export class PullRequestCommentController implements vscode.Disposable {
         reply.thread.dispose();
     }
 
+    async deleteComment(reply: vscode.CommentReply) {
+        const { remote, prId } = JSON.parse(reply.thread.uri.query) as FileDiffQueryParams;
+
+        const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
+        const bbApi = await clientForRemote(remote);
+        await bbApi.pullrequests.deleteComment(remote, prId, commentThreadId);
+
+        this.provideComments(reply.thread.uri);
+    }
+
     provideComments(uri: vscode.Uri) {
         const { commentThreads } = JSON.parse(uri.query) as FileDiffQueryParams;
 
@@ -120,6 +133,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 name: comment.user.displayName || 'Unknown user',
                 iconPath: vscode.Uri.parse(comment.user.avatarUrl)
             },
+            contextValue: "atlascode.bb.deleteComment",
             mode: vscode.CommentMode.Editing
         };
     }
