@@ -8,6 +8,7 @@ import { ProductJira, AuthInfoEvent } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
+import { MinimalORIssueLink } from "../../jira/jira-client/model/entities";
 
 export class JiraContext extends Disposable {
 
@@ -93,5 +94,17 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }
+    }
+
+    async findIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
+        let issue: MinimalORIssueLink | undefined = undefined;
+        for (let explorer of this._explorers) {
+            issue = await explorer.findIssue(issueKey);
+            if (issue !== undefined) {
+                break;
+            }
+        }
+
+        return issue;
     }
 }

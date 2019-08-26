@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { StartWorkOnIssueResult } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
@@ -14,8 +13,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
 
-type Emit = StartWorkOnBitbucketIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
+export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
     private _state: BitbucketIssue;
 
     constructor(extensionPath: string) {

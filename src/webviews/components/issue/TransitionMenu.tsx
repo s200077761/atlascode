@@ -1,14 +1,14 @@
 import * as React from "react";
 import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
-import { MinimalIssue, Transition } from "../../../jira/jira-client/model/entities";
+import { Transition, Status } from "../../../jira/jira-client/model/entities";
 
 const colorToLozengeAppearanceMap = {
   neutral: 'default',
   purple: 'new',
   blue: 'inprogress',
   red: 'removed',
-  yellow: 'moved',
+  yellow: 'inprogress',
   green: 'success',
 };
 
@@ -31,34 +31,36 @@ const StatusValue = (props: any) => (
 
 );
 
-export class TransitionMenu extends React.Component<{
-  issue: MinimalIssue;
+type Props = {
+  transitions: Transition[];
+  currentStatus: Status;
   isStatusButtonLoading: boolean;
-  onHandleStatusChange: (item: Transition) => void;
-}, {
-  selectedTransition: Transition | undefined
-}> {
+  onStatusChange: (item: Transition) => void;
+};
+
+type State = {
+  selectedTransition: Transition | undefined;
+};
+
+export class TransitionMenu extends React.Component<Props, State> {
 
   constructor(props: any) {
     super(props);
-    const issue: MinimalIssue = props.issue;
-    const selectedTransition = issue.transitions.find(transition => transition.to.id === issue.status.id);
+    const selectedTransition = props.transitions.find((transition: Transition) => transition.to.id === props.currentStatus.id);
     this.state = { selectedTransition: selectedTransition };
   }
 
   componentWillReceiveProps(nextProps: any) {
-    const issue: MinimalIssue = nextProps.issue;
-    const selectedTransition = issue.transitions.find(transition => transition.to.id === issue.status.id);
+    const selectedTransition = nextProps.transitions.find((transition: Transition) => transition.to.id === nextProps.currentStatus.id);
     this.setState({ selectedTransition: selectedTransition });
   }
 
   handleStatusChange = (item: Transition) => {
-    this.props.onHandleStatusChange(item);
+    this.props.onStatusChange(item);
   }
 
   render() {
-    const issue = this.props.issue;
-    if (!issue) {
+    if (!Array.isArray(this.props.transitions) || this.props.transitions.length < 1) {
       return <div />;
     }
 
@@ -68,7 +70,7 @@ export class TransitionMenu extends React.Component<{
         id="status"
         className="ac-select-container"
         classNamePrefix="ac-select"
-        options={issue.transitions}
+        options={this.props.transitions}
         value={this.state.selectedTransition}
         components={{ Option: StatusOption, SingleValue: StatusValue }}
         getOptionLabel={(option: any) => option.to.name}

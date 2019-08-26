@@ -1,25 +1,24 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
-import { Commands } from '../commands';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
-import { minimalIssueOrKey, MinimalIssue } from '../jira/jira-client/model/entities';
+import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
+import { showIssue } from '../commands/jira/showIssue';
+import { transitionIssue } from '../jira/transitionIssue';
 
-type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<minimalIssueOrKey> {
+export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 
@@ -74,13 +73,13 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueKey);
+                        showIssue(e.issueOrKey);
                         break;
                     }
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
+                    const linkUrl = `${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     issueUrlCopiedEvent(this._state.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });

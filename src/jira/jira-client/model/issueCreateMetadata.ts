@@ -18,7 +18,7 @@ export interface ProjectIssueCreateMetadata {
     readonly key: string;
     readonly name: string;
     readonly avatarUrls: { [k: string]: string };
-    readonly issueTypes: IssueTypeIssueCreateMetadata[];
+    readonly issuetypes: IssueTypeIssueCreateMetadata[];
 }
 
 function readProjectIssueCreateMetadata(params: any): ProjectIssueCreateMetadata {
@@ -27,7 +27,7 @@ function readProjectIssueCreateMetadata(params: any): ProjectIssueCreateMetadata
         key: params.key,
         name: params.name,
         avatarUrls: params.avatarUrls ? params.avatarUrls : {},
-        issueTypes: params.issuetypes ? params.issuetypes.map((t: any) => readIssueTypeIssueCreateMetadata(t)) : []
+        issuetypes: params.issuetypes ? params.issuetypes.map((t: any) => readIssueTypeIssueCreateMetadata(t)) : []
     };
 }
 

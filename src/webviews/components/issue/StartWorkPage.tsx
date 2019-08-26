@@ -88,7 +88,7 @@ export default class StartWorkPage extends WebviewComponent<
     };
   }
 
-  public onMessageReceived(e: any) {
+  public onMessageReceived(e: any): boolean {
     switch (e.type) {
       case 'error': {
         this.setState({ isStartButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -149,9 +149,11 @@ export default class StartWorkPage extends WebviewComponent<
 
     }
 
+    return true;
+
   }
 
-  onHandleStatusChange = (item: Transition) => {
+  handleStatusChange = (item: Transition) => {
     if (isStartWorkOnIssueData(this.state.data)) {
       this.setState({
         // there must be a better way to update the transition dropdown!!
@@ -278,9 +280,9 @@ export default class StartWorkPage extends WebviewComponent<
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
               {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.parentKey! })} />} />
+                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue.parentKey! })} />} />
               }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.key })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} iconUrl={issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} onCopy={() => this.postMessage({ action: 'copyJiraIssueLink' })} />} />
             </BreadcrumbsStateless>
           }
         >
@@ -351,7 +353,7 @@ export default class StartWorkPage extends WebviewComponent<
                 <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                   <div style={{ margin: 10 }}>
                     <label>Select new status</label>
-                    <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.onHandleStatusChange} />
+                    <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
                   </div>
                 </div>
               }

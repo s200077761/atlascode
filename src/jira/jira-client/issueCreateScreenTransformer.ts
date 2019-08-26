@@ -1,5 +1,5 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { ProjectIssueCreateMetadata, IssueTypeIssueCreateMetadata } from "./model/issueCreateMetadata";
+import { IssueTypeIssueCreateMetadata, ProjectIssueCreateMetadata } from "./model/issueCreateMetadata";
 import { CreateMetaTransformerProblems, CreateMetaTransformerResult, IssueTypeProblem, IssueTypeUI } from "./model/createIssueUI";
 import { FieldTransformerResult } from "./model/fieldUI";
 import { Container } from "../../container";
@@ -15,7 +15,7 @@ const defaultCommonFields: string[] = [
     , 'labels'
 ];
 
-const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter'];
+const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter', 'statuscategorychangedate', 'lastViewed'];
 
 export class IssueCreateScreenTransformer {
 
@@ -29,27 +29,27 @@ export class IssueCreateScreenTransformer {
 
     public async transformIssueScreens(project: ProjectIssueCreateMetadata): Promise<CreateMetaTransformerResult> {
         const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(this._site);
-        const commonFields = [...defaultCommonFields, epicFieldInfo.epicName.id];
+        const commonFields = [epicFieldInfo.epicName.id, ...defaultCommonFields];
 
         const issueTypeUIList = {};
         let firstIssueType: IssueType | undefined;
         let problems: CreateMetaTransformerProblems = {};
         const renderableIssueTypes: IssueTypeIssueCreateMetadata[] = [];
 
-        if (Array.isArray(project.issueTypes) && project.issueTypes.length > 0) {
-            firstIssueType = this.metaIssueTypeToIssueType(project.issueTypes[0]);
+        if (Array.isArray(project.issuetypes) && project.issuetypes.length > 0) {
+            firstIssueType = this.metaIssueTypeToIssueType(project.issuetypes[0]);
 
-            for (let i = 0; i < project.issueTypes.length; i++) {
-                const issueType: IssueTypeIssueCreateMetadata = project.issueTypes[i];
+            for (let i = 0; i < project.issuetypes.length; i++) {
+                const issueType: IssueTypeIssueCreateMetadata = project.issuetypes[i];
 
                 const issueTypeUI: IssueTypeUI = {
                     name: issueType.name,
                     id: issueType.id,
                     iconUrl: (issueType.iconUrl !== undefined) ? issueType.iconUrl : '',
-                    fields: []
+                    fields: {}
                 };
 
-                if (issueType.fields && Object.keys.length > 0) {
+                if (issueType.fields && Object.keys(issueType.fields).length > 0) {
                     let issueTypeFieldFilters = [...defaultFieldFilters];
 
                     // if it's an Epic type, we need to filter out the epic link field (epics can't belong to other epics)
@@ -57,18 +57,18 @@ export class IssueCreateScreenTransformer {
                         issueTypeFieldFilters.push(epicFieldInfo.epicLink.id);
                     }
 
-                    const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(issueType.fields, project.key, issueTypeFieldFilters, commonFields);
+                    const fieldResult: FieldTransformerResult = await this._fieldTransformer.transformFields(issueType.fields, { id: project.id, key: project.key }, commonFields, true, issueTypeFieldFilters);
 
                     if (fieldResult.nonRenderableFields.length > 0) {
                         this.addIssueTypeProblem({
                             issueType: this.metaIssueTypeToIssueType(issueType),
-                            isRenderable: !fieldResult.hasRequireNonRenderables,
+                            isRenderable: !fieldResult.hasRequiredNonRenderables,
                             nonRenderableFields: fieldResult.nonRenderableFields,
                             message: "Issue Type contains non-renderable fields"
                         }, problems);
                     }
 
-                    if (!fieldResult.hasRequireNonRenderables) {
+                    if (!fieldResult.hasRequiredNonRenderables) {
                         issueTypeUI.fields = fieldResult.fields;
                         renderableIssueTypes.push(issueType);
                         issueTypeUIList[issueType.id] = issueTypeUI;

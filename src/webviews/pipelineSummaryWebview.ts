@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
 import { Pipeline, PipelineStep } from "../pipelines/model";
 import { PipelineInfo } from "../views/pipelines/PipelinesTree";
@@ -9,9 +9,7 @@ import { Logger } from "../logger";
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
 import { clientForRemote } from '../bitbucket/bbUtils';
 
-type Emit = PipelineData | StepMessageData | HostErrorMessage;
-
-export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PipelineInfo> {
+export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
     constructor(extensionPath: string) {
         super(extensionPath);

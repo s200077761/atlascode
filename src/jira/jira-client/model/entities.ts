@@ -1,21 +1,21 @@
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 
-export type minimalIssueOrKey = MinimalIssue | string;
+export type MinimalIssueOrKeyAndSiteOrKey = MinimalIssue | IssueKeyAndSite | string;
 
 export interface MinimalIssue {
     key: string;
     id: string;
     self: string;
-    created: Date;
+    created?: Date;
     updated: Date;
     description: string;
     descriptionHtml: string;
     summary: string;
     status: Status;
     priority: Priority;
-    issueType: IssueType;
+    issuetype: IssueType;
     parentKey?: string;
-    subtasks: MinimalIssue[];
+    subtasks: IssueLinkIssue[];
     issuelinks: MinimalIssueLink[];
     transitions: Transition[];
     siteDetails: DetailedSiteInfo;
@@ -25,11 +25,64 @@ export interface MinimalIssue {
     epicLink: string;
 }
 
+export type IssueKeyAndSite = Pick<MinimalIssue, 'siteDetails' | 'key'>;
+export type IssueLinkIssue = Pick<MinimalIssue, 'siteDetails' | 'id' | 'self' | 'key' | 'created' | 'summary' | 'status' | 'priority' | 'issuetype'>;
+export const IssueLinkIssueKeys: string[] = ['id', 'self', 'key', 'created', 'summary', 'status', 'priority', 'issuetype'];
+export type MinimalORIssueLink = MinimalIssue | IssueLinkIssue;
+
+export function readIssueLinkIssues(values: any[], siteDetails: DetailedSiteInfo): IssueLinkIssue[] {
+    return values.map(val => {
+        return readIssueLinkIssue(val, siteDetails);
+    });
+}
+
+export function readIssueLinkIssue(value: any, siteDetails: DetailedSiteInfo): IssueLinkIssue {
+
+    if (isMinimalIssue(value)) {
+        return {
+            id: value.id,
+            key: value.key,
+            self: value.self,
+            summary: value.summary,
+            status: value.status,
+            priority: value.priority,
+            issuetype: value.issuetype,
+            siteDetails: siteDetails
+        };
+    }
+
+    return {
+        id: value.id,
+        key: value.key,
+        self: value.self,
+        summary: value.fields['summary'],
+        status: value.fields['status'],
+        priority: value.fields['priority'],
+        issuetype: value.fields['issuetype'],
+        siteDetails: siteDetails
+    };
+}
+
 export interface MinimalIssueLink {
     id: string;
     type: IssueLinkType;
-    inwardIssue?: MinimalIssue;
-    outwardIssue?: MinimalIssue;
+    inwardIssue?: IssueLinkIssue;
+    outwardIssue?: IssueLinkIssue;
+}
+
+export function readMinimalIssueLinks(values: any[], siteDetails: DetailedSiteInfo): MinimalIssueLink[] {
+    return values.map(val => {
+        return readMinimalIssueLink(val, siteDetails);
+    });
+}
+
+export function readMinimalIssueLink(value: any, siteDetails: DetailedSiteInfo): MinimalIssueLink {
+    return {
+        id: value.id,
+        type: value.type,
+        inwardIssue: (value.inwardIssue) ? readIssueLinkIssue(value.inwardIssue, siteDetails) : undefined,
+        outwardIssue: (value.outwardIssue) ? readIssueLinkIssue(value.outwardIssue, siteDetails) : undefined,
+    };
 }
 
 export interface Component {
@@ -112,6 +165,7 @@ export interface IssueLinkType {
 export interface Comment {
     author: User;
     body: string;
+    renderedBody?: string;
     created: string;
     id: string;
     self: string;
@@ -171,7 +225,17 @@ export function readProject(projectJson: any): Project {
 
 export function isMinimalIssue(a: any): a is MinimalIssue {
     return a && (<MinimalIssue>a).key !== undefined
-        && (<MinimalIssue>a).summary !== undefined;
+        && (<MinimalIssue>a).transitions !== undefined
+        && (<MinimalIssue>a).id !== undefined
+        && (<MinimalIssue>a).summary !== undefined
+        && (<MinimalIssue>a).status !== undefined
+        && (<MinimalIssue>a).issuetype !== undefined;
+
+}
+
+export function isIssueKeyAndSite(a: any): a is IssueKeyAndSite {
+    return a && (<IssueKeyAndSite>a).key !== undefined
+        && (<IssueKeyAndSite>a).siteDetails !== undefined;
 }
 
 export function isIssueType(a: any): a is IssueType {

@@ -1,15 +1,11 @@
 import { AbstractReactWebview } from "./abstractWebview";
-import { Action, HostErrorMessage } from "../ipc/messaging";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { WorkingProject } from "../config/model";
 import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
-import { IssueProblemsData } from "../ipc/issueMessaging";
 import { fetchCreateIssueUI } from "../jira/fetchIssue";
 
-type Emit = HostErrorMessage | IssueProblemsData;
-
-export class CreateIssueProblemsWebview extends AbstractReactWebview<Emit, Action> {
+export class CreateIssueProblemsWebview extends AbstractReactWebview {
     private _site: DetailedSiteInfo | undefined;
     private _project: WorkingProject | undefined;
 

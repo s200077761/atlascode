@@ -7,6 +7,7 @@ import { configuration } from "../config/configuration";
 import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { IssueLinkType } from "./jira-client/model/entities";
+import { readField, Fields } from "./jira-client/model/fieldMetadata";
 
 
 export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
@@ -15,6 +16,7 @@ export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "sta
 export class JiraSettingsManager extends Disposable {
     private _disposable: Disposable;
     private _epicStore: Map<string, EpicFieldInfo> = new Map<string, EpicFieldInfo>();
+    private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
 
     constructor() {
@@ -85,50 +87,69 @@ export class JiraSettingsManager extends Disposable {
 
     public async getEpicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
         if (!this._epicStore.has(site.id)) {
-            let fields = await this.epicFieldsForSite(site);
+            let fields = await this.fetchEpicFieldsForSite(site);
             this._epicStore.set(site.id, fields);
         }
 
         return this._epicStore.get(site.id)!;
     }
 
-    private async epicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
-        const client = await Container.clientManager.jirarequest(site);
+    private async fetchEpicFieldsForSite(site: DetailedSiteInfo): Promise<EpicFieldInfo> {
+        let allFields: Fields = await this.getAllFieldsForSite(site);
+
         let epicFields = epicsDisabled;
-        try {
-            let allFields = await client.getFields({});
-            if (allFields) {
-                let epicName = undefined;
-                let epicLink = undefined;
 
-                allFields.filter(field => {
-                    if (field.schema && field.schema.custom && (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label'
-                        || field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')) {
-                        return field;
-                    }
-                    return undefined;
-                }).forEach(field => {
-                    // cfid example: customfield_10013
-                    if (field.schema!.custom! === 'com.pyxis.greenhopper.jira:gh-epic-label') {
-                        epicName = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
-                    } else if (field.schema!.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
-                        epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id!.substr(12)) };
-                    }
-                });
+        if (Object.keys(allFields).length > 0) {
+            let epicName = undefined;
+            let epicLink = undefined;
 
-                if (epicName && epicLink) {
-                    epicFields = {
-                        epicName: epicName,
-                        epicLink: epicLink,
-                        epicsEnabled: true
-                    };
+            Object.values(allFields).filter(field => {
+                if (field.schema && field.schema.custom && (field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label'
+                    || field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link')) {
+                    return field;
                 }
+                return undefined;
+            }).forEach(field => {
+                // cfid example: customfield_10013
+                if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-label') {
+                    epicName = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
+                } else if (field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-epic-link') {
+                    epicLink = { name: field.name, id: field.id, cfid: parseInt(field.id.substr(12)) };
+                }
+            });
 
+            if (epicName && epicLink) {
+                epicFields = {
+                    epicName: epicName,
+                    epicLink: epicLink,
+                    epicsEnabled: true
+                };
             }
 
-        } catch (e) {
-            Logger.error(e);
         }
+
         return epicFields;
+    }
+
+    public async getAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
+        if (!this._fieldStore.has(site.id)) {
+            let fields = await this.fetchAllFieldsForSite(site);
+            this._fieldStore.set(site.id, fields);
+        }
+
+        return this._fieldStore.get(site.id)!;
+    }
+
+    private async fetchAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
+        let fields: Fields = {};
+        const client = await Container.clientManager.jirarequest(site);
+        let allFields = await client.getFields({});
+        if (allFields) {
+            allFields.forEach(field => {
+                fields[field.key] = readField(field);
+            });
+        }
+
+        return fields;
     }
 }

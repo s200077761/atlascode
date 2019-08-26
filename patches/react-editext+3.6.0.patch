@@ -1,0 +1,978 @@
+diff --git a/node_modules/react-editext/dist/index.es.js b/node_modules/react-editext/dist/index.es.js
+index 8f4a9d1..2d180bc 100644
+--- a/node_modules/react-editext/dist/index.es.js
++++ b/node_modules/react-editext/dist/index.es.js
+@@ -104,7 +104,7 @@ function _possibleConstructorReturn(self, call) {
+ }
+ 
+ function styleInject(css, ref) {
+-  if ( ref === void 0 ) ref = {};
++  if (ref === void 0) ref = {};
+   var insertAt = ref.insertAt;
+ 
+   if (!css || typeof document === 'undefined') { return; }
+@@ -131,122 +131,122 @@ function styleInject(css, ref) {
+ }
+ 
+ var css = ".styles_Editext__button__6H8n_ {\n  border-radius: 1px;\n  outline: none;\n  padding: 0.6em;\n  min-width: 30px;\n  height: 100%;\n  border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);\n  border-style: solid;\n  border-width: 1px;\n}\n.styles_Editext__button__6H8n_:hover {\n  cursor: pointer;\n  background-color: rgba(241, 241, 241, 1.00)\n}\n.styles_Editext__input__1534X {\n  width: 100%;\n  border: 1px solid rgb(212, 212, 212);\n  padding: 0.6em;\n  outline: none;\n}\n.styles_Editext__main_container__2Y-IL {\n  display: flex;\n  flex-direction: column;\n}\n.styles_Editext__editing_container__3yvUv {\n  display: flex;\n  flex: 1;\n  align-items: center;\n}\n.styles_Editext__view_container__2l2kB {\n  display: flex;\n  align-items: center;\n}\n.styles_Editext__buttons_container__1kphL {\n  display: flex;\n}\n.styles_Editext__buttons_before_aligned__NnoWq {\n  margin-right: 5px;\n}\n.styles_Editext__buttons_after_aligned__1nlcG {\n  margin-left: 5px;\n}\n.styles_Editext__validation_message__3B-OU {\n  font-weight: 500;\n  color: crimson;\n  font-size: .7em;\n  margin-top: 3px;\n}\n.styles_Editext__cancel_button__259hb {\n  color: crimson;\n}\n.styles_Editext__cancel_button__259hb:before {\n  content: '\\2715';\n  margin: 3px;\n}\n.styles_Editext__edit_button__hthOZ {\n  color: #000;\n}\n.styles_Editext__edit_button__hthOZ:before {\n  content: '\\270E';\n  margin: 3px;\n}\n.styles_Editext__save_button__3WN6q {\n  color: darkgreen;\n  margin-right: 3px;\n}\n.styles_Editext__save_button__3WN6q:before {\n  content: '\\2713';\n  margin: 3px;\n}\n.styles_Editext__hide_default_icons__AV_7m:before {\n  content: none;\n  margin: 0;\n}\n.styles_Editext__hint__2QU2S {\n  font-weight: 500;\n  color: lightslategray;\n  font-size: .7em;\n  margin-top: 3px;\n  text-align: left;\n}\n";
+-var styles = {"Editext__button":"styles_Editext__button__6H8n_","Editext__input":"styles_Editext__input__1534X","Editext__main_container":"styles_Editext__main_container__2Y-IL","Editext__editing_container":"styles_Editext__editing_container__3yvUv","Editext__view_container":"styles_Editext__view_container__2l2kB","Editext__buttons_container":"styles_Editext__buttons_container__1kphL","Editext__buttons_before_aligned":"styles_Editext__buttons_before_aligned__NnoWq","Editext__buttons_after_aligned":"styles_Editext__buttons_after_aligned__1nlcG","Editext__validation_message":"styles_Editext__validation_message__3B-OU","Editext__cancel_button":"styles_Editext__cancel_button__259hb","Editext__edit_button":"styles_Editext__edit_button__hthOZ","Editext__save_button":"styles_Editext__save_button__3WN6q","Editext__hide_default_icons":"styles_Editext__hide_default_icons__AV_7m","Editext__hint":"styles_Editext__hint__2QU2S"};
++var styles = { "Editext__button": "styles_Editext__button__6H8n_", "Editext__input": "styles_Editext__input__1534X", "Editext__main_container": "styles_Editext__main_container__2Y-IL", "Editext__editing_container": "styles_Editext__editing_container__3yvUv", "Editext__view_container": "styles_Editext__view_container__2l2kB", "Editext__buttons_container": "styles_Editext__buttons_container__1kphL", "Editext__buttons_before_aligned": "styles_Editext__buttons_before_aligned__NnoWq", "Editext__buttons_after_aligned": "styles_Editext__buttons_after_aligned__1nlcG", "Editext__validation_message": "styles_Editext__validation_message__3B-OU", "Editext__cancel_button": "styles_Editext__cancel_button__259hb", "Editext__edit_button": "styles_Editext__edit_button__hthOZ", "Editext__save_button": "styles_Editext__save_button__3WN6q", "Editext__hide_default_icons": "styles_Editext__hide_default_icons__AV_7m", "Editext__hint": "styles_Editext__hint__2QU2S" };
+ styleInject(css);
+ 
+ function createCommonjsModule(fn, module) {
+-	return module = { exports: {} }, fn(module, module.exports), module.exports;
++  return module = { exports: {} }, fn(module, module.exports), module.exports;
+ }
+ 
+ var classnames = createCommonjsModule(function (module) {
+-/*!
+-  Copyright (c) 2017 Jed Watson.
+-  Licensed under the MIT License (MIT), see
+-  http://jedwatson.github.io/classnames
+-*/
+-/* global define */
+-
+-(function () {
+-
+-	var hasOwn = {}.hasOwnProperty;
+-
+-	function classNames () {
+-		var classes = [];
+-
+-		for (var i = 0; i < arguments.length; i++) {
+-			var arg = arguments[i];
+-			if (!arg) continue;
+-
+-			var argType = typeof arg;
+-
+-			if (argType === 'string' || argType === 'number') {
+-				classes.push(arg);
+-			} else if (Array.isArray(arg) && arg.length) {
+-				var inner = classNames.apply(null, arg);
+-				if (inner) {
+-					classes.push(inner);
+-				}
+-			} else if (argType === 'object') {
+-				for (var key in arg) {
+-					if (hasOwn.call(arg, key) && arg[key]) {
+-						classes.push(key);
+-					}
+-				}
+-			}
+-		}
+-
+-		return classes.join(' ');
+-	}
+-
+-	if ( module.exports) {
+-		classNames.default = classNames;
+-		module.exports = classNames;
+-	} else {
+-		window.classNames = classNames;
+-	}
+-}());
++  /*!
++    Copyright (c) 2017 Jed Watson.
++    Licensed under the MIT License (MIT), see
++    http://jedwatson.github.io/classnames
++  */
++  /* global define */
++
++  (function () {
++
++    var hasOwn = {}.hasOwnProperty;
++
++    function classNames() {
++      var classes = [];
++
++      for (var i = 0; i < arguments.length; i++) {
++        var arg = arguments[i];
++        if (!arg) continue;
++
++        var argType = typeof arg;
++
++        if (argType === 'string' || argType === 'number') {
++          classes.push(arg);
++        } else if (Array.isArray(arg) && arg.length) {
++          var inner = classNames.apply(null, arg);
++          if (inner) {
++            classes.push(inner);
++          }
++        } else if (argType === 'object') {
++          for (var key in arg) {
++            if (hasOwn.call(arg, key) && arg[key]) {
++              classes.push(key);
++            }
++          }
++        }
++      }
++
++      return classes.join(' ');
++    }
++
++    if (module.exports) {
++      classNames.default = classNames;
++      module.exports = classNames;
++    } else {
++      window.classNames = classNames;
++    }
++  }());
+ });
+ 
+ var EdiText =
+-/*#__PURE__*/
+-function (_Component) {
+-  _inherits(EdiText, _Component);
++  /*#__PURE__*/
++  function (_Component) {
++    _inherits(EdiText, _Component);
+ 
+-  function EdiText(props) {
+-    var _this;
++    function EdiText(props) {
++      var _this;
+ 
+-    _classCallCheck(this, EdiText);
++      _classCallCheck(this, EdiText);
+ 
+-    _this = _possibleConstructorReturn(this, _getPrototypeOf(EdiText).call(this, props));
++      _this = _possibleConstructorReturn(this, _getPrototypeOf(EdiText).call(this, props));
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onInputChange", function (e) {
+-      _this.setState({
+-        valid: true,
+-        value: e.target.value
++      _defineProperty(_assertThisInitialized(_this), "_onInputChange", function (e) {
++        _this.setState({
++          valid: true,
++          value: e.target.value
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onCancel", function () {
+-      _this.setState({
+-        valid: true,
+-        editing: false,
+-        value: _this.state.savedValue || _this.props.value
+-      }, function () {
+-        return _this.props.onCancel(_this.state.value);
++      _defineProperty(_assertThisInitialized(_this), "_onCancel", function () {
++        _this.setState({
++          valid: true,
++          editing: false,
++          value: _this.state.savedValue || _this.props.value
++        }, function () {
++          return _this.props.onCancel(_this.state.value);
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_activateEditMode", function () {
+-      _this.setState({
+-        editing: true
++      _defineProperty(_assertThisInitialized(_this), "_activateEditMode", function () {
++        _this.setState({
++          editing: true
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onSave", function () {
+-      var _this$props = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_onSave", function () {
++        var _this$props = _this.props,
+           onSave = _this$props.onSave,
+           validation = _this$props.validation,
+           onValidationFail = _this$props.onValidationFail;
+-      var isValid = validation(_this.state.value);
++        var isValid = validation(_this.state.value);
++
++        if (!isValid) {
++          return _this.setState({
++            valid: false
++          }, function () {
++            onValidationFail && onValidationFail(_this.state.value);
++          });
++        }
+ 
+-      if (!isValid) {
+-        return _this.setState({
+-          valid: false
++        _this.setState({
++          editing: false,
++          savedValue: _this.state.value
+         }, function () {
+-          onValidationFail && onValidationFail(_this.state.value);
++          return onSave(_this.state.savedValue);
+         });
+-      }
+-
+-      _this.setState({
+-        editing: false,
+-        savedValue: _this.state.value
+-      }, function () {
+-        return onSave(_this.state.savedValue);
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_renderEditingMode", function () {
+-      var _this$props2 = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_renderEditingMode", function () {
++        var _this$props2 = _this.props,
+           saveButtonClassName = _this$props2.saveButtonClassName,
+           saveButtonContent = _this$props2.saveButtonContent,
+           cancelButtonClassName = _this$props2.cancelButtonClassName,
+@@ -259,41 +259,41 @@ function (_Component) {
+           hideIcons = _this$props2.hideIcons,
+           buttonsAlign = _this$props2.buttonsAlign;
+ 
+-      var inputElem = _this._renderInput(); // calculate save button classes
+-
+-
+-      var saveButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__save_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var saveButtonClass = saveButtonClassName || saveButtonDefaultClasses; // calculate cancel button classes
+-
+-      var cancelButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__cancel_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var cancelButtonClass = cancelButtonClassName || cancelButtonDefaultClasses;
+-      var editContainerClass = styles.Editext__editing_container;
+-      if (editContainerClassName) editContainerClass = editContainerClassName;
+-      if (viewContainerClassName) editContainerClass = viewContainerClassName;
+-      var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
+-      return React.createElement("div", null, React.createElement("div", {
+-        className: editContainerClass
+-      }, buttonsAlign === 'after' && inputElem, React.createElement("div", {
+-        className: buttonsContainerClass
+-      }, React.createElement("button", {
+-        ref: _this.saveButton,
+-        type: "button",
+-        className: saveButtonClass,
+-        onClick: _this._onSave
+-      }, saveButtonContent), React.createElement("button", {
+-        ref: _this.cancelButton,
+-        type: "button",
+-        className: cancelButtonClass,
+-        onClick: _this._onCancel
+-      }, cancelButtonContent)), buttonsAlign === 'before' && inputElem), !_this.state.valid && !onValidationFail && React.createElement("div", {
+-        className: styles.Editext__validation_message
+-      }, validationMessage), hint && React.createElement("div", {
+-        className: styles.Editext__hint
+-      }, hint));
+-    });
++        var inputElem = _this._renderInput(); // calculate save button classes
++
++
++        var saveButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__save_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var saveButtonClass = saveButtonClassName || saveButtonDefaultClasses; // calculate cancel button classes
++
++        var cancelButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__cancel_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var cancelButtonClass = cancelButtonClassName || cancelButtonDefaultClasses;
++        var editContainerClass = styles.Editext__editing_container;
++        if (editContainerClassName) editContainerClass = editContainerClassName;
++        if (viewContainerClassName) editContainerClass = viewContainerClassName;
++        var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
++        return React.createElement("div", null, React.createElement("div", {
++          className: editContainerClass
++        }, buttonsAlign === 'after' && inputElem, React.createElement("div", {
++          className: buttonsContainerClass
++        }, React.createElement("button", {
++          ref: _this.saveButton,
++          type: "button",
++          className: saveButtonClass,
++          onClick: _this._onSave
++        }, saveButtonContent), React.createElement("button", {
++          ref: _this.cancelButton,
++          type: "button",
++          className: cancelButtonClass,
++          onClick: _this._onCancel
++        }, cancelButtonContent)), buttonsAlign === 'before' && inputElem), !_this.state.valid && !onValidationFail && React.createElement("div", {
++          className: styles.Editext__validation_message
++        }, validationMessage), hint && React.createElement("div", {
++          className: styles.Editext__hint
++        }, hint));
++      });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_renderViewMode", function () {
+-      var _this$props3 = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_renderViewMode", function () {
++        var _this$props3 = _this.props,
+           viewProps = _this$props3.viewProps,
+           editButtonClassName = _this$props3.editButtonClassName,
+           editButtonContent = _this$props3.editButtonContent,
+@@ -302,92 +302,94 @@ function (_Component) {
+           buttonsAlign = _this$props3.buttonsAlign,
+           editOnViewClick = _this$props3.editOnViewClick; // calculate edit button classes
+ 
+-      var editButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__edit_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var editButtonClass = editButtonClassName || editButtonDefaultClasses;
+-      var viewContainerClass = viewContainerClassName || styles.Editext__view_container;
+-      var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
+-      var viewClickHandler = editOnViewClick ? _this._activateEditMode : undefined;
+-      return React.createElement("div", {
+-        className: viewContainerClass
+-      }, buttonsAlign === 'after' && React.createElement("div", _extends({}, viewProps, {
+-        onClick: viewClickHandler
+-      }), _this.state.value), React.createElement("div", {
+-        className: buttonsContainerClass
+-      }, React.createElement("button", {
+-        ref: _this.editButton,
+-        type: "button",
+-        className: editButtonClass,
+-        onClick: _this._activateEditMode
+-      }, editButtonContent)), buttonsAlign === 'before' && React.createElement("div", _extends({}, viewProps, {
+-        onClick: viewClickHandler
+-      }), _this.state.value));
+-    });
++        var editButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__edit_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var editButtonClass = editButtonClassName || editButtonDefaultClasses;
++        var viewContainerClass = viewContainerClassName || styles.Editext__view_container;
++        var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
++        var viewClickHandler = editOnViewClick ? _this._activateEditMode : undefined;
++        return React.createElement("div", {
++          className: viewContainerClass
++        }, buttonsAlign === 'after' && React.createElement("div", _extends({}, viewProps, {
++          onClick: viewClickHandler
++        }), _this.state.value), React.createElement("div", {
++          className: buttonsContainerClass
++        }, React.createElement("button", {
++          ref: _this.editButton,
++          type: "button",
++          className: editButtonClass,
++          onClick: _this._activateEditMode
++        }, editButtonContent)), buttonsAlign === 'before' && React.createElement("div", _extends({}, viewProps, {
++          onClick: viewClickHandler
++        }), _this.state.value));
++      });
+ 
+-    _this.state = {
+-      editing: props.editing,
+-      valid: true,
+-      value: props.value || '',
+-      savedValue: ''
+-    };
+-    _this.editButton = React.createRef();
+-    _this.saveButton = React.createRef();
+-    _this.cancelButton = React.createRef();
+-    _this.input = React.createRef();
+-    return _this;
+-  }
++      _this.state = {
++        editing: props.editing,
++        valid: true,
++        value: props.value || '',
++        savedValue: ''
++      };
++      _this.editButton = React.createRef();
++      _this.saveButton = React.createRef();
++      _this.cancelButton = React.createRef();
++      _this.input = React.createRef();
++      return _this;
++    }
+ 
+-  _createClass(EdiText, [{
+-    key: "componentWillReceiveProps",
+-    value: function componentWillReceiveProps(nextProps) {
+-      if (nextProps.value) {
+-        this.setState({
+-          value: nextProps.value
+-        });
+-      }
++    _createClass(EdiText, [{
++      key: "componentWillReceiveProps",
++      value: function componentWillReceiveProps(nextProps) {
++        var nextState = {};
+ 
+-      if (nextProps.editing !== undefined) {
+-        this.setState({
+-          editing: nextProps.editing
+-        });
++        if (nextProps.value !== undefined && nextProps.value !== this.state.value) {
++          nextState.value = nextProps.value;
++        }
++
++        if (nextProps.editing !== undefined && nextProps.editing !== this.props.editing) {
++          nextState.editing = nextProps.editing;
++        }
++
++        if (Object.keys(nextState).length > 0) {
++          this.setState(nextState);
++        }
+       }
+-    }
+-  }, {
+-    key: "_renderInput",
+-    value: function _renderInput() {
+-      if (this.props.type === 'textarea') {
+-        return React.createElement("textarea", _extends({
+-          ref: this.input,
+-          className: styles.Editext__input
+-        }, this.props.inputProps, {
+-          value: this.state.value,
+-          onChange: this._onInputChange,
+-          autoFocus: this.state.editing
+-        }));
+-      } else {
+-        return React.createElement("input", _extends({
+-          ref: this.input,
+-          className: styles.Editext__input
+-        }, this.props.inputProps, {
+-          value: this.state.value,
+-          type: this.props.type,
+-          onChange: this._onInputChange,
+-          autoFocus: this.state.editing
+-        }));
++    }, {
++      key: "_renderInput",
++      value: function _renderInput() {
++        if (this.props.type === 'textarea') {
++          return React.createElement("textarea", _extends({
++            ref: this.input,
++            className: styles.Editext__input
++          }, this.props.inputProps, {
++              value: this.state.value,
++              onChange: this._onInputChange,
++              autoFocus: this.state.editing
++            }));
++        } else {
++          return React.createElement("input", _extends({
++            ref: this.input,
++            className: styles.Editext__input
++          }, this.props.inputProps, {
++              value: this.state.value,
++              type: this.props.type,
++              onChange: this._onInputChange,
++              autoFocus: this.state.editing
++            }));
++        }
+       }
+-    }
+-  }, {
+-    key: "render",
+-    value: function render() {
+-      var mode = this.state.editing ? this._renderEditingMode() : this._renderViewMode();
+-      var mainContainerClass = this.props.mainContainerClassName || styles.Editext__main_container;
+-      return React.createElement("div", {
+-        className: mainContainerClass
+-      }, mode);
+-    }
+-  }]);
++    }, {
++      key: "render",
++      value: function render() {
++        var mode = this.state.editing ? this._renderEditingMode() : this._renderViewMode();
++        var mainContainerClass = this.props.mainContainerClassName || styles.Editext__main_container;
++        return React.createElement("div", {
++          className: mainContainerClass
++        }, mode);
++      }
++    }]);
+ 
+-  return EdiText;
+-}(Component);
++    return EdiText;
++  }(Component);
+ EdiText.defaultProps = {
+   value: '',
+   type: 'text',
+@@ -395,7 +397,7 @@ EdiText.defaultProps = {
+   validation: function validation(value) {
+     return true;
+   },
+-  onCancel: function onCancel() {},
++  onCancel: function onCancel() { },
+   cancelButtonContent: '',
+   saveButtonContent: '',
+   editButtonContent: '',
+diff --git a/node_modules/react-editext/dist/index.js b/node_modules/react-editext/dist/index.js
+index 0b8fe2b..e047568 100644
+--- a/node_modules/react-editext/dist/index.js
++++ b/node_modules/react-editext/dist/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
++function _interopDefault(ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+ 
+ var React = require('react');
+ var React__default = _interopDefault(React);
+@@ -109,7 +109,7 @@ function _possibleConstructorReturn(self, call) {
+ }
+ 
+ function styleInject(css, ref) {
+-  if ( ref === void 0 ) ref = {};
++  if (ref === void 0) ref = {};
+   var insertAt = ref.insertAt;
+ 
+   if (!css || typeof document === 'undefined') { return; }
+@@ -136,122 +136,122 @@ function styleInject(css, ref) {
+ }
+ 
+ var css = ".styles_Editext__button__6H8n_ {\n  border-radius: 1px;\n  outline: none;\n  padding: 0.6em;\n  min-width: 30px;\n  height: 100%;\n  border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);\n  border-style: solid;\n  border-width: 1px;\n}\n.styles_Editext__button__6H8n_:hover {\n  cursor: pointer;\n  background-color: rgba(241, 241, 241, 1.00)\n}\n.styles_Editext__input__1534X {\n  width: 100%;\n  border: 1px solid rgb(212, 212, 212);\n  padding: 0.6em;\n  outline: none;\n}\n.styles_Editext__main_container__2Y-IL {\n  display: flex;\n  flex-direction: column;\n}\n.styles_Editext__editing_container__3yvUv {\n  display: flex;\n  flex: 1;\n  align-items: center;\n}\n.styles_Editext__view_container__2l2kB {\n  display: flex;\n  align-items: center;\n}\n.styles_Editext__buttons_container__1kphL {\n  display: flex;\n}\n.styles_Editext__buttons_before_aligned__NnoWq {\n  margin-right: 5px;\n}\n.styles_Editext__buttons_after_aligned__1nlcG {\n  margin-left: 5px;\n}\n.styles_Editext__validation_message__3B-OU {\n  font-weight: 500;\n  color: crimson;\n  font-size: .7em;\n  margin-top: 3px;\n}\n.styles_Editext__cancel_button__259hb {\n  color: crimson;\n}\n.styles_Editext__cancel_button__259hb:before {\n  content: '\\2715';\n  margin: 3px;\n}\n.styles_Editext__edit_button__hthOZ {\n  color: #000;\n}\n.styles_Editext__edit_button__hthOZ:before {\n  content: '\\270E';\n  margin: 3px;\n}\n.styles_Editext__save_button__3WN6q {\n  color: darkgreen;\n  margin-right: 3px;\n}\n.styles_Editext__save_button__3WN6q:before {\n  content: '\\2713';\n  margin: 3px;\n}\n.styles_Editext__hide_default_icons__AV_7m:before {\n  content: none;\n  margin: 0;\n}\n.styles_Editext__hint__2QU2S {\n  font-weight: 500;\n  color: lightslategray;\n  font-size: .7em;\n  margin-top: 3px;\n  text-align: left;\n}\n";
+-var styles = {"Editext__button":"styles_Editext__button__6H8n_","Editext__input":"styles_Editext__input__1534X","Editext__main_container":"styles_Editext__main_container__2Y-IL","Editext__editing_container":"styles_Editext__editing_container__3yvUv","Editext__view_container":"styles_Editext__view_container__2l2kB","Editext__buttons_container":"styles_Editext__buttons_container__1kphL","Editext__buttons_before_aligned":"styles_Editext__buttons_before_aligned__NnoWq","Editext__buttons_after_aligned":"styles_Editext__buttons_after_aligned__1nlcG","Editext__validation_message":"styles_Editext__validation_message__3B-OU","Editext__cancel_button":"styles_Editext__cancel_button__259hb","Editext__edit_button":"styles_Editext__edit_button__hthOZ","Editext__save_button":"styles_Editext__save_button__3WN6q","Editext__hide_default_icons":"styles_Editext__hide_default_icons__AV_7m","Editext__hint":"styles_Editext__hint__2QU2S"};
++var styles = { "Editext__button": "styles_Editext__button__6H8n_", "Editext__input": "styles_Editext__input__1534X", "Editext__main_container": "styles_Editext__main_container__2Y-IL", "Editext__editing_container": "styles_Editext__editing_container__3yvUv", "Editext__view_container": "styles_Editext__view_container__2l2kB", "Editext__buttons_container": "styles_Editext__buttons_container__1kphL", "Editext__buttons_before_aligned": "styles_Editext__buttons_before_aligned__NnoWq", "Editext__buttons_after_aligned": "styles_Editext__buttons_after_aligned__1nlcG", "Editext__validation_message": "styles_Editext__validation_message__3B-OU", "Editext__cancel_button": "styles_Editext__cancel_button__259hb", "Editext__edit_button": "styles_Editext__edit_button__hthOZ", "Editext__save_button": "styles_Editext__save_button__3WN6q", "Editext__hide_default_icons": "styles_Editext__hide_default_icons__AV_7m", "Editext__hint": "styles_Editext__hint__2QU2S" };
+ styleInject(css);
+ 
+ function createCommonjsModule(fn, module) {
+-	return module = { exports: {} }, fn(module, module.exports), module.exports;
++  return module = { exports: {} }, fn(module, module.exports), module.exports;
+ }
+ 
+ var classnames = createCommonjsModule(function (module) {
+-/*!
+-  Copyright (c) 2017 Jed Watson.
+-  Licensed under the MIT License (MIT), see
+-  http://jedwatson.github.io/classnames
+-*/
+-/* global define */
+-
+-(function () {
+-
+-	var hasOwn = {}.hasOwnProperty;
+-
+-	function classNames () {
+-		var classes = [];
+-
+-		for (var i = 0; i < arguments.length; i++) {
+-			var arg = arguments[i];
+-			if (!arg) continue;
+-
+-			var argType = typeof arg;
+-
+-			if (argType === 'string' || argType === 'number') {
+-				classes.push(arg);
+-			} else if (Array.isArray(arg) && arg.length) {
+-				var inner = classNames.apply(null, arg);
+-				if (inner) {
+-					classes.push(inner);
+-				}
+-			} else if (argType === 'object') {
+-				for (var key in arg) {
+-					if (hasOwn.call(arg, key) && arg[key]) {
+-						classes.push(key);
+-					}
+-				}
+-			}
+-		}
+-
+-		return classes.join(' ');
+-	}
+-
+-	if ( module.exports) {
+-		classNames.default = classNames;
+-		module.exports = classNames;
+-	} else {
+-		window.classNames = classNames;
+-	}
+-}());
++  /*!
++    Copyright (c) 2017 Jed Watson.
++    Licensed under the MIT License (MIT), see
++    http://jedwatson.github.io/classnames
++  */
++  /* global define */
++
++  (function () {
++
++    var hasOwn = {}.hasOwnProperty;
++
++    function classNames() {
++      var classes = [];
++
++      for (var i = 0; i < arguments.length; i++) {
++        var arg = arguments[i];
++        if (!arg) continue;
++
++        var argType = typeof arg;
++
++        if (argType === 'string' || argType === 'number') {
++          classes.push(arg);
++        } else if (Array.isArray(arg) && arg.length) {
++          var inner = classNames.apply(null, arg);
++          if (inner) {
++            classes.push(inner);
++          }
++        } else if (argType === 'object') {
++          for (var key in arg) {
++            if (hasOwn.call(arg, key) && arg[key]) {
++              classes.push(key);
++            }
++          }
++        }
++      }
++
++      return classes.join(' ');
++    }
++
++    if (module.exports) {
++      classNames.default = classNames;
++      module.exports = classNames;
++    } else {
++      window.classNames = classNames;
++    }
++  }());
+ });
+ 
+ var EdiText =
+-/*#__PURE__*/
+-function (_Component) {
+-  _inherits(EdiText, _Component);
++  /*#__PURE__*/
++  function (_Component) {
++    _inherits(EdiText, _Component);
+ 
+-  function EdiText(props) {
+-    var _this;
++    function EdiText(props) {
++      var _this;
+ 
+-    _classCallCheck(this, EdiText);
++      _classCallCheck(this, EdiText);
+ 
+-    _this = _possibleConstructorReturn(this, _getPrototypeOf(EdiText).call(this, props));
++      _this = _possibleConstructorReturn(this, _getPrototypeOf(EdiText).call(this, props));
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onInputChange", function (e) {
+-      _this.setState({
+-        valid: true,
+-        value: e.target.value
++      _defineProperty(_assertThisInitialized(_this), "_onInputChange", function (e) {
++        _this.setState({
++          valid: true,
++          value: e.target.value
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onCancel", function () {
+-      _this.setState({
+-        valid: true,
+-        editing: false,
+-        value: _this.state.savedValue || _this.props.value
+-      }, function () {
+-        return _this.props.onCancel(_this.state.value);
++      _defineProperty(_assertThisInitialized(_this), "_onCancel", function () {
++        _this.setState({
++          valid: true,
++          editing: false,
++          value: _this.state.savedValue || _this.props.value
++        }, function () {
++          return _this.props.onCancel(_this.state.value);
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_activateEditMode", function () {
+-      _this.setState({
+-        editing: true
++      _defineProperty(_assertThisInitialized(_this), "_activateEditMode", function () {
++        _this.setState({
++          editing: true
++        });
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_onSave", function () {
+-      var _this$props = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_onSave", function () {
++        var _this$props = _this.props,
+           onSave = _this$props.onSave,
+           validation = _this$props.validation,
+           onValidationFail = _this$props.onValidationFail;
+-      var isValid = validation(_this.state.value);
++        var isValid = validation(_this.state.value);
++
++        if (!isValid) {
++          return _this.setState({
++            valid: false
++          }, function () {
++            onValidationFail && onValidationFail(_this.state.value);
++          });
++        }
+ 
+-      if (!isValid) {
+-        return _this.setState({
+-          valid: false
++        _this.setState({
++          editing: false,
++          savedValue: _this.state.value
+         }, function () {
+-          onValidationFail && onValidationFail(_this.state.value);
++          return onSave(_this.state.savedValue);
+         });
+-      }
+-
+-      _this.setState({
+-        editing: false,
+-        savedValue: _this.state.value
+-      }, function () {
+-        return onSave(_this.state.savedValue);
+       });
+-    });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_renderEditingMode", function () {
+-      var _this$props2 = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_renderEditingMode", function () {
++        var _this$props2 = _this.props,
+           saveButtonClassName = _this$props2.saveButtonClassName,
+           saveButtonContent = _this$props2.saveButtonContent,
+           cancelButtonClassName = _this$props2.cancelButtonClassName,
+@@ -264,41 +264,41 @@ function (_Component) {
+           hideIcons = _this$props2.hideIcons,
+           buttonsAlign = _this$props2.buttonsAlign;
+ 
+-      var inputElem = _this._renderInput(); // calculate save button classes
+-
+-
+-      var saveButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__save_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var saveButtonClass = saveButtonClassName || saveButtonDefaultClasses; // calculate cancel button classes
+-
+-      var cancelButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__cancel_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var cancelButtonClass = cancelButtonClassName || cancelButtonDefaultClasses;
+-      var editContainerClass = styles.Editext__editing_container;
+-      if (editContainerClassName) editContainerClass = editContainerClassName;
+-      if (viewContainerClassName) editContainerClass = viewContainerClassName;
+-      var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
+-      return React__default.createElement("div", null, React__default.createElement("div", {
+-        className: editContainerClass
+-      }, buttonsAlign === 'after' && inputElem, React__default.createElement("div", {
+-        className: buttonsContainerClass
+-      }, React__default.createElement("button", {
+-        ref: _this.saveButton,
+-        type: "button",
+-        className: saveButtonClass,
+-        onClick: _this._onSave
+-      }, saveButtonContent), React__default.createElement("button", {
+-        ref: _this.cancelButton,
+-        type: "button",
+-        className: cancelButtonClass,
+-        onClick: _this._onCancel
+-      }, cancelButtonContent)), buttonsAlign === 'before' && inputElem), !_this.state.valid && !onValidationFail && React__default.createElement("div", {
+-        className: styles.Editext__validation_message
+-      }, validationMessage), hint && React__default.createElement("div", {
+-        className: styles.Editext__hint
+-      }, hint));
+-    });
++        var inputElem = _this._renderInput(); // calculate save button classes
++
++
++        var saveButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__save_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var saveButtonClass = saveButtonClassName || saveButtonDefaultClasses; // calculate cancel button classes
++
++        var cancelButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__cancel_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var cancelButtonClass = cancelButtonClassName || cancelButtonDefaultClasses;
++        var editContainerClass = styles.Editext__editing_container;
++        if (editContainerClassName) editContainerClass = editContainerClassName;
++        if (viewContainerClassName) editContainerClass = viewContainerClassName;
++        var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
++        return React__default.createElement("div", null, React__default.createElement("div", {
++          className: editContainerClass
++        }, buttonsAlign === 'after' && inputElem, React__default.createElement("div", {
++          className: buttonsContainerClass
++        }, React__default.createElement("button", {
++          ref: _this.saveButton,
++          type: "button",
++          className: saveButtonClass,
++          onClick: _this._onSave
++        }, saveButtonContent), React__default.createElement("button", {
++          ref: _this.cancelButton,
++          type: "button",
++          className: cancelButtonClass,
++          onClick: _this._onCancel
++        }, cancelButtonContent)), buttonsAlign === 'before' && inputElem), !_this.state.valid && !onValidationFail && React__default.createElement("div", {
++          className: styles.Editext__validation_message
++        }, validationMessage), hint && React__default.createElement("div", {
++          className: styles.Editext__hint
++        }, hint));
++      });
+ 
+-    _defineProperty(_assertThisInitialized(_this), "_renderViewMode", function () {
+-      var _this$props3 = _this.props,
++      _defineProperty(_assertThisInitialized(_this), "_renderViewMode", function () {
++        var _this$props3 = _this.props,
+           viewProps = _this$props3.viewProps,
+           editButtonClassName = _this$props3.editButtonClassName,
+           editButtonContent = _this$props3.editButtonContent,
+@@ -307,92 +307,94 @@ function (_Component) {
+           buttonsAlign = _this$props3.buttonsAlign,
+           editOnViewClick = _this$props3.editOnViewClick; // calculate edit button classes
+ 
+-      var editButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__edit_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
+-      var editButtonClass = editButtonClassName || editButtonDefaultClasses;
+-      var viewContainerClass = viewContainerClassName || styles.Editext__view_container;
+-      var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
+-      var viewClickHandler = editOnViewClick ? _this._activateEditMode : undefined;
+-      return React__default.createElement("div", {
+-        className: viewContainerClass
+-      }, buttonsAlign === 'after' && React__default.createElement("div", _extends({}, viewProps, {
+-        onClick: viewClickHandler
+-      }), _this.state.value), React__default.createElement("div", {
+-        className: buttonsContainerClass
+-      }, React__default.createElement("button", {
+-        ref: _this.editButton,
+-        type: "button",
+-        className: editButtonClass,
+-        onClick: _this._activateEditMode
+-      }, editButtonContent)), buttonsAlign === 'before' && React__default.createElement("div", _extends({}, viewProps, {
+-        onClick: viewClickHandler
+-      }), _this.state.value));
+-    });
++        var editButtonDefaultClasses = classnames("".concat(styles.Editext__button), "".concat(styles.Editext__edit_button), hideIcons && "".concat(styles.Editext__hide_default_icons));
++        var editButtonClass = editButtonClassName || editButtonDefaultClasses;
++        var viewContainerClass = viewContainerClassName || styles.Editext__view_container;
++        var buttonsContainerClass = classnames(styles.Editext__buttons_container, buttonsAlign === 'before' && "".concat(styles.Editext__buttons_before_aligned), buttonsAlign === 'after' && "".concat(styles.Editext__buttons_after_aligned));
++        var viewClickHandler = editOnViewClick ? _this._activateEditMode : undefined;
++        return React__default.createElement("div", {
++          className: viewContainerClass
++        }, buttonsAlign === 'after' && React__default.createElement("div", _extends({}, viewProps, {
++          onClick: viewClickHandler
++        }), _this.state.value), React__default.createElement("div", {
++          className: buttonsContainerClass
++        }, React__default.createElement("button", {
++          ref: _this.editButton,
++          type: "button",
++          className: editButtonClass,
++          onClick: _this._activateEditMode
++        }, editButtonContent)), buttonsAlign === 'before' && React__default.createElement("div", _extends({}, viewProps, {
++          onClick: viewClickHandler
++        }), _this.state.value));
++      });
+ 
+-    _this.state = {
+-      editing: props.editing,
+-      valid: true,
+-      value: props.value || '',
+-      savedValue: ''
+-    };
+-    _this.editButton = React__default.createRef();
+-    _this.saveButton = React__default.createRef();
+-    _this.cancelButton = React__default.createRef();
+-    _this.input = React__default.createRef();
+-    return _this;
+-  }
++      _this.state = {
++        editing: props.editing,
++        valid: true,
++        value: props.value || '',
++        savedValue: ''
++      };
++      _this.editButton = React__default.createRef();
++      _this.saveButton = React__default.createRef();
++      _this.cancelButton = React__default.createRef();
++      _this.input = React__default.createRef();
++      return _this;
++    }
+ 
+-  _createClass(EdiText, [{
+-    key: "componentWillReceiveProps",
+-    value: function componentWillReceiveProps(nextProps) {
+-      if (nextProps.value) {
+-        this.setState({
+-          value: nextProps.value
+-        });
+-      }
++    _createClass(EdiText, [{
++      key: "componentWillReceiveProps",
++      value: function componentWillReceiveProps(nextProps) {
++        var nextState = {};
+ 
+-      if (nextProps.editing !== undefined) {
+-        this.setState({
+-          editing: nextProps.editing
+-        });
++        if (nextProps.value !== undefined && nextProps.value !== this.state.value) {
++          nextState.value = nextProps.value;
++        }
++
++        if (nextProps.editing !== undefined && nextProps.editing !== this.props.editing) {
++          nextState.editing = nextProps.editing;
++        }
++
++        if (Object.keys(nextState).length > 0) {
++          this.setState(nextState);
++        }
+       }
+-    }
+-  }, {
+-    key: "_renderInput",
+-    value: function _renderInput() {
+-      if (this.props.type === 'textarea') {
+-        return React__default.createElement("textarea", _extends({
+-          ref: this.input,
+-          className: styles.Editext__input
+-        }, this.props.inputProps, {
+-          value: this.state.value,
+-          onChange: this._onInputChange,
+-          autoFocus: this.state.editing
+-        }));
+-      } else {
+-        return React__default.createElement("input", _extends({
+-          ref: this.input,
+-          className: styles.Editext__input
+-        }, this.props.inputProps, {
+-          value: this.state.value,
+-          type: this.props.type,
+-          onChange: this._onInputChange,
+-          autoFocus: this.state.editing
+-        }));
++    }, {
++      key: "_renderInput",
++      value: function _renderInput() {
++        if (this.props.type === 'textarea') {
++          return React__default.createElement("textarea", _extends({
++            ref: this.input,
++            className: styles.Editext__input
++          }, this.props.inputProps, {
++              value: this.state.value,
++              onChange: this._onInputChange,
++              autoFocus: this.state.editing
++            }));
++        } else {
++          return React__default.createElement("input", _extends({
++            ref: this.input,
++            className: styles.Editext__input
++          }, this.props.inputProps, {
++              value: this.state.value,
++              type: this.props.type,
++              onChange: this._onInputChange,
++              autoFocus: this.state.editing
++            }));
++        }
+       }
+-    }
+-  }, {
+-    key: "render",
+-    value: function render() {
+-      var mode = this.state.editing ? this._renderEditingMode() : this._renderViewMode();
+-      var mainContainerClass = this.props.mainContainerClassName || styles.Editext__main_container;
+-      return React__default.createElement("div", {
+-        className: mainContainerClass
+-      }, mode);
+-    }
+-  }]);
++    }, {
++      key: "render",
++      value: function render() {
++        var mode = this.state.editing ? this._renderEditingMode() : this._renderViewMode();
++        var mainContainerClass = this.props.mainContainerClassName || styles.Editext__main_container;
++        return React__default.createElement("div", {
++          className: mainContainerClass
++        }, mode);
++      }
++    }]);
+ 
+-  return EdiText;
+-}(React.Component);
++    return EdiText;
++  }(React.Component);
+ EdiText.defaultProps = {
+   value: '',
+   type: 'text',
+@@ -400,7 +402,7 @@ EdiText.defaultProps = {
+   validation: function validation(value) {
+     return true;
+   },
+-  onCancel: function onCancel() {},
++  onCancel: function onCancel() { },
+   cancelButtonContent: '',
+   saveButtonContent: '',
+   editButtonContent: '',

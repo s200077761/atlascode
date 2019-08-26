@@ -1,38 +1,34 @@
 /*-------------------- BEGIN - fix css-reset --------------------*/
 
 body {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    font-family: var(--vscode-font-family);
-    font-weight: var(--vscode-font-weight);
-    font-size: var(--vscode-font-size);
-    margin: 0;
-    padding: 0 20px;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-weight: var(--vscode-font-weight);
+  font-size: var(--vscode-font-size);
+  margin: 0;
+  padding: 0 20px;
 }
 
 a {
-    color: var(--vscode-textLink-foreground);
+  color: var(--vscode-textLink-foreground);
 }
 
 a:hover {
-    color: var(--vscode-textLink-activeForeground);
+  color: var(--vscode-textLink-activeForeground);
 }
 
-a:focus,
-input:focus,
-select:focus,
-textarea:focus {
-    outline: 1px solid -webkit-focus-ring-color;
-    outline-offset: -1px;
+a:focus, input:focus, select:focus, textarea:focus {
+  outline: 1px solid -webkit-focus-ring-color;
+  outline-offset: -1px;
 }
 
-p, h1, h2, h3, h4, h5, h6, label, span {
+p, h1, h2, h3, h4, h5, h6, label, span, .ac-inline-edit-p {
   color: var(--vscode-editor-foreground);
   margin: 0px;
 }
 
 /*-------------------- END - fix css-reset --------------------*/
-
 
 /*-------------------- BEGIN - general containers --------------------*/
 
@@ -132,7 +128,107 @@ pre {
   align-items: center;
 }
 
+.ac-issue-created-updated {
+  color: var(--vscode-editorCodeLens-foreground);
+}
+
 /*-------------------- END - general containers --------------------*/
+
+/*----------------- BEGIN - inline edit containers -----------------*/
+
+.ac-inline-edit-buttons-container {
+  display: flex;
+  margin-left: 5px;
+}
+
+.ac-field-label {
+  font-weight: bold;
+}
+
+.ac-inline-edit-main_container-left-margin {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+  width: 70%;
+}
+
+.ac-inline-input-view-p {
+  width: 100%;
+  color: var(--vscode-editor-foreground);
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.ac-inline-input-view-p:hover {
+  background: var(--vscode-editor-selectionHighlightBackground) !important;
+  /* color: var(--vscode-input-foreground) !important; */
+}
+
+.ac-hidden {
+  visibility: hidden;
+}
+
+.ac-inline-cancel-button, .ac-inline-save-button, .ac-inline-add-button {
+  background: var(--vscode-button-background)!important;
+  color: var(--vscode-button-foreground)!important;
+  border-width: 0px;
+  border-radius: 3px;
+  transition: background 0.1s ease-out 0s, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38) 0s;
+  outline: none !important;
+  margin-right: 3px;
+}
+
+.ac-inline-cancel-button:hover, .ac-inline-save-button:hover, .ac-inline-add-button:hover {
+  background: var(--vscode-button-hoverBackground) !important
+}
+
+.ac-inline-cancel-button:active, .ac-inline-save-button:active, .ac-inline-add-button:active {
+  background: var(--vscode-button-background--darken-05) !important;
+  color: var(--vscode-button-foreground) !important
+}
+
+.ac-inline-save-button:before {
+  content: '\2713';
+  margin: 3px;
+}
+
+.ac-inline-cancel-button:before {
+  content: '\2715';
+  margin: 3px;
+}
+
+.label-and-button {
+  width: 100%;
+  display: inline-flex;
+}
+
+.ac-inline-add-button {
+  margin-left: auto;
+}
+
+.ac-inline-add-button:before {
+  content: '\002B';
+  margin: 2px;
+}
+
+.ac-inline-add-button:disabled, .ac-inline-save-button:disabled {
+  background: var(--vscode-button-background--50) !important;
+}
+
+/*------------------ END - inline edit containers ------------------*/
+
+/*-------------------- BEGIN - page header --------------------*/
+
+[class^=styled__StyledTitle-] p {
+  margin: 0px;
+  color: var(--vscode-editor-foreground);
+}
+
+[class^=styled__StyledTitle-] {
+  margin: 0px;
+}
+
+/*-------------------- END - page header --------------------*/
 
 /*-------------------- BEGIN - panels --------------------*/
 
@@ -390,7 +486,7 @@ section button span {
   color: var(--vscode-input-foreground) !important;
   font: inherit;
   width: inherit;
-  padding: 6px;
+  padding-left: 6px;
   box-sizing: border-box;
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
   outline: 0 !important
@@ -439,7 +535,7 @@ section button span {
   border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator,.ac-select__input,.ac-select__menu,.ac-select__menu-list {
+.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list {
   background: var(--vscode-dropdown-background)!important;
   color: var(--vscode-input-foreground)!important;
 }
@@ -458,7 +554,8 @@ section button span {
 }
 
 .ac-select__option {
-  cursor: pointer !important
+  cursor: pointer !important;
+  width: auto!important;
 }
 
 .ac-select__placeholder {
@@ -902,4 +999,29 @@ img::after is triggered only if img loading fails */
 
 .react-tabs__tab-panel--selected {
   display: block;
+}
+
+.ac-collapsible-trigger {
+  color: var(--vscode-textLink-foreground);
+  display: block;
+  margin: 5px;
+  cursor: pointer;
+}
+
+/* .ac-collapsible-trigger::after {
+  font-family: 'FontAwesome';
+  content: '\f107';
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: block;
+  transition: transform 300ms;
+}
+
+.ac-collapsible-trigger.is-open::after {
+  transform: rotateZ(180deg);
+} */
+
+.ac-collapsible-trigger:hover {
+  color: var(--vscode-textLink-activeForeground);
 }

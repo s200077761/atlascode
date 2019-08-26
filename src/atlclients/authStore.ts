@@ -84,32 +84,22 @@ export class AuthManager implements Disposable {
     }
 
     public async getAuthInfo(site: SiteInfo): Promise<AuthInfo | undefined> {
-        Logger.debug('trying to get authInfo for site', site.hostname);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(site.product.key);
 
-        Logger.debug('productAuths', productAuths);
-
         if (productAuths && productAuths.has(site.hostname)) {
             foundInfo = productAuths.get(site.hostname);
-
-            Logger.debug('mem found info', foundInfo);
         }
 
         if (!foundInfo && keychain) {
             try {
-                Logger.debug('getting info from keychain');
                 let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product) || undefined;
                 if (infoEntry) {
-                    Logger.debug(`found info entry for ${site.product}`);
                     let infos: HostToAuthInfo = JSON.parse(infoEntry);
 
-                    Logger.debug(`infos`, infos);
                     let info = infos[site.hostname];
 
-                    Logger.debug(`info for hostname ${site.hostname}`, info);
                     if (info && productAuths) {
-                        Logger.debug(`setting info in memstore`);
                         this._memStore.set(site.product.key, productAuths.set(site.hostname, info));
 
                         foundInfo = info;
@@ -232,16 +222,13 @@ export class AuthManager implements Disposable {
         let bbSites: DetailedSiteInfo[] = [];
         if (keychain) {
             for (const provider of Object.values(OAuthProvider)) {
-                Logger.debug('converting auth provider', provider);
                 try {
                     let infoEntry = await this.getJsonAuthInfoFromKeychain({ key: provider, name: 'legacy' }, keychainServiceNameV1) || undefined;
-                    Logger.debug('got legacy auth info', infoEntry);
                     if (infoEntry) {
                         let info: AuthInfoV1 = JSON.parse(infoEntry);
 
                         if (provider.startsWith('jira')) {
                             const newAccess = await _refresher.getNewAccessToken(provider, info.refresh);
-                            Logger.debug('new access token is', newAccess);
                             if (!newAccess) {
                                 continue;
                             }
@@ -251,16 +238,13 @@ export class AuthManager implements Disposable {
                                         jiraInfo = {};
                                     }
 
-                                    Logger.debug('processing resource', resource.name);
                                     let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-                                    Logger.debug('trying to get base url', provider);
 
                                     // TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                                     //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${resource.id}/rest/2`, newAccess);
 
                                     const baseUrlString = provider === OAuthProvider.JiraCloudStaging ? `https://${resource.name}.jira-dev.com` : `https://${resource.name}.atlassian.net`;
 
-                                    Logger.debug('got base url', baseUrlString);
                                     const baseUrl: URL = new URL(baseUrlString);
 
                                     const newInfo: OAuthInfo = {
@@ -274,7 +258,6 @@ export class AuthManager implements Disposable {
                                     };
                                     jiraInfo[baseUrl.hostname] = newInfo;
 
-                                    Logger.debug('set jira info', jiraInfo);
 
                                     let newSite: DetailedSiteInfo = {
                                         avatarUrl: resource.avatarUrl,
@@ -289,14 +272,11 @@ export class AuthManager implements Disposable {
 
                                     jiraSites.push(newSite);
 
-                                    Logger.debug('added site', newSite);
 
                                     if (defaultSite && defaultSite.id === resource.id) {
                                         const oldProject = Container.config.jira.workingProject;
                                         await configuration.setDefaultSite(newSite);
                                         await configuration.setWorkingProject(oldProject);
-
-                                        Logger.debug('set default site site', newSite);
 
                                         if (!this.isDebugging) {
                                             configuration.setWorkingSite(undefined);
@@ -348,7 +328,6 @@ export class AuthManager implements Disposable {
         }
 
         if (jiraSites.length > 0) {
-            Logger.debug('updating global store', `${ProductJira.key}Sites`);
             this._globalStore.update(`${ProductJira.key}Sites`, jiraSites);
         }
 
@@ -357,7 +336,6 @@ export class AuthManager implements Disposable {
         }
 
         if (jiraInfo !== undefined) {
-            Logger.debug('updating mem store', jiraInfo);
             this._memStore.set(ProductJira.key, new Map(Object.entries(jiraInfo)));
 
             if (keychain) {
@@ -370,7 +348,6 @@ export class AuthManager implements Disposable {
                         }
                     }
 
-                    Logger.debug('updating key store', JSON.stringify(jiraInfo));
                     await keychain.setPassword(keychainServiceNameV2, ProductJira.key, JSON.stringify(jiraInfo));
                 }
                 catch (e) {
@@ -380,7 +357,6 @@ export class AuthManager implements Disposable {
         }
 
         if (bbInfo !== undefined) {
-            Logger.debug('updating mem store', bbInfo);
             this._memStore.set(ProductBitbucket.key, new Map(Object.entries(bbInfo)));
             if (keychain) {
                 try {

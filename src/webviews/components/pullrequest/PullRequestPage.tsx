@@ -37,7 +37,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
+import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -115,10 +115,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleIssueClicked = (issueKey: string) => {
+    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => {
         this.postMessage({
             action: 'openJiraIssue',
-            issueKey: issueKey
+            issueOrKey: issueOrKey
         });
     }
 
@@ -137,7 +137,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isApproveButtonLoading: false, isMergeButtonLoading: false, isCheckoutButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -179,6 +179,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 break;
             }
         }
+
+        return true;
     }
 
     handleDismissError = () => {
@@ -238,11 +240,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     ? <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Jira issue status after merge' />
-                            <NavItem text={`${issue.key}`} iconUrl={issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: issue.key })} />
+                            <NavItem text={`${issue.key}`} iconUrl={issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <TransitionMenu issue={issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -358,7 +360,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         {
                                             this.state.pr.relatedJiraIssues && this.state.pr.relatedJiraIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Jira Issues</h3>}>
-                                                <IssueList issues={this.state.pr.relatedJiraIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
+                                                <IssueList issues={this.state.pr.relatedJiraIssues} onIssueClick={this.handleIssueClicked} />
                                             </Panel>
                                         }
                                         {

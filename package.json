@@ -81,11 +81,6 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.transitionIssue",
-                "title": "Transition Issue",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.jira.assignIssueToMe",
                 "title": "Assign Issue to Me",
                 "category": "Atlassian"
@@ -319,11 +314,6 @@
                 }
             ],
             "view/item/context": [
-                {
-                    "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
-                    "group": "jiraContextMenuGroup1"
-                },
                 {
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
@@ -862,11 +852,13 @@
         "passport-oauth2": "^1.4.0",
         "passport-oauth2-refresh": "^1.1.0",
         "react": "^16.8.6",
+        "react-collapsible": "2.6.0",
         "react-dom": "^16.8.6",
         "react-final-form": "^6.0.1",
         "react-intl": "^2.9.0",
         "react-loadable": "^5.5.0",
         "react-tabs": "^3.0.0",
+        "react-editext": "^3.6.0",
         "semver": "^6.1.1",
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
@@ -884,7 +876,7 @@
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
         "@types/mocha": "^5.2.2",
-        "@types/node": "^8.10.25",
+        "@types/node": "^12.6.9",
         "@types/passport": "^0.4.6",
         "@types/passport-oauth2": "^1.4.6",
         "@types/react": "^16.8.19",
@@ -901,7 +893,7 @@
         "react-scripts-ts": "^3.1.0",
         "ts-loader": "^5.3.1",
         "tslint": "^5.11.0",
-        "typescript": "^3.2.2",
+        "typescript": "^3.5.3",
         "vscode": "^1.1.26",
         "webpack": "^4.26.1",
         "webpack-cli": "^3.1.2"
