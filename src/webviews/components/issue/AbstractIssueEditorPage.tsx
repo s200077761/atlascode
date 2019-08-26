@@ -64,13 +64,28 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
     private selectSuggestions: any[] | undefined = undefined;
     private waitForCreateOptionResponse: boolean = false;
+    private executingEdit: boolean = false;
 
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
     protected handleCommentSave = (newValue: string) => { };
 
+    private resetEditing = () => { this.executingEdit = false; };
+
     protected handleSelectChange = (field: SelectFieldUI, newValue: any) => {
+        // react-select is dumb and doesn't stop propagation on click events when you provide
+        // a custom option component.  e.g. it calls this twice, so we have to do this first check.
+        if (!this.executingEdit) {
+            this.executingEdit = true;
+            this.handleInlineEdit(field, this.formatEditValue(field, newValue));
+
+            setTimeout(this.resetEditing, 300);
+
+        }
+    }
+
+    protected formatEditValue(field: FieldUI, newValue: any): any {
         let val = newValue;
         if (field.valueType === ValueType.String && typeof newValue !== 'string') {
             if (Array.isArray(newValue)) {
@@ -83,9 +98,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             } else {
                 val = newValue.value;
             }
+        } else if (field.valueType === ValueType.Group) {
+            val = { name: newValue.value };
         }
 
-        this.handleInlineEdit(field, val);
+        return val;
     }
 
     onMessageReceived(e: any): boolean {
@@ -289,7 +306,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     } else {
                         markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
-                            value={this.state.fieldValues[field.key]}
+                            value={(this.state.fieldValues[field.key]) ? this.state.fieldValues[field.key] : ""}
                             onSave={(val: string) => { this.handleInlineEdit(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}

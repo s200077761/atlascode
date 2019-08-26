@@ -51,6 +51,19 @@ export class Section {
     public readonly issues: IssuePickerIssue[];
 }
 
+export class GroupPickerResult {
+    public readonly groups: Group[];
+}
+
+export class Group {
+    public readonly name: string;
+    public readonly html: string;
+}
+
+export function isGroupPickerResult(a: any): a is GroupPickerResult {
+    return a && a.groups !== undefined;
+}
+
 export class AutocompleteSuggestionsResult {
     public readonly results: AutocompleteSuggestion[];
 }

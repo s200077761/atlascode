@@ -47,6 +47,7 @@ export enum ValueType {
     Component = 'component', // mutli-select, {id, name}
     Worklog = 'worklog',
     Attachment = 'attachment',
+    Group = 'group',
 }
 
 // Note: Typescript doesn't include reverse mappings for string enums, so we need this method.
@@ -78,6 +79,7 @@ export function valueTypeForString(s: string): ValueType {
         case 'worklog': return ValueType.Worklog;
         case 'attachment': return ValueType.Attachment;
         case 'transition': return ValueType.Transition;
+        case 'group': return ValueType.Group;
         default: return ValueType.String;
     }
 }
@@ -153,6 +155,7 @@ export const multiSelectSchemas: string[] = [
     , 'subtasks'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker'
+    , 'com.atlassian.jira.plugin.system.customfieldtypes:multigrouppicker'
 ];
 
 export const createableSelectSchemas: string[] = [
@@ -198,6 +201,7 @@ export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , [ValueType.Attachment, UIType.Attachment]
         , [ValueType.Status, UIType.NonEditable]
         , [ValueType.Transition, UIType.Select]
+        , [ValueType.Group, UIType.Select]
     ]
 );
 

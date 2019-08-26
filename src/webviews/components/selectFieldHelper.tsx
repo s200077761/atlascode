@@ -21,6 +21,18 @@ const returnOptionOrValueFunc = (option: any) => {
     return value;
 };
 
+const returnValueOrNameFunc = (option: any) => {
+    let value: string = '';
+    if (option.value) {
+        value = option.value;
+    } else if (option.name) {
+        value = option.name;
+    } else {
+        value = JSON.stringify(option);
+    }
+    return value;
+};
+
 const returnOptionOrLabelFunc = (option: any) => {
     let value: string = '';
     if (typeof option === 'object') {
@@ -132,6 +144,7 @@ const LabelOption = (props: any) => {
 
 const LabelValue = (props: any) => {
     let value: string = '';
+    console.log('props', props);
     if (typeof props.data === 'string') { value = props.data; }
 
     if (typeof props.data === 'object') {
@@ -220,9 +233,11 @@ export namespace SelectFieldHelper {
         }
 
         if (field.autoCompleteUrl.trim() !== '') {
+            if (field.key === 'customfield_10118') { console.log('returning async select for multi group'); }
             return SelectComponentType.Async;
         }
 
+        if (field.key === 'customfield_10118') { console.log('returning select for multi group'); }
         return SelectComponentType.Select;
     }
 
@@ -268,6 +283,10 @@ export namespace SelectFieldHelper {
             case ValueType.Transition:
             case ValueType.Option: {
                 return returnIdFunc;
+            }
+
+            case ValueType.Group: {
+                return returnValueOrNameFunc;
             }
 
             case ValueType.User:

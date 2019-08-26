@@ -105,21 +105,7 @@ export class FieldTransformer {
         let allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
         const schema: FieldSchemaMeta = field.schema!;
         const schemaName: string = this.schemaName(field);
-        let autoCompleteUrl: string = '';
-
-        if (isFieldMeta(field)) {
-            if (field.autoCompleteUrl) {
-                autoCompleteUrl = field.autoCompleteUrl;
-            }
-            // if this is an issuelinks field we always want it to be editable no matter what
-        } else if (schema.items && schema.items === 'issuelinks') {
-            autoCompleteUrl = defaultILAutocomplete;
-        }
-
-        //we need to fix up bad autocomplete urls from jira
-        if (autoCompleteUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id) {
-            autoCompleteUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
-        }
+        const autoCompleteUrl: string = this.getAutocompleteUrl(field, defaultILAutocomplete, epicFieldInfo);
 
         const uiType: UIType = this.uiTypeForField(field);
         switch (uiType) {
@@ -384,6 +370,34 @@ export class FieldTransformer {
         }
     }
 
+    private getAutocompleteUrl(field: FieldOrFieldMeta, defaultILAutocomplete: string, epicFieldInfo: EpicFieldInfo): string {
+        let acUrl = '';
+
+        if (field.schema) {
+            let schemaType: string = field.schema.type === 'array' ? field.schema.items! : field.schema.type;
+
+            if (isFieldMeta(field) && field.autoCompleteUrl) {
+                acUrl = field.autoCompleteUrl;
+            } else if (schemaType === ValueType.IssueLinks) {
+                acUrl = defaultILAutocomplete;
+            } else if (schemaType === ValueType.Group) {
+                // NOTE: this *should be* /groups/picker?query= but that's not OAUth 2 enabled  :(
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
+            }
+
+            //we need to fix up bad autocomplete urls from jira
+            if (acUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id) {
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
+            }
+
+            if (acUrl.includes('/1.0/users/picker')) {
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/user/search?query=`;
+            }
+        }
+
+        return acUrl;
+    }
+
     private shouldRender(field: FieldOrFieldMeta, filters: string[], collector: ProblemCollector): boolean {
         if (filters.includes(field.key)) {
             return false;
@@ -403,7 +417,7 @@ export class FieldTransformer {
 
             if (schemaTypeToUIMap.has(schemaType) || customSchemaToUIMap.has(schemaName) || schemaOptionToUIMap.has(schemaName)) {
                 hasKnownType = true;
-                if (schemaType === 'option' && !schemaOptionToUIMap.has(schemaName)) {
+                if (schemaType === ValueType.Option && !schemaOptionToUIMap.has(schemaName)) {
                     hasKnownType = false;
                 }
 
@@ -444,7 +458,7 @@ export class FieldTransformer {
         const schemaName = this.schemaName(field);
         let foundType: UIType | undefined = undefined;
 
-        if (field.schema && field.schema.items && field.schema.items === 'issuelinks') {
+        if (field.schema && field.schema.items && field.schema.items === ValueType.IssueLinks) {
             foundType = (schemaName === 'subtasks') ? UIType.Subtasks : UIType.IssueLinks;
         }
 
@@ -456,7 +470,7 @@ export class FieldTransformer {
 
             foundType = customSchemaToUIMap.get(schemaName);
 
-            if (!foundType && field.schema.type === 'option') {
+            if (!foundType && (field.schema.type === ValueType.Option || (field.schema.type === 'array' && field.schema.items === ValueType.Option))) {
                 foundType = schemaOptionToUIMap.get(schemaName);
             }
 

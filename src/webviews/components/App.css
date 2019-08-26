@@ -157,6 +157,7 @@ pre {
   color: var(--vscode-editor-foreground);
   padding-left: 6px;
   padding-right: 6px;
+  min-height: 18px;
 }
 
 .ac-inline-input-view-p:hover {

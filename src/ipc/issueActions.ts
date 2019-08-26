@@ -1,7 +1,7 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
 import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
-import { FieldValues, IssueLinkTypeSelectOption } from "../jira/jira-client/model/fieldUI";
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface RefreshIssueAction extends Action {
@@ -49,6 +49,7 @@ export interface FetchQueryAction extends Action {
     query: string;
     site: DetailedSiteInfo;
     autocompleteUrl?: string;
+    valueType: ValueType;
 }
 
 export interface FetchByProjectQueryAction extends Action {
