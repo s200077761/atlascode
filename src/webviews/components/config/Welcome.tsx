@@ -18,8 +18,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
         super(props);
     }
 
-    public onMessageReceived(e: any) {
-
+    public onMessageReceived(e: any): boolean {
+        return true;
     }
 
     handleConfigure = () => {

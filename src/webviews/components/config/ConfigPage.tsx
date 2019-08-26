@@ -65,7 +65,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isProjectsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -83,6 +83,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             }
         }
 
+        return true;
+
     }
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
@@ -90,7 +92,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
-        console.log('config posting saving site', site);
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
     }
 

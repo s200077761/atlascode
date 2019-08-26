@@ -26,25 +26,19 @@ export async function activate(context: ExtensionContext) {
     const atlascodeVersion = atlascode.packageJSON.version;
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
-    console.log("registering resources");
     registerResources(context);
 
-    console.log("configuring configuration");
     Configuration.configure(context);
-    console.log("configuring Logger");
     Logger.configure(context);
 
     try {
-        Logger.debug('initializing container');
         Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-        Logger.debug('registering commands');
         registerCommands(context);
         activateCodebucket(context);
 
         await migrateConfig(context.globalState);
 
-        Logger.debug('setting auth command context');
         setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
         setCommandContext(CommandContext.IsBBAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
 
@@ -52,7 +46,6 @@ export async function activate(context: ExtensionContext) {
         if (gitExtension) {
             const gitApi = gitExtension.exports.getAPI(1);
             const bbContext = new BitbucketContext(gitApi);
-            Logger.debug('initializing bitbucket');
             Container.initializeBitbucket(bbContext);
         } else {
             Logger.error(new Error('vscode.git extension not found'));
@@ -82,11 +75,9 @@ async function migrateConfig(globalState: Memento): Promise<void> {
     const authModelVersion = globalState.get<number>(AuthInfoVersionKey);
 
     if (!authModelVersion || authModelVersion < 2) {
-        Logger.debug('migrating old config');
         const cfg = configuration.get<IConfig>();
         await Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
         await globalState.update(AuthInfoVersionKey, 2);
-        Logger.debug('old config migrated');
     }
 }
 

@@ -2,8 +2,6 @@ import { Disposable, EventEmitter, Event, Memento } from "vscode";
 import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, isUpdateAuthEvent, emptySiteInfo, isEmptySiteInfo, SiteInfo } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
-import { Logger } from "./logger";
-
 
 
 export type SitesAvailableUpdateEvent = {
@@ -107,10 +105,8 @@ export class SiteManager extends Disposable {
         let defaultSite = emptySiteInfo;
         switch (product.key) {
             case ProductJira.key:
-                Logger.debug(`getting siteInfo for ${product.key}`);
                 const configSite = Container.config.jira.defaultSite;
                 if (configSite && !isEmptySiteInfo(configSite)) {
-                    Logger.debug(`got site from config`, configSite);
                     defaultSite = configSite;
                 } else {
                     const sites = this.getSitesAvailable(product);

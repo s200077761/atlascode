@@ -1,10 +1,10 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { CreateIssueData, ProjectList, CreatedSomething, IssueCreated, LabelList, UserList, PreliminaryIssueData, IssueSuggestionsList, JqlOptionsList } from '../ipc/issueMessaging';
+import { CreateIssueData, PreliminaryIssueData } from '../ipc/issueMessaging';
 import { WorkingProject } from '../config/model';
-import { isScreensForProjects, isCreateSomething, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateIssue, isFetchQuery, isFetchByProjectQuery, isOpenJiraIssue, isSetIssueType, isFetchOptionsJQL } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { issueCreatedEvent } from '../analytics';
@@ -17,6 +17,7 @@ import { User } from '../jira/jira-client/model/entities';
 import { IssuePickerIssue } from '../jira/jira-client/model/responses';
 import { CreateMetaTransformerResult } from '../jira/jira-client/model/createIssueUI';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
+import { showIssue } from '../commands/jira/showIssue';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -37,8 +38,8 @@ export interface BBData {
     bbIssue: BitbucketIssue;
     issueKey: string;
 }
-type Emit = CreateIssueData | ProjectList | CreatedSomething | IssueCreated | HostErrorMessage | LabelList | UserList | IssueSuggestionsList | JqlOptionsList | PreliminaryIssueData;
-export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
+
+export class CreateIssueWebview extends AbstractReactWebview {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: WorkingProject | undefined;
     private _screenData: CreateMetaTransformerResult | undefined;
@@ -61,14 +62,12 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
         this._partialIssue = data;
 
         if (data) {
-            Logger.debug('got create partial data', data);
             const pd: PreliminaryIssueData = { type: 'preliminaryIssueData', summary: data.summary, description: data.description };
 
             if (data.bbIssue) {
                 this._relatedBBIssue = data.bbIssue;
             }
 
-            Logger.debug('sending create partial data', pd);
             this.postMessage(pd);
         }
     }
@@ -90,12 +89,19 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
 
         this.isRefeshing = true;
         try {
+
+            let effProject = project;
+
+            if (!effProject) {
+                effProject = await Container.jiraProjectManager.getEffectiveProject();
+            }
+
             const site: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
 
             const availableProjects = await Container.jiraProjectManager.getProjects();
             let projectChanged = false;
 
-            if (project && project !== this._currentProject) {
+            if (effProject !== this._currentProject) {
                 projectChanged = true;
                 this._currentProject = project;
             }
@@ -273,36 +279,36 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                     }
                     break;
                 }
-                case 'createOption': {
-                    handled = true;
-                    if (isCreateSomething(e)) {
-                        try {
+                // case 'createOption': {
+                //     handled = true;
+                //     if (isCreateSelectOption(e)) {
+                //         try {
 
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
-                            if (client) {
-                                switch (e.createData.fieldKey) {
-                                    case 'fixVersions':
-                                    case 'versions': {
-                                        let resp = await client.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp });
+                //             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                //             if (client) {
+                //                 switch (e.createData.fieldKey) {
+                //                     case 'fixVersions':
+                //                     case 'versions': {
+                //                         let resp = await client.createVersion({ body: { name: e.createData.name, project: e.createData.project } });
+                //                         this.postMessage({ type: 'optionCreated', createdData: resp });
 
-                                        break;
-                                    }
-                                    case 'components': {
-                                        let resp = await client.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
-                                        this.postMessage({ type: 'optionCreated', createdData: resp });
+                //                         break;
+                //                     }
+                //                     case 'components': {
+                //                         let resp = await client.createComponent({ body: { name: e.createData.name, project: e.createData.project } });
+                //                         this.postMessage({ type: 'optionCreated', createdData: resp });
 
-                                        break;
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            Logger.error(new Error(`error creating option: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
-                        }
-                    }
-                    break;
-                }
+                //                         break;
+                //                     }
+                //                 }
+                //             }
+                //         } catch (e) {
+                //             Logger.error(new Error(`error creating option: ${e}`));
+                //             this.postMessage({ type: 'error', reason: e });
+                //         }
+                //     }
+                //     break;
+                // }
 
                 case 'createIssue': {
                     handled = true;
@@ -379,7 +385,7 @@ export class CreateIssueWebview extends AbstractReactWebview<Emit, Action> {
                 case 'openJiraIssue': {
                     handled = true;
                     if (isOpenJiraIssue(e)) {
-                        commands.executeCommand(Commands.ShowIssue, e.issueKey);
+                        showIssue(e.issueOrKey);
                     }
                     break;
                 }

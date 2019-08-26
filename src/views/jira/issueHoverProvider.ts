@@ -31,7 +31,7 @@ export class IssueHoverProvider implements HoverProvider {
     const descriptionText = issue.descriptionHtml ? turnDownService.turndown(issue.descriptionHtml) : "*No description*";
 
     const header =
-      `| ![](${issue.issueType.iconUrl})                        | ${key}: ${summaryText} |
+      `| ![](${issue.issuetype.iconUrl})                        | ${key}: ${summaryText} |
        | -                                                      | -                      |
        | ![](${issue.priority.iconUrl.replace(".svg", ".png")}) | ${issue.priority.name} |
        |                                                        | ${statusText}          |`;
@@ -43,8 +43,8 @@ export class IssueHoverProvider implements HoverProvider {
 
     const showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
     const issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
-    const issueLinksLine = 
-     `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;
+    const issueLinksLine =
+      `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;
     text.push(new vscode.MarkdownString(issueLinksLine));
     text[text.length - 1].isTrusted = true;
 

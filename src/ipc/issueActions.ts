@@ -1,7 +1,8 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition } from "../jira/jira-client/model/entities";
-import { DetailedIssue } from "../jira/jira-client/model/detailedJiraIssue";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
+import { FieldValues, IssueLinkTypeSelectOption } from "../jira/jira-client/model/fieldUI";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
@@ -9,18 +10,18 @@ export interface RefreshIssueAction extends Action {
 
 export interface EditIssueAction extends Action {
     action: 'editIssue';
-    fields: any;
+    fields: FieldValues;
 }
 
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
-    issue: MinimalIssue;
+    issue: MinimalIssueOrKeyAndSiteOrKey;
     transition: Transition;
 }
 
 export interface IssueCommentAction extends Action {
     action: 'comment';
-    issue: DetailedIssue;
+    issue: IssueKeyAndSite;
     comment: string;
 }
 
@@ -37,7 +38,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueKey: string;
+    issueOrKey: MinimalIssueOrKeyAndSiteOrKey;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
@@ -46,6 +47,8 @@ export interface CopyJiraIssueLinkAction extends Action {
 
 export interface FetchQueryAction extends Action {
     query: string;
+    site: DetailedSiteInfo;
+    autocompleteUrl?: string;
 }
 
 export interface FetchByProjectQueryAction extends Action {
@@ -62,12 +65,25 @@ export interface ScreensForProjectsAction extends Action {
     project: WorkingProject;
 }
 
-export interface CreateSomethingAction extends Action {
-    createData: any;
+export interface CreateSelectOptionAction extends Action {
+    fieldKey: string;
+    siteDetails: DetailedSiteInfo;
+    createUrl: string;
+    createData: {
+        name: string;
+        project: string;
+    };
 }
 
 export interface CreateIssueAction extends Action {
+    site: DetailedSiteInfo;
     issueData: any;
+}
+
+export interface CreateIssueLinkAction extends Action {
+    site: DetailedSiteInfo;
+    issueLinkData: any;
+    issueLinkType: IssueLinkTypeSelectOption;
 }
 
 export interface StartWorkAction extends Action {
@@ -102,11 +118,12 @@ export function isIssueAssign(a: Action): a is IssueAssignAction {
     return (<IssueAssignAction>a).issue !== undefined;
 }
 export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
-    return (<OpenJiraIssueAction>a).issueKey !== undefined;
+    return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
 export function isFetchQuery(a: Action): a is FetchQueryAction {
-    return (<FetchQueryAction>a).query !== undefined;
+    return a && (<FetchQueryAction>a).query !== undefined
+        && (<FetchQueryAction>a).site !== undefined;
 }
 
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {
@@ -123,12 +140,19 @@ export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
 }
 
-export function isCreateSomething(a: Action): a is CreateSomethingAction {
-    return (<CreateSomethingAction>a).createData !== undefined;
+export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
+    return a && (<CreateSelectOptionAction>a).createData !== undefined;
 }
 
 export function isCreateIssue(a: Action): a is CreateIssueAction {
-    return (<CreateIssueAction>a).issueData !== undefined;
+    return a && (<CreateIssueAction>a).issueData !== undefined
+        && (<CreateIssueAction>a).site !== undefined;
+}
+
+export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {
+    return a && (<CreateIssueLinkAction>a).issueLinkData !== undefined
+        && (<CreateIssueLinkAction>a).site !== undefined
+        && (<CreateIssueLinkAction>a).issueLinkType !== undefined;
 }
 
 export function isStartWork(a: Action): a is StartWorkAction {

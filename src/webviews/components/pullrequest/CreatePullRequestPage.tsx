@@ -298,7 +298,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         });
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isCreateButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -356,6 +356,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 break;
             }
         }
+
+        return true;
     }
 
     handleDismissError = () => {
@@ -388,7 +390,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     {isMinimalIssue(this.state.issue)
                         ? <div className='ac-flex'>
                             <h4>Transition Jira issue - </h4>
-                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issueType.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueKey: (this.state.issue as MinimalIssue).key })} />
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: (this.state.issue as MinimalIssue) })} />
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
@@ -403,7 +405,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         <div style={{ margin: 10 }}>
                             <label>Select new status</label>
                             {isMinimalIssue(this.state.issue)
-                                ? <TransitionMenu issue={this.state.issue as MinimalIssue} isStatusButtonLoading={false} onHandleStatusChange={this.handleJiraIssueStatusChange} />
+                                ? <TransitionMenu transitions={(this.state.issue as MinimalIssue).transitions} currentStatus={(this.state.issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                                 : <StatusMenu issue={this.state.issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>

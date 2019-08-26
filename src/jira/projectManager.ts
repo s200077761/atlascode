@@ -3,7 +3,6 @@ import { Container } from "../container";
 import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } from "../config/configuration";
 import { ProductJira } from "../atlclients/authInfo";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
-import { Logger } from "../logger";
 import { Project } from "./jira-client/model/entities";
 
 
@@ -58,9 +57,7 @@ export class JiraProjectManager extends Disposable {
 
         const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
         const order = orderBy !== undefined ? orderBy : 'key';
-        Logger.debug('calling getProjectsPaginated');
         const resp = await client.getProjects(query, order);
-        Logger.debug('got response', resp);
         this._projectsAvailable = resp;
 
         return this._projectsAvailable;

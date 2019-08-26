@@ -1,11 +1,11 @@
-import { DetailedIssue } from "../../jira/jira-client/model/detailedJiraIssue";
 import { Container } from "../../container";
 import { issueCommentEvent } from "../../analytics";
+import { IssueKeyAndSite, Comment } from "../../jira/jira-client/model/entities";
 
-export async function postComment(issue: DetailedIssue, comment: string) {
+export async function postComment(issue: IssueKeyAndSite, comment: string): Promise<Comment> {
   let client = await Container.clientManager.jirarequest(issue.siteDetails);
 
-  let resp = await client.addComment(issue.id, comment);
+  let resp = await client.addComment(issue.key, comment);
 
   issueCommentEvent(issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
