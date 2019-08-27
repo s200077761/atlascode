@@ -144,14 +144,13 @@ const LabelOption = (props: any) => {
 
 const LabelValue = (props: any) => {
     let value: string = '';
-    console.log('props', props);
     if (typeof props.data === 'string') { value = props.data; }
 
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
-        if (props.data.displayName) { value = props.data.displayName; }
-        if (props.data.label) { value = props.data.label; }
-        if (props.data.value) { value = props.data.value; }
+        else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
+        else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {
@@ -170,9 +169,9 @@ const MultiLabelValue = (props: any) => {
     let value: string = '';
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
-        if (props.data.displayName) { value = props.data.displayName; }
-        if (props.data.label) { value = props.data.label; }
-        if (props.data.value) { value = props.data.value; }
+        else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
+        else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {
@@ -233,16 +232,15 @@ export namespace SelectFieldHelper {
         }
 
         if (field.autoCompleteUrl.trim() !== '') {
-            if (field.key === 'customfield_10118') { console.log('returning async select for multi group'); }
             return SelectComponentType.Async;
         }
 
-        if (field.key === 'customfield_10118') { console.log('returning select for multi group'); }
         return SelectComponentType.Select;
     }
 
     export function labelFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
+            case ValueType.Number:
             case ValueType.String: {
                 return returnOptionOrLabelFunc;
             }
@@ -272,6 +270,7 @@ export namespace SelectFieldHelper {
 
     export function valueFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
+            case ValueType.Number:
             case ValueType.String: {
                 return returnOptionOrValueFunc;
             }

@@ -18,6 +18,7 @@ import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { SelectFieldHelper } from '../selectFieldHelper';
 import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
+import { ParticipantList } from './ParticipantList';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -87,10 +88,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     protected formatEditValue(field: FieldUI, newValue: any): any {
         let val = newValue;
-        if (field.valueType === ValueType.String && typeof newValue !== 'string') {
+        if ((field.valueType === ValueType.String || field.valueType === ValueType.Number)
+            && (typeof newValue !== 'string' && typeof newValue !== 'number')) {
             if (Array.isArray(newValue)) {
                 val = newValue.map(aryValue => {
-                    if (typeof aryValue !== 'string') {
+                    if (typeof aryValue === 'object') {
                         return aryValue.value;
                     }
                     return aryValue;
@@ -752,6 +754,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         );
                     }
                 }
+            }
+            case UIType.Participants: {
+                return (
+                    <ParticipantList users={this.state.fieldValues[field.key]} />
+                );
             }
         }
 

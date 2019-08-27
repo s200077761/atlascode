@@ -7,6 +7,9 @@ import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model
 import { Container } from "../../container";
 import { API_VERSION } from "../jira-client/client";
 
+const sprintIdRegex = /id=(\d*),/;
+const sprintNameRegex = /name=([^,]*),/;
+
 interface ProblemCollector {
     problems: FieldProblem[];
     hasRequiredNonRenderables: boolean;
@@ -122,7 +125,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         isMultiline: isMulti,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Checkbox: {
@@ -136,7 +139,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Radio: {
@@ -150,7 +153,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Date: {
@@ -164,7 +167,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.DateTime: {
@@ -178,7 +181,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Select: {
@@ -208,11 +211,10 @@ export class FieldTransformer {
                         valueType: vt,
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, selectOptions: allowedValues
+                    }, value: this.formatCurrentValue(field), selectOptions: allowedValues
                 };
             }
             case UIType.IssueLinks: {
-                const currentVal = readMinimalIssueLinks(field.currentValue, this._site);
                 const linkTypeOptions: IssueLinkTypeSelectOption[] = [];
 
                 issueLinkTypes.forEach(opt => {
@@ -234,12 +236,10 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal, selectOptions: linkTypeOptions
+                    }, value: this.formatCurrentValue(field), selectOptions: linkTypeOptions
                 };
             }
             case UIType.Subtasks: {
-
-                const currentVal = readIssueLinkIssues(field.currentValue, this._site);
 
                 return {
                     field: {
@@ -252,12 +252,11 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal, selectOptions: inlineSubtaskTypes
+                    }, value: this.formatCurrentValue(field), selectOptions: inlineSubtaskTypes
                 };
             }
             case UIType.IssueLink: {
                 // Note: this is used for parent links for sub-tasks
-                const currentVal = readIssueLinkIssue(field.currentValue, this._site);
                 return {
                     field: {
                         required: required,
@@ -272,7 +271,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Timetracking: {
@@ -285,7 +284,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Worklog: {
@@ -298,7 +297,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Comments: {
@@ -312,7 +311,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Watches: {
@@ -325,7 +324,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Votes: {
@@ -338,7 +337,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.NonEditable: {
@@ -351,7 +350,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Attachment: {
@@ -364,7 +363,20 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
+                };
+            }
+            case UIType.Participants: {
+                return {
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Participants,
+                        valueType: this.valueTypeForField(field),
+                        displayOrder: displayOrder,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: this.formatCurrentValue(field)
                 };
             }
         }
@@ -386,7 +398,7 @@ export class FieldTransformer {
             }
 
             //we need to fix up bad autocomplete urls from jira
-            if (acUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id) {
+            if (acUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id || this.schemaName(field) === 'com.pyxis.greenhopper.jira:gh-sprint') {
                 acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
             }
 
@@ -396,6 +408,36 @@ export class FieldTransformer {
         }
 
         return acUrl;
+    }
+
+    private formatCurrentValue(field: FieldOrFieldMeta): any {
+        if (field.currentValue) {
+            const vt = this.valueTypeForField(field);
+
+            if (vt === ValueType.IssueLinks) {
+                return (this.schemaName(field) === 'issuelinks') ? readMinimalIssueLinks(field.currentValue, this._site) : readIssueLinkIssues(field.currentValue, this._site);
+            } else if (vt === ValueType.IssueLink) {
+                return readIssueLinkIssue(field.currentValue, this._site);
+            }
+
+            if (this.schemaName(field) === 'com.pyxis.greenhopper.jira:gh-sprint') {
+                const id = sprintIdRegex.exec(field.currentValue);
+                const name = sprintNameRegex.exec(field.currentValue);
+
+                if (id && name) {
+                    return {
+                        label: name[1],
+                        value: id[1],
+                    };
+                } else {
+                    return undefined;
+                }
+            }
+
+            return field.currentValue;
+        }
+
+        return undefined;
     }
 
     private shouldRender(field: FieldOrFieldMeta, filters: string[], collector: ProblemCollector): boolean {
@@ -508,6 +550,10 @@ export class FieldTransformer {
 
         if (schemaName === 'com.atlassian.jira.plugin.system.customfieldtypes:url') {
             return ValueType.Url;
+        }
+
+        if (schemaName === 'com.pyxis.greenhopper.jira:gh-sprint') {
+            return ValueType.Number;
         }
 
         if (field.schema) {

@@ -64,7 +64,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     break;
                 }
                 case 'fieldValueUpdate': {
-                    console.log('fieldValueUpdate', e);
                     this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
                 }
