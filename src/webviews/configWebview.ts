@@ -3,7 +3,7 @@ import { IConfig } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
-import { ProductJira, ProductBitbucket, DetailedSiteInfo, AuthInfoEvent, isBasicAuthInfo } from '../atlclients/authInfo';
+import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -24,7 +24,6 @@ export class ConfigWebview extends AbstractReactWebview {
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
-            Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
             Container.jiraProjectManager.onDidProjectsAvailableChange(this.onProjectsAvailableChange, this),
         );
@@ -88,10 +87,6 @@ export class ConfigWebview extends AbstractReactWebview {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        this.invalidate();
-    }
-
-    private onDidAuthChange(e: AuthInfoEvent) {
         this.invalidate();
     }
 
