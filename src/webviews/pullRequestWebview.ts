@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
-import { PRData, CheckoutResult, FetchUsersResult } from '../ipc/prMessaging';
+import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isFetchUsers } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -18,7 +18,6 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
@@ -33,7 +32,6 @@ interface PRState {
 }
 
 const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [] } };
-type Emit = PRData | CheckoutResult | FetchUsersResult | HostErrorMessage;
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
