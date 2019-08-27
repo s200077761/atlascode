@@ -327,7 +327,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         let markups: any[] = [];
 
         this.advancedSidebarFields.forEach(field => {
-            if (field.advanced) {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
                 markups.push(
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
@@ -345,7 +345,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         let markups: any[] = [];
 
         this.advancedMainFields.forEach(field => {
-            if (field.advanced) {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
                 markups.push(
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>

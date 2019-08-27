@@ -107,7 +107,7 @@ export interface OptionableFieldUI extends FieldUI {
     allowedValues: any[];
 }
 
-export interface CreatableFieldUI extends OptionableFieldUI {
+export interface CreatableFieldUI extends FieldUI {
     createUrl: string;
 }
 

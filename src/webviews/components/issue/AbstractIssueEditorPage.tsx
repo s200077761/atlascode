@@ -2,9 +2,9 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList, isCreatedSelectOption } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI } from "../../../jira/jira-client/model/fieldUI";
+import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators, chain } from "../fieldValidators";
-import { Field, ErrorMessage } from '@atlaskit/form';
+import { Field, ErrorMessage, CheckboxField, Fieldset } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
@@ -19,6 +19,8 @@ import { SelectFieldHelper } from '../selectFieldHelper';
 import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { ParticipantList } from './ParticipantList';
+import { Checkbox } from '@atlaskit/checkbox';
+import { RadioGroup } from '@atlaskit/radio';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -74,7 +76,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     private resetEditing = () => { this.executingEdit = false; };
 
-    protected handleSelectChange = (field: SelectFieldUI, newValue: any) => {
+    protected handleSelectChange = (field: FieldUI, newValue: any) => {
         // react-select is dumb and doesn't stop propagation on click events when you provide
         // a custom option component.  e.g. it calls this twice, so we have to do this first check.
         if (!this.executingEdit) {
@@ -272,6 +274,14 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         }
     }
 
+    /*
+    IssueLink = 'issuelink',
+    Timetracking = 'timetracking',
+    Worklog = 'worklog',
+    Watches = 'watches',
+    Votes = 'votes',
+    Attachment = 'attachment',
+    */
     protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
@@ -755,11 +765,113 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     }
                 }
             }
+            case UIType.Checkbox: {
+                if (editmode) {
+                    const optionableField = field as OptionableFieldUI;
+
+                    const commonProps: any = {
+                        isMulti: true,
+                        className: "ac-select-container",
+                        classNamePrefix: "ac-select",
+                        getOptionLabel: SelectFieldHelper.labelFuncForValueType(field.valueType),
+                        getOptionValue: SelectFieldHelper.valueFuncForValueType(field.valueType),
+                        components: SelectFieldHelper.getComponentsForValueType(field.valueType),
+                        label: field.name,
+                        id: field.key,
+                        name: field.key,
+                        defaultValue: this.state.fieldValues[field.key],
+                        isClearable: true,
+                    };
+
+                    return (<Select
+                        {...commonProps}
+                        isClearable={true}
+                        options={optionableField.allowedValues}
+                        isDisabled={this.state.isSomethingLoading}
+                        onChange={(selected: any) => { this.handleSelectChange(optionableField, selected); }}
+                    />);
+                }
+
+                let checkboxItems: any[] = [];
+                const checkField = field as OptionableFieldUI;
+                checkField.allowedValues.forEach(value => {
+                    checkboxItems.push(
+                        <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
+                            {
+                                (fieldArgs: any) => {
+                                    return (<Checkbox {...fieldArgs.fieldProps} label={value.value} />);
+                                }
+                            }
+                        </CheckboxField>
+
+                    );
+                });
+
+                return (
+                    <Fieldset legend={field.name}>
+                        {checkboxItems}
+                    </Fieldset>
+                );
+            }
+            case UIType.Radio: {
+                if (editmode) {
+                    const optionableField = field as OptionableFieldUI;
+
+                    const commonProps: any = {
+                        isMulti: false,
+                        className: "ac-select-container",
+                        classNamePrefix: "ac-select",
+                        getOptionLabel: SelectFieldHelper.labelFuncForValueType(field.valueType),
+                        getOptionValue: SelectFieldHelper.valueFuncForValueType(field.valueType),
+                        components: SelectFieldHelper.getComponentsForValueType(field.valueType),
+                        label: field.name,
+                        id: field.key,
+                        name: field.key,
+                        defaultValue: this.state.fieldValues[field.key],
+                        isClearable: !field.required,
+                    };
+
+                    return (<Select
+                        {...commonProps}
+                        isClearable={true}
+                        options={optionableField.allowedValues}
+                        isDisabled={this.state.isSomethingLoading}
+                        onChange={(selected: any) => { this.handleSelectChange(optionableField, selected); }}
+                    />);
+                }
+
+                let radioItems: any[] = [];
+                const radioField = field as OptionableFieldUI;
+                radioField.allowedValues.forEach(value => {
+                    radioItems.push({ name: field.key, label: value.value, value: value.id });
+                });
+
+                let validateFunc = field.required ? FieldValidators.validateMultiSelect : undefined;
+                return (
+                    <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                        {
+                            (fieldArgs: any) => {
+                                return (<RadioGroup {...fieldArgs.fieldProps} options={radioItems} />);
+                            }
+                        }
+                    </Field>
+                );
+            }
             case UIType.Participants: {
                 return (
                     <ParticipantList users={this.state.fieldValues[field.key]} />
                 );
             }
+            case UIType.NonEditable: {
+                let value = this.state.fieldValues[field.key];
+                if (typeof value === 'object') {
+                    value = JSON.stringify(value);
+                }
+                return (
+                    <div>{value}</div>
+                );
+            }
+
         }
 
         // catch-all for unknown field types
@@ -767,7 +879,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
         if (editmode) {
             return (
-                <div>Unknown field type - {field.key} : {field.uiType}</div>
+                <div style={{ color: 'red' }}>Unknown field type - {field.key} : {field.uiType}</div>
             );
         }
         return (
