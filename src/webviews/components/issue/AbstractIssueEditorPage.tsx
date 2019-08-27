@@ -4,7 +4,7 @@ import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList, isCreatedSelectOption } from "../../../ipc/issueMessaging";
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators, chain } from "../fieldValidators";
-import { Field, ErrorMessage, CheckboxField, Fieldset } from '@atlaskit/form';
+import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
@@ -857,6 +857,81 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     </Field>
                 );
             }
+            case UIType.Timetracking: {
+                let validateFunc = this.getValidateFunction(field, editmode);
+                if (editmode) {
+                    const hasValue: boolean = this.state.fieldValues[field.key]
+                        && this.state.fieldValues[field.key].originalEstimate
+                        && this.state.fieldValues[field.key].originalEstimate.trim() !== '';
+                    return (
+                        <div>
+                            <EdiText
+                                type='text'
+                                value={(hasValue) ? this.state.fieldValues[field.key].originalEstimate : "0m"}
+                                onSave={(val: string) => { this.handleInlineEdit(field, val); }}
+                                inputProps={{ className: 'ac-inputField' }}
+                                viewProps={{ id: field.key, className: 'ac-inline-input-view-p' }}
+                                editButtonClassName='ac-hidden'
+                                cancelButtonClassName='ac-inline-cancel-button'
+                                saveButtonClassName='ac-inline-save-button'
+                                editOnViewClick={true}
+                            />
+                            <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className='ac-flex'>
+                        <Field
+                            label='Original estimate'
+                            isRequired={field.required}
+                            id={`${field.key}.originalEstimate`}
+                            name={`${field.key}.originalEstimate`}
+                            validate={validateFunc}>
+                            {
+                                (fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                            {errDiv}
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+                        <div className='ac-inline-flex-hpad'></div>
+                        <Field
+                            label='Remaining estimate'
+                            isRequired={field.required}
+                            id={`${field.key}.remainingEstimate`}
+                            name={`${field.key}.remainingEstimate`}
+                            validate={validateFunc}>
+                            {
+                                (fieldArgs: any) => {
+                                    let errDiv = <span />;
+                                    if (fieldArgs.error === 'EMPTY') {
+                                        errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                    }
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                            {errDiv}
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+                    </div>
+                );
+            }
+
             case UIType.Participants: {
                 return (
                     <ParticipantList users={this.state.fieldValues[field.key]} />

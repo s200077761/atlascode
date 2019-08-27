@@ -136,6 +136,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 , issueLinkType: newValue.type
             });
+        } else if (field.uiType === UIType.Timetracking) {
+            let newValObject = this.state.fieldValues[field.key];
+            if (newValObject) {
+                newValObject.originalEstimate = newValue;
+            } else {
+                newValObject = {
+                    originalEstimate: newValue
+                };
+            }
+            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
+                this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
+            });
         } else {
             let typedVal = newValue;
 
@@ -328,6 +340,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         this.advancedSidebarFields.forEach(field => {
             if (field.advanced && field.uiType !== UIType.NonEditable) {
+                if (field.uiType === UIType.Timetracking) {
+                    field.name = "Original estimate";
+                }
                 markups.push(
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
