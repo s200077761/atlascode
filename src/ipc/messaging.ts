@@ -43,6 +43,10 @@ export function isOnlineStatus(m: Message): m is OnlineStatusMessage {
     return (<OnlineStatusMessage>m).isOnline !== undefined;
 }
 
+export function isAction(a: any): a is Action {
+    return a && (<Action>a).action !== undefined;
+}
+
 export function onlineStatus(status: boolean): OnlineStatusMessage {
     return { type: 'onlineStatus', isOnline: status };
 }

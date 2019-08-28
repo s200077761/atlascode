@@ -75,19 +75,21 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         this._disposables = [];
     }
 
-    async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
+    async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
         if (!await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })]);
+            return [new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })];
         }
         if (parent) {
             return parent.getChildren();
         }
         if (!this._jql) {
-            return Promise.resolve([new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)]);
+            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
         } else if (this._issues) {
-            return Promise.resolve(this.nodesForIssues());
-        } else {
+            return this.nodesForIssues();
+        } else if (allowFetch) {
             return await this.fetchIssues();
+        } else {
+            return [];
         }
     }
 

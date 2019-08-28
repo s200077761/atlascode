@@ -1,5 +1,6 @@
 import * as React from 'react';
 import SectionMessage from '@atlaskit/section-message';
+import { isErrorCollection, isErrorWithMessages } from '../../jira/jira-client/model/responses';
 
 export default class ErrorBanner extends React.Component<{ errorDetails: any, onDismissError: () => void }, { errorDetails: any }> {
     constructor(props: any) {
@@ -17,18 +18,31 @@ export default class ErrorBanner extends React.Component<{ errorDetails: any, on
 
     render() {
         let errorMarkup = [];
-        if (typeof this.state.errorDetails === 'object') {
+        if (isErrorCollection(this.state.errorDetails)) {
+            Object.keys(this.state.errorDetails.errors).forEach(key => {
+                errorMarkup.push(<p className='force-wrap'><b>{key}:</b><span className='force-wrap' style={{ marginLeft: '5px' }}>{this.state.errorDetails.errors[key]}</span></p>);
+            });
+
+            this.state.errorDetails.errorMessages.forEach(msg => {
+                errorMarkup.push(<p className='force-wrap'><span className='force-wrap' style={{ marginLeft: '5px' }}>{msg}</span></p>);
+            });
+        } else if (isErrorWithMessages(this.state.errorDetails)) {
+            this.state.errorDetails.errorMessages.forEach(msg => {
+                errorMarkup.push(<p className='force-wrap'><span className='force-wrap' style={{ marginLeft: '5px' }}>{msg}</span></p>);
+            });
+        } else if (typeof this.state.errorDetails === 'object') {
             Object.keys(this.state.errorDetails).forEach(key => {
                 errorMarkup.push(<p className='force-wrap'><b>{key}:</b><span className='force-wrap' style={{ marginLeft: '5px' }}>{JSON.stringify(this.state.errorDetails[key])}</span></p>);
             });
         } else {
-            errorMarkup.push(<p className='force-wrap'>{JSON.stringify(this.state.errorDetails)}</p>);
+            errorMarkup.push(<p className='force-wrap'>{this.state.errorDetails}</p>);
         }
 
+        const title: string = (this.state.errorDetails.title) ? this.state.errorDetails.title : 'Something went wrong';
         return (
             <SectionMessage
                 appearance="warning"
-                title="Something went wrong"
+                title={title}
                 actions={[{ text: 'Dismiss', onClick: () => { this.setState({ errorDetails: undefined }); this.props.onDismissError(); } }]}>
                 <div>{errorMarkup}</div>
             </SectionMessage>

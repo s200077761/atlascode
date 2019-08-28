@@ -27,7 +27,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
         };
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
@@ -35,12 +35,12 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 break;
             }
             case 'screenRefresh': {
-                console.log('got problems?', e.problems);
                 this.setState({ problems: e.problems, project: e.project, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
 
         }
+        return true;
     }
 
     handleDismissError = () => {

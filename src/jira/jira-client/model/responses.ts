@@ -15,15 +15,25 @@ export function readCreatedIssue(params: any): CreatedIssue {
     };
 }
 
-export interface ErrorCollection {
-    readonly status: number;
+export interface ErrorWithMessages {
     readonly errorMessages: string[];
-    readonly errors: any;
+}
+
+export interface ErrorCollection extends ErrorWithMessages {
+    readonly errors: { [key: string]: string };
+}
+
+export function isErrorCollection(a: any): a is ErrorCollection {
+    return a && (<ErrorCollection>a).errorMessages !== undefined
+        && (<ErrorCollection>a).errors !== undefined;
+}
+
+export function isErrorWithMessages(a: any): a is ErrorCollection {
+    return a && (<ErrorCollection>a).errorMessages !== undefined;
 }
 
 export function readErrorCollection(params: any): ErrorCollection {
     return {
-        status: params.status,
         errorMessages: Array.isArray(params.errorMessages) ? params.errorMessages : [],
         errors: params.errors
     };
@@ -33,8 +43,28 @@ export class IssuePickerResult {
     public readonly sections: Section[];
 }
 
+export function isIssuePickerResult(a: any): a is IssuePickerResult {
+    return a && a.sections !== undefined;
+}
+
 export class Section {
     public readonly issues: IssuePickerIssue[];
+}
+
+export class AutocompleteSuggestionsResult {
+    public readonly results: AutocompleteSuggestion[];
+}
+
+export function isAutocompleteSuggestionsResult(a: any): a is AutocompleteSuggestionsResult {
+    return a && a.results !== undefined
+        && Array.isArray(a.results)
+        && a.results.length > 0
+        && a.results[0].displayName !== undefined;
+}
+
+export class AutocompleteSuggestion {
+    public readonly value: string;
+    public readonly displayName: string;
 }
 
 export class IssuePickerIssue {
@@ -43,6 +73,12 @@ export class IssuePickerIssue {
     keyHtml: string;
     summary: string;
     summaryText: string;
+}
+
+export function isIssuePickerIssue(a: any): a is IssuePickerIssue {
+    return a && a.key !== undefined
+        && a.summary !== undefined
+        && a.img !== undefined;
 }
 
 export interface SearchResults {

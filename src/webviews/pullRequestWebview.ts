@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
-import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { PRData, } from '../ipc/prMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
 import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment } from '../ipc/prActions';
@@ -18,10 +18,11 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
+import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote } from '../bitbucket/bbUtils';
+import { transitionIssue } from '../jira/transitionIssue';
 
 interface PRState {
     prData: PRData;
@@ -31,8 +32,8 @@ interface PRState {
 }
 
 const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
-type Emit = PRData | CheckoutResult | HostErrorMessage;
-export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
+
+export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
 
@@ -157,7 +158,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, msg.issueKey);
+                        showIssue(msg.issueOrKey);
                         break;
                     }
                 }
@@ -208,6 +209,18 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
     }
 
+    private shouldDisplayComment(comment: any): boolean {
+        if(comment.children.length === 0){
+            return !comment.deleted;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
+    }
+
     private async postCompleteState() {
         if(!this._pr){
             return;
@@ -223,6 +236,7 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
         const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
+        comments.data = comments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -334,7 +348,9 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         }
         if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
-            await transitionIssue(issue, transition);
+            if (transition) {
+                await transitionIssue(issue, transition);
+            }
         } else {
             const bbApi = await clientForRemote(this._state.remote!);
             await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);

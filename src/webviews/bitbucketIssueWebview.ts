@@ -1,18 +1,17 @@
 import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { BitbucketIssueMessageData } from "../ipc/bitbucketIssueMessaging";
 import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
-import { BitbucketIssueData, BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssue } from "../bitbucket/model";
 import { clientForRemote } from "../bitbucket/bbUtils";
 
-type Emit = BitbucketIssueData | HostErrorMessage;
 
-export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<BitbucketIssue> {
+export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
 
     private _issue?: BitbucketIssue;
 

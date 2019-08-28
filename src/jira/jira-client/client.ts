@@ -2,12 +2,12 @@ import axios from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, MinimalIssue } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
-const issueExpand = "names,transitions,renderedFields";
-const API_VERSION = 2;
+const issueExpand = "transitions,renderedFields,transitions.fields";
+export const API_VERSION = 2;
 
 // JiraClient provides methods to invoke Jira REST API endpoints
 //
@@ -22,6 +22,7 @@ export abstract class JiraClient {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
         this.agent = agent;
+
     }
 
     // Issue
@@ -31,8 +32,8 @@ export abstract class JiraClient {
         return readCreatedIssue(result);
     }
 
-    public async getIssue(issueIdOrKey: string, fields: string[]): Promise<MinimalIssue> {
-        const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: issueExpand, fields: fields });
+    public async getIssue(issueIdOrKey: string, fields: string[], expand: string = issueExpand): Promise<any> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}`, { expand: expand, fields: fields });
         return res;
     }
 
@@ -45,7 +46,7 @@ export abstract class JiraClient {
     }
 
     public async addComment(issueIdOrKey: string, comment: string): Promise<any> {
-        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment });
+        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment }, { expand: 'renderedBody' });
 
         return res;
     }
@@ -69,6 +70,33 @@ export abstract class JiraClient {
         });
 
         return readIssueCreateMetadata(res);
+    }
+
+    public async getAutocompleteDataFromUrl(url: string): Promise<any> {
+        const res = await axios(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            httpsAgent: this.agent
+        });
+
+        return res.data;
+    }
+
+    public async postCreateUrl(url: string, data: any): Promise<any> {
+        const res = await axios(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            data: JSON.stringify(data),
+            httpsAgent: this.agent
+        });
+
+        return res.data;
     }
 
     public async getIssuePickerSuggestions(query: string): Promise<IssuePickerIssue[]> {
@@ -142,7 +170,7 @@ export abstract class JiraClient {
 
     public async getIssueLinkTypes(): Promise<IssueLinkType[]> {
         const res = await this.getFromJira('issueLinkType');
-        return res;
+        return (res.issueLinkTypes) ? res.issueLinkTypes : [];
     }
 
     // Field
@@ -193,8 +221,15 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async postToJira(url: string, params: any): Promise<any> {
+    protected async postToJira(url: string, params: any, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
+        }
 
         const res = await axios(url, {
             method: "POST",

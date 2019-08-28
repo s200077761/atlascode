@@ -88,6 +88,18 @@ export class PullRequestCommentController implements vscode.Disposable {
             this.provideComments(reply.thread.uri);
         }
     }
+    
+    private shouldDisplayComment(comment: any): boolean {
+        if(comment.children.length === 0){
+            return !comment.deleted;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
+    }
 
     provideComments(uri: vscode.Uri) {
         const { commentThreads } = JSON.parse(uri.query) as FileDiffQueryParams;
@@ -101,9 +113,12 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = c.map(comment => PullRequestCommentController.createVSCodeComment(c[0].id!, comment));
+                const comments = c.filter(comment => this.shouldDisplayComment(comment))
+                                    .map(comment => PullRequestCommentController.createVSCodeComment(c[0].id!, comment));
 
-                this.createOrUpdateThread(c[0].id!, uri, range, comments);
+                if(comments.length > 0){
+                    this.createOrUpdateThread(c[0].id!, uri, range, comments);     
+                } 
             });
     }
 

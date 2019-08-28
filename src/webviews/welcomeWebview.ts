@@ -5,7 +5,7 @@ import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
 import { submitFeedback } from './feedbackSubmitter';
 
-export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
+export class WelcomeWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);
