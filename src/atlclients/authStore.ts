@@ -111,16 +111,11 @@ export class CredentialManager implements Disposable {
     }
 
     private async getAuthInfoForProductAndCredentialId(productKey: string, credentialId: string): Promise<AuthInfo | undefined> {
-        Logger.debug('trying to get authInfo for credentialId', credentialId);
         let foundInfo: AuthInfo | undefined = undefined;
         let productAuths = this._memStore.get(productKey);
 
-        Logger.debug('productAuths', productAuths);
-
         if (productAuths && productAuths.has(credentialId)) {
             foundInfo = productAuths.get(credentialId);
-
-            Logger.debug('mem found info', foundInfo);
         }
 
         if (!foundInfo && keychain) {
