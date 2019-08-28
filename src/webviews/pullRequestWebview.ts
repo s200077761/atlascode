@@ -5,7 +5,7 @@ import { PRData, CheckoutResult } from '../ipc/prMessaging';
 import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -121,6 +121,17 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                             this.deleteComment(msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'editComment': {
+                    if (isEditComment(msg)){
+                        try {
+                            this.editComment(msg.content, msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
                     }
@@ -361,13 +372,19 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
 
     private async postComment(text: string, parentId?: number) {
         const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        await bbApi.pullrequests.postComment(this._state.remote!, this._pr!.data.id, text, parentId);
         this.updatePullRequest();
     }
 
-    private async deleteComment(commentId?: number) {
+    private async deleteComment(commentId: number) {
         const bbApi = await clientForRemote(this._state.remote!);
         await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
+        this.updatePullRequest();
+    }
+
+    private async editComment(content: string, commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
         this.updatePullRequest();
     }
 

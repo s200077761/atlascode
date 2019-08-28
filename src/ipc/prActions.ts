@@ -4,7 +4,12 @@ import { Reviewer, BitbucketIssueData } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 
 export interface DeleteComment extends Action {
-    commentId?: number;
+    commentId: number;
+}
+
+export interface EditComment extends Action {
+    content: string;
+    commentId: number;
 }
 
 export interface PostComment extends Action {
@@ -14,6 +19,10 @@ export interface PostComment extends Action {
 
 export function isDeleteComment(a: Action): a is DeleteComment {
     return (<DeleteComment>a).commentId !== undefined;
+}
+
+export function isEditComment(a: Action): a is EditComment {
+    return (<EditComment>a).content !== undefined && (<EditComment>a).commentId !== undefined;
 }
 
 export function isPostComment(a: Action): a is PostComment {

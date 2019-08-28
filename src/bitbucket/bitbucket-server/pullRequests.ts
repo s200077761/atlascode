@@ -204,23 +204,25 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async deleteComment(remote: Remote, prId: number, commentId?: number): Promise<void>{
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>{
         let parsed = parseGitUrl(urlForRemote(remote));
-        if(commentId){
-            /*
-            The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
-            In order to get the comment's version, a call must be made to the Bitbucket Server API.
-            */
-            let { data } = await this.client.get(
-                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
-            );
+        /*
+        The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
+        In order to get the comment's version, a call must be made to the Bitbucket Server API.
+        */
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
+        );
 
-            await this.client.delete(
-                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
-                {},
-                {version: data.version}
-            );
-        }
+        await this.client.delete(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
+            {},
+            {version: data.version}
+        );
+    }
+
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<void> {
+        console.log("something is supposed to happen");
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {

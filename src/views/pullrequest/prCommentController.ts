@@ -82,10 +82,11 @@ export class PullRequestCommentController implements vscode.Disposable {
         const { remote, prId } = JSON.parse(reply.thread.uri.query) as FileDiffQueryParams;
 
         const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
-        const bbApi = await clientForRemote(remote);
-        await bbApi.pullrequests.deleteComment(remote, prId, commentThreadId);
-
-        this.provideComments(reply.thread.uri);
+        if(commentThreadId){
+            const bbApi = await clientForRemote(remote);
+            await bbApi.pullrequests.deleteComment(remote, prId, commentThreadId);
+            this.provideComments(reply.thread.uri);
+        }
     }
 
     provideComments(uri: vscode.Uri) {

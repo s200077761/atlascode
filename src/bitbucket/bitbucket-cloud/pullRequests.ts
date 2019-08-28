@@ -169,14 +169,24 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async deleteComment(remote: Remote, prId: number, commentId?: number): Promise<void> {
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        if(commentId){
-            await this.client.delete(
-                `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
-                {}
-            );
-        }
+        await this.client.delete(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {}
+        );
+    }
+
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<void> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        await this.client.put(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {
+                content: {
+                    raw: content
+                }
+            }   
+        );
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {

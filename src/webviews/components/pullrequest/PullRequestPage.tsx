@@ -19,7 +19,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment } from '../../../ipc/prActions';
+import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -39,7 +39,7 @@ import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -106,11 +106,19 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleDeleteComment = (commentId?: number) => {
+    handleDeleteComment = (commentId: number) => {
         this.setState({ isAnyCommentLoading: true });
-        console.log(commentId);
         this.postMessage({
             action: 'deleteComment',
+            commentId: commentId
+        });
+    }
+
+    handleEditComment = (content: string, commentId: number) => {
+        this.setState({ isAnyCommentLoading: true });
+        this.postMessage({
+            action: 'editComment',
+            content: content,
             commentId: commentId
         });
     }
@@ -385,6 +393,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                                 currentUser={this.state.pr.currentUser!} 
                                                 isAnyCommentLoading={this.state.isAnyCommentLoading} 
                                                 onComment={this.handlePostComment} 
+                                                onEdit={this.handleEditComment}
                                                 onDelete={this.handleDeleteComment} 
                                             />
                                             <CommentForm 
