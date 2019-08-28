@@ -44,7 +44,6 @@ export class ConfigWebview extends AbstractReactWebview {
         this.isRefeshing = true;
         try {
             const config: IConfig = await configuration.get<IConfig>();
-            config.jira.defaultSite = Container.siteManager.effectiveSite(ProductJira);
 
             const isJiraConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
             const isBBConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);

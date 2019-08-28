@@ -1,5 +1,5 @@
 import { Disposable, EventEmitter, Event, Memento } from "vscode";
-import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, emptySiteInfo, isEmptySiteInfo, SiteInfo, isRemoveAuthEvent } from "./atlclients/authInfo";
+import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, emptySiteInfo, SiteInfo, isRemoveAuthEvent } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
 
@@ -141,18 +141,33 @@ export class SiteManager extends Disposable {
         return false;
     }
 
+    private defaultSiteFromConfig(): DetailedSiteInfo | undefined {
+        const configId = Container.config.jira.defaultSite;
+
+        if (!configId) {
+            return undefined;
+        }
+
+        const jiraSites = this.getSitesAvailable(ProductJira);
+        if (!jiraSites) {
+            return undefined;
+        }
+
+        return jiraSites.find(s => s.id === configId);
+    }
+
     public effectiveSite(product: Product): DetailedSiteInfo {
         let defaultSite = emptySiteInfo;
         switch (product.key) {
             case ProductJira.key:
-                const configSite = Container.config.jira.defaultSite;
-                if (configSite && !isEmptySiteInfo(configSite)) {
+                const configSite = this.defaultSiteFromConfig();
+                if (configSite) {
                     defaultSite = configSite;
                 } else {
                     const sites = this.getSitesAvailable(product);
                     if (sites && sites.length > 0) {
                         defaultSite = sites[0];
-                        configuration.setDefaultSite(defaultSite);
+                        configuration.setDefaultSite(defaultSite.id);
                     }
                 }
                 break;

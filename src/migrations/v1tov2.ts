@@ -19,9 +19,9 @@ export class V1toV2Migrator {
         private _credentialManager: CredentialManager,
         private _deleteV1: boolean,
         workingProject?: any,
-        defaultSite?: AccessibleResourceV1) {
+        workingSite?: AccessibleResourceV1) {
         this._workingProject = workingProject;
-        this._defaultSiteId = defaultSite ? defaultSite.id : undefined;
+        this._defaultSiteId = workingSite ? workingSite.id : undefined;
     }
 
     public async convertLegacyAuthInfo() {
@@ -116,10 +116,10 @@ export class V1toV2Migrator {
 
     private async updateDefaultSiteInfo(newSite: DetailedSiteInfo) {
         if (this._deleteV1) {
-            configuration.setWorkingSite(undefined);
+            configuration.clearVersion1WorkingSite();
         }
 
-        await configuration.setDefaultSite(newSite);
+        await configuration.setDefaultSite(newSite.id);
         await configuration.setWorkingProject(this._workingProject);
 
         Logger.debug('set default site site', newSite);

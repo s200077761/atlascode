@@ -56,6 +56,12 @@ export default class JiraExplorer extends React.Component<{
         return (count < 2);
     }
 
+    selectedSiteName = () => {
+        const siteId = this.props.configData.config.jira.defaultSite;
+        const site = this.props.sites.find(site => site.id === siteId);
+        return site ? site.name : "<default site not set>";
+    }
+
     render() {
         const config = this.props.configData.config;
         return (
@@ -91,7 +97,7 @@ export default class JiraExplorer extends React.Component<{
                         openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
                         onConfigChange={this.props.onConfigChange}
                         jiraAccessToken={this.props.jiraAccessToken}
-                        defaultSite={config.jira.defaultSite}
+                        defaultSiteId={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
@@ -105,7 +111,8 @@ export default class JiraExplorer extends React.Component<{
                         siteJqlList={config.jira.customJql}
                         onConfigChange={this.props.onConfigChange}
                         jiraAccessToken={this.props.jiraAccessToken}
-                        defaultSite={config.jira.defaultSite}
+                        defaultSiteName={this.selectedSiteName()}
+                        defaultSiteId={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
