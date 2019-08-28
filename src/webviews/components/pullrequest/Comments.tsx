@@ -1,10 +1,11 @@
 import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
-import CommentComponent, { CommentAuthor, CommentTime, CommentAction } from '@atlaskit/comment';
+import CommentComponent, { CommentAuthor, CommentTime, CommentAction, CommentEdited } from '@atlaskit/comment';
 import CommentForm from './CommentForm';
 import { User, Comment } from '../../../bitbucket/model';
 import { ButtonGroup } from '@atlaskit/button';
 import { Button } from '@atlaskit/button/components/Button';
+import { distanceInWordsToNow, differenceInSeconds } from 'date-fns';
 
 class NestedComment extends React.Component<
     { 
@@ -69,13 +70,13 @@ class NestedComment extends React.Component<
 
     generateActionsList = () => {
         let actionList = [];
-        if(this.props.onSave && !this.state.showCommentForm && !this.state.commentEditMode){
+        if(this.props.onSave && !this.state.showCommentForm && !this.state.commentEditMode && !this.props.node.deleted){
             actionList.push(<CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>);
         }
-        if(this.props.onEdit && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode){
+        if(this.props.onEdit && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted){
             actionList.push(<CommentAction onClick={this.handleEditClick}>Edit</CommentAction>);
         }
-        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode){
+        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted){
             actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
         }
         return actionList;
@@ -90,6 +91,13 @@ class NestedComment extends React.Component<
             avatar={<Avatar src={avatarHref} size="medium" />}
             author={<CommentAuthor>{authorName}</CommentAuthor>}
             time={<CommentTime>{new Date(node.ts).toLocaleString()}</CommentTime>}
+            edited={
+                //While very close, even comments that are unedited have different creation times and update times. If the difference is greater
+                //than one second, it's almost certainly an edit (likewise, edits are very unlikely to occur within 1 seconds of posting);
+                //It should be noted the comment API does not provide an 'edited' property, which would avoid this unclean solution.
+                differenceInSeconds(this.props.node.updatedTs, this.props.node.ts) > 1 &&
+                <CommentEdited>{`Edited ${distanceInWordsToNow(this.props.node.updatedTs)} ago`}</CommentEdited>
+            }
             content={
                 <React.Fragment>
                     {
@@ -171,7 +179,7 @@ export default class Comments extends React.Component<
 class EditForm extends React.Component<
 { 
     commentData: Comment, 
-    onSaveChanges?: (content: string, parentCommentId?: number) => void,
+    onSaveChanges?: (content: string) => void,
     onCancel?: () => void,
 },
 { editInput: string }
@@ -184,8 +192,8 @@ class EditForm extends React.Component<
     }
 
     handleEditSubmit = () => {
-        if(this.props.onSaveChanges){
-            this.props.onSaveChanges(this.state.editInput, this.props.commentData.id);
+        if(this.props.onSaveChanges && this.state.editInput !== ''){
+            this.props.onSaveChanges(this.state.editInput);
         }
     }
 
@@ -194,7 +202,7 @@ class EditForm extends React.Component<
     }
 
     render(): any{
-        return <div style={{ width: '100%', marginLeft: 8 }}>
+        return <div style={{ width: '100%', marginLeft: 8, marginTop: 10 }}>
             <textarea
                 className='ac-textarea'
                 rows={3}
