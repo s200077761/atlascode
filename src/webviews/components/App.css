@@ -7,7 +7,7 @@ body {
   font-weight: var(--vscode-font-weight);
   font-size: var(--vscode-font-size);
   margin: 0;
-  padding: 0 20px;
+  padding: 0px;
 }
 
 a {
@@ -234,7 +234,16 @@ pre {
   justify-content: space-between;
 }
 
+.ac-breadcrumbs .ac-link-button span {
+  color: var(--vscode-breadcrumb-foreground)!important;
+}
+
+.ac-breadcrumbs .ac-link-button:hover, .ac-breadcrumbs .ac-link-button:hover span {
+  color: var(--vscode-breadcrumb-focusForeground)!important;
+}
+
 .ac-breadcrumb-divider {
+  color: var(--vscode-breadcrumb-foreground);
   margin: 0px 8px;
 }
 
@@ -458,9 +467,21 @@ section button span {
 
 /*-------------------- BEGIN - links --------------------*/
 
+.ac-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
+
+.ac-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.ac-link-button>button {
+  padding: 0 !important
+}
+
 /* links inside of banners with colored backgrounds */
 
-.ac-banner-link-button:hover, .ac-banner-link-button span {
+.ac-banner-link-button:hover, .ac-banner-link-button>span {
   text-decoration: underline;
 }
 
@@ -468,9 +489,15 @@ section button span {
   padding: 0 !important
 }
 
-/*-----------------*/
+.ac-banner-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
 
-.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button span {
+.ac-banner-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+/* .vscode-light .ac-link-button:hover, .vscode-light .ac-link-button span {
   color: var(--vscode-textlink-foreground) !important
 }
 
@@ -481,8 +508,6 @@ section button span {
 .ac-link-button button {
   padding: 0 !important
 }
-
-/* links inside of banners with colored backgrounds */
 
 .ac-banner-link-button span {
   color: var(--vscode-textLink-foreground);
@@ -498,7 +523,7 @@ section button span {
 
 .ac-banner-link-button button {
   padding: 0 !important
-}
+} */
 
 /*-------------------- END - links --------------------*/
 
@@ -978,14 +1003,14 @@ img::after is triggered only if img loading fails */
 }
 
 .react-tabs__tab-list {
-  border-bottom: 1px solid var(--vscode-settings-textInputBorder);
+  border-bottom: 1px solid var(--vscode-panel-border);
   margin: 0 0 10px;
   padding: 0;
 }
 
 .react-tabs__tab {
   display: inline-block;
-  border: 1px solid var(--vscode-settings-textInputBorder);
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 5px 5px 0 0;
   margin-left: 1px;
   bottom: -1px;
@@ -1016,12 +1041,7 @@ img::after is triggered only if img loading fails */
 
 .react-tabs__tab:focus:after, .react-tabs__tab--selected:after {
   content: "";
-  position: absolute;
-  height: 5px;
-  left: -4px;
-  right: -4px;
-  bottom: -5px;
-  background: var(--vscode-focusBorder);
+  height: 0px;
 }
 
 .react-tabs__tab-panel {
