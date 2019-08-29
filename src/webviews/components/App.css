@@ -1076,3 +1076,9 @@ img::after is triggered only if img loading fails */
 .ac-collapsible-trigger:hover {
   color: var(--vscode-textLink-activeForeground);
 }
+
+/* the borders on TableTrees */
+
+[class^=styled__TreeRowContainer] {
+  border-color: var(--vscode-editorRuler-foreground)!important;
+}
