@@ -55,7 +55,7 @@ const returnAccountIdFunc = (option: any) => { return option.accountId; };
 const IconOption = (props: any) => {
     return (
         <components.Option {...props} >
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}> <img src={props.data.iconUrl} width="24" height="24" /> <span style={{ marginLeft: '10px' }}> {props.label} </span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'> <img src={props.data.iconUrl} width="24" height="24" /> <span style={{ marginLeft: '10px' }}> {props.label} </span></div>
         </components.Option>
     );
 };
@@ -68,7 +68,7 @@ const SingleIconValue = (props: any) => {
 
     return (
         <components.SingleValue {...props}>
-            <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
+            <div className='ac-flex'><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
         </components.SingleValue >
     );
 };
@@ -81,7 +81,7 @@ const MultiIconValue = (props: any) => {
 
     return (
         <components.MultiValueLabel {...props}>
-            <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
+            <div className='ac-flex'><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
         </components.MultiValueLabel >
     );
 };
@@ -90,7 +90,7 @@ const AvatarOption = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.label}</span></div>
         </components.Option>
     );
 };
@@ -104,7 +104,7 @@ const SingleAvatarValue = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.SingleValue {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
         </components.SingleValue>
     );
 };
@@ -118,7 +118,7 @@ const MultiAvatarValue = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
         </components.MultiValueLabel>
     );
 };

@@ -171,6 +171,23 @@ export interface Comment {
     self: string;
 }
 
+export interface WorklogContainer {
+    worklogs: Worklog[];
+    total: number;
+}
+
+export interface Worklog {
+    author: User;
+    updateAuthor: User;
+    comment: string;
+    timeSpent: string;
+    timeSpentSeconds: number;
+    id: string;
+    issueId: string;
+    created: string;
+    updated: string;
+    started: string;
+}
 export interface User {
     accountId: string;
     active: boolean;

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
@@ -17,12 +17,18 @@ export abstract class JiraClient {
     readonly baseUrl: string;
     readonly site: DetailedSiteInfo;
     readonly agent: any | undefined;
+    readonly transport: AxiosInstance;
 
     constructor(site: DetailedSiteInfo, agent?: any) {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
         this.agent = agent;
 
+        // Note: analytics-node-client adds axios-retry to the global axios instance.
+        // Unfortunately, there's a bug that causes axios to infinitely retry when it gets
+        // 500 errors.  Lesson  learned: ALWAYS use a custom instance of axios and config it yourself.
+        // see: https://github.com/softonic/axios-retry/issues/59
+        this.transport = axios.create();
     }
 
     // Issue
@@ -73,7 +79,7 @@ export abstract class JiraClient {
     }
 
     public async getAutocompleteDataFromUrl(url: string): Promise<any> {
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -86,7 +92,7 @@ export abstract class JiraClient {
     }
 
     public async postCreateUrl(url: string, data: any): Promise<any> {
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -168,6 +174,13 @@ export abstract class JiraClient {
         return result;
     }
 
+    // Worklog
+    public async addWorklog(issuekey: string, params: any): Promise<any> {
+        const result = await this.postToJira(`issue/${issuekey}/worklog`, params);
+
+        return result;
+    }
+
     public async getIssueLinkTypes(): Promise<IssueLinkType[]> {
         const res = await this.getFromJira('issueLinkType');
         return (res.issueLinkTypes) ? res.issueLinkTypes : [];
@@ -209,7 +222,7 @@ export abstract class JiraClient {
             url = `${url}?${sp.toString()}`;
         }
 
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -230,8 +243,7 @@ export abstract class JiraClient {
             }
             url = `${url}?${sp.toString()}`;
         }
-
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -242,12 +254,13 @@ export abstract class JiraClient {
         });
 
         return res.data;
+
     }
 
     protected async putToJira(url: string, params: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
 
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",

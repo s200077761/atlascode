@@ -7,7 +7,7 @@ import { Container } from "../container";
 import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog } from "../ipc/issueActions";
 import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
@@ -246,6 +246,36 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         } catch (e) {
                             Logger.error(new Error(`error creating issue link: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'createWorklog': {
+                    if (isCreateWorklog(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData);
+
+                            if (!this._editUIData.fieldValues['worklog']
+                                || !this._editUIData.fieldValues['worklog'].worklogs
+                                || !Array.isArray(this._editUIData.fieldValues['worklog'].worklogs)
+                            ) {
+                                this._editUIData.fieldValues['worklog'].worklogs = [];
+                            }
+
+                            this._editUIData.fieldValues['worklog'].worklogs.push(resp);
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error creating worklog: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating worklog') });
                         }
 
                     }

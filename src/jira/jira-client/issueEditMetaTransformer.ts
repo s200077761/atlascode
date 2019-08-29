@@ -27,9 +27,12 @@ const defaultCommonFields: string[] = [
     , 'environment'
     , 'created'
     , 'updated'
+    , 'worklog'
+    , 'watches'
+    , 'votes'
 ];
 
-const defaultFieldFilters: string[] = ['votes', 'creator', 'project', 'statuscategorychangedate', 'lastViewed'];
+const defaultFieldFilters: string[] = ['creator', 'project', 'statuscategorychangedate', 'lastViewed'];
 
 export class IssueEditMetaTransformer {
 

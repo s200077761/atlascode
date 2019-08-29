@@ -103,6 +103,12 @@ export interface OpenStartWorkPageAction extends Action {
     issue: MinimalIssue;
 }
 
+export interface CreateWorklogAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogData: any;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -148,6 +154,12 @@ export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
 export function isCreateIssue(a: Action): a is CreateIssueAction {
     return a && (<CreateIssueAction>a).issueData !== undefined
         && (<CreateIssueAction>a).site !== undefined;
+}
+
+export function isCreateWorklog(a: Action): a is CreateWorklogAction {
+    return a && (<CreateWorklogAction>a).worklogData !== undefined
+        && (<CreateWorklogAction>a).site !== undefined
+        && (<CreateWorklogAction>a).issueKey !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

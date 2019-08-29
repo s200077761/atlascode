@@ -16,10 +16,15 @@ import IssueList from './IssueList';
 import LinkedIssues from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
 import { Transition } from '../../../jira/jira-client/model/entities';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import Tooltip from '@atlaskit/tooltip';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import LikeIcon from '@atlaskit/icon/glyph/like';
 
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import Collapsible from 'react-collapsible';
+import Worklogs from './Worklogs';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -108,56 +113,71 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
-        if (field.uiType === UIType.Subtasks) {
-            /* newValue will be:
-            {
-                summary: string;
-                issuetype: {id:number}
-            }
-            */
-            this.setState({ isSomethingLoading: true, loadingField: 'subtasks' });
-            const payload: any = newValue;
-            payload.project = { key: this.getProjectKey() };
-            payload.parent = { key: this.state.key };
-            this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
-
-        } else if (field.uiType === UIType.IssueLinks) {
-            this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
-
-            this.postMessage({
-                action: 'createIssueLink'
-                , site: this.state.siteDetails
-                , issueLinkData: {
-                    type: {
-                        id: newValue.type.id
-                    },
-                    inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
-                    outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+        switch (field.uiType) {
+            case UIType.Subtasks: {
+                /* newValue will be:
+                {
+                    summary: string;
+                    issuetype: {id:number}
                 }
-                , issueLinkType: newValue.type
-            });
-        } else if (field.uiType === UIType.Timetracking) {
-            let newValObject = this.state.fieldValues[field.key];
-            if (newValObject) {
-                newValObject.originalEstimate = newValue;
-            } else {
-                newValObject = {
-                    originalEstimate: newValue
-                };
-            }
-            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
-                this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
-            });
-        } else {
-            let typedVal = newValue;
+                */
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                const payload: any = newValue;
+                payload.project = { key: this.getProjectKey() };
+                payload.parent = { key: this.state.key };
+                this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
 
-            if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
-                typedVal = parseFloat(newValue);
+                break;
             }
-            //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
-            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
-                this.handleEditIssue(field.key, typedVal);
-            });
+            case UIType.IssueLinks: {
+                this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+
+                this.postMessage({
+                    action: 'createIssueLink'
+                    , site: this.state.siteDetails
+                    , issueLinkData: {
+                        type: {
+                            id: newValue.type.id
+                        },
+                        inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
+                        outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+                    }
+                    , issueLinkType: newValue.type
+                });
+                break;
+            }
+            case UIType.Timetracking: {
+                let newValObject = this.state.fieldValues[field.key];
+                if (newValObject) {
+                    newValObject.originalEstimate = newValue;
+                } else {
+                    newValObject = {
+                        originalEstimate: newValue
+                    };
+                }
+                this.setState({ loadingField: field.key, isSomethingLoading: true, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
+                    this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
+                });
+                break;
+            }
+            case UIType.Worklog: {
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                this.postMessage({ action: 'createWorklog', site: this.state.siteDetails, worklogData: newValue, issueKey: this.state.key });
+                break;
+            }
+
+            default: {
+                let typedVal = newValue;
+
+                if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                    typedVal = parseFloat(newValue);
+                }
+                //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
+                this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
+                    this.handleEditIssue(field.key, typedVal);
+                });
+                break;
+            }
         }
     }
 
@@ -217,9 +237,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 } */}
                 <PageHeader
-                    actions={<ButtonGroup>
-                        <Button className='ac-button' onClick={this.handleStartWorkOnIssue}>Start work on issue...</Button>
-                    </ButtonGroup>}
                     breadcrumbs={
                         <BreadcrumbsStateless onExpand={() => { }}>
                             {(epicLinkValue && epicLinkKey !== '') &&
@@ -273,6 +290,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
                     </div>
                 }
+                {this.state.fields['worklog'] &&
+                    <div className='ac-vpadding'>
+                        {this.getInputMarkup(this.state.fields['worklog'], true)}
+                        <Worklogs worklogs={this.state.fieldValues['worklog']} />
+                    </div>
+                }
                 {
                     this.advancedMain()
                 }
@@ -290,6 +313,31 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     commonSidebar(): any {
         return (
             <React.Fragment>
+                <ButtonGroup>
+                    {this.state.fields['worklog'] &&
+                        <Tooltip content="Log work">
+                            <Button className='ac-button'
+                                onClick={this.handleOpenWorklogEditor}
+                                iconBefore={<EmojiFrequentIcon label="Log Work" />}
+                                isLoading={this.state.loadingField === 'worklog'} />
+                        </Tooltip>
+                    }
+                    {this.state.fields['watches'] &&
+                        <Tooltip content="Watches">
+                            <Button className='ac-button'
+                                onClick={() => { }}
+                                iconBefore={<WatchIcon label="Watches" />} />
+                        </Tooltip>
+                    }
+                    {this.state.fields['vote'] &&
+                        <Tooltip content="Votes">
+                            <Button className='ac-button'
+                                onClick={() => { }}
+                                iconBefore={<LikeIcon label="Votes" />} />
+                        </Tooltip>
+                    }
+                    <Button className='ac-button' onClick={this.handleStartWorkOnIssue}>Start work on issue...</Button>
+                </ButtonGroup>
                 <div className='ac-vpadding'>
                     <label className='ac-field-label'>{this.state.fields['status'].name}</label>
                     <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />

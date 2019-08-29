@@ -146,12 +146,12 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   });
 
-  console.log(JSON.stringify({
-    issueKey: issue.key,
-    isSubtask: issue.issuetype.subtask,
-    isEpic: issue.isEpic,
-    fields: { ...metaFields, ...filteredFields }
-  }));
+  // console.log(JSON.stringify({
+  //   issueKey: issue.key,
+  //   isSubtask: issue.issuetype.subtask,
+  //   isEpic: issue.isEpic,
+  //   fields: { ...metaFields, ...filteredFields }
+  // }));
 
   return {
     issueKey: issue.key,

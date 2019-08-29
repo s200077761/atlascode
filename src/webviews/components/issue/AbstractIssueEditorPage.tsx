@@ -21,6 +21,8 @@ import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
+import InlineWorklogLauncher from './InlineWorklogLauncher';
+import ModalWorklogEditor from './ModalWorklogEditor';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -40,6 +42,7 @@ export interface CommonEditorViewState extends Message {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     commentInputValue: string;
+    isWorklogEditorOpen: boolean;
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -54,6 +57,15 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
+    isWorklogEditorOpen: false,
+};
+
+const Condition = ({ when, is, children }: any) => {
+    return <Field name={when} subscription={{ value: false }}>
+        {({ fieldProps }: { fieldProps: any }) => {
+            return (fieldProps && fieldProps.value && fieldProps.value === is ? children : null);
+        }}
+    </Field>;
 };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
@@ -274,9 +286,20 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         }
     }
 
+    protected handleOpenWorklogEditor = () => {
+        this.setState({ isWorklogEditorOpen: true });
+    }
+
+    protected handleCancelWorklogEditor = () => {
+        this.setState({ isWorklogEditorOpen: false });
+    }
+
+    protected handleSaveWorklog = (field: FieldUI, value: any) => {
+        this.setState({ isWorklogEditorOpen: false });
+        this.handleInlineEdit(field, value);
+    }
     /*
     IssueLink = 'issuelink',
-    Timetracking = 'timetracking',
     Worklog = 'worklog',
     Watches = 'watches',
     Votes = 'votes',
@@ -931,7 +954,142 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     </div>
                 );
             }
+            case UIType.Worklog: {
+                if (editmode) {
+                    const orig: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
 
+                    return (
+                        <React.Fragment>
+                            <InlineWorklogLauncher
+                                label={field.name}
+                                onOpenEditor={this.handleOpenWorklogEditor}
+                                disabled={this.state.isWorklogEditorOpen || this.state.isSomethingLoading}
+                            />
+                            <ModalWorklogEditor
+                                onSave={(val: any) => this.handleSaveWorklog(field, val)}
+                                onCancel={this.handleCancelWorklogEditor}
+                                isOpen={this.state.isWorklogEditorOpen}
+                                originalEstimate={orig} />
+                        </React.Fragment>
+                    );
+                }
+
+                let validateFunc = FieldValidators.validateString;
+                return (
+                    <React.Fragment>
+                        <div style={{ display: field.required ? 'none' : 'block' }}>
+                            <Field
+                                id={`${field.key}.enabled`}
+                                name={`${field.key}.enabled`}>
+                                {
+                                    (fieldArgs: any) => <Checkbox {...fieldArgs.fieldProps} label='Log work' />
+                                }
+                            </Field>
+                        </div>
+                        <Condition when='worklog.enabled' is={true}>
+                            <div className='ac-flex'>
+                                <Field
+                                    label='Worklog time spent'
+                                    isRequired={true}
+                                    id={`${field.key}.timeSpent`}
+                                    name={`${field.key}.timeSpent`}
+                                    validate={validateFunc}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            let errDiv = <span />;
+                                            if (fieldArgs.error === 'EMPTY') {
+                                                errDiv = <ErrorMessage>Time spent is required</ErrorMessage>;
+                                            }
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    {errDiv}
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+                                <div className='ac-inline-flex-hpad'></div>
+                                <Field
+                                    label='Remaining estimate'
+                                    isRequired={true}
+                                    id={`${field.key}.newEstimate`}
+                                    name={`${field.key}.newEstimate`}
+                                    validate={validateFunc}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            let errDiv = <span />;
+                                            if (fieldArgs.error === 'EMPTY') {
+                                                errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                            }
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    {errDiv}
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+                            </div>
+                            <Field
+                                label='Worklog start time'
+                                isRequired={true}
+                                id={`${field.key}.started`}
+                                name={`${field.key}.started`}
+                                validate={validateFunc}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Start time is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <div>
+                                                <DateTimePicker
+                                                    {...fieldArgs.fieldProps}
+                                                    className="ac-select-container"
+                                                    timeIsEditable
+                                                    datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                />
+                                                {errDiv}
+                                            </div>
+                                        );
+                                    }
+                                }
+                            </Field>
+                            <Field
+                                label='Worklog comment'
+                                isRequired={false}
+                                id={`${field.key}.comment`}
+                                name={`${field.key}.comment`}
+                                validate={validateFunc}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>Comment is required</ErrorMessage>;
+                                        }
+                                        return (
+                                            <div>
+                                                <textarea {...fieldArgs.fieldProps}
+                                                    style={{ width: '100%', display: 'block' }}
+                                                    className='ac-textarea'
+                                                    rows={5}
+                                                />
+                                                {errDiv}
+                                            </div>
+                                        );
+                                    }
+                                }
+                            </Field>
+                        </Condition>
+                    </React.Fragment>
+                );
+            }
             case UIType.Participants: {
                 return (
                     <ParticipantList users={this.state.fieldValues[field.key]} />
