@@ -38,6 +38,11 @@ export interface FieldValueUpdate extends Message {
     fieldValues: FieldValues;
 }
 
+export interface PullRequestUpdate extends Message {
+    type: 'pullRequestUpdate';
+    recentPullRequests: PullRequestData[];
+}
+
 export interface IssueProblemsData extends Message {
     problems: CreateMetaTransformerProblems;
     project: WorkingProject;

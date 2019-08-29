@@ -21,8 +21,7 @@ import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
-import InlineWorklogLauncher from './InlineWorklogLauncher';
-import ModalWorklogEditor from './ModalWorklogEditor';
+import WorklogForm from './WorklogForm';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -287,15 +286,16 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     protected handleOpenWorklogEditor = () => {
-        this.setState({ isWorklogEditorOpen: true });
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        this.setState({ isWorklogEditorOpen: true, isSomethingLoading: true });
     }
 
     protected handleCancelWorklogEditor = () => {
-        this.setState({ isWorklogEditorOpen: false });
+        this.setState({ isWorklogEditorOpen: false, isSomethingLoading: false });
     }
 
     protected handleSaveWorklog = (field: FieldUI, value: any) => {
-        this.setState({ isWorklogEditorOpen: false });
+        this.setState({ isWorklogEditorOpen: false, isSomethingLoading: false });
         this.handleInlineEdit(field, value);
     }
     /*
@@ -421,6 +421,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     <div>
                                         <DatePicker
                                             {...fieldArgs.fieldProps}
+                                            isDisabled={this.state.isSomethingLoading}
                                             className="ac-select-container"
                                             selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                         />
@@ -473,6 +474,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     <div>
                                         <DateTimePicker
                                             {...fieldArgs.fieldProps}
+                                            isDisabled={this.state.isSomethingLoading}
                                             className="ac-select-container"
                                             datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                             timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
@@ -526,7 +528,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         onChange={this.handleCommentInput}
                     />
                     <ButtonGroup>
-                        <Button className='ac-button' onClick={this.handleCommentSaveClick} isDisabled={this.state.commentInputValue === ''}>Save</Button>
+                        <Button className='ac-button' onClick={this.handleCommentSaveClick} isDisabled={this.state.commentInputValue === '' || this.state.isSomethingLoading}>Save</Button>
                         <Button appearance="default" onClick={this.handleCommentCancelClick}>Cancel</Button>
                     </ButtonGroup>
                 </div>);
@@ -676,6 +678,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     {...commonProps}
                                     placeholder='Type to search'
                                     isClearable={this.isClearableSelect(selectField)}
+                                    isDisabled={this.state.isSomethingLoading}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
@@ -704,6 +707,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
+                                                    isDisabled={this.state.isSomethingLoading}
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
@@ -735,6 +739,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     {...commonProps}
                                     value={this.state.fieldValues[field.key]}
                                     placeholder='Type to search'
+                                    isDisabled={this.state.isSomethingLoading}
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
@@ -768,6 +773,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
+                                                    isDisabled={this.state.isSomethingLoading}
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
@@ -960,15 +966,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
                     return (
                         <React.Fragment>
-                            <InlineWorklogLauncher
-                                label={field.name}
-                                onOpenEditor={this.handleOpenWorklogEditor}
-                                disabled={this.state.isWorklogEditorOpen || this.state.isSomethingLoading}
-                            />
-                            <ModalWorklogEditor
+                            <WorklogForm
                                 onSave={(val: any) => this.handleSaveWorklog(field, val)}
                                 onCancel={this.handleCancelWorklogEditor}
-                                isOpen={this.state.isWorklogEditorOpen}
                                 originalEstimate={orig} />
                         </React.Fragment>
                     );

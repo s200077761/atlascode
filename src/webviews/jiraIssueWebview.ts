@@ -15,6 +15,8 @@ import { commands } from "vscode";
 import { Commands } from "../commands";
 import { issueCreatedEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
+import { parseJiraIssueKeys } from "../jira/issueKeyParser";
+import { PullRequestData } from "../bitbucket/model";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
@@ -98,14 +100,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             let msg = this._editUIData;
 
             msg.type = 'update';
-            // TODO: 
+
             this.postMessage(msg);
 
-            //const relatedPrs = await this.recentPullRequests();
-            // if (relatedPrs.length > 0) {
-            //     msg.recentPullRequests = await this.recentPullRequests();
-            //     this.postMessage(msg);
-            // }
+            const relatedPrs = await this.recentPullRequests();
+            if (relatedPrs.length > 0) {
+                this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
+            }
+
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
@@ -307,5 +309,21 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         }
 
         return handled;
+    }
+
+    private async recentPullRequests(): Promise<PullRequestData[]> {
+        if (!Container.bitbucketContext) {
+            return [];
+        }
+
+        const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
+        const relatedPrs = await Promise.all(prs.map(async pr => {
+            const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.rawSummary!)];
+            return issueKeys.find(key => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
+                ? pr
+                : undefined;
+        }));
+
+        return relatedPrs.filter(pr => pr !== undefined).map(p => p!.data);
     }
 }

@@ -123,7 +123,6 @@ pre {
 /* used to display svg images with labels like Jira priority */
 
 .ac-icon-with-text {
-  height: 2em;
   display: flex;
   align-items: center;
 }
@@ -220,14 +219,33 @@ pre {
 
 /*-------------------- BEGIN - page header --------------------*/
 
-[class^=styled__StyledTitle-] p {
+.ac-page-header h2 {
+  color: var(--vscode-editor-foreground);
+  margin: 10px 0px;
+}
+
+.ac-page-header a {
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ac-breadcrumb-divider {
+  margin: 0px 8px;
+}
+
+/* [class^=styled__StyledTitle-] p {
   margin: 0px;
   color: var(--vscode-editor-foreground);
 }
 
 [class^=styled__StyledTitle-] {
   margin: 0px;
-}
+} */
 
 /*-------------------- END - page header --------------------*/
 
@@ -440,21 +458,9 @@ section button span {
 
 /*-------------------- BEGIN - links --------------------*/
 
-.ac-link-button span {
-  color: var(--vscode-textLink-foreground);
-}
-
-.ac-link-button:hover span {
-  color: var(--vscode-textLink-activeForeground);
-}
-
-.ac-link-button>button {
-  padding: 0 !important
-}
-
 /* links inside of banners with colored backgrounds */
 
-.ac-banner-link-button:hover, .ac-banner-link-button>span {
+.ac-banner-link-button:hover, .ac-banner-link-button span {
   text-decoration: underline;
 }
 
@@ -462,12 +468,36 @@ section button span {
   padding: 0 !important
 }
 
+/*-----------------*/
+
+.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button span {
+  color: var(--vscode-textlink-foreground) !important
+}
+
+.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button span {
+  color: var(--vscode-foreground) !important
+}
+
+.ac-link-button button {
+  padding: 0 !important
+}
+
+/* links inside of banners with colored backgrounds */
+
 .ac-banner-link-button span {
   color: var(--vscode-textLink-foreground);
 }
 
 .ac-banner-link-button:hover span {
   color: var(--vscode-textLink-activeForeground);
+}
+
+.ac-banner-link-button:hover, .ac-banner-link-button span {
+  text-decoration: underline;
+}
+
+.ac-banner-link-button button {
+  padding: 0 !important
 }
 
 /*-------------------- END - links --------------------*/

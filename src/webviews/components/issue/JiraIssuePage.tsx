@@ -3,10 +3,8 @@ import { CommonEditorPageEmit, CommonEditorPageAccept, CommonEditorViewState, Ab
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import Offline from '../Offline';
 import ErrorBanner from '../ErrorBanner';
-import PageHeader from '@atlaskit/page-header';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
@@ -20,11 +18,13 @@ import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import Tooltip from '@atlaskit/tooltip';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import LikeIcon from '@atlaskit/icon/glyph/like';
+import InlineDialog from '@atlaskit/inline-dialog';
 
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import Collapsible from 'react-collapsible';
 import Worklogs from './Worklogs';
+import PullRequests from './PullRequests';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -71,6 +71,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 case 'fieldValueUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
+                }
+                case 'pullRequestUpdate': {
+                    this.setState({ recentPullRequests: e.recentPullRequests });
                 }
                 case 'issueCreated': {
                     if (isIssueCreated(e)) {
@@ -236,23 +239,30 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {/* {this.state.showPMF &&
                     <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 } */}
-                <PageHeader
-                    breadcrumbs={
-                        <BreadcrumbsStateless onExpand={() => { }}>
-                            {(epicLinkValue && epicLinkKey !== '') &&
-                                <BreadcrumbsItem component={() => <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />} />
-                            }
-                            {this.state.fieldValues['parent'] &&
-                                <BreadcrumbsItem component={() => <NavItem
+                <div className='ac-page-header'>
+                    <div className='ac-breadcrumbs'>
+                        {(epicLinkValue && epicLinkKey !== '') &&
+                            <React.Fragment>
+                                <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+                        {this.state.fieldValues['parent'] &&
+                            <React.Fragment>
+                                <NavItem
                                     text={this.state.fieldValues['parent'].key}
                                     iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
-                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />} />
-                            }
-                            <BreadcrumbsItem component={() => <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />} />
-                        </BreadcrumbsStateless>
-                    }>
-                    {this.getInputMarkup(this.state.fields['summary'], true)}
-                </PageHeader>
+                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+
+                        <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                    </div>
+                    <h2>
+                        {this.getInputMarkup(this.state.fields['summary'], true)}
+                    </h2>
+                </div>
                 {this.state.fields['description'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['description'].name}</label>
@@ -292,7 +302,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 {this.state.fields['worklog'] &&
                     <div className='ac-vpadding'>
-                        {this.getInputMarkup(this.state.fields['worklog'], true)}
+                        <label className='ac-field-label'>{this.state.fields['worklog'].name}</label>
                         <Worklogs worklogs={this.state.fieldValues['worklog']} />
                     </div>
                 }
@@ -315,12 +325,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             <React.Fragment>
                 <ButtonGroup>
                     {this.state.fields['worklog'] &&
-                        <Tooltip content="Log work">
-                            <Button className='ac-button'
-                                onClick={this.handleOpenWorklogEditor}
-                                iconBefore={<EmojiFrequentIcon label="Log Work" />}
-                                isLoading={this.state.loadingField === 'worklog'} />
-                        </Tooltip>
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={this.getInputMarkup(this.state.fields['worklog'], true)}
+                                isOpen={this.state.isWorklogEditorOpen}
+                                onClose={this.handleCancelWorklogEditor}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Log work">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWorklogEditor}
+                                        iconBefore={<EmojiFrequentIcon label="Log Work" />}
+                                        isLoading={this.state.loadingField === 'worklog'} />
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
                     }
                     {this.state.fields['watches'] &&
                         <Tooltip content="Watches">
@@ -329,7 +348,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 iconBefore={<WatchIcon label="Watches" />} />
                         </Tooltip>
                     }
-                    {this.state.fields['vote'] &&
+                    {this.state.fields['votes'] &&
                         <Tooltip content="Votes">
                             <Button className='ac-button'
                                 onClick={() => { }}
@@ -401,6 +420,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         });
 
+        if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
+            markups.push(<div className='ac-vpadding'>
+                <label className='ac-field-label'>Recent pull requests</label>
+                {this.state.recentPullRequests.map(pr => {
+                    return <PullRequests pullRequests={this.state.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })} />;
+                })}
+            </div>);
+        }
+
         return markups;
     }
 
@@ -433,7 +461,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {(size: SizeMetrics) => {
                         if (size.width < 800) {
                             return (
-                                <div>
+                                <div style={{ marginTop: '20px' }}>
                                     {this.getMainPanelMarkup()}
                                     {this.commonSidebar()}
                                     <Collapsible
@@ -459,7 +487,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             );
                         }
                         return (
-                            <div style={{ maxWidth: '1200px', margin: 'auto' }}>
+                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                 <Grid layout="fluid">
                                     <GridColumn medium={8}>
                                         {this.getMainPanelMarkup()}
