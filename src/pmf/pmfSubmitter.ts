@@ -141,5 +141,5 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
 }
 
 async function getAAID(): Promise<string | undefined> {
-    return Container.siteManager.getFirstUserId();
+    return Container.siteManager.getFirstAAID();
 }

@@ -121,9 +121,9 @@ export class LoginManager {
 
     private async saveDetailsForServerSite(site: SiteInfo, credentials: BasicAuthInfo) {
         const authHeader = 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
-        // userId is only used to link the sites and their credentials, since this one-to-one for server
-        // we can just use a UUID. Unless I'm wrong and userId does other things.
-        const fakeId = v4();
+        // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances will
+        // have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
+        const credentialId = v4();
 
         let siteDetailsUrl = '';
         let avatarUrl = '';
@@ -160,7 +160,7 @@ export class LoginManager {
             id: site.hostname,
             name: site.hostname,
             userId: json.id,
-            credentialId: fakeId,
+            credentialId: credentialId,
         };
 
         credentials.user = {

@@ -277,7 +277,7 @@ async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T
 
     let newObj: Object;
 
-    let userId = Container.siteManager.getFirstUserId(hostProduct);
+    let userId = Container.siteManager.getFirstAAID(hostProduct);
     if (!userId) {
         userId = Container.machineId;
     }

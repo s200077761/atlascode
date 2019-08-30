@@ -93,21 +93,22 @@ export class SiteManager extends Disposable {
         return sites;
     }
 
-    public getFirstUserId(productKey?: string): string | undefined {
+    public getFirstAAID(productKey?: string): string | undefined {
         if (productKey) {
-            return this.getFirstUserIdForProduct(productKey);
+            return this.getFirstAAIDForProduct(productKey);
         }
-        let userId = this.getFirstUserIdForProduct(ProductJira.key);
+        let userId = this.getFirstAAIDForProduct(ProductJira.key);
         if (userId) {
             return userId;
         }
-        return this.getFirstUserIdForProduct(ProductBitbucket.key);
+        return this.getFirstAAIDForProduct(ProductBitbucket.key);
     }
 
-    private getFirstUserIdForProduct(productKey: string): string | undefined {
+    private getFirstAAIDForProduct(productKey: string): string | undefined {
         const sites = this.getSitesAvailableForKey(productKey);
-        if (sites.length > 0) {
-            return sites[0].userId;
+        const cloudSites = sites.filter(s => s.isCloud);
+        if (cloudSites.length > 0) {
+            return cloudSites[0].userId;
         }
 
         return undefined;
