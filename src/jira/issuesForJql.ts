@@ -7,7 +7,7 @@ import { readSearchResults } from "./jira-client/model/responses";
 export async function issuesForJQL(jql: string): Promise<MinimalIssue[]> {
   const site = Container.siteManager.effectiveSite(ProductJira);
 
-  const client = await Container.clientManager.jirarequest(site);
+  const client = await Container.clientManager.jiraClient(site);
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
   const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 

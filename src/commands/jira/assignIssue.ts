@@ -6,7 +6,7 @@ import { MinimalIssue, isMinimalIssue } from "../../jira/jira-client/model/entit
 
 export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: string) {
   const issue = isMinimalIssue(param) ? param : param.issue;
-  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
   if (!accountId) {
     const me = await currentUserJira(issue.siteDetails);
@@ -19,7 +19,7 @@ export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: s
 }
 
 export async function unassignIssue(issue: MinimalIssue) {
-  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
   const response = await client.assignIssue(issue.id, undefined);
   Logger.info(response);

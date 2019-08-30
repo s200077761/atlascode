@@ -38,7 +38,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isFetchQuery(msg)) {
                             try {
-                                let client = await Container.clientManager.jirarequest(msg.site);
+                                let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + msg.query);
@@ -62,7 +62,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isFetchQuery(msg)) {
                             try {
-                                let client = await Container.clientManager.jirarequest(msg.site);
+                                let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + msg.query);
@@ -88,7 +88,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         handled = true;
                         if (isCreateSelectOption(msg)) {
                             try {
-                                let client = await Container.clientManager.jirarequest(msg.siteDetails);
+                                let client = await Container.clientManager.jiraClient(msg.siteDetails);
                                 const result = await client.postCreateUrl(msg.createUrl, msg.createData);
                                 await this.handleSelectOptionCreated(msg.fieldKey, result);
                             } catch (e) {

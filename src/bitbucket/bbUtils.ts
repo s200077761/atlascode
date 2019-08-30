@@ -32,7 +32,7 @@ export async function clientForRemote(remote: Remote): Promise<BitbucketApi> {
     let site = siteDetailsForRemote(remote);
 
     if (site) {
-        return await Container.clientManager.bbrequest(site);
+        return await Container.clientManager.bbClient(site);
     }
 
     return Promise.reject(bbAPIConnectivityError);
@@ -42,7 +42,7 @@ export async function clientForHostname(hostname: string): Promise<BitbucketApi>
     let site = Container.siteManager.getSiteForHostname(ProductBitbucket, hostname);
 
     if (site) {
-        return await Container.clientManager.bbrequest(site);
+        return await Container.clientManager.bbClient(site);
     }
 
     return Promise.reject(bbAPIConnectivityError);

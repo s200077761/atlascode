@@ -1,24 +1,19 @@
 import {
-  window,
   ConfigurationChangeEvent,
   ExtensionContext,
   Disposable,
 } from "vscode";
 import { JiraClient } from "../jira/jira-client/client";
-import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, Product, ProductBitbucket, ProductJira, AuthInfo, isOAuthInfo, isBasicAuthInfo, AccessibleResource } from "./authInfo";
+import { SiteInfo, DetailedSiteInfo, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
 import { Container } from "../container";
-import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
 var tunnel = require("tunnel");
 import * as fs from "fs";
 import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
-import { authenticatedEvent } from "../analytics";
 import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
-import axios from 'axios';
-import { OAuthRefesher } from "./oauthRefresher";
 import { JiraCloudClient } from "../jira/jira-client/cloudClient";
 import { JiraServerClient } from "../jira/jira-client/serverClient";
 import { BitbucketApi } from "../bitbucket/model";
@@ -34,8 +29,6 @@ const serverTTL: number = Interval.FOREVER;
 
 export class ClientManager implements Disposable {
   private _clients: CacheMap = new CacheMap();
-  private _dancer: OAuthDancer = OAuthDancer.Instance;
-  private _refresher: OAuthRefesher = new OAuthRefesher();
   private _agent: any | undefined;
   private _agentChanged: boolean = false;
 
@@ -48,7 +41,6 @@ export class ClientManager implements Disposable {
 
   dispose() {
     this._clients.clear();
-    this._dancer.dispose();
   }
 
   // used to add and remove the proxy agent when charles setting changes.
@@ -83,185 +75,7 @@ export class ClientManager implements Disposable {
     }
   }
 
-  // this is *only* called when login buttons are clicked by the user
-  public async userInitiatedOAuthLogin(site: SiteInfo): Promise<void> {
-    const provider = oauthProviderForSite(site);
-    try {
-      if (!provider) {
-        throw new Error(`No provider found for ${site.hostname}`);
-      }
-
-      const resp = await this._dancer.doDance(provider);
-
-      const oauthInfo: OAuthInfo = {
-        access: resp.access,
-        refresh: resp.refresh,
-        provider: provider,
-        user: resp.user
-      };
-
-      const siteDetails: DetailedSiteInfo | undefined = await this.getNewOAuthSiteDetails(site.product, oauthInfo, resp.accessibleResources);
-
-      if (siteDetails) {
-        await Container.authManager.saveAuthInfo(siteDetails, oauthInfo);
-      }
-
-      window.showInformationMessage(`You are now authenticated with ${site.product}`);
-      authenticatedEvent(site.product.name).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-    } catch (e) {
-      Logger.error(e, 'Error authenticating');
-      if (typeof e === 'object' && e.cancelled !== undefined) {
-        window.showWarningMessage(`${e.message}`);
-      } else {
-        window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
-      }
-
-    }
-  }
-
-  public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
-    let siteDetails: DetailedSiteInfo | undefined = undefined;
-
-    switch (site.product.key) {
-      case ProductJira.key:
-        if (isBasicAuthInfo(authInfo)) {
-          let authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
-          try {
-            const res = await axios(`https://${site.hostname}/rest/api/2/myself`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: authHeader
-              }
-            });
-            const json = res.data;
-
-            siteDetails = {
-              product: site.product,
-              isCloud: false,
-              avatarUrl: `https://${site.hostname}/images/fav-jcore.png`,
-              hostname: site.hostname,
-              baseApiUrl: `https://${site.hostname}/rest`,
-              baseLinkUrl: `https://${site.hostname}`,
-              id: site.hostname,
-              name: site.hostname
-            };
-
-            authInfo.user = {
-              displayName: json.displayName,
-              id: json.key
-            };
-
-            await Container.authManager.saveAuthInfo(siteDetails, authInfo);
-
-          } catch (err) {
-            Logger.error(new Error(`Error authenticating with Jira: ${err}`));
-            return Promise.reject(`Error authenticating with Jira: ${err}`);
-          }
-        }
-        break;
-
-      case ProductBitbucket.key:
-        let authHeader = "";
-        if (isBasicAuthInfo(authInfo)) {
-          authHeader = 'Basic ' + new Buffer(authInfo.username + ':' + authInfo.password).toString('base64');
-
-
-          try {
-            const res = await axios(`https://${site.hostname}/rest/api/1.0/users/${authInfo.username}`, {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: authHeader
-              }
-            });
-            const json = res.data;
-
-            siteDetails = {
-              product: site.product,
-              isCloud: false,
-              avatarUrl: ``,
-              hostname: site.hostname,
-              baseApiUrl: `https://${site.hostname}`,
-              baseLinkUrl: `https://${site.hostname}`,
-              id: site.hostname,
-              name: site.hostname
-            };
-
-            authInfo.user = {
-              displayName: json.displayName,
-              id: json.slug
-            };
-
-            await Container.authManager.saveAuthInfo(siteDetails, authInfo);
-
-          } catch (err) {
-            Logger.error(new Error(`Error authenticating with Bitbucket: ${err}`));
-            return Promise.reject(`Error authenticating with Bitbucket: ${err}`);
-          }
-        }
-        break;
-    }
-  }
-
-  private async getNewOAuthSiteDetails(product: Product, authInfo: OAuthInfo, resources: AccessibleResource[]): Promise<DetailedSiteInfo | undefined> {
-    const knownSites = Container.siteManager.getSitesAvailable(product);
-    let newResource: AccessibleResource | undefined = undefined;
-    let newSite: DetailedSiteInfo | undefined = undefined;
-
-    switch (product.key) {
-      case ProductBitbucket.key:
-        const bbResources = resources.filter(resource => knownSites.find(site => resource.url.endsWith(site.hostname) === undefined));
-        if (bbResources.length > 0) {
-          newResource = bbResources[0];
-          const hostname = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
-          const baseApiUrl = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
-          const siteName = (authInfo.provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
-
-          // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
-          newSite = {
-            avatarUrl: "",
-            baseApiUrl: baseApiUrl,
-            baseLinkUrl: newResource.url,
-            hostname: hostname,
-            id: newResource.id,
-            name: siteName,
-            product: ProductBitbucket,
-            isCloud: true,
-          };
-        }
-        break;
-      case ProductJira.key:
-        const jiraResources = resources.filter(resource => knownSites.find(site => site.id === resource.id) === undefined);
-        if (jiraResources.length > 0) {
-          newResource = jiraResources[0];
-
-          let apiUri = authInfo.provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-
-          //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
-          //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
-          const baseUrlString = newResource.url;
-          const baseUrl: URL = new URL(baseUrlString);
-
-          newSite = {
-            avatarUrl: newResource.avatarUrl,
-            baseApiUrl: `https://${apiUri}/ex/jira/${newResource.id}/rest`,
-            baseLinkUrl: baseUrlString,
-            hostname: baseUrl.hostname,
-            id: newResource.id,
-            name: newResource.name,
-            product: ProductJira,
-            isCloud: true,
-          };
-        }
-        break;
-    }
-
-    return newSite;
-  }
-
-  public async bbrequest(site: DetailedSiteInfo): Promise<BitbucketApi> {
-
+  public async bbClient(site: DetailedSiteInfo): Promise<BitbucketApi> {
     return this.getClient<BitbucketApi>(
       site,
       info => {
@@ -300,7 +114,7 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async jirarequest(site: DetailedSiteInfo): Promise<JiraClient> {
+  public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient> {
     return this.getClient<JiraClient>(
       site,
       info => {
@@ -321,37 +135,27 @@ export class ClientManager implements Disposable {
     let client: T | undefined = this._clients.getItem<T>(site.hostname);
 
     if (!client) {
-      const info = await Container.authManager.getAuthInfo(site);
+      try {
+        Container.credentialManager.refreshAccessToken(site);
+      } catch (e) {
+        Logger.debug(`error refreshing token ${e}`);
+        return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
+      }
+      const credentials = await Container.credentialManager.getAuthInfo(site);
 
-      if (isOAuthInfo(info)) {
-        try {
-          const provider: OAuthProvider | undefined = oauthProviderForSite(site);
-          if (provider) {
-            const newAccessToken = await this._refresher.getNewAccessToken(provider, info.refresh);
-            if (newAccessToken) {
-              info.access = newAccessToken;
-              await Container.authManager.saveAuthInfo(site, info);
-
-              client = factory(info);
-
-              this._clients.setItem(site.hostname, client, oauthTTL);
-            }
-          }
-        } catch (e) {
-          Logger.debug(`error refreshing token ${e}`);
-          return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
-        }
-      } else if (info) {
-        client = factory(info);
-        this._clients.setItem(site.hostname, client, serverTTL);
+      if (credentials) {
+        client = factory(credentials);
+        this._clients.setItem(site.hostname, client, isOAuthInfo(credentials) ? oauthTTL : serverTTL);
+      } else {
+        Logger.debug(`No credentials for ${site.name}!`);
       }
     }
 
     if (this._agentChanged) {
-      let info = await Container.authManager.getAuthInfo(site);
+      const credentials = await Container.credentialManager.getAuthInfo(site);
 
-      if (info) {
-        client = factory(info);
+      if (credentials) {
+        client = factory(credentials);
 
         this._clients.updateItem(site.hostname, client);
       }
@@ -361,31 +165,25 @@ export class ClientManager implements Disposable {
     return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
   }
 
+  // TODO: [VSCODE-598] Get rid of getValidAccessToken method
   public async getValidAccessToken(site: DetailedSiteInfo): Promise<string> {
     if (!site.isCloud) {
       return Promise.reject(`site ${site.name} is not a cloud instance`);
     }
 
     let client: any = this._clients.getItem(site.hostname);
-    let info = await Container.authManager.getAuthInfo(site);
+    let info = await Container.credentialManager.getAuthInfo(site);
     let newAccessToken: string | undefined = undefined;
 
     if (isOAuthInfo(info)) {
       if (!client) {
         try {
-          const provider: OAuthProvider | undefined = oauthProviderForSite(site);
-          if (provider) {
-            newAccessToken = await this._refresher.getNewAccessToken(provider, info.refresh);
-            if (newAccessToken) {
-              info.access = newAccessToken;
-              await Container.authManager.saveAuthInfo(site, info);
-            }
-          }
+          newAccessToken = await Container.credentialManager.refreshAccessToken(site);
         } catch (e) {
           Logger.debug(`error refreshing token ${e}`);
           return Promise.reject(e);
         }
-      } else if (info) {
+      } else {
         newAccessToken = info.access;
       }
     }
@@ -395,5 +193,4 @@ export class ClientManager implements Disposable {
   public async removeClient(site: SiteInfo) {
     this._clients.deleteItem(site.hostname);
   }
-
 }

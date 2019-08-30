@@ -74,7 +74,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
             if (!this._currentUserId) {
-                const authInfo = await Container.authManager.getAuthInfo(this._issue.siteDetails);
+                const authInfo = await Container.credentialManager.getAuthInfo(this._issue.siteDetails);
                 this._currentUserId = authInfo ? authInfo.user.id : undefined;
             }
 
@@ -135,7 +135,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
         this._editUIData.fieldValues[fieldKey].push(newValue);
 
-        const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
         await client.editIssue(this._issue!.key, { [fieldKey]: this._editUIData.fieldValues[fieldKey] });
 
         let optionMessage = {
@@ -157,7 +157,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     handled = true;
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
-                        const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         await client.editIssue(this._issue!.key, newFieldValues);
                         this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                         this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues });
@@ -195,7 +195,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isCreateIssue(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue(msg.issueData);
 
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
@@ -221,7 +221,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isCreateIssueLink(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.createIssueLink(msg.issueLinkData);
 
                             const linkedIssueKey: string = (msg.issueLinkType.type === 'inward') ? msg.issueLinkData.inwardIssue.key : msg.issueLinkData.outwardIssue.key;
