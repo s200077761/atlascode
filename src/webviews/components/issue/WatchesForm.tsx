@@ -74,7 +74,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             return (
                 <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleWatching}>
                     <WatchFilledIcon label='watchfilledicon' size='medium' />
-                    <span>Stop watching</span>
+                    <span style={{ marginLeft: '8px' }}>Stop watching</span>
                 </div>
             );
         }
@@ -82,7 +82,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
         return (
             <div className='ac-icon-with-text ac-inline-watcher-hover' style={{ cursor: 'pointer' }} onClick={this.toggleWatching}>
                 <WatchIcon label='watchicon' size='medium' />
-                <span>Start watching</span>
+                <span style={{ marginLeft: '8px' }}>Start watching</span>
             </div>
         );
 

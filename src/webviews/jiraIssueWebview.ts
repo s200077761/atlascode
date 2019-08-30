@@ -7,7 +7,7 @@ import { Container } from "../container";
 import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction } from "../ipc/issueActions";
 import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
@@ -102,8 +102,9 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
             // call async-able update functions here
             this.updateCurrentUser();
-            this.updateRelatedPullRequests();
             this.updateWatchers();
+            this.updateVoters();
+            this.updateRelatedPullRequests();
 
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
@@ -140,6 +141,19 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.postMessage({
                 type: 'fieldValueUpdate'
                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+            });
+        }
+    }
+
+    async updateVoters() {
+        if (this._editUIData.fieldValues['votes'] && this._editUIData.fieldValues['votes'].votes > 0) {
+            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const votes = await client.getVotes(this._issue.key);
+
+            this._editUIData.fieldValues['votes'] = votes;
+            this.postMessage({
+                type: 'fieldValueUpdate'
+                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
             });
         }
     }
@@ -377,8 +391,77 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
 
                         } catch (e) {
-                            Logger.error(new Error(`error adding watcher: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher') });
+                            Logger.error(new Error(`error removing watcher: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing watcher') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'addVote': {
+                    if (isUpdateVoteAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.addVote(msg.issueKey);
+
+                            if (!this._editUIData.fieldValues['votes']
+                                || !this._editUIData.fieldValues['votes'].voters
+                                || !Array.isArray(this._editUIData.fieldValues['votes'].voters)
+                            ) {
+                                this._editUIData.fieldValues['votes'].voters = [];
+                            }
+
+                            this._editUIData.fieldValues['votes'].voters.push(msg.voter);
+                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues['votes'].voters.length;
+                            this._editUIData.fieldValues['votes'].hasVoted = true;
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error adding vote: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding vote') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'removeVote': {
+                    if (isUpdateVoteAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.removeVote(msg.issueKey);
+                            if (!this._editUIData.fieldValues['votes']
+                                || !this._editUIData.fieldValues['votes'].voters
+                                || !Array.isArray(this._editUIData.fieldValues['votes'].voters)
+                            ) {
+                                this._editUIData.fieldValues['votes'].voters = [];
+                            }
+                            const foundIndex: number = this._editUIData.fieldValues['votes'].voters.findIndex((user: User) => user.accountId === msg.voter.accountId);
+                            if (foundIndex > -1) {
+                                this._editUIData.fieldValues['votes'].voters.splice(foundIndex, 1);
+                            }
+
+                            this._editUIData.fieldValues['votes'].hasVoted = false;
+                            this._editUIData.fieldValues['votes'].votes = this._editUIData.fieldValues['votes'].voters.length;
+
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error removing vote: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing vote') });
                         }
 
                     }

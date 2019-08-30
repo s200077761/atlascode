@@ -2,7 +2,7 @@
 import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI, IssueLinkTypeSelectOption } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
-import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue, readWatches } from "./model/entities";
+import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue, readWatches, readVotes } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
 import { API_VERSION } from "../jira-client/client";
@@ -423,6 +423,9 @@ export class FieldTransformer {
                 }
                 case ValueType.Watches: {
                     return readWatches(field.currentValue);
+                }
+                case ValueType.Votes: {
+                    return readVotes(field.currentValue);
                 }
             }
 

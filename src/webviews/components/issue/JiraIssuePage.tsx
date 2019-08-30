@@ -18,7 +18,8 @@ import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import Tooltip from '@atlaskit/tooltip';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
-import LikeIcon from '@atlaskit/icon/glyph/like';
+import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
+import StarIcon from '@atlaskit/icon/glyph/star';
 import InlineDialog from '@atlaskit/inline-dialog';
 import WorklogForm from './WorklogForm';
 
@@ -272,6 +273,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'removeWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
     }
 
+    handleAddVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'addVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
+    handleRemoveVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
     /*
     , 'attachment'
     */
@@ -382,6 +393,19 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     commonSidebar(): any {
         const originalEstimate: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
+        const numWatches: string = (
+            this.state.fieldValues['watches']
+            && this.state.fieldValues['watches'].watchCount > 0) ? this.state.fieldValues['watches'].watchCount : '';
+
+        const numVotes: string = (
+            this.state.fieldValues['votes']
+            && this.state.fieldValues['votes'].votes > 0) ? this.state.fieldValues['votes'].votes : '';
+
+        const allowVoting: boolean = (
+            this.state.fieldValues['reporter']
+            && this.state.fieldValues['reporter'].accountId !== this.state.currentUser.accountId
+        );
+
         return (
             <React.Fragment>
                 <ButtonGroup>
@@ -433,7 +457,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                                 : <WatchIcon label="Watches" />
                                         }
                                         isLoading={this.state.loadingField === 'watches'} >
-                                        {this.state.fieldValues['watches'].watchCount}
+                                        {numWatches}
                                     </Button>
                                 </Tooltip>
                             </InlineDialog>
@@ -445,8 +469,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             <InlineDialog
                                 content={
                                     <VotesForm
-                                        onSave={(val: any) => this.handleInlineDialogSave(this.state.fields['votes'], val)}
-                                        onCancel={this.handleInlineDialogClose}
+                                        onAddVote={this.handleAddVote}
+                                        onRemoveVote={this.handleRemoveVote}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        allowVoting={allowVoting}
                                         votes={this.state.fieldValues['votes']} />
 
                                 }
@@ -457,8 +484,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <Tooltip content="Vote options">
                                     <Button className='ac-button'
                                         onClick={this.handleOpenVotesEditor}
-                                        iconBefore={<LikeIcon label="Votes" />}
-                                        isLoading={this.state.loadingField === 'votes'} />
+                                        iconBefore={
+                                            this.state.fieldValues['votes'].hasVoted
+                                                ? <StarFilledIcon label="Votes" />
+                                                : <StarIcon label="Votes" />
+                                        }
+                                        isLoading={this.state.loadingField === 'votes'}>
+                                        {numVotes}
+                                    </Button>
                                 </Tooltip>
                             </InlineDialog>
                         </div>

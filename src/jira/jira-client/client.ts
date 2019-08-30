@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 
@@ -67,12 +67,6 @@ export abstract class JiraClient {
         const res = await this.getFromJira(`issue/${issueIdOrKey}/editmeta`);
 
         return new IssueUpdateMetadata(res);
-    }
-
-    public async getWatchers(issueIdOrKey: string): Promise<Watches> {
-        const res = await this.getFromJira(`issue/${issueIdOrKey}/watchers`);
-
-        return readWatches(res);
     }
 
     public async getCreateIssueMetadata(projectKey: string): Promise<IssueCreateMetadata> {
@@ -188,6 +182,12 @@ export abstract class JiraClient {
     }
 
     // Watchers
+    public async getWatchers(issueIdOrKey: string): Promise<Watches> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}/watchers`);
+
+        return readWatches(res);
+    }
+
     public async addWatcher(issuekey: string, accountId: string): Promise<any> {
         const result = await this.postToJira(`issue/${issuekey}/watchers`, accountId);
 
@@ -196,6 +196,25 @@ export abstract class JiraClient {
 
     public async removeWatcher(issuekey: string, accountId: string): Promise<any> {
         const result = await this.deleteToJira(`issue/${issuekey}/watchers`, { accountId: accountId });
+
+        return result;
+    }
+
+    // Votes
+    public async getVotes(issueIdOrKey: string): Promise<Votes> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}/votes`);
+
+        return readVotes(res);
+    }
+
+    public async addVote(issuekey: string): Promise<any> {
+        const result = await this.postToJira(`issue/${issuekey}/votes`);
+
+        return result;
+    }
+
+    public async removeVote(issuekey: string): Promise<any> {
+        const result = await this.deleteToJira(`issue/${issuekey}/votes`);
 
         return result;
     }
@@ -253,7 +272,7 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async postToJira(url: string, params: any, queryParams?: any): Promise<any> {
+    protected async postToJira(url: string, params?: any, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {
             const sp = new URLSearchParams();
@@ -262,14 +281,21 @@ export abstract class JiraClient {
             }
             url = `${url}?${sp.toString()}`;
         }
+
+        // yup, jira's silly and accepts post with no data
+        let data = {};
+        if (params) {
+            data = { data: JSON.stringify(params) };
+        }
+
         const res = await this.transport(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            data: JSON.stringify(params),
-            httpsAgent: this.agent
+            httpsAgent: this.agent,
+            ...data
         });
 
         return res.data;
@@ -292,7 +318,7 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async deleteToJira(url: string, queryParams: any): Promise<any> {
+    protected async deleteToJira(url: string, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {
             const sp = new URLSearchParams();

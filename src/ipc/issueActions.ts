@@ -115,6 +115,12 @@ export interface UpdateWatcherAction extends Action {
     watcher: User;
 }
 
+export interface UpdateVoteAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    voter: User;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -172,6 +178,12 @@ export function isUpdateWatcherAction(a: Action): a is UpdateWatcherAction {
     return a && (<UpdateWatcherAction>a).watcher !== undefined
         && (<UpdateWatcherAction>a).site !== undefined
         && (<UpdateWatcherAction>a).issueKey !== undefined;
+}
+
+export function isUpdateVoteAction(a: Action): a is UpdateVoteAction {
+    return a && (<UpdateVoteAction>a).voter !== undefined
+        && (<UpdateVoteAction>a).site !== undefined
+        && (<UpdateVoteAction>a).issueKey !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

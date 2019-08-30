@@ -207,6 +207,12 @@ export interface Watches {
     watchers: User[];
 }
 
+export interface Votes {
+    hasVoted: boolean;
+    votes: number;
+    voters: User[];
+}
+
 export interface Avatars {
     '48x48': string;
     '24x24': string;
@@ -260,6 +266,22 @@ export function readWatches(watchesJson: any): Watches {
         isWatching: false,
         watchCount: 0,
         watchers: [],
+    };
+}
+
+export function readVotes(votesJson: any): Votes {
+    if (votesJson) {
+        return {
+            hasVoted: votesJson.hasVoted,
+            votes: votesJson.votes,
+            voters: Array.isArray(votesJson.voters) ? votesJson.voters : [],
+        };
+    }
+
+    return {
+        hasVoted: false,
+        votes: 0,
+        voters: [],
     };
 }
 
