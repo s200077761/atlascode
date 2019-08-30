@@ -218,6 +218,7 @@ export const customSchemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
     [['com.pyxis.greenhopper.jira:gh-epic-link', UIType.Select]
         , ['com.pyxis.greenhopper.jira:gh-epic-label', UIType.Input]
         , [ValueType.Worklog, UIType.Worklog]
+        , [ValueType.Attachment, UIType.Attachment]
         , ['com.atlassian.jira.toolkit:participants', UIType.Participants]
     ]
 );

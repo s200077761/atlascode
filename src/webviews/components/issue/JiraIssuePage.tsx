@@ -30,6 +30,7 @@ import Worklogs from './Worklogs';
 import PullRequests from './PullRequests';
 import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
+import { AttachmentForm } from '../AttachmentForm';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -340,6 +341,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
+                {this.state.fields['attachment']
+                    &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
+                        {/* {this.getInputMarkup(this.state.fields['attachment'], true)} */}
+                        <AttachmentForm onFilesAdded={(files: any[]) => console.log('files dropped', files)} />
+                    </div>
+                }
+
                 {this.state.fieldValues['environment']
                     && this.state.fieldValues['environment'].trim() !== ''
                     &&

@@ -22,6 +22,7 @@ import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import debounce from "lodash.debounce";
+//import { useDropzone } from 'react-dropzone';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -1079,6 +1080,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 return (
                     <div>{value}</div>
                 );
+            }
+            case UIType.Attachment: {
+                if (editmode) {
+
+                }
             }
 
         }

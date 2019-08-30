@@ -203,7 +203,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' })
+                baseUri: Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' }),
+                resourceRoot: Uri.file(path.join(this._extensionPath, 'resources')).with({ scheme: 'vscode-resource' })
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });
