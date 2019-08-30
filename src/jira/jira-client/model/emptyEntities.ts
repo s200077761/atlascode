@@ -16,6 +16,10 @@ export const emptyUser: User = {
     timeZone: ''
 };
 
+export function isEmptyUser(u: any): u is User {
+    return u && (<User>u).accountId.trim() === '';
+}
+
 export const emptyIssueType: IssueType = {
     avatarId: -1,
     description: '',

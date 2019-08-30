@@ -200,6 +200,13 @@ export interface User {
     timeZone: string | undefined;
 }
 
+
+export interface Watches {
+    isWatching: boolean;
+    watchCount: number;
+    watchers: User[];
+}
+
 export interface Avatars {
     '48x48': string;
     '24x24': string;
@@ -237,6 +244,22 @@ export function readProject(projectJson: any): Project {
         simplified: projectJson.simplified,
         style: projectJson.style,
         isPrivate: projectJson.isPrivate,
+    };
+}
+
+export function readWatches(watchesJson: any): Watches {
+    if (watchesJson) {
+        return {
+            isWatching: watchesJson.isWatching,
+            watchCount: watchesJson.watchCount,
+            watchers: Array.isArray(watchesJson.watchers) ? watchesJson.watchers : [],
+        };
+    }
+
+    return {
+        isWatching: false,
+        watchCount: 0,
+        watchers: [],
     };
 }
 

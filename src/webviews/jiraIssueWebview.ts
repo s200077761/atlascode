@@ -1,14 +1,14 @@
 import { AbstractIssueEditorWebview } from "./abstractIssueEditorWebview";
 import { InitializingWebview } from "./abstractWebview";
-import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue } from "../jira/jira-client/model/entities";
+import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue, User } from "../jira/jira-client/model/entities";
 import { Action, onlineStatus } from "../ipc/messaging";
 import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { Container } from "../container";
 import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog } from "../ipc/issueActions";
-import { emptyMinimalIssue } from "../jira/jira-client/model/emptyEntities";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction } from "../ipc/issueActions";
+import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
@@ -21,12 +21,13 @@ import { PullRequestData } from "../bitbucket/model";
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
     private _editUIData: EditIssueData;
-    private _currentUserId: string | undefined;
+    private _currentUser: User;
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._issue = emptyMinimalIssue;
         this._editUIData = emptyEditIssueData;
+        this._currentUser = emptyUser;
     }
 
     public get title(): string {
@@ -75,10 +76,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         this.isRefeshing = true;
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
-            if (!this._currentUserId) {
-                const authInfo = await Container.authManager.getAuthInfo(this._issue.siteDetails);
-                this._currentUserId = authInfo ? authInfo.user.id : undefined;
-            }
 
             if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
 
@@ -89,13 +86,13 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             //     : [];
 
             this._editUIData = editUI as EditIssueData;
-            this._editUIData.currentUserId = this._currentUserId!;
 
             // msg.workInProgress = this._issue.assignee.accountId === this._currentUserId &&
             //     issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
             //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
 
             this._editUIData.recentPullRequests = [];
+            this._editUIData.currentUser = emptyUser;
 
             let msg = this._editUIData;
 
@@ -103,10 +100,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
             this.postMessage(msg);
 
-            const relatedPrs = await this.recentPullRequests();
-            if (relatedPrs.length > 0) {
-                this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
-            }
+            // call async-able update functions here
+            this.updateCurrentUser();
+            this.updateRelatedPullRequests();
+            this.updateWatchers();
 
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
@@ -114,6 +111,36 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
         } finally {
             this.isRefeshing = false;
+        }
+    }
+
+    async updateCurrentUser() {
+        if (isEmptyUser(this._currentUser)) {
+            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const user = await client.getCurrentUser();
+            this._currentUser = user;
+            this.postMessage({ type: 'currentUserUpdate', currentUser: user });
+        }
+
+    }
+
+    async updateRelatedPullRequests() {
+        const relatedPrs = await this.recentPullRequests();
+        if (relatedPrs.length > 0) {
+            this.postMessage({ type: 'pullRequestUpdate', recentPullRequests: relatedPrs });
+        }
+    }
+
+    async updateWatchers() {
+        if (this._editUIData.fieldValues['watches'] && this._editUIData.fieldValues['watches'].watchCount > 0) {
+            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const watches = await client.getWatchers(this._issue.key);
+
+            this._editUIData.fieldValues['watches'] = watches;
+            this.postMessage({
+                type: 'fieldValueUpdate'
+                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+            });
         }
     }
 
@@ -278,6 +305,80 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         } catch (e) {
                             Logger.error(new Error(`error creating worklog: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating worklog') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'addWatcher': {
+                    if (isUpdateWatcherAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.addWatcher(msg.issueKey, msg.watcher.accountId);
+
+                            if (!this._editUIData.fieldValues['watches']
+                                || !this._editUIData.fieldValues['watches'].watchers
+                                || !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
+                            ) {
+                                this._editUIData.fieldValues['watches'].watchers = [];
+                            }
+
+                            this._editUIData.fieldValues['watches'].watchers.push(msg.watcher);
+                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues['watches'].watchers.length;
+                            if (msg.watcher.accountId === this._currentUser.accountId) {
+                                this._editUIData.fieldValues['watches'].isWatching = true;
+                            }
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error adding watcher: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'removeWatcher': {
+                    if (isUpdateWatcherAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
+                            if (!this._editUIData.fieldValues['watches']
+                                || !this._editUIData.fieldValues['watches'].watchers
+                                || !Array.isArray(this._editUIData.fieldValues['watches'].watchers)
+                            ) {
+                                this._editUIData.fieldValues['watches'].watchers = [];
+                            }
+                            const foundIndex: number = this._editUIData.fieldValues['watches'].watchers.findIndex((user: User) => user.accountId === msg.watcher.accountId);
+                            if (foundIndex > -1) {
+                                this._editUIData.fieldValues['watches'].watchers.splice(foundIndex, 1);
+                            }
+
+                            if (msg.watcher.accountId === this._currentUser.accountId) {
+                                this._editUIData.fieldValues['watches'].isWatching = false;
+                            }
+
+                            this._editUIData.fieldValues['watches'].watchCount = this._editUIData.fieldValues['watches'].watchers.length;
+
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error adding watcher: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher') });
                         }
 
                     }

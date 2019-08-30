@@ -21,7 +21,7 @@ import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
-import WorklogForm from './WorklogForm';
+import debounce from "lodash.debounce";
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -41,7 +41,7 @@ export interface CommonEditorViewState extends Message {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     commentInputValue: string;
-    isWorklogEditorOpen: boolean;
+
 }
 
 export const emptyCommonEditorState: CommonEditorViewState = {
@@ -56,7 +56,6 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
-    isWorklogEditorOpen: false,
 };
 
 const Condition = ({ when, is, children }: any) => {
@@ -78,26 +77,19 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
     private selectSuggestions: any[] | undefined = undefined;
     private waitForCreateOptionResponse: boolean = false;
-    private executingEdit: boolean = false;
-
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
     protected handleCommentSave = (newValue: string) => { };
 
-    private resetEditing = () => { this.executingEdit = false; };
+    // react-select has issues and doesn't stop propagation on click events when you provide
+    // a custom option component.  e.g. it calls this twice, so we have to debounce.
+    // see: https://github.com/JedWatson/react-select/issues/2477
+    // and more importantly: https://github.com/JedWatson/react-select/issues/2326
+    protected handleSelectChange = debounce((field: FieldUI, newValue: any) => {
 
-    protected handleSelectChange = (field: FieldUI, newValue: any) => {
-        // react-select is dumb and doesn't stop propagation on click events when you provide
-        // a custom option component.  e.g. it calls this twice, so we have to do this first check.
-        if (!this.executingEdit) {
-            this.executingEdit = true;
-            this.handleInlineEdit(field, this.formatEditValue(field, newValue));
-
-            setTimeout(this.resetEditing, 300);
-
-        }
-    }
+        this.handleInlineEdit(field, this.formatEditValue(field, newValue));
+    }, 100);
 
     protected formatEditValue(field: FieldUI, newValue: any): any {
         let val = newValue;
@@ -235,11 +227,16 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    protected loadSelectOptions = (field: SelectFieldUI, input: string): Promise<any[]> => {
+    protected loadSelectOptionsForField = async (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
+        return this.loadSelectOptions(input, field.autoCompleteUrl);
+    }
+
+    protected loadSelectOptions = async (input: string, url: string): Promise<any[]> => {
+        this.setState({ isSomethingLoading: true });
         return new Promise(resolve => {
             this.selectSuggestions = undefined;
-            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl });
+            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -257,9 +254,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         });
     }
 
-    handleSelectOptionCreate(field: SelectFieldUI, input: string): void {
-        // react-select is dumb and doesn't stop propagation on click events when you provide
-        // a custom option component.  e.g. it calls this twice, so we have to do this first check.
+    // react-select has issues and doesn't stop propagation on click events when you provide
+    // a custom option component.  e.g. it calls this twice, so we have to debounce.
+    // see: https://github.com/JedWatson/react-select/issues/2477
+    // and more importantly: https://github.com/JedWatson/react-select/issues/2326
+    handleSelectOptionCreate = debounce((field: SelectFieldUI, input: string): void => {
         if (!this.waitForCreateOptionResponse) {
             if (field.createUrl.trim() !== '') {
                 this.waitForCreateOptionResponse = true;
@@ -283,26 +282,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 }, 100);
             }
         }
-    }
+    }, 100);
 
-    protected handleOpenWorklogEditor = () => {
-        // Note: we set isSomethingLoading: true to disable all fields while the form is open
-        this.setState({ isWorklogEditorOpen: true, isSomethingLoading: true });
-    }
-
-    protected handleCancelWorklogEditor = () => {
-        this.setState({ isWorklogEditorOpen: false, isSomethingLoading: false });
-    }
-
-    protected handleSaveWorklog = (field: FieldUI, value: any) => {
-        this.setState({ isWorklogEditorOpen: false, isSomethingLoading: false });
-        this.handleInlineEdit(field, value);
-    }
     /*
-    IssueLink = 'issuelink',
-    Worklog = 'worklog',
-    Watches = 'watches',
-    Votes = 'votes',
     Attachment = 'attachment',
     */
     protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
@@ -678,11 +660,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     {...commonProps}
                                     placeholder='Type to search'
                                     isClearable={this.isClearableSelect(selectField)}
-                                    isDisabled={this.state.isSomethingLoading}
+                                    isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                 />
                             );
                         }
@@ -707,12 +689,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
-                                                    isDisabled={this.state.isSomethingLoading}
+                                                    isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
                                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 />
                                                 {errDiv}
                                             </React.Fragment>
@@ -739,7 +721,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     {...commonProps}
                                     value={this.state.fieldValues[field.key]}
                                     placeholder='Type to search'
-                                    isDisabled={this.state.isSomethingLoading}
+                                    isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
@@ -747,7 +729,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     onCreateOption={onCreateFunc}
                                     getNewOptionData={newDataFunc}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                 >
                                 </AsyncCreatableSelect>
                             );
@@ -773,7 +755,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
-                                                    isDisabled={this.state.isSomethingLoading}
+                                                    isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
@@ -781,7 +763,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     onCreateOption={onCreateFunc}
                                                     getNewOptionData={newDataFunc}
                                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                                    loadOptions={async (input: any) => this.loadSelectOptions(field as SelectFieldUI, input)}
+                                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 >
                                                 </AsyncCreatableSelect>
                                                 {errDiv}
@@ -962,15 +944,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             }
             case UIType.Worklog: {
                 if (editmode) {
-                    const orig: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
 
                     return (
-                        <React.Fragment>
-                            <WorklogForm
-                                onSave={(val: any) => this.handleSaveWorklog(field, val)}
-                                onCancel={this.handleCancelWorklogEditor}
-                                originalEstimate={orig} />
-                        </React.Fragment>
+                        <div>don't call getInputMarkup for worklog in editmode</div>
                     );
                 }
 

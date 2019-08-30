@@ -417,9 +417,75 @@ section button span {
 
 /*-------------------- BEGIN - inline dialog --------------------*/
 
-.ac-inline-dialog div {
-  background-color: var(--vscode-editor-background--lighten-05);
+.ac-inline-dialog>div {
   color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--lighten-05);
+}
+
+.vscode-light .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--darken-05);
+}
+
+.ac-inline-items-container {
+  width: 100%
+}
+
+.ac-inline-item {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: var(--vscode-editor-background--lighten-05)
+}
+
+.ac-inline-watcher {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  padding-left: 9px;
+  padding-right: 9px;
+}
+
+.ac-inline-watcher-list-heading {
+  font-size: .8em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+
+.ac-inline-watcher-name {
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.ac-inline-watcher-delete {
+  margin-left: 15px;
+  cursor: pointer
+}
+
+.vscode-dark .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--lighten-15)
+}
+
+.vscode-light .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--darken-15)
+}
+
+.ac-inline-watcher-delete:after {
+  content: "\2715"
+}
+
+.vscode-dark .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--lighten-075)
+}
+
+.vscode-light .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--darken-075)
 }
 
 /*-------------------- END - inline dialog --------------------*/

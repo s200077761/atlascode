@@ -1,6 +1,6 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User } from "../jira/jira-client/model/entities";
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -109,6 +109,12 @@ export interface CreateWorklogAction extends Action {
     worklogData: any;
 }
 
+export interface UpdateWatcherAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    watcher: User;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -160,6 +166,12 @@ export function isCreateWorklog(a: Action): a is CreateWorklogAction {
     return a && (<CreateWorklogAction>a).worklogData !== undefined
         && (<CreateWorklogAction>a).site !== undefined
         && (<CreateWorklogAction>a).issueKey !== undefined;
+}
+
+export function isUpdateWatcherAction(a: Action): a is UpdateWatcherAction {
+    return a && (<UpdateWatcherAction>a).watcher !== undefined
+        && (<UpdateWatcherAction>a).site !== undefined
+        && (<UpdateWatcherAction>a).issueKey !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

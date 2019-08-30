@@ -17,14 +17,18 @@ import { Transition } from '../../../jira/jira-client/model/entities';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import Tooltip from '@atlaskit/tooltip';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
+import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import LikeIcon from '@atlaskit/icon/glyph/like';
 import InlineDialog from '@atlaskit/inline-dialog';
+import WorklogForm from './WorklogForm';
 
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import Collapsible from 'react-collapsible';
 import Worklogs from './Worklogs';
 import PullRequests from './PullRequests';
+import WatchesForm from './WatchesForm';
+import VotesForm from './VotesForm';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -36,12 +40,14 @@ type SizeMetrics = {
 
 interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
+    currentInlineDialog: string;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyEditIssueData,
     showMore: false,
+    currentInlineDialog: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -74,6 +80,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'pullRequestUpdate': {
                     this.setState({ recentPullRequests: e.recentPullRequests });
+                }
+                case 'currentUserUpdate': {
+                    this.setState({ currentUser: e.currentUser });
                 }
                 case 'issueCreated': {
                     if (isIssueCreated(e)) {
@@ -113,6 +122,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             action: 'openStartWorkPage'
             , issue: { key: this.state.key, siteDetails: this.state.siteDetails }
         });
+    }
+
+    fetchUsers = (input: string) => {
+        return this.loadSelectOptions(input, `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`);
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
@@ -210,6 +223,53 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             transition: transition,
             issue: { key: this.state.key, siteDetails: this.state.siteDetails }
         });
+    }
+
+    handleOpenWorklogEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'worklog') {
+            this.setState({ currentInlineDialog: 'worklog', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleOpenWatchesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'watches') {
+            this.setState({ currentInlineDialog: 'watches', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+
+    }
+
+    handleOpenVotesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'votes') {
+            this.setState({ currentInlineDialog: 'votes', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleInlineDialogClose = () => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+    }
+
+    handleInlineDialogSave = (field: FieldUI, value: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        this.handleInlineEdit(field, value);
+    }
+
+    handleAddWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'addWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
+    }
+
+    handleRemoveWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'removeWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
     }
 
     /*
@@ -321,15 +381,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     commonSidebar(): any {
+        const originalEstimate: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
         return (
             <React.Fragment>
                 <ButtonGroup>
                     {this.state.fields['worklog'] &&
                         <div className='ac-inline-dialog'>
                             <InlineDialog
-                                content={this.getInputMarkup(this.state.fields['worklog'], true)}
-                                isOpen={this.state.isWorklogEditorOpen}
-                                onClose={this.handleCancelWorklogEditor}
+                                content={
+                                    <WorklogForm
+                                        onSave={(val: any) => this.handleInlineDialogSave(this.state.fields['worklog'], val)}
+                                        onCancel={this.handleInlineDialogClose}
+                                        originalEstimate={originalEstimate} />
+                                }
+                                isOpen={this.state.currentInlineDialog === 'worklog'}
+                                onClose={this.handleInlineDialogClose}
                                 placement='left-start'
                             >
                                 <Tooltip content="Log work">
@@ -342,18 +408,60 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         </div>
                     }
                     {this.state.fields['watches'] &&
-                        <Tooltip content="Watches">
-                            <Button className='ac-button'
-                                onClick={() => { }}
-                                iconBefore={<WatchIcon label="Watches" />} />
-                        </Tooltip>
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <WatchesForm
+                                        onFetchUsers={this.fetchUsers}
+                                        onAddWatcher={this.handleAddWatcher}
+                                        onRemoveWatcher={this.handleRemoveWatcher}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        watches={this.state.fieldValues['watches']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'watches'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Watch options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWatchesEditor}
+                                        iconBefore={
+                                            this.state.fieldValues['watches'].isWatching
+                                                ? <WatchFilledIcon label="Watches" />
+                                                : <WatchIcon label="Watches" />
+                                        }
+                                        isLoading={this.state.loadingField === 'watches'} >
+                                        {this.state.fieldValues['watches'].watchCount}
+                                    </Button>
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+
                     }
                     {this.state.fields['votes'] &&
-                        <Tooltip content="Votes">
-                            <Button className='ac-button'
-                                onClick={() => { }}
-                                iconBefore={<LikeIcon label="Votes" />} />
-                        </Tooltip>
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <VotesForm
+                                        onSave={(val: any) => this.handleInlineDialogSave(this.state.fields['votes'], val)}
+                                        onCancel={this.handleInlineDialogClose}
+                                        votes={this.state.fieldValues['votes']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'votes'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Vote options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenVotesEditor}
+                                        iconBefore={<LikeIcon label="Votes" />}
+                                        isLoading={this.state.loadingField === 'votes'} />
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
                     }
                     <Button className='ac-button' onClick={this.handleStartWorkOnIssue}>Start work on issue...</Button>
                 </ButtonGroup>

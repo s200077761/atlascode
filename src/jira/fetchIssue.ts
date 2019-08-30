@@ -9,6 +9,7 @@ import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-c
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
 import { EditIssueUI } from "./jira-client/model/editIssueUI";
+import { API_VERSION } from "./jira-client/client";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
   const client = await Container.clientManager.jirarequest(siteDetails);
@@ -56,7 +57,8 @@ export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI
     siteDetails: issue.siteDetails,
     isEpic: issue.isEpic,
     epicChildren: issue.epicChildren,
-    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails)
+    epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails),
+    apiVersion: API_VERSION,
 
   };
 

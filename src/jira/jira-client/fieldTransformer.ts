@@ -2,7 +2,7 @@
 import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI, IssueLinkTypeSelectOption } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
-import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue } from "./model/entities";
+import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue, readWatches } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
 import { API_VERSION } from "../jira-client/client";
@@ -414,10 +414,16 @@ export class FieldTransformer {
         if (field.currentValue) {
             const vt = this.valueTypeForField(field);
 
-            if (vt === ValueType.IssueLinks) {
-                return (this.schemaName(field) === 'issuelinks') ? readMinimalIssueLinks(field.currentValue, this._site) : readIssueLinkIssues(field.currentValue, this._site);
-            } else if (vt === ValueType.IssueLink) {
-                return readIssueLinkIssue(field.currentValue, this._site);
+            switch (vt) {
+                case ValueType.IssueLinks: {
+                    return (this.schemaName(field) === 'issuelinks') ? readMinimalIssueLinks(field.currentValue, this._site) : readIssueLinkIssues(field.currentValue, this._site);
+                }
+                case ValueType.IssueLink: {
+                    return readIssueLinkIssue(field.currentValue, this._site);
+                }
+                case ValueType.Watches: {
+                    return readWatches(field.currentValue);
+                }
             }
 
             if (this.schemaName(field) === 'com.pyxis.greenhopper.jira:gh-sprint') {
