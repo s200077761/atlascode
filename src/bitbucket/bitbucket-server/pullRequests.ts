@@ -248,7 +248,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let users: any[] = [];
@@ -287,7 +287,12 @@ export class ServerPullRequestApi implements PullRequestApi {
             users = data.values || [];
         }
 
-        return users.map(val => ({ ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
+        return users.map(val => ({
+            ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val),
+            mention: `@${val.slug}`,
+            approved: false,
+            role: 'PARTICIPANT' as 'PARTICIPANT'
+        }));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -309,6 +314,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                         name: accountId
                     }
                 }))
+            },
+            {
+                markup: true,
+                avatarSize: 64
             }
         );
 
@@ -360,6 +369,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                         path: inline!.path
                     }
                     : undefined
+            },
+            {
+                markup: true,
+                avatarSize: 64
             }
         );
 
@@ -430,6 +443,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 participants: data.reviewers.map((reviewer: any) => (
                     {
                         ...this.toUser(site, reviewer.user),
+                        mention: `@${reviewer.user.slug}`,
                         role: reviewer.role,
                         approved: reviewer.approved
                     }

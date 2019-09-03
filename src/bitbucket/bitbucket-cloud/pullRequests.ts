@@ -271,7 +271,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let reviewers: any[] = [];
@@ -295,6 +295,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             displayName: reviewer.display_name!,
             url: reviewer.links!.html!.href!,
             avatarUrl: reviewer.links!.avatar!.href!,
+            mention: `@{${reviewer.account_id}}`,
             approved: !!reviewer.approved,
             role: reviewer.role!
         }));
@@ -433,6 +434,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     accountId: participant.user!.account_id!,
                     displayName: participant.user!.display_name!,
+                    mention: `@{${participant.user!.accountId}}`,
                     url: participant.user!.links!.html!.href!,
                     avatarUrl: participant.user!.links!.avatar!.href!,
                     role: participant.role!,
