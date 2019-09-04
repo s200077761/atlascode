@@ -8,7 +8,7 @@ import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
-import { submitFeedback } from './feedbackSubmitter';
+import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQuery } from '../ipc/issueActions';
 import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
@@ -63,6 +63,8 @@ export class ConfigWebview extends AbstractReactWebview {
                 bitbucketSitesAvailable = await Container.siteManager.getSitesAvailable(ProductBitbucket);
             }
 
+            const feedbackUser = await getFeedbackUser();
+
             this.updateConfig({
                 type: 'update',
                 config: config,
@@ -74,7 +76,8 @@ export class ConfigWebview extends AbstractReactWebview {
                 isBitbucketAuthenticated: isBBConfigured,
                 jiraAccessToken: "FIXME!",
                 jiraStagingAccessToken: "REMOVEME!",
-                isStagingEnabled: stagingEnabled
+                isStagingEnabled: stagingEnabled,
+                feedbackUser: feedbackUser
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);

@@ -6,10 +6,11 @@ import { Checkbox } from '@atlaskit/checkbox';
 import Select from '@atlaskit/select';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import { FieldValidators, chain } from '../fieldValidators';
+import { FeedbackUser } from '../../../ipc/configMessaging';
 
 type MyState = { isOpen: boolean, description: string };
 
-export default class DisplayFeedback extends React.Component<{ onFeedback: (feedback: FeedbackData) => void }, MyState> {
+export default class DisplayFeedback extends React.Component<{ userDetails: FeedbackUser, onFeedback: (feedback: FeedbackData) => void }, MyState> {
 
   constructor(props: any) {
     super(props);
@@ -24,7 +25,10 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
     const feedback: FeedbackData = {
       description: formData.description,
       type: formData.type.value,
-      canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0)
+      canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0),
+      canBeResearched: (formData.canBeResearched && formData.canBeResearched.length > 0),
+      userName: formData.userName,
+      emailAddress: formData.email
     };
 
     if (this.props.onFeedback) {
@@ -134,6 +138,70 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                         }
                       }
                     </CheckboxField>
+
+                    <CheckboxField
+                      name='canBeResearched'
+                      id='canBeResearched'
+                      value='canBeResearched'
+                      defaultIsChecked={true}>
+                      {
+                        (fieldArgs: any) => {
+                          return (
+                            <Checkbox {...fieldArgs.fieldProps}
+                              label="I'd like to participate in product research" />
+                          );
+                        }
+                      }
+                    </CheckboxField>
+
+                    <Field label='Your name'
+                      isRequired={false}
+                      id='userName'
+                      name='userName'
+                      defaultValue={this.props.userDetails.userName}>
+                      {
+                        (fieldArgs: any) => {
+                          let errDiv = <span />;
+                          if (fieldArgs.error === 'EMPTY') {
+                            errDiv = <ErrorMessage>userName is required</ErrorMessage>;
+                          }
+                          return (
+                            <div>
+                              <input {...fieldArgs.fieldProps}
+                                style={{ width: '100%', display: 'block' }}
+                                className='ac-inputField'
+                              />
+                              {errDiv}
+                            </div>
+                          );
+                        }
+                      }
+                    </Field>
+
+                    <Field label='Your contact email'
+                      isRequired={true}
+                      id='email'
+                      name='email'
+                      validate={FieldValidators.validateEmail}
+                      defaultValue={this.props.userDetails.emailAddress}>
+                      {
+                        (fieldArgs: any) => {
+                          let errDiv = <span />;
+                          if (fieldArgs.error === 'EMPTY') {
+                            errDiv = <ErrorMessage>email is required</ErrorMessage>;
+                          }
+                          return (
+                            <div>
+                              <input {...fieldArgs.fieldProps}
+                                style={{ width: '100%', display: 'block' }}
+                                className='ac-inputField'
+                              />
+                              {errDiv}
+                            </div>
+                          );
+                        }
+                      }
+                    </Field>
 
                     <FormFooter actions={{}}>
                       <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>

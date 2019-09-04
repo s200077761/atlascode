@@ -31,6 +31,10 @@ p, h1, h2, h3, h4, h5, h6, label, span, .ac-inline-edit-p {
   margin: 0px;
 }
 
+section {
+  margin: 1em;
+}
+
 small {
   color: var(--vscode-editorCodeLens-foreground);
 }

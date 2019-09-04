@@ -265,7 +265,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
 
                     <GridColumn medium={3}>
-                        <DisplayFeedback onFeedback={this.handleFeedback} />
+                        <DisplayFeedback userDetails={this.state.feedbackUser} onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                         </div>

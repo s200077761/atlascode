@@ -3,7 +3,7 @@ import { Action } from '../ipc/messaging';
 import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
-import { submitFeedback } from './feedbackSubmitter';
+import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 
 export class WelcomeWebview extends AbstractReactWebview {
 
@@ -19,7 +19,12 @@ export class WelcomeWebview extends AbstractReactWebview {
     }
 
     public async invalidate() {
+        const currentUser = await getFeedbackUser();
 
+        this.postMessage({
+            type: 'update',
+            feedbackUser: currentUser
+        });
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {

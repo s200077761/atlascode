@@ -19,6 +19,10 @@ export namespace FieldValidators {
         return validateString(value) === undefined;
     }
 
+    export function validateEmail(value: string, state?: any): string | undefined {
+        return (value === undefined || value.length < 1 || !/^\S+@\S+$/.test(value)) ? 'EMPTY' : undefined;
+    }
+
     export function validateNumber(value: any, state?: any): string | undefined {
         let err = undefined;
 
