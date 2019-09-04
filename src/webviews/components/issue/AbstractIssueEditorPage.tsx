@@ -1084,12 +1084,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             }
             case UIType.Attachment: {
                 if (editmode) {
-                    const vals = (this.state.fieldValues[`${field.key}.rendered`])
-                        ? this.state.fieldValues[`${field.key}.rendered`]
-                        : this.state.fieldValues[field.key];
-
                     return (
-                        <AttachmentList attachments={vals} />
+                        <AttachmentList attachments={this.state.fieldValues[field.key]} />
                     );
                 }
             }

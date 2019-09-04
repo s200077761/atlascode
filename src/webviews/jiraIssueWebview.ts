@@ -480,7 +480,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 this._editUIData.fieldValues['attachment'] = [];
                             }
 
-                            this._editUIData.fieldValues['attachment'].push(resp);
+                            resp.forEach((attachment: any) => {
+                                this._editUIData.fieldValues['attachment'].push(attachment);
+                            });
+
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'

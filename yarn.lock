@@ -837,6 +837,11 @@
     "@types/express-serve-static-core" "*"
     "@types/serve-static" "*"
 
+"@types/filesize@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@types/filesize/-/filesize-4.1.0.tgz#da49e71ccb6bf5b024ced2bcad30528a8eebd46d"
+  integrity sha512-PsogPt8wYP5406gh7hscvg3jdcEGeeHeG+qGpwSK3wUTgiT2WvKbT8la/SxSglfLTqxJcLwPcXvhenNGOAdHuw==
+
 "@types/git-url-parse@^9.0.0":
   version "9.0.0"
   resolved "https://registry.yarnpkg.com/@types/git-url-parse/-/git-url-parse-9.0.0.tgz#aac1315a44fa4ed5a52c3820f6c3c2fb79cbd12d"
@@ -4860,6 +4865,11 @@ filesize@3.5.11:
   version "3.5.11"
   resolved "https://registry.yarnpkg.com/filesize/-/filesize-3.5.11.tgz#1919326749433bb3cf77368bd158caabcc19e9ee"
   integrity sha512-ZH7loueKBoDb7yG9esn1U+fgq7BzlzW6NRi5/rMdxIZ05dj7GFD/Xc5rq2CDt5Yq86CyfSYVyx4242QQNZbx1g==
+
+filesize@^4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/filesize/-/filesize-4.1.2.tgz#fcd570af1353cea97897be64f56183adb995994b"
+  integrity sha512-iSWteWtfNcrWQTkQw8ble2bnonSl7YJImsn9OZKpE2E4IHhXI78eASpDYUljXZZdYj36QsEKjOs/CsiDqmKMJw==
 
 fill-range@^2.1.0:
   version "2.2.4"

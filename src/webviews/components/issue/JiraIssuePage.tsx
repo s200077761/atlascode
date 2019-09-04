@@ -296,7 +296,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     handleAddAttachments = (files: any[]) => {
-        console.log('saving files', files);
         this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
         const serFiles = files.map((file: any) => {
             return {

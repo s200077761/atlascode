@@ -45,6 +45,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         this.state = {
             ...emptyForm,
             savingDisabled: true,
+            started: format(Date.now(), 'YYYY-MM-DD'),
         };
     }
 

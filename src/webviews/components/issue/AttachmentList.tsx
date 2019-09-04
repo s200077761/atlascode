@@ -1,15 +1,19 @@
 import React from 'react';
 import TableTree from '@atlaskit/table-tree';
-import { Attachment } from '../../../jira/jira-client/model/entities';
+import filesize from 'filesize';
 
-type ItemData = { attachment: Attachment };
+type ItemData = { attachment: any };
 
 interface AttachmentListProps {
-    attachments: Attachment[];
+    attachments: any[];
 }
 
 const Filename = (data: ItemData) => <p style={{ display: "inline" }}>{data.attachment.filename}</p>;
-const Size = (data: ItemData) => <p style={{ display: "inline" }}>{data.attachment.size}</p>;
+const Size = (data: ItemData) => {
+    const numSize = (typeof data.attachment.size === 'number') ? data.attachment.size : parseFloat(data.attachment.size);
+    const size = filesize(numSize);
+    return (<p style={{ display: "inline" }}>{size}</p>);
+};
 
 export const AttachmentList: React.FunctionComponent<AttachmentListProps> = ({ attachments }) => {
 

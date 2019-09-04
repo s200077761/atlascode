@@ -10,15 +10,11 @@ interface AttachmentsModalProps {
 }
 
 const initialState: File[] = [];
-const filesChanged = (files: FileWithPath[]) => {
-    console.log('got new files', files);
-};
 
 export const AttachmentsModal: React.FunctionComponent<AttachmentsModalProps> = ({ isOpen, onSave, onCancel }) => {
     const [files, setFiles] = useState(initialState);
 
     const doSave = () => {
-        console.log('saving files', files);
         onSave(files);
     };
 
@@ -33,7 +29,7 @@ export const AttachmentsModal: React.FunctionComponent<AttachmentsModalProps> = 
                 heading="Add Attachment"
                 shouldCloseOnEscapePress={false}
             >
-                <AttachmentForm onFilesChanged={(files: File[]) => { setFiles(files); filesChanged(files); }} />
+                <AttachmentForm onFilesChanged={setFiles} />
                 <ButtonGroup>
                     <Button className='ac-button'
                         onClick={doSave}
