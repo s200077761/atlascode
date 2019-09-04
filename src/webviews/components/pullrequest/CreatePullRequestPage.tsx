@@ -30,6 +30,7 @@ import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import { Reviewer, Commit, BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -367,7 +368,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     render() {
 
         if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return (<div>waiting for data...</div>);
+            return <AtlLoader />;
         }
 
         const repo = this.state.repo || { label: '', value: emptyRepoData };

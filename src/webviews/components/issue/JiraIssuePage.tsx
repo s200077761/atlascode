@@ -33,6 +33,7 @@ import PullRequests from './PullRequests';
 import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
 import { AttachmentsModal } from './AttachmentsModal';
+import { AtlLoader } from '../AtlLoader';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -650,7 +651,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     public render() {
         if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return <div>Loading Data...</div>;
+            return <AtlLoader />;
         }
 
         return (
