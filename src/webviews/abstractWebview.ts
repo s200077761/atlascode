@@ -92,7 +92,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     enableFindWidget: true,
                     enableCommandUris: true,
                     enableScripts: true,
-                    localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))]
+                    localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build')), Uri.file(path.join(this._extensionPath, 'images'))]
                 }
             );
 
@@ -203,8 +203,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' }),
-                resourceRoot: Uri.file(path.join(this._extensionPath, 'resources')).with({ scheme: 'vscode-resource' })
+                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });

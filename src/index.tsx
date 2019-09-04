@@ -5,7 +5,7 @@ import DynamicApp from './webviews/components/DynamicApp';
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
 declare var __webpack_public_path__: string;
-__webpack_public_path__ = document.baseURI!;
+__webpack_public_path__ = `${document.baseURI!}build/`;
 
 const view = document.getElementById('reactView') as HTMLElement;
 

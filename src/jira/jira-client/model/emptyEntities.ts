@@ -11,7 +11,6 @@ export const emptyUser: User = {
     displayName: '',
     emailAddress: '',
     key: '',
-    name: '',
     self: '',
     timeZone: ''
 };

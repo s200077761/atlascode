@@ -22,6 +22,8 @@ import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import InlineDialog from '@atlaskit/inline-dialog';
 import WorklogForm from './WorklogForm';
+import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
 
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
@@ -30,7 +32,7 @@ import Worklogs from './Worklogs';
 import PullRequests from './PullRequests';
 import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
-import { AttachmentForm } from '../AttachmentForm';
+import { AttachmentsModal } from './AttachmentsModal';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -255,6 +257,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         }
     }
 
+    handleOpenAttachmentEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'attachment') {
+            this.setState({ currentInlineDialog: 'attachment', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
     handleInlineDialogClose = () => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: false });
     }
@@ -284,6 +295,22 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
     }
 
+    handleAddAttachments = (files: any[]) => {
+        console.log('saving files', files);
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
+        const serFiles = files.map((file: any) => {
+            return {
+                lastModified: file.lastModified,
+                lastModifiedDate: file.lastModifiedDate,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                path: file.path,
+            };
+        });
+        this.postMessage({ action: 'addAttachments', site: this.state.siteDetails, issueKey: this.state.key, files: serFiles });
+    }
+
     /*
     , 'attachment'
     */
@@ -304,10 +331,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {!this.state.isOnline &&
                     <Offline />
                 }
-                {this.state.isErrorBannerOpen &&
-                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
-                }
-
                 {/* {this.state.showPMF &&
                     <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 } */}
@@ -335,6 +358,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['summary'], true)}
                     </h2>
                 </div>
+                {this.state.isErrorBannerOpen &&
+                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                }
                 {this.state.fields['description'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['description'].name}</label>
@@ -345,8 +371,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
-                        {/* {this.getInputMarkup(this.state.fields['attachment'], true)} */}
-                        <AttachmentForm onFilesAdded={(files: any[]) => console.log('files dropped', files)} />
+                        {this.getInputMarkup(this.state.fields['attachment'], true)}
+
                     </div>
                 }
 
@@ -441,6 +467,21 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </InlineDialog>
                         </div>
                     }
+                    {this.state.fields['attachment'] &&
+                        <div className='ac-inline-dialog'>
+                            <Tooltip content="Add Attachment">
+                                <Button className='ac-button'
+                                    onClick={this.handleOpenAttachmentEditor}
+                                    iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
+                                    isLoading={this.state.loadingField === 'attachment'} />
+                            </Tooltip>
+
+                            <AttachmentsModal
+                                isOpen={this.state.currentInlineDialog === 'attachment'}
+                                onCancel={this.handleInlineDialogClose}
+                                onSave={this.handleAddAttachments} />
+                        </div>
+                    }
                     {this.state.fields['watches'] &&
                         <div className='ac-inline-dialog'>
                             <InlineDialog
@@ -506,7 +547,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </InlineDialog>
                         </div>
                     }
-                    <Button className='ac-button' onClick={this.handleStartWorkOnIssue}>Start work on issue...</Button>
+                    <Tooltip content="Start work on issue">
+                        <Button className='ac-button'
+                            onClick={this.handleStartWorkOnIssue}
+                            iconBefore={<VidPlayIcon label="Start work" />}
+                            isLoading={false}>
+                            Start work
+                                    </Button>
+                    </Tooltip>
                 </ButtonGroup>
                 <div className='ac-vpadding'>
                     <label className='ac-field-label'>{this.state.fields['status'].name}</label>

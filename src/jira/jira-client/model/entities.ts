@@ -195,7 +195,6 @@ export interface User {
     displayName: string;
     emailAddress: string | undefined;
     key: string | undefined;
-    name: string | undefined;
     self: string;
     timeZone: string | undefined;
 }
@@ -218,6 +217,17 @@ export interface Avatars {
     '24x24': string;
     '16x16': string;
     '32x32': string;
+}
+
+export interface Attachment {
+    id: string;
+    filename: string;
+    author: User;
+    created: string;
+    size: string;
+    mimeType: string;
+    content: string;
+    thumbnail: string;
 }
 
 export interface Project {

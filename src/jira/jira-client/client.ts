@@ -5,6 +5,8 @@ import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } f
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
+import FormData from 'form-data';
+import * as fs from "fs";
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
@@ -28,7 +30,12 @@ export abstract class JiraClient {
         // Unfortunately, there's a bug that causes axios to infinitely retry when it gets
         // 500 errors.  Lesson  learned: ALWAYS use a custom instance of axios and config it yourself.
         // see: https://github.com/softonic/axios-retry/issues/59
-        this.transport = axios.create();
+        this.transport = axios.create({
+            headers: {
+                'X-Atlassian-Token': 'no-check',
+                'x-atlassian-force-account-id': 'true',
+            }
+        });
     }
 
     // Issue
@@ -242,8 +249,19 @@ export abstract class JiraClient {
     }
 
     // Attachment
-    public async addAttachment(issuekey: string, params: any): Promise<any> {
-        const res = this.postToJira(`issue/${issuekey}/attachments`, params);
+    public async addAttachments(issuekey: string, files: any[]): Promise<any> {
+        let formData = new FormData();
+        files.forEach((file: any) => {
+            formData.append('file'
+                , fs.createReadStream(file.path)
+                , {
+                    filename: file.name,
+                    contentType: file.type,
+                }
+            );
+        });
+
+        const res = this.multipartToJira(`issue/${issuekey}/attachments`, formData);
 
         return res;
     }
@@ -296,6 +314,33 @@ export abstract class JiraClient {
             },
             httpsAgent: this.agent,
             ...data
+        });
+
+        return res.data;
+
+    }
+
+    protected async multipartToJira(url: string, formData: FormData, queryParams?: any): Promise<any> {
+        url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
+        }
+
+        // let data = {};
+        // if (formData) {
+        //     data = { data: JSON.stringify(formData) };
+        // }
+
+        const res = await this.transport.post(url, formData, {
+            headers: {
+                Authorization: this.authorization(),
+                'Content-Type': formData.getHeaders()['content-type'],
+            },
+            httpsAgent: this.agent,
         });
 
         return res.data;

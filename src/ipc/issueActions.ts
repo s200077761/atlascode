@@ -121,6 +121,12 @@ export interface UpdateVoteAction extends Action {
     voter: User;
 }
 
+export interface AddAttachmentsAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    files: any[];
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -184,6 +190,12 @@ export function isUpdateVoteAction(a: Action): a is UpdateVoteAction {
     return a && (<UpdateVoteAction>a).voter !== undefined
         && (<UpdateVoteAction>a).site !== undefined
         && (<UpdateVoteAction>a).issueKey !== undefined;
+}
+
+export function isAddAttachmentsAction(a: Action): a is AddAttachmentsAction {
+    return a && (<AddAttachmentsAction>a).files !== undefined
+        && (<AddAttachmentsAction>a).site !== undefined
+        && (<AddAttachmentsAction>a).issueKey !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

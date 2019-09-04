@@ -7,7 +7,7 @@ import { Container } from "../container";
 import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction } from "../ipc/issueActions";
 import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
@@ -462,6 +462,36 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         } catch (e) {
                             Logger.error(new Error(`error removing vote: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing vote') });
+                        }
+
+                    }
+                    break;
+                }
+                case 'addAttachments': {
+                    if (isAddAttachmentsAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            const resp = await client.addAttachments(msg.issueKey, msg.files);
+
+                            if (!this._editUIData.fieldValues['attachment']
+                                || !Array.isArray(this._editUIData.fieldValues['attachment'])
+                            ) {
+                                this._editUIData.fieldValues['attachment'] = [];
+                            }
+
+                            this._editUIData.fieldValues['attachment'].push(resp);
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error adding attachments: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding attachments') });
                         }
 
                     }

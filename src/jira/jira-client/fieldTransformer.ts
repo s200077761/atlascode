@@ -354,6 +354,7 @@ export class FieldTransformer {
                 };
             }
             case UIType.Attachment: {
+                const renderedValue = (field.renderedValue) ? field.renderedValue : undefined;
                 return {
                     field: {
                         required: required,
@@ -363,7 +364,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: this.formatCurrentValue(field)
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Participants: {
