@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import FormData from 'form-data';
@@ -175,10 +175,11 @@ export abstract class JiraClient {
     }
 
     // IssueLink
-    public async createIssueLink(params: any): Promise<any> {
-        const result = await this.postToJira('issueLink', params);
+    public async createIssueLink(parentIssueKey: string, linkData: any): Promise<MinimalIssueLink[]> {
+        await this.postToJira('issueLink', linkData);
+        const resp = await this.getFromJira(`issue/${parentIssueKey}`, { fields: 'issuelinks' });
 
-        return result;
+        return readMinimalIssueLinks(resp.fields['issuelinks'], this.site);
     }
 
     // Worklog
@@ -264,6 +265,18 @@ export abstract class JiraClient {
         const res = this.multipartToJira(`issue/${issuekey}/attachments`, formData);
 
         return res;
+    }
+
+    public async deleteAttachment(attachmentId: string): Promise<any> {
+        const result = await this.deleteToJira(`attachment/${attachmentId}`);
+
+        return result;
+    }
+
+    public async deleteIssuelink(linkId: string): Promise<any> {
+        const result = await this.deleteToJira(`issuelink/${linkId}`);
+
+        return result;
     }
 
     protected abstract authorization(): string;

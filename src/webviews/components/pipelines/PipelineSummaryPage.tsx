@@ -29,6 +29,7 @@ import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from "../issue/NavItem";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
 import { Button } from "@atlaskit/button/components/Button";
+import { AtlLoader } from "../AtlLoader";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />

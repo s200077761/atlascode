@@ -3,6 +3,7 @@ import { components } from '@atlaskit/select';
 import { SelectFieldUI, ValueType } from "../../jira/jira-client/model/fieldUI";
 import Avatar from '@atlaskit/avatar';
 import Lozenge from "@atlaskit/lozenge";
+import { colorToLozengeAppearanceMap } from "./colors";
 
 type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
@@ -184,35 +185,27 @@ const MultiLabelValue = (props: any) => {
     );
 };
 
-const colorToLozengeAppearanceMap = {
-    neutral: 'default',
-    'blue-gray': 'default',
-    'medium-gray': 'default',
-    purple: 'new',
-    brown: 'new',
-    blue: 'inprogress',
-    red: 'removed',
-    'warm-red': 'removed',
-    yellow: 'inprogress',
-    green: 'success',
+const StatusOption = (props: any) => {
+    const lozColor: string = colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName];
+    return (
+        <components.Option {...props}>
+            <Lozenge appearance={lozColor}>
+                {props.label}
+            </Lozenge>
+        </components.Option>
+    );
 };
 
-const StatusOption = (props: any) => (
-    <components.Option {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-            {props.label}
-        </Lozenge>
-    </components.Option>
-);
-
-const StatusValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-            {props.data.to.name}
-        </Lozenge>
-    </components.SingleValue>
-
-);
+const StatusValue = (props: any) => {
+    const lozColor: string = colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName];
+    return (
+        <components.SingleValue {...props}>
+            <Lozenge appearance={lozColor}>
+                {props.data.to.name}
+            </Lozenge>
+        </components.SingleValue>
+    );
+};
 
 export namespace SelectFieldHelper {
     export enum SelectComponentType {

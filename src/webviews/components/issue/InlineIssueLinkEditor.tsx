@@ -45,13 +45,13 @@ const TypeValue = (props: any) => (
 
 const IssueSuggestionOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><img src={props.data.img} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
     </Option>
 );
 
 const IssueSuggestionValue = (props: any) => (
     <components.SingleValue {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><img src={props.data.img} width="16" height="16" /><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
     </components.SingleValue>
 
 );

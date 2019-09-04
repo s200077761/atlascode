@@ -1312,6 +1312,13 @@ img::after is triggered only if img loading fails */
   cursor: pointer;
 }
 
+.ac-delete {
+  height: 18px;
+  width: 18px;
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+}
+
 @keyframes hideshow {
   0% {
     opacity: .3

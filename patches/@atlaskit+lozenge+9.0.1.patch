@@ -1,0 +1,28 @@
+diff --git a/node_modules/@atlaskit/lozenge/Lozenge/Content.js b/node_modules/@atlaskit/lozenge/Lozenge/Content.js
+index 314818f..bd9d895 100644
+--- a/node_modules/@atlaskit/lozenge/Lozenge/Content.js
++++ b/node_modules/@atlaskit/lozenge/Lozenge/Content.js
+@@ -2,8 +2,11 @@ import { jsx } from '@emotion/core';
+ import { gridSize } from '@atlaskit/theme';
+ var HORIZONTAL_SPACING = gridSize() / 2 + "px";
+ export default (function (_a) {
+-    var maxWidth = _a.maxWidth, children = _a.children;
+-    return (jsx("span", { css: {
++    var maxWidth = _a.maxWidth, backgroundColor = _a.backgroundColor, textColor = _a.textColor, children = _a.children;
++    return (jsx("span", {
++        css: {
++            backgroundColor: backgroundColor,
++            color: textColor,
+             display: 'inline-block',
+             verticalAlign: 'top',
+             overflow: 'hidden',
+@@ -13,6 +16,7 @@ export default (function (_a) {
+             padding: "0 " + HORIZONTAL_SPACING,
+             maxWidth: typeof maxWidth === 'number' ? maxWidth + "px" : maxWidth,
+             width: '100%',
+-        } }, children));
++        }
++    }, children));
+ });
+ //# sourceMappingURL=Content.js.map
+\ No newline at end of file

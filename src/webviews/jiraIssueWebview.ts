@@ -4,10 +4,10 @@ import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue, User } from "../j
 import { Action, onlineStatus } from "../ipc/messaging";
 import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { Container } from "../container";
-import { fetchEditIssueUI, getCachedOrFetchMinimalIssue } from "../jira/fetchIssue";
+import { fetchEditIssueUI } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction } from "../ipc/issueActions";
+import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction, isDeleteByIDAction, isOpenStartWorkPageAction } from "../ipc/issueActions";
 import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
@@ -17,6 +17,10 @@ import { issueCreatedEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { PullRequestData } from "../bitbucket/model";
+import { startWorkOnIssue } from "../commands/jira/startWorkOnIssue";
+import { isOpenPullRequest } from "../ipc/prActions";
+import { clientForRemote } from "../bitbucket/bbUtils";
+import { readSearchResults } from "../jira/jira-client/model/responses";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
@@ -101,6 +105,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.postMessage(msg);
 
             // call async-able update functions here
+            this.updateEpicChildren();
             this.updateCurrentUser();
             this.updateWatchers();
             this.updateVoters();
@@ -112,6 +117,19 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
         } finally {
             this.isRefeshing = false;
+        }
+    }
+
+    async updateEpicChildren() {
+        if (this._issue.isEpic) {
+            const site = this._issue.siteDetails;
+            const client = await Container.clientManager.jirarequest(site);
+            const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+            const epicFieldInfo = this._editUIData.epicFieldInfo;
+
+            const res = await client.searchForIssuesUsingJqlGet(`cf[${epicFieldInfo.epicLink.cfid}] = "${this._issue.key}" order by lastViewed DESC`, fields);
+            const searchResults = await readSearchResults(res, site, epicFieldInfo);
+            this.postMessage({ type: 'epicChildrenUpdate', epicChildren: searchResults.issues });
         }
     }
 
@@ -265,19 +283,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         handled = true;
                         try {
                             let client = await Container.clientManager.jirarequest(msg.site);
-                            await client.createIssueLink(msg.issueLinkData);
+                            const resp = await client.createIssueLink(this._issue.key, msg.issueLinkData);
 
-                            const linkedIssueKey: string = (msg.issueLinkType.type === 'inward') ? msg.issueLinkData.inwardIssue.key : msg.issueLinkData.outwardIssue.key;
+                            this._editUIData.fieldValues['issuelinks'] = resp;
 
-                            const issue = await getCachedOrFetchMinimalIssue(linkedIssueKey, msg.site);
-                            const picked = readIssueLinkIssue(issue, msg.site);
-
-                            this._editUIData.fieldValues['issuelinks'].push({
-                                id: "",
-                                inwardIssue: msg.issueLinkType.type === 'inward' ? picked : undefined,
-                                outwardIssue: msg.issueLinkType.type === 'outward' ? picked : undefined,
-                                type: msg.issueLinkType
-                            });
                             this.postMessage({
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
@@ -294,6 +303,41 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     }
                     break;
                 }
+                case 'deleteIssuelink': {
+                    if (isDeleteByIDAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+
+                            // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
+                            //await client.deleteIssuelink(msg.objectWithId.id);
+
+                            if (!this._editUIData.fieldValues['issuelinks']
+                                || !Array.isArray(this._editUIData.fieldValues['issuelinks'])
+                            ) {
+                                this._editUIData.fieldValues['issuelinks'] = [];
+                            }
+
+                            this._editUIData.fieldValues['issuelinks'] = this._editUIData.fieldValues['issuelinks'].filter((link: any) => link.id !== msg.objectWithId.id);
+
+                            await client.editIssue(this._issue.key, { ['issuelinks']: this._editUIData.fieldValues['issuelinks'] });
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting issuelink: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting issuelink') });
+                        }
+
+                    }
+                    break;
+                }
+
                 case 'createWorklog': {
                     if (isCreateWorklog(msg)) {
                         handled = true;
@@ -500,6 +544,36 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     }
                     break;
                 }
+                case 'deleteAttachment': {
+                    if (isDeleteByIDAction(msg)) {
+                        handled = true;
+                        try {
+                            let client = await Container.clientManager.jirarequest(msg.site);
+                            await client.deleteAttachment(msg.objectWithId.id);
+
+                            if (!this._editUIData.fieldValues['attachment']
+                                || !Array.isArray(this._editUIData.fieldValues['attachment'])
+                            ) {
+                                this._editUIData.fieldValues['attachment'] = [];
+                            }
+
+                            this._editUIData.fieldValues['attachment'] = this._editUIData.fieldValues['attachment'].filter((file: any) => file.id !== msg.objectWithId.id);
+
+                            this.postMessage({
+                                type: 'fieldValueUpdate'
+                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
+                            });
+
+                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting attachments: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting attachments') });
+                        }
+
+                    }
+                    break;
+                }
                 case 'transitionIssue': {
                     if (isTransitionIssue(msg)) {
                         handled = true;
@@ -521,6 +595,28 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                     }
                     break;
+                }
+                case 'openStartWorkPage': {
+                    if (isOpenStartWorkPageAction(msg)) {
+                        handled = true;
+                        startWorkOnIssue(this._issue);
+                        break;
+                    }
+                }
+                case 'openPullRequest': {
+                    if (isOpenPullRequest(msg)) {
+                        handled = true;
+                        // TODO: [VSCODE-606] abstract madness for calling Commands.BitbucketShowPullRequestDetails into a reusable function
+                        const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
+                        if (pr) {
+                            const bbApi = await clientForRemote(pr.remote);
+                            commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
+                        } else {
+                            Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
+                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}` });
+                        }
+                        break;
+                    }
                 }
             }
         }

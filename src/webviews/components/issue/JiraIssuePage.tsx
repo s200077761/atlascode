@@ -11,7 +11,7 @@ import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-cli
 import { EditIssueAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
-import LinkedIssues from './LinkedIssues';
+import { LinkedIssues } from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
 import { Transition } from '../../../jira/jira-client/model/entities';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
@@ -34,6 +34,8 @@ import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
 import { AttachmentsModal } from './AttachmentsModal';
 import { AtlLoader } from '../AtlLoader';
+import { distanceInWordsToNow } from "date-fns";
+import { AttachmentList } from './AttachmentList';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -81,6 +83,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'fieldValueUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
+                    break;
+                }
+                case 'epicChildrenUpdate': {
+                    this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
                 }
                 case 'pullRequestUpdate': {
@@ -311,9 +317,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'addAttachments', site: this.state.siteDetails, issueKey: this.state.key, files: serFiles });
     }
 
-    /*
-    , 'attachment'
-    */
+    handleDeleteAttachment = (file: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'attachment' });
+        this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
+    }
+
+    handleDeleteIssuelink = (issuelink: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+        this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
+    }
+
     getMainPanelMarkup(): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
@@ -367,11 +380,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
-                {this.state.fields['attachment']
+                {this.state.fieldValues['attachment'] && this.state.fieldValues['attachment'].length > 0
                     &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
-                        {this.getInputMarkup(this.state.fields['attachment'], true)}
+                        <AttachmentList onDelete={this.handleDeleteAttachment} attachments={this.state.fieldValues['attachment']} />
 
                     </div>
                 }
@@ -385,7 +398,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 }
 
-                {this.state.isEpic &&
+                {this.state.isEpic && this.state.epicChildren.length > 0
+                    &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>Issues in this epic</label>
                         <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
@@ -404,7 +418,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['issuelinks'] &&
                     <div className='ac-vpadding'>
                         {this.getInputMarkup(this.state.fields['issuelinks'], true)}
-                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
+                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} onDelete={this.handleDeleteIssuelink} />
                     </div>
                 }
                 {this.state.fields['worklog'] &&
@@ -706,10 +720,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         </Collapsible>
                                         <div className='ac-issue-created-updated'>
                                             {this.state.fieldValues['created'] &&
-                                                <div>Created {this.state.fieldValues['created']}</div>
+                                                <div>Created {`${distanceInWordsToNow(this.state.fieldValues['created'])} ago`}</div>
                                             }
                                             {this.state.fieldValues['updated'] &&
-                                                <div>Updated {this.state.fieldValues['updated']}</div>
+                                                <div>Updated {`${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`}</div>
                                             }
                                         </div>
                                     </GridColumn>

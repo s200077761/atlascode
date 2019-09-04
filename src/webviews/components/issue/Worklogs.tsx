@@ -2,9 +2,11 @@ import * as React from 'react';
 import TableTree from '@atlaskit/table-tree';
 import { Worklog, WorklogContainer } from '../../../jira/jira-client/model/entities';
 import Avatar from '@atlaskit/avatar';
+import { distanceInWordsToNow } from "date-fns";
 
 type ItemData = { worklog: Worklog };
 
+const Created = (data: ItemData) => <p style={{ display: "inline" }}>{`${distanceInWordsToNow(data.worklog.created)} ago`}</p>;
 const Comment = (data: ItemData) => <p style={{ display: "inline" }}>{data.worklog.comment}</p>;
 const TimeSpent = (data: ItemData) => <p style={{ display: "inline" }}>{data.worklog.timeSpent}</p>;
 const Author = (data: ItemData) => {
@@ -23,8 +25,8 @@ export default class Worklogs extends React.Component<{ worklogs: WorklogContain
     render() {
         return (
             <TableTree
-                columns={[Author, Comment, TimeSpent]}
-                columnWidths={['100%', '100%', '150px']}
+                columns={[Author, Comment, TimeSpent, Created]}
+                columnWidths={['100%', '100%', '150px', '150px']}
                 items={this.props.worklogs.worklogs.map(worklog => {
                     return {
                         id: worklog.id,

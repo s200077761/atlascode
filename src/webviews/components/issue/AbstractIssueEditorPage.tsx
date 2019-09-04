@@ -22,8 +22,6 @@ import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import debounce from "lodash.debounce";
-import { AttachmentList } from './AttachmentList';
-//import { useDropzone } from 'react-dropzone';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -1085,7 +1083,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             case UIType.Attachment: {
                 if (editmode) {
                     return (
-                        <AttachmentList attachments={this.state.fieldValues[field.key]} />
+                        <div />
                     );
                 }
             }

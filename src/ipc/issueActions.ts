@@ -127,6 +127,11 @@ export interface AddAttachmentsAction extends Action {
     files: any[];
 }
 
+export interface DeleteByIDAction extends Action {
+    site: DetailedSiteInfo;
+    objectWithId: any;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -196,6 +201,12 @@ export function isAddAttachmentsAction(a: Action): a is AddAttachmentsAction {
     return a && (<AddAttachmentsAction>a).files !== undefined
         && (<AddAttachmentsAction>a).site !== undefined
         && (<AddAttachmentsAction>a).issueKey !== undefined;
+}
+
+export function isDeleteByIDAction(a: Action): a is DeleteByIDAction {
+    return a && (<DeleteByIDAction>a).objectWithId !== undefined
+        && (<DeleteByIDAction>a).objectWithId.id !== undefined
+        && (<DeleteByIDAction>a).site !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

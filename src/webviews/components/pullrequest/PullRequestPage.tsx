@@ -38,6 +38,7 @@ import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
 type Receive = PRData | CheckoutResult | HostErrorMessage;

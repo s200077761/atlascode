@@ -39,6 +39,11 @@ export interface FieldValueUpdate extends Message {
     fieldValues: FieldValues;
 }
 
+export interface EpicChildrenUpdate extends Message {
+    type: 'epicChildrenUpdate';
+    epicChildren: MinimalIssue[];
+}
+
 export interface PullRequestUpdate extends Message {
     type: 'pullRequestUpdate';
     recentPullRequests: PullRequestData[];
