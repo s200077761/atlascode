@@ -3,7 +3,7 @@ import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey } from "../../constants";
+import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
 import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
@@ -58,7 +58,7 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraDefaultSiteConfigurationKey))) {
+        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey))) {
             const project = await Container.jiraProjectManager.getEffectiveProject();
             this._explorers.forEach(t => t.project = project);
             this._newIssueMonitor.setProject(project);
