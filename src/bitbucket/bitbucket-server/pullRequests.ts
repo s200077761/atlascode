@@ -231,7 +231,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
         );
 
-        const { commentData } = await this.client.put(
+        const res = await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
             {
                 text: content,
@@ -240,7 +240,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             {}
         );
 
-        return this.convertDataToComment(commentData, remote);
+        return this.convertDataToComment(res.data, remote);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -427,7 +427,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             id: data.id,
             parentId: data.parentId,
             user: ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author),
-            htmlContent: data.html,
+            htmlContent: data.html ? data.html : data.text,
             rawContent: data.text,
             ts: data.createdDate,
             updatedTs: data.updatedDate,
