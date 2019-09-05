@@ -171,6 +171,23 @@ export interface Comment {
     self: string;
 }
 
+export interface WorklogContainer {
+    worklogs: Worklog[];
+    total: number;
+}
+
+export interface Worklog {
+    author: User;
+    updateAuthor: User;
+    comment: string;
+    timeSpent: string;
+    timeSpentSeconds: number;
+    id: string;
+    issueId: string;
+    created: string;
+    updated: string;
+    started: string;
+}
 export interface User {
     accountId: string;
     active: boolean;
@@ -178,9 +195,21 @@ export interface User {
     displayName: string;
     emailAddress: string | undefined;
     key: string | undefined;
-    name: string | undefined;
     self: string;
     timeZone: string | undefined;
+}
+
+
+export interface Watches {
+    isWatching: boolean;
+    watchCount: number;
+    watchers: User[];
+}
+
+export interface Votes {
+    hasVoted: boolean;
+    votes: number;
+    voters: User[];
 }
 
 export interface Avatars {
@@ -188,6 +217,17 @@ export interface Avatars {
     '24x24': string;
     '16x16': string;
     '32x32': string;
+}
+
+export interface Attachment {
+    id: string;
+    filename: string;
+    author: User;
+    created: string;
+    size: string;
+    mimeType: string;
+    content: string;
+    thumbnail: string;
 }
 
 export interface Project {
@@ -220,6 +260,38 @@ export function readProject(projectJson: any): Project {
         simplified: projectJson.simplified,
         style: projectJson.style,
         isPrivate: projectJson.isPrivate,
+    };
+}
+
+export function readWatches(watchesJson: any): Watches {
+    if (watchesJson) {
+        return {
+            isWatching: watchesJson.isWatching,
+            watchCount: watchesJson.watchCount,
+            watchers: Array.isArray(watchesJson.watchers) ? watchesJson.watchers : [],
+        };
+    }
+
+    return {
+        isWatching: false,
+        watchCount: 0,
+        watchers: [],
+    };
+}
+
+export function readVotes(votesJson: any): Votes {
+    if (votesJson) {
+        return {
+            hasVoted: votesJson.hasVoted,
+            votes: votesJson.votes,
+            voters: Array.isArray(votesJson.voters) ? votesJson.voters : [],
+        };
+    }
+
+    return {
+        hasVoted: false,
+        votes: 0,
+        voters: [],
     };
 }
 

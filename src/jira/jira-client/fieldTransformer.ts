@@ -2,10 +2,13 @@
 import { FieldTransformerResult, UIType, multiSelectSchemas, createableSelectSchemas, ValueType, FieldProblem, schemaTypeToUIMap, schemaOptionToUIMap, customSchemaToUIMap, multiLineStringSchemas, valueTypeForString, FieldUI, IssueLinkTypeSelectOption } from "./model/fieldUI";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
-import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue } from "./model/entities";
+import { IssueLinkType, readIssueLinkIssues, readMinimalIssueLinks, IssueType, readIssueLinkIssue, readWatches, readVotes } from "./model/entities";
 import { FieldOrFieldMeta, isFieldMeta, isField, FieldSchemaMeta } from "./model/fieldMetadata";
 import { Container } from "../../container";
 import { API_VERSION } from "../jira-client/client";
+
+const sprintIdRegex = /id=(\d*),/;
+const sprintNameRegex = /name=([^,]*),/;
 
 interface ProblemCollector {
     problems: FieldProblem[];
@@ -105,21 +108,7 @@ export class FieldTransformer {
         let allowedValues: any[] = isFieldMeta(field) && field.allowedValues ? field.allowedValues : [];
         const schema: FieldSchemaMeta = field.schema!;
         const schemaName: string = this.schemaName(field);
-        let autoCompleteUrl: string = '';
-
-        if (isFieldMeta(field)) {
-            if (field.autoCompleteUrl) {
-                autoCompleteUrl = field.autoCompleteUrl;
-            }
-            // if this is an issuelinks field we always want it to be editable no matter what
-        } else if (schema.items && schema.items === 'issuelinks') {
-            autoCompleteUrl = defaultILAutocomplete;
-        }
-
-        //we need to fix up bad autocomplete urls from jira
-        if (autoCompleteUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id) {
-            autoCompleteUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
-        }
+        const autoCompleteUrl: string = this.getAutocompleteUrl(field, defaultILAutocomplete, epicFieldInfo);
 
         const uiType: UIType = this.uiTypeForField(field);
         switch (uiType) {
@@ -136,7 +125,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         isMultiline: isMulti,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Checkbox: {
@@ -150,7 +139,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Radio: {
@@ -164,7 +153,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Date: {
@@ -178,7 +167,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.DateTime: {
@@ -192,7 +181,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Select: {
@@ -222,11 +211,10 @@ export class FieldTransformer {
                         valueType: vt,
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, selectOptions: allowedValues
+                    }, value: this.formatCurrentValue(field), selectOptions: allowedValues
                 };
             }
             case UIType.IssueLinks: {
-                const currentVal = readMinimalIssueLinks(field.currentValue, this._site);
                 const linkTypeOptions: IssueLinkTypeSelectOption[] = [];
 
                 issueLinkTypes.forEach(opt => {
@@ -248,12 +236,10 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal, selectOptions: linkTypeOptions
+                    }, value: this.formatCurrentValue(field), selectOptions: linkTypeOptions
                 };
             }
             case UIType.Subtasks: {
-
-                const currentVal = readIssueLinkIssues(field.currentValue, this._site);
 
                 return {
                     field: {
@@ -266,12 +252,11 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal, selectOptions: inlineSubtaskTypes
+                    }, value: this.formatCurrentValue(field), selectOptions: inlineSubtaskTypes
                 };
             }
             case UIType.IssueLink: {
                 // Note: this is used for parent links for sub-tasks
-                const currentVal = readIssueLinkIssue(field.currentValue, this._site);
                 return {
                     field: {
                         required: required,
@@ -286,7 +271,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: currentVal
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Timetracking: {
@@ -299,7 +284,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Worklog: {
@@ -312,7 +297,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Comments: {
@@ -326,7 +311,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue, renderedValue: renderedValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
                 };
             }
             case UIType.Watches: {
@@ -339,7 +324,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Votes: {
@@ -352,7 +337,7 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.NonEditable: {
@@ -365,10 +350,11 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field)
                 };
             }
             case UIType.Attachment: {
+                const renderedValue = (field.renderedValue) ? field.renderedValue : undefined;
                 return {
                     field: {
                         required: required,
@@ -378,10 +364,90 @@ export class FieldTransformer {
                         valueType: this.valueTypeForField(field),
                         displayOrder: displayOrder,
                         advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
-                    }, value: field.currentValue
+                    }, value: this.formatCurrentValue(field), renderedValue: renderedValue
+                };
+            }
+            case UIType.Participants: {
+                return {
+                    field: {
+                        required: required,
+                        name: field.name,
+                        key: field.key,
+                        uiType: UIType.Participants,
+                        valueType: this.valueTypeForField(field),
+                        displayOrder: displayOrder,
+                        advanced: this.isAdvanced(field, commonFields, requiredAsCommon)
+                    }, value: this.formatCurrentValue(field)
                 };
             }
         }
+    }
+
+    private getAutocompleteUrl(field: FieldOrFieldMeta, defaultILAutocomplete: string, epicFieldInfo: EpicFieldInfo): string {
+        let acUrl = '';
+
+        if (field.schema) {
+            let schemaType: string = field.schema.type === 'array' ? field.schema.items! : field.schema.type;
+
+            if (isFieldMeta(field) && field.autoCompleteUrl) {
+                acUrl = field.autoCompleteUrl;
+            } else if (schemaType === ValueType.IssueLinks) {
+                acUrl = defaultILAutocomplete;
+            } else if (schemaType === ValueType.Group) {
+                // NOTE: this *should be* /groups/picker?query= but that's not OAUth 2 enabled  :(
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
+            }
+
+            //we need to fix up bad autocomplete urls from jira
+            if (acUrl.includes('suggest?') || field.key === epicFieldInfo.epicLink.id || this.schemaName(field) === 'com.pyxis.greenhopper.jira:gh-sprint') {
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
+            }
+
+            if (acUrl.includes('/1.0/users/picker')) {
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/user/search?query=`;
+            }
+        }
+
+        return acUrl;
+    }
+
+    private formatCurrentValue(field: FieldOrFieldMeta): any {
+        if (field.currentValue) {
+            const vt = this.valueTypeForField(field);
+
+            switch (vt) {
+                case ValueType.IssueLinks: {
+                    return (this.schemaName(field) === 'issuelinks') ? readMinimalIssueLinks(field.currentValue, this._site) : readIssueLinkIssues(field.currentValue, this._site);
+                }
+                case ValueType.IssueLink: {
+                    return readIssueLinkIssue(field.currentValue, this._site);
+                }
+                case ValueType.Watches: {
+                    return readWatches(field.currentValue);
+                }
+                case ValueType.Votes: {
+                    return readVotes(field.currentValue);
+                }
+            }
+
+            if (this.schemaName(field) === 'com.pyxis.greenhopper.jira:gh-sprint') {
+                const id = sprintIdRegex.exec(field.currentValue);
+                const name = sprintNameRegex.exec(field.currentValue);
+
+                if (id && name) {
+                    return {
+                        label: name[1],
+                        value: id[1],
+                    };
+                } else {
+                    return undefined;
+                }
+            }
+
+            return field.currentValue;
+        }
+
+        return undefined;
     }
 
     private shouldRender(field: FieldOrFieldMeta, filters: string[], collector: ProblemCollector): boolean {
@@ -403,7 +469,7 @@ export class FieldTransformer {
 
             if (schemaTypeToUIMap.has(schemaType) || customSchemaToUIMap.has(schemaName) || schemaOptionToUIMap.has(schemaName)) {
                 hasKnownType = true;
-                if (schemaType === 'option' && !schemaOptionToUIMap.has(schemaName)) {
+                if (schemaType === ValueType.Option && !schemaOptionToUIMap.has(schemaName)) {
                     hasKnownType = false;
                 }
 
@@ -444,7 +510,7 @@ export class FieldTransformer {
         const schemaName = this.schemaName(field);
         let foundType: UIType | undefined = undefined;
 
-        if (field.schema && field.schema.items && field.schema.items === 'issuelinks') {
+        if (field.schema && field.schema.items && field.schema.items === ValueType.IssueLinks) {
             foundType = (schemaName === 'subtasks') ? UIType.Subtasks : UIType.IssueLinks;
         }
 
@@ -456,7 +522,7 @@ export class FieldTransformer {
 
             foundType = customSchemaToUIMap.get(schemaName);
 
-            if (!foundType && field.schema.type === 'option') {
+            if (!foundType && (field.schema.type === ValueType.Option || (field.schema.type === 'array' && field.schema.items === ValueType.Option))) {
                 foundType = schemaOptionToUIMap.get(schemaName);
             }
 
@@ -494,6 +560,10 @@ export class FieldTransformer {
 
         if (schemaName === 'com.atlassian.jira.plugin.system.customfieldtypes:url') {
             return ValueType.Url;
+        }
+
+        if (schemaName === 'com.pyxis.greenhopper.jira:gh-sprint') {
+            return ValueType.Number;
         }
 
         if (field.schema) {

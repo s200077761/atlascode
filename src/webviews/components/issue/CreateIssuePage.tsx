@@ -11,6 +11,7 @@ import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
 import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { AtlLoader } from '../AtlLoader';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -150,7 +151,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.selectedIssueTypeId}` });
             }
         } else if (!this.state.isErrorBannerOpen && this.state.isOnline) {
-            return (<div>waiting for data...</div>);
+            return <AtlLoader />;
         }
 
         return (

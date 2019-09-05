@@ -2,21 +2,28 @@ import { AbstractReactWebview } from "./abstractWebview";
 import { isAction } from "../ipc/messaging";
 import { isFetchQuery, isOpenJiraIssue, isCreateSelectOption } from "../ipc/issueActions";
 import { Container } from "../container";
-import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult } from "../jira/jira-client/model/responses";
+import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult, isGroupPickerResult } from "../jira/jira-client/model/responses";
 import { Logger } from "../logger";
 import { showIssue } from "../commands/jira/showIssue";
+import { ValueType } from "../jira/jira-client/model/fieldUI";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
     abstract async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void>;
 
-    protected formatSelectOptions(result: any): any[] {
+    protected formatSelectOptions(result: any, valueType?: ValueType): any[] {
         let suggestions: any[] = [];
 
         if (isIssuePickerResult(result)) {
             if (Array.isArray(result.sections)) {
                 suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
             }
+        } else if (isGroupPickerResult(result)) {
+            // NOTE: since the group endpoint doesn't support OAuth 2, this will never be called, but
+            // we're keeping it here for future wackiness.
+            suggestions = result.groups.map(result => {
+                return { label: result.html, value: result.name };
+            });
         } else if (isAutocompleteSuggestionsResult(result)) {
             suggestions = result.results.map(result => {
                 return { label: result.displayName, value: result.value };

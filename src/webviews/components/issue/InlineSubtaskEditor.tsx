@@ -31,7 +31,7 @@ interface State {
 const { Option } = components;
 const IconOption = (props: any) => (
     <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><img src={props.data.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
     </Option>
 );
 

@@ -4,16 +4,19 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
 import { MinimalIssueLink, MinimalIssueOrKeyAndSiteOrKey, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { colorToLozengeAppearanceMap } from '../colors';
 
-type ItemData = { linkDescription: string, issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void };
+interface LinkedIssuesProps {
+    issuelinks: MinimalIssueLink[];
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void;
+    onDelete: (issueLink: any) => void;
+}
 
-const colorToLozengeAppearanceMap = {
-    neutral: 'default',
-    purple: 'new',
-    blue: 'inprogress',
-    red: 'removed',
-    yellow: 'moved',
-    green: 'success',
+type ItemData = {
+    linkDescription: string,
+    issue: IssueLinkIssue,
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void,
+    onDelete: (issueLink: any) => void;
 };
 
 const IssueKey = (data: ItemData) =>
@@ -26,30 +29,33 @@ const IssueKey = (data: ItemData) =>
     </div>;
 const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue.summary}</p>;
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
-const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}><Lozenge appearence={colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName]}>{data.issue.status.name}</Lozenge></p>;
+const StatusColumn = (data: ItemData) => {
+    const lozColor: string = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName];
+    return (<Lozenge appearance={lozColor}>{data.issue.status.name}</Lozenge>);
 
-export default class LinkedIssues extends React.Component<{ issuelinks: MinimalIssueLink[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void }, {}> {
-    constructor(props: any) {
-        super(props);
-    }
+};
+// const Delete = (data: ItemData) => {
+//     return (<div className='ac-delete' onClick={() => data.onDelete(data.issue)}>
+//         <TrashIcon label='trash' />
+//     </div>);
+// };
 
-    // TODO: [VSCODE-585] Add ability to delete issuelinsk from LinkedIssues list component
-    render() {
-        return (
-            <TableTree
-                columns={[IssueKey, Summary, Priority, StatusColumn]}
-                columnWidths={['150px', '100%', '20px', '150px']}
-                items={this.props.issuelinks.map(issuelink => {
-                    return {
-                        id: issuelink.id,
-                        content: {
-                            linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
-                            issue: issuelink.inwardIssue || issuelink.outwardIssue,
-                            onIssueClick: this.props.onIssueClick
-                        }
-                    };
-                })}
-            />
-        );
-    }
-}
+export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({ issuelinks, onIssueClick, onDelete }) => {
+    return (
+        <TableTree
+            columns={[IssueKey, Summary, Priority, StatusColumn]}
+            columnWidths={['150px', '100%', '20px', '150px']}
+            items={issuelinks.map(issuelink => {
+                return {
+                    id: issuelink.id,
+                    content: {
+                        linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
+                        issue: issuelink.inwardIssue || issuelink.outwardIssue,
+                        onIssueClick: onIssueClick,
+                        onDelete: onDelete,
+                    }
+                };
+            })}
+        />
+    );
+};

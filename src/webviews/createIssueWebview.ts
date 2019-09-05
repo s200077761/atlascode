@@ -362,7 +362,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                                 if (issuelinks.length > 0) {
                                     issuelinks.forEach(async (link: any) => {
                                         if (client) {
-                                            await client.createIssueLink({ body: link });
+                                            await client.createIssueLink('', { body: link });
                                         }
                                     });
                                 }

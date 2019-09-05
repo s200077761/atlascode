@@ -38,6 +38,7 @@ import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -243,7 +244,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const pr = this.state.pr.pr!;
 
         if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return (<div>waiting for data...</div>);
+            return <AtlLoader />;
         } else if (!pr && !this.state.isOnline) {
             return (
                 <div className='bitbucket-page'>
@@ -332,8 +333,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
                     </InlineDialog>
                 </div>
-                <Button className='ac-button' style={{float: "right"}} onClick={() => this.postMessage({ action: 'refreshPR' })}>
-                  <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                <Button className='ac-button' style={{ float: "right" }} onClick={() => this.postMessage({ action: 'refreshPR' })}>
+                    <RefreshIcon label="refresh" size="small"></RefreshIcon>
                 </Button>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>

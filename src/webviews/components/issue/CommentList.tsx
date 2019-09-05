@@ -2,6 +2,7 @@ import * as React from "react";
 import Avatar from "@atlaskit/avatar";
 import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
 import { Comment as JiraComment } from "../../../jira/jira-client/model/entities";
+import { distanceInWordsToNow } from "date-fns";
 
 type Props = {
   comments: JiraComment[];
@@ -26,7 +27,8 @@ export class CommentList extends React.Component<Props, State> {
 
     let result: any[] = [];
     this.state.comments.forEach((comment: JiraComment) => {
-      const created = (isNaN(Date.parse(comment.created))) ? comment.created : new Date(comment.created).toLocaleString();
+      const prettyCreated = `${distanceInWordsToNow(comment.created)} ago`;
+      //const created = (isNaN(Date.parse(comment.created))) ? comment.created : new Date(comment.created).toLocaleString();
       const body = (comment.renderedBody) ? comment.renderedBody : comment.body;
       const commentMarkup =
         <Comment
@@ -38,7 +40,7 @@ export class CommentList extends React.Component<Props, State> {
             />
           }
           author={<CommentAuthor><div className="jira-comment-author">{comment.author.displayName}</div></CommentAuthor>}
-          time={<CommentTime>{created}</CommentTime>}
+          time={<CommentTime>{prettyCreated}</CommentTime>}
           content={<div className="jira-comment"><p dangerouslySetInnerHTML={{ __html: body }} /></div>}
         />;
 

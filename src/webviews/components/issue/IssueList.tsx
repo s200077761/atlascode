@@ -4,17 +4,9 @@ import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
 import { MinimalIssueOrKeyAndSiteOrKey, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { colorToLozengeAppearanceMap } from '../colors';
 
 type ItemData = { issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void };
-
-const colorToLozengeAppearanceMap = {
-    neutral: 'default',
-    purple: 'new',
-    blue: 'inprogress',
-    red: 'removed',
-    yellow: 'moved',
-    green: 'success',
-};
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
@@ -25,7 +17,11 @@ const IssueKey = (data: ItemData) =>
     </div>;
 const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue.summary}</p>;
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
-const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}><Lozenge appearence={colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName]}>{data.issue.status.name}</Lozenge></p>;
+const StatusColumn = (data: ItemData) => {
+    const lozColor: string = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName];
+
+    return (<Lozenge appearence={lozColor}>{data.issue.status.name}</Lozenge>);
+};
 
 export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void }, {}> {
     constructor(props: any) {
