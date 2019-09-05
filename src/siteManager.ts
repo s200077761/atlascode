@@ -135,6 +135,11 @@ export class SiteManager extends Disposable {
                 if (sites.length === 0) {
                     Container.credentialManager.removeAuthInfo(deletedSite);
                 }
+
+                if (deletedSite.id === Container.config.jira.defaultSite) {
+                    configuration.setDefaultSite(undefined);
+                }
+
                 return true;
             }
         }
