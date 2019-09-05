@@ -80,7 +80,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         this.isRefeshing = true;
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
-
+          
             if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
 
             // const currentBranches = Container.bitbucketContext ?
@@ -90,7 +90,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             //     : [];
 
             this._editUIData = editUI as EditIssueData;
-
+      
             // msg.workInProgress = this._issue.assignee.accountId === this._currentUserId &&
             //     issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
             //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
@@ -196,7 +196,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
         this._editUIData.fieldValues[fieldKey].push(newValue);
 
-        const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
         await client.editIssue(this._issue!.key, { [fieldKey]: this._editUIData.fieldValues[fieldKey] });
 
         let optionMessage = {
@@ -218,7 +218,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     handled = true;
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
                     try {
-                        const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+                        const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         await client.editIssue(this._issue!.key, newFieldValues);
                         this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                         this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues });
@@ -256,7 +256,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isCreateIssue(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue(msg.issueData);
 
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
@@ -282,7 +282,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isCreateIssueLink(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssueLink(this._issue.key, msg.issueLinkData);
 
                             this._editUIData.fieldValues['issuelinks'] = resp;

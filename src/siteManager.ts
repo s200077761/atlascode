@@ -1,5 +1,5 @@
 import { Disposable, EventEmitter, Event, Memento } from "vscode";
-import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, isUpdateAuthEvent, emptySiteInfo, isEmptySiteInfo, SiteInfo } from "./atlclients/authInfo";
+import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, emptySiteInfo, SiteInfo, isRemoveAuthEvent } from "./atlclients/authInfo";
 import { Container } from "./container";
 import { configuration } from "./config/configuration";
 
@@ -30,7 +30,7 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(ProductBitbucket.key, []);
 
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
+            Container.credentialManager.onDidAuthChange(this.onDidAuthChange, this)
         );
     }
 
@@ -39,42 +39,79 @@ export class SiteManager extends Disposable {
         this._onDidSitesAvailableChange.dispose();
     }
 
-    onDidAuthChange(e: AuthInfoEvent) {
-        let notify = false;
-        let sites = this._globalStore.get<DetailedSiteInfo[]>(`${e.site.product.key}${SitesSuffix}`);
-        if (!sites) {
-            sites = [];
+    public addSites(newSites: DetailedSiteInfo[]) {
+        if (newSites.length === 0) {
+            return;
+        }
+        const productKey = newSites[0].product.key;
+        let notify = true;
+        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`);
+        if (allSites) {
+            newSites = newSites.filter(s => !allSites!.some(s2 => s2.id === s.id && s2.userId === s.userId));
+            if (newSites.length === 0) {
+                notify = false;
+            }
+            allSites = allSites.concat(newSites);
+        } else {
+            allSites = newSites;
         }
 
-        if (isUpdateAuthEvent(e)) {
-            if (!sites.find(site => site.hostname === e.site.hostname)) {
-                notify = true;
-                sites.push(e.site);
-                this._globalStore.update(`${e.site.product.key}${SitesSuffix}`, sites);
-                this._sitesAvailable.set(e.site.product.key, sites);
-            }
-        } else {
-            notify = this.removeSite(e.site);
-        }
+        this._globalStore.update(`${productKey}${SitesSuffix}`, allSites);
+        this._sitesAvailable.set(productKey, allSites);
 
         if (notify) {
-            this._onDidSitesAvailableChange.fire({ sites: sites, product: e.site.product });
+            this._onDidSitesAvailableChange.fire({ sites: allSites, product: allSites[0].product });
+        }
+    }
+
+    onDidAuthChange(e: AuthInfoEvent) {
+        if (isRemoveAuthEvent(e)) {
+            const deadSites = this.getSitesAvailable(e.product).filter(site => site.credentialId === e.credentialId);
+            deadSites.forEach(s => this.removeSite(s));
+            if (deadSites.length > 0) {
+                this._onDidSitesAvailableChange.fire({ sites: this.getSitesAvailable(e.product), product: e.product });
+            }
         }
     }
 
     public getSitesAvailable(product: Product): DetailedSiteInfo[] {
-        let sites = this._sitesAvailable.get(product.key);
+        return this.getSitesAvailableForKey(product.key);
+    }
+
+    private getSitesAvailableForKey(productKey: string): DetailedSiteInfo[] {
+        let sites = this._sitesAvailable.get(productKey);
 
         if (!sites || sites.length < 1) {
-            sites = this._globalStore.get<DetailedSiteInfo[]>(`${product.key}${SitesSuffix}`);
+            sites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`);
             if (!sites) {
                 sites = [];
             }
 
-            this._sitesAvailable.set(product.key, sites);
+            this._sitesAvailable.set(productKey, sites);
         }
 
         return sites;
+    }
+
+    public getFirstAAID(productKey?: string): string | undefined {
+        if (productKey) {
+            return this.getFirstAAIDForProduct(productKey);
+        }
+        let userId = this.getFirstAAIDForProduct(ProductJira.key);
+        if (userId) {
+            return userId;
+        }
+        return this.getFirstAAIDForProduct(ProductBitbucket.key);
+    }
+
+    private getFirstAAIDForProduct(productKey: string): string | undefined {
+        const sites = this.getSitesAvailableForKey(productKey);
+        const cloudSites = sites.filter(s => s.isCloud);
+        if (cloudSites.length > 0) {
+            return cloudSites[0].userId;
+        }
+
+        return undefined;
     }
 
     public productHasAtLeastOneSite(product: Product): boolean {
@@ -86,33 +123,57 @@ export class SiteManager extends Disposable {
     }
 
     public removeSite(site: SiteInfo): boolean {
-        let deleted = false;
         const sites = this._globalStore.get<DetailedSiteInfo[]>(`${site.product.key}${SitesSuffix}`);
         if (sites && sites.length > 0) {
             const foundIndex = sites.findIndex(availableSite => availableSite.hostname === site.hostname);
             if (foundIndex > -1) {
-                deleted = true;
+                const deletedSite = sites[foundIndex];
                 sites.splice(foundIndex, 1);
                 this._globalStore.update(`${site.product.key}${SitesSuffix}`, sites);
                 this._sitesAvailable.set(site.product.key, sites);
+                this._onDidSitesAvailableChange.fire({ sites: sites, product: site.product });
+                if (sites.length === 0) {
+                    Container.credentialManager.removeAuthInfo(deletedSite);
+                }
+
+                if (deletedSite.id === Container.config.jira.defaultSite) {
+                    configuration.setDefaultSite(undefined);
+                }
+
+                return true;
             }
         }
 
-        return deleted;
+        return false;
+    }
+
+    private defaultSiteFromConfig(): DetailedSiteInfo | undefined {
+        const configId = Container.config.jira.defaultSite;
+
+        if (!configId) {
+            return undefined;
+        }
+
+        const jiraSites = this.getSitesAvailable(ProductJira);
+        if (!jiraSites) {
+            return undefined;
+        }
+
+        return jiraSites.find(s => s.id === configId);
     }
 
     public effectiveSite(product: Product): DetailedSiteInfo {
         let defaultSite = emptySiteInfo;
         switch (product.key) {
             case ProductJira.key:
-                const configSite = Container.config.jira.defaultSite;
-                if (configSite && !isEmptySiteInfo(configSite)) {
+                const configSite = this.defaultSiteFromConfig();
+                if (configSite) {
                     defaultSite = configSite;
                 } else {
                     const sites = this.getSitesAvailable(product);
                     if (sites && sites.length > 0) {
                         defaultSite = sites[0];
-                        configuration.setDefaultSite(defaultSite);
+                        configuration.setDefaultSite(defaultSite.id);
                     }
                 }
                 break;

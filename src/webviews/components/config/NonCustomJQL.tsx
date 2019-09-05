@@ -12,7 +12,7 @@ type changeObject = { [key: string]: any };
 
 export default class NonCustomJQL extends React.Component<
     {
-        defaultSite: DetailedSiteInfo;
+        defaultSiteId: string;
         workingProject: string;
         sites: DetailedSiteInfo[];
         yourIssuesJql: string;
@@ -100,7 +100,7 @@ export default class NonCustomJQL extends React.Component<
         });
     }
 
-    handleSaveEdit = (site: DetailedSiteInfo, jqlEntry: JQLEntry) => {
+    handleSaveEdit = (siteId: string, jqlEntry: JQLEntry) => {
         switch (jqlEntry.id) {
             case "YOURS":
                 this.publishChanges("jira.explorer.assignedIssueJql", jqlEntry.query);
@@ -185,7 +185,7 @@ export default class NonCustomJQL extends React.Component<
     }
 
     render() {
-        if (!this.props.defaultSite && !this.props.jiraAccessToken) {
+        if (!this.props.defaultSiteId && !this.props.jiraAccessToken) {
             return <div />;
         }
 
@@ -196,7 +196,7 @@ export default class NonCustomJQL extends React.Component<
                 {this.state.editingEntry && (
                     <EditJQL
                         jiraAccessToken={this.props.jiraAccessToken}
-                        defaultSite={this.props.defaultSite}
+                        defaultSiteId={this.props.defaultSiteId}
                         workingProject={this.props.workingProject}
                         sites={[]}
                         jqlEntry={this.state.editingEntry}

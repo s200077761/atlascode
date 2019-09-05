@@ -5,8 +5,17 @@ import { FileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
 import { clientForRemote } from '../../bitbucket/bbUtils';
+import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 
 const turndownService = new TurndownService();
+turndownService.addRule('mention', {
+    filter: function (node) {
+        return node.classList.contains('ap-mention');
+    },
+    replacement: function (content, _, options) {
+        return `${options.emDelimiter}${content}${options.emDelimiter}`;
+    }
+});
 
 interface PullRequestComment extends vscode.Comment {
     prCommentThreadId?: number;
@@ -21,6 +30,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     constructor(ctx: vscode.ExtensionContext) {
         ctx.subscriptions.push(
+            vscode.languages.registerCompletionItemProvider({ scheme: 'comment' }, new BitbucketMentionsCompletionProvider(), '@'),
             vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
                 this.addComment(reply);
             }),
@@ -75,6 +85,18 @@ export class PullRequestCommentController implements vscode.Disposable {
         reply.thread.dispose();
     }
 
+    private shouldDisplayComment(comment: any): boolean {
+        if(comment.children.length === 0){
+            return !comment.deleted;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
+    }
+
     provideComments(uri: vscode.Uri) {
         const { commentThreads } = JSON.parse(uri.query) as FileDiffQueryParams;
 
@@ -87,9 +109,12 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = c.map(comment => PullRequestCommentController.createVSCodeComment(c[0].id!, comment));
+                const comments = c.filter(comment => this.shouldDisplayComment(comment))
+                                    .map(comment => PullRequestCommentController.createVSCodeComment(c[0].id!, comment));
 
-                this.createOrUpdateThread(c[0].id!, uri, range, comments);
+                if(comments.length > 0){
+                    this.createOrUpdateThread(c[0].id!, uri, range, comments);     
+                } 
             });
     }
 

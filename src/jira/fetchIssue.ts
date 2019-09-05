@@ -12,7 +12,7 @@ import { EditIssueUI } from "./jira-client/model/editIssueUI";
 import { API_VERSION } from "./jira-client/client";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
-  const client = await Container.clientManager.jirarequest(siteDetails);
+  const client = await Container.clientManager.jiraClient(siteDetails);
   const createIssueTransformer: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
 
   const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
@@ -37,7 +37,7 @@ export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLi
 
 export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
-  const client = await Container.clientManager.jirarequest(siteDetails);
+  const client = await Container.clientManager.jiraClient(siteDetails);
 
   const res = await client.getIssue(issue, fields);
   return minimalIssueFromJsonObject(res, siteDetails, await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails));
@@ -71,7 +71,7 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
 
   const allFieldKeys: string[] = Object.keys(allFields);
 
-  const client = await Container.clientManager.jirarequest(issue.siteDetails);
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
   const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
   const metaFields: MetaFields = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
 

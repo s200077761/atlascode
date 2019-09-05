@@ -4,6 +4,7 @@ import { configuration, WorkingProject, emptyWorkingProject, notEmptyProject } f
 import { ProductJira } from "../atlclients/authInfo";
 import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { Project } from "./jira-client/model/entities";
+import { Logger } from "../logger";
 
 
 export type JiraAvailableProjectsUpdateEvent = {
@@ -55,10 +56,14 @@ export class JiraProjectManager extends Disposable {
             return this._projectsAvailable;
         }
 
-        const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
-        const order = orderBy !== undefined ? orderBy : 'key';
-        const resp = await client.getProjects(query, order);
-        this._projectsAvailable = resp;
+        try {
+            const client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
+            const order = orderBy !== undefined ? orderBy : 'key';
+            const resp = await client.getProjects(query, order);
+            this._projectsAvailable = resp;
+        } catch (e) {
+            Logger.debug(`Failed to get client for effective Jira site. This is likely due to missing credentials.`);
+        }
 
         return this._projectsAvailable;
     }

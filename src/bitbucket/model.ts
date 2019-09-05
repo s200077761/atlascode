@@ -18,6 +18,7 @@ export const UnknownUser = {
 };
 
 export type Reviewer = User & {
+    mention: string;
     approved: boolean;
     role: "PARTICIPANT" | "REVIEWER";
 };
@@ -176,7 +177,7 @@ export interface PullRequestApi {
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
-    getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
+    getReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, approved: boolean): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;

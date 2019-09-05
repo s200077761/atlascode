@@ -24,7 +24,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         return await bbApi.pullrequests.getList(repo, remote);
     }
 
-    static SCHEME = 'atlascode.bbpr';
+    public static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;
 
     constructor(private ctx: BitbucketContext) {

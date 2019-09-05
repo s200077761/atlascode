@@ -1,9 +1,11 @@
 import { Message } from "./messaging";
 import { RepoData } from "./prMessaging";
 import { User, Comment, BitbucketIssueData } from "../bitbucket/model";
+import { Remote } from "../typings/git";
 
 export interface BitbucketIssueMessageData extends Message {
     issueData: BitbucketIssueData;
+    remote: Remote;
     currentUser: User;
     comments: Comment[];
     hasMore: boolean;

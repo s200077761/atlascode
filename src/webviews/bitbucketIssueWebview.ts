@@ -9,6 +9,7 @@ import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
 import { BitbucketIssue } from "../bitbucket/model";
 import { clientForRemote } from "../bitbucket/bbUtils";
+import { isFetchUsers } from "../ipc/prActions";
 
 
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
@@ -71,14 +72,15 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
             // replace comment with change data which contains additional details
             const updatedComments = comments.data.map(comment =>
                 changes.data.find(change => change.id! === comment.id!) || comment);
-            const msg = {
+            const msg: BitbucketIssueMessageData = {
                 type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
                 issueData: issueLatest.data,
+                remote: issueLatest.remote,
                 currentUser: currentUser,
                 comments: updatedComments,
                 hasMore: !!comments.next || !!changes.next,
                 showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
-            } as BitbucketIssueMessageData;
+            };
 
             this.postMessage(msg);
         } catch (e) {
@@ -165,6 +167,20 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                     if (isCreateJiraIssueAction(e)) {
                         handled = true;
                         vscode.commands.executeCommand(Commands.CreateIssue, this._issue);
+                    }
+                    break;
+                }
+                case 'fetchUsers': {
+                    if (isFetchUsers(e)) {
+                        handled = true;
+                        try {
+                            const bbApi = await clientForRemote(e.remote);
+                            const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
                     }
                     break;
                 }

@@ -28,6 +28,10 @@ p, h1, h2, h3, h4, h5, h6, label, span, .ac-inline-edit-p {
   margin: 0px;
 }
 
+small {
+  color: var(--vscode-editorCodeLens-foreground);
+}
+
 /*-------------------- END - fix css-reset --------------------*/
 
 /*-------------------- BEGIN - general containers --------------------*/
@@ -123,6 +127,7 @@ pre {
 /* used to display svg images with labels like Jira priority */
 
 .ac-icon-with-text {
+  height: 2em;
   display: flex;
   align-items: center;
 }
@@ -647,6 +652,13 @@ section button span {
   color: var(--vscode-foreground) !important;
 }
 
+.ac-textarea-toolbar {
+  margin-top: -5px;
+  margin-bottom: 5px;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+  border-top: none;
+}
+
 /*-------------------- END - form input/text --------------------*/
 
 /*-------------------- BEGIN - select boxes --------------------*/
@@ -764,6 +776,18 @@ section button span {
 }
 
 /*-------------------- END - calendar controls --------------------*/
+
+/*-------------------- BEGIN - BB cloud rendered html classes --------------------*/
+
+.vscode-light .ap-mention {
+  background: var(--vscode-editor-background--darken-15);
+}
+
+.vscode-dark .ap-mention {
+  background: var(--vscode-editor-background--lighten-15);
+}
+
+/*-------------------- END - BB cloud rendered html classes --------------------*/
 
 /*-------------------- BEGIN - PR branch lozenges --------------------*/
 
@@ -1003,8 +1027,21 @@ pre.pipeline-logs {
 
 /*-------------------- BEGIN - Comments --------------------*/
 
+.ac-comment-form {
+  display: flex;
+  margin-top: 10px;
+}
+
 .ac-comments [class^="LayoutStyles__Container"] {
   padding-top: 0px !important;
+}
+
+.ac-comments [class^="LayoutStyles__ContentSectionDiv"] {
+  margin-bottom: 10px !important;
+}
+
+.ac-comments [class^="LayoutStyles__NestedCommentsDiv"] {
+  margin: 5px !important;
 }
 
 .ac-comments .emoji {

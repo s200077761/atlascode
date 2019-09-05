@@ -20,7 +20,7 @@ export async function showSiteSelectionDialog() {
 }
 
 async function saveWorkingSite(site: DetailedSiteInfo) {
-  await configuration.setDefaultSite(site)
+  await configuration.setDefaultSite(site.id)
     .then(async () => {
       commands.executeCommand(Commands.RefreshJiraExplorer);
 

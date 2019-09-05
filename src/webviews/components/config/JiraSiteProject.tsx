@@ -30,10 +30,6 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
 
     componentWillReceiveProps = (nextProps: any) => {
 
-        if (nextProps.configData.config.jira.defaultSite && !nextProps.configData.config.jira.defaultSite.id) {
-            nextProps.configData.config.jira.defaultSite = '';
-        }
-
         if (nextProps.configData.config.jira.workingProject && !nextProps.configData.config.jira.workingProject.id) {
             nextProps.configData.config.jira.workingProject = '';
         }
@@ -46,7 +42,7 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
             const removes = [];
 
             removes.push('jira.workingProject');
-            changes['jira.defaultSite'] = item;
+            changes['jira.defaultSite'] = item.id;
 
             if (this.props.onConfigChange) {
                 this.props.onConfigChange(changes, removes);
@@ -70,12 +66,17 @@ export default class JiraSiteProject extends React.Component<{ configData: Confi
         }
     }
 
+    defaultSite = () => {
+        const siteId = this.state.config.jira.defaultSite;
+        return this.state.jiraSites.find(site => site.id === siteId);
+    }
+
     render() {
         return <div className='ac-flex-space-between'>
             <Field label='Default Site'
                 id='defaultSite'
                 name='defaultSite'
-                defaultValue={this.state.config.jira.defaultSite}
+                defaultValue={this.defaultSite()}
             >
                 {
                     (fieldArgs: any) => {

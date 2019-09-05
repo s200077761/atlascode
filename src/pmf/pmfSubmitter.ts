@@ -1,5 +1,4 @@
 import { PMFData } from "../ipc/messaging";
-import { AuthInfo, ProductJira, ProductBitbucket, isOAuthInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { format } from 'date-fns';
 import axios from 'axios';
@@ -142,17 +141,5 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
 }
 
 async function getAAID(): Promise<string | undefined> {
-    let authInfo: AuthInfo | undefined = undefined;
-
-    authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductJira);
-    if (!authInfo) {
-        authInfo = await Container.authManager.getFirstAuthInfoForProduct(ProductBitbucket);
-    }
-
-    // TODO: [VSCODE-504] handle non-cloud users in PMF form
-    if (isOAuthInfo(authInfo)) {
-        return authInfo.user.id;
-    }
-
-    return undefined;
+    return Container.siteManager.getFirstAAID();
 }

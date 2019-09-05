@@ -10,7 +10,7 @@ export async function issuesForJQL(jql: string, site?: DetailedSiteInfo): Promis
     effSite = Container.siteManager.effectiveSite(ProductJira);
   }
 
-  const client = await Container.clientManager.jirarequest(effSite);
+  const client = await Container.clientManager.jiraClient(effSite);
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(effSite);
   const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(effSite);
 

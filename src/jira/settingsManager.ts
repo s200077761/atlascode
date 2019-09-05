@@ -45,7 +45,7 @@ export class JiraSettingsManager extends Disposable {
         if (!this._issueLinkTypesStore.has(site.id)) {
             let ilts: IssueLinkType[] = [];
             try {
-                const client = await Container.clientManager.jirarequest(site);
+                const client = await Container.clientManager.jiraClient(site);
                 const issuelinkTypes = await client.getIssueLinkTypes();
 
                 if (Array.isArray(issuelinkTypes)) {
@@ -142,7 +142,7 @@ export class JiraSettingsManager extends Disposable {
 
     private async fetchAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
         let fields: Fields = {};
-        const client = await Container.clientManager.jirarequest(site);
+        const client = await Container.clientManager.jiraClient(site);
         let allFields = await client.getFields({});
         if (allFields) {
             allFields.forEach(field => {
