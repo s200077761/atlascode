@@ -80,7 +80,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         this.isRefeshing = true;
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
-          
+
             if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
 
             // const currentBranches = Container.bitbucketContext ?
@@ -90,7 +90,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             //     : [];
 
             this._editUIData = editUI as EditIssueData;
-      
+
             // msg.workInProgress = this._issue.assignee.accountId === this._currentUserId &&
             //     issue.transitions.find(t => t.isInitial && t.to.id === issue.status.id) === undefined &&
             //     currentBranches.find(b => b.toLowerCase().indexOf(issue.key.toLowerCase()) !== -1) !== undefined;
@@ -123,7 +123,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
     async updateEpicChildren() {
         if (this._issue.isEpic) {
             const site = this._issue.siteDetails;
-            const client = await Container.clientManager.jirarequest(site);
+            const client = await Container.clientManager.jiraClient(site);
             const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
             const epicFieldInfo = this._editUIData.epicFieldInfo;
 
@@ -135,7 +135,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
     async updateCurrentUser() {
         if (isEmptyUser(this._currentUser)) {
-            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const user = await client.getCurrentUser();
             this._currentUser = user;
             this.postMessage({ type: 'currentUserUpdate', currentUser: user });
@@ -152,7 +152,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
     async updateWatchers() {
         if (this._editUIData.fieldValues['watches'] && this._editUIData.fieldValues['watches'].watchCount > 0) {
-            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const watches = await client.getWatchers(this._issue.key);
 
             this._editUIData.fieldValues['watches'] = watches;
@@ -165,7 +165,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
     async updateVoters() {
         if (this._editUIData.fieldValues['votes'] && this._editUIData.fieldValues['votes'].votes > 0) {
-            const client = await Container.clientManager.jirarequest(this._issue.siteDetails);
+            const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
             const votes = await client.getVotes(this._issue.key);
 
             this._editUIData.fieldValues['votes'] = votes;
@@ -307,7 +307,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isDeleteByIDAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
 
                             // We wish we could just call the delete issuelink endpoint, but it doesn't support OAuth 2.0
                             //await client.deleteIssuelink(msg.objectWithId.id);
@@ -342,7 +342,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isCreateWorklog(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.addWorklog(msg.issueKey, msg.worklogData);
 
                             if (!this._editUIData.fieldValues['worklog']
@@ -372,7 +372,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isUpdateWatcherAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.addWatcher(msg.issueKey, msg.watcher.accountId);
 
                             if (!this._editUIData.fieldValues['watches']
@@ -407,7 +407,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isUpdateWatcherAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeWatcher(msg.issueKey, msg.watcher.accountId);
                             if (!this._editUIData.fieldValues['watches']
                                 || !this._editUIData.fieldValues['watches'].watchers
@@ -446,7 +446,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isUpdateVoteAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.addVote(msg.issueKey);
 
                             if (!this._editUIData.fieldValues['votes']
@@ -479,7 +479,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isUpdateVoteAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.removeVote(msg.issueKey);
                             if (!this._editUIData.fieldValues['votes']
                                 || !this._editUIData.fieldValues['votes'].voters
@@ -515,7 +515,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isAddAttachmentsAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.addAttachments(msg.issueKey, msg.files);
 
                             if (!this._editUIData.fieldValues['attachment']
@@ -548,7 +548,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isDeleteByIDAction(msg)) {
                         handled = true;
                         try {
-                            let client = await Container.clientManager.jirarequest(msg.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             await client.deleteAttachment(msg.objectWithId.id);
 
                             if (!this._editUIData.fieldValues['attachment']
