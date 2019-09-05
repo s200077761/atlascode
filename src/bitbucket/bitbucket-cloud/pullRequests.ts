@@ -177,9 +177,9 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<void> {
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        await this.client.put(
+        const { data } = await this.client.put(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
             {
                 content: {
@@ -187,6 +187,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 }
             }   
         );
+
+        return this.convertDataToComment(data);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -220,7 +222,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                     markup: 'markdown',
                     raw: '*Comment deleted*',
                     html: '<p><em>Comment deleted</em></p>'
-                }
+                },
+                deleted: true
             } as any;
         });
 
@@ -245,10 +248,25 @@ export class CloudPullRequestApi implements PullRequestApi {
                 children: []
             })));
 
+        const undeletedComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
-            data: nestedComments,
+            data: undeletedComments,
             next: undefined
         };
+    }
+
+    private shouldDisplayComment(comment: any): boolean {
+        if (!comment.deleted){
+            return true;
+        } else if (!!comment.children || comment.children.length === 0){
+            return false;
+        } {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
     }
 
     private toNestedList(comments: Comment[]): Comment[] {

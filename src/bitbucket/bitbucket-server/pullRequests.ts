@@ -221,8 +221,26 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<void> {
-        console.log("something is supposed to happen");
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        /*
+        The Bitbucket Server API can not edit a comment unless the comment's version is provided as a query parameter.
+        In order to get the comment's version, a call must be made to the Bitbucket Server API.
+        */
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
+        );
+
+        const { commentData } = await this.client.put(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
+            {
+                text: content,
+                version: data.version
+            },
+            {}
+        );
+
+        return this.convertDataToComment(commentData, remote);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -239,8 +257,24 @@ export class ServerPullRequestApi implements PullRequestApi {
         const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
 
         return {
-            data: activities.map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
+            data: activities
+                .map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
+                .filter(comment => this.shouldDisplayComment(comment))
         };
+    }
+
+    private shouldDisplayComment(comment: any): boolean {
+        if (!comment.deleted){
+            return true;
+        } else if (!!comment.children || comment.children.length === 0){
+            return false;
+        } {
+            let hasUndeletedChild: boolean = false;
+            for(let i = 0; i < comment.children.length; i++){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            }
+            return hasUndeletedChild;
+        }       
     }
 
     private toCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Comment {

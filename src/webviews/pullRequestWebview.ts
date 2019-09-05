@@ -209,18 +209,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
-    private shouldDisplayComment(comment: any): boolean {
-        if(comment.children.length === 0){
-            return !comment.deleted;
-        } else {
-            let hasUndeletedChild: boolean = false;
-            for(let i = 0; i < comment.children.length; i++){
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
-            }
-            return hasUndeletedChild;
-        }       
-    }
-
     private async postCompleteState() {
         if(!this._pr){
             return;
@@ -236,7 +224,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
         const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
-        comments.data = comments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
