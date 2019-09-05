@@ -2,7 +2,6 @@ import { window, version } from 'vscode';
 import axios from 'axios';
 import { FeedbackData, FeedbackType } from "../ipc/configActions";
 import { Container } from "../container";
-import { feedbackEvent } from "../analytics";
 import { ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 import { truncate } from 'lodash';
 import { FeedbackUser } from '../ipc/configMessaging';
@@ -60,7 +59,6 @@ export async function getFeedbackUser(): Promise<FeedbackUser> {
 }
 
 export async function submitFeedback(feedback: FeedbackData, source: string) {
-    feedbackEvent(feedback, source).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
     const context = {
         source: source,
@@ -106,15 +104,6 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
                 value: [
                     {
                         id: feedback.canBeContacted ? "10109" : "10111"
-                    }
-                ]
-            },
-            {
-                // Can be researched?
-                id: "customfield_10044",
-                value: [
-                    {
-                        id: feedback.canBeResearched ? "10110" : "10112"
                     }
                 ]
             },

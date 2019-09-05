@@ -26,7 +26,6 @@ export default class DisplayFeedback extends React.Component<{ userDetails: Feed
       description: formData.description,
       type: formData.type.value,
       canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0),
-      canBeResearched: (formData.canBeResearched && formData.canBeResearched.length > 0),
       userName: formData.userName,
       emailAddress: formData.email
     };
@@ -134,21 +133,6 @@ export default class DisplayFeedback extends React.Component<{ userDetails: Feed
                           return (
                             <Checkbox {...fieldArgs.fieldProps}
                               label='Atlassian can contact me about this feedback' />
-                          );
-                        }
-                      }
-                    </CheckboxField>
-
-                    <CheckboxField
-                      name='canBeResearched'
-                      id='canBeResearched'
-                      value='canBeResearched'
-                      defaultIsChecked={true}>
-                      {
-                        (fieldArgs: any) => {
-                          return (
-                            <Checkbox {...fieldArgs.fieldProps}
-                              label="I'd like to participate in product research" />
                           );
                         }
                       }
