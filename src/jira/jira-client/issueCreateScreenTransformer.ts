@@ -1,21 +1,23 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { IssueTypeIssueCreateMetadata, ProjectIssueCreateMetadata } from "./model/issueCreateMetadata";
-import { CreateMetaTransformerProblems, CreateMetaTransformerResult, IssueTypeProblem, IssueTypeUI } from "./model/createIssueUI";
 import { FieldTransformerResult } from "./model/fieldUI";
 import { Container } from "../../container";
 import { FieldTransformer } from "./fieldTransformer";
 import { IssueType } from "./model/entities";
+import { CreateMetaTransformerResult, CreateMetaTransformerProblems, IssueTypeUI, IssueTypeProblem, emptyIssueTypeUI } from "./model/editIssueUI";
 
 
 const defaultCommonFields: string[] = [
-    'summary'
+    'project'
+    , 'issuetype'
+    , 'summary'
     , 'description'
     , 'fixVersions'
     , 'components'
     , 'labels'
 ];
 
-const defaultFieldFilters: string[] = ['issuetype', 'project', 'reporter', 'statuscategorychangedate', 'lastViewed'];
+const defaultFieldFilters: string[] = ['reporter', 'statuscategorychangedate', 'lastViewed'];
 
 export class IssueCreateScreenTransformer {
 
@@ -34,7 +36,8 @@ export class IssueCreateScreenTransformer {
         const issueTypeUIList = {};
         let firstIssueType: IssueType | undefined;
         let problems: CreateMetaTransformerProblems = {};
-        const renderableIssueTypes: IssueTypeIssueCreateMetadata[] = [];
+        const renderableIssueTypesMeta: IssueTypeIssueCreateMetadata[] = [];
+        const renderableIssueTypes: IssueType[] = [];
 
         if (Array.isArray(project.issuetypes) && project.issuetypes.length > 0) {
             firstIssueType = this.metaIssueTypeToIssueType(project.issuetypes[0]);
@@ -42,11 +45,12 @@ export class IssueCreateScreenTransformer {
             for (let i = 0; i < project.issuetypes.length; i++) {
                 const issueType: IssueTypeIssueCreateMetadata = project.issuetypes[i];
 
-                const issueTypeUI: IssueTypeUI = {
-                    name: issueType.name,
-                    id: issueType.id,
-                    iconUrl: (issueType.iconUrl !== undefined) ? issueType.iconUrl : '',
-                    fields: {}
+                let issueTypeUI: IssueTypeUI = {
+                    ...emptyIssueTypeUI,
+                    ...{
+                        siteDetails: this._site,
+                        epicFieldInfo: epicFieldInfo,
+                    }
                 };
 
                 if (issueType.fields && Object.keys(issueType.fields).length > 0) {
@@ -68,9 +72,10 @@ export class IssueCreateScreenTransformer {
                         }, problems);
                     }
 
-                    if (!fieldResult.hasRequiredNonRenderables) {
-                        issueTypeUI.fields = fieldResult.fields;
-                        renderableIssueTypes.push(issueType);
+                    if (!fieldResult.hasRequiredNonRenderables && !issueType.subtask) {
+                        issueTypeUI = { ...issueTypeUI, ...fieldResult };
+                        renderableIssueTypesMeta.push(issueType);
+                        renderableIssueTypes.push(this.metaIssueTypeToIssueType(issueType));
                         issueTypeUIList[issueType.id] = issueTypeUI;
                     }
                 } else {
@@ -84,11 +89,11 @@ export class IssueCreateScreenTransformer {
             }
         }
 
-        if (!firstIssueType || (!renderableIssueTypes.find(it => it.id === firstIssueType!.id))) {
-            firstIssueType = this.metaIssueTypeToIssueType(renderableIssueTypes[0]);
+        if (!firstIssueType || (!renderableIssueTypesMeta.find(it => it.id === firstIssueType!.id))) {
+            firstIssueType = this.metaIssueTypeToIssueType(renderableIssueTypesMeta[0]);
         }
 
-        return { selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
+        return { issueTypes: renderableIssueTypes, selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
     }
 
     private addIssueTypeProblem(problem: IssueTypeProblem, problems: CreateMetaTransformerProblems) {

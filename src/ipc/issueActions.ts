@@ -151,9 +151,13 @@ export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
     return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
-export function isFetchQuery(a: Action): a is FetchQueryAction {
+export function isFetchQueryAndSite(a: Action): a is FetchQueryAction {
     return a && (<FetchQueryAction>a).query !== undefined
         && (<FetchQueryAction>a).site !== undefined;
+}
+
+export function isFetchQuery(a: Action): a is FetchQueryAction {
+    return a && (<FetchQueryAction>a).query !== undefined;
 }
 
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {

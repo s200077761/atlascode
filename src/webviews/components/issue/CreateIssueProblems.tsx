@@ -5,7 +5,7 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
 import { WorkingProject, emptyWorkingProject } from '../../../config/model';
-import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/createIssueUI';
+import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/editIssueUI';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 

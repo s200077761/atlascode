@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { AbstractIssueEditorPage, CommonEditorPageAccept, CommonEditorPageEmit, CommonEditorViewState, emptyCommonEditorState } from "./AbstractIssueEditorPage";
-import { CreateIssueData, PreliminaryIssueData } from "../../../ipc/issueMessaging";
-import { emptyWorkingProject } from '../../../config/model';
-import { epicsDisabled } from "../../../jira/jiraCommon";
+import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from "../../../ipc/issueMessaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SectionMessage from '@atlaskit/section-message';
 import Offline from '../Offline';
@@ -10,7 +8,7 @@ import ErrorBanner from '../ErrorBanner';
 import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
-import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { FieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { AtlLoader } from '../AtlLoader';
 
 type Emit = CommonEditorPageEmit;
@@ -22,12 +20,7 @@ interface ViewState extends CommonEditorViewState, CreateIssueData {
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
-    selectedProject: emptyWorkingProject,
-    availableProjects: [],
-    selectedIssueTypeId: '',
-    issueTypeScreens: {},
-    epicFieldInfo: epicsDisabled,
-    transformerProblems: {},
+    ...emptyCreateIssueData,
     isCreateBannerOpen: false,
     createdIssue: {},
 
@@ -71,10 +64,12 @@ const emptyState: ViewState = {
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
+    private advancedFields: FieldUI[] = [];
+    private commonFields: FieldUI[] = [];
+
     getProjectKey(): string {
-        throw new Error("Method not implemented.");
+        return this.state.fieldValues['project'].key;
     }
-    // private issueTypes: any[] = [];
 
     constructor(props: any) {
         super(props);
@@ -86,23 +81,39 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         if (!handled) {
             switch (e.type) {
-                case 'preliminaryIssueData': {
-                    const data = e as PreliminaryIssueData;
-                    this.setState({ fieldValues: { ...this.state.fieldValues, ...{ description: `${data.description}${createdFromAtlascodeFooter}`, summary: data.summary } } });
+                case 'update': {
+                    const issueData = e as CreateIssueData;
+                    this.updateInternals(issueData);
+                    this.setState({ ...issueData, ...{ isSomethingLoading: false, loadingField: '' } });
                     break;
                 }
-
-                case 'screenRefresh': {
-                    const issueData = e as CreateIssueData;
-                    //this.issueTypes = Object.entries(issueData.issueTypeScreens).map(([key, value]) => { return { id: value.id, name: value.name, iconUrl: value.iconUrl }; });
-
-                    this.setState({ ...issueData, ...{ isSomethingLoading: false, loadingField: '' } });
+                case 'currentUserUpdate': {
+                    this.setState({ currentUser: e.currentUser });
+                }
+                case 'issueCreated': {
+                    if (isIssueCreated(e)) {
+                        this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
+                    }
                     break;
                 }
             }
         }
 
         return handled;
+    }
+
+    updateInternals(data: CreateIssueData) {
+        const orderedValues: FieldUI[] = this.sortFieldValues(data.fields);
+        this.advancedFields = [];
+        this.commonFields = [];
+
+        orderedValues.forEach(field => {
+            if (field.advanced) {
+                this.advancedFields.push(field);
+            } else {
+                this.commonFields.push(field);
+            }
+        });
     }
 
     handleSubmit = async (e: any) => {
@@ -131,27 +142,87 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         return undefined;
     }
 
-    public render() {
-        let renderableFields: any[] = [];
-        let advancedFields: any[] = [];
-        if (this.state.selectedIssueTypeId && this.state.selectedIssueTypeId !== '') {
+    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
+        switch (field.uiType) {
+            // case UIType.Subtasks: {
+            //     /* newValue will be:
+            //     {
+            //         summary: string;
+            //         issuetype: {id:number}
+            //     }
+            //     */
+            //     this.setState({ isSomethingLoading: true, loadingField: field.key });
+            //     const payload: any = newValue;
+            //     payload.project = { key: this.getProjectKey() };
+            //     payload.parent = { key: this.state.key };
+            //     this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
 
-            const screen = this.state.issueTypeScreens[this.state.selectedIssueTypeId];
-            if (screen && screen.fields && Object.keys(screen.fields).length > 0) {
-                renderableFields = [];
-                advancedFields = [];
-                const orderedValues: FieldUI[] = this.sortFieldValues(screen.fields);
+            //     break;
+            // }
+            // case UIType.IssueLinks: {
+            //     this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
 
-                orderedValues.forEach(field => {
-                    (field.advanced) ? advancedFields.push(this.getInputMarkup(field)) : renderableFields.push(this.getInputMarkup(field));
+            //     this.postMessage({
+            //         action: 'createIssueLink'
+            //         , site: this.state.siteDetails
+            //         , issueLinkData: {
+            //             type: {
+            //                 id: newValue.type.id
+            //             },
+            //             inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
+            //             outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+            //         }
+            //         , issueLinkType: newValue.type
+            //     });
+            //     break;
+            // }
+            // case UIType.Timetracking: {
+            //     let newValObject = this.state.fieldValues[field.key];
+            //     if (newValObject) {
+            //         newValObject.originalEstimate = newValue;
+            //     } else {
+            //         newValObject = {
+            //             originalEstimate: newValue
+            //         };
+            //     }
+            //     this.setState({ loadingField: field.key, isSomethingLoading: true, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
+            //         this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
+            //     });
+            //     break;
+            // }
+            // case UIType.Worklog: {
+            //     this.setState({ isSomethingLoading: true, loadingField: field.key });
+            //     this.postMessage({ action: 'createWorklog', site: this.state.siteDetails, worklogData: newValue, issueKey: this.state.key });
+            //     break;
+            // }
 
-                });
+            default: {
+                let typedVal = newValue;
 
-            } else {
-                this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.selectedIssueTypeId}` });
+                if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                    typedVal = parseFloat(newValue);
+                }
+                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } });
+                break;
             }
-        } else if (!this.state.isErrorBannerOpen && this.state.isOnline) {
+        }
+    }
+
+    getCommonFieldMarkup(): any {
+        return this.commonFields.map(field => this.getInputMarkup(field));
+    }
+
+    getAdvancedFieldMarkup(): any {
+        return this.advancedFields.map(field => this.getInputMarkup(field));
+    }
+
+    public render() {
+        if (!this.state.fieldValues['issuetype'] || this.state.fieldValues['issuetype'].id === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
             return <AtlLoader />;
+        }
+
+        if (Object.keys(this.state.fields).length < 1) {
+            this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.fieldValues['issuetype'].name}` });
         }
 
         return (
@@ -162,6 +233,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             {!this.state.isOnline &&
                                 <Offline />
                             }
+                            {/* {this.state.showPMF &&
+                    <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                } */}
                             {this.state.isCreateBannerOpen &&
                                 <div className='fade-in'>
                                     <SectionMessage
@@ -181,80 +255,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             >
                                 {(frmArgs: any) => {
                                     return (<form {...frmArgs.formProps}>
-                                        {/* <Field defaultValue={this.state.selectedProject}
-                                            label='Project'
-                                            isRequired={true}
-                                            id='project'
-                                            name='project'
-                                            validate={FieldValidators.validateSingleSelect}>
-                                            {
-                                                (fieldArgs: any) => {
-                                                    let errDiv = <span />;
-                                                    if (fieldArgs.error === 'EMPTY') {
-                                                        errDiv = <ErrorMessage>Project is required</ErrorMessage>;
-                                                    }
-                                                    return (
-                                                        <div>
-                                                            <AsyncSelect
-                                                                {...fieldArgs.fieldProps}
-                                                                className="ac-select-container"
-                                                                classNamePrefix="ac-select"
-                                                                getOptionLabel={(option: WorkingProject) => {
-                                                                    return option.name;
-                                                                }}
-                                                                getOptionValue={(option: WorkingProject) => {
-                                                                    return option.key;
-                                                                }}
-                                                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleProjectChange)}
-                                                                defaultOptions={this.state.availableProjects}
-                                                                loadOptions={this.loadProjectOptions}
-                                                                placeholder="Choose a Project"
-                                                                isDisabled={this.state.isSomethingLoading}
-                                                                isLoading={this.state.loadingField === 'project'}
-                                                            />
-                                                            {errDiv}
-                                                        </div>
-                                                    );
-                                                }
-                                            }
-                                        </Field> */}
-
-                                        {/* <Field defaultValue={this.state.defaultIssueType}
-                                            label='Issue Type'
-                                            isRequired={true}
-                                            id='issuetype'
-                                            name='issuetype'
-                                            validate={FieldValidators.validateSingleSelect}>
-                                            {
-                                                (fieldArgs: any) => {
-                                                    let errDiv = <span />;
-                                                    if (fieldArgs.error === 'EMPTY') {
-                                                        errDiv = <ErrorMessage>Issue Type is required</ErrorMessage>;
-                                                    }
-                                                    return (
-                                                        <div>
-                                                            <Select
-                                                                {...fieldArgs.fieldProps}
-                                                                className="ac-select-container"
-                                                                classNamePrefix="ac-select"
-                                                                options={this.issueTypes}
-                                                                placeholder="Select Issue Type"
-                                                                components={{ Option: IconOption, SingleValue: IconValue }}
-                                                                getOptionLabel={(option: any) => option.name}
-                                                                getOptionValue={(option: any) => option.id}
-                                                                isDisabled={this.state.isSomethingLoading}
-                                                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleIssueTypeChange)}
-                                                            />
-                                                            {errDiv}
-                                                        </div>
-                                                    );
-                                                }
-                                            }
-                                        </Field> */}
-
-                                        {renderableFields}
+                                        {this.getCommonFieldMarkup()}
                                         <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
-                                            <div>{advancedFields}</div>
+                                            <div>{this.getAdvancedFieldMarkup()}</div>
                                         </Panel>
                                         <FormFooter actions={{}}>
                                             <Button type="submit" className='ac-button' isDisabled={this.state.isSomethingLoading} isLoading={this.state.loadingField === 'submitButton'}>

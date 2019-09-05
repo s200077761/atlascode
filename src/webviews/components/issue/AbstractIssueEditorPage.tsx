@@ -10,7 +10,7 @@ import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
 import { ButtonGroup } from '@atlaskit/button';
-import { Button } from '@atlaskit/button/components/Button';
+import Button from '@atlaskit/button';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
@@ -87,7 +87,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     // see: https://github.com/JedWatson/react-select/issues/2477
     // and more importantly: https://github.com/JedWatson/react-select/issues/2326
     protected handleSelectChange = debounce((field: FieldUI, newValue: any) => {
-
+        console.log(`${field.name} was changed`, newValue);
         this.handleInlineEdit(field, this.formatEditValue(field, newValue));
     }, 100);
 
@@ -116,13 +116,18 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         let handled: boolean = false;
         switch (e.type) {
             case 'error': {
+                handled = true;
                 this.waitForCreateOptionResponse = false;
                 if (isIssueEditError(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 } else {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason });
                 }
+                break;
+            }
+            case 'fieldValueUpdate': {
                 handled = true;
+                this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 break;
             }
             case 'issueSuggestionsList': {
@@ -136,6 +141,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 break;
             }
             case 'optionCreated': {
+                handled = true;
                 if (isCreatedSelectOption(e)) {
                     this.waitForCreateOptionResponse = false;
                     this.setState(
@@ -305,7 +311,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     default: {
                         if (field.required) {
                             validationFailMessage = `${field.name} is required`;
-                            break;
                         }
                         break;
                     }
@@ -343,7 +348,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;
-                                if (fieldArgs.error !== undefined) {
+                                if (fieldArgs.error && fieldArgs.error !== '') {
+                                    console.log(`${field.name} error`, fieldArgs.error);
                                     errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
@@ -523,6 +529,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     validateFunc = (selectField.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;
                 }
 
+                // Note: react-select doesn't let you set an initial value as a string.
+                // it must be an object or an array (ugh.)
+                let defVal = this.state.fieldValues[field.key];
+                if (typeof this.state.fieldValues[field.key] === 'string') {
+                    defVal = { label: defVal, value: defVal };
+                }
+
                 const commonProps: any = {
                     isMulti: selectField.isMulti,
                     className: "ac-select-container",
@@ -536,17 +549,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     commonProps.label = field.name;
                     commonProps.id = field.key;
                     commonProps.name = field.key;
-
-                    // Note: react-select doesn't let you set an initial value as a string.
-                    // it must be an object or an array (ugh.)
-                    if (typeof this.state.fieldValues[field.key] === 'string') {
-                        const val = this.state.fieldValues[field.key];
-
-                        commonProps.defaultValue = { label: val, value: val };
-                    } else {
-                        commonProps.defaultValue = this.state.fieldValues[field.key];
-                    }
-
+                    commonProps.defaultValue = defVal;
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {
@@ -570,7 +573,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -622,7 +625,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -634,7 +637,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 <CreatableSelect
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
-                                                    value={this.state.fieldValues[field.key]}
                                                     placeholder='Type to create new option'
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
@@ -676,7 +678,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -742,7 +744,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -1148,6 +1150,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             }
         }
 
+        console.log(`returning validate func for ${field.name}`, valfunc);
         return valfunc;
     }
 

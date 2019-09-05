@@ -62,7 +62,7 @@ export class JiraProjectManager extends Disposable {
             const resp = await client.getProjects(query, order);
             this._projectsAvailable = resp;
         } catch (e) {
-            Logger.debug(`Failed to get client for effective Jira site. This is likely due to missing credentials.`);
+            Logger.debug(`Failed to fetch projects ${e}`);
         }
 
         return this._projectsAvailable;

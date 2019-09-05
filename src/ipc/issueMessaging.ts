@@ -3,9 +3,7 @@ import { WorkingProject } from "../config/model";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
 import { MinimalIssue, Project, User } from "../jira/jira-client/model/entities";
-import { EpicFieldInfo } from "../jira/jiraCommon";
-import { CreateMetaTransformerProblems, IssueTypeUIs } from "../jira/jira-client/model/createIssueUI";
-import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { EditIssueUI, emptyEditIssueUI, CreateMetaTransformerProblems, IssueTypeUI, emptyIssueTypeUI } from "../jira/jira-client/model/editIssueUI";
 import { FieldValues, SelectFieldOptions } from "../jira/jira-client/model/fieldUI";
 import { emptyUser } from "../jira/jira-client/model/emptyEntities";
 
@@ -25,6 +23,24 @@ export const emptyEditIssueData: EditIssueData = {
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],
+};
+
+export interface IssueProblemsData extends Message {
+    problems: CreateMetaTransformerProblems;
+    project: WorkingProject;
+}
+
+export interface CreateIssueData extends Message { }
+export interface CreateIssueData extends IssueTypeUI {
+    currentUser: User;
+    transformerProblems: CreateMetaTransformerProblems;
+}
+
+export const emptyCreateIssueData: CreateIssueData = {
+    type: "",
+    ...emptyIssueTypeUI,
+    currentUser: emptyUser,
+    transformerProblems: {},
 };
 
 export interface IssueEditError extends HostErrorMessage {
@@ -52,25 +68,6 @@ export interface PullRequestUpdate extends Message {
 export interface CurrentUserUpdate extends Message {
     type: 'currentUserUpdate';
     currentUser: User;
-}
-
-export interface IssueProblemsData extends Message {
-    problems: CreateMetaTransformerProblems;
-    project: WorkingProject;
-}
-
-export interface CreateIssueData extends Message {
-    selectedProject: WorkingProject;
-    selectedIssueTypeId: string | undefined;
-    availableProjects: WorkingProject[];
-    issueTypeScreens: IssueTypeUIs;
-    epicFieldInfo: EpicFieldInfo;
-    transformerProblems: CreateMetaTransformerProblems;
-}
-
-export interface PreliminaryIssueData extends Message {
-    summary?: string;
-    description?: string;
 }
 
 export interface ProjectList extends Message {

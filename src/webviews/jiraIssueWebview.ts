@@ -54,6 +54,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
     invalidate(): void {
         if (Container.onlineDetector.isOnline()) {
             this.forceUpdateIssue();
+        } else {
+            this.postMessage(onlineStatus(false));
         }
 
         Container.pmfStats.touchActivity();

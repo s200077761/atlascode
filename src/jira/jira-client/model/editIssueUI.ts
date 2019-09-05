@@ -1,8 +1,8 @@
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
-import { MinimalIssue } from "./entities";
-import { FieldTransformerResult } from "./fieldUI";
+import { MinimalIssue, IssueType } from "./entities";
+import { FieldTransformerResult, FieldProblem } from "./fieldUI";
 import { EpicFieldInfo } from "../../jiraCommon";
-import { emptyEpicFieldInfo } from "./emptyEntities";
+import { emptyEpicFieldInfo, emptyIssueType } from "./emptyEntities";
 
 export interface EditIssueUI extends FieldTransformerResult {
     key: string;
@@ -29,4 +29,45 @@ export const emptyEditIssueUI: EditIssueUI = {
     nonRenderableFields: [],
     hasRequiredNonRenderables: false,
     apiVersion: 2,
+};
+
+export interface CreateMetaTransformerProblems { [k: string]: IssueTypeProblem; }
+export interface CreateMetaTransformerResult {
+    issueTypes: IssueType[];
+    selectedIssueType: IssueType;
+    issueTypeUIs: IssueTypeUIs;
+    problems: CreateMetaTransformerProblems;
+}
+
+export interface IssueTypeProblem {
+    issueType: IssueType;
+    isRenderable: boolean;
+    nonRenderableFields: FieldProblem[];
+    message: string;
+}
+
+export interface IssueTypeUI extends FieldTransformerResult {
+    siteDetails: DetailedSiteInfo;
+    apiVersion: number;
+    epicFieldInfo: EpicFieldInfo;
+}
+
+export const emptyIssueTypeUI: IssueTypeUI = {
+    siteDetails: emptySiteInfo,
+    epicFieldInfo: emptyEpicFieldInfo,
+    apiVersion: 2,
+    fields: {},
+    fieldValues: {},
+    selectFieldOptions: {},
+    nonRenderableFields: [],
+    hasRequiredNonRenderables: false,
+};
+
+export type IssueTypeUIs = { [k: string]: IssueTypeUI };
+
+export const emptyCreateMetaResult: CreateMetaTransformerResult = {
+    selectedIssueType: emptyIssueType,
+    issueTypeUIs: {},
+    problems: {},
+    issueTypes: [],
 };

@@ -81,10 +81,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
                     break;
                 }
-                case 'fieldValueUpdate': {
-                    this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
-                    break;
-                }
                 case 'epicChildrenUpdate': {
                     this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
                     break;
