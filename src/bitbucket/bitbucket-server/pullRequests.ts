@@ -410,6 +410,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return {
             accountId: input.slug!,
             displayName: input.displayName!,
+            emailAddress: input.emailAddress,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
             avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
         };

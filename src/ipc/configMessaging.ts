@@ -3,6 +3,11 @@ import { IConfig, emptyConfig } from "../config/model";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Project } from "../jira/jira-client/model/entities";
 
+export interface FeedbackUser {
+    userName: string;
+    emailAddress: string;
+}
+
 export interface ConfigData extends Message {
     config: IConfig;
     jiraSites: DetailedSiteInfo[];
@@ -14,6 +19,7 @@ export interface ConfigData extends Message {
     isBitbucketAuthenticated: boolean;
     jiraAccessToken: string;
     jiraStagingAccessToken: string;
+    feedbackUser: FeedbackUser;
 }
 
 export const emptyConfigData: ConfigData = {
@@ -27,5 +33,9 @@ export const emptyConfigData: ConfigData = {
     isStagingEnabled: false,
     isBitbucketAuthenticated: false,
     jiraAccessToken: '',
-    jiraStagingAccessToken: ''
+    jiraStagingAccessToken: '',
+    feedbackUser: {
+        userName: '',
+        emailAddress: ''
+    }
 };

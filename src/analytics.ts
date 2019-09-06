@@ -1,6 +1,5 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
-import { FeedbackData } from './ipc/configActions';
 import { AuthInfo } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
@@ -40,11 +39,6 @@ export async function installedEvent(version: string): Promise<TrackEvent> {
 
 export async function upgradedEvent(version: string, previousVersion: string): Promise<TrackEvent> {
     return trackEvent('upgraded', 'atlascode', { attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion } });
-}
-
-export async function feedbackEvent(feedback: FeedbackData, source: string): Promise<TrackEvent> {
-    const attributes = { feedback: feedback.description, feedbackType: feedback.type, canContact: feedback.canBeContacted };
-    return trackEvent('submitted', 'atlascodeFeedback', { source: source, attributes: attributes });
 }
 
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {

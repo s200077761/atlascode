@@ -12,6 +12,8 @@ export interface FeedbackData {
     type: FeedbackType;
     description: string;
     canBeContacted: boolean;
+    userName: string;
+    emailAddress: string;
 }
 
 export interface AuthAction extends Action {
