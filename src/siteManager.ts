@@ -173,7 +173,6 @@ export class SiteManager extends Disposable {
                     const sites = this.getSitesAvailable(product);
                     if (sites && sites.length > 0) {
                         defaultSite = sites[0];
-                        configuration.setDefaultSite(defaultSite.id);
                     }
                 }
                 break;
