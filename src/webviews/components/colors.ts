@@ -7,6 +7,19 @@ function adjustLight(color: number, amount: number) {
     return Math.round(c);
 }
 
+export const colorToLozengeAppearanceMap: { [key: string]: string } = {
+    neutral: 'default',
+    'blue-gray': 'default',
+    'medium-gray': 'default',
+    purple: 'new',
+    brown: 'new',
+    blue: 'inprogress',
+    red: 'removed',
+    'warm-red': 'removed',
+    yellow: 'inprogress',
+    green: 'success',
+};
+
 export function darken(color: string, percentage: number) {
     return lighten(color, -percentage);
 }

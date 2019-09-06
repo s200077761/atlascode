@@ -30,6 +30,7 @@ import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import { Reviewer, Commit, BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -116,7 +117,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
 const UserOption = (props: any) => {
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.Option>
     );
 };
@@ -124,7 +125,7 @@ const UserOption = (props: any) => {
 const UserValue = (props: any) => {
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='xsmall' borderColor='var(--vscode-dropdown-foreground)!important' src={props.data.avatarUrl} /><span style={{ marginLeft: '4px' }}>{props.data.displayName}</span></div>
         </components.MultiValueLabel>
     );
 };
@@ -367,7 +368,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     render() {
 
         if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return (<div>waiting for data...</div>);
+            return <AtlLoader />;
         }
 
         const repo = this.state.repo || { label: '', value: emptyRepoData };
@@ -570,7 +571,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
-                                                <Commits type={''} currentBranch={''} commits={this.state.commits} />
+                                                <Commits type={''} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} />
                                             </Panel>
                                         }
                                     </GridColumn>

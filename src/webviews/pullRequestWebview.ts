@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
-import { PRData, } from '../ipc/prMessaging';
+import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -31,8 +31,7 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
-
+const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [] } };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
@@ -188,6 +187,20 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     vscode.window.showInformationMessage(`Copied pull request link to clipboard - ${linkUrl}`);
                     break;
                 }
+                case 'fetchUsers': {
+                    if (isFetchUsers(msg)) {
+                        handled = true;
+                        try {
+                            const bbApi = await clientForRemote(msg.remote);
+                            const reviewers = await bbApi.pullrequests.getReviewers(msg.remote, msg.query);
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
             }
         }
 
@@ -210,7 +223,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private async postCompleteState() {
-        if(!this._pr){
+        if (!this._pr) {
             return;
         }
 
@@ -230,7 +243,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
             this.fetchMainIssue(this._pr)
         ]);
-    
+
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
         const currentUser = await Container.bitbucketContext.currentUser(this._pr.remote);
         this._state = {
@@ -239,6 +252,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             repository: this._pr.repository,
             prData: {
                 pr: this._pr.data,
+                remote: this._pr.remote,
                 currentUser: currentUser,
                 currentBranch: this._pr.repository.state.HEAD!.name!,
                 type: 'update',

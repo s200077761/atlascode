@@ -9,7 +9,7 @@ export async function currentUserJira(site?: DetailedSiteInfo): Promise<User> {
         effectiveSite = Container.siteManager.effectiveSite(ProductJira);
     }
 
-    const client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+    const client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
     const resp = await client.getCurrentUser();
     return resp;
 }

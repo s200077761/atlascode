@@ -93,8 +93,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            const authInfo = await Container.authManager.getAuthInfo(issue.siteDetails);
-                            const currentUserId = authInfo!.user.id;
+                            const currentUserId = issue.siteDetails.userId;
                             await assignIssue(issue, currentUserId);
                             if (e.setupJira && issue.status.id !== e.transition.to.id) {
                                 await transitionIssue(issue, e.transition);

@@ -14,7 +14,8 @@ type changeObject = { [key: string]: any };
 
 export default class CustomJQL extends React.Component<
   {
-    defaultSite: DetailedSiteInfo;
+    defaultSiteName: string;
+    defaultSiteId: string;
     workingProject: string;
     sites: DetailedSiteInfo[];
     siteJqlList: SiteJQL[];
@@ -98,7 +99,7 @@ export default class CustomJQL extends React.Component<
     const index = this.indexForId(jqlList, id);
     if (index >= 0) {
       jqlList.splice(index, 1);
-      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jqlList });
+      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jqlList });
     }
   }
 
@@ -110,19 +111,19 @@ export default class CustomJQL extends React.Component<
     if (index >= 0) {
       const entry = jqlList[index];
       entry.enabled = e.target.checked;
-      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jqlList });
+      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jqlList });
     }
   }
 
-  private readJqlListFromProps(inputSite?: DetailedSiteInfo): JQLEntry[] {
-    const site = inputSite ? inputSite : this.props.defaultSite;
+  private readJqlListFromProps(inputSiteId?: string): JQLEntry[] {
+    const defaultSiteId = inputSiteId ? inputSiteId : this.props.defaultSiteId;
     const customJqlList = this.props.siteJqlList;
     const siteJql = customJqlList.find((item: SiteJQL) => {
-      return item.siteId === site.id;
+      return item.siteId === defaultSiteId;
     });
 
     if (!siteJql) {
-      const newJql = { siteId: site.id, jql: [emptyJQLEntry] };
+      const newJql = { siteId: defaultSiteId, jql: [emptyJQLEntry] };
       customJqlList.push(newJql);
       return newJql.jql;
     }
@@ -142,8 +143,8 @@ export default class CustomJQL extends React.Component<
     });
   }
 
-  handleSaveEdit = (site: DetailedSiteInfo, jqlEntry: JQLEntry) => {
-    const jqlList = this.readJqlListFromProps(site);
+  handleSaveEdit = (siteId: string, jqlEntry: JQLEntry) => {
+    const jqlList = this.readJqlListFromProps(siteId);
     const index = this.indexForId(jqlList, this.state.editingId);
 
     if (index >= 0) {
@@ -156,7 +157,7 @@ export default class CustomJQL extends React.Component<
       editingId: undefined,
       editingEntry: undefined
     });
-    this.publishChanges({ siteId: site.id, jql: jqlList });
+    this.publishChanges({ siteId: siteId, jql: jqlList });
   }
 
   handleDragStart = (e: any) => {
@@ -197,7 +198,7 @@ export default class CustomJQL extends React.Component<
       const temp = jql[this.state.dragSourceIndex];
       jql.splice(this.state.dragSourceIndex, 1);
       jql.splice(this.state.dragTargetIndex, 0, temp);
-      this.publishChanges({ siteId: this.props.defaultSite.id, jql: jql });
+      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jql });
     }
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
   }
@@ -282,7 +283,7 @@ export default class CustomJQL extends React.Component<
   }
 
   render() {
-    if (!this.props.defaultSite && !this.props.jiraAccessToken) {
+    if (!this.props.defaultSiteId && !this.props.jiraAccessToken) {
       return <div />;
     }
 
@@ -293,7 +294,7 @@ export default class CustomJQL extends React.Component<
         {this.state.editingEntry && (
           <EditJQL
             jiraAccessToken={this.props.jiraAccessToken}
-            defaultSite={this.props.defaultSite}
+            defaultSiteId={this.props.defaultSiteId}
             workingProject={this.props.workingProject}
             sites={this.props.sites}
             jqlEntry={this.state.editingEntry}
@@ -301,7 +302,7 @@ export default class CustomJQL extends React.Component<
             onSave={this.handleSaveEdit}
           />
         )}
-        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.defaultSite ? this.props.defaultSite.name : '<default site not set>'}</strong> (default site can be changed in the authentication section above)</em></p>
+        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.defaultSiteName}</strong> (default site can be changed in the authentication section above)</em></p>
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}

@@ -16,7 +16,8 @@ export enum UIType {
     Watches = 'watches',
     Votes = 'votes',
     Attachment = 'attachment',
-    NonEditable = 'noneditable'
+    NonEditable = 'noneditable',
+    Participants = 'participants',
 }
 
 export enum ValueType {
@@ -47,6 +48,7 @@ export enum ValueType {
     Component = 'component', // mutli-select, {id, name}
     Worklog = 'worklog',
     Attachment = 'attachment',
+    Group = 'group',
 }
 
 // Note: Typescript doesn't include reverse mappings for string enums, so we need this method.
@@ -78,6 +80,7 @@ export function valueTypeForString(s: string): ValueType {
         case 'worklog': return ValueType.Worklog;
         case 'attachment': return ValueType.Attachment;
         case 'transition': return ValueType.Transition;
+        case 'group': return ValueType.Group;
         default: return ValueType.String;
     }
 }
@@ -104,7 +107,7 @@ export interface OptionableFieldUI extends FieldUI {
     allowedValues: any[];
 }
 
-export interface CreatableFieldUI extends OptionableFieldUI {
+export interface CreatableFieldUI extends FieldUI {
     createUrl: string;
 }
 
@@ -153,6 +156,7 @@ export const multiSelectSchemas: string[] = [
     , 'subtasks'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:multiselect'
     , 'com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker'
+    , 'com.atlassian.jira.plugin.system.customfieldtypes:multigrouppicker'
 ];
 
 export const createableSelectSchemas: string[] = [
@@ -198,6 +202,7 @@ export const schemaTypeToUIMap: Map<string, UIType> = new Map<string, UIType>(
         , [ValueType.Attachment, UIType.Attachment]
         , [ValueType.Status, UIType.NonEditable]
         , [ValueType.Transition, UIType.Select]
+        , [ValueType.Group, UIType.Select]
     ]
 );
 
@@ -213,6 +218,8 @@ export const customSchemaToUIMap: Map<string, UIType> = new Map<string, UIType>(
     [['com.pyxis.greenhopper.jira:gh-epic-link', UIType.Select]
         , ['com.pyxis.greenhopper.jira:gh-epic-label', UIType.Input]
         , [ValueType.Worklog, UIType.Worklog]
+        , [ValueType.Attachment, UIType.Attachment]
+        , ['com.atlassian.jira.toolkit:participants', UIType.Participants]
     ]
 );
 

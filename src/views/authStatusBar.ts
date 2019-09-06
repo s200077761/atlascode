@@ -1,10 +1,11 @@
-import { ProductJira, ProductBitbucket, Product, AuthInfo, AuthInfoEvent } from "../atlclients/authInfo";
+import { ProductJira, ProductBitbucket, Product, AuthInfo } from "../atlclients/authInfo";
 import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
 import { Commands } from "../commands";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
 import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, BitbucketEnabledKey, JiraEnabledKey } from "../constants";
+import { SitesAvailableUpdateEvent } from "src/siteManager";
 
 export class AuthStatusBar extends Disposable {
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<
@@ -17,37 +18,35 @@ export class AuthStatusBar extends Disposable {
   constructor() {
     super(() => this.dispose());
     this._disposable = Disposable.from(
-      Container.authManager.onDidAuthChange(this.onDidAuthChange, this)
-      , configuration.onDidChange(this.onConfigurationChanged, this)
+      Container.siteManager.onDidSitesAvailableChange(this.onDidSitesChange, this),
+      configuration.onDidChange(this.onConfigurationChanged, this)
     );
 
     void this.onConfigurationChanged(configuration.initializingChangeEvent);
   }
 
-  async onDidAuthChange(e: AuthInfoEvent) {
-    this.updateAuthenticationStatusBar(e.site.product, e.authInfo);
+  onDidSitesChange(e: SitesAvailableUpdateEvent) {
+    this.updateAuthenticationStatusBar(e.product);
   }
 
-  async generateStatusbarItem(product: Product): Promise<void> {    
-      const itemInfo = await Container.authManager.getAuthInfo(Container.siteManager.effectiveSite(product));
-      await this.updateAuthenticationStatusBar(product, itemInfo);
+  async generateStatusbarItem(product: Product): Promise<void> {
+    const itemInfo = await Container.credentialManager.getAuthInfo(Container.siteManager.effectiveSite(product));
+    await this.updateAuthenticationStatusBar(product, itemInfo);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
     const initializing = configuration.initializing(e);
-    if (initializing || 
-        configuration.changed(e, 'jira.statusbar') || 
-        configuration.changed(e, JiraDefaultSiteConfigurationKey) || 
-        configuration.changed(e, JiraWorkingProjectConfigurationKey) ||
-        configuration.changed(e, JiraEnabledKey)) 
-    {
+    if (initializing ||
+      configuration.changed(e, 'jira.statusbar') ||
+      configuration.changed(e, JiraDefaultSiteConfigurationKey) ||
+      configuration.changed(e, JiraWorkingProjectConfigurationKey) ||
+      configuration.changed(e, JiraEnabledKey)) {
       await this.generateStatusbarItem(ProductJira);
     }
 
-    if (initializing || 
-        configuration.changed(e, 'bitbucket.statusbar') || 
-        configuration.changed(e, BitbucketEnabledKey)) 
-    {
+    if (initializing ||
+      configuration.changed(e, 'bitbucket.statusbar') ||
+      configuration.changed(e, BitbucketEnabledKey)) {
       await this.generateStatusbarItem(ProductBitbucket);
     }
   }
@@ -71,12 +70,11 @@ export class AuthStatusBar extends Disposable {
 
   private async updateAuthenticationStatusBar(
     product: Product,
-    info: AuthInfo | undefined
+    info?: AuthInfo
   ): Promise<void> {
     const statusBarItem = this.ensureStatusItem(product);
-    if((product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) || 
-        (product.name === 'Bitbucket' && Container.config.bitbucket.enabled && Container.config.bitbucket.statusbar.enabled))
-    {
+    if ((product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) ||
+      (product.name === 'Bitbucket' && Container.config.bitbucket.enabled && Container.config.bitbucket.statusbar.enabled)) {
       const statusBarItem = this.ensureStatusItem(product);
       await this.updateStatusBarItem(statusBarItem, product, info);
     } else {

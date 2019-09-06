@@ -7,7 +7,7 @@ body {
   font-weight: var(--vscode-font-weight);
   font-size: var(--vscode-font-size);
   margin: 0;
-  padding: 0 20px;
+  padding: 0px;
 }
 
 a {
@@ -26,6 +26,10 @@ a:focus, input:focus, select:focus, textarea:focus {
 p, h1, h2, h3, h4, h5, h6, label, span, .ac-inline-edit-p {
   color: var(--vscode-editor-foreground);
   margin: 0px;
+}
+
+small {
+  color: var(--vscode-editorCodeLens-foreground);
 }
 
 /*-------------------- END - fix css-reset --------------------*/
@@ -157,6 +161,7 @@ pre {
   color: var(--vscode-editor-foreground);
   padding-left: 6px;
   padding-right: 6px;
+  min-height: 18px;
 }
 
 .ac-inline-input-view-p:hover {
@@ -219,14 +224,42 @@ pre {
 
 /*-------------------- BEGIN - page header --------------------*/
 
-[class^=styled__StyledTitle-] p {
+.ac-page-header h2 {
+  color: var(--vscode-editor-foreground);
+  margin: 10px 0px;
+}
+
+.ac-page-header a {
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ac-breadcrumbs .ac-link-button span {
+  color: var(--vscode-breadcrumb-foreground)!important;
+}
+
+.ac-breadcrumbs .ac-link-button:hover, .ac-breadcrumbs .ac-link-button:hover span {
+  color: var(--vscode-breadcrumb-focusForeground)!important;
+}
+
+.ac-breadcrumb-divider {
+  color: var(--vscode-breadcrumb-foreground);
+  margin: 0px 8px;
+}
+
+/* [class^=styled__StyledTitle-] p {
   margin: 0px;
   color: var(--vscode-editor-foreground);
 }
 
 [class^=styled__StyledTitle-] {
   margin: 0px;
-}
+} */
 
 /*-------------------- END - page header --------------------*/
 
@@ -275,8 +308,12 @@ pre {
 
 /*-------------------- BEGIN - modal dialogs --------------------*/
 
-[class^=Modal__Dialog], div[role=dialog] {
-  background: var(--vscode-editor-background) !important
+.vscode-dark [class^=Modal__Dialog], .vscode-dark div[role=dialog] {
+  background-color: var(--vscode-editor-background--lighten-05) !important;
+}
+
+.vscode-light [class^=Modal__Dialog], .vscode-light div[role=dialog] {
+  background-color: var(--vscode-editor-background--darken-05) !important;
 }
 
 /*-------------------- END - modal dialogs --------------------*/
@@ -389,9 +426,75 @@ section button span {
 
 /*-------------------- BEGIN - inline dialog --------------------*/
 
-.ac-inline-dialog div {
-  background-color: var(--vscode-editor-background--lighten-05);
+.ac-inline-dialog>div {
   color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--lighten-05);
+}
+
+.vscode-light .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--darken-05);
+}
+
+.ac-inline-items-container {
+  width: 100%
+}
+
+.ac-inline-item {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: var(--vscode-editor-background--lighten-05)
+}
+
+.ac-inline-watcher {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  padding-left: 9px;
+  padding-right: 9px;
+}
+
+.ac-inline-watcher-list-heading {
+  font-size: .8em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+
+.ac-inline-watcher-name {
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.ac-inline-watcher-delete {
+  margin-left: 15px;
+  cursor: pointer
+}
+
+.vscode-dark .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--lighten-15)
+}
+
+.vscode-light .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--darken-15)
+}
+
+.ac-inline-watcher-delete:after {
+  content: "\2715"
+}
+
+.vscode-dark .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--lighten-075)
+}
+
+.vscode-light .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--darken-075)
 }
 
 /*-------------------- END - inline dialog --------------------*/
@@ -469,6 +572,34 @@ section button span {
   color: var(--vscode-textLink-activeForeground);
 }
 
+/* .vscode-light .ac-link-button:hover, .vscode-light .ac-link-button span {
+  color: var(--vscode-textlink-foreground) !important
+}
+
+.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button span {
+  color: var(--vscode-foreground) !important
+}
+
+.ac-link-button button {
+  padding: 0 !important
+}
+
+.ac-banner-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
+
+.ac-banner-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.ac-banner-link-button:hover, .ac-banner-link-button span {
+  text-decoration: underline;
+}
+
+.ac-banner-link-button button {
+  padding: 0 !important
+} */
+
 /*-------------------- END - links --------------------*/
 
 /*-------------------- BEGIN - form input/text --------------------*/
@@ -519,6 +650,13 @@ section button span {
   margin-bottom: 25px;
   display: flex;
   color: var(--vscode-foreground) !important;
+}
+
+.ac-textarea-toolbar {
+  margin-top: -5px;
+  margin-bottom: 5px;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+  border-top: none;
 }
 
 /*-------------------- END - form input/text --------------------*/
@@ -638,6 +776,18 @@ section button span {
 }
 
 /*-------------------- END - calendar controls --------------------*/
+
+/*-------------------- BEGIN - BB cloud rendered html classes --------------------*/
+
+.vscode-light .ap-mention {
+  background: var(--vscode-editor-background--darken-15);
+}
+
+.vscode-dark .ap-mention {
+  background: var(--vscode-editor-background--lighten-15);
+}
+
+/*-------------------- END - BB cloud rendered html classes --------------------*/
 
 /*-------------------- BEGIN - PR branch lozenges --------------------*/
 
@@ -877,8 +1027,21 @@ pre.pipeline-logs {
 
 /*-------------------- BEGIN - Comments --------------------*/
 
+.ac-comment-form {
+  display: flex;
+  margin-top: 10px;
+}
+
 .ac-comments [class^="LayoutStyles__Container"] {
   padding-top: 0px !important;
+}
+
+.ac-comments [class^="LayoutStyles__ContentSectionDiv"] {
+  margin-bottom: 10px !important;
+}
+
+.ac-comments [class^="LayoutStyles__NestedCommentsDiv"] {
+  margin: 5px !important;
 }
 
 .ac-comments .emoji {
@@ -947,14 +1110,14 @@ img::after is triggered only if img loading fails */
 }
 
 .react-tabs__tab-list {
-  border-bottom: 1px solid var(--vscode-settings-textInputBorder);
+  border-bottom: 1px solid var(--vscode-panel-border);
   margin: 0 0 10px;
   padding: 0;
 }
 
 .react-tabs__tab {
   display: inline-block;
-  border: 1px solid var(--vscode-settings-textInputBorder);
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 5px 5px 0 0;
   margin-left: 1px;
   bottom: -1px;
@@ -985,12 +1148,7 @@ img::after is triggered only if img loading fails */
 
 .react-tabs__tab:focus:after, .react-tabs__tab--selected:after {
   content: "";
-  position: absolute;
-  height: 5px;
-  left: -4px;
-  right: -4px;
-  bottom: -5px;
-  background: var(--vscode-focusBorder);
+  height: 0px;
 }
 
 .react-tabs__tab-panel {
@@ -1024,4 +1182,210 @@ img::after is triggered only if img loading fails */
 
 .ac-collapsible-trigger:hover {
   color: var(--vscode-textLink-activeForeground);
+}
+
+/* the borders on TableTrees */
+
+[class^=styled__TreeRowContainer] {
+  border-color: var(--vscode-editorRuler-foreground)!important;
+}
+
+.ac-attachment-dropzone {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 200px;
+  border-radius: 3px;
+  border: 2px dashed var(--vscode-editorRuler-foreground);
+  outline: none!important
+}
+
+.ac-attachment-instructions {
+  display: block;
+  float: left;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%)
+}
+
+.ac-attachment-filesbg {
+  float: left;
+  width: 115px;
+  border: 0px;
+}
+
+.ac-attachment-drag-and-button {
+  float: left;
+}
+
+.ac-attachment-drag-text {
+  display: block;
+  margin-left: 10px;
+  white-space: nowrap;
+  margin-top: 15px;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-attachment-upload-button {
+  margin-left: 10px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.ac-attachment-thumbs-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  margin-left: 32px;
+  margin-bottom: 16px;
+}
+
+.ac-attachment-thumb {
+  /* display: inline-flex;
+  border-radius: 2px;
+  border: 1px solid var(--vscode-editorRuler-foreground); */
+  margin-bottom: 8px;
+  margin-right: 10px;
+  /* padding: 0px;
+  box-sizing: border-box;
+  align-items: center; */
+}
+
+.vscode-dark .ac-attachment-thumb {
+  background-color: var(--vscode-editor-background--lighten-15)
+}
+
+.vscode-light .ac-attachment-thumb {
+  background-color: var(--vscode-editor-background--darken-15)
+}
+
+.ac-attachment-thumb-item {
+  height: 108px;
+  max-height: 100%;
+  width: 162px;
+  max-width: 100%;
+  /* align-items: center;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 8px; */
+}
+
+.ac-attachment-thumb-inner {
+  line-height: normal;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.ac-attachment-thumb-img-wrapper {
+  position: relative;
+  width: inherit;
+  height: inherit;
+  display: block;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.ac-attachment-thumb-img {
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.ac-attachment-overlay-container {
+  position: relative;
+  height: inherit;
+}
+
+.ac-attachment-overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(9, 30, 66, 0.5);
+  border-radius: inherit;
+}
+
+.ac-attachment-filename-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: break-word;
+  padding: 8px;
+}
+
+.ac-attachment-filename {
+  width: 135px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-attachment-delete-container {
+  display: flex;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  color: rgb(255, 255, 255);
+  padding: 8px;
+}
+
+.ac-attachment-delete {
+  height: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.ac-delete {
+  height: 18px;
+  width: 18px;
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+}
+
+@keyframes hideshow {
+  0% {
+    opacity: .3
+  }
+  100% {
+    opacity: .1
+  }
+}
+
+.ac-atl-loader-container {
+  margin-top: 100px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ac-atl-loader-container div {
+  color: var(--vscode-editor-foreground);
+  opacity: .7
+}
+
+.ac-atl-loader {
+  width: 400px;
+  height: 400px;
+  color: var(--vscode-editor-foreground);
+  animation-name: hideshow;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
 }

@@ -1,10 +1,12 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
+import FormData from 'form-data';
+import * as fs from "fs";
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
@@ -17,12 +19,23 @@ export abstract class JiraClient {
     readonly baseUrl: string;
     readonly site: DetailedSiteInfo;
     readonly agent: any | undefined;
+    readonly transport: AxiosInstance;
 
     constructor(site: DetailedSiteInfo, agent?: any) {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
         this.agent = agent;
 
+        // Note: analytics-node-client adds axios-retry to the global axios instance.
+        // Unfortunately, there's a bug that causes axios to infinitely retry when it gets
+        // 500 errors.  Lesson  learned: ALWAYS use a custom instance of axios and config it yourself.
+        // see: https://github.com/softonic/axios-retry/issues/59
+        this.transport = axios.create({
+            headers: {
+                'X-Atlassian-Token': 'no-check',
+                'x-atlassian-force-account-id': 'true',
+            }
+        });
     }
 
     // Issue
@@ -73,7 +86,7 @@ export abstract class JiraClient {
     }
 
     public async getAutocompleteDataFromUrl(url: string): Promise<any> {
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -86,7 +99,7 @@ export abstract class JiraClient {
     }
 
     public async postCreateUrl(url: string, data: any): Promise<any> {
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -162,8 +175,54 @@ export abstract class JiraClient {
     }
 
     // IssueLink
-    public async createIssueLink(params: any): Promise<any> {
-        const result = await this.postToJira('issueLink', params);
+    public async createIssueLink(parentIssueKey: string, linkData: any): Promise<MinimalIssueLink[]> {
+        await this.postToJira('issueLink', linkData);
+        const resp = await this.getFromJira(`issue/${parentIssueKey}`, { fields: 'issuelinks' });
+
+        return readMinimalIssueLinks(resp.fields['issuelinks'], this.site);
+    }
+
+    // Worklog
+    public async addWorklog(issuekey: string, params: any): Promise<any> {
+        const result = await this.postToJira(`issue/${issuekey}/worklog`, params);
+
+        return result;
+    }
+
+    // Watchers
+    public async getWatchers(issueIdOrKey: string): Promise<Watches> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}/watchers`);
+
+        return readWatches(res);
+    }
+
+    public async addWatcher(issuekey: string, accountId: string): Promise<any> {
+        const result = await this.postToJira(`issue/${issuekey}/watchers`, accountId);
+
+        return result;
+    }
+
+    public async removeWatcher(issuekey: string, accountId: string): Promise<any> {
+        const result = await this.deleteToJira(`issue/${issuekey}/watchers`, { accountId: accountId });
+
+        return result;
+    }
+
+    // Votes
+    public async getVotes(issueIdOrKey: string): Promise<Votes> {
+        const res = await this.getFromJira(`issue/${issueIdOrKey}/votes`);
+
+        return readVotes(res);
+    }
+
+    public async addVote(issuekey: string): Promise<any> {
+        const result = await this.postToJira(`issue/${issuekey}/votes`);
+
+        return result;
+    }
+
+    public async removeVote(issuekey: string): Promise<any> {
+        const result = await this.deleteToJira(`issue/${issuekey}/votes`);
 
         return result;
     }
@@ -191,10 +250,33 @@ export abstract class JiraClient {
     }
 
     // Attachment
-    public async addAttachment(issuekey: string, params: any): Promise<any> {
-        const res = this.postToJira(`issue/${issuekey}/attachments`, params);
+    public async addAttachments(issuekey: string, files: any[]): Promise<any> {
+        let formData = new FormData();
+        files.forEach((file: any) => {
+            formData.append('file'
+                , fs.createReadStream(file.path)
+                , {
+                    filename: file.name,
+                    contentType: file.type,
+                }
+            );
+        });
+
+        const res = this.multipartToJira(`issue/${issuekey}/attachments`, formData);
 
         return res;
+    }
+
+    public async deleteAttachment(attachmentId: string): Promise<any> {
+        const result = await this.deleteToJira(`attachment/${attachmentId}`);
+
+        return result;
+    }
+
+    public async deleteIssuelink(linkId: string): Promise<any> {
+        const result = await this.deleteToJira(`issuelink/${linkId}`);
+
+        return result;
     }
 
     protected abstract authorization(): string;
@@ -209,7 +291,7 @@ export abstract class JiraClient {
             url = `${url}?${sp.toString()}`;
         }
 
-        const res = await axios(url, {
+        const res = await this.transport(url, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -221,7 +303,7 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async postToJira(url: string, params: any, queryParams?: any): Promise<any> {
+    protected async postToJira(url: string, params?: any, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
         if (queryParams) {
             const sp = new URLSearchParams();
@@ -231,8 +313,58 @@ export abstract class JiraClient {
             url = `${url}?${sp.toString()}`;
         }
 
-        const res = await axios(url, {
+        // yup, jira's silly and accepts post with no data
+        let data = {};
+        if (params) {
+            data = { data: JSON.stringify(params) };
+        }
+
+        const res = await this.transport(url, {
             method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            httpsAgent: this.agent,
+            ...data
+        });
+
+        return res.data;
+
+    }
+
+    protected async multipartToJira(url: string, formData: FormData, queryParams?: any): Promise<any> {
+        url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
+        }
+
+        // let data = {};
+        // if (formData) {
+        //     data = { data: JSON.stringify(formData) };
+        // }
+
+        const res = await this.transport.post(url, formData, {
+            headers: {
+                Authorization: this.authorization(),
+                'Content-Type': formData.getHeaders()['content-type'],
+            },
+            httpsAgent: this.agent,
+        });
+
+        return res.data;
+
+    }
+
+    protected async putToJira(url: string, params: any): Promise<any> {
+        url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
+
+        const res = await this.transport(url, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
@@ -244,16 +376,21 @@ export abstract class JiraClient {
         return res.data;
     }
 
-    protected async putToJira(url: string, params: any): Promise<any> {
+    protected async deleteToJira(url: string, queryParams?: any): Promise<any> {
         url = `${this.baseUrl}/api/${API_VERSION}/${url}`;
-
-        const res = await axios(url, {
-            method: "PUT",
+        if (queryParams) {
+            const sp = new URLSearchParams();
+            for (const [k, v] of Object.entries(queryParams)) {
+                sp.append(k, `${v}`);
+            }
+            url = `${url}?${sp.toString()}`;
+        }
+        const res = await this.transport(url, {
+            method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            data: JSON.stringify(params),
             httpsAgent: this.agent
         });
 

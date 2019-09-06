@@ -15,6 +15,7 @@ class NestedComment extends React.Component<
         onSave?: (content: string, parentCommentId?: number) => void,
         onDelete?: (commentId: number) => void,
         onEdit?: (content: string, commentId: number) => void 
+        loadUserOptions?: (input: string) => any
     }, 
     { 
         showCommentForm: boolean,
@@ -73,10 +74,10 @@ class NestedComment extends React.Component<
         if(this.props.onSave && !this.state.showCommentForm && !this.state.commentEditMode && !this.props.node.deleted){
             actionList.push(<CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>);
         }
-        if(this.props.onEdit && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted){
+        if(this.props.onEdit && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted && !!this.props.node.editable){
             actionList.push(<CommentAction onClick={this.handleEditClick}>Edit</CommentAction>);
         }
-        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted){
+        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted && !!this.props.node.deletable){
             actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
         }
         return actionList;
@@ -121,7 +122,8 @@ class NestedComment extends React.Component<
                             onEdit={(content: string) => this.handleEdit(content)}
                             onSave={(content: string) => this.handleSave(content, node.id)}
                             onDelete={() => this.handleDelete()}
-                            onCancel={this.handleCancel} />
+                            onCancel={this.handleCancel}
+                            loadUserOptions={this.props.loadUserOptions} />
                         </React.Fragment>
                     } 
                 </React.Fragment>
@@ -137,6 +139,7 @@ class NestedComment extends React.Component<
                                 onSave={this.props.onSave}
                                 onDelete={this.props.onDelete}
                                 onEdit={this.props.onEdit}
+                                loadUserOptions={this.props.loadUserOptions}
                             />
                 )
             }
@@ -152,6 +155,7 @@ export default class Comments extends React.Component<
         onComment?: (content: string, parentCommentId?: number) => void,
         onDelete?:  (commentId: number) => void,
         onEdit?: (content: string, commentId: number) => void
+        loadUserOptions?: (input: string) => any
     }, 
     {}> {
     constructor(props: any) {
@@ -170,6 +174,7 @@ export default class Comments extends React.Component<
                 onSave={this.props.onComment} 
                 onEdit={this.props.onEdit}
                 onDelete={this.props.onDelete}
+                loadUserOptions={this.props.loadUserOptions}
             />
         );
         return <div className='ac-comments'>{result}</div>;

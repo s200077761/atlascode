@@ -63,10 +63,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     r.fetch(),
                     bbApi.repositories.get(remote),
                     bbApi.repositories.getDevelopmentBranch(remote),
-                    bbApi.pullrequests.getDefaultReviewers(remote)
+                    bbApi.pullrequests.getReviewers(remote)
                 ]);
 
-                const currentUser = { accountId: (await Container.authManager.getAuthInfo(siteDetailsForRemote(remote)!))!.user.id };
+                const currentUser = { accountId: (await siteDetailsForRemote(remote)!).userId };
 
                 await state.push({
                     uri: r.rootUri.toString(),
@@ -142,7 +142,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                         handled = true;
                         try {
                             const bbApi = await clientForRemote(e.remote);
-                            const reviewers = await bbApi.pullrequests.getDefaultReviewers(e.remote, e.query);
+                            const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));

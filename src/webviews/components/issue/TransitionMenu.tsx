@@ -2,15 +2,7 @@ import * as React from "react";
 import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
 import { Transition, Status } from "../../../jira/jira-client/model/entities";
-
-const colorToLozengeAppearanceMap = {
-  neutral: 'default',
-  purple: 'new',
-  blue: 'inprogress',
-  red: 'removed',
-  yellow: 'inprogress',
-  green: 'success',
-};
+import { colorToLozengeAppearanceMap } from "../colors";
 
 const { Option } = components;
 

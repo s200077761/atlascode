@@ -19,7 +19,7 @@ import Commits from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment } from '../../../ipc/prActions';
+import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -38,8 +38,9 @@ import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -60,6 +61,7 @@ interface ViewState {
 
 const emptyPR = {
     type: '',
+    remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
     relatedJiraIssues: [],
     relatedBitbucketIssues: []
@@ -83,6 +85,8 @@ const emptyState: ViewState = {
 };
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, ViewState> {
+    private userSuggestions: any;
+
     constructor(props: any) {
         super(props);
         this.state = emptyState;
@@ -154,6 +158,26 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
+    loadUserOptions = (input: string): Promise<any> => {
+        return new Promise(resolve => {
+            this.userSuggestions = undefined;
+            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.pr.remote });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.userSuggestions === undefined) {
+                        this.userSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
+    }
+
     onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
@@ -167,6 +191,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     isCheckoutButtonLoading: false,
                     pr: { ...this.state.pr, currentBranch: e.currentBranch }
                 });
+                break;
+            }
+            case 'fetchUsersResult': {
+                this.userSuggestions = e.users;
                 break;
             }
             case 'update': {
@@ -233,7 +261,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const pr = this.state.pr.pr!;
 
         if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return (<div>waiting for data...</div>);
+            return <AtlLoader />;
         } else if (!pr && !this.state.isOnline) {
             return (
                 <div className='bitbucket-page'>
@@ -322,8 +350,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         <Button className='ac-button' iconAfter={<ChevronDownIcon label='merge-options' />} isLoading={this.state.isMergeButtonLoading} isDisabled={!isPrOpen} onClick={this.toggleMergeDialog}>{isPrOpen ? 'Merge' : pr.state}</Button>
                     </InlineDialog>
                 </div>
-                <Button className='ac-button' style={{float: "right"}} onClick={() => this.postMessage({ action: 'refreshPR' })}>
-                  <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                <Button className='ac-button' style={{ float: "right" }} onClick={() => this.postMessage({ action: 'refreshPR' })}>
+                    <RefreshIcon label="refresh" size="small"></RefreshIcon>
                 </Button>
                 {
                     this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
@@ -396,13 +424,15 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                                 isAnyCommentLoading={this.state.isAnyCommentLoading} 
                                                 onComment={this.handlePostComment} 
                                                 onEdit={this.handleEditComment}
-                                                onDelete={this.handleDeleteComment} 
+                                                onDelete={this.handleDeleteComment}
+                                                loadUserOptions={this.loadUserOptions} 
                                             />
                                             <CommentForm 
                                                 currentUser={this.state.pr.currentUser!} 
                                                 visible={true} 
                                                 isAnyCommentLoading={this.state.isAnyCommentLoading} 
                                                 onSave={this.handlePostComment} 
+                                                loadUserOptions={this.loadUserOptions}
                                             />
                                         </Panel>
                                     </React.Fragment>

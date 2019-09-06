@@ -2,6 +2,7 @@ import * as React from 'react';
 import './reset.css';
 import './App.css';
 import * as Loadable from 'react-loadable';
+import { AtlLoader } from './AtlLoader';
 
 // These Loadables dynamically load chunks as needed so we don't need ALL js on every page.
 // The special comment tells webpack what to name the chunks. This should match the id() returned
@@ -68,7 +69,7 @@ function Loading(props: Loadable.LoadingComponentProps) {
     if (props.error) {
         return <div>Error! {props.error}</div>;
     } else {
-        return <div>Loading...</div>;
+        return <AtlLoader />;
     }
 }
 

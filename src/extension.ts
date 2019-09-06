@@ -17,6 +17,7 @@ import { window, Memento } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
+import { V1toV2Migrator } from './migrations/v1tov2';
 
 const AnalyticDelay = 5000;
 
@@ -76,7 +77,12 @@ async function migrateConfig(globalState: Memento): Promise<void> {
 
     if (!authModelVersion || authModelVersion < 2) {
         const cfg = configuration.get<IConfig>();
-        await Container.authManager.convertLegacyAuthInfo(cfg.jira.workingSite);
+        const migrator = new V1toV2Migrator(Container.siteManager,
+            Container.credentialManager,
+            !!Container.isDebugging,
+            Container.config.jira.workingProject,
+            cfg.jira.workingSite);
+        await migrator.convertLegacyAuthInfo();
         await globalState.update(AuthInfoVersionKey, 2);
     }
 }

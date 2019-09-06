@@ -11,9 +11,8 @@ import {
     workspace,
     Disposable
 } from 'vscode';
-import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
+import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
 import { Container } from '../container';
-import { DetailedSiteInfo, AccessibleResourceV1 } from 'src/atlclients/authInfo';
 import { WorkingProject } from './model';
 import { Project } from '../jira/jira-client/model/entities';
 
@@ -92,22 +91,22 @@ export class Configuration extends Disposable {
             .update(section, value, target);
     }
 
-    async setWorkingSite(site?: AccessibleResourceV1) {
-        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
-        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
+    // Moving from V1 to V2 working site became default site.
+    async clearVersion1WorkingSite() {
+        await this.updateForWorkspaceFolder(JiraLegacyWorkingSiteConfigurationKey, undefined);
     }
 
-    async setDefaultSite(site?: DetailedSiteInfo) {
-        await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, site);
+    async setDefaultSite(siteId?: string) {
+        await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, siteId);
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
     }
 
     async setWorkingProject(project?: Project | WorkingProject) {
         // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
         // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
-        const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);
+        const inspect = configuration.inspect(JiraDefaultSiteConfigurationKey);
         if (inspect && !inspect.workspaceFolderValue) {
-            this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
+            await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, inspect.globalValue);
         }
         await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
             id: project.id,

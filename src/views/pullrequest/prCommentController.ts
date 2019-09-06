@@ -7,8 +7,17 @@ import { Comment } from '../../bitbucket/model';
 import { clientForRemote } from '../../bitbucket/bbUtils';
 import { Container } from '../../container';
 import { Remote } from '../../typings/git';
+import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 
 const turndownService = new TurndownService();
+turndownService.addRule('mention', {
+    filter: function (node) {
+        return node.classList.contains('ap-mention');
+    },
+    replacement: function (content, _, options) {
+        return `${options.emDelimiter}${content}${options.emDelimiter}`;
+    }
+});
 
 interface PullRequestComment extends vscode.Comment {
     prCommentThreadId: number | undefined;
@@ -27,6 +36,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     constructor(ctx: vscode.ExtensionContext) {
         ctx.subscriptions.push(
+            vscode.languages.registerCompletionItemProvider({ scheme: 'comment' }, new BitbucketMentionsCompletionProvider(), '@'),
             vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
                 this.addComment(reply);
             }),
@@ -205,8 +215,13 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     private async createVSCodeComment(parentCommentThreadId: number, comment: Comment, remote: Remote, prId: number): Promise<PullRequestComment> {
         let contextValueString = "";
-        if (comment.user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId && !comment.deleted){
+        const belongsToLoggedInUser = comment.user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
+        if (belongsToLoggedInUser && !comment.deleted && !!comment.deletable && !!comment.editable){
             contextValueString = "canEdit,canDelete";
+        } else if(belongsToLoggedInUser && !comment.deleted && !!comment.editable) {
+            contextValueString = "canEdit";
+        } else if(belongsToLoggedInUser && !comment.deleted && !!comment.deletable) {
+            contextValueString = "canDelete";
         }
 
         return {

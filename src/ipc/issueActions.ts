@@ -1,7 +1,7 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey } from "../jira/jira-client/model/entities";
-import { FieldValues, IssueLinkTypeSelectOption } from "../jira/jira-client/model/fieldUI";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User } from "../jira/jira-client/model/entities";
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface RefreshIssueAction extends Action {
@@ -49,6 +49,7 @@ export interface FetchQueryAction extends Action {
     query: string;
     site: DetailedSiteInfo;
     autocompleteUrl?: string;
+    valueType: ValueType;
 }
 
 export interface FetchByProjectQueryAction extends Action {
@@ -102,6 +103,35 @@ export interface OpenStartWorkPageAction extends Action {
     issue: MinimalIssue;
 }
 
+export interface CreateWorklogAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    worklogData: any;
+}
+
+export interface UpdateWatcherAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    watcher: User;
+}
+
+export interface UpdateVoteAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    voter: User;
+}
+
+export interface AddAttachmentsAction extends Action {
+    site: DetailedSiteInfo;
+    issueKey: string;
+    files: any[];
+}
+
+export interface DeleteByIDAction extends Action {
+    site: DetailedSiteInfo;
+    objectWithId: any;
+}
+
 export function isTransitionIssue(a: Action): a is TransitionIssueAction {
     return (<TransitionIssueAction>a).transition !== undefined && (<TransitionIssueAction>a).issue !== undefined;
 }
@@ -147,6 +177,36 @@ export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {
 export function isCreateIssue(a: Action): a is CreateIssueAction {
     return a && (<CreateIssueAction>a).issueData !== undefined
         && (<CreateIssueAction>a).site !== undefined;
+}
+
+export function isCreateWorklog(a: Action): a is CreateWorklogAction {
+    return a && (<CreateWorklogAction>a).worklogData !== undefined
+        && (<CreateWorklogAction>a).site !== undefined
+        && (<CreateWorklogAction>a).issueKey !== undefined;
+}
+
+export function isUpdateWatcherAction(a: Action): a is UpdateWatcherAction {
+    return a && (<UpdateWatcherAction>a).watcher !== undefined
+        && (<UpdateWatcherAction>a).site !== undefined
+        && (<UpdateWatcherAction>a).issueKey !== undefined;
+}
+
+export function isUpdateVoteAction(a: Action): a is UpdateVoteAction {
+    return a && (<UpdateVoteAction>a).voter !== undefined
+        && (<UpdateVoteAction>a).site !== undefined
+        && (<UpdateVoteAction>a).issueKey !== undefined;
+}
+
+export function isAddAttachmentsAction(a: Action): a is AddAttachmentsAction {
+    return a && (<AddAttachmentsAction>a).files !== undefined
+        && (<AddAttachmentsAction>a).site !== undefined
+        && (<AddAttachmentsAction>a).issueKey !== undefined;
+}
+
+export function isDeleteByIDAction(a: Action): a is DeleteByIDAction {
+    return a && (<DeleteByIDAction>a).objectWithId !== undefined
+        && (<DeleteByIDAction>a).objectWithId.id !== undefined
+        && (<DeleteByIDAction>a).site !== undefined;
 }
 
 export function isCreateIssueLink(a: Action): a is CreateIssueLinkAction {

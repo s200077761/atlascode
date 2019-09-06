@@ -27,9 +27,12 @@ const defaultCommonFields: string[] = [
     , 'environment'
     , 'created'
     , 'updated'
+    , 'worklog'
+    , 'watches'
+    , 'votes'
 ];
 
-const defaultFieldFilters: string[] = ['votes', 'creator', 'project', 'statuscategorychangedate', 'lastViewed'];
+const defaultFieldFilters: string[] = ['creator', 'project', 'statuscategorychangedate', 'lastViewed'];
 
 export class IssueEditMetaTransformer {
 
@@ -85,7 +88,7 @@ export class IssueEditMetaTransformer {
         let subtaskTypes: IssueType[] = [];
 
         if (Object.keys(descriptor.fields).includes('subtasks')) {
-            const client = await Container.clientManager.jirarequest(this._site);
+            const client = await Container.clientManager.jiraClient(this._site);
             const cMeta: IssueCreateMetadata = await client.getCreateIssueMetadata(project.key);
             subtaskTypes = cMeta.projects[0].issuetypes.filter(it => it.subtask === true);
         }

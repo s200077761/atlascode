@@ -190,7 +190,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                     handled = true;
                     if (isFetchQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                            let client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
 
                             if (client) {
                                 let suggestions: AutoCompleteSuggestion[] = await client.getFieldAutoCompleteSuggestions('labels', e.query);
@@ -216,7 +216,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                     handled = true;
                     if (isFetchByProjectQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                            let client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 let res: User[] = await client.findUsersAssignableToProject(e.project, e.query);
 
@@ -236,7 +236,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                     handled = true;
                     if (isFetchQuery(e)) {
                         try {
-                            let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                            let client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
                             if (client) {
                                 const suggestions: IssuePickerIssue[] = await client.getIssuePickerSuggestions(e.query);
                                 this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
@@ -284,7 +284,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                 //     if (isCreateSelectOption(e)) {
                 //         try {
 
-                //             let client = await Container.clientManager.jirarequest(Container.siteManager.effectiveSite(ProductJira));
+                //             let client = await Container.clientManager.jiraClient(Container.siteManager.effectiveSite(ProductJira));
                 //             if (client) {
                 //                 switch (e.createData.fieldKey) {
                 //                     case 'fixVersions':
@@ -315,7 +315,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                     if (isCreateIssue(e)) {
                         try {
                             const site = Container.siteManager.effectiveSite(ProductJira);
-                            let client = await Container.clientManager.jirarequest(site);
+                            let client = await Container.clientManager.jiraClient(site);
                             if (client) {
                                 const issuelinks: any[] = [];
                                 const formLinks = e.issueData.issuelinks;
@@ -362,7 +362,7 @@ export class CreateIssueWebview extends AbstractReactWebview {
                                 if (issuelinks.length > 0) {
                                     issuelinks.forEach(async (link: any) => {
                                         if (client) {
-                                            await client.createIssueLink({ body: link });
+                                            await client.createIssueLink('', { body: link });
                                         }
                                     });
                                 }

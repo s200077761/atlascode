@@ -3,23 +3,39 @@ import { CommonEditorPageEmit, CommonEditorPageAccept, CommonEditorViewState, Ab
 import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
 import Offline from '../Offline';
 import ErrorBanner from '../ErrorBanner';
-import PageHeader from '@atlaskit/page-header';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { EditIssueAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
-import LinkedIssues from './LinkedIssues';
+import { LinkedIssues } from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
 import { Transition } from '../../../jira/jira-client/model/entities';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import Tooltip from '@atlaskit/tooltip';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
+import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
+import StarIcon from '@atlaskit/icon/glyph/star';
+import InlineDialog from '@atlaskit/inline-dialog';
+import WorklogForm from './WorklogForm';
+import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
 
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.
 import Collapsible from 'react-collapsible';
+import Worklogs from './Worklogs';
+import PullRequests from './PullRequests';
+import WatchesForm from './WatchesForm';
+import VotesForm from './VotesForm';
+import { AttachmentsModal } from './AttachmentsModal';
+import { AtlLoader } from '../AtlLoader';
+import { distanceInWordsToNow } from "date-fns";
+import { AttachmentList } from './AttachmentList';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -31,12 +47,14 @@ type SizeMetrics = {
 
 interface ViewState extends CommonEditorViewState, EditIssueData {
     showMore: boolean;
+    currentInlineDialog: string;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyEditIssueData,
     showMore: false,
+    currentInlineDialog: '',
 };
 
 export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -64,9 +82,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     break;
                 }
                 case 'fieldValueUpdate': {
-                    console.log('fieldValueUpdate', e);
                     this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
+                }
+                case 'epicChildrenUpdate': {
+                    this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
+                    break;
+                }
+                case 'pullRequestUpdate': {
+                    this.setState({ recentPullRequests: e.recentPullRequests });
+                }
+                case 'currentUserUpdate': {
+                    this.setState({ currentUser: e.currentUser });
                 }
                 case 'issueCreated': {
                     if (isIssueCreated(e)) {
@@ -108,45 +135,76 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
+    fetchUsers = (input: string) => {
+        return this.loadSelectOptions(input, `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`);
+    }
+
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
-        if (field.uiType === UIType.Subtasks) {
-            /* newValue will be:
-            {
-                summary: string;
-                issuetype: {id:number}
-            }
-            */
-            this.setState({ isSomethingLoading: true, loadingField: 'subtasks' });
-            const payload: any = newValue;
-            payload.project = { key: this.getProjectKey() };
-            payload.parent = { key: this.state.key };
-            this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
-
-        } else if (field.uiType === UIType.IssueLinks) {
-            this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
-
-            this.postMessage({
-                action: 'createIssueLink'
-                , site: this.state.siteDetails
-                , issueLinkData: {
-                    type: {
-                        id: newValue.type.id
-                    },
-                    inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
-                    outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+        switch (field.uiType) {
+            case UIType.Subtasks: {
+                /* newValue will be:
+                {
+                    summary: string;
+                    issuetype: {id:number}
                 }
-                , issueLinkType: newValue.type
-            });
-        } else {
-            let typedVal = newValue;
+                */
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                const payload: any = newValue;
+                payload.project = { key: this.getProjectKey() };
+                payload.parent = { key: this.state.key };
+                this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
 
-            if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
-                typedVal = parseFloat(newValue);
+                break;
             }
-            //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
-            this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
-                this.handleEditIssue(field.key, typedVal);
-            });
+            case UIType.IssueLinks: {
+                this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+
+                this.postMessage({
+                    action: 'createIssueLink'
+                    , site: this.state.siteDetails
+                    , issueLinkData: {
+                        type: {
+                            id: newValue.type.id
+                        },
+                        inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
+                        outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+                    }
+                    , issueLinkType: newValue.type
+                });
+                break;
+            }
+            case UIType.Timetracking: {
+                let newValObject = this.state.fieldValues[field.key];
+                if (newValObject) {
+                    newValObject.originalEstimate = newValue;
+                } else {
+                    newValObject = {
+                        originalEstimate: newValue
+                    };
+                }
+                this.setState({ loadingField: field.key, isSomethingLoading: true, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
+                    this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
+                });
+                break;
+            }
+            case UIType.Worklog: {
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                this.postMessage({ action: 'createWorklog', site: this.state.siteDetails, worklogData: newValue, issueKey: this.state.key });
+                break;
+            }
+
+            default: {
+                let typedVal = newValue;
+
+                if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                    typedVal = parseFloat(newValue);
+                }
+                //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
+                this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
+                    this.handleEditIssue(field.key, typedVal);
+                });
+                break;
+            }
         }
     }
 
@@ -178,9 +236,97 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
-    /*
-    , 'attachment'
-    */
+    handleOpenWorklogEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'worklog') {
+            this.setState({ currentInlineDialog: 'worklog', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleOpenWatchesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'watches') {
+            this.setState({ currentInlineDialog: 'watches', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+
+    }
+
+    handleOpenVotesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'votes') {
+            this.setState({ currentInlineDialog: 'votes', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleOpenAttachmentEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'attachment') {
+            this.setState({ currentInlineDialog: 'attachment', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleInlineDialogClose = () => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+    }
+
+    handleInlineDialogSave = (field: FieldUI, value: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        this.handleInlineEdit(field, value);
+    }
+
+    handleAddWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'addWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
+    }
+
+    handleRemoveWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'removeWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
+    }
+
+    handleAddVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'addVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
+    handleRemoveVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
+    handleAddAttachments = (files: any[]) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
+        const serFiles = files.map((file: any) => {
+            return {
+                lastModified: file.lastModified,
+                lastModifiedDate: file.lastModifiedDate,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                path: file.path,
+            };
+        });
+        this.postMessage({ action: 'addAttachments', site: this.state.siteDetails, issueKey: this.state.key, files: serFiles });
+    }
+
+    handleDeleteAttachment = (file: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'attachment' });
+        this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
+    }
+
+    handleDeleteIssuelink = (issuelink: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+        this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
+    }
+
     getMainPanelMarkup(): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
         let epicLinkKey: string = '';
@@ -198,39 +344,51 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {!this.state.isOnline &&
                     <Offline />
                 }
-                {this.state.isErrorBannerOpen &&
-                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
-                }
-
                 {/* {this.state.showPMF &&
                     <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 } */}
-                <PageHeader
-                    actions={<ButtonGroup>
-                        <Button className='ac-button' onClick={this.handleStartWorkOnIssue}>Start work on issue...</Button>
-                    </ButtonGroup>}
-                    breadcrumbs={
-                        <BreadcrumbsStateless onExpand={() => { }}>
-                            {(epicLinkValue && epicLinkKey !== '') &&
-                                <BreadcrumbsItem component={() => <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />} />
-                            }
-                            {this.state.fieldValues['parent'] &&
-                                <BreadcrumbsItem component={() => <NavItem
+                <div className='ac-page-header'>
+                    <div className='ac-breadcrumbs'>
+                        {(epicLinkValue && epicLinkKey !== '') &&
+                            <React.Fragment>
+                                <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+                        {this.state.fieldValues['parent'] &&
+                            <React.Fragment>
+                                <NavItem
                                     text={this.state.fieldValues['parent'].key}
                                     iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
-                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />} />
-                            }
-                            <BreadcrumbsItem component={() => <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />} />
-                        </BreadcrumbsStateless>
-                    }>
-                    {this.getInputMarkup(this.state.fields['summary'], true)}
-                </PageHeader>
+                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+
+                        <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                    </div>
+                    <h2>
+                        {this.getInputMarkup(this.state.fields['summary'], true)}
+                    </h2>
+                </div>
+                {this.state.isErrorBannerOpen &&
+                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                }
                 {this.state.fields['description'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['description'].name}</label>
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
+                {this.state.fieldValues['attachment'] && this.state.fieldValues['attachment'].length > 0
+                    &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
+                        <AttachmentList onDelete={this.handleDeleteAttachment} attachments={this.state.fieldValues['attachment']} />
+
+                    </div>
+                }
+
                 {this.state.fieldValues['environment']
                     && this.state.fieldValues['environment'].trim() !== ''
                     &&
@@ -240,7 +398,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 }
 
-                {this.state.isEpic &&
+                {this.state.isEpic && this.state.epicChildren.length > 0
+                    &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>Issues in this epic</label>
                         <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
@@ -259,7 +418,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['issuelinks'] &&
                     <div className='ac-vpadding'>
                         {this.getInputMarkup(this.state.fields['issuelinks'], true)}
-                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} />
+                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} onDelete={this.handleDeleteIssuelink} />
+                    </div>
+                }
+                {this.state.fields['worklog'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['worklog'].name}</label>
+                        <Worklogs worklogs={this.state.fieldValues['worklog']} />
                     </div>
                 }
                 {
@@ -277,8 +442,134 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     commonSidebar(): any {
+        const originalEstimate: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
+        const numWatches: string = (
+            this.state.fieldValues['watches']
+            && this.state.fieldValues['watches'].watchCount > 0) ? this.state.fieldValues['watches'].watchCount : '';
+
+        const numVotes: string = (
+            this.state.fieldValues['votes']
+            && this.state.fieldValues['votes'].votes > 0) ? this.state.fieldValues['votes'].votes : '';
+
+        const allowVoting: boolean = (
+            this.state.fieldValues['reporter']
+            && this.state.fieldValues['reporter'].accountId !== this.state.currentUser.accountId
+        );
+
         return (
             <React.Fragment>
+                <ButtonGroup>
+                    {this.state.fields['worklog'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <WorklogForm
+                                        onSave={(val: any) => this.handleInlineDialogSave(this.state.fields['worklog'], val)}
+                                        onCancel={this.handleInlineDialogClose}
+                                        originalEstimate={originalEstimate} />
+                                }
+                                isOpen={this.state.currentInlineDialog === 'worklog'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Log work">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWorklogEditor}
+                                        iconBefore={<EmojiFrequentIcon label="Log Work" />}
+                                        isLoading={this.state.loadingField === 'worklog'} />
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+                    }
+                    {this.state.fields['attachment'] &&
+                        <div className='ac-inline-dialog'>
+                            <Tooltip content="Add Attachment">
+                                <Button className='ac-button'
+                                    onClick={this.handleOpenAttachmentEditor}
+                                    iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
+                                    isLoading={this.state.loadingField === 'attachment'} />
+                            </Tooltip>
+
+                            <AttachmentsModal
+                                isOpen={this.state.currentInlineDialog === 'attachment'}
+                                onCancel={this.handleInlineDialogClose}
+                                onSave={this.handleAddAttachments} />
+                        </div>
+                    }
+                    {this.state.fields['watches'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <WatchesForm
+                                        onFetchUsers={this.fetchUsers}
+                                        onAddWatcher={this.handleAddWatcher}
+                                        onRemoveWatcher={this.handleRemoveWatcher}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        watches={this.state.fieldValues['watches']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'watches'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Watch options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWatchesEditor}
+                                        iconBefore={
+                                            this.state.fieldValues['watches'].isWatching
+                                                ? <WatchFilledIcon label="Watches" />
+                                                : <WatchIcon label="Watches" />
+                                        }
+                                        isLoading={this.state.loadingField === 'watches'} >
+                                        {numWatches}
+                                    </Button>
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+
+                    }
+                    {this.state.fields['votes'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <VotesForm
+                                        onAddVote={this.handleAddVote}
+                                        onRemoveVote={this.handleRemoveVote}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        allowVoting={allowVoting}
+                                        votes={this.state.fieldValues['votes']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'votes'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Vote options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenVotesEditor}
+                                        iconBefore={
+                                            this.state.fieldValues['votes'].hasVoted
+                                                ? <StarFilledIcon label="Votes" />
+                                                : <StarIcon label="Votes" />
+                                        }
+                                        isLoading={this.state.loadingField === 'votes'}>
+                                        {numVotes}
+                                    </Button>
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+                    }
+                    <Tooltip content="Start work on issue">
+                        <Button className='ac-button'
+                            onClick={this.handleStartWorkOnIssue}
+                            iconBefore={<VidPlayIcon label="Start work" />}
+                            isLoading={false}>
+                            Start work
+                                    </Button>
+                    </Tooltip>
+                </ButtonGroup>
                 <div className='ac-vpadding'>
                     <label className='ac-field-label'>{this.state.fields['status'].name}</label>
                     <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
@@ -328,7 +619,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         let markups: any[] = [];
 
         this.advancedSidebarFields.forEach(field => {
-            if (field.advanced) {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
+                if (field.uiType === UIType.Timetracking) {
+                    field.name = "Original estimate";
+                }
                 markups.push(
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
@@ -339,6 +633,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         });
 
+        if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
+            markups.push(<div className='ac-vpadding'>
+                <label className='ac-field-label'>Recent pull requests</label>
+                {this.state.recentPullRequests.map(pr => {
+                    return <PullRequests pullRequests={this.state.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })} />;
+                })}
+            </div>);
+        }
+
         return markups;
     }
 
@@ -346,7 +649,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         let markups: any[] = [];
 
         this.advancedMainFields.forEach(field => {
-            if (field.advanced) {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
                 markups.push(
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
@@ -362,7 +665,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     public render() {
         if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return <div>Loading Data...</div>;
+            return <AtlLoader />;
         }
 
         return (
@@ -371,7 +674,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {(size: SizeMetrics) => {
                         if (size.width < 800) {
                             return (
-                                <div>
+                                <div style={{ marginTop: '20px' }}>
                                     {this.getMainPanelMarkup()}
                                     {this.commonSidebar()}
                                     <Collapsible
@@ -397,7 +700,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             );
                         }
                         return (
-                            <div style={{ maxWidth: '1200px', margin: 'auto' }}>
+                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
                                 <Grid layout="fluid">
                                     <GridColumn medium={8}>
                                         {this.getMainPanelMarkup()}
@@ -417,10 +720,10 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         </Collapsible>
                                         <div className='ac-issue-created-updated'>
                                             {this.state.fieldValues['created'] &&
-                                                <div>Created {this.state.fieldValues['created']}</div>
+                                                <div>Created {`${distanceInWordsToNow(this.state.fieldValues['created'])} ago`}</div>
                                             }
                                             {this.state.fieldValues['updated'] &&
-                                                <div>Updated {this.state.fieldValues['updated']}</div>
+                                                <div>Updated {`${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`}</div>
                                             }
                                         </div>
                                     </GridColumn>

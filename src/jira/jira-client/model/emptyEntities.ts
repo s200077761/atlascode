@@ -11,10 +11,13 @@ export const emptyUser: User = {
     displayName: '',
     emailAddress: '',
     key: '',
-    name: '',
     self: '',
     timeZone: ''
 };
+
+export function isEmptyUser(u: any): u is User {
+    return u && (<User>u).accountId.trim() === '';
+}
 
 export const emptyIssueType: IssueType = {
     avatarId: -1,

@@ -29,6 +29,7 @@ import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from "../issue/NavItem";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
 import { Button } from "@atlaskit/button/components/Button";
+import { AtlLoader } from "../AtlLoader";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -118,10 +119,10 @@ const emptyPipeline: PipelineData = {
     result: { name: "", type: "" },
     stage: { name: "PENDING", type: "pipeline_step_state_pending_pending" }
   },
-  target: { 
-    ref_name: "", 
-    selector: {pattern: "", type: ""}, 
-    triggerName: "" 
+  target: {
+    ref_name: "",
+    selector: { pattern: "", type: "" },
+    triggerName: ""
   }
 };
 
@@ -327,7 +328,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
   render() {
     if (this.state.pipeline.uuid === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
-      return (<div>waiting for data...</div>);
+      return <AtlLoader />;
     }
 
     return (
@@ -341,8 +342,8 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         <Page>
           <Grid spacing="comfortable" layout="fixed">
             <GridColumn medium={12}>
-              <Button className='ac-button' style={{float: "right"}} onClick={() => this.postMessage({ action: 'refresh' })}>
-                  <RefreshIcon label="refresh" size="small"></RefreshIcon>
+              <Button className='ac-button' style={{ float: "right" }} onClick={() => this.postMessage({ action: 'refresh' })}>
+                <RefreshIcon label="refresh" size="small"></RefreshIcon>
               </Button>
               <PageHeader
                 breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>

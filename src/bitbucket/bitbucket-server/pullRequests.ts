@@ -1,7 +1,6 @@
 import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
-import { Container } from '../../container';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
@@ -55,7 +54,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -69,7 +68,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -87,7 +86,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(remote)!))!.user.id;
+        const currentUser = (await siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -168,7 +167,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
-        const userSlug = (await Container.authManager.getAuthInfo(site))!.user.id;
+        const userSlug = site.userId;
         const { data } = await this.client.get(
             `/rest/api/1.0/users/${userSlug}`,
             {
@@ -219,6 +218,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             {},
             {version: data.version}
         );
+
+        console.log("Reaching here");
     }
 
     async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
@@ -260,20 +261,33 @@ export class ServerPullRequestApi implements PullRequestApi {
             data: activities
                 .map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
                 .filter(comment => this.shouldDisplayComment(comment))
+                .map((comment: Comment) => {
+                    if(this.hasUndeletedChild(comment)) {
+                        comment.deletable = false;
+                    }
+                    return comment;
+                })
         };
+    }
+
+    private hasUndeletedChild (comment: any) {
+        let hasUndeletedChild: boolean = false;
+        for(let child of comment.children){
+            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+            if(hasUndeletedChild){
+                return hasUndeletedChild;
+            }
+        }
+        return hasUndeletedChild;
     }
 
     private shouldDisplayComment(comment: any): boolean {
         if (!comment.deleted){
             return true;
-        } else if (!!comment.children || comment.children.length === 0){
+        } else if (!comment.children || comment.children.length === 0){
             return false;
-        } {
-            let hasUndeletedChild: boolean = false;
-            for(let i = 0; i < comment.children.length; i++){
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
-            }
-            return hasUndeletedChild;
+        } else {
+            return this.hasUndeletedChild(comment);
         }       
     }
 
@@ -286,6 +300,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             ts: comment.createdDate,
             updatedTs: comment.updatedDate,
             deleted: !!comment.deleted,
+            deletable: comment.permittedOperations.deletable,
+            editable: comment.permittedOperations.editable,
             inline: commentAnchor
                 ? {
                     path: commentAnchor.path,
@@ -304,7 +320,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async getDefaultReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let users: any[] = [];
@@ -343,7 +359,12 @@ export class ServerPullRequestApi implements PullRequestApi {
             users = data.values || [];
         }
 
-        return users.map(val => ({ ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val), approved: false, role: 'PARTICIPANT' as 'PARTICIPANT' }));
+        return users.map(val => ({
+            ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val),
+            mention: `@${val.slug}`,
+            approved: false,
+            role: 'PARTICIPANT' as 'PARTICIPANT'
+        }));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -365,6 +386,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                         name: accountId
                     }
                 }))
+            },
+            {
+                markup: true,
+                avatarSize: 64
             }
         );
 
@@ -374,7 +399,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     async updateApproval(pr: PullRequest, approved: boolean) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
-        const userSlug = (await Container.authManager.getAuthInfo(await siteDetailsForRemote(pr.remote)!))!.user.id;
+        const userSlug = (await siteDetailsForRemote(pr.remote)!).userId;
 
         await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/participants/${userSlug}`,
@@ -416,6 +441,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                         path: inline!.path
                     }
                     : undefined
+            },
+            {
+                markup: true,
+                avatarSize: 64
             }
         );
 
@@ -490,6 +519,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 participants: data.reviewers.map((reviewer: any) => (
                     {
                         ...this.toUser(site, reviewer.user),
+                        mention: `@${reviewer.user.slug}`,
                         role: reviewer.role,
                         approved: reviewer.approved
                     }

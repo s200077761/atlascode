@@ -12,6 +12,7 @@ export interface EditIssueUI extends FieldTransformerResult {
     isEpic: boolean;
     epicChildren: MinimalIssue[];
     epicFieldInfo: EpicFieldInfo;
+    apiVersion: number;
 }
 
 export const emptyEditIssueUI: EditIssueUI = {
@@ -27,4 +28,5 @@ export const emptyEditIssueUI: EditIssueUI = {
     selectFieldOptions: {},
     nonRenderableFields: [],
     hasRequiredNonRenderables: false,
+    apiVersion: 2,
 };

@@ -207,7 +207,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.get(data.next);
+            const nextPage = await this.client.getURL(data.next);
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -236,6 +236,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 ts: comment.created_on!,
                 updatedTs: comment.updated_on!,
                 deleted: !!comment.deleted,
+                deletable: true,
+                editable: true,
                 inline: comment.inline,
                 user: comment.user
                     ? {
@@ -258,12 +260,15 @@ export class CloudPullRequestApi implements PullRequestApi {
     private shouldDisplayComment(comment: any): boolean {
         if (!comment.deleted){
             return true;
-        } else if (!!comment.children || comment.children.length === 0){
+        } else if (!comment.children || comment.children.length === 0){
             return false;
-        } {
+        } else {
             let hasUndeletedChild: boolean = false;
-            for(let i = 0; i < comment.children.length; i++){
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
+            for(let child of comment.children){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+                if(hasUndeletedChild){
+                    return hasUndeletedChild;
+                }
             }
             return hasUndeletedChild;
         }       
@@ -309,7 +314,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getDefaultReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let reviewers: any[] = [];
@@ -333,6 +338,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             displayName: reviewer.display_name!,
             url: reviewer.links!.html!.href!,
             avatarUrl: reviewer.links!.avatar!.href!,
+            mention: `@{${reviewer.account_id}}`,
             approved: !!reviewer.approved,
             role: reviewer.role!
         }));
@@ -475,6 +481,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     accountId: participant.user!.account_id!,
                     displayName: participant.user!.display_name!,
+                    mention: `@{${participant.user!.accountId}}`,
                     url: participant.user!.links!.html!.href!,
                     avatarUrl: participant.user!.links!.avatar!.href!,
                     role: participant.role!,

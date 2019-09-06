@@ -3,6 +3,7 @@ import { components } from '@atlaskit/select';
 import { SelectFieldUI, ValueType } from "../../jira/jira-client/model/fieldUI";
 import Avatar from '@atlaskit/avatar';
 import Lozenge from "@atlaskit/lozenge";
+import { colorToLozengeAppearanceMap } from "./colors";
 
 type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
@@ -17,6 +18,18 @@ const returnOptionOrValueFunc = (option: any) => {
         }
     } else if (typeof option === 'string') {
         value = option;
+    }
+    return value;
+};
+
+const returnValueOrNameFunc = (option: any) => {
+    let value: string = '';
+    if (option.value) {
+        value = option.value;
+    } else if (option.name) {
+        value = option.name;
+    } else {
+        value = JSON.stringify(option);
     }
     return value;
 };
@@ -43,7 +56,7 @@ const returnAccountIdFunc = (option: any) => { return option.accountId; };
 const IconOption = (props: any) => {
     return (
         <components.Option {...props} >
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}> <img src={props.data.iconUrl} width="24" height="24" /> <span style={{ marginLeft: '10px' }}> {props.label} </span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'> <img src={props.data.iconUrl} width="24" height="24" /> <span style={{ marginLeft: '10px' }}> {props.label} </span></div>
         </components.Option>
     );
 };
@@ -56,7 +69,7 @@ const SingleIconValue = (props: any) => {
 
     return (
         <components.SingleValue {...props}>
-            <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
+            <div className='ac-flex'><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
         </components.SingleValue >
     );
 };
@@ -69,7 +82,7 @@ const MultiIconValue = (props: any) => {
 
     return (
         <components.MultiValueLabel {...props}>
-            <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
+            <div className='ac-flex'><img src={props.data.iconUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{label}</span></div>
         </components.MultiValueLabel >
     );
 };
@@ -78,7 +91,7 @@ const AvatarOption = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{props.label}</span></div>
         </components.Option>
     );
 };
@@ -92,7 +105,7 @@ const SingleAvatarValue = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.SingleValue {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
         </components.SingleValue>
     );
 };
@@ -106,7 +119,7 @@ const MultiAvatarValue = (props: any) => {
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.MultiValueLabel {...props}>
-            <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '4px' }}>{label}</span></div>
         </components.MultiValueLabel>
     );
 };
@@ -136,9 +149,9 @@ const LabelValue = (props: any) => {
 
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
-        if (props.data.displayName) { value = props.data.displayName; }
-        if (props.data.label) { value = props.data.label; }
-        if (props.data.value) { value = props.data.value; }
+        else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
+        else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {
@@ -157,9 +170,9 @@ const MultiLabelValue = (props: any) => {
     let value: string = '';
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
-        if (props.data.displayName) { value = props.data.displayName; }
-        if (props.data.label) { value = props.data.label; }
-        if (props.data.value) { value = props.data.value; }
+        else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
+        else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else {
@@ -172,35 +185,27 @@ const MultiLabelValue = (props: any) => {
     );
 };
 
-const colorToLozengeAppearanceMap = {
-    neutral: 'default',
-    'blue-gray': 'default',
-    'medium-gray': 'default',
-    purple: 'new',
-    brown: 'new',
-    blue: 'inprogress',
-    red: 'removed',
-    'warm-red': 'removed',
-    yellow: 'inprogress',
-    green: 'success',
+const StatusOption = (props: any) => {
+    const lozColor: string = colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName];
+    return (
+        <components.Option {...props}>
+            <Lozenge appearance={lozColor}>
+                {props.label}
+            </Lozenge>
+        </components.Option>
+    );
 };
 
-const StatusOption = (props: any) => (
-    <components.Option {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-            {props.label}
-        </Lozenge>
-    </components.Option>
-);
-
-const StatusValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
-            {props.data.to.name}
-        </Lozenge>
-    </components.SingleValue>
-
-);
+const StatusValue = (props: any) => {
+    const lozColor: string = colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName];
+    return (
+        <components.SingleValue {...props}>
+            <Lozenge appearance={lozColor}>
+                {props.data.to.name}
+            </Lozenge>
+        </components.SingleValue>
+    );
+};
 
 export namespace SelectFieldHelper {
     export enum SelectComponentType {
@@ -228,6 +233,7 @@ export namespace SelectFieldHelper {
 
     export function labelFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
+            case ValueType.Number:
             case ValueType.String: {
                 return returnOptionOrLabelFunc;
             }
@@ -257,6 +263,7 @@ export namespace SelectFieldHelper {
 
     export function valueFuncForValueType(vt: ValueType): OptionFunc {
         switch (vt) {
+            case ValueType.Number:
             case ValueType.String: {
                 return returnOptionOrValueFunc;
             }
@@ -268,6 +275,10 @@ export namespace SelectFieldHelper {
             case ValueType.Transition:
             case ValueType.Option: {
                 return returnIdFunc;
+            }
+
+            case ValueType.Group: {
+                return returnValueOrNameFunc;
             }
 
             case ValueType.User:

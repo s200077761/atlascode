@@ -26,16 +26,16 @@ const IconValue = (props: any) => (
 
 export default class EditJQL extends PureComponent<{
   jiraAccessToken: string;
-  defaultSite: DetailedSiteInfo;
+  defaultSiteId: string;
   workingProject: string;
   sites: DetailedSiteInfo[];
   jqlEntry: JQLEntry;
   nameEditable?: boolean;
   onCancel: () => void;
   onRestoreDefault?: (jqlEntry: JQLEntry) => void;
-  onSave: (site: DetailedSiteInfo, jqlEntry: JQLEntry) => void;
+  onSave: (siteId: string, jqlEntry: JQLEntry) => void;
 }, {
-  selectedSite: DetailedSiteInfo;
+  selectedSiteId: string;
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
@@ -43,7 +43,7 @@ export default class EditJQL extends PureComponent<{
   isEditing: boolean;
 }> {
   state = {
-    selectedSite: this.props.defaultSite,
+    selectedSiteId: this.props.defaultSiteId,
     nameValue: this.props.jqlEntry.name,
     inputValue: this.props.jqlEntry.query,
     openComplete: false,
@@ -53,7 +53,7 @@ export default class EditJQL extends PureComponent<{
 
   async fetchEndpoint(endpoint: string): Promise<any> {
     const fullUrl = `https://api.atlassian.com/ex/jira/${
-      this.state.selectedSite.id
+      this.state.selectedSiteId
       }/rest/api/2/${endpoint}`;
 
     return axios(fullUrl, {
@@ -92,7 +92,7 @@ export default class EditJQL extends PureComponent<{
 
   handleSiteChange = (e: DetailedSiteInfo) => {
     this.setState({
-      selectedSite: e
+      selectedSiteId: e.id
     });
   }
 
@@ -117,7 +117,7 @@ export default class EditJQL extends PureComponent<{
   onSave = () => {
     var entry = this.props.jqlEntry;
 
-    this.props.onSave(this.state.selectedSite, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
+    this.props.onSave(this.state.selectedSiteId, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onRestoreDefault = () => {
@@ -171,7 +171,7 @@ export default class EditJQL extends PureComponent<{
             <Field label='Select Site'
               id='site'
               name='site'
-              defaultValue={this.props.defaultSite}
+              defaultValue={this.props.defaultSiteId}
             >
               {
                 (fieldArgs: any) => {
