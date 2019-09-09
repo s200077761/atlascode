@@ -26,6 +26,8 @@ import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/b
 import { BitbucketIssueData } from "../../../bitbucket/model";
 import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-client/model/entities";
 import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
+import EdiText from 'react-editext';
+import { FieldValidators } from "../fieldValidators";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
@@ -360,7 +362,7 @@ export default class StartWorkPage extends WebviewComponent<
             </GridColumn>
           }
           <GridColumn medium={12} />
-          <GridColumn medium={6}>
+          <GridColumn medium={8}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Checkbox isChecked={this.state.bitbucketSetupEnabled} onChange={this.toggleBitbucketSetupEnabled} name='setup-bitbucket-checkbox' />
               <h4>Set up git branch</h4>
@@ -417,27 +419,27 @@ export default class StartWorkPage extends WebviewComponent<
                   <div className='ac-vpadding'>
                     <label>Local branch</label>
                     <div className="branch-container">
-                      <div className='prefix-container'>
-                        {this.state.prefix && this.state.prefix.value &&
+                      {this.state.prefix && this.state.prefix.value &&
+                        <div className='prefix-container'>
                           <label>{this.state.prefix.value}</label>
-                        }
-                      </div>
+                        </div>
+                      }
                       <div className="branch-name">
-                        <CreatableSelect
-                          isClearable
-                          className="ac-select-container"
-                          classNamePrefix="ac-select"
-                          onCreateOption={this.handleCreateBranchOption}
-                          options={this.state.branchOptions}
-                          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => {
-                            if (inputValue.trim().length === 0 || selectOptions.find(option => option === inputValue) || /\s/.test(inputValue)) {
-                              return false;
-                            }
-                            return true;
-                          }}
-                          onChange={this.handleBranchNameChange}
-                          value={this.state.localBranch} />
+                        <EdiText
+                          type='text'
+                          value={this.state.localBranch ? this.state.localBranch.value : ''}
+                          onSave={(val: string) => { this.handleBranchNameChange({ label: val, value: val }); }}
+                          validation={FieldValidators.isValidString}
+                          validationMessage='Branch name is required'
+                          inputProps={{ className: 'ac-inputField' }}
+                          viewProps={{ id: 'start-work-branch-name', className: 'ac-inline-input-view-p' }}
+                          editButtonClassName='ac-inline-edit-button'
+                          cancelButtonClassName='ac-inline-cancel-button'
+                          saveButtonClassName='ac-inline-save-button'
+                          editOnViewClick={true}
+                        />
                       </div>
+
                     </div>
 
                   </div>

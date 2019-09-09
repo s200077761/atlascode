@@ -12,7 +12,7 @@ export namespace FieldValidators {
     }
 
     export function validateString(value: string, state?: any): string | undefined {
-        return (value === undefined || value.length < 1) ? 'EMPTY' : undefined;
+        return (value === undefined || value.trim().length < 1) ? 'EMPTY' : undefined;
     }
 
     export function isValidString(value: string): boolean {

@@ -162,7 +162,7 @@ pre {
 
 .ac-inline-input-view-p {
   width: 100%;
-  color: var(--vscode-editor-foreground);
+  color: var(--vscode-input-foreground);
   padding-left: 6px;
   padding-right: 6px;
   min-height: 18px;
@@ -177,7 +177,7 @@ pre {
   visibility: hidden;
 }
 
-.ac-inline-cancel-button, .ac-inline-save-button, .ac-inline-add-button {
+.ac-inline-cancel-button, .ac-inline-save-button, .ac-inline-add-button, .ac-inline-edit-button {
   background: var(--vscode-button-background)!important;
   color: var(--vscode-button-foreground)!important;
   border-width: 0px;
@@ -185,13 +185,14 @@ pre {
   transition: background 0.1s ease-out 0s, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38) 0s;
   outline: none !important;
   margin-right: 3px;
+  padding: 0.6em;
 }
 
-.ac-inline-cancel-button:hover, .ac-inline-save-button:hover, .ac-inline-add-button:hover {
+.ac-inline-cancel-button:hover, .ac-inline-save-button:hover, .ac-inline-add-button:hover, .ac-inline-edit-button:hover {
   background: var(--vscode-button-hoverBackground) !important
 }
 
-.ac-inline-cancel-button:active, .ac-inline-save-button:active, .ac-inline-add-button:active {
+.ac-inline-cancel-button:active, .ac-inline-save-button:active, .ac-inline-add-button:active, .ac-inline-edit-button:active {
   background: var(--vscode-button-background--darken-05) !important;
   color: var(--vscode-button-foreground) !important
 }
@@ -222,6 +223,11 @@ pre {
 
 .ac-inline-add-button:disabled, .ac-inline-save-button:disabled {
   background: var(--vscode-button-background--50) !important;
+}
+
+.ac-inline-edit-button:before {
+  content: '\270E';
+  margin: 3px;
 }
 
 /*------------------ END - inline edit containers ------------------*/
@@ -620,7 +626,7 @@ section button span {
   background: var(--vscode-input-background) !important;
   color: var(--vscode-input-foreground) !important;
   font: inherit;
-  width: inherit;
+  width: 100%;
   padding-left: 6px;
   box-sizing: border-box;
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
@@ -939,19 +945,30 @@ section button span {
 }
 
 .branch-container {
-  /* display: flex; */
+  display: flex;
   flex-direction: row;
-  align-items: stretch;
+  border: 1px solid var(--vscode-settings-textInputBorder);
 }
 
 .branch-container .prefix-container {
-  border: solid var(--vscode-settings-textInputBorder) !important;
-  border-right-width: 0px !important;
-  flex-grow: 1;
-  /* display: flex; */
-  flex-direction: row;
+  display: flex;
   align-items: center;
+  padding: 0 1em;
 }
+
+.vscode-light .branch-container .prefix-container {
+  background: var(--vscode-editor-background--darken-15);
+}
+
+.vscode-dark .branch-container .prefix-container {
+  background: var(--vscode-editor-background--lighten-15);
+}
+
+.branch-container .branch-name {
+  flex-grow: 1;
+  background: var(--vscode-input-background);
+}
+
 
 .start-work-success code {
   font-weight: bold;
