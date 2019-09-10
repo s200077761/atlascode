@@ -23,6 +23,11 @@ export function isPRData(a: Message): a is PRData {
     return (<PRData>a).type === 'update';
 }
 
+export interface BranchType {
+    kind: string;
+    prefix: string;
+}
+
 export interface RepoData {
     uri: string;
     href?: string;
@@ -33,6 +38,7 @@ export interface RepoData {
     defaultReviewers: Reviewer[];
     localBranches: Branch[];
     remoteBranches: Branch[];
+    branchTypes: BranchType[];
     developmentBranch?: string;
     hasLocalChanges?: boolean;
     branchingModel?: BitbucketBranchingModel;

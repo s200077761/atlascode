@@ -58,6 +58,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                     defaultReviewers: [],
                     localBranches: [],
                     remoteBranches: [],
+                    branchTypes: [],
                     isCloud: true
                 });
             }

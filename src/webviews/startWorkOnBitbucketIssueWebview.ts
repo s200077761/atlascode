@@ -151,6 +151,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                 defaultReviewers: [],
                 localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
                 remoteBranches: [],
+                branchTypes: [],
                 developmentBranch: developmentBranch,
                 isCloud: isCloud
             });

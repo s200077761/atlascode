@@ -7,7 +7,7 @@ import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
 import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Repository, RefType, Remote } from '../typings/git';
-import { RepoData } from '../ipc/prMessaging';
+import { RepoData, BranchType } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
@@ -17,6 +17,8 @@ import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
+
+const customBranchType: BranchType = { kind: "Custom", prefix: "" };
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;
@@ -160,9 +162,11 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                 let developmentBranch = undefined;
                 let href = undefined;
                 let isCloud = false;
-                let branchingModel: BitbucketBranchingModel | undefined = undefined;
+                let branchTypes: BranchType[] = [];
                 if (Container.bitbucketContext.isBitbucketRepo(r)) {
                     const remote = firstBitbucketRemote(r);
+
+                    let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
                     const bbApi = await clientForRemote(remote);
                     [, repo, developmentBranch, branchingModel] = await Promise.all(
@@ -173,17 +177,27 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                         ]);
                     href = repo.url;
                     isCloud = siteDetailsForRemote(remote)!.isCloud;
+
+                    if (branchingModel && branchingModel.branch_types) {
+                        branchTypes = [...branchingModel.branch_types]
+                            .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
+                        if (branchTypes.length > 0) {
+                            branchTypes.push(customBranchType);
+                        }
+                    }
                 }
 
-                await repoData.push({
+                const localBranches = await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!)));
+
+                repoData.push({
                     uri: r.rootUri.toString(),
                     href: href,
                     remotes: remotes,
                     defaultReviewers: [],
-                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
+                    localBranches: localBranches,
                     remoteBranches: [],
+                    branchTypes: branchTypes,
                     developmentBranch: developmentBranch,
-                    branchingModel: branchingModel,
                     isCloud: isCloud
                 });
             }
