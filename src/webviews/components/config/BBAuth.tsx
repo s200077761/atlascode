@@ -31,8 +31,13 @@ export default class BitbucketAuth extends React.Component<
         }
     }
 
-    onNewSite = () => {
+    handleNewSite = () => {
         this.setState({ addingSite: true });
+    }
+
+    handleCloud = () => {
+        this.handleSave({ hostname: "www.bitbucket.org", product: ProductBitbucket },
+            { user: { id: "empty", displayName: "empty" } });
     }
 
     handleCancel = () => {
@@ -77,7 +82,8 @@ export default class BitbucketAuth extends React.Component<
                     return this.htmlForSite(site);
                 })}
                 <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
-                    <Button className="ac-button" onClick={this.onNewSite}>Add Site</Button>
+                    <Button className="ac-button" style={{ marginRight: '4px' }} onClick={this.handleCloud}>Log in to Bitbucket Cloud</Button>
+                    <Button className="ac-button" onClick={this.handleNewSite}>Add Custom Bitbucket Site</Button>
                 </div>
             </React.Fragment>
         );
