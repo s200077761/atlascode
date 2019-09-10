@@ -184,7 +184,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         </TabList>
                                         {this.state.config.jira.enabled &&
                                             <TabPanel>
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Jira')}>
+                                                <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Jira')}>
                                                     <JiraAuth
                                                         sites={this.state.jiraSites}
                                                         handleDeleteSite={this.handleLogout}
@@ -193,18 +193,18 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer')}>
+                                                <Panel header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
                                                     <JiraExplorer configData={this.state}
                                                         jiraAccessToken={this.state.jiraAccessToken}
                                                         sites={this.state.jiraSites}
                                                         onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
+                                                <Panel header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
                                                     <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
+                                                <Panel header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
                                                     <MultiOptionList
                                                         onConfigChange={this.onConfigChange}
                                                         enabledConfig={'jira.todoIssues.enabled'}
@@ -215,7 +215,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                         options={this.state.config.jira.todoIssues.triggers} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Jira')}>
+                                                <Panel header={panelHeader('Status Bar', 'configure the status bar display for Jira')}>
                                                     <JiraStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                             </TabPanel>
@@ -223,35 +223,35 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
+                                                <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
                                                     <BitbucketAuth
                                                         sites={this.state.bitbucketSites}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Pull Request Explorer', 'configure the Bitbucket pull request explorer')}>
+                                                <Panel header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>
                                                     <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Pipeline Explorer', 'configure the Bitbucket Pipeline explorer')}>
+                                                <Panel header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket Pipelines explorer and notifications')}>
                                                     <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer')}>
+                                                <Panel header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer and notifications')}>
                                                     <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Bitbucket Context Menus', 'configure the Bitbucket context menus in editor')}>
+                                                <Panel header={panelHeader('Context Menus', 'configure the context menus in editor')}>
                                                     <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
-                                                <Panel isDefaultExpanded={true} header={panelHeader('Status Bar', 'configure the status bar display for Bitbucket')}>
+                                                <Panel header={panelHeader('Status Bar', 'configure the status bar display for Bitbucket')}>
                                                     <BBStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                             </TabPanel>
                                         }
                                         <TabPanel>
-                                            <Panel isDefaultExpanded={true} header={<div><p className='subheader'>miscellaneous settings</p></div>}>
+                                            <Panel isDefaultExpanded header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                                                 <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                             </Panel>
                                         </TabPanel>
@@ -265,7 +265,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
 
                     <GridColumn medium={3}>
-                        <DisplayFeedback onFeedback={this.handleFeedback} />
+                        <DisplayFeedback userDetails={this.state.feedbackUser} onFeedback={this.handleFeedback} />
                         <div style={{ marginTop: '15px' }}>
                             <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
                         </div>

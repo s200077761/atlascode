@@ -2,23 +2,35 @@ import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
-// import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
-// import IssuesIcon from '@atlaskit/icon/glyph/issues';
-// import ArrowUpCircleIcon from '@atlaskit/icon/glyph/arrow-up-circle';
+import { FeedbackUser } from '../../../ipc/configMessaging';
+
+type ViewState = {
+    feedbackUser: FeedbackUser;
+};
 
 type Emit = SubmitFeedbackAction | Action;
-export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
+export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewState> {
     constructor(props: any) {
         super(props);
+        this.state = {
+            feedbackUser: { userName: '', emailAddress: '' }
+        };
     }
 
     public onMessageReceived(e: any): boolean {
+        switch (e.type) {
+            case 'update': {
+                this.setState({ feedbackUser: e.feedbackUser });
+                break;
+            }
+        }
+
         return true;
     }
 
@@ -49,28 +61,18 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
         return (
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
-                    <GridColumn>
+                    <GridColumn medium={12}>
                         <PageHeader><p>Welcome To Atlassian for VSCode!</p></PageHeader>
-                        <ButtonGroup>
-                            <Button className='ac-button' onClick={this.handleConfigure}>Configure Atlassian Settings</Button>
-                            <DisplayFeedback onFeedback={this.handleFeedback} />
-                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
-                            <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
-                        </ButtonGroup>
                     </GridColumn>
-                </Grid>
-
-                <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
-                        <h2>🎉 First Time Here? 🎉</h2>
+                        <h3>🎉 First Time Here? 🎉</h3>
                         <section>
-                            <p>To get started, you'll need to authenticate with Jira and/or Bitbucket.</p>
-                            <p>Use the 'Configure Atlassian Settings' button above to authenticate.</p>
+                            <p>To get started, you'll need to authenticate with Jira and/or Bitbucket from the configuration screen</p>
+                            <p>click the <em>Configure Atlassian Settings</em> to access the configuration 👉</p>
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
-                        <h2>🎉 What's New in 1.4.3 🎉</h2>
+                        <h3>🎉 What's New in 1.4.3 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -84,7 +86,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira issue created notifications do not show up sometimes</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.2 🎉</h2>
+                        <h3>🎉 What's New in 1.4.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -98,7 +100,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Comment API changes for VS Code May Updates</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.1 🎉</h2>
+                        <h3>🎉 What's New in 1.4.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -112,7 +114,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Panel text colours appear washed out in Jira webview</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.0 🎉</h2>
+                        <h3>🎉 What's New in 1.4.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -146,7 +148,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Unable to start pipeline from explorer</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.3.1 🎉</h2>
+                        <h3>🎉 What's New in 1.3.1 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -154,7 +156,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira treeviews show no issues after some time</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.3.0 🎉</h2>
+                        <h3>🎉 What's New in 1.3.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -182,14 +184,14 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Create pull request screen shows blank page when remote branch is deleted</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.3 🎉</h2>
+                        <h3>🎉 What's New in 1.2.3 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>JQL error when opening related Jira issues in the pull request tree</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.2 🎉</h2>
+                        <h3>🎉 What's New in 1.2.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -198,7 +200,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Support to add an issue link when creating a Jira issue</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.1 🎉</h2>
+                        <h3>🎉 What's New in 1.2.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -217,7 +219,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>PR create screen is not splitting the title and description correctly</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.0 🎉</h2>
+                        <h3>🎉 What's New in 1.2.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -238,7 +240,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Pipeline summary fails for in-progress builds</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.1.0 🎉</h2>
+                        <h3>🎉 What's New in 1.1.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -269,21 +271,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira issue details were not loading completely in some cases</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.4 🎉</h2>
+                        <h3>🎉 What's New in 1.0.4 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>Fixed a bug where upstream branch was not being set properly when starting work on Jira issue</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.3 🎉</h2>
+                        <h3>🎉 What's New in 1.0.3 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>Fixed another case causing extension to open an authentication browser tab occasionally without user interaction</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.2 🎉</h2>
+                        <h3>🎉 What's New in 1.0.2 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -308,7 +310,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Detect dirty working tree and ask user to commit when creating PRs</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.1 🎉</h2>
+                        <h3>🎉 What's New in 1.0.1 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -330,10 +332,19 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             </ul>
                         </section>
                         <section>
-                            <h2>Feedback</h2>
+                            <h3>Feedback</h3>
                             <p>We can only make this extension better with your help!</p>
                             <p>Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.</p>
                         </section>
+                    </GridColumn>
+                    <GridColumn medium={3}>
+                        <Button className='ac-button' onClick={this.handleConfigure}>Configure Atlassian Settings</Button>
+                        <div className='ac-vpadding'>
+                            <DisplayFeedback userDetails={this.state.feedbackUser} onFeedback={this.handleFeedback} />
+                        </div>
+                        <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                        <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
+                        <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
                     </GridColumn>
                 </Grid>
             </Page>

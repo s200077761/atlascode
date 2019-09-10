@@ -6,6 +6,7 @@ import { PipelineApiImpl } from "../pipelines/pipelines";
 export type User = {
     accountId: string;
     displayName: string;
+    emailAddress?: string;
     url: string;
     avatarUrl: string;
 };

@@ -48,6 +48,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return {
             accountId: data.account_id!,
             avatarUrl: data.links!.avatar!.href!,
+            emailAddress: undefined,
             displayName: data.display_name!,
             url: data.links!.html!.href!
         };
@@ -295,7 +296,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             displayName: reviewer.display_name!,
             url: reviewer.links!.html!.href!,
             avatarUrl: reviewer.links!.avatar!.href!,
-            mention: `@{${reviewer.account_id}}`,
+            mention: `@[${reviewer.display_name!}](account_id:${reviewer.account_id})`,
             approved: !!reviewer.approved,
             role: reviewer.role!
         }));
@@ -434,7 +435,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     accountId: participant.user!.account_id!,
                     displayName: participant.user!.display_name!,
-                    mention: `@{${participant.user!.accountId}}`,
+                    mention: `@[${participant.user!.display_name!}](account_id:${participant.user!.account_id})`,
                     url: participant.user!.links!.html!.href!,
                     avatarUrl: participant.user!.links!.avatar!.href!,
                     role: participant.role!,
