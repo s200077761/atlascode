@@ -101,7 +101,6 @@ const SingleAvatarValue = (props: any) => {
     if (props.data.name) { label = props.data.name; }
     if (props.data.displayName) { label = props.data.displayName; }
     if (typeof props.data === 'string') { label = props.data; }
-
     let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
     return (
         <components.SingleValue {...props}>
@@ -150,7 +149,6 @@ const LabelValue = (props: any) => {
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         else if (props.data.displayName) { value = props.data.displayName; }
-        else if (props.data.label) { value = props.data.label; }
         else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
@@ -171,7 +169,6 @@ const MultiLabelValue = (props: any) => {
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         else if (props.data.displayName) { value = props.data.displayName; }
-        else if (props.data.label) { value = props.data.label; }
         else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
@@ -207,7 +204,33 @@ const StatusValue = (props: any) => {
     );
 };
 
+const IssueLinkTypeOption = (props: any) => (
+    <components.Option {...props}>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
+    </components.Option>
+);
+
+const IssueLinkTypeValue = (props: any) => (
+    <components.SingleValue {...props}>
+        <div style={{ display: 'flex', alignItems: 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </components.SingleValue >
+
+);
+
 export namespace SelectFieldHelper {
+    export const IssueSuggestionOption = (props: any) => (
+        <components.Option {...props}>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
+        </components.Option>
+    );
+
+    export const IssueSuggestionValue = (props: any) => (
+        <components.SingleValue {...props}>
+            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
+        </components.SingleValue>
+
+    );
+
     export enum SelectComponentType {
         Select = 'select',
         Creatable = 'creatable',
@@ -237,6 +260,7 @@ export namespace SelectFieldHelper {
             case ValueType.String: {
                 return returnOptionOrLabelFunc;
             }
+            case ValueType.IssueLinks:
             case ValueType.Component:
             case ValueType.Version:
             case ValueType.Project:
@@ -275,6 +299,10 @@ export namespace SelectFieldHelper {
             case ValueType.Transition:
             case ValueType.Option: {
                 return returnIdFunc;
+            }
+
+            case ValueType.IssueLinks: {
+                return returnNameFunc;
             }
 
             case ValueType.Group: {
@@ -316,6 +344,10 @@ export namespace SelectFieldHelper {
                 return StatusOption;
             }
 
+            case ValueType.IssueLinks: {
+                return IssueLinkTypeOption;
+            }
+
             default: {
                 return LabelOption;
             }
@@ -344,6 +376,12 @@ export namespace SelectFieldHelper {
             case ValueType.Transition: {
                 return {
                     SingleValue: StatusValue
+                };
+            }
+
+            case ValueType.IssueLinks: {
+                return {
+                    SingleValue: IssueLinkTypeValue
                 };
             }
 

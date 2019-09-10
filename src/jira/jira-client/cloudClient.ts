@@ -1,7 +1,4 @@
-import { isArray } from 'util';
 import { JiraClient } from './client';
-import { Project } from './model/entities';
-import { readProjects } from './model/responses';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 
 
@@ -20,23 +17,8 @@ export class JiraCloudClient extends JiraClient {
     }
 
     // Project
-    public async getProjects(query?: string, orderBy?: string): Promise<Project[]> {
-        let queryValues: any | undefined = undefined;
-        if (query || orderBy) {
-            queryValues = {};
-            if (query) {
-                queryValues.query = query;
-            }
-            if (orderBy) {
-                queryValues.orderBy = orderBy;
-            }
-        }
-        const res = await this.getFromJira('project/search', queryValues);
-
-        if (isArray(res.values)) {
-            return readProjects(res.values);
-        }
-        return [];
+    public getProjectSearchPath(): string {
+        return 'project/search';
     }
 
     protected authorization(): string {

@@ -1,4 +1,4 @@
-import { MinimalIssue, isProject, readProject, Project } from "./entities";
+import { MinimalIssue, isProject, readProject, Project, isProjectArray } from "./entities";
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { minimalIssueFromJsonObject } from "../issueFromJson";
 import { EpicFieldInfo } from "../../jiraCommon";
@@ -109,6 +109,18 @@ export async function readSearchResults(params: any, site: DetailedSiteInfo, epi
         total: params.total,
         issues: Array.isArray(params.issues) ? params.issues.map((i: any) => minimalIssueFromJsonObject(i, site, epicFieldInfo)) : []
     };
+}
+
+export interface ProjectResult {
+    readonly maxResults: number;
+    readonly startAt: number;
+    readonly total: number;
+    readonly isLast: boolean;
+    readonly values: Project[];
+}
+
+export function isProjectsResult(a: any): a is ProjectResult {
+    return a && a.values !== undefined && isProjectArray(a.values);
 }
 
 export function readProjects(projects: any[] | undefined): Project[] {

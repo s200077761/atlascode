@@ -78,7 +78,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         if (this.isRefeshing) {
             return;
         }
-        console.log('force updating issue');
         this.isRefeshing = true;
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);

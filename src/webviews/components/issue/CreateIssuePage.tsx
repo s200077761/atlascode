@@ -8,59 +8,26 @@ import ErrorBanner from '../ErrorBanner';
 import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
-import { FieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
+import { FieldUI, ValueType, UIType } from '../../../jira/jira-client/model/fieldUI';
 import { AtlLoader } from '../AtlLoader';
+import { IssueKeyAndSite } from '../../../jira/jira-client/model/entities';
+import { emptySiteInfo } from '../../../atlclients/authInfo';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     isCreateBannerOpen: boolean;
-    createdIssue: any;
+    createdIssue: IssueKeyAndSite;
 }
 
 const emptyState: ViewState = {
     ...emptyCommonEditorState,
     ...emptyCreateIssueData,
     isCreateBannerOpen: false,
-    createdIssue: {},
+    createdIssue: { key: '', siteDetails: emptySiteInfo },
 
 };
 
-/*
-interface ViewState extends CreateIssueData {
-    fieldOptions: { [k: string]: any };
-    isCreateBannerOpen: boolean;
-    isErrorBannerOpen: boolean;
-    errorDetails: any;
-    createdIssue: any;
-    defaultIssueType: any;
-    fieldValues: { [k: string]: any };
-}
-*/
-
-/*
-const emptyState: ViewState = {
-    type: '',
-    selectedProject: emptyWorkingProject,
-    availableProjects: [],
-    selectedIssueTypeId: '',
-    defaultIssueType: {},
-    issueTypeScreens: {},
-    fieldValues: {
-        description: createdFromAtlascodeFooter
-    },
-    fieldOptions: {},
-    isSomethingLoading: false,
-    loadingField: '',
-    isCreateBannerOpen: false,
-    isErrorBannerOpen: false,
-    errorDetails: undefined,
-    isOnline: true,
-    createdIssue: {},
-    epicFieldInfo: epicsDisabled,
-    transformerProblems: {},
-};
-*/
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
 export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
@@ -82,15 +49,22 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         if (!handled) {
             switch (e.type) {
                 case 'update': {
+                    handled = true;
                     const issueData = e as CreateIssueData;
                     this.updateInternals(issueData);
-                    this.setState({ ...issueData, ...{ isSomethingLoading: false, loadingField: '' } });
+                    this.setState(issueData, () => {
+                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                    });
+
                     break;
                 }
                 case 'currentUserUpdate': {
+                    handled = true;
                     this.setState({ currentUser: e.currentUser });
+                    break;
                 }
                 case 'issueCreated': {
+                    handled = true;
                     if (isIssueCreated(e)) {
                         this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
                     }
@@ -117,18 +91,39 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     }
 
     handleSubmit = async (e: any) => {
-        // let requiredFields = this.state.issueTypeScreens[this.state.selectedIssueTypeId!].fields.filter(field => { return field.required; });
-        // let errs = {};
-        // requiredFields.forEach((field: FieldUI) => {
-        //     if (e[field.key] === undefined || (e[field.key].length < 1)) {
-        //         errs[field.key] = 'EMPTY';
-        //     }
-        // });
+        let requiredFields = Object.values(this.state.fields).filter(field => field.required);
+
+        let errs = {};
+        requiredFields.forEach((field: FieldUI) => {
+            if (field.uiType === UIType.Worklog && this.state.fieldValues[`${field.key}.enabled`]) {
+                const timeSpent = this.state.fieldValues[`${field.key}.timeSpent`];
+                const newEstimate = this.state.fieldValues[`${field.key}.newEstimate`];
+                const started = this.state.fieldValues[`${field.key}.started`];
+                const comment = this.state.fieldValues[`${field.key}.comment`];
+
+                if (timeSpent === undefined || (timeSpent.length < 1)) {
+                    errs[`${field.key}.timeSpent`] = 'EMPTY';
+                }
+                if (newEstimate === undefined || (newEstimate.length < 1)) {
+                    errs[`${field.key}.newEstimate`] = 'EMPTY';
+                }
+                if (started === undefined || (started.length < 1)) {
+                    errs[`${field.key}.started`] = 'EMPTY';
+                }
+                if (comment === undefined || (comment.length < 1)) {
+                    errs[`${field.key}.comment`] = 'EMPTY';
+                }
+            }
+            const val = this.state.fieldValues[field.key];
+            if (val === undefined || (val.length < 1)) {
+                errs[field.key] = 'EMPTY';
+            }
+        });
 
 
-        // if (Object.keys(errs).length > 0) {
-        //     return errs;
-        // }
+        if (Object.keys(errs).length > 0) {
+            return errs;
+        }
 
         // // TODO: [VSCODE-439] find a better way to transform submit data or deal with different select option shapes
         // if (e[this.state.epicFieldInfo.epicLink.id]) {
@@ -136,75 +131,50 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         //     e[this.state.epicFieldInfo.epicLink.id] = val.id;
         // }
 
-        // this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });
-        // this.postMessage({ action: 'createIssue', issueData: e });
+        this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });
+        this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: this.state.fieldValues });
 
         return undefined;
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
-        switch (field.uiType) {
-            // case UIType.Subtasks: {
-            //     /* newValue will be:
-            //     {
-            //         summary: string;
-            //         issuetype: {id:number}
-            //     }
-            //     */
-            //     this.setState({ isSomethingLoading: true, loadingField: field.key });
-            //     const payload: any = newValue;
-            //     payload.project = { key: this.getProjectKey() };
-            //     payload.parent = { key: this.state.key };
-            //     this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
+        let typedVal = newValue;
+        let fieldkey = field.key;
 
-            //     break;
-            // }
-            // case UIType.IssueLinks: {
-            //     this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+        if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+            typedVal = parseFloat(newValue);
+        }
 
-            //     this.postMessage({
-            //         action: 'createIssueLink'
-            //         , site: this.state.siteDetails
-            //         , issueLinkData: {
-            //             type: {
-            //                 id: newValue.type.id
-            //             },
-            //             inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
-            //             outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
-            //         }
-            //         , issueLinkType: newValue.type
-            //     });
-            //     break;
-            // }
-            // case UIType.Timetracking: {
-            //     let newValObject = this.state.fieldValues[field.key];
-            //     if (newValObject) {
-            //         newValObject.originalEstimate = newValue;
-            //     } else {
-            //         newValObject = {
-            //             originalEstimate: newValue
-            //         };
-            //     }
-            //     this.setState({ loadingField: field.key, isSomethingLoading: true, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
-            //         this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
-            //     });
-            //     break;
-            // }
-            // case UIType.Worklog: {
-            //     this.setState({ isSomethingLoading: true, loadingField: field.key });
-            //     this.postMessage({ action: 'createWorklog', site: this.state.siteDetails, worklogData: newValue, issueKey: this.state.key });
-            //     break;
-            // }
-
-            default: {
-                let typedVal = newValue;
-
-                if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
-                    typedVal = parseFloat(newValue);
-                }
-                this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } });
-                break;
+        if (field.key.indexOf('.') > -1) {
+            let valObj = {};
+            const splits = field.key.split('.');
+            fieldkey = splits[0];
+            if (this.state.fieldValues[splits[0]]) {
+                valObj = this.state.fieldValues[splits[0]];
             }
+            valObj[splits[1]] = typedVal;
+            typedVal = valObj;
+        }
+
+        this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
+
+
+        if (field.valueType === ValueType.Project) {
+            this.setState({ loadingField: field.key, isSomethingLoading: true });
+            this.postMessage({
+                action: 'getScreensForProject'
+                , project: newValue
+                , fieldValues: this.state.fieldValues
+            });
+        }
+
+        if (field.valueType === ValueType.IssueType) {
+            this.setState({ loadingField: field.key, isSomethingLoading: true });
+            this.postMessage({
+                action: 'setIssueType'
+                , issueType: newValue
+                , fieldValues: this.state.fieldValues
+            });
         }
     }
 
@@ -267,11 +237,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                     </form>);
                                 }}
                             </Form>
-                            {this.state.transformerProblems && Object.keys(this.state.transformerProblems).length > 0 &&
-                                <div className='fade-in' style={{ marginTop: '20px' }}>
-                                    <span>non-renderable fields detected.</span> <Button className='ac-banner-link-button' appearance="link" spacing="none" onClick={() => { this.postMessage({ action: 'openProblemReport' }); }}>View a problem report</Button>
-                                </div>
-                            }
                         </div>
                     </GridColumn>
                 </Grid>
