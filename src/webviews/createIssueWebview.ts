@@ -45,13 +45,11 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     private _screenData: CreateMetaTransformerResult;
     private _selectedIssueTypeId: string;
     private _relatedBBIssue: BitbucketIssue | undefined;
-    private _prefill: boolean;
     private _siteDetails: DetailedSiteInfo;
 
     constructor(extensionPath: string) {
         super(extensionPath);
         this._screenData = emptyCreateMetaResult;
-        this._prefill = false;
         this._siteDetails = emptySiteInfo;
     }
 
@@ -69,7 +67,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
     private reset() {
         this._screenData = emptyCreateMetaResult;
-        this._prefill = false;
         this._siteDetails = emptySiteInfo;
     }
 
@@ -89,15 +86,12 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         }
 
         if (data) {
-            this._prefill = true;
+            this._screenData = emptyCreateMetaResult;
             if (data.bbIssue) {
                 this._relatedBBIssue = data.bbIssue;
             }
         } else {
-            this._partialIssue = {
-                description: createdFromAtlascodeFooter
-            };
-            this._prefill = true;
+            this._partialIssue = {};
         }
 
         this.invalidate();
@@ -170,34 +164,31 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             }
 
             const availableProjects = await Container.jiraProjectManager.getProjects();
-            let projectChanged = false;
 
             if (effProject && effProject !== this._currentProject) {
-                projectChanged = true;
                 this._currentProject = effProject;
             }
 
-            if (projectChanged) {
-                this._selectedIssueTypeId = '';
-                this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject!.key);
-                this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
+            this._selectedIssueTypeId = '';
+            this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject!.key);
+            this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
-                if (fieldValues) {
-                    const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields, fieldValues);
-                    this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues, ...overrides };
-                }
-
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
-                this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
-
-                if (this._partialIssue && this._prefill) {
-                    const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
-                    const partialvals = { 'summary': this._partialIssue.summary, 'description': this._partialIssue.description + createdFromAtlascodeFooter };
-
-                    this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...currentVals, ...partialvals };
-                }
-
+            if (fieldValues) {
+                const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields, fieldValues);
+                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues, ...overrides };
             }
+
+            this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
+            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
+
+            if (this._partialIssue) {
+                const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
+                const desc = this._partialIssue.description ? this._partialIssue.description + createdFromAtlascodeFooter : createdFromAtlascodeFooter;
+                const partialvals = { 'summary': this._partialIssue.summary, 'description': desc };
+
+                this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...currentVals, ...partialvals };
+            }
+
 
             if (this._screenData) {
                 const createData: CreateIssueData = this._screenData.issueTypeUIs[this._selectedIssueTypeId] as CreateIssueData;
