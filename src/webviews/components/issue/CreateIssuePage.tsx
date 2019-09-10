@@ -12,6 +12,8 @@ import { FieldUI, ValueType, UIType } from '../../../jira/jira-client/model/fiel
 import { AtlLoader } from '../AtlLoader';
 import { IssueKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { emptySiteInfo } from '../../../atlclients/authInfo';
+import PMFBBanner from '../pmfBanner';
+import { PMFData } from '../../../ipc/messaging';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -95,6 +97,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
 
         let errs = {};
         requiredFields.forEach((field: FieldUI) => {
+
             if (field.uiType === UIType.Worklog && this.state.fieldValues[`${field.key}.enabled`]) {
                 const timeSpent = this.state.fieldValues[`${field.key}.timeSpent`];
                 const newEstimate = this.state.fieldValues[`${field.key}.newEstimate`];
@@ -114,6 +117,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                     errs[`${field.key}.comment`] = 'EMPTY';
                 }
             }
+
             const val = this.state.fieldValues[field.key];
             if (val === undefined || (val.length < 1)) {
                 errs[field.key] = 'EMPTY';
@@ -124,12 +128,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         if (Object.keys(errs).length > 0) {
             return errs;
         }
-
-        // // TODO: [VSCODE-439] find a better way to transform submit data or deal with different select option shapes
-        // if (e[this.state.epicFieldInfo.epicLink.id]) {
-        //     let val: any = e[this.state.epicFieldInfo.epicLink.id];
-        //     e[this.state.epicFieldInfo.epicLink.id] = val.id;
-        // }
 
         this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });
         this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: this.state.fieldValues });
@@ -154,6 +152,23 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             }
             valObj[splits[1]] = typedVal;
             typedVal = valObj;
+        }
+
+        if (field.uiType === UIType.Attachment) {
+            if (Array.isArray(newValue) && newValue.length > 0) {
+                const serFiles = newValue.map((file: any) => {
+                    return {
+                        lastModified: file.lastModified,
+                        lastModifiedDate: file.lastModifiedDate,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        path: file.path,
+                    };
+                });
+
+                typedVal = serFiles;
+            }
         }
 
         this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
@@ -203,9 +218,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             {!this.state.isOnline &&
                                 <Offline />
                             }
-                            {/* {this.state.showPMF &&
-                    <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
-                } */}
+                            {this.state.showPMF &&
+                                <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                            }
                             {this.state.isCreateBannerOpen &&
                                 <div className='fade-in'>
                                     <SectionMessage

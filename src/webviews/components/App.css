@@ -1199,6 +1199,15 @@ img::after is triggered only if img loading fails */
   outline: none!important
 }
 
+.ac-attachment-dropzone-inline {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 50px;
+  border-radius: 3px;
+  border: 2px dashed var(--vscode-editorRuler-foreground);
+  outline: none!important
+}
+
 .ac-attachment-instructions {
   display: block;
   float: left;
@@ -1214,6 +1223,11 @@ img::after is triggered only if img loading fails */
   border: 0px;
 }
 
+.ac-attachment-filesbg-inline {
+  float: left;
+  border: 0px;
+}
+
 .ac-attachment-drag-and-button {
   float: left;
 }
@@ -1223,6 +1237,13 @@ img::after is triggered only if img loading fails */
   margin-left: 10px;
   white-space: nowrap;
   margin-top: 15px;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-attachment-drag-text-inline {
+  display: block;
+  margin-left: 10px;
+  white-space: nowrap;
   color: var(--vscode-editor-foreground);
 }
 
@@ -1296,6 +1317,11 @@ img::after is triggered only if img loading fails */
   position: absolute;
   left: 50%;
   top: 50%;
+}
+
+.ac-attachment-thumb-img-inline {
+  width: 34px;
+  height: 34px;
 }
 
 .ac-attachment-overlay-container {

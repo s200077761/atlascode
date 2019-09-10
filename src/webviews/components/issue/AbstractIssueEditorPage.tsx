@@ -22,6 +22,7 @@ import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import debounce from "lodash.debounce";
+import { AttachmentForm } from './AttachmentForm';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -155,6 +156,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 }
                 break;
             }
+            case 'pmfStatus': {
+                this.setState({ showPMF: e.showPMF });
+                break;
+              }
         }
 
         return handled;
@@ -1224,6 +1229,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         <div />
                     );
                 }
+
+                return (
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        <AttachmentForm isInline={true} onFilesChanged={(files: any) => this.handleInlineEdit(field, files)} />
+                    </div>
+                );
             }
 
         }

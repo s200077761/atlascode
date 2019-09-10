@@ -174,14 +174,12 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
 
     protected onPanelDisposed() {
-        console.log('webview panel disposed');
         if (this._disposablePanel) { this._disposablePanel.dispose(); }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
     }
 
     public dispose() {
-        console.log('webview disposed');
         if (this._disposablePanel) {
             this._disposablePanel.dispose();
         }

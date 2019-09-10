@@ -2,6 +2,42 @@ import React, { useEffect, useReducer } from 'react';
 import { useDropzone, FileWithPath } from 'react-dropzone';
 import FileIcon from '@atlaskit/icon/glyph/file';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
+import UploadIcon from '@atlaskit/icon/glyph/upload';
+import TableTree from '@atlaskit/table-tree';
+import filesize from 'filesize';
+
+type ItemData = {
+    file: FileWithPreview;
+    delfunc: (file: any) => void;
+};
+
+const Delete = (data: ItemData) => {
+    return (<div className='ac-delete' onClick={() => data.delfunc(data.file)}>
+        <TrashIcon label='trash' />
+    </div>);
+};
+
+const Thumbnail = (data: ItemData) => {
+    if (data.file.isImage) {
+        return (
+            <div className='ac-attachment-thumb-img-inline'>
+                <img
+                    src={data.file.preview}
+                />
+            </div>
+        );
+    }
+
+    return (<div className='ac-attachment-thumb-img-inline'>
+        <FileIcon label="no preview" />
+    </div>);
+};
+const Filename = (data: ItemData) => <p style={{ display: "inline" }}>{data.file.name}</p>;
+const Size = (data: ItemData) => {
+    const numSize = (typeof data.file.size === 'number') ? data.file.size : parseFloat(data.file.size);
+    const size = filesize(numSize);
+    return (<p style={{ display: "inline" }}>{size}</p>);
+};
 
 interface FileWithPreview extends FileWithPath {
     preview: string;
@@ -16,6 +52,7 @@ type ActionType = {
 };
 
 interface AttachmentFormProps {
+    isInline?: boolean;
     onFilesChanged(files: FileWithPath[]): void;
 }
 
@@ -40,30 +77,7 @@ const filesReducer = (state: FileWithPreview[], action: ActionType) => {
     }
 };
 
-export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ onFilesChanged }) => {
-    const [files, dispatch] = useReducer(filesReducer, initialState);
-    const { getRootProps, getInputProps } = useDropzone({
-        onDrop: (acceptedFiles: File[]) => {
-            const newFiles = acceptedFiles.map(file => {
-                if (previewableTypes.includes(file.type)) {
-                    return Object.assign(file, { preview: URL.createObjectURL(file), isImage: true });
-                } else {
-                    return Object.assign(file, { preview: '', isImage: false });
-                }
-
-            });
-
-            dispatch({ type: 'addFiles', payload: newFiles });
-        }
-    });
-
-    useEffect(() => () => {
-        // Make sure to revoke the data uris to avoid memory leaks
-        files.forEach(file => URL.revokeObjectURL(file.preview));
-    }, [files]);
-
-    useEffect(() => { onFilesChanged(files); }, [files]);
-
+const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, onFilesChanged: (files: FileWithPath[]) => void) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone' })}>
@@ -117,4 +131,69 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ o
             </div>
         </div>
     );
+};
+
+const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, onFilesChanged: (files: FileWithPath[]) => void) => {
+    return (
+        <div className="ac-attachment-container">
+            <div {...getRootProps({ className: 'ac-attachment-dropzone-inline' })}>
+                <div className='ac-attachment-instructions'>
+                    <div className='ac-attachment-filesbg-inline'>
+                        <UploadIcon label='upload' />
+                    </div>
+                    <div className='ac-attachment-drag-and-button'>
+                        <div className='ac-attachment-drag-text-inline'>
+                            <span>Drop files or click to browse</span>
+                        </div>
+                        <input {...getInputProps()} />
+                    </div>
+                </div>
+            </div>
+            <TableTree
+                columns={[Thumbnail, Filename, Size, Delete]}
+                columnWidths={['36px', '100%', '150px', '50px']}
+                items={files.map(file => {
+                    return {
+                        id: file.path,
+                        content: {
+                            file: file,
+                            delfunc: () => dispatch({ type: 'removeFile', payload: file }),
+                        }
+                    };
+                })}
+            />
+        </div>
+    );
+};
+
+export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ onFilesChanged, isInline }) => {
+    const [files, dispatch] = useReducer(filesReducer, initialState);
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop: (acceptedFiles: File[]) => {
+            const newFiles = acceptedFiles.map(file => {
+                if (previewableTypes.includes(file.type)) {
+                    return Object.assign(file, { preview: URL.createObjectURL(file), isImage: true });
+                } else {
+                    return Object.assign(file, { preview: '', isImage: false });
+                }
+
+            });
+
+            dispatch({ type: 'addFiles', payload: newFiles });
+        }
+    });
+
+    useEffect(() => () => {
+        // Make sure to revoke the data uris to avoid memory leaks
+        files.forEach(file => URL.revokeObjectURL(file.preview));
+    }, [files]);
+
+    useEffect(() => { onFilesChanged(files); }, [files]);
+
+    if (isInline) {
+        return inlineEditor(files, dispatch, getRootProps, getInputProps, onFilesChanged);
+    }
+
+    return dialogEditor(files, dispatch, getRootProps, getInputProps, onFilesChanged);
+
 };

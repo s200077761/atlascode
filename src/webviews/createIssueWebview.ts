@@ -93,6 +93,11 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             if (data.bbIssue) {
                 this._relatedBBIssue = data.bbIssue;
             }
+        } else {
+            this._partialIssue = {
+                description: createdFromAtlascodeFooter
+            };
+            this._prefill = true;
         }
 
         this.invalidate();
@@ -335,7 +340,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                     handled = true;
                     if (isCreateIssue(e)) {
                         try {
-                            const [payload, worklog, issuelinks] = this.formatCreatePayload(e);
+                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(e);
 
                             let client = await Container.clientManager.jiraClient(e.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
@@ -348,6 +353,9 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                                 });
                             }
 
+                            if (attachments) {
+                                await client.addAttachments(resp.key, attachments);
+                            }
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
