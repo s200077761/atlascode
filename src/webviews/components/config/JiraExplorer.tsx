@@ -84,12 +84,13 @@ export default class JiraExplorer extends React.Component<{
                         }
                     }
                 </CheckboxField>
-                <h3>Common Filters</h3>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     paddingLeft: '24px',
+                    paddingTop: '10px'
                 }}>
+                    <h4>Common Filters</h4>
                     <NonCustomJQL
                         yourIssuesJql={config.jira.explorer.assignedIssueJql}
                         yourIssuesIsEnabled={config.jira.explorer.showAssignedIssues}
@@ -101,12 +102,13 @@ export default class JiraExplorer extends React.Component<{
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
-                <h3>Custom JQL</h3>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     paddingLeft: '24px',
+                    paddingTop: '10px'
                 }}>
+                    <h4>Custom JQL</h4>
                     <CustomJQL
                         siteJqlList={config.jira.customJql}
                         onConfigChange={this.props.onConfigChange}
