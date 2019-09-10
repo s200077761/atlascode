@@ -4,7 +4,6 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import SectionMessage from '@atlaskit/section-message';
-import Spinner from '@atlaskit/spinner';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CreatableSelect } from '@atlaskit/select';
 import { WebviewComponent } from "../WebviewComponent";
@@ -28,11 +27,13 @@ import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-cli
 import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
 import EdiText from 'react-editext';
 import { FieldValidators } from "../fieldValidators";
+import { AtlLoader } from "../AtlLoader";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], isCloud: true };
+const customBranchType = { kind: "Custom", prefix: "" };
 
 type BranchNameOption = { label: string, value: string };
 type State = {
@@ -43,8 +44,9 @@ type State = {
   transition: Transition;
   sourceBranch?: { label: string, value: Branch },
   prefix?: { label: string, value: string },
-  localBranch?: BranchNameOption;
-  branchOptions: { label: string, options: BranchNameOption[] }[],
+  localBranch?: string;
+  branchTypes: { kind: string, prefix: string }[];
+  branchOptions: string[],
   repo: { label: string, value: RepoData };
   remote?: { label: string, value: string };
   isStartButtonLoading: boolean;
@@ -62,6 +64,7 @@ const emptyState: State = {
   transition: emptyTransition,
   repo: { label: 'No repositories found...', value: emptyRepoData },
   localBranch: undefined,
+  branchTypes: [],
   branchOptions: [],
   isStartButtonLoading: false,
   result: { type: 'startWorkOnIssueResult', successMessage: undefined, error: undefined },
@@ -174,15 +177,15 @@ export default class StartWorkPage extends WebviewComponent<
     this.setState({ sourceBranch: newValue });
   }
 
-  handleBranchNameChange = (e: any) => {
+  handleBranchNameChange = (e: string) => {
     this.setState({ localBranch: e });
   }
 
-  handleCreateBranchOption = (e: any) => {
-    const newOption = { label: e, value: e.trim() };
+  handleSelectExistingBranch = (branchName: string) => {
+    const branchType = this.state.branchTypes.find(b => branchName.startsWith(b.prefix));
     this.setState({
-      branchOptions: [...this.state.branchOptions, { label: 'Create new branch', options: [newOption] }],
-      localBranch: newOption
+      prefix: branchType ? { label: branchType.kind, value: branchType.prefix } : undefined,
+      localBranch: branchType ? branchName.substring(branchType.prefix.length) : branchName
     });
   }
 
@@ -208,7 +211,7 @@ export default class StartWorkPage extends WebviewComponent<
     let branchName = '';
     if (this.state.localBranch) {
       const prefix = this.state.prefix ? this.state.prefix.value : '';
-      branchName = prefix + this.state.localBranch.value;
+      branchName = prefix + this.state.localBranch;
     }
 
     this.postMessage({
@@ -230,16 +233,11 @@ export default class StartWorkPage extends WebviewComponent<
   private updateState(data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData, issueType: 'jiraIssue' | 'bitbucketIssue', repo: { label: string; value: RepoData; }, issueId: string, issueTitle: string, transition: Transition) {
     const branchOptions = this.state.branchOptions.length > 0
       ? this.state.branchOptions
-      : [{ label: 'Select an existing branch', options: repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase())).map(b => this.createLocalBranchOption(b.name!)) }];
-    let generatedBranchNameOption = undefined;
+      : repo.value.localBranches.filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase())).map(b => b.name!);
     const localBranch = this.state.localBranch
       ? this.state.localBranch
-      : branchOptions.length > 0 && branchOptions[0].options.length > 0
-        ? this.createLocalBranchOption(branchOptions[0].options[0].value)
-        : generatedBranchNameOption = this.createLocalBranchOption(`${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`);
-    if (generatedBranchNameOption) {
-      branchOptions.push({ label: 'Create a new branch', options: [generatedBranchNameOption] });
-    }
+      : `${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`;
+
     const sourceBranchValue = this.state.sourceBranch ? this.state.sourceBranch.value : repo.value.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.value.developmentBranch!) !== -1) || repo.value.localBranches[0];
     const sourceBranch = sourceBranchValue === undefined ? undefined : { label: sourceBranchValue.name!, value: sourceBranchValue };
     let remote = this.state.remote;
@@ -247,6 +245,19 @@ export default class StartWorkPage extends WebviewComponent<
       const firstRemote = repo.value.remotes.find(r => r.name === 'origin') || repo.value.remotes[0];
       remote = { label: firstRemote.name, value: firstRemote.name };
     }
+
+    let branchTypes: { kind: string, prefix: string }[] = [];
+    if (repo.value.branchingModel && repo.value.branchingModel.branch_types) {
+      branchTypes = [...repo.value.branchingModel.branch_types]
+        .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
+      if (branchTypes.length > 0) {
+        if (!this.state.prefix) {
+          this.setState({ prefix: { label: branchTypes[0].kind, value: branchTypes[0].prefix } });
+        }
+        branchTypes.push(customBranchType);
+      }
+    }
+
     this.setState({
       data: data,
       issueType: issueType,
@@ -255,6 +266,7 @@ export default class StartWorkPage extends WebviewComponent<
       transition: transition,
       branchOptions: branchOptions,
       localBranch: localBranch,
+      branchTypes: branchTypes,
       remote: remote,
       bitbucketSetupEnabled: this.isEmptyRepo(repo.value) ? false : this.state.bitbucketSetupEnabled,
       isErrorBannerOpen: false, errorDetails: undefined
@@ -263,7 +275,7 @@ export default class StartWorkPage extends WebviewComponent<
 
   render() {
     if (isStartWorkOnIssueData(this.state.data) && this.state.data.issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
-      return <div className='ac-block-centered'>waiting for data... <Spinner size="large" /></div>;
+      return <AtlLoader />;
     }
 
     const issue = this.state.data.issue;
@@ -311,18 +323,6 @@ export default class StartWorkPage extends WebviewComponent<
         </PageHeader>
         <p dangerouslySetInnerHTML={{ __html: bbIssue.content!.html! }} />
       </GridColumn>;
-    }
-
-    let branchTypes: { kind: string, prefix: string }[] = [];
-    if (repo.value.branchingModel && repo.value.branchingModel.branch_types) {
-      branchTypes = [...repo.value.branchingModel.branch_types]
-        .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
-      if (branchTypes.length > 0) {
-        if (!this.state.prefix) {
-          this.setState({ prefix: { label: branchTypes[0].kind, value: branchTypes[0].prefix } });
-        }
-        branchTypes.push({ kind: "other", prefix: "" });
-      }
     }
 
     return (
@@ -396,13 +396,13 @@ export default class StartWorkPage extends WebviewComponent<
                         value={repo} />
                     </div>
                   }
-                  {(branchTypes.length > 0) &&
+                  {(this.state.branchTypes.length > 0) &&
                     <div className='ac-vpadding' style={{ textTransform: 'capitalize' }}>
                       <label>Type</label>
                       <CreatableSelect
                         className="ac-select-container"
                         classNamePrefix="ac-select"
-                        options={branchTypes.map(bt => { return { label: bt.kind, value: bt.prefix }; })}
+                        options={this.state.branchTypes.map(bt => { return { label: bt.kind, value: bt.prefix }; })}
                         onChange={(model: any) => { this.setState({ prefix: model }); }}
                         value={this.state.prefix} />
                     </div>
@@ -427,8 +427,8 @@ export default class StartWorkPage extends WebviewComponent<
                       <div className="branch-name">
                         <EdiText
                           type='text'
-                          value={this.state.localBranch ? this.state.localBranch.value : ''}
-                          onSave={(val: string) => { this.handleBranchNameChange({ label: val, value: val }); }}
+                          value={this.state.localBranch || ''}
+                          onSave={this.handleBranchNameChange}
                           validation={FieldValidators.isValidString}
                           validationMessage='Branch name is required'
                           inputProps={{ className: 'ac-inputField' }}
@@ -439,9 +439,22 @@ export default class StartWorkPage extends WebviewComponent<
                           editOnViewClick={true}
                         />
                       </div>
-
                     </div>
-
+                    {this.state.branchOptions.length > 0 &&
+                      <SectionMessage
+                        appearance="change"
+                        title='Use an existing branch?'>
+                        <div>
+                          <p>Click to use an existing branch exist for this issue:</p>
+                          <div className='ac-hmargin'>
+                            {
+                              this.state.branchOptions.map(branchName =>
+                                <Button className='ac-link-button' appearance='link' onClick={() => this.handleSelectExistingBranch(branchName)}>{branchName}</Button>)
+                            }
+                          </div>
+                        </div>
+                      </SectionMessage>
+                    }
                   </div>
                   {this.state.repo.value.remotes.length > 1 &&
                     <div>
@@ -464,7 +477,7 @@ export default class StartWorkPage extends WebviewComponent<
             </div>
           </GridColumn>
         </Grid>
-      </Page>
+      </Page >
     );
   }
 }
