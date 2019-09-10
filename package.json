@@ -470,6 +470,12 @@
                     "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.monitorEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notifications when new issues are created for default site and project",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.refreshInterval": {
                     "type": "integer",
                     "default": 5,
@@ -649,7 +655,7 @@
                 "atlascode.bitbucket.pipelines.monitorEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Watch Bitbucket Pipelines For New Build Statuses",
+                    "description": "Show notifications for new Bitbucket Pipelines build statuses",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.pipelines.refreshInterval": {
@@ -696,7 +702,7 @@
                 "atlascode.bitbucket.issues.monitorEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Watch for new Bitbucket Issues",
+                    "description": "Show notifications when new Bitbucket Issues are created",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.issues.refreshInterval": {
@@ -726,7 +732,7 @@
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Periodically check for newly created pull requests and show an information message if there are any",
+                    "description": "Show notifications when new pull requests are created",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.contextMenus.enabled": {
