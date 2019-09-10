@@ -30,8 +30,6 @@ class NestedComment extends React.Component<
         };
     }
 
-    commentBelongsToUser = () => this.props.node.user.accountId === this.props.currentUser.accountId;
-
     handleDelete = () => {
         if(this.props.onDelete) {
             this.props.onDelete(this.props.node.id);
@@ -74,13 +72,21 @@ class NestedComment extends React.Component<
         if(this.props.onSave && !this.state.showCommentForm && !this.state.commentEditMode && !this.props.node.deleted){
             actionList.push(<CommentAction onClick={this.handleReplyClick}>Reply</CommentAction>);
         }
-        if(this.props.onEdit && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted && !!this.props.node.editable){
+        if(this.props.onEdit && !this.state.showCommentForm && !this.state.commentEditMode && this.props.node.editable){
             actionList.push(<CommentAction onClick={this.handleEditClick}>Edit</CommentAction>);
         }
-        if(this.props.onDelete && !this.state.showCommentForm && this.commentBelongsToUser() && !this.state.commentEditMode && !this.props.node.deleted && !!this.props.node.deletable){
+        if(this.props.onDelete && !this.state.showCommentForm && !this.state.commentEditMode && this.props.node.deletable){
             actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
         }
         return actionList;
+    }
+
+    editedOrDeleted = () => {
+        if(this.props.node.deleted){
+            return 'Deleted';
+        } else {
+            return 'Edited';
+        }
     }
 
     render(): any {
@@ -97,7 +103,7 @@ class NestedComment extends React.Component<
                 //than one second, it's almost certainly an edit (likewise, edits are very unlikely to occur within 1 seconds of posting);
                 //It should be noted the comment API does not provide an 'edited' property, which would avoid this unclean solution.
                 differenceInSeconds(this.props.node.updatedTs, this.props.node.ts) > 1 &&
-                <CommentEdited>{`Edited ${distanceInWordsToNow(this.props.node.updatedTs)} ago`}</CommentEdited>
+                <CommentEdited>{`${this.editedOrDeleted()} ${distanceInWordsToNow(this.props.node.updatedTs)} ago`}</CommentEdited>
             }
             content={
                 <React.Fragment>

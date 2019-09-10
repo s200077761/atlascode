@@ -5,6 +5,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
 import { ServerRepositoriesApi } from './repositories';
+import { Container } from '../../container';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -218,8 +219,6 @@ export class ServerPullRequestApi implements PullRequestApi {
             {},
             {version: data.version}
         );
-
-        console.log("Reaching here");
     }
 
     async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
@@ -258,15 +257,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
 
         return {
-            data: activities
-                .map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
+            data: (await Promise.all(
+                    activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
+                )
                 .filter(comment => this.shouldDisplayComment(comment))
-                .map((comment: Comment) => {
-                    if(this.hasUndeletedChild(comment)) {
-                        comment.deletable = false;
-                    }
-                    return comment;
-                })
         };
     }
 
@@ -291,17 +285,28 @@ export class ServerPullRequestApi implements PullRequestApi {
         }       
     }
 
-    private toCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Comment {
+    private async toNestedCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Promise<Comment> {
+        let commentModel: Comment = await this.convertDataToComment(comment, remote, commentAnchor);
+        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(c, commentAnchor, comment.id, remote)));
+        if(this.hasUndeletedChild(commentModel)){
+            commentModel.deletable = false;
+        }
+        return commentModel;
+    }
+
+    private async convertDataToComment(data: any, remote: Remote, commentAnchor?: any): Promise<Comment> {
+        const user = data.author ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author) : UnknownUser;
+        const commentBelongsToUser: boolean = user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
         return {
-            id: comment.id!,
-            parentId: parentId,
-            htmlContent: comment.html,
-            rawContent: comment.text,
-            ts: comment.createdDate,
-            updatedTs: comment.updatedDate,
-            deleted: !!comment.deleted,
-            deletable: comment.permittedOperations.deletable,
-            editable: comment.permittedOperations.editable,
+            id: data.id,
+            parentId: data.parentId,
+            htmlContent: data.html ? data.html : data.text,
+            rawContent: data.text,
+            ts: data.createdDate,
+            updatedTs: data.updatedDate,
+            deleted: !!data.deleted,
+            deletable: data.permittedOperations.deletable && commentBelongsToUser && !data.deleted,
+            editable: data.permittedOperations.editable && commentBelongsToUser && !data.deleted,
             inline: commentAnchor
                 ? {
                     path: commentAnchor.path,
@@ -309,10 +314,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                     to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
                 }
                 : undefined,
-            user: comment.author
-                ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, comment.author)
-                : UnknownUser,
-            children: (comment.comments || []).map((c: any) => this.toCommentModel(c, commentAnchor, comment.id, remote))
+            user: user,
+            children: []
         };
     }
 
@@ -449,27 +452,6 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
 
         return this.convertDataToComment(data, remote);
-    }
-
-    private convertDataToComment(data: any, remote: Remote): Comment {
-        return {
-            id: data.id,
-            parentId: data.parentId,
-            user: ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author),
-            htmlContent: data.html ? data.html : data.text,
-            rawContent: data.text,
-            ts: data.createdDate,
-            updatedTs: data.updatedDate,
-            deleted: false,
-            inline: data.commentAnchor
-                ? {
-                    path: data.commentAnchor.path,
-                    from: data.commentAnchor.fileType === 'TO' ? undefined : data.commentAnchor.line,
-                    to: data.commentAnchor.fileType === 'TO' ? data.commentAnchor.line : undefined
-                }
-                : undefined,
-            children: []
-        };
     }
 
     private async getTaskCount(pr: PullRequest): Promise<number> {

@@ -5,7 +5,6 @@ import { FileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
 import { clientForRemote } from '../../bitbucket/bbUtils';
-import { Container } from '../../container';
 import { Remote } from '../../typings/git';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 
@@ -215,12 +214,11 @@ export class PullRequestCommentController implements vscode.Disposable {
 
     private async createVSCodeComment(parentCommentThreadId: number, comment: Comment, remote: Remote, prId: number): Promise<PullRequestComment> {
         let contextValueString = "";
-        const belongsToLoggedInUser = comment.user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
-        if (belongsToLoggedInUser && !comment.deleted && !!comment.deletable && !!comment.editable){
+        if (comment.deletable && comment.editable){
             contextValueString = "canEdit,canDelete";
-        } else if(belongsToLoggedInUser && !comment.deleted && !!comment.editable) {
+        } else if(comment.editable) {
             contextValueString = "canEdit";
-        } else if(belongsToLoggedInUser && !comment.deleted && !!comment.deletable) {
+        } else if(comment.deletable) {
             contextValueString = "canDelete";
         }
 

@@ -85,13 +85,13 @@
                 "category": "Atlassian"
             },
             {
-				"command": "atlascode.bb.saveCommentEdit",
-				"title": "Save Changes"
-			},
-			{
-				"command": "atlascode.bb.cancelCommentEdit",
-				"title": "Cancel"
-			},
+                "command": "atlascode.bb.saveCommentEdit",
+                "title": "Save Changes"
+            },
+            {
+                "command": "atlascode.bb.cancelCommentEdit",
+                "title": "Cancel"
+            },
             {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh",

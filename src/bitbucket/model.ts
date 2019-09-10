@@ -38,8 +38,8 @@ export type Repo = {
 export type Comment = {
     id: number;
     parentId?: number;
-    deletable?: boolean;
-    editable?: boolean;
+    deletable: boolean;
+    editable: boolean;
     user: User;
     htmlContent: string;
     rawContent: string;
