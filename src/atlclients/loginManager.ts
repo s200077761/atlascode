@@ -159,7 +159,7 @@ export class LoginManager {
             baseLinkUrl: `https://${site.hostname}`,
             id: site.hostname,
             name: site.hostname,
-            userId: json.id,
+            userId: site.product.key === ProductJira.key ? json.id : json.slug,
             credentialId: credentialId,
         };
 
