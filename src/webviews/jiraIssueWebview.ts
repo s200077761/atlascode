@@ -13,7 +13,7 @@ import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands } from "vscode";
 import { Commands } from "../commands";
-import { issueCreatedEvent } from "../analytics";
+import { issueCreatedEvent, issueUpdatedEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { PullRequestData } from "../bitbucket/model";
@@ -210,6 +210,15 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         this.postMessage(optionMessage);
     }
 
+    fieldNameForKey(key: string): string {
+        const found = Object.values(this._editUIData.fields).filter(field => field.key === key);
+        if (Array.isArray(found) && found.length > 0) {
+            return found[0].name;
+        }
+
+        return '';
+    }
+
     protected async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
@@ -224,7 +233,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
                         this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues });
 
-                        // TODO: [VSCODE-601] add a new analytic event for issue updates
+                        Object.keys(newFieldValues).forEach(key => {
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, key, this.fieldNameForKey(key)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                        });
+
                         commands.executeCommand(Commands.RefreshJiraExplorer);
                     }
                     catch (e) {
@@ -293,7 +305,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
                         } catch (e) {
@@ -328,7 +340,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error deleting issuelink: ${e}`));
@@ -359,7 +371,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'worklog', this.fieldNameForKey('worklog')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error creating worklog: ${e}`));
@@ -394,7 +406,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding watcher: ${e}`));
@@ -433,7 +445,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error removing watcher: ${e}`));
@@ -466,7 +478,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding vote: ${e}`));
@@ -502,7 +514,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error removing vote: ${e}`));
@@ -535,7 +547,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding attachments: ${e}`));
@@ -565,7 +577,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
                             });
 
-                            // TODO: [VSCODE-601] add a new analytic event for issue updates
+                            issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error deleting attachments: ${e}`));

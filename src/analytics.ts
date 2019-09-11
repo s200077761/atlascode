@@ -84,6 +84,10 @@ export async function issueWorkStartedEvent(site: DetailedSiteInfo): Promise<Tra
     return instanceTrackEvent(site, 'workStarted', 'issue');
 }
 
+export async function issueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey, fieldName: fieldName, fieldKey: fieldKey });
+}
+
 // Bitbucket issue events
 
 export async function bbIssueCreatedEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
