@@ -28,6 +28,14 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         return "startWorkOnIssueScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._state) {
+            return siteDetailsForRemote(this._state.remote);
+        }
+
+        return undefined;
+    }
+
     async createOrShowIssue(data: BitbucketIssue) {
         await super.createOrShow();
         this.initialize(data);
@@ -43,7 +51,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         this.invalidate();
     }
 
-    public invalidate() {
+    public async invalidate() {
         this.forceUpdateIssue();
     }
 

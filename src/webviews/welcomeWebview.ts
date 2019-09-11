@@ -4,6 +4,7 @@ import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export class WelcomeWebview extends AbstractReactWebview {
 
@@ -16,6 +17,10 @@ export class WelcomeWebview extends AbstractReactWebview {
     }
     public get id(): string {
         return "atlascodeWelcomeScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return undefined;
     }
 
     public async invalidate() {

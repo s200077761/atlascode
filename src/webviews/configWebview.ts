@@ -36,6 +36,11 @@ export class ConfigWebview extends AbstractReactWebview {
         return "atlascodeSettings";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+
+        return undefined;
+    }
+
     public async invalidate() {
         if (this.isRefeshing) {
             return;

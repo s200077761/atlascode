@@ -20,6 +20,10 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
         return "atlascodeCreateIssueProblemsScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return this._site;
+    }
+
     async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: WorkingProject): Promise<void> {
         await super.createOrShow(column);
         this._site = site;

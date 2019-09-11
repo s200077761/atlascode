@@ -33,6 +33,15 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return "createPullRequestScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        if (repos.length > 0) {
+            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+        }
+
+        return undefined;
+    }
+
     public async invalidate() {
         if (Container.onlineDetector.isOnline()) {
             await this.updateFields();

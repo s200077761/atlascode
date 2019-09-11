@@ -1,6 +1,6 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
-import { AuthInfo, DetailedSiteInfo, ProductJira } from './atlclients/authInfo';
+import { AuthInfo, DetailedSiteInfo, ProductJira, isEmptySiteInfo } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
@@ -153,7 +153,7 @@ export async function startIssueCreationEvent(source: string): Promise<TrackEven
 
 // Screen Events
 
-export async function viewScreenEvent(screenName: string, tenantId?: string): Promise<ScreenEvent> {
+export async function viewScreenEvent(screenName: string, site?: DetailedSiteInfo): Promise<ScreenEvent> {
     const e = {
         tenantIdType: null,
         name: screenName,
@@ -163,7 +163,8 @@ export async function viewScreenEvent(screenName: string, tenantId?: string): Pr
         }
     };
 
-    return await tenantOrNull<ScreenEvent>(e, tenantId).then(async (o) => { return anyUserOrAnonymous<ScreenEvent>(o); });
+    const tenantId: string | undefined = (site) ? site.id : undefined;
+    return instanceType<ScreenEvent>(anyUserOrAnonymous<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId)));
 }
 
 // UI Events
@@ -184,7 +185,7 @@ export async function bbIssuesPaginationEvent(): Promise<UIEvent> {
         }
     };
 
-    return await anyUserOrAnonymous<UIEvent>(e);
+    return anyUserOrAnonymous<UIEvent>(e);
 }
 
 export async function prPaginationEvent(): Promise<UIEvent> {
@@ -203,7 +204,7 @@ export async function prPaginationEvent(): Promise<UIEvent> {
         }
     };
 
-    return await anyUserOrAnonymous<UIEvent>(e);
+    return anyUserOrAnonymous<UIEvent>(e);
 }
 
 export async function authenticateButtonEvent(source: string): Promise<UIEvent> {
@@ -219,7 +220,7 @@ export async function authenticateButtonEvent(source: string): Promise<UIEvent> 
         }
     };
 
-    return await anyUserOrAnonymous<UIEvent>(e);
+    return anyUserOrAnonymous<UIEvent>(e);
 }
 
 export async function logoutButtonEvent(source: string): Promise<UIEvent> {
@@ -235,19 +236,18 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
         }
     };
 
-    return await anyUserOrAnonymous<UIEvent>(e);
+    return anyUserOrAnonymous<UIEvent>(e);
 }
 
 // Helper methods
 
 async function instanceTrackEvent(site: DetailedSiteInfo, action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
-    const instanceType: string = site.isCloud ? 'cloud' : 'server';
 
     let event: TrackEvent = (site.isCloud && site.product.key === ProductJira.key) ?
         await tenantTrackEvent(site.id, action, actionSubject, attributes)
         : await trackEvent(action, actionSubject, attributes);
 
-    return { ...event, ...{ instanceType: instanceType } };
+    return instanceType<TrackEvent>(event, site);
 }
 
 async function trackEvent(action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
@@ -280,7 +280,7 @@ function event(action: string, actionSubject: string, attributes: any): any {
     return Object.assign(event, attributes);
 }
 
-async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T> {
+function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): T {
     let userType = 'anonymousId';
     let authInfo: AuthInfo | undefined = undefined;
 
@@ -305,7 +305,7 @@ async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T
     return newObj as T;
 }
 
-async function tenantOrNull<T>(e: Object, tenantId?: string): Promise<T> {
+function tenantOrNull<T>(e: Object, tenantId?: string): T {
     let tenantType: string | null = 'cloudId';
     let newObj: Object;
 
@@ -315,4 +315,18 @@ async function tenantOrNull<T>(e: Object, tenantId?: string): Promise<T> {
     newObj = { ...e, ...{ tenantIdType: tenantType, tenantId: tenantId } };
 
     return newObj as T;
+}
+
+function instanceType<T>(e: Object, site?: DetailedSiteInfo): T {
+    let newObj: Object;
+
+    if (site && !isEmptySiteInfo(site)) {
+        const instanceType: string = site.isCloud ? 'cloud' : 'server';
+        newObj = { ...e, ...{ instanceType: instanceType } };
+    } else {
+        newObj = e;
+    }
+
+    return newObj as T;
+
 }

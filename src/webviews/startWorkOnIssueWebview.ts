@@ -5,7 +5,6 @@ import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
-import { ProductJira, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Repository, RefType, Remote } from '../typings/git';
 import { RepoData } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
@@ -17,6 +16,7 @@ import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
     private _state: MinimalIssue = emptyMinimalIssue;
@@ -24,7 +24,6 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
 
     constructor(extensionPath: string) {
         super(extensionPath);
-        this.tenantId = Container.siteManager.effectiveSite(ProductJira).id;
     }
 
     public get title(): string {
@@ -32,6 +31,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
     }
     public get id(): string {
         return "startWorkOnIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return this._state.siteDetails;
     }
 
     async createOrShowIssue(data: MinimalIssue) {
@@ -56,8 +59,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         return;
     }
 
-    public invalidate() {
-        this.forceUpdateIssue();
+    public async invalidate() {
+        await this.forceUpdateIssue();
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
@@ -138,9 +141,6 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         this.isRefeshing = true;
         try {
             this._state = issue;
-            if (!isEmptySiteInfo(issue.siteDetails)) {
-                this.tenantId = issue.siteDetails.id;
-            }
 
             if (this._panel) {
                 this._panel.title = `Start work on Jira issue ${issue.key}`;

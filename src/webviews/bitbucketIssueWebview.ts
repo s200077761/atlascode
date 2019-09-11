@@ -29,6 +29,14 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
         return "bitbucketIssueScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._issue) {
+            return siteDetailsForRemote(this._issue.remote);
+        }
+
+        return undefined;
+    }
+
     initialize(data: BitbucketIssue) {
         this._issue = data;
 

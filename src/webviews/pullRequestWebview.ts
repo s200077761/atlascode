@@ -51,6 +51,14 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return "pullRequestDetailsScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._pr) {
+            return siteDetailsForRemote(this._pr.remote);
+        }
+
+        return undefined;
+    }
+
     initialize(data: PullRequest) {
         this._pr = data;
 
