@@ -4,7 +4,7 @@ import CommentComponent, { CommentAuthor, CommentTime, CommentAction, CommentEdi
 import CommentForm from './CommentForm';
 import { User, Comment } from '../../../bitbucket/model';
 import { ButtonGroup } from '@atlaskit/button';
-import { Button } from '@atlaskit/button/components/Button';
+import  Button from '@atlaskit/button';
 import { distanceInWordsToNow, differenceInSeconds } from 'date-fns';
 
 class NestedComment extends React.Component<
