@@ -102,7 +102,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
                             });
-                            issueWorkStartedEvent(issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
                             this.postMessage({ type: 'error', reason: e });

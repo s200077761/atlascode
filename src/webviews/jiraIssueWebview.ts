@@ -268,7 +268,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'subtasks': this._editUIData.fieldValues['subtasks'] }
                             });
-                            issueCreatedEvent(resp.key, msg.site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(msg.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
                         } catch (e) {

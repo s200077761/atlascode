@@ -16,12 +16,12 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { ProductJira } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
-import { clientForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 
 interface PRState {
@@ -201,15 +201,15 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private shouldDisplayComment(comment: any): boolean {
-        if(comment.children.length === 0){
+        if (comment.children.length === 0) {
             return !comment.deleted;
         } else {
             let hasUndeletedChild: boolean = false;
-            for(let i = 0; i < comment.children.length; i++){
+            for (let i = 0; i < comment.children.length; i++) {
                 hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
             }
             return hasUndeletedChild;
-        }       
+        }
     }
 
     private async postCompleteState() {
@@ -316,7 +316,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async approve(approved: boolean) {
         const bbApi = await clientForRemote(this._state.remote!);
         await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
-        prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prApproveEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         await this.updatePullRequest();
     }
 
@@ -327,7 +332,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             m.closeSourceBranch,
             m.mergeStrategy
         );
-        prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prMergeEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
@@ -370,7 +380,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
                 });
-                prCheckoutEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.sourceRemote!);
+                if (site) {
+                    prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                }
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));

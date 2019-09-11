@@ -8,8 +8,9 @@ import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
 import { BitbucketIssue } from "../bitbucket/model";
-import { clientForRemote } from "../bitbucket/bbUtils";
+import { clientForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { isFetchUsers } from "../ipc/prActions";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
@@ -130,7 +131,10 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             const bbApi = await clientForRemote(this._issue!.remote);
                             await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
-                            bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueCommentEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -147,7 +151,11 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
                             this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
-                            bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueTransitionedEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
                             this.postMessage({ type: 'error', reason: e });

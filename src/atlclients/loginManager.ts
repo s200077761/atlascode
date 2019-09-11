@@ -39,10 +39,11 @@ export class LoginManager {
             if (siteDetails.length > 0) {
                 await this._credentialManager.saveAuthInfo(siteDetails[0], oauthInfo);
                 this._siteManager.addSites(siteDetails);
+                authenticatedEvent(siteDetails[0]).then(e => { this._analyticsClient.sendTrackEvent(e); });
             }
 
             window.showInformationMessage(`You are now authenticated with ${site.product}`);
-            authenticatedEvent(site.product.name).then(e => { this._analyticsClient.sendTrackEvent(e); });
+
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {

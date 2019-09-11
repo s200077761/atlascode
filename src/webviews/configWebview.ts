@@ -163,7 +163,7 @@ export class ConfigWebview extends AbstractReactWebview {
                                 }
 
                                 if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 }
                             }
 

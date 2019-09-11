@@ -67,8 +67,8 @@ async function saveWorkingProject(project: Project) {
     });
 
   projectSelectedEvent(
+    Container.siteManager.effectiveSite(ProductJira),
     project.id,
-    Container.siteManager.effectiveSite(ProductJira).id
   ).then(e => {
     Container.analyticsClient.sendTrackEvent(e);
   });

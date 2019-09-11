@@ -336,7 +336,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             let client = await Container.clientManager.jiraClient(e.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
-                            issueCreatedEvent(resp.key, e.site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(e.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                             if (issuelinks) {
                                 this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {

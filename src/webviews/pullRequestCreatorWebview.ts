@@ -10,7 +10,7 @@ import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { ProductJira } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
@@ -269,7 +269,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-                prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+                if (site) {
+                    prCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                }
             });
 
         await this.updateIssue(repo, remote, issue);

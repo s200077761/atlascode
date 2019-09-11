@@ -2,7 +2,7 @@ import { Repository, Remote } from "../../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
-import { parseGitUrl, urlForRemote } from "../bbUtils";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
@@ -369,7 +369,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+        if (site) {
+            prCommentEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
 
         const { data } = await this.client.post(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments`,
