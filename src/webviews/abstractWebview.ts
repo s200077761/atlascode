@@ -120,12 +120,12 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
             this.postMessage({ type: 'pmfStatus', showPMF: Container.pmfStats.shouldShowSurvey() });
 
-            this.invalidate();
-
-            if (!this._viewEventSent) {
-                this._viewEventSent = true;
-                viewScreenEvent(this.id, this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-            }
+            this.invalidate().then(() => {
+                if (!this._viewEventSent) {
+                    this._viewEventSent = true;
+                    viewScreenEvent(this.id, this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                }
+            });
         }
     }
 
