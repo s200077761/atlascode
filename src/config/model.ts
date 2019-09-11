@@ -53,6 +53,7 @@ export interface JiraIssueMonitor {
 
 export interface JiraExplorer {
     enabled: boolean;
+    monitorEnabled: boolean;
     showOpenIssues: boolean;
     openIssueJql: string;
     showAssignedIssues: boolean;
@@ -156,6 +157,7 @@ export function notEmptyProject(p: WorkingProject): p is WorkingProject {
 
 export const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
+    monitorEnabled: true,
     showOpenIssues: true,
     openIssueJql: "",
     showAssignedIssues: true,

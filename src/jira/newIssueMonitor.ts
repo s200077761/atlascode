@@ -22,7 +22,12 @@ export class NewIssueMonitor {
   }
 
   async checkForNewIssues() {
-    if (!this._workingProject || !Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+    if (
+      !this._workingProject ||
+      !Container.onlineDetector.isOnline() ||
+      !Container.config.jira.explorer.monitorEnabled ||
+      !await Container.siteManager.productHasAtLeastOneSite(ProductJira)
+    ) {
       return;
     }
 
