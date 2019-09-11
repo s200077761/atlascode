@@ -1,8 +1,8 @@
 import { AbstractReactWebview } from "./abstractWebview";
 import { isAction } from "../ipc/messaging";
-import { isFetchQuery, isOpenJiraIssue, isCreateSelectOption } from "../ipc/issueActions";
+import { isFetchQueryAndSite, isOpenJiraIssue, isCreateSelectOption } from "../ipc/issueActions";
 import { Container } from "../container";
-import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult, isGroupPickerResult } from "../jira/jira-client/model/responses";
+import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult, isGroupPickerResult, isProjectsResult } from "../jira/jira-client/model/responses";
 import { Logger } from "../logger";
 import { showIssue } from "../commands/jira/showIssue";
 import { ValueType } from "../jira/jira-client/model/fieldUI";
@@ -28,6 +28,8 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             suggestions = result.results.map(result => {
                 return { label: result.displayName, value: result.value };
             });
+        } else if (isProjectsResult(result)) {
+            suggestions = result.values;
         } else if (Array.isArray(result)) {
             suggestions = result;
         }
@@ -43,7 +45,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                     case 'fetchIssues': {
                         //TODO: [VSCODE-588] Add nonce handling
                         handled = true;
-                        if (isFetchQuery(msg)) {
+                        if (isFetchQueryAndSite(msg)) {
                             try {
                                 let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
@@ -67,7 +69,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                     case 'fetchSelectOptions': {
                         //TODO: [VSCODE-588] Add nonce handling
                         handled = true;
-                        if (isFetchQuery(msg)) {
+                        if (isFetchQueryAndSite(msg)) {
                             try {
                                 let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: any[] = [];

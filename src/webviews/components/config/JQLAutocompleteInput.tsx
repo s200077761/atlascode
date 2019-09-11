@@ -35,7 +35,7 @@ export class JQLAutocompleteInput extends PureComponent<
         shouldFlip?: boolean;
         initialValue: string;
         inputValue?: string;
-        label?: string;
+        label: string;
         inputId: string;
         getSuggestionsRequest: (fieldName: string, fieldValue: string) => Promise<any>;
         getAutocompleteDataRequest: () => Promise<any>;

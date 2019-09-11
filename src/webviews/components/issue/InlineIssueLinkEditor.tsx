@@ -1,8 +1,9 @@
 import * as React from 'react';
-import Select, { AsyncSelect, components } from '@atlaskit/select';
+import Select, { AsyncSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueLinkTypeSelectOption } from '../../../jira/jira-client/model/fieldUI';
+import { IssueLinkTypeSelectOption, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
+import { SelectFieldHelper } from '../selectFieldHelper';
 
 export type LinkTypeAndIssue = {
     issueKey: string;
@@ -28,33 +29,6 @@ interface State {
     editorContainerClassname: string | undefined;
     defaultIssueValue: IssuePickerIssue | undefined;
 }
-
-const { Option } = components;
-const TypeOption = (props: any) => (
-    <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.label}</span></div>
-    </Option>
-);
-
-const TypeValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <div style={{ display: 'flex', alignItems: 'center' }}><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
-    </components.SingleValue >
-
-);
-
-const IssueSuggestionOption = (props: any) => (
-    <Option {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
-    </Option>
-);
-
-const IssueSuggestionValue = (props: any) => (
-    <components.SingleValue {...props}>
-        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
-    </components.SingleValue>
-
-);
 
 export default class InlineIssueLinksEditor extends React.Component<Props, State> {
     constructor(props: any) {
@@ -159,9 +133,9 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                     className="ac-select-container"
                                     classNamePrefix="ac-select"
                                     options={this.state.linkTypes}
-                                    components={{ Option: TypeOption, SingleValue: TypeValue }}
-                                    getOptionLabel={(option: any) => option.name}
-                                    getOptionValue={(option: any) => option.name}
+                                    components={SelectFieldHelper.getComponentsForValueType(ValueType.IssueLinks)}
+                                    getOptionLabel={SelectFieldHelper.labelFuncForValueType(ValueType.IssueLinks)}
+                                    getOptionValue={SelectFieldHelper.valueFuncForValueType(ValueType.IssueLinks)}
                                     isDisabled={this.state.isLoading}
                                     onChange={this.handleIssueLinkTypeChange}
                                 />
@@ -179,7 +153,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
                                         isLoading={this.state.isIssueLoading}
                                         isDisabled={this.state.isIssueLoading}
                                         onChange={this.handleIssueChange}
-                                        components={{ Option: IssueSuggestionOption, SingleValue: IssueSuggestionValue }}
+                                        components={{ Option: SelectFieldHelper.IssueSuggestionOption, SingleValue: SelectFieldHelper.IssueSuggestionValue }}
                                     />
                                 </div>
                             </div>

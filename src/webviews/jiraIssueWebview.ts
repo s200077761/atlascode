@@ -54,6 +54,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
     invalidate(): void {
         if (Container.onlineDetector.isOnline()) {
             this.forceUpdateIssue();
+        } else {
+            this.postMessage(onlineStatus(false));
         }
 
         Container.pmfStats.touchActivity();
@@ -76,7 +78,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         if (this.isRefeshing) {
             return;
         }
-        console.log('force updating issue');
         this.isRefeshing = true;
         try {
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);

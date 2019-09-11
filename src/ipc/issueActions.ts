@@ -1,6 +1,6 @@
 import { Action } from "./messaging";
 import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User, IssueType, isIssueType } from "../jira/jira-client/model/entities";
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -33,7 +33,8 @@ export interface IssueAssignAction extends Action {
 
 export interface SetIssueTypeAction extends Action {
     action: 'setIssueType';
-    id: string;
+    issueType: IssueType;
+    fieldValues: FieldValues;
 }
 
 export interface OpenJiraIssueAction extends Action {
@@ -64,6 +65,7 @@ export interface FetchIssueFieldOptionsByJQLAction extends Action {
 
 export interface ScreensForProjectsAction extends Action {
     project: WorkingProject;
+    fieldValues: FieldValues;
 }
 
 export interface CreateSelectOptionAction extends Action {
@@ -137,7 +139,9 @@ export function isTransitionIssue(a: Action): a is TransitionIssueAction {
 }
 
 export function isSetIssueType(a: Action): a is SetIssueTypeAction {
-    return (<SetIssueTypeAction>a).id !== undefined && a.action === 'setIssueType';
+    return a
+        && (<SetIssueTypeAction>a).issueType !== undefined
+        && isIssueType((<SetIssueTypeAction>a).issueType);
 }
 
 export function isIssueComment(a: Action): a is IssueCommentAction {
@@ -151,9 +155,13 @@ export function isOpenJiraIssue(a: Action): a is OpenJiraIssueAction {
     return (<OpenJiraIssueAction>a).issueOrKey !== undefined;
 }
 
-export function isFetchQuery(a: Action): a is FetchQueryAction {
+export function isFetchQueryAndSite(a: Action): a is FetchQueryAction {
     return a && (<FetchQueryAction>a).query !== undefined
         && (<FetchQueryAction>a).site !== undefined;
+}
+
+export function isFetchQuery(a: Action): a is FetchQueryAction {
+    return a && (<FetchQueryAction>a).query !== undefined;
 }
 
 export function isFetchByProjectQuery(a: Action): a is FetchByProjectQueryAction {

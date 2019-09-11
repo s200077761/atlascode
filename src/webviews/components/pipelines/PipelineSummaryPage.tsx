@@ -28,7 +28,7 @@ import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from "../issue/NavItem";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
-import { Button } from "@atlaskit/button/components/Button";
+import Button from "@atlaskit/button";
 import { AtlLoader } from "../AtlLoader";
 
 const successIcon = (

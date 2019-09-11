@@ -10,7 +10,7 @@ import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
 import { ButtonGroup } from '@atlaskit/button';
-import { Button } from '@atlaskit/button/components/Button';
+import Button from '@atlaskit/button';
 import InlineSubtaskEditor from './InlineSubtaskEditor';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
@@ -22,6 +22,7 @@ import { ParticipantList } from './ParticipantList';
 import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import debounce from "lodash.debounce";
+import { AttachmentForm } from './AttachmentForm';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -39,6 +40,7 @@ export interface CommonEditorViewState extends Message {
     editingField: string;
     isOnline: boolean;
     isErrorBannerOpen: boolean;
+    showPMF: boolean;
     errorDetails: any;
     commentInputValue: string;
 
@@ -53,18 +55,19 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     loadingField: '',
     editingField: '',
     isOnline: true,
+    showPMF: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     commentInputValue: '',
 };
 
-const Condition = ({ when, is, children }: any) => {
-    return <Field name={when} subscription={{ value: false }}>
-        {({ fieldProps }: { fieldProps: any }) => {
-            return (fieldProps && fieldProps.value && fieldProps.value === is ? children : null);
-        }}
-    </Field>;
-};
+// const WorklogCondition = ({ worklogEnabled, children }: any) => {
+//     if (worklogEnabled) {
+//         return children;
+//     }
+
+//     return <React.Fragment />;
+// };
 
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
     if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
@@ -87,7 +90,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     // see: https://github.com/JedWatson/react-select/issues/2477
     // and more importantly: https://github.com/JedWatson/react-select/issues/2326
     protected handleSelectChange = debounce((field: FieldUI, newValue: any) => {
-
         this.handleInlineEdit(field, this.formatEditValue(field, newValue));
     }, 100);
 
@@ -116,13 +118,18 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         let handled: boolean = false;
         switch (e.type) {
             case 'error': {
+                handled = true;
                 this.waitForCreateOptionResponse = false;
                 if (isIssueEditError(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 } else {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason });
                 }
+                break;
+            }
+            case 'fieldValueUpdate': {
                 handled = true;
+                this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 break;
             }
             case 'issueSuggestionsList': {
@@ -136,6 +143,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 break;
             }
             case 'optionCreated': {
+                handled = true;
                 if (isCreatedSelectOption(e)) {
                     this.waitForCreateOptionResponse = false;
                     this.setState(
@@ -148,6 +156,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 }
                 break;
             }
+            case 'pmfStatus': {
+                this.setState({ showPMF: e.showPMF });
+                break;
+              }
         }
 
         return handled;
@@ -204,6 +216,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             action: "openJiraIssue",
             issueOrKey: issueObj,
         });
+    }
+
+    private handleInlineInputEdit = (field: FieldUI, e: any) => {
+        const val: string = e.target.value.trim();
+        this.handleInlineEdit(field, val);
     }
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
@@ -305,7 +322,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     default: {
                         if (field.required) {
                             validationFailMessage = `${field.name} is required`;
-                            break;
                         }
                         break;
                     }
@@ -343,13 +359,23 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;
-                                if (fieldArgs.error !== undefined) {
+                                if (fieldArgs.error && fieldArgs.error !== '') {
                                     errDiv = <ErrorMessage>{validationFailMessage}</ErrorMessage>;
                                 }
 
-                                let markup = <input  {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' disabled={this.state.isSomethingLoading} />;
+                                let markup = <input  {...fieldArgs.fieldProps}
+                                    style={{ width: '100%', display: 'block' }}
+                                    className='ac-inputField'
+                                    disabled={this.state.isSomethingLoading}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })} />;
                                 if ((field as InputFieldUI).isMultiline) {
-                                    markup = <textarea {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-textarea' rows={5} disabled={this.state.isSomethingLoading} />;
+                                    markup = <textarea {...fieldArgs.fieldProps}
+                                        style={{ width: '100%', display: 'block' }}
+                                        className='ac-textarea'
+                                        rows={5}
+                                        disabled={this.state.isSomethingLoading}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })}
+                                    />;
                                 }
                                 return (
                                     <div>
@@ -406,6 +432,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                             isDisabled={this.state.isSomethingLoading}
                                             className="ac-select-container"
                                             selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
                                         />
                                         {errDiv}
                                     </div>
@@ -460,6 +487,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                             className="ac-select-container"
                                             datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                             timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
                                         />
                                         {errDiv}
                                     </div>
@@ -470,7 +498,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 );
             }
             case UIType.Subtasks: {
-                let markup = <div></div>;
+                let markup = <React.Fragment />;
                 if (editmode) {
                     markup = <InlineSubtaskEditor
                         label={field.name}
@@ -478,8 +506,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         onSave={(val: any) => { this.handleInlineEdit(field, val); }}
                         isLoading={this.state.loadingField === field.key}
                     />;
-                } else {
-
                 }
                 return markup;
             }
@@ -495,7 +521,77 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         onFetchIssues={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
                     />;
                 } else {
+                    let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
+                    return (
+                        <React.Fragment>
+                            <Field label={field.name}
+                                isRequired={field.required}
+                                id={`${field.key}.type`}
+                                name={`${field.key}.type`}
+                                validate={validateFunc}>
+                                {
+                                    (fieldArgs: any) => {
+                                        let errDiv = <span />;
+                                        if (fieldArgs.error === 'EMPTY') {
+                                            errDiv = <ErrorMessage>{field.name} is required</ErrorMessage>;
+                                        }
 
+                                        return (
+                                            <div>
+                                                <Select
+                                                    {...fieldArgs.fieldProps}
+                                                    isMulti={false}
+                                                    isClearable={!field.required}
+                                                    className="ac-select-container"
+                                                    classNamePrefix="ac-select"
+                                                    components={SelectFieldHelper.getComponentsForValueType(ValueType.IssueLinks)}
+                                                    getOptionLabel={SelectFieldHelper.labelFuncForValueType(ValueType.IssueLinks)}
+                                                    getOptionValue={SelectFieldHelper.valueFuncForValueType(ValueType.IssueLinks)}
+                                                    placeholder="Select link type"
+                                                    isDisabled={this.state.isSomethingLoading}
+                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                        const subField = { ...field, ...{ key: `${field.key}.type` } };
+                                                        this.handleInlineEdit(subField, val);
+                                                    })}
+                                                />
+                                                {errDiv}
+                                            </div>
+                                        );
+                                    }
+                                }
+                            </Field>
+                            <Field
+                                id={`${field.key}.issue`}
+                                name={`${field.key}.issue`}>
+                                {
+                                    (fieldArgs: any) => {
+                                        return (
+                                            <AsyncSelect
+                                                {...fieldArgs.fieldProps}
+                                                isClearable={true}
+                                                isMulti={true}
+                                                className="ac-select-container"
+                                                classNamePrefix="ac-select"
+                                                loadOptions={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
+                                                getOptionLabel={(option: any) => option.key}
+                                                getOptionValue={(option: any) => option.key}
+                                                placeholder="Search for an issue"
+                                                isLoading={this.state.loadingField === field.key}
+                                                isDisabled={this.state.isSomethingLoading}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                    const subField = { ...field, ...{ key: `${field.key}.issue` } };
+                                                    this.handleInlineEdit(subField, val);
+                                                })}
+                                                components={{ Option: SelectFieldHelper.IssueSuggestionOption, SingleValue: SelectFieldHelper.IssueSuggestionValue }}
+                                            />
+                                        );
+                                    }
+                                }
+                            </Field>
+
+                        </React.Fragment>
+                    );
                 }
                 return markup;
             }
@@ -523,6 +619,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     validateFunc = (selectField.isMulti) ? FieldValidators.validateMultiSelect : FieldValidators.validateSingleSelect;
                 }
 
+                // Note: react-select doesn't let you set an initial value as a string.
+                // it must be an object or an array (ugh.)
+                let defVal = this.state.fieldValues[field.key];
+                if (typeof this.state.fieldValues[field.key] === 'string') {
+                    defVal = { label: defVal, value: defVal };
+                }
+
                 const commonProps: any = {
                     isMulti: selectField.isMulti,
                     className: "ac-select-container",
@@ -536,17 +639,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     commonProps.label = field.name;
                     commonProps.id = field.key;
                     commonProps.name = field.key;
-
-                    // Note: react-select doesn't let you set an initial value as a string.
-                    // it must be an object or an array (ugh.)
-                    if (typeof this.state.fieldValues[field.key] === 'string') {
-                        const val = this.state.fieldValues[field.key];
-
-                        commonProps.defaultValue = { label: val, value: val };
-                    } else {
-                        commonProps.defaultValue = this.state.fieldValues[field.key];
-                    }
-
+                    commonProps.defaultValue = defVal;
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {
@@ -570,7 +663,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -602,13 +695,15 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             return (
                                 <CreatableSelect
                                     {...commonProps}
+                                    placeholder='Type to create new option'
+                                    createOptionPosition='first'
                                     value={this.state.fieldValues[field.key]}
                                     isClearable={this.isClearableSelect(selectField)}
                                     options={this.state.selectFieldOptions[field.key]}
                                     isDisabled={this.state.isSomethingLoading}
                                     isLoading={this.state.loadingField === field.key}
                                     isValidNewOption={shouldShowCreateOption}
-                                    placeholder='Type to create new option'
+                                    noOptionsMessage={(input: any) => 'Type to create new option'}
                                     onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                 />
@@ -622,7 +717,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -634,8 +729,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 <CreatableSelect
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
-                                                    value={this.state.fieldValues[field.key]}
                                                     placeholder='Type to create new option'
+                                                    createOptionPosition='first'
+                                                    noOptionsMessage={(input: any) => 'Type to create new option'}
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isDisabled={this.state.isSomethingLoading}
@@ -659,9 +755,10 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 <AsyncSelect
                                     {...commonProps}
                                     placeholder='Type to search'
+                                    noOptionsMessage={(input: any) => 'Type to search'}
                                     isClearable={this.isClearableSelect(selectField)}
                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
-                                    options={this.state.selectFieldOptions[field.key]}
+                                    defaultOptions={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                     loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
@@ -676,7 +773,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -689,11 +786,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
+                                                    noOptionsMessage={(input: any) => 'Type to search'}
                                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                                     isClearable={this.isClearableSelect(selectField)}
-                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    defaultOptions={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
-                                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                     loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 />
                                                 {errDiv}
@@ -707,27 +805,31 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
                     case SelectFieldHelper.SelectComponentType.AsyncCreatable: {
                         let onCreateFunc: any = undefined;
-                        let newDataFunc: any = undefined;
+                        let newDataValue: any = undefined;
 
                         if (selectField.createUrl.trim() !== '') {
                             onCreateFunc = (input: any): void => { this.handleSelectOptionCreate(selectField, input); };
                         } else {
-                            newDataFunc = (inputValue: any, optionLabel: any) => { return { label: optionLabel, value: inputValue }; };
+                            newDataValue = (inputValue: any, optionLabel: any) => {
+                                return { label: inputValue, value: inputValue };
+                            };
                         }
 
                         if (editmode) {
                             return (
                                 <AsyncCreatableSelect
                                     {...commonProps}
-                                    value={this.state.fieldValues[field.key]}
                                     placeholder='Type to search'
+                                    createOptionPosition='first'
+                                    value={this.state.fieldValues[field.key]}
+                                    noOptionsMessage={(input: any) => 'Type to search'}
                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                     isClearable={this.isClearableSelect(selectField)}
-                                    options={this.state.selectFieldOptions[field.key]}
+                                    defaultOptions={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
                                     isValidNewOption={shouldShowCreateOption}
                                     onCreateOption={onCreateFunc}
-                                    getNewOptionData={newDataFunc}
+                                    getNewOptionData={newDataValue}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
                                     loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                 >
@@ -742,7 +844,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={field.key}
                                 name={field.key}
                                 validate={validateFunc}
-                                defaultValue={this.state.fieldValues[field.key]}>
+                                defaultValue={defVal}>
                                 {
                                     (fieldArgs: any) => {
                                         let errDiv = <span />;
@@ -755,14 +857,16 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     {...fieldArgs.fieldProps}
                                                     {...commonProps}
                                                     placeholder='Type to search'
+                                                    createOptionPosition='first'
+                                                    noOptionsMessage={(input: any) => 'Type to search'}
                                                     isDisabled={this.state.isSomethingLoading && this.state.loadingField !== field.key}
                                                     isClearable={this.isClearableSelect(selectField)}
-                                                    options={this.state.selectFieldOptions[field.key]}
+                                                    defaultOptions={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
                                                     isValidNewOption={shouldShowCreateOption}
                                                     onCreateOption={onCreateFunc}
-                                                    getNewOptionData={newDataFunc}
-                                                    onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
+                                                    getNewOptionData={newDataValue}
+                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                     loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 >
                                                 </AsyncCreatableSelect>
@@ -810,7 +914,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         <CheckboxField name={field.key} id={field.key} value={value.id} isRequired={field.required}>
                             {
                                 (fieldArgs: any) => {
-                                    return (<Checkbox {...fieldArgs.fieldProps} label={value.value} />);
+                                    return (<Checkbox {...fieldArgs.fieldProps}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) => { this.handleInlineEdit(field, e.target.checked); })}
+                                        label={value.value} />);
                                 }
                             }
                         </CheckboxField>
@@ -862,7 +968,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     <Field label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
                         {
                             (fieldArgs: any) => {
-                                return (<RadioGroup {...fieldArgs.fieldProps} options={radioItems} />);
+                                return (<RadioGroup {...fieldArgs.fieldProps}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
+                                    options={radioItems} />);
                             }
                         }
                     </Field>
@@ -908,7 +1016,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     }
                                     return (
                                         <div>
-                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <input {...fieldArgs.fieldProps}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                    const subField = { ...field, ...{ key: `${field.key}.originalEstimate` } };
+                                                    this.handleInlineInputEdit(subField, val);
+                                                })}
+                                                className='ac-inputField'
+                                            />
                                             <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
                                             {errDiv}
                                         </div>
@@ -931,7 +1045,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     }
                                     return (
                                         <div>
-                                            <input {...fieldArgs.fieldProps} className='ac-inputField' />
+                                            <input {...fieldArgs.fieldProps}
+                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                    const subField = { ...field, ...{ key: `${field.key}.remainingEstimate` } };
+                                                    this.handleInlineInputEdit(subField, val);
+                                                })}
+                                                className='ac-inputField' />
                                             <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
                                             {errDiv}
                                         </div>
@@ -949,7 +1068,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         <div>don't call getInputMarkup for worklog in editmode</div>
                     );
                 }
-
                 let validateFunc = FieldValidators.validateString;
                 return (
                     <React.Fragment>
@@ -958,111 +1076,136 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 id={`${field.key}.enabled`}
                                 name={`${field.key}.enabled`}>
                                 {
-                                    (fieldArgs: any) => <Checkbox {...fieldArgs.fieldProps} label='Log work' />
+                                    (fieldArgs: any) => <Checkbox {...fieldArgs.fieldProps}
+                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) => {
+                                            const subField = { ...field, ...{ key: `${field.key}.enabled` } };
+                                            this.handleInlineEdit(subField, e.target.checked);
+                                        })}
+                                        label='Log work' />
                                 }
                             </Field>
                         </div>
-                        <Condition when='worklog.enabled' is={true}>
-                            <div className='ac-flex'>
+                        {this.state.fieldValues[field.key] && this.state.fieldValues[field.key].enabled &&
+                            <React.Fragment>
+                                <div className='ac-flex'>
+                                    <Field
+                                        label='Worklog time spent'
+                                        isRequired={true}
+                                        id={`${field.key}.timeSpent`}
+                                        name={`${field.key}.timeSpent`}
+                                        validate={validateFunc}>
+                                        {
+                                            (fieldArgs: any) => {
+                                                let errDiv = <span />;
+                                                if (fieldArgs.error === 'EMPTY') {
+                                                    errDiv = <ErrorMessage>Time spent is required</ErrorMessage>;
+                                                }
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                                const subField = { ...field, ...{ key: `${field.key}.timeSpent` } };
+                                                                this.handleInlineInputEdit(subField, val);
+                                                            })}
+                                                            className='ac-inputField' />
+                                                        <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                        {errDiv}
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                    </Field>
+                                    <div className='ac-inline-flex-hpad'></div>
+                                    <Field
+                                        label='Remaining estimate'
+                                        isRequired={true}
+                                        id={`${field.key}.newEstimate`}
+                                        name={`${field.key}.newEstimate`}
+                                        validate={validateFunc}>
+                                        {
+                                            (fieldArgs: any) => {
+                                                let errDiv = <span />;
+                                                if (fieldArgs.error === 'EMPTY') {
+                                                    errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                                }
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                                const subField = { ...field, ...{ key: `${field.key}.newEstimate` } };
+                                                                this.handleInlineInputEdit(subField, val);
+                                                            })}
+                                                            className='ac-inputField' />
+                                                        <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                        {errDiv}
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                    </Field>
+                                </div>
                                 <Field
-                                    label='Worklog time spent'
+                                    label='Worklog start time'
                                     isRequired={true}
-                                    id={`${field.key}.timeSpent`}
-                                    name={`${field.key}.timeSpent`}
+                                    id={`${field.key}.started`}
+                                    name={`${field.key}.started`}
                                     validate={validateFunc}>
                                     {
                                         (fieldArgs: any) => {
                                             let errDiv = <span />;
                                             if (fieldArgs.error === 'EMPTY') {
-                                                errDiv = <ErrorMessage>Time spent is required</ErrorMessage>;
+                                                errDiv = <ErrorMessage>Start time is required</ErrorMessage>;
                                             }
                                             return (
                                                 <div>
-                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
-                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    <DateTimePicker
+                                                        {...fieldArgs.fieldProps}
+                                                        className="ac-select-container"
+                                                        timeIsEditable
+                                                        datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                        timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                            const subField = { ...field, ...{ key: `${field.key}.started` } };
+                                                            this.handleInlineEdit(subField, val);
+                                                        })}
+                                                    />
                                                     {errDiv}
                                                 </div>
                                             );
                                         }
                                     }
                                 </Field>
-                                <div className='ac-inline-flex-hpad'></div>
                                 <Field
-                                    label='Remaining estimate'
-                                    isRequired={true}
-                                    id={`${field.key}.newEstimate`}
-                                    name={`${field.key}.newEstimate`}
+                                    label='Worklog comment'
+                                    isRequired={false}
+                                    id={`${field.key}.comment`}
+                                    name={`${field.key}.comment`}
                                     validate={validateFunc}>
                                     {
                                         (fieldArgs: any) => {
                                             let errDiv = <span />;
                                             if (fieldArgs.error === 'EMPTY') {
-                                                errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                                errDiv = <ErrorMessage>Comment is required</ErrorMessage>;
                                             }
                                             return (
                                                 <div>
-                                                    <input {...fieldArgs.fieldProps} className='ac-inputField' />
-                                                    <HelperMessage>(eg. 3w 4d 12h)</HelperMessage>
+                                                    <textarea {...fieldArgs.fieldProps}
+                                                        style={{ width: '100%', display: 'block' }}
+                                                        className='ac-textarea'
+                                                        rows={5}
+                                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                            const subField = { ...field, ...{ key: `${field.key}.comment` } };
+                                                            this.handleInlineInputEdit(subField, val);
+                                                        })}
+                                                    />
                                                     {errDiv}
                                                 </div>
                                             );
                                         }
                                     }
                                 </Field>
-                            </div>
-                            <Field
-                                label='Worklog start time'
-                                isRequired={true}
-                                id={`${field.key}.started`}
-                                name={`${field.key}.started`}
-                                validate={validateFunc}>
-                                {
-                                    (fieldArgs: any) => {
-                                        let errDiv = <span />;
-                                        if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Start time is required</ErrorMessage>;
-                                        }
-                                        return (
-                                            <div>
-                                                <DateTimePicker
-                                                    {...fieldArgs.fieldProps}
-                                                    className="ac-select-container"
-                                                    timeIsEditable
-                                                    datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                                    timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                                />
-                                                {errDiv}
-                                            </div>
-                                        );
-                                    }
-                                }
-                            </Field>
-                            <Field
-                                label='Worklog comment'
-                                isRequired={false}
-                                id={`${field.key}.comment`}
-                                name={`${field.key}.comment`}
-                                validate={validateFunc}>
-                                {
-                                    (fieldArgs: any) => {
-                                        let errDiv = <span />;
-                                        if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Comment is required</ErrorMessage>;
-                                        }
-                                        return (
-                                            <div>
-                                                <textarea {...fieldArgs.fieldProps}
-                                                    style={{ width: '100%', display: 'block' }}
-                                                    className='ac-textarea'
-                                                    rows={5}
-                                                />
-                                                {errDiv}
-                                            </div>
-                                        );
-                                    }
-                                }
-                            </Field>
-                        </Condition>
+                            </React.Fragment>
+                        }
                     </React.Fragment>
                 );
             }
@@ -1086,6 +1229,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         <div />
                     );
                 }
+
+                return (
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        <AttachmentForm isInline={true} onFilesChanged={(files: any) => this.handleInlineEdit(field, files)} />
+                    </div>
+                );
             }
 
         }
@@ -1108,6 +1258,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         }
                         return (
                             <div>
+                                <div style={{ color: 'red' }}>Unknown field type - {field.key} : {field.uiType}</div>
                                 <input {...fieldArgs.fieldProps} style={{ width: '100%', display: 'block' }} className='ac-inputField' />
                                 {errDiv}
                             </div>

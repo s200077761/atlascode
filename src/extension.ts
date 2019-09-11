@@ -79,7 +79,7 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         const cfg = configuration.get<IConfig>();
         const migrator = new V1toV2Migrator(Container.siteManager,
             Container.credentialManager,
-            !!Container.isDebugging,
+            !Container.isDebugging,
             Container.config.jira.workingProject,
             cfg.jira.workingSite);
         await migrator.convertLegacyAuthInfo();

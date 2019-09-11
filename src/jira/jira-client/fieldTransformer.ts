@@ -396,6 +396,9 @@ export class FieldTransformer {
             } else if (schemaType === ValueType.Group) {
                 // NOTE: this *should be* /groups/picker?query= but that's not OAUth 2 enabled  :(
                 acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/jql/autocompletedata/suggestions?fieldName=${field.name}&fieldValue=`;
+            } else if (schemaType === ValueType.Project) {
+                const path = this._site.isCloud ? 'project/search' : 'project';
+                acUrl = `${this._site.baseApiUrl}/api/${API_VERSION}/${path}?orderBy=name&query=`;
             }
 
             //we need to fix up bad autocomplete urls from jira

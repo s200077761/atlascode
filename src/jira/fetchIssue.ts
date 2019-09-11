@@ -2,13 +2,12 @@ import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { MinimalIssue, MinimalORIssueLink } from "./jira-client/model/entities";
 import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
-import { CreateMetaTransformerResult } from "./jira-client/model/createIssueUI";
 import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
 import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
 import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
 import { FieldTransformerResult } from "./jira-client/model/fieldUI";
-import { EditIssueUI } from "./jira-client/model/editIssueUI";
+import { EditIssueUI, CreateMetaTransformerResult } from "./jira-client/model/editIssueUI";
 import { API_VERSION } from "./jira-client/client";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {

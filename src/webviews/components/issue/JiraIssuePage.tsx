@@ -36,6 +36,8 @@ import { AttachmentsModal } from './AttachmentsModal';
 import { AtlLoader } from '../AtlLoader';
 import { distanceInWordsToNow } from "date-fns";
 import { AttachmentList } from './AttachmentList';
+import PMFBBanner from '../pmfBanner';
+import { PMFData } from '../../../ipc/messaging';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -79,10 +81,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     const issueData = e as EditIssueData;
                     this.updateInternals(issueData);
                     this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
-                    break;
-                }
-                case 'fieldValueUpdate': {
-                    this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                     break;
                 }
                 case 'epicChildrenUpdate': {
@@ -142,12 +140,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
             case UIType.Subtasks: {
-                /* newValue will be:
-                {
-                    summary: string;
-                    issuetype: {id:number}
-                }
-                */
                 this.setState({ isSomethingLoading: true, loadingField: field.key });
                 const payload: any = newValue;
                 payload.project = { key: this.getProjectKey() };
@@ -344,9 +336,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {!this.state.isOnline &&
                     <Offline />
                 }
-                {/* {this.state.showPMF &&
+                {this.state.showPMF &&
                     <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
-                } */}
+                }
                 <div className='ac-page-header'>
                     <div className='ac-breadcrumbs'>
                         {(epicLinkValue && epicLinkKey !== '') &&

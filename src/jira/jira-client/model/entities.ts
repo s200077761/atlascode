@@ -340,6 +340,14 @@ export function isProject(a: any): a is Project {
     );
 }
 
+export function isProjectArray(a: any): a is Project[] {
+    return (
+        Array.isArray(a)
+        && (a.length > 0)
+        && isProject(a[0])
+    );
+}
+
 export function isComment(a: any): a is Comment {
     return a && (<Comment>a).author !== undefined && (<Comment>a).body !== undefined;
 }
