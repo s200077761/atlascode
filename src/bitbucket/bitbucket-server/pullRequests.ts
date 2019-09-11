@@ -5,6 +5,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
 import { ServerRepositoriesApi } from './repositories';
+import { Container } from '../../container';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -176,7 +177,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return ServerPullRequestApi.toUser(siteDetailsForRemote({ name: 'dummy', isReadOnly: true, fetchUrl: 'https://bb.pi-jira-server.tk/scm/tp/vscode-bitbucket-server.git' })!, data);
+        return ServerPullRequestApi.toUser(site, data);
     }
 
     async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
@@ -203,6 +204,45 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>{
+        let parsed = parseGitUrl(urlForRemote(remote));
+        /*
+        The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
+        In order to get the comment's version, a call must be made to the Bitbucket Server API.
+        */
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
+        );
+
+        await this.client.delete(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
+            {},
+            {version: data.version}
+        );
+    }
+
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        /*
+        The Bitbucket Server API can not edit a comment unless the comment's version is provided as a query parameter.
+        In order to get the comment's version, a call must be made to the Bitbucket Server API.
+        */
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`
+        );
+
+        const res = await this.client.put(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
+            {
+                text: content,
+                version: data.version
+            },
+            {}
+        );
+
+        return this.convertDataToComment(res.data, remote);
+    }
+
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
@@ -217,19 +257,56 @@ export class ServerPullRequestApi implements PullRequestApi {
         const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
 
         return {
-            data: activities.map(activity => this.toCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote))
+            data: (await Promise.all(
+                    activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
+                )
+                .filter(comment => this.shouldDisplayComment(comment))
         };
     }
 
-    private toCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Comment {
+    private hasUndeletedChild (comment: any) {
+        let hasUndeletedChild: boolean = false;
+        for(let child of comment.children){
+            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+            if(hasUndeletedChild){
+                return hasUndeletedChild;
+            }
+        }
+        return hasUndeletedChild;
+    }
+
+    private shouldDisplayComment(comment: any): boolean {
+        if (!comment.deleted){
+            return true;
+        } else if (!comment.children || comment.children.length === 0){
+            return false;
+        } else {
+            return this.hasUndeletedChild(comment);
+        }       
+    }
+
+    private async toNestedCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Promise<Comment> {
+        let commentModel: Comment = await this.convertDataToComment(comment, remote, commentAnchor);
+        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(c, commentAnchor, comment.id, remote)));
+        if(this.hasUndeletedChild(commentModel)){
+            commentModel.deletable = false;
+        }
+        return commentModel;
+    }
+
+    private async convertDataToComment(data: any, remote: Remote, commentAnchor?: any): Promise<Comment> {
+        const user = data.author ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author) : UnknownUser;
+        const commentBelongsToUser: boolean = user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
         return {
-            id: comment.id!,
-            parentId: parentId,
-            htmlContent: comment.html,
-            rawContent: comment.text,
-            ts: comment.createdDate,
-            updatedTs: comment.updatedDate,
-            deleted: !!comment.deleted,
+            id: data.id,
+            parentId: data.parentId,
+            htmlContent: data.html ? data.html : data.text,
+            rawContent: data.text,
+            ts: data.createdDate,
+            updatedTs: data.updatedDate,
+            deleted: !!data.deleted,
+            deletable: data.permittedOperations.deletable && commentBelongsToUser && !data.deleted,
+            editable: data.permittedOperations.editable && commentBelongsToUser && !data.deleted,
             inline: commentAnchor
                 ? {
                     path: commentAnchor.path,
@@ -237,10 +314,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                     to: commentAnchor.fileType === 'TO' ? commentAnchor.line : undefined
                 }
                 : undefined,
-            user: comment.author
-                ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, comment.author)
-                : UnknownUser,
-            children: (comment.comments || []).map((c: any) => this.toCommentModel(c, commentAnchor, comment.id, remote))
+            user: user,
+            children: []
         };
     }
 
@@ -376,24 +451,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return {
-            id: data.id,
-            parentId: data.parentId,
-            user: ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author),
-            htmlContent: data.html,
-            rawContent: data.text,
-            ts: data.createdDate,
-            updatedTs: data.updatedDate,
-            deleted: false,
-            inline: data.commentAnchor
-                ? {
-                    path: data.commentAnchor.path,
-                    from: data.commentAnchor.fileType === 'TO' ? undefined : data.commentAnchor.line,
-                    to: data.commentAnchor.fileType === 'TO' ? data.commentAnchor.line : undefined
-                }
-                : undefined,
-            children: []
-        };
+        return this.convertDataToComment(data, remote);
     }
 
     private async getTaskCount(pr: PullRequest): Promise<number> {
