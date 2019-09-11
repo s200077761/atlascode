@@ -124,7 +124,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
 
             if (!this._viewEventSent) {
                 this._viewEventSent = true;
-                console.log('create/show screen event', this.siteOrUndefined);
                 viewScreenEvent(this.id, this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             }
         }
