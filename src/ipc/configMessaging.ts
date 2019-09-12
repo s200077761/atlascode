@@ -14,12 +14,6 @@ export interface ConfigData extends Message {
     jiraSites: DetailedSiteInfo[];
     bitbucketSites: DetailedSiteInfo[];
     projects: Project[];
-    isJiraAuthenticated: boolean;
-    isJiraStagingAuthenticated: boolean;
-    isStagingEnabled: boolean;
-    isBitbucketAuthenticated: boolean;
-    jiraAccessToken: string;
-    jiraStagingAccessToken: string;
     feedbackUser: FeedbackUser;
     siteProjectMapping: JiraSiteProjectMapping;
 }
@@ -30,15 +24,18 @@ export const emptyConfigData: ConfigData = {
     jiraSites: [],
     projects: [],
     bitbucketSites: [],
-    isJiraAuthenticated: false,
-    isJiraStagingAuthenticated: false,
-    isStagingEnabled: false,
-    isBitbucketAuthenticated: false,
-    jiraAccessToken: '',
-    jiraStagingAccessToken: '',
     feedbackUser: {
         userName: '',
         emailAddress: ''
     },
     siteProjectMapping: {}
 };
+
+export interface ConfigUpdate extends Message {
+    config: IConfig;
+}
+
+export interface SitesAvailableUpdate extends Message {
+    jiraSites: DetailedSiteInfo[];
+    bitbucketSites: DetailedSiteInfo[];
+}

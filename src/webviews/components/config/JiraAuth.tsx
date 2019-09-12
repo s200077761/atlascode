@@ -13,10 +13,12 @@ import { SelectFieldHelper } from "../selectFieldHelper";
 import { AsyncSelect } from '@atlaskit/select';
 import { debounce } from "lodash";
 import { Project } from "../../../jira/jira-client/model/entities";
+import { JiraSiteProjectMapping } from "../../../jira/projectManager";
 
 interface JiraAuthProps {
     sites: DetailedSiteInfo[];
     defaultSite: string;
+    siteProjectMapping: JiraSiteProjectMapping;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
     handleDefaultSite: (site: DetailedSiteInfo) => void;
@@ -27,6 +29,7 @@ interface JiraAuthProps {
 type ItemData = {
     site: DetailedSiteInfo;
     isDefault: boolean;
+    defaultProject: Project | undefined;
     delfunc: (site: DetailedSiteInfo) => void;
     setDefault: (site: DetailedSiteInfo) => void;
     setLoading: (siteId: string) => void;
@@ -71,6 +74,7 @@ const Project = (data: ItemData) => {
         getOptionValue: SelectFieldHelper.valueFuncForValueType(ValueType.Project),
         components: SelectFieldHelper.getComponentsForValueType(ValueType.Project),
         placeholder: 'Search for project',
+        defaultValue: data.defaultProject,
     };
 
     return (
@@ -99,7 +103,7 @@ const Delete = (data: ItemData) => {
     );
 };
 
-export const JiraAuth: React.FunctionComponent<JiraAuthProps> = ({ sites, defaultSite, handleDeleteSite, handleSaveSite, handleDefaultSite, loadProjectOptions, handleDefaultProject }) => {
+export const JiraAuth: React.FunctionComponent<JiraAuthProps> = ({ sites, defaultSite, handleDeleteSite, handleSaveSite, handleDefaultSite, loadProjectOptions, handleDefaultProject, siteProjectMapping }) => {
     const [addingSite, setAddingSite] = useState(false);
     const [loadingSiteId, setLoadingSiteId] = useState('');
 
@@ -142,6 +146,7 @@ export const JiraAuth: React.FunctionComponent<JiraAuthProps> = ({ sites, defaul
                             loading: loadingSiteId === site.id,
                             loadProjectOptions: loadProjectOptions,
                             handleDefaultProject: handleDefaultProject,
+                            defaultProject: siteProjectMapping[site.id],
                         }
                     };
                 })}

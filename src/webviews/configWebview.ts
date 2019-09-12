@@ -38,7 +38,7 @@ export class ConfigWebview extends AbstractReactWebview {
 
     public async invalidate() {
         try {
-            if (this.isRefeshing) {
+            if (!this._panel || this.isRefeshing) {
                 return;
             }
 
@@ -46,38 +46,23 @@ export class ConfigWebview extends AbstractReactWebview {
             const config: IConfig = configuration.get<IConfig>();
 
             const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
-            const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
 
-            let jiraSitesAvailable: DetailedSiteInfo[] = [];
-            let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
-            let stagingEnabled = false;
+            const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
             let projects: Project[] = [];
 
             if (isJiraConfigured) {
-                jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-                stagingEnabled = false;
                 projects = await Container.jiraProjectManager.getProjects();
-            }
-
-            if (isBBConfigured) {
-                bitbucketSitesAvailable = await Container.siteManager.getSitesAvailable(ProductBitbucket);
             }
 
             const feedbackUser = await getFeedbackUser();
             const siteProjectMapping = await Container.jiraProjectManager.getSiteProjectMapping();
 
-            this.updateConfig({
-                type: 'update',
+            this.postMessage({
+                type: 'init',
                 config: config,
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 projects: projects,
-                isJiraAuthenticated: isJiraConfigured,
-                isJiraStagingAuthenticated: false,
-                isBitbucketAuthenticated: isBBConfigured,
-                jiraAccessToken: "FIXME!",
-                jiraStagingAccessToken: "REMOVEME!",
-                isStagingEnabled: stagingEnabled,
                 feedbackUser: feedbackUser,
                 siteProjectMapping: siteProjectMapping,
             });
@@ -91,7 +76,7 @@ export class ConfigWebview extends AbstractReactWebview {
     }
 
     private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        this.invalidate();
+        this.postMessage({ type: 'configUpdate', config: configuration.get<IConfig>() });
     }
 
     private onProjectsAvailableChange(e: JiraAvailableProjectsUpdateEvent) {
@@ -99,16 +84,30 @@ export class ConfigWebview extends AbstractReactWebview {
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        this.invalidate();
+        const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+
+        this.postMessage({
+            type: 'sitesAvailableUpdate'
+            , jiraSites: jiraSitesAvailable
+            , bitbucketSites: bitbucketSitesAvailable
+        });
     }
 
-    public async updateConfig(config: ConfigData) {
-        this.postMessage(config);
-    }
+    private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
+        const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
+        const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
+        let jiraSitesAvailable: DetailedSiteInfo[] = [];
+        let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
 
-    async createOrShow(): Promise<void> {
-        await super.createOrShow();
-        await this.invalidate();
+        if (isJiraConfigured) {
+            jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        }
+
+        if (isBBConfigured) {
+            bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
+        }
+
+        return [jiraSitesAvailable, bitbucketSitesAvailable];
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {

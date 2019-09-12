@@ -71,8 +71,16 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                 break;
             }
-            case 'update': {
+            case 'init': {
                 this.setState({ ...e as ConfigData, isErrorBannerOpen: false, errorDetails: undefined });
+                break;
+            }
+            case 'configUpdate': {
+                this.setState({ config: e.config, isErrorBannerOpen: false, errorDetails: undefined });
+                break;
+            }
+            case 'sitesAvailableUpdate': {
+                this.setState({ jiraSites: e.jiraSites, bitbucketSites: e.bitbucketSites, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
             case 'projectList': {
@@ -207,6 +215,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <JiraAuth
                                                         defaultSite={this.state.config.jira.defaultSite}
                                                         sites={this.state.jiraSites}
+                                                        siteProjectMapping={this.state.siteProjectMapping}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin}
                                                         handleDefaultSite={this.handleDefaultSite}

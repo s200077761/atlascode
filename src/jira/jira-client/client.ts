@@ -7,6 +7,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import FormData from 'form-data';
 import * as fs from "fs";
+import { Time } from '../../util/time';
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
@@ -31,7 +32,7 @@ export abstract class JiraClient {
         // 500 errors.  Lesson  learned: ALWAYS use a custom instance of axios and config it yourself.
         // see: https://github.com/softonic/axios-retry/issues/59
         this.transport = axios.create({
-            timeout: 10000,
+            timeout: 30 * Time.SECONDS,
             headers: {
                 'X-Atlassian-Token': 'no-check',
                 'x-atlassian-force-account-id': 'true',
@@ -369,11 +370,6 @@ export abstract class JiraClient {
             }
             url = `${url}?${sp.toString()}`;
         }
-
-        // let data = {};
-        // if (formData) {
-        //     data = { data: JSON.stringify(formData) };
-        // }
 
         const res = await this.transport.post(url, formData, {
             headers: {
