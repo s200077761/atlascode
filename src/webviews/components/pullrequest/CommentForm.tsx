@@ -10,15 +10,22 @@ export default class CommentForm extends React.Component<{
     visible: boolean,
     isAnyCommentLoading: boolean,
     onSave?: (content: string) => void,
-    onCancel?: () => void,
+    onDelete?: (commentId: number) => void,
+    onEdit?: (content: string, commentId: number) => void,
+    onCancel?: () => void
     loadUserOptions?: any
-}, { commentInput: string, isThisCommentLoading: boolean }> {
-
+    }, 
+    { commentInput: string, isThisCommentLoading: boolean }
+    > {
+        
     private textAreaElement: HTMLTextAreaElement;
 
     constructor(props: any) {
         super(props);
-        this.state = { commentInput: '', isThisCommentLoading: false };
+        this.state = { 
+            commentInput: '', 
+            isThisCommentLoading: false 
+        };
     }
 
     componentWillReceiveProps(nextProps: any) {

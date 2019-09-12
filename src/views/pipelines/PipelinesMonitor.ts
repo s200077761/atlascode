@@ -23,7 +23,10 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       const remote = firstBitbucketRemote(repo);
       const bbApi = await clientForRemote(remote);
 
-      bbApi.pipelines!.getRecentActivity(repo).then(newResults => {
+      if(!bbApi.pipelines){
+        return; //Bitbucket Server instances will not have pipelines
+      }
+      bbApi.pipelines.getRecentActivity(repo).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
         diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
         const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";

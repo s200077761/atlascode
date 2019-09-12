@@ -118,6 +118,30 @@ export default class JiraExplorer extends React.Component<{
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    paddingLeft: '24px',
+                    paddingTop: '10px'
+                }}>
+                    <CheckboxField
+                        name="jira-explorer-monitor-enabled"
+                        id="jira-explorer-monitor-enabled"
+                        value="jira.explorer.monitorEnabled"
+                    >
+                        {(fieldArgs: any) => {
+                            return (
+                                <Checkbox
+                                    {...fieldArgs.fieldProps}
+                                    label="Show notifications when new issues are created for default site and project"
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isDisabled={!this.props.configData.config.jira.explorer.enabled}
+                                    isChecked={this.props.configData.config.jira.explorer.monitorEnabled}
+                                />
+                            );
+                        }}
+                    </CheckboxField>
+                </div>
                 <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
                     <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"

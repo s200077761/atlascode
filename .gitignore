@@ -10,3 +10,4 @@ yarn-error.log
 charles-ssl-proxying-certificate.pem
 *.pem
 TEMP-*
+.DS_Store

@@ -85,7 +85,7 @@ const emptyState = {
     isSomethingLoading: false
 };
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], isCloud: true };
+const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (

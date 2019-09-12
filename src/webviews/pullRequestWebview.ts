@@ -5,7 +5,7 @@ import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isFetchUsers } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -123,6 +123,28 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                     break;
                 }
+                case 'deleteComment': {
+                    if (isDeleteComment(msg)){
+                        try {
+                            this.deleteComment(msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'editComment': {
+                    if (isEditComment(msg)){
+                        try {
+                            this.editComment(msg.content, msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
                 case 'checkout': {
                     if (isCheckout(msg)) {
                         handled = true;
@@ -208,18 +230,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
-    private shouldDisplayComment(comment: any): boolean {
-        if (comment.children.length === 0) {
-            return !comment.deleted;
-        } else {
-            let hasUndeletedChild: boolean = false;
-            for (let i = 0; i < comment.children.length; i++) {
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
-            }
-            return hasUndeletedChild;
-        }
-    }
-
     private async postCompleteState() {
         if (!this._pr) {
             return;
@@ -235,7 +245,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
         const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
-        comments.data = comments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -401,7 +410,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async postComment(text: string, parentId?: number) {
         const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        await bbApi.pullrequests.postComment(this._state.remote!, this._pr!.data.id, text, parentId);
+        this.updatePullRequest();
+    }
+
+    private async deleteComment(commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
+        this.updatePullRequest();
+    }
+
+    private async editComment(content: string, commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
         this.updatePullRequest();
     }
 

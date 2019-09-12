@@ -39,6 +39,8 @@ export type Repo = {
 export type Comment = {
     id: number;
     parentId?: number;
+    deletable: boolean;
+    editable: boolean;
     user: User;
     htmlContent: string;
     rawContent: string;
@@ -177,6 +179,8 @@ export interface PullRequestApi {
     getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
+    editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
+    deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
