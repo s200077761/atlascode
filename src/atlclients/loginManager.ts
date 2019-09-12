@@ -174,7 +174,7 @@ export class LoginManager {
         } else {
             credentials.user = {
                 displayName: json.displayName,
-                id: json.id,
+                id: json.slug,
                 email: json.emailAddress,
                 avatarUrl: json.avatarUrl,
             };
