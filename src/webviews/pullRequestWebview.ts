@@ -116,7 +116,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'deleteComment': {
-                    if (isDeleteComment(msg)){
+                    if (isDeleteComment(msg)) {
                         try {
                             this.deleteComment(msg.commentId);
                         } catch (e) {
@@ -127,7 +127,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'editComment': {
-                    if (isEditComment(msg)){
+                    if (isEditComment(msg)) {
                         try {
                             this.editComment(msg.content, msg.commentId);
                         } catch (e) {
@@ -370,8 +370,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 .catch(async _ => {
                     await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
                 });
+
+            await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
         }
-        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
+
         this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branchName)
             .then(() => {
                 this._state.prData.currentBranch = this._state.repository!.state.HEAD!.name!;
