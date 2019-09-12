@@ -1,13 +1,13 @@
 import { AbstractReactWebview } from "./abstractWebview";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { WorkingProject } from "../config/model";
 import { ViewColumn } from "vscode";
 import { Logger } from "../logger";
 import { fetchCreateIssueUI } from "../jira/fetchIssue";
+import { Project } from "../jira/jira-client/model/entities";
 
 export class CreateIssueProblemsWebview extends AbstractReactWebview {
     private _site: DetailedSiteInfo | undefined;
-    private _project: WorkingProject | undefined;
+    private _project: Project | undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -20,7 +20,7 @@ export class CreateIssueProblemsWebview extends AbstractReactWebview {
         return "atlascodeCreateIssueProblemsScreen";
     }
 
-    async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: WorkingProject): Promise<void> {
+    async createOrShow(column?: ViewColumn, site?: DetailedSiteInfo, project?: Project): Promise<void> {
         await super.createOrShow(column);
         this._site = site;
         this._project = project;

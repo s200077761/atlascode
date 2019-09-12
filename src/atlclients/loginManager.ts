@@ -135,7 +135,7 @@ export class LoginManager {
                 apiUrl = `https://${site.hostname}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username}`;
+                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username}?avatarSize=64`;
                 avatarUrl = '';
                 apiUrl = `https://${site.hostname}`;
                 break;
@@ -163,10 +163,21 @@ export class LoginManager {
             credentialId: credentialId,
         };
 
-        credentials.user = {
-            displayName: json.displayName,
-            id: json.id,
-        };
+        if (site.product.key === ProductJira.key) {
+            credentials.user = {
+                displayName: json.displayName,
+                id: json.id,
+                email: json.emailAddress,
+                avatarUrl: json.avatarUrls["48x48"],
+            };
+        } else {
+            credentials.user = {
+                displayName: json.displayName,
+                id: json.id,
+                email: json.emailAddress,
+                avatarUrl: json.avatarUrl,
+            };
+        }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
         this._siteManager.addSites([siteDetails]);

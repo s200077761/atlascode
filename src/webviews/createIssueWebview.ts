@@ -3,7 +3,6 @@ import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
@@ -15,7 +14,7 @@ import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ValueType, FieldValues, FieldUIs } from '../jira/jira-client/model/fieldUI';
 import { CreateMetaTransformerResult, emptyCreateMetaResult, IssueTypeUI } from '../jira/jira-client/model/editIssueUI';
-import { IssueType } from '../jira/jira-client/model/entities';
+import { IssueType, Project } from '../jira/jira-client/model/entities';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -41,7 +40,7 @@ const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Cod
 
 export class CreateIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<PartialIssue | undefined> {
     private _partialIssue: PartialIssue | undefined;
-    private _currentProject: WorkingProject | undefined;
+    private _currentProject: Project | undefined;
     private _screenData: CreateMetaTransformerResult;
     private _selectedIssueTypeId: string;
     private _relatedBBIssue: BitbucketIssue | undefined;
@@ -149,7 +148,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         }
     }
 
-    async forceUpdateFields(project?: WorkingProject, fieldValues?: FieldValues) {
+    async forceUpdateFields(project?: Project, fieldValues?: FieldValues) {
         if (this.isRefeshing) {
             return;
         }
@@ -160,7 +159,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             let effProject = project;
 
             if (!effProject) {
-                effProject = await Container.jiraProjectManager.getEffectiveProject();
+                effProject = await Container.jiraProjectManager.getEffectiveProject(this._siteDetails);
             }
 
             const availableProjects = await Container.jiraProjectManager.getProjects();

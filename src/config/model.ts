@@ -9,7 +9,7 @@ export enum OutputLevel {
     Debug = 'debug'
 }
 
-export interface WorkingProject {
+export interface WorkingProjectV1 {
     name: string;
     id: string;
     key: string;
@@ -25,11 +25,13 @@ export interface IConfig {
 
 }
 
+export type DefaultProjects = { [key: string]: string };
 export interface JiraConfig {
     enabled: boolean;
-    workingProject: WorkingProject;
+    workingProject: WorkingProjectV1;
     workingSite: AccessibleResourceV1;
     defaultSite: string;
+    defaultProjects: DefaultProjects;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
@@ -139,19 +141,19 @@ export interface BitbucketContextMenus {
     enabled: boolean;
 }
 
-export const emptyWorkingProject: WorkingProject = {
+export const emptyWorkingProjectV1: WorkingProjectV1 = {
     name: '',
     id: '',
     key: ''
 };
 
-export function notEmptyProject(p: WorkingProject): p is WorkingProject {
-    return (<WorkingProject>p).name !== undefined
-        && (<WorkingProject>p).name !== ''
-        && (<WorkingProject>p).id !== undefined
-        && (<WorkingProject>p).id !== ''
-        && (<WorkingProject>p).key !== undefined
-        && (<WorkingProject>p).key !== ''
+export function notEmptyProjectV1(p: WorkingProjectV1): p is WorkingProjectV1 {
+    return (<WorkingProjectV1>p).name !== undefined
+        && (<WorkingProjectV1>p).name !== ''
+        && (<WorkingProjectV1>p).id !== undefined
+        && (<WorkingProjectV1>p).id !== ''
+        && (<WorkingProjectV1>p).key !== undefined
+        && (<WorkingProjectV1>p).key !== ''
         ;
 }
 
@@ -196,9 +198,10 @@ export const emptyTodoIssues: TodoIssues = {
 
 export const emptyJiraConfig: JiraConfig = {
     enabled: true,
-    workingProject: emptyWorkingProject,
+    workingProject: emptyWorkingProjectV1,
     workingSite: emptyAccessibleResourceV1,
     defaultSite: "",
+    defaultProjects: {},
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,

@@ -8,9 +8,8 @@ import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchMinimalIssue } from '../../jira/fetchIssue';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { WorkingProject } from '../../config/model';
 import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
-import { MinimalIssue } from '../../jira/jira-client/model/entities';
+import { MinimalIssue, Project } from '../../jira/jira-client/model/entities';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
@@ -52,7 +51,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return applyWorkingProject(this._projectId, this._jql);
     }
 
-    setProject(project: WorkingProject) {
+    setProject(project: Project) {
         this._projectId = project.id;
     }
 

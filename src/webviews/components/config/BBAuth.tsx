@@ -3,7 +3,7 @@ import Button from "@atlaskit/button";
 import Tooltip from '@atlaskit/tooltip';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import { ButtonGroup } from "@atlaskit/button";
-import { DetailedSiteInfo, SiteInfo, AuthInfo, ProductBitbucket } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, SiteInfo, AuthInfo, ProductBitbucket, emptyUserInfo } from "../../../atlclients/authInfo";
 import AuthForm from "./AuthForm";
 
 export default class BitbucketAuth extends React.Component<
@@ -37,7 +37,7 @@ export default class BitbucketAuth extends React.Component<
 
     handleCloud = () => {
         this.handleSave({ hostname: "www.bitbucket.org", product: ProductBitbucket },
-            { user: { id: "empty", displayName: "empty" } });
+            { user: emptyUserInfo });
     }
 
     handleCancel = () => {

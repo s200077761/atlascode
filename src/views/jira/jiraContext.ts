@@ -3,7 +3,7 @@ import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from "../../constants";
+import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from "../../constants";
 import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
@@ -58,16 +58,16 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraWorkingProjectConfigurationKey))) {
-            const project = await Container.jiraProjectManager.getEffectiveProject();
+        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraDefaultProjectsConfigurationKey))) {
+            const project = await Container.jiraProjectManager.getEffectiveProject(Container.siteManager.effectiveSite(ProductJira));
             this._explorers.forEach(t => t.project = project);
             this._newIssueMonitor.setProject(project);
         }
 
         if (initializing) {
-            const isLoggedIn = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
+            const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            const project = await Container.jiraProjectManager.getEffectiveProject();
+            const project = await Container.jiraProjectManager.getEffectiveProject(Container.siteManager.effectiveSite(ProductJira));
             this._newIssueMonitor.setProject(project);
         }
     }
@@ -81,7 +81,7 @@ export class JiraContext extends Disposable {
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+        if (!Container.onlineDetector.isOnline() || !Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return;
         }
         this._explorers.forEach(e => e.refresh());

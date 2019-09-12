@@ -10,8 +10,8 @@ import { Container } from '../container';
 import { ConfigData } from '../ipc/configMessaging';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
-import { isFetchQuery } from '../ipc/issueActions';
-import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
+import { isFetchQueryAndSite } from '../ipc/issueActions';
+import { JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
@@ -37,16 +37,16 @@ export class ConfigWebview extends AbstractReactWebview {
     }
 
     public async invalidate() {
-        if (this.isRefeshing) {
-            return;
-        }
-
-        this.isRefeshing = true;
         try {
-            const config: IConfig = await configuration.get<IConfig>();
+            if (this.isRefeshing) {
+                return;
+            }
 
-            const isJiraConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductJira);
-            const isBBConfigured = await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
+            this.isRefeshing = true;
+            const config: IConfig = configuration.get<IConfig>();
+
+            const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
+            const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
 
             let jiraSitesAvailable: DetailedSiteInfo[] = [];
             let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
@@ -54,7 +54,7 @@ export class ConfigWebview extends AbstractReactWebview {
             let projects: Project[] = [];
 
             if (isJiraConfigured) {
-                jiraSitesAvailable = await Container.siteManager.getSitesAvailable(ProductJira);
+                jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
                 stagingEnabled = false;
                 projects = await Container.jiraProjectManager.getProjects();
             }
@@ -64,6 +64,7 @@ export class ConfigWebview extends AbstractReactWebview {
             }
 
             const feedbackUser = await getFeedbackUser();
+            const siteProjectMapping = await Container.jiraProjectManager.getSiteProjectMapping();
 
             this.updateConfig({
                 type: 'update',
@@ -77,7 +78,8 @@ export class ConfigWebview extends AbstractReactWebview {
                 jiraAccessToken: "FIXME!",
                 jiraStagingAccessToken: "REMOVEME!",
                 isStagingEnabled: stagingEnabled,
-                feedbackUser: feedbackUser
+                feedbackUser: feedbackUser,
+                siteProjectMapping: siteProjectMapping,
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
@@ -146,14 +148,14 @@ export class ConfigWebview extends AbstractReactWebview {
                         try {
 
                             for (const key in e.changes) {
-                                const inspect = await configuration.inspect(key)!;
+                                const inspect = configuration.inspect(key)!;
 
                                 const value = e.changes[key];
 
                                 if (key === JiraDefaultSiteConfigurationKey) {
                                     await configuration.setDefaultSite(value === inspect.defaultValue ? undefined : value);
-                                } else if (key === JiraWorkingProjectConfigurationKey) {
-                                    await configuration.setWorkingProject(value === inspect.defaultValue ? undefined : value);
+                                } else if (key === JiraDefaultProjectsConfigurationKey) {
+                                    await configuration.setDefaultProjects(value === inspect.defaultValue ? undefined : value);
                                 } else {
                                     await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
                                 }
@@ -183,10 +185,9 @@ export class ConfigWebview extends AbstractReactWebview {
                 }
                 case 'fetchProjects': {
                     handled = true;
-                    if (isFetchQuery(e)) {
-                        Container.jiraProjectManager.getProjects('name', e.query).then(projects => {
-                            this.postMessage({ type: 'projectList', availableProjects: projects });
-                        });
+                    if (isFetchQueryAndSite(e)) {
+                        const projects = await Container.jiraProjectManager.getProjects(e.site, 'name', e.query);
+                        this.postMessage({ type: 'projectList', availableProjects: projects, nonce: e.nonce });
                     }
                     break;
                 }

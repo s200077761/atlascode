@@ -19,18 +19,17 @@ import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import PipelinesConfig from './PipelinesConfig';
-import { WorkingProject } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
-import JiraSiteProject from './JiraSiteProject';
 import BitbucketIssuesConfig from './BBIssuesConfig';
 import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
 import BitbucketAuth from './BBAuth';
-import JiraAuth from './JiraAuth';
+import { JiraAuth } from './JiraAuth';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import ProductEnabler from './ProductEnabler';
+import { Project } from '../../../jira/jira-client/model/entities';
 
 type changeObject = { [key: string]: any };
 
@@ -58,7 +57,7 @@ const emptyState: ViewState = {
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private nonce: string;
-    private newProjects: WorkingProject[] = [];
+    private newProjects: Project[] = [];
 
     constructor(props: any) {
         super(props);
@@ -78,6 +77,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             }
             case 'projectList': {
                 this.newProjects = (e as ProjectList).availableProjects;
+                console.log('got new projects', this.newProjects);
                 this.nonce = e.nonce;
                 break;
             }
@@ -89,6 +89,22 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
+    }
+
+    handleDefaultSite = (site: DetailedSiteInfo) => {
+        const changes = Object.create(null);
+        changes['jira.defaultSite'] = site.id;
+        this.onConfigChange(changes);
+    }
+
+    handleDefaultProject = (site: DetailedSiteInfo, project: Project) => {
+        const changes = Object.create(null);
+
+        const current = this.state.config.jira.defaultProjects;
+        current[site.id] = project.key;
+
+        changes['jira.defaultProjects'] = current;
+        this.onConfigChange(changes);
     }
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
@@ -115,13 +131,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
 
-    loadProjectOptions = (input: string): Promise<any> => {
+    loadProjectOptions = (site: DetailedSiteInfo, input: string): Promise<any> => {
         this.setState({ isProjectsLoading: true });
         return new Promise(resolve => {
             this.newProjects = [];
 
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchProjects', query: input, nonce: nonce });
+            this.postMessage({ action: 'fetchProjects', query: input, site: site, nonce: nonce });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -129,6 +145,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 if ((this.newProjects.length > 0 && this.nonce === nonce) || (end - start) > 2000) {
                     this.setState({ isProjectsLoading: false });
                     clearInterval(timer);
+                    console.log('resolving new projects', this.newProjects);
                     resolve(this.newProjects);
                 }
             }, 100);
@@ -188,11 +205,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                             <TabPanel>
                                                 <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Jira')}>
                                                     <JiraAuth
+                                                        defaultSite={this.state.config.jira.defaultSite}
                                                         sites={this.state.jiraSites}
                                                         handleDeleteSite={this.handleLogout}
-                                                        handleSaveSite={this.handleLogin} />
+                                                        handleSaveSite={this.handleLogin}
+                                                        handleDefaultSite={this.handleDefaultSite}
+                                                        loadProjectOptions={this.loadProjectOptions}
+                                                        handleDefaultProject={this.handleDefaultProject} />
                                                     {/* TODO: [VSCODE-509] move default site selection to auth list */}
-                                                    <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>

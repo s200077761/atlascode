@@ -1,6 +1,5 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
-import { AuthInfo } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
@@ -267,18 +266,14 @@ function event(action: string, actionSubject: string, attributes: any): any {
 
 async function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): Promise<T> {
     let userType = 'anonymousId';
-    let authInfo: AuthInfo | undefined = undefined;
+    let userId = Container.machineId;
 
     let newObj: Object;
 
-    let userId = Container.siteManager.getFirstAAID(hostProduct);
-    if (!userId) {
-        userId = Container.machineId;
-    }
-
-    if (authInfo) {
+    let aaid = Container.siteManager.getFirstAAID(hostProduct);
+    if (aaid) {
+        userId = aaid;
         userType = 'userId';
-        userId = userId;
     }
 
     if (userType === 'userId') {

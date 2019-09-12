@@ -2,21 +2,20 @@ import { window, commands } from "vscode";
 import { Container } from "../container";
 import { Commands } from "../commands";
 import { Logger } from "../logger";
-import { WorkingProject } from "../config/configuration";
 import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
 import { ProductJira } from "../atlclients/authInfo";
 import { showIssue } from "../commands/jira/showIssue";
-import { MinimalIssue } from "./jira-client/model/entities";
+import { MinimalIssue, Project } from "./jira-client/model/entities";
 
 export class NewIssueMonitor {
-  private _workingProject: WorkingProject | undefined;
+  private _workingProject: Project | undefined;
   private _timestamp = new Date();
 
   constructor() {
   }
 
-  setProject(project: WorkingProject) {
+  setProject(project: Project) {
     this._workingProject = project;
     this._timestamp = new Date();
   }

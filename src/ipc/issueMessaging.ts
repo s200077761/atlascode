@@ -1,5 +1,4 @@
 import { Message, HostErrorMessage } from "./messaging";
-import { WorkingProject } from "../config/model";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
 import { MinimalIssue, Project, User } from "../jira/jira-client/model/entities";
@@ -27,7 +26,7 @@ export const emptyEditIssueData: EditIssueData = {
 
 export interface IssueProblemsData extends Message {
     problems: CreateMetaTransformerProblems;
-    project: WorkingProject;
+    project: Project;
 }
 
 export interface CreateIssueData extends Message { }
