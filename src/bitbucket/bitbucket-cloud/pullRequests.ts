@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
@@ -45,12 +45,17 @@ export class CloudPullRequestApi implements PullRequestApi {
             '/user'
         );
 
+        return CloudPullRequestApi.toUserModel(data);
+    }
+
+    private static toUserModel(input: any): User {
         return {
-            accountId: data.account_id!,
-            avatarUrl: data.links!.avatar!.href!,
+            accountId: input.account_id!,
+            avatarUrl: input.links!.avatar!.href!,
             emailAddress: undefined,
-            displayName: data.display_name!,
-            url: data.links!.html!.href!
+            displayName: input.display_name!,
+            url: input.links!.html!.href!,
+            mention: `@[${input.display_name!}](account_id:${input.account_id})`
         };
     }
 
@@ -159,12 +164,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 url: commit.links!.html!.href!,
                 htmlSummary: commit.summary ? commit.summary.html! : undefined,
                 rawSummary: commit.summary ? commit.summary.raw! : undefined,
-                author: {
-                    accountId: commit.author!.user!.account_id,
-                    displayName: commit.author!.user!.display_name!,
-                    url: commit.author!.user!.links!.html!.href!,
-                    avatarUrl: commit.author!.user!.links!.avatar!.href!
-                }
+                author: CloudPullRequestApi.toUserModel(commit.author!.user!)
             })),
             next: data.next
         };
@@ -186,7 +186,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 content: {
                     raw: content
                 }
-            }   
+            }
         );
 
         return this.convertDataToComment(data, remote);
@@ -236,20 +236,20 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     private shouldDisplayComment(comment: any): boolean {
-        if (!comment.deleted){
+        if (!comment.deleted) {
             return true;
-        } else if (!comment.children || comment.children.length === 0){
+        } else if (!comment.children || comment.children.length === 0) {
             return false;
         } else {
             let hasUndeletedChild: boolean = false;
-            for(let child of comment.children){
+            for (let child of comment.children) {
                 hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-                if(hasUndeletedChild){
+                if (hasUndeletedChild) {
                     return hasUndeletedChild;
                 }
             }
             return hasUndeletedChild;
-        }       
+        }
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
@@ -292,7 +292,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query?: string): Promise<User[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let reviewers: any[] = [];
@@ -311,15 +311,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             reviewers = data.values || [];
         }
 
-        return reviewers.map(reviewer => ({
-            accountId: reviewer.account_id!,
-            displayName: reviewer.display_name!,
-            url: reviewer.links!.html!.href!,
-            avatarUrl: reviewer.links!.avatar!.href!,
-            mention: `@[${reviewer.display_name!}](account_id:${reviewer.account_id})`,
-            approved: !!reviewer.approved,
-            role: reviewer.role!
-        }));
+        return reviewers.map(reviewer => CloudPullRequestApi.toUserModel(reviewer));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -423,12 +415,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             editable: commentBelongsToUser && !data.deleted,
             inline: data.inline,
             user: data.user
-                ? {
-                    accountId: data.user.account_id!,
-                    displayName: data.user.display_name!,
-                    url: data.user.links!.html!.href!,
-                    avatarUrl: data.user.links!.avatar!.href!
-                }
+                ? CloudPullRequestApi.toUserModel(data.user)
                 : UnknownUser,
             children: []
         };
@@ -456,19 +443,10 @@ export class CloudPullRequestApi implements PullRequestApi {
                 id: pr.id!,
                 version: -1,
                 url: pr.links!.html!.href!,
-                author: {
-                    accountId: pr.author!.account_id,
-                    displayName: pr.author!.display_name!,
-                    url: pr.author!.links!.html!.href!,
-                    avatarUrl: pr.author!.links!.avatar!.href!
-                },
+                author: CloudPullRequestApi.toUserModel(pr.author),
                 reviewers: [],
                 participants: (pr.participants || [])!.map((participant: any) => ({
-                    accountId: participant.user!.account_id!,
-                    displayName: participant.user!.display_name!,
-                    mention: `@[${participant.user!.display_name!}](account_id:${participant.user!.account_id})`,
-                    url: participant.user!.links!.html!.href!,
-                    avatarUrl: participant.user!.links!.avatar!.href!,
+                    ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
                     approved: !!participant.approved
                 })),

@@ -243,7 +243,8 @@ export class BitbucketIssuesApiImpl {
                     accountId: change.user.account_id!,
                     displayName: change.user.display_name!,
                     url: change.user.links!.html!.href!,
-                    avatarUrl: change.user.links!.avatar!.href!
+                    avatarUrl: change.user.links!.avatar!.href!,
+                    mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
                 }
                 : UnknownUser,
             children: []

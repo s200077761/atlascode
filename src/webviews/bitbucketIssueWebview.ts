@@ -7,7 +7,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
-import { BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssue, User } from "../bitbucket/model";
 import { clientForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { isFetchUsers } from "../ipc/prActions";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
@@ -16,6 +16,7 @@ import { DetailedSiteInfo } from "../atlclients/authInfo";
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
 
     private _issue?: BitbucketIssue;
+    private _participants: User[] = [];
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -76,6 +77,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 bbApi.issues!.getComments(issue),
                 bbApi.issues!.getChanges(issue)]
             );
+
+            this._participants = comments.data.map(c => c.user);
 
             //@ts-ignore
             // replace comment with change data which contains additional details
@@ -192,6 +195,9 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                         try {
                             const bbApi = await clientForRemote(e.remote);
                             const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
+                            if (reviewers.length === 0) {
+                                reviewers.push(...this._participants);
+                            }
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));

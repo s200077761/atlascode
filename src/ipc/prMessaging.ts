@@ -35,7 +35,7 @@ export interface RepoData {
     name?: string;
     owner?: string;
     remotes: Remote[];
-    defaultReviewers: Reviewer[];
+    defaultReviewers: User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
     branchTypes: BranchType[];
