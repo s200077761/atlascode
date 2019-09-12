@@ -214,7 +214,7 @@ export class OAuthDancer implements Disposable {
             };
         } else {
             // BB forces you to make a second call to get the email
-            let email = 'no-reply@atlassian.com';
+            let email = 'do-not-reply@atlassian.com';
             const bbclient = axios.create({
                 timeout: 10000,
                 headers: {
