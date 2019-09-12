@@ -99,15 +99,35 @@ export class Configuration extends Disposable {
     // Migrates the workspace level site settings. This needs to be done for every workspace /directory
     // the first time it's opened unlike global migrations that can happen on first run of the extension only.
     async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
-        const inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
+        let siteId: string | undefined = undefined;
+        let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
         if (inspect && inspect.workspaceValue) {
             const legacyValue: any = inspect.workspaceValue;
-            if (legacyValue.id) {
+            siteId = legacyValue.id;
+            if (siteId) {
                 const config = this.configForOpenWorkspace();
                 if (config) {
-                    await config.update(JiraDefaultSiteConfigurationKey, legacyValue.id);
+                    await config.update(JiraDefaultSiteConfigurationKey, siteId);
                     if (deletePrevious) {
                         await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
+                    }
+                }
+            }
+        }
+
+        if (siteId) {
+            inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
+            if (inspect && inspect.workspaceValue) {
+                const legacyValue: any = inspect.workspaceValue;
+                if (legacyValue.key) {
+                    const config = this.configForOpenWorkspace();
+                    if (config) {
+                        const defaultProjects: DefaultProjects = {};
+                        defaultProjects[siteId] = legacyValue.key;
+                        await config.update(JiraDefaultProjectsConfigurationKey, defaultProjects);
+                        if (deletePrevious) {
+                            await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
+                        }
                     }
                 }
             }
@@ -125,20 +145,6 @@ export class Configuration extends Disposable {
     // Moving from V1 to V2 working project became defaultProjects.
     async clearVersion1WorkingProject() {
         await this.updateForWorkspace(JiraV1WorkingProjectConfigurationKey, undefined);
-    }
-
-    async setWorkingProject(project?: Project | WorkingProject) {
-        // It's possible that the working site is being read from the global settings while we're writing to Workspace settings. 
-        // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
-        const inspect = configuration.inspect(JiraDefaultSiteConfigurationKey);
-        if (inspect && !inspect.workspaceValue) {
-            await this.updateForWorkspace(JiraDefaultSiteConfigurationKey, inspect.globalValue);
-        }
-        await this.updateForWorkspace(JiraWorkingProjectConfigurationKey, project ? {
-            id: project.id,
-            name: project.name,
-            key: project.key
-        } : undefined);
     }
 
     private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
