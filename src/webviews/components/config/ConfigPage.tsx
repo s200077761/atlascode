@@ -5,7 +5,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
-import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction } from '../../../ipc/configActions';
+import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction } from '../../../ipc/configActions';
 import { DetailedSiteInfo, AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
@@ -40,7 +40,7 @@ const panelHeader = (heading: string, subheading: string) =>
         <p className='inlinePanelSubheading'>{subheading}</p>
     </div>;
 
-type Emit = AuthAction | LoginAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | Action;
+type Emit = AuthAction | LoginAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | FetchJqlDataAction | Action;
 type Accept = ConfigData | ProjectList | HostErrorMessage;
 
 interface ViewState extends ConfigData {
@@ -59,6 +59,7 @@ const emptyState: ViewState = {
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private nonce: string;
     private newProjects: Project[] = [];
+    private jqlDataMap: { [key: string]: any } = {};
 
     constructor(props: any) {
         super(props);
@@ -94,6 +95,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 this.nonce = e.nonce;
                 break;
             }
+            case 'jqlData': {
+                this.jqlDataMap[e.nonce] = e.data;
+                break;
+            }
         }
 
         return true;
@@ -118,6 +123,32 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
         changes['jira.defaultProjects'] = current;
         this.onConfigChange(changes);
+    }
+
+    handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
+        return new Promise(resolve => {
+            const nonce = uuid.v4();
+            this.jqlDataMap[nonce] = undefined;
+
+            this.postMessage({ action: 'fetchJqlOptions', path: path, site: site, nonce: nonce });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                const gotData = this.jqlDataMap[nonce] !== undefined;
+                const timeIsUp = (end - start) > 15 * Time.SECONDS;
+
+                if (gotData || timeIsUp) {
+                    clearInterval(timer);
+                    console.log('resolving new jqldata', this.jqlDataMap[nonce]);
+                    console.log('got jqlData', gotData);
+                    console.log('timeisup', timeIsUp);
+                    resolve({ ...this.jqlDataMap[nonce] });
+
+                    this.jqlDataMap[nonce] = undefined;
+                }
+            }, 100);
+        });
     }
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
@@ -236,7 +267,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                                 <Panel header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
                                                     <JiraExplorer configData={this.state}
-                                                        jiraAccessToken={this.state.jiraAccessToken}
+                                                        jqlFetcher={this.handleFetchJqlOptions}
                                                         sites={this.state.jiraSites}
                                                         onConfigChange={this.onConfigChange} />
                                                 </Panel>

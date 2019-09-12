@@ -2,7 +2,7 @@ import { AbstractReactWebview } from './abstractWebview';
 import { IConfig } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
-import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
+import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction } from '../ipc/configActions';
 import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
@@ -102,24 +102,24 @@ export class ConfigWebview extends AbstractReactWebview {
         return [jiraSitesAvailable, bitbucketSitesAvailable];
     }
 
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
+            switch (msg.action) {
                 case 'login': {
                     handled = true;
-                    if (isLoginAuthAction(e)) {
-                        if (isBasicAuthInfo(e.authInfo)) {
+                    if (isLoginAuthAction(msg)) {
+                        if (isBasicAuthInfo(msg.authInfo)) {
                             try {
-                                await authenticateServer(e.siteInfo, e.authInfo);
+                                await authenticateServer(msg.siteInfo, msg.authInfo);
                             } catch (e) {
                                 let err = new Error(`Authentication error: ${e}`);
                                 Logger.error(err);
                                 this.postMessage({ type: 'error', reason: `Authentication error: ${e}` });
                             }
                         } else {
-                            authenticateCloud(e.siteInfo);
+                            authenticateCloud(msg.siteInfo);
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
@@ -127,21 +127,40 @@ export class ConfigWebview extends AbstractReactWebview {
                 }
                 case 'logout': {
                     handled = true;
-                    if (isAuthAction(e)) {
-                        clearAuth(e.siteInfo);
+                    if (isAuthAction(msg)) {
+                        clearAuth(msg.siteInfo);
                         logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                    }
+                    break;
+                }
+                case 'fetchJqlOptions': {
+                    handled = true;
+                    if (isFetchJqlDataAction(msg)) {
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const data = await client.getJqlDataFromPath(msg.path);
+                            this.postMessage({ type: 'jqlData', data: data, nonce: msg.nonce });
+                        } catch (e) {
+                            let errData = { errorMessages: [`${e}`] };
+                            if (e.response && e.response.data) {
+                                errData = e.response.data;
+                            }
+                            let err = new Error(`JQL fetch error: ${e}`);
+                            Logger.error(err);
+                            this.postMessage({ type: 'jqlData', data: errData, nonce: msg.nonce });
+                        }
                     }
                     break;
                 }
                 case 'saveSettings': {
                     handled = true;
-                    if (isSaveSettingsAction(e)) {
+                    if (isSaveSettingsAction(msg)) {
                         try {
 
-                            for (const key in e.changes) {
+                            for (const key in msg.changes) {
                                 const inspect = configuration.inspect(key)!;
 
-                                const value = e.changes[key];
+                                const value = msg.changes[key];
 
                                 if (key === JiraDefaultSiteConfigurationKey) {
                                     await configuration.setDefaultSite(value === inspect.defaultValue ? undefined : value);
@@ -160,8 +179,8 @@ export class ConfigWebview extends AbstractReactWebview {
                                 }
                             }
 
-                            if (e.removes) {
-                                for (const key of e.removes) {
+                            if (msg.removes) {
+                                for (const key of msg.removes) {
                                     await configuration.updateEffective(key, undefined);
                                 }
                             }
@@ -176,9 +195,9 @@ export class ConfigWebview extends AbstractReactWebview {
                 }
                 case 'fetchProjects': {
                     handled = true;
-                    if (isFetchQueryAndSite(e)) {
-                        const projects = await Container.jiraProjectManager.getProjects(e.site, 'name', e.query);
-                        this.postMessage({ type: 'projectList', availableProjects: projects, nonce: e.nonce });
+                    if (isFetchQueryAndSite(msg)) {
+                        const projects = await Container.jiraProjectManager.getProjects(msg.site, 'name', msg.query);
+                        this.postMessage({ type: 'projectList', availableProjects: projects, nonce: msg.nonce });
                     }
                     break;
                 }
@@ -199,8 +218,8 @@ export class ConfigWebview extends AbstractReactWebview {
                 }
                 case 'submitFeedback': {
                     handled = true;
-                    if (isSubmitFeedbackAction(e)) {
-                        submitFeedback(e.feedback, 'atlascodeSettings');
+                    if (isSubmitFeedbackAction(msg)) {
+                        submitFeedback(msg.feedback, 'atlascodeSettings');
                     }
                     break;
                 }

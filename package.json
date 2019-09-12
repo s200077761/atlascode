@@ -577,7 +577,7 @@
                     "description": "mapping of site to default project",
                     "scope": "resource",
                     "patternProperties": {
-                        "*": {
+                        ".*": {
                             "type": "string"
                         }
                     }

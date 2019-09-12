@@ -100,6 +100,21 @@ export abstract class JiraClient {
         return res.data;
     }
 
+    public async getJqlDataFromPath(path: string): Promise<any> {
+        const url = `${this.baseUrl}/api/${API_VERSION}/${path}`;
+
+        const res = await this.transport(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            httpsAgent: this.agent
+        });
+
+        return res.data;
+    }
+
     public async postCreateUrl(url: string, data: any): Promise<any> {
         const res = await this.transport(url, {
             method: "POST",

@@ -10,7 +10,6 @@ export interface FeedbackUser {
 
 export interface ConfigData extends Message {
     config: IConfig;
-    jiraAccessToken: string;
     jiraSites: DetailedSiteInfo[];
     bitbucketSites: DetailedSiteInfo[];
     feedbackUser: FeedbackUser;
@@ -21,7 +20,6 @@ export const emptyConfigData: ConfigData = {
     type: 'init',
     config: emptyConfig,
     jiraSites: [],
-    jiraAccessToken: '',
     bitbucketSites: [],
     feedbackUser: {
         userName: '',
@@ -32,6 +30,10 @@ export const emptyConfigData: ConfigData = {
 
 export interface ConfigUpdate extends Message {
     config: IConfig;
+}
+
+export interface JqlData extends Message {
+    data: any;
 }
 
 export interface SitesAvailableUpdate extends Message {
