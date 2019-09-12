@@ -212,7 +212,7 @@ export class V1toV2Migrator {
                     }
                 });
 
-                let email = 'no-reply@atlassian.com';
+                let email = 'do-not-reply@atlassian.com';
                 if (Array.isArray(emailRes.data.values) && emailRes.data.values.length > 0) {
                     const primary = emailRes.data.values.filter((val: any) => val.is_primary);
                     if (primary.length > 0) {
