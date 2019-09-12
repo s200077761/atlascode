@@ -28,7 +28,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
-import { Reviewer, Commit, BitbucketIssueData } from '../../../bitbucket/model';
+import { Commit, BitbucketIssueData, User } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 
@@ -45,7 +45,7 @@ interface MyState {
     summaryManuallyEdited: boolean;
     repo?: { label: string; value: RepoData; };
     remote?: { label: string; value: Remote; };
-    reviewers: Reviewer[];
+    reviewers: User[];
     sourceBranch?: { label: string; value: Branch };
     sourceRemoteBranchName?: string;
     destinationBranch?: { label: string; value: Ref };

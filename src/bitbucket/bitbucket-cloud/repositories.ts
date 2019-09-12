@@ -97,7 +97,8 @@ export class CloudRepositoriesApi implements RepositoriesApi {
                 accountId: commit.author!.user!.account_id,
                 displayName: commit.author!.user!.display_name!,
                 url: commit.author!.user!.links!.html!.href!,
-                avatarUrl: commit.author!.user!.links!.avatar!.href!
+                avatarUrl: commit.author!.user!.links!.avatar!.href!,
+                mention: `@[${commit.author!.display_name!}](account_id:${commit.author!.account_id})`
             }
         }));
     }

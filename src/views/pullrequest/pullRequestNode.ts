@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment, FileChange } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment, FileChange, User } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
@@ -18,6 +18,7 @@ export interface FileDiffQueryParams {
     lhs: boolean;
     prHref: string;
     prId: number;
+    participants: User[];
     repoUri: string;
     remote: Remote;
     branchName: string;
@@ -202,6 +203,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 lhs: true,
                 prHref: this.pr.data.url,
                 prId: this.pr.data.id,
+                participants: this.pr.data.participants,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.remote,
                 branchName: this.pr.data.destination!.branchName,
@@ -215,6 +217,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 lhs: false,
                 prHref: this.pr.data.url,
                 prId: this.pr.data.id,
+                participants: this.pr.data.participants,
                 repoUri: this.pr.repository.rootUri.toString(),
                 remote: this.pr.sourceRemote || this.pr.remote,
                 branchName: this.pr.data.source!.branchName,

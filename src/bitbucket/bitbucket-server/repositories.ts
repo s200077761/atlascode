@@ -103,10 +103,11 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             htmlSummary: commit.summary ? commit.summary.html! : undefined,
             rawSummary: commit.summary ? commit.summary.raw! : undefined,
             author: {
-                accountId: commit.author.id,
+                accountId: commit.author.slug,
                 displayName: commit.author.displayName,
                 url: undefined!,
-                avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, commit.author.avatarUrl)
+                avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, commit.author.avatarUrl),
+                mention: `@${commit.author.slug}`
             }
         }));
     }

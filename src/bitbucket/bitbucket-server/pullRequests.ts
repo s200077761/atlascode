@@ -1,4 +1,4 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, Reviewer } from '../model';
+import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -204,7 +204,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>{
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
         let parsed = parseGitUrl(urlForRemote(remote));
         /*
         The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
@@ -217,7 +217,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         await this.client.delete(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${prId}/comments/${commentId}`,
             {},
-            {version: data.version}
+            { version: data.version }
         );
     }
 
@@ -258,17 +258,17 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return {
             data: (await Promise.all(
-                    activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
-                )
+                activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
+            )
                 .filter(comment => this.shouldDisplayComment(comment))
         };
     }
 
-    private hasUndeletedChild (comment: any) {
+    private hasUndeletedChild(comment: any) {
         let hasUndeletedChild: boolean = false;
-        for(let child of comment.children){
+        for (let child of comment.children) {
             hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-            if(hasUndeletedChild){
+            if (hasUndeletedChild) {
                 return hasUndeletedChild;
             }
         }
@@ -276,19 +276,19 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     private shouldDisplayComment(comment: any): boolean {
-        if (!comment.deleted){
+        if (!comment.deleted) {
             return true;
-        } else if (!comment.children || comment.children.length === 0){
+        } else if (!comment.children || comment.children.length === 0) {
             return false;
         } else {
             return this.hasUndeletedChild(comment);
-        }       
+        }
     }
 
     private async toNestedCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(comment, remote, commentAnchor);
         commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(c, commentAnchor, comment.id, remote)));
-        if(this.hasUndeletedChild(commentModel)){
+        if (this.hasUndeletedChild(commentModel)) {
             commentModel.deletable = false;
         }
         return commentModel;
@@ -323,7 +323,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async getReviewers(remote: Remote, query: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query: string): Promise<User[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let users: any[] = [];
@@ -362,12 +362,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             users = data.values || [];
         }
 
-        return users.map(val => ({
-            ...ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val),
-            mention: `@${val.slug}`,
-            approved: false,
-            role: 'PARTICIPANT' as 'PARTICIPANT'
-        }));
+        return users.map(val => ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, val));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -470,7 +465,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             displayName: input.displayName!,
             emailAddress: input.emailAddress,
             url: input.links && input.links.self ? input.links.self[0].href : undefined,
-            avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl)
+            avatarUrl: ServerPullRequestApi.patchAvatarUrl(site.baseLinkUrl, input.avatarUrl),
+            mention: `@${input.slug}`
         };
     }
 
@@ -502,7 +498,6 @@ export class ServerPullRequestApi implements PullRequestApi {
                 participants: data.reviewers.map((reviewer: any) => (
                     {
                         ...this.toUser(site, reviewer.user),
-                        mention: `@${reviewer.user.slug}`,
                         role: reviewer.role,
                         approved: reviewer.approved
                     }

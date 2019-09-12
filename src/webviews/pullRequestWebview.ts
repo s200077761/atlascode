@@ -124,7 +124,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'deleteComment': {
-                    if (isDeleteComment(msg)){
+                    if (isDeleteComment(msg)) {
                         try {
                             this.deleteComment(msg.commentId);
                         } catch (e) {
@@ -135,7 +135,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'editComment': {
-                    if (isEditComment(msg)){
+                    if (isEditComment(msg)) {
                         try {
                             this.editComment(msg.content, msg.commentId);
                         } catch (e) {
@@ -201,6 +201,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         try {
                             const bbApi = await clientForRemote(msg.remote);
                             const reviewers = await bbApi.pullrequests.getReviewers(msg.remote, msg.query);
+                            if (reviewers.length === 0) {
+                                reviewers.push(...this._pr!.data.participants);
+                            }
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
