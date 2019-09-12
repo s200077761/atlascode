@@ -9,7 +9,7 @@ const Hash = (props: any) =>
     <Button appearance="subtle-link" href={props.href} >
         <span style={style}>{props.hash}</span>
     </Button>;
-const Message = (props: any) => <p style={{ display: "inline" }}>{props.message}</p>;
+const Message = (props: any) => <Tooltip content={props.message}><p style={{ display: "inline" }}>{props.message.trim().split('\n')[0]}</p></Tooltip>;
 const Timestamp = (props: any) => {
     const d = new Date(props.ts);
     return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
