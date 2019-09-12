@@ -366,10 +366,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                     }
                     break;
                 }
-                case 'openProblemReport': {
-                    handled = true;
-                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.siteManager.effectiveSite(ProductJira), this._currentProject);
-                }
                 default: {
                     break;
                 }
