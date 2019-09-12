@@ -281,21 +281,13 @@ function event(action: string, actionSubject: string, attributes: any): any {
 }
 
 function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): T {
-    let userType = 'anonymousId';
-    let userId = Container.machineId;
-
     let newObj: Object;
+    const aaid = Container.siteManager.getFirstAAID(hostProduct);
 
-    let aaid = Container.siteManager.getFirstAAID(hostProduct);
     if (aaid) {
-        userId = aaid;
-        userType = 'userId';
-    }
-
-    if (userType === 'userId') {
-        newObj = { ...e, ...{ userId: userId, userIdType: 'atlassianAccount' } };
+        newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount' } };
     } else {
-        newObj = { ...e, ...{ anonymousId: userId } };
+        newObj = { ...e, ...{ anonymousId: Container.machineId } };
     }
 
     return newObj as T;
