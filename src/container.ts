@@ -21,7 +21,6 @@ import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebv
 import { OnlineDetector } from './util/online';
 import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
 import { JiraSettingsManager } from './jira/settingsManager';
-import { CreateIssueProblemsWebview } from './webviews/createIssueProblemsWebview';
 import { PmfStats } from './pmf/stats';
 import { SiteManager } from './siteManager';
 import { JiraProjectManager } from './jira/projectManager';
@@ -78,7 +77,6 @@ export class Container {
         context.subscriptions.push((this._createIssueWebview = new CreateIssueWebview(context.extensionPath)));
         context.subscriptions.push((this._jiraIssueViewManager = new JiraIssueViewManager(context.extensionPath)));
         context.subscriptions.push(this._startWorkOnIssueWebview = new StartWorkOnIssueWebview(context.extensionPath));
-        context.subscriptions.push(this._createIssueProblemsWebview = new CreateIssueProblemsWebview(context.extensionPath));
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
@@ -163,11 +161,6 @@ export class Container {
     private static _createIssueWebview: CreateIssueWebview;
     static get createIssueWebview() {
         return this._createIssueWebview;
-    }
-
-    private static _createIssueProblemsWebview: CreateIssueProblemsWebview;
-    static get createIssueProblemsWebview() {
-        return this._createIssueProblemsWebview;
     }
 
     private static _startWorkOnIssueWebview: StartWorkOnIssueWebview;

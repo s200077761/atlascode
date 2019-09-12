@@ -7,9 +7,8 @@ import Select, { components } from '@atlaskit/select';
 import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
-import { DetailedSiteInfo } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
 import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
-import axios from "axios";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -25,7 +24,7 @@ const IconValue = (props: any) => (
 );
 
 export default class EditJQL extends PureComponent<{
-  jiraAccessToken: string;
+  jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
   defaultSiteId: string;
   workingProject: string;
   sites: DetailedSiteInfo[];
@@ -35,34 +34,38 @@ export default class EditJQL extends PureComponent<{
   onRestoreDefault?: (jqlEntry: JQLEntry) => void;
   onSave: (siteId: string, jqlEntry: JQLEntry) => void;
 }, {
-  selectedSiteId: string;
+  selectedSite: DetailedSiteInfo;
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
   jqlError: string | null;
   isEditing: boolean;
 }> {
-  state = {
-    selectedSiteId: this.props.defaultSiteId,
-    nameValue: this.props.jqlEntry.name,
-    inputValue: this.props.jqlEntry.query,
-    openComplete: false,
-    jqlError: null,
-    isEditing: false
-  };
+
+  constructor(props: any) {
+    super(props);
+
+    let defaultSite = this.props.sites.find(site => site.id === this.props.defaultSiteId);
+    if (!defaultSite && this.props.sites.length > 0) {
+      defaultSite = this.props.sites[0];
+    } else if (!defaultSite) {
+      defaultSite = emptySiteInfo;
+    }
+
+    this.state = {
+      selectedSite: defaultSite,
+      nameValue: this.props.jqlEntry.name,
+      inputValue: this.props.jqlEntry.query,
+      openComplete: false,
+      jqlError: null,
+      isEditing: false
+    };
+  }
+
+
 
   async fetchEndpoint(endpoint: string): Promise<any> {
-    const fullUrl = `https://api.atlassian.com/ex/jira/${
-      this.state.selectedSiteId
-      }/rest/api/2/${endpoint}`;
-
-    return axios(fullUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.props.jiraAccessToken}`,
-        "Content-Type": "application/json"
-      }
-    }).then(res => { return res.data; });
+    return this.props.jqlFetcher(this.state.selectedSite, endpoint);
   }
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {
@@ -92,7 +95,7 @@ export default class EditJQL extends PureComponent<{
 
   handleSiteChange = (e: DetailedSiteInfo) => {
     this.setState({
-      selectedSiteId: e.id
+      selectedSite: e
     });
   }
 
@@ -117,7 +120,7 @@ export default class EditJQL extends PureComponent<{
   onSave = () => {
     var entry = this.props.jqlEntry;
 
-    this.props.onSave(this.state.selectedSiteId, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
+    this.props.onSave(this.state.selectedSite.id, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onRestoreDefault = () => {
@@ -171,7 +174,7 @@ export default class EditJQL extends PureComponent<{
             <Field label='Select Site'
               id='site'
               name='site'
-              defaultValue={this.props.defaultSiteId}
+              defaultValue={this.state.selectedSite}
             >
               {
                 (fieldArgs: any) => {

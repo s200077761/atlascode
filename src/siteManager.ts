@@ -122,6 +122,10 @@ export class SiteManager extends Disposable {
         return this.getSitesAvailable(product).find(site => site.hostname === hostname);
     }
 
+    public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {
+        return this.getSitesAvailable(product).find(site => site.id === id);
+    }
+
     public removeSite(site: SiteInfo): boolean {
         const sites = this._globalStore.get<DetailedSiteInfo[]>(`${site.product.key}${SitesSuffix}`);
         if (sites && sites.length > 0) {

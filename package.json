@@ -628,6 +628,16 @@
                     "description": "Jira site ID for workspace",
                     "scope": "resource"
                 },
+                "atlascode.jira.defaultProjects": {
+                    "type": "object",
+                    "description": "mapping of site to default project",
+                    "scope": "resource",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "atlascode.jira.customJql": {
                     "type": "array",
                     "items": {

@@ -2,11 +2,12 @@ import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink, readProject } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import FormData from 'form-data';
 import * as fs from "fs";
+import { Time } from '../../util/time';
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
@@ -31,6 +32,7 @@ export abstract class JiraClient {
         // 500 errors.  Lesson  learned: ALWAYS use a custom instance of axios and config it yourself.
         // see: https://github.com/softonic/axios-retry/issues/59
         this.transport = axios.create({
+            timeout: 30 * Time.SECONDS,
             headers: {
                 'X-Atlassian-Token': 'no-check',
                 'x-atlassian-force-account-id': 'true',
@@ -98,6 +100,21 @@ export abstract class JiraClient {
         return res.data;
     }
 
+    public async getJqlDataFromPath(path: string): Promise<any> {
+        const url = `${this.baseUrl}/api/${API_VERSION}/${path}`;
+
+        const res = await this.transport(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.authorization()
+            },
+            httpsAgent: this.agent
+        });
+
+        return res.data;
+    }
+
     public async postCreateUrl(url: string, data: any): Promise<any> {
         const res = await this.transport(url, {
             method: "POST",
@@ -147,14 +164,21 @@ export abstract class JiraClient {
         return [];
     }
 
+    public async getProject(projectIdOrKey: string): Promise<Project> {
+
+        const res = await this.getFromJira(`project/${projectIdOrKey}`);
+
+        return readProject(res);
+    }
+
     // User
     public async findUsersAssignableToIssue(issueKey: string, query: string): Promise<User[]> {
-        const res = this.getFromJira('user/assignable/search', { issueKey: issueKey, query: query });
+        const res = await this.getFromJira('user/assignable/search', { issueKey: issueKey, query: query });
         return res;
     }
 
     public async findUsersAssignableToProject(project: string, query: string): Promise<User[]> {
-        const res = this.getFromJira('user/assignable/search', { project: project, query: query });
+        const res = await this.getFromJira('user/assignable/search', { project: project, query: query });
         return res;
     }
 
@@ -252,7 +276,7 @@ export abstract class JiraClient {
     }
 
     // Field
-    public async getFields(params: any): Promise<Field[]> {
+    public async getFields(): Promise<Field[]> {
         const res = await this.getFromJira('field');
         if (Array.isArray(res)) {
             return res.map(f => readField(f));
@@ -263,7 +287,7 @@ export abstract class JiraClient {
 
     // Myself
     public async getCurrentUser(): Promise<User> {
-        const res = this.getFromJira('myself');
+        const res = await this.getFromJira('myself');
 
         return res;
     }
@@ -281,7 +305,7 @@ export abstract class JiraClient {
             );
         });
 
-        const res = this.multipartToJira(`issue/${issuekey}/attachments`, formData);
+        const res = await this.multipartToJira(`issue/${issuekey}/attachments`, formData);
 
         return res;
     }
@@ -361,11 +385,6 @@ export abstract class JiraClient {
             }
             url = `${url}?${sp.toString()}`;
         }
-
-        // let data = {};
-        // if (formData) {
-        //     data = { data: JSON.stringify(formData) };
-        // }
 
         const res = await this.transport.post(url, formData, {
             headers: {

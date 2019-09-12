@@ -4,7 +4,7 @@ import { Commands } from "../commands";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
-import { JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, BitbucketEnabledKey, JiraEnabledKey } from "../constants";
+import { JiraV1WorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, BitbucketEnabledKey, JiraEnabledKey } from "../constants";
 import { SitesAvailableUpdateEvent } from "src/siteManager";
 
 export class AuthStatusBar extends Disposable {
@@ -39,7 +39,7 @@ export class AuthStatusBar extends Disposable {
     if (initializing ||
       configuration.changed(e, 'jira.statusbar') ||
       configuration.changed(e, JiraDefaultSiteConfigurationKey) ||
-      configuration.changed(e, JiraWorkingProjectConfigurationKey) ||
+      configuration.changed(e, JiraV1WorkingProjectConfigurationKey) ||
       configuration.changed(e, JiraEnabledKey)) {
       await this.generateStatusbarItem(ProductJira);
     }
@@ -99,7 +99,7 @@ export class AuthStatusBar extends Disposable {
 
           if (tmpl) {
             const effSite = Container.siteManager.effectiveSite(product);
-            const effProject = await Container.jiraProjectManager.getEffectiveProject();
+            const effProject = await Container.jiraProjectManager.getEffectiveProject(effSite);
             const site = effSite.name;
             const project = effProject.name;
 

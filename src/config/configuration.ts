@@ -11,10 +11,9 @@ import {
     workspace,
     Disposable
 } from 'vscode';
-import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey } from '../constants';
+import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
 import { Container } from '../container';
-import { WorkingProject } from './model';
-import { Project } from '../jira/jira-client/model/entities';
+import { DefaultProjects } from './model';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -98,21 +97,15 @@ export class Configuration extends Disposable {
 
     async setDefaultSite(siteId?: string) {
         await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, siteId);
-        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
     }
 
-    async setWorkingProject(project?: Project | WorkingProject) {
-        // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
-        // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
-        const inspect = configuration.inspect(JiraDefaultSiteConfigurationKey);
-        if (inspect && !inspect.workspaceFolderValue) {
-            await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, inspect.globalValue);
-        }
-        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
-            id: project.id,
-            name: project.name,
-            key: project.key
-        } : undefined);
+    async setDefaultProjects(defaultProjects: DefaultProjects) {
+        await this.updateForWorkspaceFolder(JiraDefaultProjectsConfigurationKey, defaultProjects);
+    }
+
+    // Moving from V1 to V2 working project became defaultProjects.
+    async clearVersion1WorkingProject() {
+        await this.updateForWorkspaceFolder(JiraV1WorkingProjectConfigurationKey, undefined);
     }
 
     // Will attempt to update the value for both the WorkspaceFolder and Global. If that fails (no folder is open) it will only set the value globaly.

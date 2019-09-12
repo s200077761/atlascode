@@ -1,11 +1,12 @@
 import { keychain } from "../util/keychain";
 import { Logger } from "../logger";
-import { DetailedSiteInfo, OAuthProvider, AuthInfoV1, OAuthInfo, ProductJira, ProductBitbucket, AccessibleResourceV1 } from "../atlclients/authInfo";
+import { DetailedSiteInfo, OAuthProvider, AuthInfoV1, OAuthInfo, ProductJira, ProductBitbucket, AccessibleResourceV1, Product, UserInfo } from "../atlclients/authInfo";
 import debounce from 'lodash.debounce';
 import { SiteManager } from "../siteManager";
 import { CredentialManager } from "../atlclients/authStore";
 import { OAuthRefesher } from "../atlclients/oauthRefresher";
-import { configuration } from "../config/configuration";
+import { configuration, DefaultProjects } from "../config/configuration";
+import axios from 'axios';
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 
@@ -46,15 +47,17 @@ export class V1toV2Migrator {
             Logger.debug('got legacy auth info', infoEntry);
             if (infoEntry) {
                 let info: AuthInfoV1 = JSON.parse(infoEntry);
+                const newAccess = await this._refresher.getNewAccessToken(provider, info.refresh);
+                Logger.debug('new access token is', newAccess);
 
                 if (provider.startsWith('jira')) {
-                    const newAccess = await this._refresher.getNewAccessToken(provider, info.refresh);
-                    Logger.debug('new access token is', newAccess);
                     if (newAccess && info.accessibleResources) {
                         this.migrateJiraData(info, provider, newAccess);
                     }
                 } else {
-                    this.migrateBitbucketData(info, provider);
+                    if (newAccess) {
+                        this.migrateBitbucketData(info, provider, newAccess);
+                    }
                 }
             }
 
@@ -82,16 +85,23 @@ export class V1toV2Migrator {
 
             Logger.debug('got base url', baseUrlString);
             const baseUrl: URL = new URL(baseUrlString);
+            const baseApiUrl = `https://${apiUri}/ex/jira/${resource.id}/rest`;
+
+            const user: UserInfo | undefined = await this.getNewUserInfo(ProductJira, `${baseApiUrl}/api/2`, accessToken);
+
+            if (!user) {
+                return;
+            }
 
             const newInfo: OAuthInfo = {
                 access: accessToken,
                 refresh: info.refresh,
-                user: { id: info.user.id, displayName: info.user.displayName },
+                user: user,
             };
 
             let newSite: DetailedSiteInfo = {
                 avatarUrl: resource.avatarUrl,
-                baseApiUrl: `https://${apiUri}/ex/jira/${resource.id}/rest`,
+                baseApiUrl: baseApiUrl,
                 baseLinkUrl: baseUrlString,
                 hostname: baseUrl.hostname,
                 id: resource.id,
@@ -117,22 +127,32 @@ export class V1toV2Migrator {
     private async updateDefaultSiteInfo(newSite: DetailedSiteInfo) {
         if (this._deleteV1) {
             configuration.clearVersion1WorkingSite();
+            configuration.clearVersion1WorkingProject();
         }
 
         await configuration.setDefaultSite(newSite.id);
-        await configuration.setWorkingProject(this._workingProject);
+
+        const defaultProjects: DefaultProjects = {};
+        defaultProjects[newSite.id] = this._workingProject.key;
+        await configuration.setDefaultProjects(defaultProjects);
 
         Logger.debug('set default site site', newSite);
     }
 
-    private async migrateBitbucketData(info: AuthInfoV1, provider: OAuthProvider) {
+    private async migrateBitbucketData(info: AuthInfoV1, provider: OAuthProvider, accessToken: string) {
         const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
         const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
         const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
+        const user: UserInfo | undefined = await this.getNewUserInfo(ProductBitbucket, baseApiUrl, accessToken);
+
+        if (!user) {
+            return;
+        }
+
         const newInfo: OAuthInfo = {
-            access: info.access,
+            access: accessToken,
             refresh: info.refresh,
-            user: { id: info.user.id, displayName: info.user.displayName },
+            user: user,
         };
 
         // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
@@ -151,6 +171,68 @@ export class V1toV2Migrator {
 
         this._siteManager.addSites([newSite]);
         await this._credentialManager.saveAuthInfo(newSite, newInfo);
+    }
+
+    private async getNewUserInfo(product: Product, baseApiUrl: string, accessToken: string): Promise<UserInfo | undefined> {
+        let user: UserInfo | undefined = undefined;
+        try {
+            const client = axios.create({
+                timeout: 10000,
+                headers: {
+                    'X-Atlassian-Token': 'no-check',
+                    'x-atlassian-force-account-id': 'true',
+                }
+            });
+
+            const userUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;
+            const emailUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user/emails` : '';
+
+            const userRes = await client(userUrl, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+
+            if (product.key === ProductJira.key) {
+                user = {
+                    id: userRes.data.accountId,
+                    displayName: userRes.data.displayName,
+                    avatarUrl: userRes.data.avatarUrls["48x48"],
+                    email: userRes.data.emailAddress,
+                };
+            } else {
+                const emailRes = await client(emailUrl, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                let email = 'do-not-reply@atlassian.com';
+                if (Array.isArray(emailRes.data.values) && emailRes.data.values.length > 0) {
+                    const primary = emailRes.data.values.filter((val: any) => val.is_primary);
+                    if (primary.length > 0) {
+                        email = primary[0].email;
+                    }
+                }
+
+                user = {
+                    id: userRes.data.account_id,
+                    displayName: userRes.data.display_name,
+                    avatarUrl: userRes.data.links.avatar.href,
+                    email: email,
+                };
+            }
+
+        } catch (e) {
+            //ignore
+        }
+
+        return user;
     }
 
     private async removeV1AuthInfo(provider: string) {

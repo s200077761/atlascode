@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { SiteInfo, AuthInfo } from "../atlclients/authInfo";
+import { SiteInfo, AuthInfo, DetailedSiteInfo } from "../atlclients/authInfo";
 
 export enum FeedbackType {
     Bug = 'bug',
@@ -34,6 +34,17 @@ export interface SaveSettingsAction extends Action {
 
 export interface SubmitFeedbackAction extends Action {
     feedback: FeedbackData;
+}
+
+export interface FetchJqlDataAction extends Action {
+    site: DetailedSiteInfo;
+    path: string;
+}
+
+export function isFetchJqlDataAction(a: Action): a is FetchJqlDataAction {
+    return a && (<FetchJqlDataAction>a).site !== undefined
+        && (<FetchJqlDataAction>a).path !== undefined
+        && (<FetchJqlDataAction>a).path !== '';
 }
 
 export function isAuthAction(a: Action): a is AuthAction {

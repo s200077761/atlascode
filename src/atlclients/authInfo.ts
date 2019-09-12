@@ -78,6 +78,8 @@ export interface BasicAuthInfo extends AuthInfo {
 export interface UserInfo {
     id: string;
     displayName: string;
+    email: string;
+    avatarUrl: string;
 }
 
 export interface SiteInfo {
@@ -115,6 +117,8 @@ export interface AccessibleResource {
 export const emptyUserInfo: UserInfo = {
     id: 'empty',
     displayName: 'empty',
+    email: 'empty',
+    avatarUrl: 'empty',
 };
 
 export const emptyProduct: Product = {

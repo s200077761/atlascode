@@ -1,6 +1,6 @@
 import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
 import { Container } from './container';
-import { AuthInfo, DetailedSiteInfo, ProductJira, isEmptySiteInfo } from './atlclients/authInfo';
+import { DetailedSiteInfo, ProductJira, isEmptySiteInfo } from './atlclients/authInfo';
 import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
@@ -281,25 +281,13 @@ function event(action: string, actionSubject: string, attributes: any): any {
 }
 
 function anyUserOrAnonymous<T>(e: Object, hostProduct?: string): T {
-    let userType = 'anonymousId';
-    let authInfo: AuthInfo | undefined = undefined;
-
     let newObj: Object;
+    const aaid = Container.siteManager.getFirstAAID(hostProduct);
 
-    let userId = Container.siteManager.getFirstAAID(hostProduct);
-    if (!userId) {
-        userId = Container.machineId;
-    }
-
-    if (authInfo) {
-        userType = 'userId';
-        userId = userId;
-    }
-
-    if (userType === 'userId') {
-        newObj = { ...e, ...{ userId: userId, userIdType: 'atlassianAccount' } };
+    if (aaid) {
+        newObj = { ...e, ...{ userId: aaid, userIdType: 'atlassianAccount' } };
     } else {
-        newObj = { ...e, ...{ anonymousId: userId } };
+        newObj = { ...e, ...{ anonymousId: Container.machineId } };
     }
 
     return newObj as T;

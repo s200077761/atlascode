@@ -9,6 +9,7 @@ import { Resources } from '../resources';
 import { Time } from '../util/time';
 import { ProductBitbucket, ProductJira, OAuthProvider, OAuthResponse, AccessibleResource } from './authInfo';
 import { Disposable } from 'vscode';
+import axios from 'axios';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
@@ -194,7 +195,7 @@ export class OAuthDancer implements Disposable {
         return app;
     }
 
-    private verify(provider: OAuthProvider, accessToken: string, refreshToken: string, profile: any, done: any): void {
+    private async verify(provider: OAuthProvider, accessToken: string, refreshToken: string, profile: any, done: any): Promise<void> {
         let resources: AccessibleResource[] = [];
 
         if (profile.accessibleResources) {
@@ -202,28 +203,72 @@ export class OAuthDancer implements Disposable {
                 resources.push(resource);
             });
         }
+        console.log('got oauth user', profile);
+        let user: any = {};
+        if (provider === OAuthProvider.JiraCloud || provider === OAuthProvider.JiraCloudStaging) {
+            user = {
+                id: profile._json.account_id,
+                displayName: profile.displayName,
+                email: profile.email,
+                avatarUrl: profile.photo,
+            };
+        } else {
+            // BB forces you to make a second call to get the email
+            let email = 'do-not-reply@atlassian.com';
+            const bbclient = axios.create({
+                timeout: 10000,
+                headers: {
+                    'X-Atlassian-Token': 'no-check',
+                    'x-atlassian-force-account-id': 'true',
+                }
+            });
+            const url = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0/user/emails' : 'https://api-staging.bb-inf.net/2.0/user/emails';
+
+            try {
+                const res = await bbclient(url, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                });
+
+                if (Array.isArray(res.data.values) && res.data.values.length > 0) {
+                    const primary = res.data.values.filter((val: any) => val.is_primary);
+                    if (primary.length > 0) {
+                        email = primary[0].email;
+                    }
+                }
+            } catch (e) {
+                //ignore
+            }
+
+            user = {
+                id: profile._json.account_id,
+                displayName: profile.displayName,
+                email: email,
+                avatarUrl: profile._json.links.avatar.href,
+            };
+        }
 
         this._authInfo.set(provider, {
             access: accessToken,
             refresh: refreshToken,
-            user: {
-                id: profile.id,
-                displayName: profile.displayName
-            },
+            user: user,
             accessibleResources: resources,
         });
         return done(null, profile.id);
     }
 
-    private verifyJira(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        return this.verify(OAuthProvider.JiraCloud, accessToken, refreshToken, profile, done);
+    private async verifyJira(accessToken: string, refreshToken: string, profile: any, done: any): Promise<void> {
+        return await this.verify(OAuthProvider.JiraCloud, accessToken, refreshToken, profile, done);
     }
 
-    private verifyJiraStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        return this.verify(OAuthProvider.JiraCloudStaging, accessToken, refreshToken, profile, done);
+    private async verifyJiraStaging(accessToken: string, refreshToken: string, profile: any, done: any): Promise<void> {
+        return await this.verify(OAuthProvider.JiraCloudStaging, accessToken, refreshToken, profile, done);
     }
 
-    private verifyBitbucket(accessToken: string, refreshToken: string, profile: any, done: any): void {
+    private async verifyBitbucket(accessToken: string, refreshToken: string, profile: any, done: any): Promise<void> {
         profile.accessibleResources = [{
             id: OAuthProvider.BitbucketCloud,
             name: ProductBitbucket.name,
@@ -232,10 +277,10 @@ export class OAuthDancer implements Disposable {
             url: "https://bitbucket.org"
         }];
 
-        return this.verify(OAuthProvider.BitbucketCloud, accessToken, refreshToken, profile, done);
+        return await this.verify(OAuthProvider.BitbucketCloud, accessToken, refreshToken, profile, done);
     }
 
-    private verifyBitbucketStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
+    private async verifyBitbucketStaging(accessToken: string, refreshToken: string, profile: any, done: any): Promise<void> {
         profile.accessibleResources = [{
             id: OAuthProvider.BitbucketCloudStaging,
             name: ProductBitbucket.name,
@@ -244,7 +289,7 @@ export class OAuthDancer implements Disposable {
             url: "https://bb-inf.net"
         }];
 
-        return this.verify(OAuthProvider.BitbucketCloudStaging, accessToken, refreshToken, profile, done);
+        return await this.verify(OAuthProvider.BitbucketCloudStaging, accessToken, refreshToken, profile, done);
     }
 
     private sleep(ms: number): Promise<void> {

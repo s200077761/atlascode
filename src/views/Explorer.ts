@@ -3,7 +3,7 @@ import { viewScreenEvent } from "../analytics";
 import { Container } from "../container";
 import { Product } from "../atlclients/authInfo";
 import { AbstractBaseNode } from "./nodes/abstractBaseNode";
-import { WorkingProject } from "../config/model";
+import { Project } from "../jira/jira-client/model/entities";
 
 export abstract class Explorer extends Disposable {
     protected treeDataProvder: BaseTreeDataProvider | undefined;
@@ -40,7 +40,7 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
     }
 
     abstract getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]>;
-    setProject(project: WorkingProject) { }
+    setProject(project: Project) { }
 
     refresh() { }
     dispose() { }

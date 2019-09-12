@@ -969,7 +969,6 @@ section button span {
   background: var(--vscode-input-background);
 }
 
-
 .start-work-success code {
   font-weight: bold;
 }
@@ -1403,6 +1402,11 @@ img::after is triggered only if img loading fails */
   color: var(--vscode-editor-foreground);
 }
 
+.ac-icon-button {
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+}
+
 @keyframes hideshow {
   0% {
     opacity: .3
@@ -1435,4 +1439,8 @@ img::after is triggered only if img loading fails */
   animation-iteration-count: infinite;
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
+}
+
+[role=gridcell]>[class^=styled__OverflowContainer-] {
+  width: 100%;
 }

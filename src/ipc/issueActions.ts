@@ -1,6 +1,5 @@
 import { Action } from "./messaging";
-import { WorkingProject } from "../config/model";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User, IssueType, isIssueType } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User, IssueType, isIssueType, Project } from "../jira/jira-client/model/entities";
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -64,7 +63,7 @@ export interface FetchIssueFieldOptionsByJQLAction extends Action {
 }
 
 export interface ScreensForProjectsAction extends Action {
-    project: WorkingProject;
+    project: Project;
     fieldValues: FieldValues;
 }
 
