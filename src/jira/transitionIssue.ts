@@ -43,7 +43,7 @@ async function performTranstion(issueKey: string, transition: Transition, site: 
                 Container.jiraIssueViewManager.refreshAll();
             });
 
-        issueTransitionedEvent(issueKey, site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        issueTransitionedEvent(site, issueKey).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
     catch (err) {
         Logger.error(err);

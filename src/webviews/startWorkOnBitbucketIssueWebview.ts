@@ -12,6 +12,7 @@ import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
     private _state: BitbucketIssue;
@@ -25,6 +26,14 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
     }
     public get id(): string {
         return "startWorkOnIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._state) {
+            return siteDetailsForRemote(this._state.remote);
+        }
+
+        return undefined;
     }
 
     async createOrShowIssue(data: BitbucketIssue) {
@@ -42,7 +51,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         this.invalidate();
     }
 
-    public invalidate() {
+    public async invalidate() {
         this.forceUpdateIssue();
     }
 
@@ -87,7 +96,11 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
                             });
-                            bbIssueWorkStartedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote!);
+                            if (site) {
+                                bbIssueWorkStartedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            }
                         }
                         catch (e) {
                             this.postMessage({ type: 'error', reason: e });

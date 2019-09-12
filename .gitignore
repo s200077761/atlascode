@@ -2,6 +2,7 @@ out
 build
 node_modules
 .vscode-test/
+!.vscode/launch.json
 *.vsix
 .yo-*
 yarn-error.log
