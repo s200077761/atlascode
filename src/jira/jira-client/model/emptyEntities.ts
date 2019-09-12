@@ -117,8 +117,8 @@ export const emptyProject: Project = {
 
 export function isEmptyProject(p: Project): p is Project {
     return !p
-        || (<Project>p).key !== undefined
-        || (<Project>p).key !== '';
+        || (<Project>p).key === undefined
+        || (<Project>p).key === '';
 }
 
 export const emptyComment: Comment = {
