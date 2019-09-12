@@ -34,6 +34,29 @@ export class Client {
         }
     }
 
+    async getURL(url: string) {
+
+        try {
+            const res = await axios(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: this.authHeader
+                },
+                httpsAgent: this.agent
+            });
+
+            return { data: res.data, headers: res.headers };
+        } catch (e) {
+            if (e.response) {
+                return Promise.reject(await this.errorHandler(e.response));
+            } else {
+                return Promise.reject(e);
+            }
+
+        }
+    }
+
     async getOctetStream(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);

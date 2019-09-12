@@ -234,6 +234,8 @@ export class BitbucketIssuesApiImpl {
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
             deleted: false,
+            deletable: true,
+            editable: true,
             ts: change.created_on!,
             updatedTs: change.created_on!,
             user: change.user

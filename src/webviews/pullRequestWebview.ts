@@ -5,7 +5,7 @@ import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isFetchUsers } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -16,12 +16,12 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { ProductJira } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { issuesForJQL } from '../jira/issuesForJql';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
-import { clientForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 
 interface PRState {
@@ -49,6 +49,14 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
     public get id(): string {
         return "pullRequestDetailsScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._pr) {
+            return siteDetailsForRemote(this._pr.remote);
+        }
+
+        return undefined;
     }
 
     initialize(data: PullRequest) {
@@ -110,6 +118,28 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.postComment(msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteComment': {
+                    if (isDeleteComment(msg)){
+                        try {
+                            this.deleteComment(msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: e });
+                        }
+                    }
+                    break;
+                }
+                case 'editComment': {
+                    if (isEditComment(msg)){
+                        try {
+                            this.editComment(msg.content, msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
                         }
                     }
@@ -200,18 +230,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
-    private shouldDisplayComment(comment: any): boolean {
-        if(comment.children.length === 0){
-            return !comment.deleted;
-        } else {
-            let hasUndeletedChild: boolean = false;
-            for(let i = 0; i < comment.children.length; i++){
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(comment.children[i]);
-            }
-            return hasUndeletedChild;
-        }       
-    }
-
     private async postCompleteState() {
         if (!this._pr) {
             return;
@@ -227,7 +245,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getBuildStatuses(this._pr)
         ]);
         const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
-        comments.data = comments.data.filter(comment => this.shouldDisplayComment(comment));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -316,7 +333,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async approve(approved: boolean) {
         const bbApi = await clientForRemote(this._state.remote!);
         await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
-        prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prApproveEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         await this.updatePullRequest();
     }
 
@@ -327,7 +349,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             m.closeSourceBranch,
             m.mergeStrategy
         );
-        prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prMergeEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
@@ -370,7 +397,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
                 });
-                prCheckoutEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.sourceRemote!);
+                if (site) {
+                    prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                }
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
@@ -380,7 +410,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async postComment(text: string, parentId?: number) {
         const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
+        await bbApi.pullrequests.postComment(this._state.remote!, this._pr!.data.id, text, parentId);
+        this.updatePullRequest();
+    }
+
+    private async deleteComment(commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
+        this.updatePullRequest();
+    }
+
+    private async editComment(content: string, commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
         this.updatePullRequest();
     }
 

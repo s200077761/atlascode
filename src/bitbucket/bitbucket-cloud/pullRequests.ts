@@ -2,7 +2,7 @@ import { Repository, Remote } from "../../typings/git";
 import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
-import { parseGitUrl, urlForRemote } from "../bbUtils";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
@@ -170,6 +170,28 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        await this.client.delete(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {}
+        );
+    }
+
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const { data } = await this.client.put(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {
+                content: {
+                    raw: content
+                }
+            }   
+        );
+
+        return this.convertDataToComment(data, remote);
+    }
+
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
@@ -186,7 +208,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.get(data.next);
+            const nextPage = await this.client.getURL(data.next);
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -201,35 +223,33 @@ export class CloudPullRequestApi implements PullRequestApi {
                     markup: 'markdown',
                     raw: '*Comment deleted*',
                     html: '<p><em>Comment deleted</em></p>'
-                }
+                },
+                deleted: true
             } as any;
         });
-
-        const nestedComments = this.toNestedList(
-            comments.map(comment => ({
-                id: comment.id!,
-                parentId: comment.parent ? comment.parent.id! : undefined,
-                htmlContent: comment.content!.html!,
-                rawContent: comment.content!.raw!,
-                ts: comment.created_on!,
-                updatedTs: comment.updated_on!,
-                deleted: !!comment.deleted,
-                inline: comment.inline,
-                user: comment.user
-                    ? {
-                        accountId: comment.user.account_id!,
-                        displayName: comment.user.display_name!,
-                        url: comment.user.links!.html!.href!,
-                        avatarUrl: comment.user.links!.avatar!.href!
-                    }
-                    : UnknownUser,
-                children: []
-            })));
-
+        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.remote)))));
+        const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
-            data: nestedComments,
+            data: visibleComments,
             next: undefined
         };
+    }
+
+    private shouldDisplayComment(comment: any): boolean {
+        if (!comment.deleted){
+            return true;
+        } else if (!comment.children || comment.children.length === 0){
+            return false;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for(let child of comment.children){
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+                if(hasUndeletedChild){
+                    return hasUndeletedChild;
+                }
+            }
+            return hasUndeletedChild;
+        }       
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
@@ -369,7 +389,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+        if (site) {
+            prCommentEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
 
         const { data } = await this.client.post(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments`,
@@ -382,6 +406,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
+        return await this.convertDataToComment(data, remote);
+    }
+
+    private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
+        const commentBelongsToUser: boolean = data.user.account_id === (await Container.bitbucketContext.currentUser(remote)).accountId;
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,
@@ -390,6 +419,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             ts: data.created_on!,
             updatedTs: data.updated_on!,
             deleted: !!data.deleted,
+            deletable: commentBelongsToUser && !data.deleted,
+            editable: commentBelongsToUser && !data.deleted,
             inline: data.inline,
             user: data.user
                 ? {

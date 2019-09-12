@@ -59,6 +59,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         return "atlascodeCreateIssueScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return this._siteDetails;
+    }
+
     protected onPanelDisposed() {
         this.reset();
         super.onPanelDisposed();
@@ -335,7 +339,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             let client = await Container.clientManager.jiraClient(e.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
-                            issueCreatedEvent(resp.key, e.site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(e.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                             if (issuelinks) {
                                 this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {
@@ -354,66 +358,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key);
 
-                            // const site = Container.siteManager.effectiveSite(ProductJira);
-                            // let client = await Container.clientManager.jiraClient(site);
-                            // if (client) {
-                            //     const issuelinks: any[] = [];
-                            //     const formLinks = e.issueData.issuelinks;
-                            //     delete e.issueData.issuelinks;
-
-                            //     let worklog: any = undefined;
-                            //     if (e.issueData.worklog && e.issueData.worklog.enabled) {
-                            //         delete e.issueData.worklog.enabled;
-                            //         worklog = {
-                            //             worklog: [
-                            //                 {
-                            //                     add: {
-                            //                         ...e.issueData.worklog,
-                            //                         adjustEstimate: 'new',
-                            //                         started: e.issueData.worklog.started
-                            //                             ? format(e.issueData.worklog.started, 'YYYY-MM-DDTHH:mm:ss.SSSZZ')
-                            //                             : undefined
-                            //                     }
-                            //                 }
-                            //             ]
-                            //         };
-                            //         delete e.issueData.worklog;
-                            //     }
-
-                            //     const resp = await client.createIssue({ fields: e.issueData, update: worklog });
-
-                            //     if (formLinks &&
-                            //         formLinks.type && formLinks.type.id &&
-                            //         formLinks.issue && Array.isArray(formLinks.issue) && formLinks.issue.length > 0) {
-
-                            //         formLinks.issue.forEach((link: any) => {
-                            //             issuelinks.push(
-                            //                 {
-                            //                     type: {
-                            //                         id: formLinks.type.id
-                            //                     },
-                            //                     inwardIssue: formLinks.type.type === 'inward' ? { key: link.key } : { key: resp.key },
-                            //                     outwardIssue: formLinks.type.type === 'outward' ? { key: link.key } : { key: resp.key }
-                            //                 }
-                            //             );
-                            //         });
-                            //     }
-
-                            //     if (issuelinks.length > 0) {
-                            //         issuelinks.forEach(async (link: any) => {
-                            //             if (client) {
-                            //                 await client.createIssueLink('', { body: link });
-                            //             }
-                            //         });
-                            //     }
-
-                            //     this.postMessage({ type: 'issueCreated', issueData: { ...resp, site: site, token: await Container.clientManager.getValidAccessToken(Container.siteManager.effectiveSite(ProductJira)) } });
-                            //     issueCreatedEvent(resp.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                            //     commands.executeCommand(Commands.RefreshJiraExplorer);
-                            //     this.fireCallback(resp.key);
-                            // } else {
-                            //     this.postMessage({ type: 'error', reason: "jira client undefined" });
-                            // }
                         } catch (e) {
                             Logger.error(new Error(`error creating comment: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });

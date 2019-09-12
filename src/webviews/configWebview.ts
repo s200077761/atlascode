@@ -34,6 +34,11 @@ export class ConfigWebview extends AbstractReactWebview {
         return "atlascodeSettings";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+
+        return undefined;
+    }
+
     public async invalidate() {
         try {
             if (!this._panel || this.isRefeshing) {
@@ -175,7 +180,7 @@ export class ConfigWebview extends AbstractReactWebview {
                                 }
 
                                 if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                 }
                             }
 

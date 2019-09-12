@@ -24,7 +24,7 @@ async function saveWorkingSite(site: DetailedSiteInfo) {
     .then(async () => {
       commands.executeCommand(Commands.RefreshJiraExplorer);
 
-      siteSelectedEvent(site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+      siteSelectedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     });
 }
 

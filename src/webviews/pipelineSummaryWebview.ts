@@ -7,7 +7,8 @@ import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
-import { clientForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
@@ -22,6 +23,14 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
     public get id(): string {
         return "pipelineSummaryScreen";
 
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._pipelineInfo) {
+            return siteDetailsForRemote(this._pipelineInfo.remote);
+        }
+
+        return undefined;
     }
 
     initialize(pipelineInfo: PipelineInfo) {
