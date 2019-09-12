@@ -1,5 +1,5 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { IConfig } from '../config/model';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
+import { IConfig, SettingSource } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction } from '../ipc/configActions';
@@ -17,7 +17,7 @@ import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import { Project } from '../jira/jira-client/model/entities';
 
-export class ConfigWebview extends AbstractReactWebview {
+export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -27,6 +27,10 @@ export class ConfigWebview extends AbstractReactWebview {
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
             Container.jiraProjectManager.onDidProjectsAvailableChange(this.onProjectsAvailableChange, this),
         );
+    }
+
+    initialize(settingSource: SettingSource) {
+        this.postMessage({ type: 'setOpenedSettings', openedSettings: settingSource });
     }
 
     public get title(): string {
@@ -104,9 +108,9 @@ export class ConfigWebview extends AbstractReactWebview {
         this.postMessage(config);
     }
 
-    async createOrShow(): Promise<void> {
+    async createOrShowConfig(data: SettingSource) {
         await super.createOrShow();
-        await this.invalidate();
+        this.initialize(data);
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {

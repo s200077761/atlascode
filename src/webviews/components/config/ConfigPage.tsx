@@ -19,7 +19,7 @@ import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import PipelinesConfig from './PipelinesConfig';
-import { WorkingProject } from '../../../config/model';
+import { WorkingProject, SettingSource } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
@@ -46,6 +46,8 @@ type Accept = ConfigData | ProjectList | HostErrorMessage;
 interface ViewState extends ConfigData {
     isProjectsLoading: boolean;
     isErrorBannerOpen: boolean;
+    openedSettings: SettingSource;
+    tabIndex: number;
     errorDetails: any;
 }
 
@@ -53,6 +55,8 @@ const emptyState: ViewState = {
     ...emptyConfigData,
     isProjectsLoading: false,
     isErrorBannerOpen: false,
+    tabIndex: 0,
+    openedSettings: SettingSource.Default,
     errorDetails: undefined
 };
 
@@ -69,16 +73,23 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         switch (e.type) {
             case 'error': {
                 this.setState({ isProjectsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
-
                 break;
             }
             case 'update': {
                 this.setState({ ...e as ConfigData, isErrorBannerOpen: false, errorDetails: undefined });
+                this.updateTabIndex();
+                this.refreshBySwitchingTabs();
                 break;
             }
             case 'projectList': {
                 this.newProjects = (e as ProjectList).availableProjects;
                 this.nonce = e.nonce;
+                break;
+            }
+            case 'setOpenedSettings': {
+                this.setState({ openedSettings: e.openedSettings });
+                this.updateTabIndex();
+                this.refreshBySwitchingTabs();
                 break;
             }
         }
@@ -89,6 +100,30 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
+    }
+
+    //HACK: since panels only support the isDefaultExpanded prop, the tabs need to be cycled to force a refresh of the panels
+    refreshBySwitchingTabs = () => {
+        const currentTab = this.state.tabIndex;
+        if(this.state.tabIndex < 2){
+            this.setState({tabIndex: currentTab + 1 });
+        } else {
+            this.setState({tabIndex: currentTab - 1 });
+        }
+        this.setState({tabIndex: currentTab});
+    }
+
+    updateTabIndex = () => {
+        //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
+        const jiraDisabledModifier = this.state.config.jira.enabled ? 0 : 1;
+        const bitbucketDisabledModifier = this.state.config.bitbucket.enabled ? 0 : 1;
+        if(this.state.openedSettings === SettingSource.Default || this.state.openedSettings === SettingSource.JiraIssue){
+            this.setState({ tabIndex: 0 });
+        } else if(this.state.openedSettings === SettingSource.BBIssue || this.state.openedSettings === SettingSource.BBPipeline || this.state.openedSettings === SettingSource.BBPullRequest){
+            this.setState({ tabIndex: 1 - jiraDisabledModifier});
+        } else {
+            this.setState({ tabIndex: 2 - jiraDisabledModifier - bitbucketDisabledModifier});
+        }
     }
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
@@ -139,6 +174,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
+    shouldDefaultExpand = (setting: SettingSource) => {
+        if(setting === this.state.openedSettings){
+            return {isDefaultExpanded: true};
+        } else {
+            return;
+        }
+    }
+
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
@@ -174,7 +217,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         jiraEnabled={this.state.config.jira.enabled}
                                         bbEnabled={this.state.config.bitbucket.enabled}
                                         onConfigChange={this.onConfigChange} />
-                                    <Tabs>
+                                    <Tabs selectedIndex={this.state.tabIndex} onSelect={tabIndex => this.setState({ tabIndex })} >
                                         <TabList>
                                             {this.state.config.jira.enabled &&
                                                 <Tab>Jira</Tab>
@@ -186,7 +229,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         </TabList>
                                         {this.state.config.jira.enabled &&
                                             <TabPanel>
-                                                <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Jira')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Jira')}>
                                                     <JiraAuth
                                                         sites={this.state.jiraSites}
                                                         handleDeleteSite={this.handleLogout}
@@ -195,7 +238,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <JiraSiteProject configData={this.state} isLoading={this.state.isProjectsLoading} onConfigChange={this.onConfigChange} loadProjectOptions={this.loadProjectOptions} />
                                                 </Panel>
 
-                                                <Panel header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
                                                     <JiraExplorer configData={this.state}
                                                         jiraAccessToken={this.state.jiraAccessToken}
                                                         sites={this.state.jiraSites}
@@ -225,22 +268,22 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
-                                                <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
                                                     <BitbucketAuth
                                                         sites={this.state.bitbucketSites}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
 
-                                                <Panel header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPullRequest)} header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>
                                                     <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket Pipelines explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPipeline)} header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket Pipelines explorer and notifications')}>
                                                     <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer and notifications')}>
                                                     <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 

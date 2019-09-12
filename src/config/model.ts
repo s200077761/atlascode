@@ -2,6 +2,14 @@
 
 import { AccessibleResourceV1, emptyAccessibleResourceV1 } from "../atlclients/authInfo";
 
+export enum SettingSource {
+    JiraIssue = 'jiraIssue',
+    BBPullRequest = 'bbPullRequest',
+    BBPipeline = 'bbPipeline',
+    BBIssue = 'bbIssue',
+    Default = 'default'
+}
+
 export enum OutputLevel {
     Silent = 'silent',
     Errors = 'errors',
