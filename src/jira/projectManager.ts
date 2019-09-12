@@ -2,14 +2,14 @@ import { Disposable, ConfigurationChangeEvent, EventEmitter, Event } from "vscod
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { ProductJira, DetailedSiteInfo } from "../atlclients/authInfo";
-import { JiraDefaultSiteConfigurationKey } from "../constants";
+import { JiraDefaultProjectsConfigurationKey } from "../constants";
 import { Project } from "./jira-client/model/entities";
 import { Logger } from "../logger";
 import { emptyProject, isEmptyProject } from "./jira-client/model/emptyEntities";
 
 
-export type JiraAvailableProjectsUpdateEvent = {
-    projects: Project[];
+export type JiraSiteProjectMappingUpdateEvent = {
+    projectSiteMapping: JiraSiteProjectMapping;
 };
 
 export type JiraSiteProjectMapping = { [key: string]: Project };
@@ -17,12 +17,11 @@ export type JiraSiteProjectMapping = { [key: string]: Project };
 type OrderBy = "category" | "-category" | "+category" | "key" | "-key" | "+key" | "name" | "-name" | "+name" | "owner" | "-owner" | "+owner";
 export class JiraProjectManager extends Disposable {
     private _disposable: Disposable;
-    private _projectsAvailable: Project[] = [];
     private _projectSiteMapping: JiraSiteProjectMapping;
 
-    private _onDidProjectsAvailableChange = new EventEmitter<JiraAvailableProjectsUpdateEvent>();
-    public get onDidProjectsAvailableChange(): Event<JiraAvailableProjectsUpdateEvent> {
-        return this._onDidProjectsAvailableChange.event;
+    private _onDidSiteProjectMappingChange = new EventEmitter<JiraSiteProjectMappingUpdateEvent>();
+    public get onDidSiteProjectMappingChange(): Event<JiraSiteProjectMappingUpdateEvent> {
+        return this._onDidSiteProjectMappingChange.event;
     }
 
     constructor() {
@@ -39,20 +38,31 @@ export class JiraProjectManager extends Disposable {
 
     dispose() {
         this._disposable.dispose();
-        this._onDidProjectsAvailableChange.dispose();
+        this._onDidSiteProjectMappingChange.dispose();
     }
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
         const initializing = configuration.initializing(e);
 
-        if (initializing || configuration.changed(e, JiraDefaultSiteConfigurationKey)) {
-            this._projectsAvailable = [];
+        if (initializing || configuration.changed(e, JiraDefaultProjectsConfigurationKey)) {
+            await this.updateSiteProjectMapping();
+            this._onDidSiteProjectMappingChange.fire({ projectSiteMapping: this._projectSiteMapping });
+        }
+    }
 
-            await this.getProjects().then(projects => {
-                this._projectsAvailable = projects;
-            });
+    private async updateSiteProjectMapping(): Promise<void> {
+        for (let siteId in Container.config.jira.defaultProjects) {
+            const configProjectKey = Container.config.jira.defaultProjects[siteId];
+            const currentProject = this._projectSiteMapping[siteId];
 
-            this._onDidProjectsAvailableChange.fire({ projects: this._projectsAvailable });
+            if (!currentProject || currentProject.key !== configProjectKey) {
+                const site = Container.siteManager.getSiteForId(ProductJira, siteId);
+                if (site) {
+                    const client = await Container.clientManager.jiraClient(site);
+                    const project = await client.getProject(configProjectKey);
+                    this._projectSiteMapping[siteId] = project;
+                }
+            }
         }
     }
 
@@ -74,19 +84,12 @@ export class JiraProjectManager extends Disposable {
     async getProjects(site?: DetailedSiteInfo, orderBy?: OrderBy, query?: string): Promise<Project[]> {
         const defaultSite: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
         let foundProjects: Project[] = [];
-        if (this._projectsAvailable.length > 0 && query === undefined && (!site || site.id === defaultSite.id)) {
-            return this._projectsAvailable;
-        }
 
         try {
             const useSite: DetailedSiteInfo = (site) ? site : defaultSite;
             const client = await Container.clientManager.jiraClient(useSite);
             const order = orderBy !== undefined ? orderBy : 'key';
             foundProjects = await client.getProjects(query, order);
-
-            if (!site || site.id === defaultSite.id) {
-                this._projectsAvailable = foundProjects;
-            }
 
         } catch (e) {
             Logger.debug(`Failed to fetch projects ${e}`);

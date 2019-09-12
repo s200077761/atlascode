@@ -62,7 +62,7 @@ export default class EditJQL extends PureComponent<{
         Authorization: `Bearer ${this.props.jiraAccessToken}`,
         "Content-Type": "application/json"
       }
-    }).then(res => { return res.data; });
+    }).then(res => { return res.data; }).catch(reason => { console.log('jql error', reason); Promise.reject(reason) });
   }
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {

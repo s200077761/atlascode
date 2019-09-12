@@ -25,11 +25,12 @@ import Form from '@atlaskit/form';
 import BitbucketIssuesConfig from './BBIssuesConfig';
 import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
-import BitbucketAuth from './BBAuth';
+import { BBAuth } from './BBAuth';
 import { JiraAuth } from './JiraAuth';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import ProductEnabler from './ProductEnabler';
 import { Project } from '../../../jira/jira-client/model/entities';
+import { Time } from '../../../util/time';
 
 type changeObject = { [key: string]: any };
 
@@ -81,6 +82,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             }
             case 'sitesAvailableUpdate': {
                 this.setState({ jiraSites: e.jiraSites, bitbucketSites: e.bitbucketSites, isErrorBannerOpen: false, errorDetails: undefined });
+                break;
+            }
+            case 'projectMappingUpdate': {
+                this.setState({ siteProjectMapping: e.siteProjectMapping, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
             case 'projectList': {
@@ -150,10 +155,15 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if ((this.newProjects.length > 0 && this.nonce === nonce) || (end - start) > 2000) {
+                const gotProjects = (this.newProjects.length > 0 && this.nonce === nonce);
+                const timeIsUp = (end - start) > 15 * Time.SECONDS;
+
+                if (gotProjects || timeIsUp) {
                     this.setState({ isProjectsLoading: false });
                     clearInterval(timer);
                     console.log('resolving new projects', this.newProjects);
+                    console.log('got projects', gotProjects);
+                    console.log('timeisup', timeIsUp);
                     resolve(this.newProjects);
                 }
             }, 100);
@@ -255,10 +265,11 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
                                                 <Panel isDefaultExpanded header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
-                                                    <BitbucketAuth
+                                                    <BBAuth
                                                         sites={this.state.bitbucketSites}
                                                         handleDeleteSite={this.handleLogout}
-                                                        handleSaveSite={this.handleLogin} />
+                                                        handleSaveSite={this.handleLogin}
+                                                    />
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>

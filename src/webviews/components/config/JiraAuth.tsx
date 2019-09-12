@@ -73,8 +73,10 @@ const Project = (data: ItemData) => {
         getOptionLabel: SelectFieldHelper.labelFuncForValueType(ValueType.Project),
         getOptionValue: SelectFieldHelper.valueFuncForValueType(ValueType.Project),
         components: SelectFieldHelper.getComponentsForValueType(ValueType.Project),
-        placeholder: 'Search for project',
+        placeholder: 'Default project',
+        noOptionsMessage: (input: any) => { return 'type to search'; },
         defaultValue: data.defaultProject,
+        value: data.defaultProject,
     };
 
     return (
@@ -132,9 +134,11 @@ export const JiraAuth: React.FunctionComponent<JiraAuthProps> = ({ sites, defaul
                 </div>
             </div>
             <TableTree
+                headers={['Site Name', 'Default Site', 'Default Project', '']}
                 columns={[Name, Default, Project, Delete]}
-                columnWidths={['100%', '100%', '100%', '50px']}
+                columnWidths={['300px', '340px', '680px', '20px']}
                 items={sites.map(site => {
+                    console.log('default project', siteProjectMapping[site.id]);
                     return {
                         id: site.id,
                         content: {

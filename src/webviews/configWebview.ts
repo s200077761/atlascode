@@ -7,15 +7,13 @@ import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo } from
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
-import { ConfigData } from '../ipc/configMessaging';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { isFetchQueryAndSite } from '../ipc/issueActions';
 import { JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
 import { SitesAvailableUpdateEvent } from '../siteManager';
-import { JiraAvailableProjectsUpdateEvent } from '../jira/projectManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
-import { Project } from '../jira/jira-client/model/entities';
+import { JiraSiteProjectMappingUpdateEvent } from '../jira/projectManager';
 
 export class ConfigWebview extends AbstractReactWebview {
 
@@ -25,7 +23,7 @@ export class ConfigWebview extends AbstractReactWebview {
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
-            Container.jiraProjectManager.onDidProjectsAvailableChange(this.onProjectsAvailableChange, this),
+            Container.jiraProjectManager.onDidSiteProjectMappingChange(this.onSiteProjectMappingChange, this),
         );
     }
 
@@ -45,14 +43,7 @@ export class ConfigWebview extends AbstractReactWebview {
             this.isRefeshing = true;
             const config: IConfig = configuration.get<IConfig>();
 
-            const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
-
             const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
-            let projects: Project[] = [];
-
-            if (isJiraConfigured) {
-                projects = await Container.jiraProjectManager.getProjects();
-            }
 
             const feedbackUser = await getFeedbackUser();
             const siteProjectMapping = await Container.jiraProjectManager.getSiteProjectMapping();
@@ -60,9 +51,9 @@ export class ConfigWebview extends AbstractReactWebview {
             this.postMessage({
                 type: 'init',
                 config: config,
+                jiraAccessToken: "FIXME!",
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
-                projects: projects,
                 feedbackUser: feedbackUser,
                 siteProjectMapping: siteProjectMapping,
             });
@@ -75,12 +66,9 @@ export class ConfigWebview extends AbstractReactWebview {
         }
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        this.postMessage({ type: 'configUpdate', config: configuration.get<IConfig>() });
-    }
+    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 
-    private onProjectsAvailableChange(e: JiraAvailableProjectsUpdateEvent) {
-        this.invalidate();
+        this.postMessage({ type: 'configUpdate', config: configuration.get<IConfig>() });
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
@@ -91,6 +79,10 @@ export class ConfigWebview extends AbstractReactWebview {
             , jiraSites: jiraSitesAvailable
             , bitbucketSites: bitbucketSitesAvailable
         });
+    }
+
+    private onSiteProjectMappingChange(e: JiraSiteProjectMappingUpdateEvent) {
+        this.postMessage({ type: 'projectMappingUpdate', siteProjectMapping: e.projectSiteMapping });
     }
 
     private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
