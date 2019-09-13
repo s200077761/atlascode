@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
-import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue, readProjects } from './model/responses';
+import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink, readProject } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
@@ -143,26 +143,8 @@ export abstract class JiraClient {
     }
 
     // Project
-    public abstract getProjectSearchPath(): string;
+    public abstract getProjects(query?: string, orderBy?: string): Promise<Project[]>;
 
-    public async getProjects(query?: string, orderBy?: string): Promise<Project[]> {
-        let queryValues: any | undefined = undefined;
-        if (query || orderBy) {
-            queryValues = {};
-            if (query) {
-                queryValues.query = query;
-            }
-            if (orderBy) {
-                queryValues.orderBy = orderBy;
-            }
-        }
-        const res = await this.getFromJira(this.getProjectSearchPath(), queryValues);
-
-        if (Array.isArray(res.values)) {
-            return readProjects(res.values);
-        }
-        return [];
-    }
 
     public async getProject(projectIdOrKey: string): Promise<Project> {
 
