@@ -11,9 +11,10 @@ import { Container } from '../../container';
 import { ProductJira } from '../../atlclients/authInfo';
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
-import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
+import { JQLEntry, SiteJQL, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
 import { IssueNode } from "../nodes/issueNode";
+import { Project } from "../../jira/jira-client/model/entities";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -81,7 +82,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     this._onDidChangeTreeData.fire();
   }
 
-  setProject(project: WorkingProject) {
+  setProject(project: Project) {
     this._onDidChangeTreeData.fire();
   }
 

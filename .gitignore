@@ -2,6 +2,7 @@ out
 build
 node_modules
 .vscode-test/
+!.vscode/launch.json
 *.vsix
 .yo-*
 yarn-error.log
@@ -9,3 +10,4 @@ yarn-error.log
 charles-ssl-proxying-certificate.pem
 *.pem
 TEMP-*
+.DS_Store

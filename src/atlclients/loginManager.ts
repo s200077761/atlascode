@@ -39,10 +39,11 @@ export class LoginManager {
             if (siteDetails.length > 0) {
                 await this._credentialManager.saveAuthInfo(siteDetails[0], oauthInfo);
                 this._siteManager.addSites(siteDetails);
+                authenticatedEvent(siteDetails[0]).then(e => { this._analyticsClient.sendTrackEvent(e); });
             }
 
             window.showInformationMessage(`You are now authenticated with ${site.product}`);
-            authenticatedEvent(site.product.name).then(e => { this._analyticsClient.sendTrackEvent(e); });
+
         } catch (e) {
             Logger.error(e, 'Error authenticating');
             if (typeof e === 'object' && e.cancelled !== undefined) {
@@ -135,7 +136,7 @@ export class LoginManager {
                 apiUrl = `https://${site.hostname}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username}`;
+                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username}?avatarSize=64`;
                 avatarUrl = '';
                 apiUrl = `https://${site.hostname}`;
                 break;
@@ -159,14 +160,25 @@ export class LoginManager {
             baseLinkUrl: `https://${site.hostname}`,
             id: site.hostname,
             name: site.hostname,
-            userId: json.id,
+            userId: site.product.key === ProductJira.key ? json.id : json.slug,
             credentialId: credentialId,
         };
 
-        credentials.user = {
-            displayName: json.displayName,
-            id: json.id,
-        };
+        if (site.product.key === ProductJira.key) {
+            credentials.user = {
+                displayName: json.displayName,
+                id: json.id,
+                email: json.emailAddress,
+                avatarUrl: json.avatarUrls["48x48"],
+            };
+        } else {
+            credentials.user = {
+                displayName: json.displayName,
+                id: json.slug,
+                email: json.emailAddress,
+                avatarUrl: json.avatarUrl,
+            };
+        }
 
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
         this._siteManager.addSites([siteDetails]);

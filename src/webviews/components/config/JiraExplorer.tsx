@@ -11,7 +11,7 @@ type changeObject = { [key: string]: any };
 
 export default class JiraExplorer extends React.Component<{
     configData: ConfigData,
-    jiraAccessToken: string,
+    jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>,
     sites: DetailedSiteInfo[],
     onConfigChange: (changes: changeObject, removes?: string[]) => void
 }, ConfigData> {
@@ -97,7 +97,7 @@ export default class JiraExplorer extends React.Component<{
                         openIssuesJql={config.jira.explorer.openIssueJql}
                         openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
                         onConfigChange={this.props.onConfigChange}
-                        jiraAccessToken={this.props.jiraAccessToken}
+                        jqlFetcher={this.props.jqlFetcher}
                         defaultSiteId={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
@@ -112,7 +112,7 @@ export default class JiraExplorer extends React.Component<{
                     <CustomJQL
                         siteJqlList={config.jira.customJql}
                         onConfigChange={this.props.onConfigChange}
-                        jiraAccessToken={this.props.jiraAccessToken}
+                        jqlFetcher={this.props.jqlFetcher}
                         defaultSiteName={this.selectedSiteName()}
                         defaultSiteId={config.jira.defaultSite}
                         workingProject={config.jira.workingProject.id}

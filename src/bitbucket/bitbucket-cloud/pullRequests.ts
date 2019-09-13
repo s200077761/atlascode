@@ -1,8 +1,8 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Reviewer, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
-import { parseGitUrl, urlForRemote } from "../bbUtils";
+import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
 import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
@@ -45,12 +45,17 @@ export class CloudPullRequestApi implements PullRequestApi {
             '/user'
         );
 
+        return CloudPullRequestApi.toUserModel(data);
+    }
+
+    private static toUserModel(input: any): User {
         return {
-            accountId: data.account_id!,
-            avatarUrl: data.links!.avatar!.href!,
+            accountId: input.account_id!,
+            avatarUrl: input.links!.avatar!.href!,
             emailAddress: undefined,
-            displayName: data.display_name!,
-            url: data.links!.html!.href!
+            displayName: input.display_name!,
+            url: input.links!.html!.href!,
+            mention: `@[${input.display_name!}](account_id:${input.account_id})`
         };
     }
 
@@ -159,15 +164,32 @@ export class CloudPullRequestApi implements PullRequestApi {
                 url: commit.links!.html!.href!,
                 htmlSummary: commit.summary ? commit.summary.html! : undefined,
                 rawSummary: commit.summary ? commit.summary.raw! : undefined,
-                author: {
-                    accountId: commit.author!.user!.account_id,
-                    displayName: commit.author!.user!.display_name!,
-                    url: commit.author!.user!.links!.html!.href!,
-                    avatarUrl: commit.author!.user!.links!.avatar!.href!
-                }
+                author: CloudPullRequestApi.toUserModel(commit.author!.user!)
             })),
             next: data.next
         };
+    }
+
+    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        await this.client.delete(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {}
+        );
+    }
+
+    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
+        let parsed = parseGitUrl(urlForRemote(remote));
+        const { data } = await this.client.put(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            {
+                content: {
+                    raw: content
+                }
+            }
+        );
+
+        return this.convertDataToComment(data, remote);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -186,7 +208,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.get(data.next);
+            const nextPage = await this.client.getURL(data.next);
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -201,35 +223,33 @@ export class CloudPullRequestApi implements PullRequestApi {
                     markup: 'markdown',
                     raw: '*Comment deleted*',
                     html: '<p><em>Comment deleted</em></p>'
-                }
+                },
+                deleted: true
             } as any;
         });
-
-        const nestedComments = this.toNestedList(
-            comments.map(comment => ({
-                id: comment.id!,
-                parentId: comment.parent ? comment.parent.id! : undefined,
-                htmlContent: comment.content!.html!,
-                rawContent: comment.content!.raw!,
-                ts: comment.created_on!,
-                updatedTs: comment.updated_on!,
-                deleted: !!comment.deleted,
-                inline: comment.inline,
-                user: comment.user
-                    ? {
-                        accountId: comment.user.account_id!,
-                        displayName: comment.user.display_name!,
-                        url: comment.user.links!.html!.href!,
-                        avatarUrl: comment.user.links!.avatar!.href!
-                    }
-                    : UnknownUser,
-                children: []
-            })));
-
+        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.remote)))));
+        const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
-            data: nestedComments,
+            data: visibleComments,
             next: undefined
         };
+    }
+
+    private shouldDisplayComment(comment: any): boolean {
+        if (!comment.deleted) {
+            return true;
+        } else if (!comment.children || comment.children.length === 0) {
+            return false;
+        } else {
+            let hasUndeletedChild: boolean = false;
+            for (let child of comment.children) {
+                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+                if (hasUndeletedChild) {
+                    return hasUndeletedChild;
+                }
+            }
+            return hasUndeletedChild;
+        }
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
@@ -272,7 +292,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getReviewers(remote: Remote, query?: string): Promise<Reviewer[]> {
+    async getReviewers(remote: Remote, query?: string): Promise<User[]> {
         let parsed = parseGitUrl(urlForRemote(remote));
 
         let reviewers: any[] = [];
@@ -291,15 +311,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             reviewers = data.values || [];
         }
 
-        return reviewers.map(reviewer => ({
-            accountId: reviewer.account_id!,
-            displayName: reviewer.display_name!,
-            url: reviewer.links!.html!.href!,
-            avatarUrl: reviewer.links!.avatar!.href!,
-            mention: `@[${reviewer.display_name!}](account_id:${reviewer.account_id})`,
-            approved: !!reviewer.approved,
-            role: reviewer.role!
-        }));
+        return reviewers.map(reviewer => CloudPullRequestApi.toUserModel(reviewer));
     }
 
     async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -369,7 +381,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         let parsed = parseGitUrl(urlForRemote(remote));
-        prCommentEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+        if (site) {
+            prCommentEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
 
         const { data } = await this.client.post(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments`,
@@ -382,6 +398,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
+        return await this.convertDataToComment(data, remote);
+    }
+
+    private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
+        const commentBelongsToUser: boolean = data.user.account_id === (await Container.bitbucketContext.currentUser(remote)).accountId;
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,
@@ -390,14 +411,11 @@ export class CloudPullRequestApi implements PullRequestApi {
             ts: data.created_on!,
             updatedTs: data.updated_on!,
             deleted: !!data.deleted,
+            deletable: commentBelongsToUser && !data.deleted,
+            editable: commentBelongsToUser && !data.deleted,
             inline: data.inline,
             user: data.user
-                ? {
-                    accountId: data.user.account_id!,
-                    displayName: data.user.display_name!,
-                    url: data.user.links!.html!.href!,
-                    avatarUrl: data.user.links!.avatar!.href!
-                }
+                ? CloudPullRequestApi.toUserModel(data.user)
                 : UnknownUser,
             children: []
         };
@@ -425,19 +443,10 @@ export class CloudPullRequestApi implements PullRequestApi {
                 id: pr.id!,
                 version: -1,
                 url: pr.links!.html!.href!,
-                author: {
-                    accountId: pr.author!.account_id,
-                    displayName: pr.author!.display_name!,
-                    url: pr.author!.links!.html!.href!,
-                    avatarUrl: pr.author!.links!.avatar!.href!
-                },
+                author: CloudPullRequestApi.toUserModel(pr.author),
                 reviewers: [],
                 participants: (pr.participants || [])!.map((participant: any) => ({
-                    accountId: participant.user!.account_id!,
-                    displayName: participant.user!.display_name!,
-                    mention: `@[${participant.user!.display_name!}](account_id:${participant.user!.account_id})`,
-                    url: participant.user!.links!.html!.href!,
-                    avatarUrl: participant.user!.links!.avatar!.href!,
+                    ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
                     approved: !!participant.approved
                 })),

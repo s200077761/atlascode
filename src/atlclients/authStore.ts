@@ -206,7 +206,7 @@ export class CredentialManager implements Disposable {
 
             window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);
 
-            loggedOutEvent(site.product.name).then(e => { this._analyticsClient.sendTrackEvent(e); });
+            loggedOutEvent(site).then(e => { this._analyticsClient.sendTrackEvent(e); });
             return true;
         }
 

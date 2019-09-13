@@ -20,7 +20,7 @@ export default class NonCustomJQL extends React.Component<
         openIssuesJql: string;
         openIssuesIsEnabled: boolean;
         onConfigChange: (changes: changeObject, removes?: string[]) => void;
-        jiraAccessToken: string;
+        jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
     },
     {
         inputValue: string;
@@ -185,7 +185,7 @@ export default class NonCustomJQL extends React.Component<
     }
 
     render() {
-        if (!this.props.defaultSiteId && !this.props.jiraAccessToken) {
+        if (!this.props.defaultSiteId) {
             return <div />;
         }
 
@@ -195,7 +195,7 @@ export default class NonCustomJQL extends React.Component<
             <React.Fragment>
                 {this.state.editingEntry && (
                     <EditJQL
-                        jiraAccessToken={this.props.jiraAccessToken}
+                        jqlFetcher={this.props.jqlFetcher}
                         defaultSiteId={this.props.defaultSiteId}
                         workingProject={this.props.workingProject}
                         sites={[]}

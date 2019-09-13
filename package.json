@@ -67,6 +67,32 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.deleteComment",
+                "title": "Delete",
+                "icon": {
+                    "dark": "resources/dark/delete.svg",
+                    "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.editComment",
+                "title": "Edit",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.saveCommentEdit",
+                "title": "Save Changes"
+            },
+            {
+                "command": "atlascode.bb.cancelCommentEdit",
+                "title": "Cancel"
+            },
+            {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh",
                 "icon": {
@@ -405,6 +431,28 @@
                     "group": "inline"
                 }
             ],
+            "comments/comment/title": [
+                {
+                    "command": "atlascode.bb.editComment",
+                    "group": "inline@1",
+                    "when": "comment =~ /canEdit/"
+                },
+                {
+                    "command": "atlascode.bb.deleteComment",
+                    "group": "inline@2",
+                    "when": "comment =~ /canDelete/"
+                }
+            ],
+            "comments/comment/context": [
+				{
+					"command": "atlascode.bb.cancelCommentEdit",
+					"group": "inline@2"
+				},
+				{
+					"command": "atlascode.bb.saveCommentEdit",
+					"group": "inline@1"
+				}
+			],
             "commandPalette": [
                 {
                     "command": "atlascode.bb.refreshPullRequests",
@@ -436,6 +484,14 @@
                 },
                 {
                     "command": "atlascode.bb.addComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.deleteComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.editComment",
                     "when": "false"
                 },
                 {
@@ -627,6 +683,16 @@
                     "type": "string",
                     "description": "Jira site ID for workspace",
                     "scope": "resource"
+                },
+                "atlascode.jira.defaultProjects": {
+                    "type": "object",
+                    "description": "mapping of site to default project",
+                    "scope": "resource",
+                    "patternProperties": {
+                        ".*": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "atlascode.jira.customJql": {
                     "type": "array",

@@ -21,6 +21,9 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
         const bbApi = await clientForRemote(queryParams.remote);
         const triggerWord = doc.getText(doc.getWordRangeAtPosition(pos));
         const users = await bbApi.pullrequests.getReviewers(queryParams.remote, triggerWord);
+        if (users.length === 0) {
+            users.push(...queryParams.participants);
+        }
 
         return users.map(user => {
             const item = new CompletionItem(user.displayName, CompletionItemKind.Constant);

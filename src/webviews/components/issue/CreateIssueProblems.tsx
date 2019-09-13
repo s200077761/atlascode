@@ -4,8 +4,9 @@ import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
-import { WorkingProject, emptyWorkingProject } from '../../../config/model';
 import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/editIssueUI';
+import { Project } from '../../../jira/jira-client/model/entities';
+import { emptyProject } from '../../../jira/jira-client/model/emptyEntities';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
@@ -13,7 +14,7 @@ interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
     problems: CreateMetaTransformerProblems;
-    project: WorkingProject;
+    project: Project;
 }
 
 export default class CreateIssueProblems extends WebviewComponent<Action, Accept, {}, ViewState> {
@@ -23,7 +24,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
             isErrorBannerOpen: false,
             errorDetails: undefined,
             problems: {},
-            project: emptyWorkingProject
+            project: emptyProject
         };
     }
 

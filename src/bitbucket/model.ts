@@ -9,17 +9,18 @@ export type User = {
     emailAddress?: string;
     url: string;
     avatarUrl: string;
+    mention: string;
 };
 
 export const UnknownUser = {
     accountId: '',
     displayName: 'Unknown User',
     url: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    mention: ''
 };
 
 export type Reviewer = User & {
-    mention: string;
     approved: boolean;
     role: "PARTICIPANT" | "REVIEWER";
 };
@@ -39,6 +40,8 @@ export type Repo = {
 export type Comment = {
     id: number;
     parentId?: number;
+    deletable: boolean;
+    editable: boolean;
     user: User;
     htmlContent: string;
     rawContent: string;
@@ -177,8 +180,10 @@ export interface PullRequestApi {
     getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
     getCommits(pr: PullRequest): Promise<PaginatedCommits>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
+    editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
+    deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
-    getReviewers(remote: Remote, query?: string): Promise<Reviewer[]>;
+    getReviewers(remote: Remote, query?: string): Promise<User[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, approved: boolean): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;

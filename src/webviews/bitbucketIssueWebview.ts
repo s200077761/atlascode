@@ -7,14 +7,16 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
-import { BitbucketIssue } from "../bitbucket/model";
-import { clientForRemote } from "../bitbucket/bbUtils";
+import { BitbucketIssue, User } from "../bitbucket/model";
+import { clientForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { isFetchUsers } from "../ipc/prActions";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
 
     private _issue?: BitbucketIssue;
+    private _participants: User[] = [];
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -26,6 +28,14 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
 
     public get id(): string {
         return "bitbucketIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._issue) {
+            return siteDetailsForRemote(this._issue.remote);
+        }
+
+        return undefined;
     }
 
     initialize(data: BitbucketIssue) {
@@ -67,6 +77,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 bbApi.issues!.getComments(issue),
                 bbApi.issues!.getChanges(issue)]
             );
+
+            this._participants = comments.data.map(c => c.user);
 
             //@ts-ignore
             // replace comment with change data which contains additional details
@@ -130,7 +142,10 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             const bbApi = await clientForRemote(this._issue!.remote);
                             await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
-                            bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueCommentEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -147,7 +162,11 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
                             this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
-                            bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueTransitionedEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -176,6 +195,9 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                         try {
                             const bbApi = await clientForRemote(e.remote);
                             const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
+                            if (reviewers.length === 0) {
+                                reviewers.push(...this._participants);
+                            }
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));

@@ -7,7 +7,7 @@ export async function postComment(issue: IssueKeyAndSite, comment: string): Prom
 
   let resp = await client.addComment(issue.key, comment);
 
-  issueCommentEvent(issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+  issueCommentEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
   return resp;
 }

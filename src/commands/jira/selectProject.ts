@@ -4,7 +4,7 @@ import { configuration } from "../../config/configuration";
 import { Logger } from "../../logger";
 import { projectSelectedEvent } from "../../analytics";
 import debounce from "lodash.debounce";
-import { ProductJira } from "../../atlclients/authInfo";
+import { ProductJira, DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Project, readProject } from "../../jira/jira-client/model/entities";
 
 export async function showProjectSelectionDialog() {
@@ -60,15 +60,19 @@ async function fetchProjectsMatching(value: string): Promise<ProjectQuickPickIte
 }
 
 async function saveWorkingProject(project: Project) {
+  const site: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
+  const defaultProjects = Container.config.jira.defaultProjects;
+  defaultProjects[site.id] = project.key;
+
   await configuration
-    .setWorkingProject(project)
+    .setDefaultProjects(defaultProjects)
     .catch(reason => {
       Logger.debug("rejected config update", reason);
     });
 
   projectSelectedEvent(
+    Container.siteManager.effectiveSite(ProductJira),
     project.id,
-    Container.siteManager.effectiveSite(ProductJira).id
   ).then(e => {
     Container.analyticsClient.sendTrackEvent(e);
   });

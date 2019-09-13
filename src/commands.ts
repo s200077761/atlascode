@@ -25,6 +25,8 @@ export enum Commands {
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
+    BitbucketDeleteComment = 'atlascode.bb.deleteComment',
+    BitbucketEditComment = 'atlascode.bb.editComment',
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
     SelectProject = 'atlascode.jira.selectProject',
     SelectSite = 'atlascode.jira.selectSite',
@@ -49,6 +51,8 @@ export enum Commands {
     CreateBitbucketIssue = 'atlascode.bb.createIssue',
     ShowBitbucketIssue = 'atlascode.bb.showIssue',
     StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
+    BBPRCancelCommentEdit = 'atlascode.bb.cancelCommentEdit',
+    BBPRSubmitCommentEdit = 'atlascode.bb.saveCommentEdit',
     ViewDiff = 'atlascode.viewDiff'
 }
 

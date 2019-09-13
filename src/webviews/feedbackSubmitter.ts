@@ -17,44 +17,30 @@ const feedbackTypeIds = {
 export async function getFeedbackUser(): Promise<FeedbackUser> {
     let firstAvailableUser: FeedbackUser | undefined = undefined;
 
-    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira);
-    for (const site of jiraCloudSites) {
-        try {
-            const client = await Container.clientManager.jiraClient(site);
-            const user = await client.getCurrentUser();
-            if (user.accountId && user.displayName && user.emailAddress) {
-                firstAvailableUser = {
-                    userName: user.displayName,
-                    emailAddress: user.emailAddress
-                };
-                break;
-            }
-        }
-        catch (e) {
-            // continue
+    const jiraCloudSites = Container.siteManager.getSitesAvailable(ProductJira).filter(site => site.isCloud);
+    if (jiraCloudSites.length > 0) {
+        const jiraUser = await Container.credentialManager.getAuthInfo(jiraCloudSites[0]);
+        if (jiraUser) {
+            firstAvailableUser = {
+                userName: jiraUser.user.displayName,
+                emailAddress: jiraUser.user.email,
+            };
         }
     }
 
     if (!firstAvailableUser) {
-        const bitbucketCloudSites = Container.siteManager.getSitesAvailable(ProductBitbucket);
-        for (const site of bitbucketCloudSites) {
-            try {
-                const client = await Container.clientManager.bbClient(site);
-                const user = await client.pullrequests.getCurrentUser(site);
-                if (user.accountId && user.displayName && user.emailAddress) {
-                    firstAvailableUser = {
-                        userName: user.displayName,
-                        emailAddress: user.emailAddress
-                    };
-                    break;
-                }
-            }
-            catch (e) {
-                // continue
+        const bitbucketCloudSites = Container.siteManager.getSitesAvailable(ProductBitbucket).filter(site => site.isCloud);
+        if (bitbucketCloudSites.length > 0) {
+            const bbUser = await Container.credentialManager.getAuthInfo(bitbucketCloudSites[0]);
+            if (bbUser) {
+                firstAvailableUser = {
+                    userName: bbUser.user.displayName,
+                    emailAddress: bbUser.user.email,
+                };
             }
         }
-    }
 
+    }
     return firstAvailableUser || { userName: '', emailAddress: '' };
 }
 

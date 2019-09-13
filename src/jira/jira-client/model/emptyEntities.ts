@@ -115,6 +115,12 @@ export const emptyProject: Project = {
     isPrivate: false
 };
 
+export function isEmptyProject(p: Project): p is Project {
+    return !p
+        || (<Project>p).key === undefined
+        || (<Project>p).key === '';
+}
+
 export const emptyComment: Comment = {
     author: emptyUser,
     body: '',

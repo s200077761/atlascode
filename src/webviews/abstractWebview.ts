@@ -16,6 +16,7 @@ import { viewScreenEvent } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -48,8 +49,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
-    protected tenantId: string | undefined;
     protected isRefeshing: boolean = false;
+    private _viewEventSent: boolean = false;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -69,7 +70,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
     }
     abstract get title(): string;
     abstract get id(): string;
-    abstract invalidate(): void;
+    abstract async invalidate(): Promise<void>;
+    abstract get siteOrUndefined(): DetailedSiteInfo | undefined;
 
     get visible() {
         return this._panel === undefined ? false : this._panel.visible;
@@ -110,7 +112,6 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
 
-        viewScreenEvent(this.id, this.tenantId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
@@ -119,8 +120,12 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
             this.postMessage({ type: 'pmfStatus', showPMF: Container.pmfStats.shouldShowSurvey() });
 
-
-            this.invalidate();
+            this.invalidate().then(() => {
+                if (!this._viewEventSent) {
+                    this._viewEventSent = true;
+                    viewScreenEvent(this.id, this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                }
+            });
         }
     }
 

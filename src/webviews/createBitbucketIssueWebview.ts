@@ -7,7 +7,8 @@ import { Commands } from '../commands';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
-import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 
 export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
@@ -20,6 +21,15 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
     public get id(): string {
         return "createBitbucketIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        if (repos.length > 0) {
+            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+        }
+
+        return undefined;
     }
 
     public async invalidate() {
@@ -116,7 +126,13 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         let issue = await bbApi.issues!.create(href, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
-        bbIssueCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+
+        if (site) {
+            bbIssueCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
+
         this.hide();
     }
 }

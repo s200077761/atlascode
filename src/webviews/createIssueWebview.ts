@@ -3,7 +3,6 @@ import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import { WorkingProject } from '../config/model';
 import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
@@ -15,7 +14,7 @@ import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ValueType, FieldValues, FieldUIs } from '../jira/jira-client/model/fieldUI';
 import { CreateMetaTransformerResult, emptyCreateMetaResult, IssueTypeUI } from '../jira/jira-client/model/editIssueUI';
-import { IssueType } from '../jira/jira-client/model/entities';
+import { IssueType, Project } from '../jira/jira-client/model/entities';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -41,7 +40,7 @@ const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Cod
 
 export class CreateIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<PartialIssue | undefined> {
     private _partialIssue: PartialIssue | undefined;
-    private _currentProject: WorkingProject | undefined;
+    private _currentProject: Project | undefined;
     private _screenData: CreateMetaTransformerResult;
     private _selectedIssueTypeId: string;
     private _relatedBBIssue: BitbucketIssue | undefined;
@@ -58,6 +57,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
     public get id(): string {
         return "atlascodeCreateIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return this._siteDetails;
     }
 
     protected onPanelDisposed() {
@@ -149,7 +152,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         }
     }
 
-    async forceUpdateFields(project?: WorkingProject, fieldValues?: FieldValues) {
+    async forceUpdateFields(project?: Project, fieldValues?: FieldValues) {
         if (this.isRefeshing) {
             return;
         }
@@ -160,7 +163,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             let effProject = project;
 
             if (!effProject) {
-                effProject = await Container.jiraProjectManager.getEffectiveProject();
+                effProject = await Container.jiraProjectManager.getEffectiveProject(this._siteDetails);
             }
 
             const availableProjects = await Container.jiraProjectManager.getProjects();
@@ -336,7 +339,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             let client = await Container.clientManager.jiraClient(e.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
-                            issueCreatedEvent(resp.key, e.site.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(e.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                             if (issuelinks) {
                                 this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {
@@ -355,66 +358,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key);
 
-                            // const site = Container.siteManager.effectiveSite(ProductJira);
-                            // let client = await Container.clientManager.jiraClient(site);
-                            // if (client) {
-                            //     const issuelinks: any[] = [];
-                            //     const formLinks = e.issueData.issuelinks;
-                            //     delete e.issueData.issuelinks;
-
-                            //     let worklog: any = undefined;
-                            //     if (e.issueData.worklog && e.issueData.worklog.enabled) {
-                            //         delete e.issueData.worklog.enabled;
-                            //         worklog = {
-                            //             worklog: [
-                            //                 {
-                            //                     add: {
-                            //                         ...e.issueData.worklog,
-                            //                         adjustEstimate: 'new',
-                            //                         started: e.issueData.worklog.started
-                            //                             ? format(e.issueData.worklog.started, 'YYYY-MM-DDTHH:mm:ss.SSSZZ')
-                            //                             : undefined
-                            //                     }
-                            //                 }
-                            //             ]
-                            //         };
-                            //         delete e.issueData.worklog;
-                            //     }
-
-                            //     const resp = await client.createIssue({ fields: e.issueData, update: worklog });
-
-                            //     if (formLinks &&
-                            //         formLinks.type && formLinks.type.id &&
-                            //         formLinks.issue && Array.isArray(formLinks.issue) && formLinks.issue.length > 0) {
-
-                            //         formLinks.issue.forEach((link: any) => {
-                            //             issuelinks.push(
-                            //                 {
-                            //                     type: {
-                            //                         id: formLinks.type.id
-                            //                     },
-                            //                     inwardIssue: formLinks.type.type === 'inward' ? { key: link.key } : { key: resp.key },
-                            //                     outwardIssue: formLinks.type.type === 'outward' ? { key: link.key } : { key: resp.key }
-                            //                 }
-                            //             );
-                            //         });
-                            //     }
-
-                            //     if (issuelinks.length > 0) {
-                            //         issuelinks.forEach(async (link: any) => {
-                            //             if (client) {
-                            //                 await client.createIssueLink('', { body: link });
-                            //             }
-                            //         });
-                            //     }
-
-                            //     this.postMessage({ type: 'issueCreated', issueData: { ...resp, site: site, token: await Container.clientManager.getValidAccessToken(Container.siteManager.effectiveSite(ProductJira)) } });
-                            //     issueCreatedEvent(resp.key, Container.siteManager.effectiveSite(ProductJira).id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                            //     commands.executeCommand(Commands.RefreshJiraExplorer);
-                            //     this.fireCallback(resp.key);
-                            // } else {
-                            //     this.postMessage({ type: 'error', reason: "jira client undefined" });
-                            // }
                         } catch (e) {
                             Logger.error(new Error(`error creating comment: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
@@ -422,10 +365,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
                     }
                     break;
-                }
-                case 'openProblemReport': {
-                    handled = true;
-                    Container.createIssueProblemsWebview.createOrShow(undefined, Container.siteManager.effectiveSite(ProductJira), this._currentProject);
                 }
                 default: {
                     break;

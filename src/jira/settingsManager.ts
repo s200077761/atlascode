@@ -143,7 +143,7 @@ export class JiraSettingsManager extends Disposable {
     private async fetchAllFieldsForSite(site: DetailedSiteInfo): Promise<Fields> {
         let fields: Fields = {};
         const client = await Container.clientManager.jiraClient(site);
-        let allFields = await client.getFields({});
+        let allFields = await client.getFields();
         if (allFields) {
             allFields.forEach(field => {
                 fields[field.key] = readField(field);
