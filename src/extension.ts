@@ -85,6 +85,8 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         await migrator.convertLegacyAuthInfo();
         await globalState.update(AuthInfoVersionKey, 2);
     }
+
+    await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

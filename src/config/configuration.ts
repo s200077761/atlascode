@@ -9,7 +9,8 @@ import {
     ExtensionContext,
     Uri,
     workspace,
-    Disposable
+    Disposable,
+    WorkspaceConfiguration
 } from 'vscode';
 import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
 import { Container } from '../container';
@@ -92,55 +93,95 @@ export class Configuration extends Disposable {
 
     // Moving from V1 to V2 working site became default site.
     async clearVersion1WorkingSite() {
-        await this.updateForWorkspaceFolder(JiraLegacyWorkingSiteConfigurationKey, undefined);
+        await this.updateForWorkspace(JiraLegacyWorkingSiteConfigurationKey, undefined);
+    }
+
+    // Migrates the workspace level site settings. This needs to be done for every workspace /directory
+    // the first time it's opened unlike global migrations that can happen on first run of the extension only.
+    async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
+        let siteId: string | undefined = undefined;
+        let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
+        if (inspect && inspect.workspaceValue) {
+            const legacyValue: any = inspect.workspaceValue;
+            siteId = legacyValue.id;
+            if (siteId) {
+                const config = this.configForOpenWorkspace();
+                if (config) {
+                    await config.update(JiraDefaultSiteConfigurationKey, siteId);
+                    if (deletePrevious) {
+                        await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
+                    }
+                }
+            }
+        }
+
+        if (siteId) {
+            inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
+            if (inspect && inspect.workspaceValue) {
+                const legacyValue: any = inspect.workspaceValue;
+                if (legacyValue.key) {
+                    const config = this.configForOpenWorkspace();
+                    if (config) {
+                        const defaultProjects: DefaultProjects = {};
+                        defaultProjects[siteId] = legacyValue.key;
+                        await config.update(JiraDefaultProjectsConfigurationKey, defaultProjects);
+                        if (deletePrevious) {
+                            await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     async setDefaultSite(siteId?: string) {
-        await this.updateForWorkspaceFolder(JiraDefaultSiteConfigurationKey, siteId);
+        await this.updateForWorkspace(JiraDefaultSiteConfigurationKey, siteId);
     }
 
     async setDefaultProjects(defaultProjects: DefaultProjects) {
-        await this.updateForWorkspaceFolder(JiraDefaultProjectsConfigurationKey, defaultProjects);
+        await this.updateForWorkspace(JiraDefaultProjectsConfigurationKey, defaultProjects);
     }
 
     // Moving from V1 to V2 working project became defaultProjects.
     async clearVersion1WorkingProject() {
-        await this.updateForWorkspaceFolder(JiraV1WorkingProjectConfigurationKey, undefined);
+        await this.updateForWorkspace(JiraV1WorkingProjectConfigurationKey, undefined);
     }
 
-    // Will attempt to update the value for both the WorkspaceFolder and Global. If that fails (no folder is open) it will only set the value globaly.
-    private async updateForWorkspaceFolder(section: string, value: any) {
+    private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
         const f = workspace.workspaceFolders;
         if (f && f.length > 0) {
-            const config = workspace.getConfiguration(extensionId, f[0].uri);
-            return Promise.all([
-                config.update(section, value, ConfigurationTarget.WorkspaceFolder),
+            return workspace.getConfiguration(extensionId, f[0].uri);
+        }
+        return undefined;
+    }
+
+    // Will attempt to update the value for both the Workspace and Global. If that fails (no folder is open) it will only set the value globaly.
+    private async updateForWorkspace(section: string, value: any) {
+        const config = this.configForOpenWorkspace();
+        if (config) {
+            await Promise.all([
+                config.update(section, value, ConfigurationTarget.Workspace),
                 config.update(section, value, ConfigurationTarget.Global)
             ]);
         } else {
-            return this.updateEffective(section, value);
+            await this.updateEffective(section, value);
         }
     }
 
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
         const inspect = await this.inspect(section, resource)!;
-        if (inspect.workspaceFolderValue !== undefined) {
-            if (value === inspect.workspaceFolderValue) { return; }
-
-            return await this.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
-        }
-
         if (inspect.workspaceValue !== undefined) {
             if (value === inspect.workspaceValue) { return; }
 
-            return await this.update(section, value, ConfigurationTarget.Workspace);
+            await this.update(section, value, ConfigurationTarget.Workspace, resource);
+            return;
         }
 
         if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
             return;
         }
 
-        return await this.update(
+        await this.update(
             section,
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global
