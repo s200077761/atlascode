@@ -15,7 +15,7 @@ import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import Reviewers from './Reviewers';
-import Commits from './Commits';
+import { Commits } from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
@@ -418,20 +418,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                            <Comments 
-                                                comments={this.state.pr.comments!} 
-                                                currentUser={this.state.pr.currentUser!} 
-                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
-                                                onComment={this.handlePostComment} 
+                                            <Comments
+                                                comments={this.state.pr.comments!}
+                                                currentUser={this.state.pr.currentUser!}
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                                onComment={this.handlePostComment}
                                                 onEdit={this.handleEditComment}
                                                 onDelete={this.handleDeleteComment}
-                                                loadUserOptions={this.loadUserOptions} 
+                                                loadUserOptions={this.loadUserOptions}
                                             />
-                                            <CommentForm 
-                                                currentUser={this.state.pr.currentUser!} 
-                                                visible={true} 
-                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
-                                                onSave={this.handlePostComment} 
+                                            <CommentForm
+                                                currentUser={this.state.pr.currentUser!}
+                                                visible={true}
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                                onSave={this.handlePostComment}
                                                 loadUserOptions={this.loadUserOptions}
                                             />
                                         </Panel>

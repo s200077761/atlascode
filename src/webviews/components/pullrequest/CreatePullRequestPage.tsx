@@ -13,7 +13,7 @@ import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
-import Commits from './Commits';
+import { Commits } from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
 import BranchWarning from './BranchWarning';
