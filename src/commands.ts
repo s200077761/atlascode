@@ -11,6 +11,7 @@ import { createIssue } from './commands/jira/createIssue';
 import { BitbucketIssue } from './bitbucket/model';
 import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from './jira/jira-client/model/entities';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
+import { SettingSource } from './config/model';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -31,6 +32,10 @@ export enum Commands {
     SelectSite = 'atlascode.jira.selectSite',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
+    ShowJiraIssueSettings = "atlascode.jira.showJiraIssueSettings",
+    ShowPullRequestSettings = "atlascode.bb.showPullRequestSettings",
+    ShowPipelineSettings = "atlascode.bb.showPipelineSettings",
+    ShowBitbucketIssueSettings = "atlascode.bb.showBitbucketIssueSettings",
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
     ShowWelcomePage = 'atlascode.showWelcomePage',
@@ -53,7 +58,11 @@ export enum Commands {
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
-        vscode.commands.registerCommand(Commands.ShowConfigPage, Container.configWebview.createOrShow, Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowConfigPage, () => Container.configWebview.createOrShowConfig(SettingSource.Default), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowJiraIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.JiraIssue), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
         vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),

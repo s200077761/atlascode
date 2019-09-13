@@ -102,6 +102,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.jira.showJiraIssueSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.showIssue",
                 "title": "Open Jira Issue",
                 "category": "Atlassian"
@@ -122,6 +131,15 @@
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.showPullRequestSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
                 },
                 "category": "Atlassian"
             },
@@ -184,6 +202,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.showPipelineSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.createIssue",
                 "title": "Create Bitbucket Issue",
                 "icon": {
@@ -198,6 +225,15 @@
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.showBitbucketIssueSettings",
+                "title": "Refresh Bitbucket Issues",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
                 },
                 "category": "Atlassian"
             },
@@ -321,6 +357,26 @@
                 {
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.jira.showJiraIssueSettings",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showPullRequestSettings",
+                    "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showPipelineSettings",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showBitbucketIssueSettings",
+                    "when": "view == atlascode.views.bb.issuesTreeView",
                     "group": "navigation"
                 },
                 {

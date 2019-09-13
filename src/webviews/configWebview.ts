@@ -1,5 +1,5 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { IConfig } from '../config/model';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
+import { IConfig, SettingSource } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction } from '../ipc/configActions';
@@ -15,7 +15,7 @@ import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import { JiraSiteProjectMappingUpdateEvent } from '../jira/projectManager';
 
-export class ConfigWebview extends AbstractReactWebview {
+export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -25,6 +25,10 @@ export class ConfigWebview extends AbstractReactWebview {
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
             Container.jiraProjectManager.onDidSiteProjectMappingChange(this.onSiteProjectMappingChange, this),
         );
+    }
+
+    initialize(settingSource: SettingSource) {
+        this.postMessage({ type: 'setOpenedSettings', openedSettings: settingSource });
     }
 
     public get title(): string {
@@ -37,6 +41,14 @@ export class ConfigWebview extends AbstractReactWebview {
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
 
         return undefined;
+    }
+
+    async createOrShowConfig(data: SettingSource) {
+
+        await super.createOrShow();
+
+        this.initialize(data);
+
     }
 
     public async invalidate() {
@@ -56,7 +68,6 @@ export class ConfigWebview extends AbstractReactWebview {
             this.postMessage({
                 type: 'init',
                 config: config,
-                jiraAccessToken: "FIXME!",
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 feedbackUser: feedbackUser,
