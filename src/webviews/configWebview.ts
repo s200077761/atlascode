@@ -43,6 +43,14 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         return undefined;
     }
 
+    async createOrShowConfig(data: SettingSource) {
+
+        await super.createOrShow();
+
+        this.initialize(data);
+
+    }
+
     public async invalidate() {
         try {
             if (!this._panel || this.isRefeshing) {
