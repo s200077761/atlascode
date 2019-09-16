@@ -20,7 +20,7 @@ export class IssueNode extends AbstractBaseNode {
         treeItem.iconPath = vscode.Uri.parse(this.issue.issuetype.iconUrl);
         treeItem.contextValue = IssueNodeContextValue;
         treeItem.tooltip = `${this.issue.key} - ${this.issue.summary}`;
-        treeItem.resourceUri = vscode.Uri.parse(`https://${this.issue.siteDetails.baseLinkUrl}/browse/${this.issue.key}`);
+        treeItem.resourceUri = vscode.Uri.parse(`${this.issue.siteDetails.baseLinkUrl}/browse/${this.issue.key}`);
         return treeItem;
     }
 
