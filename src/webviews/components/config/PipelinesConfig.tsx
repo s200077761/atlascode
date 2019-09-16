@@ -121,7 +121,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           enabledConfig={'bitbucket.pipelines.hideFiltered'}
           optionsConfig={'bitbucket.pipelines.branchFilters'}
           enabledValue={this.props.configData.config.bitbucket.pipelines.hideFiltered}
-          enabledDescription={'Show only Bitbucket Piplines matching filters'}
+          enabledDescription={'Show only Bitbucket Pipelines matching filters'}
           promptString={'Add Filter'}
           options={this.props.configData.config.bitbucket.pipelines.branchFilters.slice()} />
 
