@@ -79,7 +79,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
               return (
                 <Checkbox
                   {...fieldArgs.fieldProps}
-                  label="Show notifications when new Bitbucket Issues are created"
+                  label="Show notifications when new Bitbucket Pipelines are created"
                   onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                   isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
                   isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
