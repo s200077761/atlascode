@@ -160,7 +160,7 @@ export async function pmfClosed(): Promise<TrackEvent> {
 }
 
 export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
-    return trackEvent('create', 'jiraIssue', { source: source });
+    return trackEvent('createFromSource', 'issue', { source: source });
 }
 
 // Screen Events
