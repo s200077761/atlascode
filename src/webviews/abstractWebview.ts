@@ -138,6 +138,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
                     }
                     return true;
                 }
+                case 'pmfOpen': {
+                    viewScreenEvent("atlascodePmf", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                    return true;
+                }
                 case 'pmfLater': {
                     Container.pmfStats.snoozeSurvey();
                     return true;

@@ -378,7 +378,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
                             {this.state.showPMF &&
-                                <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                             }
                             <PageHeader
                                 actions={actionsContent}
@@ -418,20 +418,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
-                                            <Comments 
-                                                comments={this.state.pr.comments!} 
-                                                currentUser={this.state.pr.currentUser!} 
-                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
-                                                onComment={this.handlePostComment} 
+                                            <Comments
+                                                comments={this.state.pr.comments!}
+                                                currentUser={this.state.pr.currentUser!}
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                                onComment={this.handlePostComment}
                                                 onEdit={this.handleEditComment}
                                                 onDelete={this.handleDeleteComment}
-                                                loadUserOptions={this.loadUserOptions} 
+                                                loadUserOptions={this.loadUserOptions}
                                             />
-                                            <CommentForm 
-                                                currentUser={this.state.pr.currentUser!} 
-                                                visible={true} 
-                                                isAnyCommentLoading={this.state.isAnyCommentLoading} 
-                                                onSave={this.handlePostComment} 
+                                            <CommentForm
+                                                currentUser={this.state.pr.currentUser!}
+                                                visible={true}
+                                                isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                                onSave={this.handlePostComment}
                                                 loadUserOptions={this.loadUserOptions}
                                             />
                                         </Panel>

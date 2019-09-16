@@ -85,7 +85,7 @@ export async function issueWorkStartedEvent(site: DetailedSiteInfo): Promise<Tra
 }
 
 export async function issueUpdatedEvent(site: DetailedSiteInfo, issueKey: string, fieldName: string, fieldKey: string): Promise<TrackEvent> {
-    return instanceTrackEvent(site, 'created', 'issue', { actionSubjectId: issueKey, fieldName: fieldName, fieldKey: fieldKey });
+    return instanceTrackEvent(site, 'updated', 'issue', { actionSubjectId: issueKey, fieldName: fieldName, fieldKey: fieldKey });
 }
 
 // Bitbucket issue events
@@ -145,6 +145,10 @@ export async function customJQLCreatedEvent(site: DetailedSiteInfo): Promise<Tra
 export async function pipelineStartEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     // apprently never called
     return instanceTrackEvent(site, 'start', 'pipeline');
+}
+
+export async function pmfSubmitted(level: string): Promise<TrackEvent> {
+    return trackEvent('submitted', 'atlascodePmf', { level: level });
 }
 
 export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
