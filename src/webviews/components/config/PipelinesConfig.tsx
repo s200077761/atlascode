@@ -79,7 +79,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
               return (
                 <Checkbox
                   {...fieldArgs.fieldProps}
-                  label="Show notifications when new Bitbucket Issues are created"
+                  label="Show notifications when new Bitbucket pipelines are created"
                   onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                   isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
                   isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
@@ -108,7 +108,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
             return (
               <Checkbox
                 {...fieldArgs.fieldProps}
-                label="Hide Bitbucket Pipelines with no results"
+                label="Hide Bitbucket pipelines with no results"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                 isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
                 isChecked={this.props.configData.config.bitbucket.pipelines.hideEmpty}
@@ -121,7 +121,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           enabledConfig={'bitbucket.pipelines.hideFiltered'}
           optionsConfig={'bitbucket.pipelines.branchFilters'}
           enabledValue={this.props.configData.config.bitbucket.pipelines.hideFiltered}
-          enabledDescription={'Show only Bitbucket Piplines matching filters'}
+          enabledDescription={'Show only Bitbucket pipelines matching filters'}
           promptString={'Add Filter'}
           options={this.props.configData.config.bitbucket.pipelines.branchFilters.slice()} />
 

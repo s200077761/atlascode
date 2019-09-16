@@ -58,7 +58,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                             return (
                                 <Checkbox
                                     {...fieldArgs.fieldProps}
-                                    label="Show notifications when new Bitbucket Issues are created"
+                                    label="Show notifications when new Bitbucket issues are created"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isDisabled={!this.props.configData.config.bitbucket.issues.explorerEnabled}
                                     isChecked={this.props.configData.config.bitbucket.issues.monitorEnabled}

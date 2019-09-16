@@ -36,7 +36,7 @@ export class BitbucketIssuesApiImpl {
     }
 
     // ---- BEGIN - Actions NOT on a specific issue ----
-    // ---- => ensure Bitbucket Issues are enabled for the repo
+    // ---- => ensure Bitbucket issues are enabled for the repo
 
     async getList(repository: Repository): Promise<PaginatedBitbucketIssues> {
         let remotes = getBitbucketRemotes(repository);
@@ -134,7 +134,7 @@ export class BitbucketIssuesApiImpl {
 
 
     // ---- BEGIN - Issue specific actions ----
-    // ---- => Bitbucket Issues enabled for the repo
+    // ---- => Bitbucket issues enabled for the repo
 
     async refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
         let parsed = parseGitUrl(urlForRemote(issue.remote));
