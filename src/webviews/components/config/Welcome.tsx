@@ -126,7 +126,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Better emoji styling in pull request webview</li>
                                 <li>Add loading indicator when posting comment on webviews</li>
                                 <li>Ticket comments should include date/time metadata</li>
-                                <li>Allow filtering of Pipelines</li>
+                                <li>Allow filtering of pipelines</li>
                                 <li>Make Bitbucket features work with SSH aliases</li>
                                 <li>Bitbucket features work with repositories cloned with https protocol</li>
                                 <li>Better date format on pull request commit list</li>

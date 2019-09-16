@@ -345,7 +345,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPipeline)} header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket Pipelines explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPipeline)} header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket pipelines explorer and notifications')}>
                                                     <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 

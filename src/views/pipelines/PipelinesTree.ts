@@ -125,7 +125,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 this._pipelines = await this.fetchPipelines();
             }
             if (this._pipelines.length === 0) {
-                return [new SimpleNode("No Pipelines results for this repository")];
+                return [new SimpleNode("No pipelines results for this repository")];
             }
             
             const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
