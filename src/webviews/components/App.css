@@ -1076,7 +1076,7 @@ pre.pipeline-logs {
 img::after is triggered only if img loading fails */
 
 .bitbucket-page img::after {
-  content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+  content: '⚠️ Error loading the image - open this pull request in your browser to view the image.' !important;
 }
 
 .problem-table {
