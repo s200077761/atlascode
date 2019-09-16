@@ -130,7 +130,7 @@ async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDesc
     if (fkey === 'status') {
       filteredFields[fkey] = {
         id: "status",
-        name: "Staus",
+        name: "Status",
         key: "status",
         clauseNames: [],
         currentValue: res.fields[fkey],
