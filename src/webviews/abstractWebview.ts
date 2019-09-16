@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { Resources } from '../resources';
 import { isAlertable, isPMFSubmitAction, isAction } from '../ipc/messaging';
-import { viewScreenEvent } from '../analytics';
+import { viewScreenEvent, pmfSnoozed, pmfClosed } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
@@ -118,7 +118,13 @@ export abstract class AbstractReactWebview implements ReactWebview {
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
-            this.postMessage({ type: 'pmfStatus', showPMF: Container.pmfStats.shouldShowSurvey() });
+
+            const shouldShowSurvey: boolean = Container.pmfStats.shouldShowSurvey();
+            this.postMessage({ type: 'pmfStatus', showPMF: shouldShowSurvey });
+
+            if (shouldShowSurvey) {
+                viewScreenEvent("atlascodePmfBanner", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            }
 
             this.invalidate().then(() => {
                 if (!this._viewEventSent) {
@@ -144,10 +150,12 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
                 case 'pmfLater': {
                     Container.pmfStats.snoozeSurvey();
+                    pmfSnoozed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     return true;
                 }
                 case 'pmfNever': {
                     Container.pmfStats.touchSurveyed();
+                    pmfClosed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     return true;
                 }
                 case 'pmfSubmit': {

@@ -151,6 +151,14 @@ export async function pmfSubmitted(level: string): Promise<TrackEvent> {
     return trackEvent('submitted', 'atlascodePmf', { level: level });
 }
 
+export async function pmfSnoozed(): Promise<TrackEvent> {
+    return trackEvent('snoozed', 'atlascodePmf');
+}
+
+export async function pmfClosed(): Promise<TrackEvent> {
+    return trackEvent('closed', 'atlascodePmf');
+}
+
 export async function startIssueCreationEvent(source: string): Promise<TrackEvent> {
     return trackEvent('create', 'jiraIssue', { source: source });
 }
