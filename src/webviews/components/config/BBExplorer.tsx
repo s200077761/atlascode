@@ -100,7 +100,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                             (fieldArgs: any) => {
                                 return (
                                     <Checkbox {...fieldArgs.fieldProps}
-                                        label='Show related Bitbucket Issues for pull requests'
+                                        label='Show related Bitbucket issues for pull requests'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
                                         isChecked={this.props.configData.config.bitbucket.explorer.relatedBitbucketIssues.enabled}

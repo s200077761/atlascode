@@ -14,7 +14,7 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const item = new vscode.TreeItem('Related Bitbucket Issues', vscode.TreeItemCollapsibleState.Collapsed);
+        const item = new vscode.TreeItem('Related Bitbucket issues', vscode.TreeItemCollapsibleState.Collapsed);
         item.iconPath = Resources.icons.get('issues');
         return item;
     }
