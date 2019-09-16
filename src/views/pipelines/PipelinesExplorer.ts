@@ -40,7 +40,7 @@ export class PipelinesExplorer extends BitbucketExplorer {
     }
 
     newMonitor(): BitbucketActivityMonitor {
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketCloudRepositories();
         return new PipelinesMonitor(repos);
     }
 
@@ -48,7 +48,8 @@ export class PipelinesExplorer extends BitbucketExplorer {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
-            setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled);
+            const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
+            setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled && hasCloudRepos);
         }
     }
 }

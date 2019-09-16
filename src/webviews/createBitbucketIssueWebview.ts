@@ -24,7 +24,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
         if (repos.length > 0) {
             return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
         }
@@ -48,7 +48,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         this.isRefeshing = true;
         try {
             const repoData: RepoData[] = [];
-            const repos = Container.bitbucketContext.getBitbucketRepositores();
+            const repos = Container.bitbucketContext.getBitbucketRepositories();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
                 const remotes = getBitbucketRemotes(r);

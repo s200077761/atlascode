@@ -37,7 +37,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             this._childrenMap = new Map();
         }
         this._childrenMap.clear();
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketCloudRepositories();
         const expand = repos.length === 1;
         repos.forEach(repo => {
             const remote = firstBitbucketRemote(repo);
@@ -64,7 +64,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
             return emptyBitbucketNodes;
         }

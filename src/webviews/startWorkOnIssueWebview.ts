@@ -149,7 +149,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
             }
 
             const repos = Container.bitbucketContext
-                ? Container.bitbucketContext.getAllRepositores()
+                ? Container.bitbucketContext.getAllRepositories()
                 : [];
 
             const repoData: RepoData[] = await Promise.all(repos

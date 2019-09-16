@@ -64,7 +64,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
             return element.getChildren(element);
         }
 
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
         const expand = repos.length === 1;
 
         if (this._childrenMap.size === 0) {
@@ -127,7 +127,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             if (this._pipelines.length === 0) {
                 return [new SimpleNode("No pipelines results for this repository")];
             }
-            
+
             const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
@@ -140,24 +140,24 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     private async fetchPipelines(): Promise<Pipeline[]> {
-       var pipelines: Pipeline[] = [];
-       var morePages = false;
-       //const remotes = getBitbucketRemotes(this._repo); // May need to do something with other remotes
+        var pipelines: Pipeline[] = [];
+        var morePages = false;
+        //const remotes = getBitbucketRemotes(this._repo); // May need to do something with other remotes
 
-       const remote = firstBitbucketRemote(this._repo);
-       if (remote) {
+        const remote = firstBitbucketRemote(this._repo);
+        if (remote) {
             this._remote = remote;
             const bbApi = await clientForRemote(this._remote);
             const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
-                 page: `${this._page}`,
-                 pagelen: defaultPageLength,
-             });
+                page: `${this._page}`,
+                pagelen: defaultPageLength,
+            });
             pipelines = paginatedPipelines.values;
-            const numPages = paginatedPipelines.size/defaultPageLength;
-            morePages = paginatedPipelines.page < numPages;  
-       }
-       this._morePages = morePages;
-       return pipelines;
+            const numPages = paginatedPipelines.size / defaultPageLength;
+            morePages = paginatedPipelines.page < numPages;
+        }
+        this._morePages = morePages;
+        return pipelines;
     }
 
     public refresh() {

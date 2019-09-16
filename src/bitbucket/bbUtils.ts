@@ -19,6 +19,16 @@ export function getBitbucketRemotes(repository: Repository): Remote[] {
     });
 }
 
+export function getBitbucketCloudRemotes(repository: Repository): Remote[] {
+    return repository.state.remotes.filter(remote => {
+        const details = siteDetailsForRemote(remote);
+        if (details) {
+            return details.isCloud;
+        }
+        return false;
+    });
+}
+
 export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefined {
     let parsed = parseGitUrl(urlForRemote(remote));
     return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
