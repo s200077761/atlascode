@@ -1,85 +1,63 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, AxiosInstance } from 'axios';
+import { Time } from '../util/time';
 
 export class Client {
+    private transport: AxiosInstance;
 
     constructor(
         private baseUrl: string,
         private authHeader: string,
         private agent: any,
         private errorHandler: (errJson: AxiosResponse) => Promise<Error>
-    ) { }
+    ) {
+        this.transport = axios.create({
+            timeout: 10 * Time.SECONDS,
+            headers: {
+                "Accept-Encoding": "gzip, deflate",
+                "Content-Type": "application/json",
+                Authorization: this.authHeader
+            },
+            httpsAgent: this.agent
+        });
+
+        this.transport.interceptors.response.use(
+            response => response,
+            async error => {
+                return error.response
+                    ? Promise.reject(await this.errorHandler(error.response))
+                    : Promise.reject(error);
+            }
+        );
+    }
 
     async get(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
-        try {
-            const res = await axios(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.authHeader
-                },
-                httpsAgent: this.agent
-            });
-
-            return { data: res.data, headers: res.headers };
-        } catch (e) {
-            if (e.response) {
-                return Promise.reject(await this.errorHandler(e.response));
-            } else {
-                return Promise.reject(e);
-            }
-
-        }
+        const res = await this.transport(url, {
+            method: "GET"
+        });
+        return { data: res.data, headers: res.headers };
     }
 
     async getURL(url: string) {
-
-        try {
-            const res = await axios(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.authHeader
-                },
-                httpsAgent: this.agent
-            });
-
-            return { data: res.data, headers: res.headers };
-        } catch (e) {
-            if (e.response) {
-                return Promise.reject(await this.errorHandler(e.response));
-            } else {
-                return Promise.reject(e);
-            }
-
-        }
+        const res = await this.transport(url, {
+            method: "GET"
+        });
+        return { data: res.data, headers: res.headers };
     }
 
     async getOctetStream(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
-        try {
-            const res = await axios(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "accept": "application/octet-stream",
-                    Authorization: this.authHeader
-                },
-                httpsAgent: this.agent
-            });
-            return { data: res.data, headers: res.headers };
-        } catch (e) {
-            if (e.response) {
-                return Promise.reject(await this.errorHandler(e.response));
-            } else {
-                return Promise.reject(e);
+        const res = await this.transport(url, {
+            method: "GET",
+            headers: {
+                "accept": "application/octet-stream"
             }
-
-        }
+        });
+        return { data: res.data, headers: res.headers };
     }
 
     async post(urlSlug: string, body: any, queryParams?: any): Promise<any> {
@@ -87,7 +65,7 @@ export class Client {
         url = this.addQueryParams(url, queryParams);
 
         try {
-            const res = await axios(url, {
+            const res = await this.transport(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -112,52 +90,24 @@ export class Client {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
-        try {
-            const res = await axios(url, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.authHeader
-                },
-                data: JSON.stringify(body),
-                httpsAgent: this.agent
-            });
+        const res = await this.transport(url, {
+            method: "PUT",
+            data: JSON.stringify(body)
+        });
 
-            return { data: res.data, headers: res.headers };
-        } catch (e) {
-            if (e.response) {
-                return Promise.reject(await this.errorHandler(e.response));
-            } else {
-                return Promise.reject(e);
-            }
-
-        }
+        return { data: res.data, headers: res.headers };
     }
 
     async delete(urlSlug: string, body: any, queryParams?: any): Promise<any> {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
-        try {
-            const res = await axios(url, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.authHeader
-                },
-                data: JSON.stringify(body),
-                httpsAgent: this.agent
-            });
+        const res = await this.transport(url, {
+            method: "DELETE",
+            data: JSON.stringify(body)
+        });
 
-            return { data: res.data, headers: res.headers };
-        } catch (e) {
-            if (e.response) {
-                return Promise.reject(await this.errorHandler(e.response));
-            } else {
-                return Promise.reject(e);
-            }
-
-        }
+        return { data: res.data, headers: res.headers };
     }
 
     private addQueryParams(url: string, queryParams?: any): string {

@@ -181,6 +181,7 @@ export class V1toV2Migrator {
                 headers: {
                     'X-Atlassian-Token': 'no-check',
                     'x-atlassian-force-account-id': 'true',
+                    "Accept-Encoding": "gzip, deflate"
                 }
             });
 

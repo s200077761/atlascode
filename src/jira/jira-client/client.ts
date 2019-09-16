@@ -36,6 +36,7 @@ export abstract class JiraClient {
             headers: {
                 'X-Atlassian-Token': 'no-check',
                 'x-atlassian-force-account-id': 'true',
+                "Accept-Encoding": "gzip, deflate"
             }
         });
     }
