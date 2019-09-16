@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue, ApprovalStatus } from '../bitbucket/model';
 import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -91,7 +91,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     handled = true;
                     if (isUpdateApproval(msg)) {
                         try {
-                            await this.approve(msg.approved);
+                            await this.updateApproval(msg.status);
                         } catch (e) {
                             Logger.error(new Error(`error approving PR: ${e}`));
                             this.postMessage({ type: 'error', reason: e });
@@ -337,9 +337,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return result;
     }
 
-    private async approve(approved: boolean) {
+    private async updateApproval(status: ApprovalStatus) {
         const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, approved);
+        await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, status);
 
         const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
 

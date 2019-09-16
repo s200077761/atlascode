@@ -348,9 +348,9 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toPullRequestData(repository, remote, data);
     }
 
-    async updateApproval(pr: PullRequest, approved: boolean) {
+    async updateApproval(pr: PullRequest, status: string) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
-        approved
+        status === "APPROVED"
             ? await this.client.post(
                 `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/approve`,
                 {}
@@ -440,6 +440,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             remote: remote,
             sourceRemote: sourceRemote,
             data: {
+                siteDetails: siteDetailsForRemote(remote)!,
                 id: pr.id!,
                 version: -1,
                 url: pr.links!.html!.href!,
@@ -448,7 +449,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 participants: (pr.participants || [])!.map((participant: any) => ({
                     ...CloudPullRequestApi.toUserModel(participant.user!),
                     role: participant.role!,
-                    approved: !!participant.approved
+                    status: !!participant.approved ? 'APPROVED' : 'UNAPPROVED'
                 })),
                 source: source,
                 destination: destination,

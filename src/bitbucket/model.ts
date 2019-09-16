@@ -21,7 +21,7 @@ export const UnknownUser = {
 };
 
 export type Reviewer = User & {
-    approved: boolean;
+    status: ApprovalStatus;
     role: "PARTICIPANT" | "REVIEWER";
 };
 
@@ -88,7 +88,10 @@ export type CreatePullRequestData = {
     closeSourceBranch: boolean;
 };
 
+export type ApprovalStatus = "APPROVED" | "UNAPPROVED" | "NEEDS_WORK";
+
 export type PullRequestData = {
+    siteDetails: DetailedSiteInfo;
     id: number;
     version: number;
     url: string;
@@ -185,7 +188,7 @@ export interface PullRequestApi {
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getReviewers(remote: Remote, query?: string): Promise<User[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
-    updateApproval(pr: PullRequest, approved: boolean): Promise<void>;
+    updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;
     postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
 }

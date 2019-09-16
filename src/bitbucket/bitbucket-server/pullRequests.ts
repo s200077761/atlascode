@@ -399,7 +399,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(repository, remote, data, 0);
     }
 
-    async updateApproval(pr: PullRequest, approved: boolean) {
+    async updateApproval(pr: PullRequest, status: string) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         const userSlug = (await siteDetailsForRemote(pr.remote)!).userId;
@@ -407,7 +407,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/participants/${userSlug}`,
             {
-                status: approved ? 'APPROVED' : 'UNAPPROVED'
+                status: status
             }
         );
     }
@@ -495,6 +495,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             sourceRemote: sourceRemote,
             repository: repository,
             data: {
+                siteDetails: site,
                 id: data.id,
                 version: data.version,
                 url: data.links.self[0].href,
@@ -504,7 +505,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                     {
                         ...this.toUser(site, reviewer.user),
                         role: reviewer.role,
-                        approved: reviewer.approved
+                        status: reviewer.status
                     }
                 )),
                 source: source,
