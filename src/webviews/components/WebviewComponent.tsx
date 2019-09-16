@@ -88,6 +88,9 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     protected onPMFSubmit(data: PMFData) {
         this._api.postMessage({ action: 'pmfSubmit', pmfData: data });
     }
+    protected onPMFOpen() {
+        this._api.postMessage({ action: 'pmfOpen' });
+    }
 
     private onMessageEvent(e: MessageEvent) {
         const msg = e.data as R;

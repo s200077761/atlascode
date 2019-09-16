@@ -12,13 +12,16 @@ const q2 = { id: "q2", question: "(optional) How can we improve this extension f
 const q3 = { id: "q3", question: "(optional) What would you use as an alternative if this extension were no longer available?" };
 const q4 = { id: "q4", question: "(optional) What is the main benefit you receive from this extension?" };
 
-export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
+export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFOpen: () => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
     constructor(props: any) {
         super(props);
         this.state = { isOpen: false, q1Value: undefined };
     }
 
-    handleOpen = () => this.setState({ isOpen: true });
+    handleOpen = () => {
+        this.props.onPMFOpen();
+        this.setState({ isOpen: true });
+    }
     handleLater = () => {
         this.props.onPMFLater();
         this.props.onPMFVisiblity(false);

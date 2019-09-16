@@ -2,6 +2,7 @@ import { PMFData } from "../ipc/messaging";
 import { Container } from "../container";
 import { format } from 'date-fns';
 import axios from 'axios';
+import { pmfSubmitted } from "../analytics";
 
 const devPMF = {
     collectorId: "235854834",
@@ -137,6 +138,8 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
             data: JSON.stringify(payload)
 
         });
+
+        pmfSubmitted(pmfData.q1).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
 }
 
