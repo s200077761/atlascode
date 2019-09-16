@@ -61,14 +61,6 @@ export const emptyCommonEditorState: CommonEditorViewState = {
     commentInputValue: '',
 };
 
-// const WorklogCondition = ({ worklogEnabled, children }: any) => {
-//     if (worklogEnabled) {
-//         return children;
-//     }
-
-//     return <React.Fragment />;
-// };
-
 const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions: any[]) => {
     if (inputValue.trim().length === 0 || selectOptions.find(option => option.name === inputValue)) {
         return false;
@@ -159,7 +151,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             case 'pmfStatus': {
                 this.setState({ showPMF: e.showPMF });
                 break;
-              }
+            }
         }
 
         return handled;
@@ -180,7 +172,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     private handleCommentInput = (e: any) => {
-        const val: string = e.target.value.trim();
+        const val: string = e.target.value;
         this.setState({ commentInputValue: val });
     }
 
@@ -219,7 +211,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     private handleInlineInputEdit = (field: FieldUI, e: any) => {
-        const val: string = e.target.value.trim();
+        const val: string = e.target.value;
         this.handleInlineEdit(field, val);
     }
 
