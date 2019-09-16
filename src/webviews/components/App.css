@@ -1441,6 +1441,10 @@ img::after is triggered only if img loading fails */
   animation-timing-function: ease-in-out;
 }
 
+[role=gridcell][class^=styled__Cell-] {
+  padding: 8px;
+}
+
 [role=gridcell]>[class^=styled__OverflowContainer-] {
   width: 100%;
 }

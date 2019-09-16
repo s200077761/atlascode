@@ -15,37 +15,31 @@ const Timestamp = (props: any) => {
     return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
 };
 
-export default class Commits extends React.Component<PRData, {}> {
-    constructor(props: any) {
-        super(props);
-    }
+export const Commits: React.FunctionComponent<PRData> = (props: PRData) => {
+    const commitsData = props.commits!.map((commit) => {
+        return {
+            hash: commit.hash,
+            message: commit.message,
+            href: commit.url,
+            ts: commit.ts
+        };
+    });
 
-    render() {
-        const commitsData = this.props.commits!.map((commit) => {
-            return {
-                hash: commit.hash,
-                message: commit.message,
-                href: commit.url,
-                ts: commit.ts
-            };
-        });
-
-        return (
-            <TableTree
-                columns={[Hash, Message, Timestamp]}
-                columnWidths={['120px', '100%', '180px']}
-                items={commitsData.map(c => {
-                    return {
-                        id: c.hash,
-                        content: {
-                            hash: c.hash.substring(0, 8),
-                            message: c.message,
-                            href: c.href,
-                            ts: c.ts
-                        }
-                    };
-                })}
-            />
-        );
-    }
-}
+    return (
+        <TableTree
+            columns={[Hash, Message, Timestamp]}
+            columnWidths={['120px', '100%', '180px']}
+            items={commitsData.map(c => {
+                return {
+                    id: c.hash,
+                    content: {
+                        hash: c.hash.substring(0, 8),
+                        message: c.message,
+                        href: c.href,
+                        ts: c.ts
+                    }
+                };
+            })}
+        />
+    );
+};
