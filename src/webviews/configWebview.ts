@@ -212,7 +212,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 case 'fetchProjects': {
                     handled = true;
                     if (isFetchQueryAndSite(msg)) {
-                        console.log('project query', msg.query);
                         const projects = await Container.jiraProjectManager.getProjects(msg.site, 'name', msg.query);
                         this.postMessage({ type: 'projectList', availableProjects: projects, nonce: msg.nonce });
                     }

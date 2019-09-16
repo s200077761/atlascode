@@ -152,9 +152,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                 if (gotData || timeIsUp) {
                     clearInterval(timer);
-                    console.log('resolving new jqldata', this.jqlDataMap[nonce]);
-                    console.log('got jqlData', gotData);
-                    console.log('timeisup', timeIsUp);
                     resolve({ ...this.jqlDataMap[nonce] });
 
                     this.jqlDataMap[nonce] = undefined;
