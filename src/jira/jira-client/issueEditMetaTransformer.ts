@@ -90,7 +90,10 @@ export class IssueEditMetaTransformer {
         if (Object.keys(descriptor.fields).includes('subtasks')) {
             const client = await Container.clientManager.jiraClient(this._site);
             const cMeta: IssueCreateMetadata = await client.getCreateIssueMetadata(project.key);
-            subtaskTypes = cMeta.projects[0].issuetypes.filter(it => it.subtask === true);
+
+            if (Array.isArray(cMeta.projects) && cMeta.projects.length > 0) {
+                subtaskTypes = cMeta.projects[0].issuetypes.filter(it => it.subtask === true);
+            }
         }
 
         fieldResult = await this._fieldTransformer.transformFields(descriptor.fields, project, commonFields, false, fieldFilters, descriptor.issueKey, subtaskTypes);
