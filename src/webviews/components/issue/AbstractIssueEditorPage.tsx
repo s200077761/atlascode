@@ -23,6 +23,10 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { RadioGroup } from '@atlaskit/radio';
 import debounce from "lodash.debounce";
 import { AttachmentForm } from './AttachmentForm';
+import { distanceInWordsToNow } from 'date-fns';
+import Avatar from '@atlaskit/avatar';
+import { colorToLozengeAppearanceMap } from '../colors';
+import Lozenge from "@atlaskit/lozenge";
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -1207,13 +1211,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 );
             }
             case UIType.NonEditable: {
-                let value = this.state.fieldValues[field.key];
-                if (typeof value === 'object') {
-                    value = JSON.stringify(value);
-                }
-                return (
-                    <div>{value}</div>
-                );
+                return this.getNonEditableMarkup(field.valueType, this.state.fieldValues[field.key]);
             }
             case UIType.Attachment: {
                 if (editmode) {
@@ -1258,6 +1256,78 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     }
                 }
             </Field>
+        );
+    }
+
+    private getNonEditableMarkup(valueType: ValueType, value: any): JSX.Element {
+        switch (valueType) {
+
+            case ValueType.Url:
+            case ValueType.Number:
+            case ValueType.String: {
+                return (<div className='ac-vpadding'><div className='ac-'>{value}</div></div>);
+            }
+
+            case ValueType.DateTime:
+            case ValueType.Date: {
+                return (<div className='ac-vpadding'><div>${distanceInWordsToNow(value)} ago`</div></div>);
+            }
+
+            case ValueType.Option: {
+                return (<div className='ac-vpadding'><div>{value.value}</div></div>);
+            }
+
+            case ValueType.IssueType:
+            case ValueType.Priority: {
+                return (<div className='ac-vpadding'><div className='ac-flex'><img src={value.iconUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{value.name}</span></div></div>);
+            }
+            case ValueType.Status: {
+                const lozColor: string = colorToLozengeAppearanceMap[value.statusCategory.colorName];
+                return (<div className='ac-vpadding'><Lozenge appearance={lozColor}>{value.name}</Lozenge></div>);
+            }
+            case ValueType.Transition: {
+                const lozColor: string = colorToLozengeAppearanceMap[value.to.statusCategory.colorName];
+                return (<div className='ac-vpadding'><Lozenge appearance={lozColor}>{value.name}</Lozenge></div>);
+            }
+            case ValueType.User:
+            case ValueType.Project: {
+                const label: string = value.displayName ? value.displayName : value.name;
+                const avatar = (value.avatarUrls && value.avatarUrls['24x24']) ? value.avatarUrls['24x24'] : '';
+                return (
+                    <div className='ac-vpadding'>
+                        <div className='ac-flex'>
+                            <Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} />
+                            <span style={{ marginLeft: '4px' }}>{label}</span>
+                        </div>
+                    </div>
+                );
+            }
+
+            case ValueType.Attachment:
+            case ValueType.Worklog:
+            case ValueType.IssueLinks:
+            case ValueType.CommentsPage:
+            case ValueType.Timetracking: {
+                return (<React.Fragment></React.Fragment>);
+            }
+
+            case ValueType.Group:
+            case ValueType.Component:
+            case ValueType.Version: {
+                if (Array.isArray(value)) {
+                    const names = value.map(val => val.name);
+                    return (<div className='ac-vpadding'><div>{names}</div></div>);
+                } else {
+                    return (<div className='ac-vpadding'><div>{value.name}</div></div>);
+                }
+            }
+        }
+
+        if (typeof value === 'object') {
+            value = JSON.stringify(value);
+        }
+        return (
+            <div>{value}</div>
         );
     }
 
