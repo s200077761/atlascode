@@ -209,7 +209,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     async fetchIssueForBranch(e: FetchIssue) {
         let issue: MinimalIssue | BitbucketIssueData | undefined = undefined;
         if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
+            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name);
             const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
             if (jiraIssues.length > 0) {
                 issue = jiraIssues[0];
@@ -217,7 +217,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
 
         if (!issue) {
-            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
+            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name);
             if (bbIssueKeys.length > 0) {
                 const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                 const remote = firstBitbucketRemote(repo);

@@ -657,7 +657,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
         const relatedPrs = await Promise.all(prs.map(async pr => {
-            const issueKeys = [...await parseJiraIssueKeys(pr.data.title!), ...await parseJiraIssueKeys(pr.data.rawSummary!)];
+            const issueKeys = [...await parseJiraIssueKeys(pr.data.title), ...await parseJiraIssueKeys(pr.data.rawSummary)];
             return issueKeys.find(key => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
                 ? pr
                 : undefined;

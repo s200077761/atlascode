@@ -198,8 +198,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 hash: commit.id,
                 message: commit.message,
                 url: undefined,
-                htmlSummary: undefined,
-                rawSummary: undefined
+                htmlSummary: "",
+                rawSummary: ""
             }))
         };
     }
@@ -510,8 +510,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 source: source,
                 destination: destination,
                 title: data.title,
-                htmlSummary: data.descriptionAsHtml,
-                rawSummary: data.description,
+                htmlSummary: data.descriptionAsHtml ? data.descriptionAsHtml : "",
+                rawSummary: data.description ? data.description : "",
                 ts: data.createdDate,
                 updatedTs: data.updatedDate,
                 state: data.state,

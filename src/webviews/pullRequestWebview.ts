@@ -293,9 +293,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
             const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
             const bbApi = await clientForRemote(pr.remote);
-            const bbIssues = await bbApi.issues!.getIssuesForKeys(pr.repository, bbIssueKeys);
-            if (bbIssues.length > 0) {
-                return bbIssues[0].data;
+            if (bbApi.issues) {
+                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.repository, bbIssueKeys);
+                if (bbIssues.length > 0) {
+                    return bbIssues[0].data;
+                }
             }
         }
         catch (e) {
@@ -324,7 +326,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
             const bbApi = await clientForRemote(pr.remote);
-            result = await bbApi.issues!.getIssuesForKeys(pr.repository, issueKeys);
+            if (bbApi.issues) {
+                result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);
+            }
         }
         catch (e) {
             result = [];
