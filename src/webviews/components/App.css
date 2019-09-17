@@ -789,11 +789,11 @@ section button span {
 
 /*-------------------- BEGIN - BB cloud rendered html classes --------------------*/
 
-.vscode-light .ap-mention {
+.vscode-light .ap-mention, .vscode-light .user-mention {
   background: var(--vscode-editor-background--darken-15);
 }
 
-.vscode-dark .ap-mention {
+.vscode-dark .ap-mention, .vscode-dark .user-mention {
   background: var(--vscode-editor-background--lighten-15);
 }
 
