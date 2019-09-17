@@ -95,19 +95,7 @@ const formatOptionLabel = (option: any, { context }: any) => {
                     flexDirection: 'column',
                 }}
             >
-                <div>{option.label}</div>
-                {option.value && option.value.upstream ? (
-                    <div
-                        style={{
-                            fontSize: 12,
-                            fontStyle: 'italic'
-                        }}
-                    >
-                        <div className='ac-flex-space-between'>
-                            {`tracking upstream ${option.value.upstream.remote}/${option.value.upstream.name}`}
-                        </div>
-                    </div>
-                ) : null}
+                {option.label}
             </div>
         );
     }
