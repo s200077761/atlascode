@@ -445,6 +445,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
         const allowVoting: boolean = (
             this.state.fieldValues['reporter']
+            && this.state.currentUser
             && this.state.fieldValues['reporter'].accountId !== this.state.currentUser.accountId
         );
 
