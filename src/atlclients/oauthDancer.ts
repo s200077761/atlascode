@@ -220,6 +220,7 @@ export class OAuthDancer implements Disposable {
                 headers: {
                     'X-Atlassian-Token': 'no-check',
                     'x-atlassian-force-account-id': 'true',
+                    "Accept-Encoding": "gzip, deflate"
                 }
             });
             const url = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0/user/emails' : 'https://api-staging.bb-inf.net/2.0/user/emails';
