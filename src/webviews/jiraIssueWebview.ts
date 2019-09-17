@@ -11,9 +11,9 @@ import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTr
 import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
 import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
-import { commands } from "vscode";
+import { commands, env, window } from "vscode";
 import { Commands } from "../commands";
-import { issueCreatedEvent, issueUpdatedEvent } from "../analytics";
+import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
 import { transitionIssue } from "../jira/transitionIssue";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
 import { PullRequestData } from "../bitbucket/model";
@@ -229,6 +229,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
         if (!handled) {
             switch (msg.action) {
+                case 'copyJiraIssueLink': {
+                    handled = true;
+                    const linkUrl = `${this._issue.siteDetails.baseLinkUrl}/browse/${this._issue.key}`;
+                    await env.clipboard.writeText(linkUrl);
+                    window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
+                    issueUrlCopiedEvent(this._issue.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    break;
+                }
                 case 'editIssue': {
                     handled = true;
                     const newFieldValues: FieldValues = (msg as EditIssueAction).fields;
