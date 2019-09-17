@@ -7,6 +7,8 @@ export enum SettingSource {
     BBPullRequest = 'bbPullRequest',
     BBPipeline = 'bbPipeline',
     BBIssue = 'bbIssue',
+    JiraAuth = 'jiraAuth',
+    BBAuth = 'bbAuth',
     Default = 'default'
 }
 

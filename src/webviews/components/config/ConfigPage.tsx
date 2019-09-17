@@ -175,9 +175,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
         const jiraDisabledModifier = this.state.config.jira.enabled ? 0 : 1;
         const bitbucketDisabledModifier = this.state.config.bitbucket.enabled ? 0 : 1;
-        if (this.state.openedSettings === SettingSource.Default || this.state.openedSettings === SettingSource.JiraIssue) {
+        if (this.state.openedSettings === SettingSource.Default 
+            || this.state.openedSettings === SettingSource.JiraIssue 
+            || this.state.openedSettings === SettingSource.JiraAuth) {
             this.setState({ tabIndex: 0 });
-        } else if (this.state.openedSettings === SettingSource.BBIssue || this.state.openedSettings === SettingSource.BBPipeline || this.state.openedSettings === SettingSource.BBPullRequest) {
+        } else if (this.state.openedSettings === SettingSource.BBIssue 
+            || this.state.openedSettings === SettingSource.BBPipeline 
+            || this.state.openedSettings === SettingSource.BBPullRequest
+            || this.state.openedSettings === SettingSource.BBAuth) {
             this.setState({ tabIndex: 1 - jiraDisabledModifier });
         } else {
             this.setState({ tabIndex: 2 - jiraDisabledModifier - bitbucketDisabledModifier });
@@ -235,8 +240,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    shouldDefaultExpand = (setting: SettingSource) => {
-        if (setting === this.state.openedSettings) {
+    shouldDefaultExpand = (setting: SettingSource, secondSetting?: SettingSource) => {
+        if (setting === this.state.openedSettings || secondSetting === this.state.openedSettings) {
             return { isDefaultExpanded: true };
         } else {
             return;
@@ -290,7 +295,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         </TabList>
                                         {this.state.config.jira.enabled &&
                                             <TabPanel>
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Jira')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.JiraAuth)} header={panelHeader('Authentication', 'configure authentication for Jira')}>
                                                     <JiraAuth
                                                         defaultSite={this.state.config.jira.defaultSite}
                                                         sites={this.state.jiraSites}
@@ -333,7 +338,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.BBAuth)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
                                                     <BBAuth
                                                         sites={this.state.bitbucketSites}
                                                         handleDeleteSite={this.handleLogout}

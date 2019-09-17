@@ -105,14 +105,14 @@ export class AuthStatusBar extends Disposable {
 
             const data = { product: product.name, user: info.user.displayName, site: site, project: project };
             const ctx = { ...Container.config.jira.statusbar, ...data };
-            command = Commands.ShowConfigPage;
+            command = Commands.ShowJiraAuth;
             text = tmpl(ctx);
           }
 
         } else {
           if (Container.config.jira.statusbar.showLogin) {
             text = `$(sign-in) Sign in to  ${product.name}`;
-            command = Commands.ShowConfigPage;
+            command = Commands.ShowJiraAuth;
             product = ProductJira;
           } else {
             statusBarItem.hide();
@@ -130,13 +130,13 @@ export class AuthStatusBar extends Disposable {
           if (tmpl) {
             let data = { product: product.name, user: info.user.displayName };
             let ctx = { ...Container.config.bitbucket.statusbar, ...data };
-            command = Commands.ShowConfigPage;
+            command = Commands.ShowBitbucketAuth;
             text = tmpl(ctx);
           }
         } else {
           if (Container.config.bitbucket.statusbar.showLogin) {
             text = `$(sign-in) Sign in to ${product.name}`;
-            command = Commands.ShowConfigPage;
+            command = Commands.ShowBitbucketAuth;
             product = ProductBitbucket;
           } else {
             statusBarItem.hide();
