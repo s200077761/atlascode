@@ -254,7 +254,12 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        const activities = (data.values as Array<any>).filter(activity => activity.action === 'COMMENTED');
+        const activities = (data.values as Array<any>)
+            .filter(activity => activity.action === 'COMMENTED')
+            .filter(activity => activity.commentAnchor
+                ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
+                : true
+            );
 
         return {
             data: (await Promise.all(
