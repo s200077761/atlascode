@@ -184,7 +184,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
 
-            if (this._partialIssue) {
+            if (this._partialIssue && !fieldValues) {
                 const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
                 const desc = this._partialIssue.description ? this._partialIssue.description + createdFromAtlascodeFooter : createdFromAtlascodeFooter;
                 const partialvals = { 'summary': this._partialIssue.summary, 'description': desc };
