@@ -406,7 +406,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
                 });
-                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.sourceRemote!);
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
                 if (site) {
                     prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                 }

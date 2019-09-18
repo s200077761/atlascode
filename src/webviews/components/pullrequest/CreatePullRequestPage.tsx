@@ -288,7 +288,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             action: 'createPullRequest',
             repoUri: this.state.repo!.value.uri,
             remote: this.state.remote!.value,
-            reviewers: e.reviewers,
+            reviewers: e.reviewers || [],
             title: e.title,
             summary: e.summary,
             sourceBranch: this.state.sourceBranch!.value,
