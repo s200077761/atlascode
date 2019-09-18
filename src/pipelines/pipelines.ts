@@ -118,7 +118,7 @@ export class PipelineApiImpl {
   ): Promise<PaginatedPipelines> {
     // TODO: [VSCODE-502] use site info and convert to async await with try/catch
     let parsed = parseGitUrl(urlForRemote(remote));
-    const {data: responseBody} = await this.client.get(
+    const { data: responseBody } = await this.client.get(
       `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
       {
         ...query,
@@ -191,8 +191,8 @@ export class PipelineApiImpl {
     }
     //Sometimes a pipeline runs on a commit rather than a branch, so ref_name is undefined
     let target: PipelineTarget = {
-      ref_name: pipeline.target!.ref_name, 
-      selector: pipeline.target!.selector, 
+      ref_name: pipeline.target!.ref_name,
+      selector: pipeline.target!.selector,
       triggerName: pipeline.trigger!.name
     };
 

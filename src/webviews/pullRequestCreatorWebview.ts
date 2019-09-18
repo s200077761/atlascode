@@ -223,7 +223,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
 
         if (!issue) {
-            const bbIssueKeys = parseBitbucketIssueKeys(e.sourceBranch.name!);
+            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name);
             if (bbIssueKeys.length > 0) {
                 const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                 const remote = firstBitbucketRemote(repo);

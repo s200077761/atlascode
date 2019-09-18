@@ -38,44 +38,42 @@ export default class AuthForm extends PureComponent<{
         );
     }
 
-    readyToSave = (needsCreds: boolean): boolean => {
+    setReadyToSave = (needsCreds: boolean) => {
         let credsAreGood = true;
         if (needsCreds) {
             credsAreGood =
                 FieldValidators.validateString(this.state.username, undefined) === undefined
                 && FieldValidators.validateString(this.state.password, undefined) === undefined;
         }
-        return (
-            FieldValidators.validateRequiredUrl(this.state.baseUrl, undefined) === undefined
-            && credsAreGood
-        );
+        const readyToSave = FieldValidators.validateRequiredUrl(this.state.baseUrl, undefined) === undefined && credsAreGood;
+
+        this.setState({ readyToSave: readyToSave });
     }
 
     onBaseUrlChange = (e: any) => {
         if (FieldValidators.validateRequiredUrl(e.target.value, undefined) === undefined) {
             const url = new URL(e.target.value);
             const needsCreds = !this.isCloudUrl(url);
-            this.setState({
-                baseUrl: e.target.value,
-                requiresCredentials: needsCreds,
-                readyToSave: this.readyToSave(needsCreds)
-            });
+            this.setState(
+                { baseUrl: e.target.value, requiresCredentials: needsCreds },
+                () => this.setReadyToSave(needsCreds)
+            );
         }
 
     }
 
     onUsernameChange = (e: any) => {
-        this.setState({
-            username: e.target.value,
-            readyToSave: this.readyToSave(true)
-        });
+        this.setState(
+            { username: e.target.value },
+            () => this.setReadyToSave(true)
+        );
     }
 
     onPasswordChange = (e: any) => {
-        this.setState({
-            password: e.target.value,
-            readyToSave: this.readyToSave(true)
-        });
+        this.setState(
+            { password: e.target.value },
+            () => this.setReadyToSave(true)
+        );
     }
 
     onSave = () => {

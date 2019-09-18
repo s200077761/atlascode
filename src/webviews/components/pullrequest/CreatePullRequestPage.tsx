@@ -16,7 +16,7 @@ import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { Commits } from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
-import BranchWarning from './BranchWarning';
+import { BranchWarning } from './BranchWarning';
 import CreatePRTitleSummary from './CreatePRTitleSummary';
 import Avatar from "@atlaskit/avatar";
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';

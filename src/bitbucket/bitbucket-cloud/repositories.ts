@@ -91,8 +91,8 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             message: commit.message!,
             ts: commit.date!,
             url: commit.links!.html!.href!,
-            htmlSummary: commit.summary ? commit.summary.html! : undefined,
-            rawSummary: commit.summary ? commit.summary.raw! : undefined,
+            htmlSummary: commit.summary ? commit.summary.html! : "",
+            rawSummary: commit.summary ? commit.summary.raw! : "",
             author: {
                 accountId: commit.author!.user!.account_id,
                 displayName: commit.author!.user!.display_name!,

@@ -62,8 +62,8 @@ export type Commit = {
     hash: string;
     message: string;
     url: string;
-    htmlSummary?: string;
-    rawSummary?: string;
+    htmlSummary: string;
+    rawSummary: string;
 };
 
 export type BuildStatus = {
@@ -106,8 +106,8 @@ export type PullRequestData = {
         commitHash: string;
     },
     title: string;
-    htmlSummary?: string;
-    rawSummary?: string;
+    htmlSummary: string;
+    rawSummary: string;
     ts: string;
     updatedTs: string;
     state: "MERGED" | "SUPERSEDED" | "OPEN" | "DECLINED";
