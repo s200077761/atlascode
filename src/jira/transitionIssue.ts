@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { MinimalIssueOrKeyAndSite, isIssueKeyAndSite, Transition, isMinimalIssue } from "./jira-client/model/entities";
-import { DetailedSiteInfo, emptySiteInfo, ProductJira } from "../atlclients/authInfo";
+import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";

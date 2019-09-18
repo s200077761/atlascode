@@ -67,6 +67,10 @@ export interface ScreensForProjectsAction extends Action {
     fieldValues: FieldValues;
 }
 
+export interface ScreensForSiteAction extends Action {
+    site: DetailedSiteInfo;
+}
+
 export interface CreateSelectOptionAction extends Action {
     fieldKey: string;
     siteDetails: DetailedSiteInfo;
@@ -175,6 +179,10 @@ export function isFetchOptionsJQL(a: Action): a is FetchIssueFieldOptionsByJQLAc
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
+}
+
+export function isScreensForSite(a: Action): a is ScreensForSiteAction {
+    return (<ScreensForSiteAction>a).site !== undefined;
 }
 
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {

@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { HoverProvider } from "vscode";
 import TurnDownService from "turndown";
-import { fetchMinimalIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
 import { Container } from "../../container";
@@ -42,9 +41,8 @@ export class IssueHoverProvider implements HoverProvider {
     let text = [];
     text.push(new vscode.MarkdownString(header));
     text.push(new vscode.MarkdownString(descriptionText));
-    const encodedKey = encodeURIComponent(JSON.stringify({ siteId: issue.siteDetails.id, key: key }));
-
-    const showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
+    const encodedKey = encodeURIComponent(JSON.stringify([issue.siteDetails.id, key]));
+    const showIssueCommandString = `(command:${Commands.ShowIssueForSiteIdAndKey}?${encodedKey} "View Issue")`;
     const issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
     const issueLinksLine =
       `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;

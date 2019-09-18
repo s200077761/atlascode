@@ -17,8 +17,6 @@ import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
-import { issuesForJQL } from '../jira/issuesForJql';
-import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';

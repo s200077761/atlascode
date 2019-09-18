@@ -4,7 +4,7 @@ import { Commands } from "../commands";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
-import { JiraV1WorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, BitbucketEnabledKey, JiraEnabledKey } from "../constants";
+import { BitbucketEnabledKey, JiraEnabledKey } from "../constants";
 import { SitesAvailableUpdateEvent } from "src/siteManager";
 
 export class AuthStatusBar extends Disposable {
@@ -45,8 +45,6 @@ export class AuthStatusBar extends Disposable {
     const initializing = configuration.initializing(e);
     if (initializing ||
       configuration.changed(e, 'jira.statusbar') ||
-      configuration.changed(e, JiraDefaultSiteConfigurationKey) ||
-      configuration.changed(e, JiraV1WorkingProjectConfigurationKey) ||
       configuration.changed(e, JiraEnabledKey)) {
       await this.generateStatusbarItem(ProductJira);
     }

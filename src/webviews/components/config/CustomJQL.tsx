@@ -53,7 +53,7 @@ export default class CustomJQL extends React.Component<
     const id = v4();
     this.setState({
       editingId: id,
-      editingEntry: { siteId: "", id: id, name: "", query: "", enabled: true }
+      editingEntry: { siteId: "", id: id, name: "", query: "", enabled: true, monitor: true }
     });
   }
 
@@ -91,6 +91,18 @@ export default class CustomJQL extends React.Component<
     if (index >= 0) {
       const entry = jqlList[index];
       entry.enabled = e.target.checked;
+      this.publishChanges(jqlList);
+    }
+  }
+
+  toggleMonitor = (e: any) => {
+    const id = e.target.value;
+    var jqlList = this.readJqlListFromProps();
+    const index = this.indexForId(jqlList, id);
+
+    if (index >= 0) {
+      const entry = jqlList[index];
+      entry.monitor = e.target.checked;
       this.publishChanges(jqlList);
     }
   }
@@ -194,6 +206,14 @@ export default class CustomJQL extends React.Component<
         </div>
 
         <div style={{ flexGrow: 1 }}>{element.name}</div>
+        <div>
+          <Checkbox
+            value={element.id}
+            isChecked={element.monitor}
+            onChange={this.toggleMonitor}
+            label='include in issue monitor'
+          />
+        </div>
 
         <ButtonGroup>
           <Tooltip content="Edit">

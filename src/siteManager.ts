@@ -149,8 +149,8 @@ export class SiteManager extends Disposable {
                     Container.credentialManager.removeAuthInfo(deletedSite);
                 }
 
-                if (deletedSite.id === Container.config.jira.defaultSite) {
-                    configuration.setDefaultSite(undefined);
+                if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {
+                    configuration.setLastCreateSiteAndProject(undefined);
                 }
 
                 return true;
@@ -158,46 +158,5 @@ export class SiteManager extends Disposable {
         }
 
         return false;
-    }
-
-    private defaultSiteFromConfig(): DetailedSiteInfo | undefined {
-        const configId = Container.config.jira.defaultSite;
-
-        if (!configId) {
-            return undefined;
-        }
-
-        const jiraSites = this.getSitesAvailable(ProductJira);
-        if (!jiraSites) {
-            return undefined;
-        }
-
-        return jiraSites.find(s => s.id === configId);
-    }
-
-    public effectiveSite(product: Product): DetailedSiteInfo {
-        let defaultSite = emptySiteInfo;
-        switch (product.key) {
-            case ProductJira.key:
-                const configSite = this.defaultSiteFromConfig();
-                if (configSite) {
-                    defaultSite = configSite;
-                } else {
-                    const sites = this.getSitesAvailable(product);
-                    if (sites && sites.length > 0) {
-                        defaultSite = sites[0];
-                    }
-                }
-                break;
-
-            case ProductBitbucket.key:
-                const sites = this.getSitesAvailable(product);
-                if (sites && sites.length > 0) {
-                    defaultSite = sites[0];
-                }
-                break;
-
-        }
-        return defaultSite;
     }
 }

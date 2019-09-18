@@ -33,13 +33,11 @@ export interface IConfig {
 
 }
 
-export type DefaultProjects = { [key: string]: string };
 export interface JiraConfig {
     enabled: boolean;
     workingProject: WorkingProjectV1;
     workingSite: AccessibleResourceV1;
-    defaultSite: string;
-    defaultProjects: DefaultProjects;
+    lastCreateSiteAndProject: SiteIdAndProjectKey;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
@@ -49,6 +47,10 @@ export interface JiraConfig {
     todoIssues: TodoIssues;
 }
 
+export type SiteIdAndProjectKey = {
+    siteId: string;
+    projectKey: string;
+}
 export interface JiraStatusBar {
     enabled: boolean;
     showProduct: boolean;
@@ -92,6 +94,7 @@ export interface JQLEntry {
     name: string;
     query: string;
     siteId: string;
+    monitor: boolean;
 }
 
 export interface JQLEntryV1 {
@@ -204,6 +207,7 @@ export const emptyJiraHover: JiraHover = {
 export const emptyJQLEntry: JQLEntry = {
     id: "",
     enabled: true,
+    monitor: true,
     name: "",
     query: "",
     siteId: "",
@@ -218,8 +222,7 @@ export const emptyJiraConfig: JiraConfig = {
     enabled: true,
     workingProject: emptyWorkingProjectV1,
     workingSite: emptyAccessibleResourceV1,
-    defaultSite: "",
-    defaultProjects: {},
+    lastCreateSiteAndProject: { siteId: "", projectKey: "" },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,

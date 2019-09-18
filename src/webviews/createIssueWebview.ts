@@ -3,7 +3,7 @@ import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Container } from '../container';
 import { CreateIssueData } from '../ipc/issueMessaging';
-import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction } from '../ipc/issueActions';
+import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction, isScreensForSite } from '../ipc/issueActions';
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { issueCreatedEvent } from '../analytics';
@@ -15,6 +15,7 @@ import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
 import { ValueType, FieldValues, FieldUIs } from '../jira/jira-client/model/fieldUI';
 import { CreateMetaTransformerResult, emptyCreateMetaResult, IssueTypeUI } from '../jira/jira-client/model/editIssueUI';
 import { IssueType, Project } from '../jira/jira-client/model/entities';
+import { configuration } from '../config/configuration';
 
 export interface PartialIssue {
     uri?: Uri;
@@ -81,7 +82,8 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
     async initialize(data?: PartialIssue) {
         this._partialIssue = data;
-        this._siteDetails = Container.siteManager.effectiveSite(ProductJira);
+
+        await this.updateSiteAndProject();
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -98,6 +100,40 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         }
 
         this.invalidate();
+    }
+
+    private async updateSiteAndProject(inputSite?: DetailedSiteInfo, inputProject?: Project) {
+        if (inputSite) {
+            this._siteDetails = inputSite;
+        } else {
+            let siteId = Container.config.jira.lastCreateSiteAndProject.siteId;
+            if (!siteId) {
+                siteId = "";
+            }
+            const configSite = Container.siteManager.getSiteForId(ProductJira, siteId);
+            if (configSite) {
+                this._siteDetails = configSite;
+            } else {
+                this._siteDetails = Container.siteManager.getFirstSite(ProductJira.key);
+            }
+        }
+
+        if (inputSite && !inputProject) {
+            this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+        } else if (inputProject) {
+            this._currentProject = inputProject;
+        } else {
+            let projectKey = Container.config.jira.lastCreateSiteAndProject.projectKey;
+            if (!projectKey) {
+                projectKey = "";
+            }
+            const configProject = await Container.jiraProjectManager.getProjectForKey(this._siteDetails, projectKey);
+            if (configProject) {
+                this._currentProject = configProject;
+            } else {
+                this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
+            }
+        }
     }
 
     public async invalidate() {
@@ -152,34 +188,27 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         }
     }
 
-    async forceUpdateFields(project?: Project, fieldValues?: FieldValues) {
-        if (this.isRefeshing) {
+    async forceUpdateFields(fieldValues?: FieldValues) {
+        if (this.isRefeshing || !this._siteDetails || !this._currentProject) {
             return;
         }
 
         this.isRefeshing = true;
         try {
 
-            let effProject = project;
-
-            if (!effProject) {
-                effProject = await Container.jiraProjectManager.getEffectiveProject(this._siteDetails);
-            }
-
-            const availableProjects = await Container.jiraProjectManager.getProjects();
-
-            if (effProject && effProject !== this._currentProject) {
-                this._currentProject = effProject;
-            }
+            const availableSites = Container.siteManager.getSitesAvailable(ProductJira);
+            const availableProjects = await Container.jiraProjectManager.getProjects(this._siteDetails);
 
             this._selectedIssueTypeId = '';
-            this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject!.key);
+            this._screenData = await fetchCreateIssueUI(this._siteDetails, this._currentProject.key);
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             if (fieldValues) {
                 const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields, fieldValues);
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues, ...overrides };
             }
+
+            this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['site'] = availableSites;
 
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
@@ -324,7 +353,18 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                 case 'getScreensForProject': {
                     handled = true;
                     if (isScreensForProjects(e)) {
-                        await this.forceUpdateFields(e.project, e.fieldValues);
+                        await this.updateSiteAndProject(this._siteDetails, e.project);
+                        await this.forceUpdateFields(e.fieldValues);
+                    }
+                    break;
+                }
+
+                case 'getScreensForSite': {
+                    handled = true;
+                    if (isScreensForSite(e)) {
+                        await this.updateSiteAndProject(e.site, undefined);
+                        // Note: we can't send fieldValues when site changes because custom field ids are different.
+                        await this.forceUpdateFields();
                     }
                     break;
                 }
@@ -358,8 +398,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key);
 
+                            await configuration.setLastCreateSiteAndProject({ siteId: this._siteDetails.id, projectKey: this._currentProject!.key });
+
                         } catch (e) {
-                            Logger.error(new Error(`error creating comment: ${e}`));
+                            Logger.error(new Error(`error creating issue: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
                         }
 

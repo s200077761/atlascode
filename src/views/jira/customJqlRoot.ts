@@ -14,7 +14,6 @@ import { Commands } from "../../commands";
 import { JQLEntry, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
 import { IssueNode } from "../nodes/issueNode";
-import { Project } from "../../jira/jira-client/model/entities";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -79,10 +78,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     this._jqlList = this.getCustomJqlSiteList();
     setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
 
-    this._onDidChangeTreeData.fire();
-  }
-
-  setProject(project: Project) {
     this._onDidChangeTreeData.fire();
   }
 

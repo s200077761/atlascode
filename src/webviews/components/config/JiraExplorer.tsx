@@ -55,12 +55,6 @@ export default class JiraExplorer extends React.Component<{
         return (count < 2);
     }
 
-    selectedSiteName = () => {
-        const siteId = this.props.configData.config.jira.defaultSite;
-        const site = this.props.sites.find(site => site.id === siteId);
-        return site ? site.name : "<default site not set>";
-    }
-
     render() {
         const config = this.props.configData.config;
         return (
@@ -111,7 +105,7 @@ export default class JiraExplorer extends React.Component<{
                             return (
                                 <Checkbox
                                     {...fieldArgs.fieldProps}
-                                    label="Show notifications when new issues are created for default site and project"
+                                    label="Show notifications when new issues are created matching the above JQL(s)"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isDisabled={!this.props.configData.config.jira.explorer.enabled}
                                     isChecked={this.props.configData.config.jira.explorer.monitorEnabled}

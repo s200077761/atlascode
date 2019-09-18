@@ -19,6 +19,7 @@ import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
 
@@ -208,16 +209,21 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     async fetchIssueForBranch(e: FetchIssue) {
         let issue: MinimalIssue | BitbucketIssueData | undefined = undefined;
-        if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
-            const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
+        if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            const jiraIssueKeys = parseJiraIssueKeys(e.sourceBranch.name!);
+
+            let jiraIssues: MinimalIssue[] = [];
+            if (jiraIssueKeys.length > 0) {
+                const jiraSiteIssue = await issueForKey(jiraIssueKeys[0]);
+                jiraIssues = await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`, jiraSiteIssue.siteDetails);
+            }
             if (jiraIssues.length > 0) {
                 issue = jiraIssues[0];
             }
         }
 
         if (!issue) {
-            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
+            const bbIssueKeys = parseBitbucketIssueKeys(e.sourceBranch.name!);
             if (bbIssueKeys.length > 0) {
                 const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                 const remote = firstBitbucketRemote(repo);

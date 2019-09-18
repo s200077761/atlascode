@@ -651,18 +651,18 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
-                "atlascode.jira.defaultSite": {
-                    "type": "string",
-                    "description": "Jira site ID for workspace",
-                    "scope": "resource"
-                },
-                "atlascode.jira.defaultProjects": {
+                "atlascode.jira.lastCreateSiteAndProject": {
                     "type": "object",
-                    "description": "mapping of site to default project",
+                    "description": "the last used site id and project key for create issue",
                     "scope": "resource",
-                    "patternProperties": {
-                        ".*": {
-                            "type": "string"
+                    "properties": {
+                        "siteId": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "projectKey": {
+                            "type": "string",
+                            "default": ""
                         }
                     }
                 },
@@ -951,6 +951,8 @@
         "macaddress": "^0.2.9",
         "p-any": "^2.1.0",
         "p-timeout": "^3.1.0",
+        "p-settle": "^3.1.0",
+        "p-debounce": "^2.1.0",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.1",
         "passport-bitbucket-oauth2": "^0.1.2",
