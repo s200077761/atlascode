@@ -715,6 +715,10 @@
                                 "type": "boolean",
                                 "default": true
                             },
+                            "monitor": {
+                                "type": "boolean",
+                                "default": true
+                            },
                             "name": {
                                 "type": "string",
                                 "default": ""
