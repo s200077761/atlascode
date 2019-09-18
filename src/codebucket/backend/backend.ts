@@ -48,7 +48,7 @@ export class Backend {
   public async findRemoteHost(): Promise<BitbucketSite> {
     const repo = this.findRepository();
     const remote = firstBitbucketRemote(repo);
-    const site = await siteDetailsForRemote(remote)!;
+    const site = siteDetailsForRemote(remote)!;
     return site.isCloud ? new BitbucketCloudHost(site, remote) : new BitbucketServerHost(site, remote);
   }
 

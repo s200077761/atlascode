@@ -55,7 +55,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await siteDetailsForRemote(remote)!).userId;
+        const currentUser = (siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -69,7 +69,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await siteDetailsForRemote(remote)!).userId;
+        const currentUser = (siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -87,7 +87,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (await siteDetailsForRemote(remote)!).userId;
+        const currentUser = (siteDetailsForRemote(remote)!).userId;
         return this.getList(
             repository,
             remote,
@@ -402,7 +402,7 @@ export class ServerPullRequestApi implements PullRequestApi {
     async updateApproval(pr: PullRequest, status: string) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
-        const userSlug = (await siteDetailsForRemote(pr.remote)!).userId;
+        const userSlug = (siteDetailsForRemote(pr.remote)!).userId;
 
         await this.client.put(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/participants/${userSlug}`,
