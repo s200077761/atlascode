@@ -38,6 +38,8 @@ export enum Commands {
     ShowBitbucketIssueSettings = "atlascode.bb.showBitbucketIssueSettings",
     ShowIssue = 'atlascode.jira.showIssue',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowJiraAuth = 'atlascode.showJiraAuth',
+    ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
@@ -59,6 +61,8 @@ export enum Commands {
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
         vscode.commands.registerCommand(Commands.ShowConfigPage, () => Container.configWebview.createOrShowConfig(SettingSource.Default), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowJiraAuth, () => Container.configWebview.createOrShowConfig(SettingSource.JiraAuth), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowBitbucketAuth, () => Container.configWebview.createOrShowConfig(SettingSource.BBAuth), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowJiraIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.JiraIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline), Container.configWebview),

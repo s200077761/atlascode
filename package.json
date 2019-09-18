@@ -154,6 +154,16 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.showJiraAuth",
+                "title": "Open Settings",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showBitbucketAuth",
+                "title": "Open Settings",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.showWelcomePage",
                 "title": "Open Welcome",
                 "category": "Atlassian"
@@ -454,6 +464,14 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "atlascode.showJiraAuth",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.showBitbucketAuth",
+                    "when": "false"
+                },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "false"
