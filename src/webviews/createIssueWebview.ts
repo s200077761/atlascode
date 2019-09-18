@@ -184,6 +184,13 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues['project'] = this._currentProject;
             this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions['project'] = availableProjects;
 
+            /*
+            partial issue is used for prepopulating summary and description. 
+            fieldValues get sent when you change the project in the project dropdown so we can preserve any previously set values.
+            e.g. you type some stuff, then you change the project... 
+            at this point the new project may or may not have the same (or some of the same) fields.
+            we fill them in with the previous user values.
+            */
             if (this._partialIssue && !fieldValues) {
                 const currentVals = this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues;
                 const desc = this._partialIssue.description ? this._partialIssue.description + createdFromAtlascodeFooter : createdFromAtlascodeFooter;
