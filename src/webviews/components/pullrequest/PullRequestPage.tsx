@@ -37,7 +37,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
+import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
@@ -136,7 +136,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     }
 
-    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => {
+    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite) => {
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueOrKey

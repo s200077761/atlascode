@@ -23,6 +23,7 @@ import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities
 import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
 
 interface PRState {
     prData: PRData;
@@ -283,15 +284,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
-            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-                const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
-                const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
-                if (jiraIssues.length > 0) {
-                    return jiraIssues[0];
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+                const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
+                if (jiraIssueKeys.length > 0) {
+                    try {
+                        return await issueForKey(jiraIssueKeys[0]);
+                    } catch (e) {
+                        Logger.debug('error fetching main jira issue: ', e);
+                    }
                 }
             }
 
-            const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
+            const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
             const bbApi = await clientForRemote(pr.remote);
             const bbIssues = await bbApi.issues!.getIssuesForKeys(pr.repository, bbIssueKeys);
             if (bbIssues.length > 0) {
@@ -307,9 +311,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
         let result: MinimalIssue[] = [];
         try {
-            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchMinimalIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
+                result = await Promise.all(
+                    issueKeys.map(async (issueKey) => {
+                        return await issueForKey(issueKey);
+                    })
+                );
             }
         }
         catch (e) {

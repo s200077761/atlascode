@@ -44,7 +44,8 @@ export interface JiraConfig {
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
     hover: JiraHover;
-    customJql: SiteJQL[];
+    customJql: SiteJQLV1[];
+    jqlList: JQLEntry[];
     todoIssues: TodoIssues;
 }
 
@@ -75,9 +76,9 @@ export interface JiraHover {
     enabled: boolean;
 }
 
-export interface SiteJQL {
+export interface SiteJQLV1 {
     siteId: string;
-    jql: JQLEntry[];
+    jql: JQLEntryV1[];
 }
 
 export interface TodoIssues {
@@ -86,6 +87,14 @@ export interface TodoIssues {
 }
 
 export interface JQLEntry {
+    id: string;
+    enabled: boolean;
+    name: string;
+    query: string;
+    siteId: string;
+}
+
+export interface JQLEntryV1 {
     id: string;
     enabled: boolean;
     name: string;
@@ -196,7 +205,8 @@ export const emptyJQLEntry: JQLEntry = {
     id: "",
     enabled: true,
     name: "",
-    query: ""
+    query: "",
+    siteId: "",
 };
 
 export const emptyTodoIssues: TodoIssues = {
@@ -215,6 +225,7 @@ export const emptyJiraConfig: JiraConfig = {
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: [],
+    jqlList: [],
     todoIssues: emptyTodoIssues
 };
 

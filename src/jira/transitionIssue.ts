@@ -1,26 +1,23 @@
 import * as vscode from "vscode";
-import { MinimalIssueOrKeyAndSiteOrKey, isIssueKeyAndSite, Transition, isMinimalIssue } from "./jira-client/model/entities";
+import { MinimalIssueOrKeyAndSite, isIssueKeyAndSite, Transition, isMinimalIssue } from "./jira-client/model/entities";
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { issueTransitionedEvent } from "../analytics";
 
-export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSiteOrKey, transition: Transition) {
+export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite, transition: Transition) {
     let issueKey: string = "";
     let site: DetailedSiteInfo = emptySiteInfo;
 
     if (isMinimalIssue(issueOrKey)) {
         issueKey = issueOrKey.key;
         site = issueOrKey.siteDetails;
+    } else if (isIssueKeyAndSite(issueOrKey)) {
+        issueKey = issueOrKey.key;
+        site = issueOrKey.siteDetails;
     } else {
-        if (isIssueKeyAndSite(issueOrKey)) {
-            issueKey = issueOrKey.key;
-            site = issueOrKey.siteDetails;
-        } else {
-            issueKey = issueOrKey;
-            site = Container.siteManager.effectiveSite(ProductJira);
-        }
+        throw new Error('invalid issue or key');
     }
 
     try {

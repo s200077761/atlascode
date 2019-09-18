@@ -3,19 +3,19 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { MinimalIssueLink, MinimalIssueOrKeyAndSiteOrKey, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueLink, MinimalIssueOrKeyAndSite, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
 import { colorToLozengeAppearanceMap } from '../colors';
 
 interface LinkedIssuesProps {
     issuelinks: MinimalIssueLink[];
-    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void;
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void;
     onDelete: (issueLink: any) => void;
 }
 
 type ItemData = {
     linkDescription: string,
     issue: IssueLinkIssue,
-    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void,
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void,
     onDelete: (issueLink: any) => void;
 };
 

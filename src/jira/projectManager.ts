@@ -5,7 +5,9 @@ import { ProductJira, DetailedSiteInfo } from "../atlclients/authInfo";
 import { JiraDefaultProjectsConfigurationKey } from "../constants";
 import { Project } from "./jira-client/model/entities";
 import { Logger } from "../logger";
-import { emptyProject, isEmptyProject } from "./jira-client/model/emptyEntities";
+import pAny from "p-any";
+import pTimeout from "p-timeout";
+import { Time } from "../util/time";
 
 
 export type JiraSiteProjectMappingUpdateEvent = {
@@ -81,13 +83,34 @@ export class JiraProjectManager extends Disposable {
         return this._projectSiteMapping;
     }
 
-    async getProjects(site?: DetailedSiteInfo, orderBy?: OrderBy, query?: string): Promise<Project[]> {
-        const defaultSite: DetailedSiteInfo = Container.siteManager.effectiveSite(ProductJira);
+    public async findSiteForProjectKey(projectKey: string): Promise<DetailedSiteInfo> {
+        const emptyPromises: Promise<DetailedSiteInfo>[] = [];
+
+        Container.siteManager.getSitesAvailable(ProductJira).forEach(site => {
+            emptyPromises.push(
+                (async () => {
+                    const client = await Container.clientManager.jiraClient(site);
+                    if (client) {
+                        const project = await client.getProject(projectKey);
+                        if (project.key === projectKey) {
+                            return site;
+                        }
+                    }
+                    return Promise.reject('project not found');
+                })()
+            );
+        });
+        const promise = pAny(emptyPromises);
+
+        const foundSite = await pTimeout(promise, 1 * Time.MINUTES).catch(() => undefined);
+        return (foundSite) ? foundSite : Promise.reject(`no site found with project key ${projectKey}`);
+    }
+
+    async getProjects(site: DetailedSiteInfo, orderBy?: OrderBy, query?: string): Promise<Project[]> {
         let foundProjects: Project[] = [];
 
         try {
-            const useSite: DetailedSiteInfo = (site) ? site : defaultSite;
-            const client = await Container.clientManager.jiraClient(useSite);
+            const client = await Container.clientManager.jiraClient(site);
             const order = orderBy !== undefined ? orderBy : 'key';
             foundProjects = await client.getProjects(query, order);
 
@@ -96,33 +119,5 @@ export class JiraProjectManager extends Disposable {
         }
 
         return foundProjects;
-    }
-
-    public async getEffectiveProject(site?: DetailedSiteInfo): Promise<Project> {
-        let defaultProject = emptyProject;
-        const configProjects = Container.config.jira.defaultProjects;
-        const currentSite: DetailedSiteInfo = (site) ? site : Container.siteManager.effectiveSite(ProductJira);
-
-        if (this._projectSiteMapping[currentSite.id]) {
-            return this._projectSiteMapping[currentSite.id];
-        }
-
-        // check to see if project is configured for site
-        if (configProjects[currentSite.id]) {
-            const client = await Container.clientManager.jiraClient(currentSite);
-            defaultProject = await client.getProject(configProjects[currentSite.id]);
-
-        } else {
-            const projects = await this.getProjects();
-            if (projects.length > 0) {
-                defaultProject = projects[0];
-            }
-        }
-
-        if (!isEmptyProject(defaultProject)) {
-            this._projectSiteMapping[currentSite.id] = defaultProject;
-        }
-
-        return defaultProject;
     }
 }

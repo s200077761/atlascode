@@ -4,7 +4,6 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
-import NonCustomJQL from './NonCustomJQL';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 type changeObject = { [key: string]: any };
@@ -90,32 +89,11 @@ export default class JiraExplorer extends React.Component<{
                     paddingLeft: '24px',
                     paddingTop: '10px'
                 }}>
-                    <h4>Common Filters</h4>
-                    <NonCustomJQL
-                        yourIssuesJql={config.jira.explorer.assignedIssueJql}
-                        yourIssuesIsEnabled={config.jira.explorer.showAssignedIssues}
-                        openIssuesJql={config.jira.explorer.openIssueJql}
-                        openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
-                        onConfigChange={this.props.onConfigChange}
-                        jqlFetcher={this.props.jqlFetcher}
-                        defaultSiteId={config.jira.defaultSite}
-                        workingProject={config.jira.workingProject.id}
-                        sites={this.props.sites} />
-                </div>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingLeft: '24px',
-                    paddingTop: '10px'
-                }}>
                     <h4>Custom JQL</h4>
                     <CustomJQL
-                        siteJqlList={config.jira.customJql}
+                        JqlList={config.jira.jqlList}
                         onConfigChange={this.props.onConfigChange}
                         jqlFetcher={this.props.jqlFetcher}
-                        defaultSiteName={this.selectedSiteName()}
-                        defaultSiteId={config.jira.defaultSite}
-                        workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
                 <div style={{

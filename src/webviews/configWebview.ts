@@ -190,8 +190,14 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
                                 }
 
-                                if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                if (key === 'jira.jqlList') {
+                                    if (Array.isArray(value) && value.length > 0) {
+                                        // TODO: figure out which one changed
+                                        const site = Container.siteManager.getSiteForId(ProductJira, value[0].siteId);
+                                        if (site) {
+                                            customJQLCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                        }
+                                    }
                                 }
                             }
 

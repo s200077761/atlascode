@@ -1,5 +1,5 @@
 import React from "react";
-import { SiteJQL, emptyJQLEntry, JQLEntry } from "../../../config/model";
+import { emptyJQLEntry, JQLEntry } from "../../../config/model";
 import Button from "@atlaskit/button";
 import { Checkbox } from "@atlaskit/checkbox";
 import Tooltip from '@atlaskit/tooltip';
@@ -14,11 +14,8 @@ type changeObject = { [key: string]: any };
 
 export default class CustomJQL extends React.Component<
   {
-    defaultSiteName: string;
-    defaultSiteId: string;
-    workingProject: string;
     sites: DetailedSiteInfo[];
-    siteJqlList: SiteJQL[];
+    JqlList: JQLEntry[];
     onConfigChange: (changes: changeObject, removes?: string[]) => void;
     jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
   },
@@ -42,27 +39,10 @@ export default class CustomJQL extends React.Component<
     };
   }
 
-  private copySiteJql(siteJqlList: SiteJQL[]) {
-    return siteJqlList.map((siteJql: SiteJQL) => {
-      return {
-        siteId: siteJql.siteId,
-        jql: siteJql.jql.map((entry: JQLEntry) => {
-          return Object.assign({}, entry);
-        })
-      };
-    });
-  }
-
-  private publishChanges(inputSiteJQL: SiteJQL) {
-    const siteJqlList = this.copySiteJql(this.props.siteJqlList);
-    siteJqlList.forEach((siteJql: SiteJQL) => {
-      if (siteJql.siteId === inputSiteJQL.siteId) {
-        siteJql.jql = inputSiteJQL.jql;
-      }
-    });
+  private publishChanges(inputList: JQLEntry[]) {
 
     const changes = Object.create(null);
-    changes["jira.customJql"] = siteJqlList;
+    changes["jira.jqlList"] = inputList;
 
     if (this.props.onConfigChange) {
       this.props.onConfigChange(changes);
@@ -73,7 +53,7 @@ export default class CustomJQL extends React.Component<
     const id = v4();
     this.setState({
       editingId: id,
-      editingEntry: { id: id, name: "", query: "", enabled: true }
+      editingEntry: { siteId: "", id: id, name: "", query: "", enabled: true }
     });
   }
 
@@ -99,7 +79,7 @@ export default class CustomJQL extends React.Component<
     const index = this.indexForId(jqlList, id);
     if (index >= 0) {
       jqlList.splice(index, 1);
-      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jqlList });
+      this.publishChanges(jqlList);
     }
   }
 
@@ -111,26 +91,18 @@ export default class CustomJQL extends React.Component<
     if (index >= 0) {
       const entry = jqlList[index];
       entry.enabled = e.target.checked;
-      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jqlList });
+      this.publishChanges(jqlList);
     }
   }
 
-  private readJqlListFromProps(inputSiteId?: string): JQLEntry[] {
-    const defaultSiteId = inputSiteId ? inputSiteId : this.props.defaultSiteId;
-    const customJqlList = this.props.siteJqlList;
-    const siteJql = customJqlList.find((item: SiteJQL) => {
-      return item.siteId === defaultSiteId;
-    });
-
-    if (!siteJql) {
-      const newJql = { siteId: defaultSiteId, jql: [emptyJQLEntry] };
-      customJqlList.push(newJql);
-      return newJql.jql;
+  private readJqlListFromProps(): JQLEntry[] {
+    let customJqlList = this.props.JqlList;
+    if (!customJqlList) {
+      customJqlList = [];
+      customJqlList.push(emptyJQLEntry);
     }
 
-    return siteJql.jql.map((item: JQLEntry) => {
-      return Object.assign({}, item);
-    });
+    return customJqlList;
   }
 
   handleCancelEdit = () => {
@@ -143,8 +115,8 @@ export default class CustomJQL extends React.Component<
     });
   }
 
-  handleSaveEdit = (siteId: string, jqlEntry: JQLEntry) => {
-    const jqlList = this.readJqlListFromProps(siteId);
+  handleSaveEdit = (jqlEntry: JQLEntry) => {
+    const jqlList = this.readJqlListFromProps();
     const index = this.indexForId(jqlList, this.state.editingId);
 
     if (index >= 0) {
@@ -157,7 +129,7 @@ export default class CustomJQL extends React.Component<
       editingId: undefined,
       editingEntry: undefined
     });
-    this.publishChanges({ siteId: siteId, jql: jqlList });
+    this.publishChanges(jqlList);
   }
 
   handleDragStart = (e: any) => {
@@ -198,7 +170,7 @@ export default class CustomJQL extends React.Component<
       const temp = jql[this.state.dragSourceIndex];
       jql.splice(this.state.dragSourceIndex, 1);
       jql.splice(this.state.dragTargetIndex, 0, temp);
-      this.publishChanges({ siteId: this.props.defaultSiteId, jql: jql });
+      this.publishChanges(jql);
     }
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
   }
@@ -283,26 +255,21 @@ export default class CustomJQL extends React.Component<
   }
 
   render() {
-    if (!this.props.defaultSiteId) {
-      return <div />;
-    }
 
     const jql = this.readJqlListFromProps();
-
+    const noJql = jql.length === 0 ? <p><em>No custom jql configured</em></p> : <React.Fragment />;
     return (
       <React.Fragment>
         {this.state.editingEntry && (
           <EditJQL
             jqlFetcher={this.props.jqlFetcher}
-            defaultSiteId={this.props.defaultSiteId}
-            workingProject={this.props.workingProject}
             sites={this.props.sites}
             jqlEntry={this.state.editingEntry}
             onCancel={this.handleCancelEdit}
             onSave={this.handleSaveEdit}
           />
         )}
-        <p><em>{jql.length === 0 ? 'No custom jql configured ' : 'Showing custom jql'} for default site - <strong>{this.props.defaultSiteName}</strong> (default site can be changed in the authentication section above)</em></p>
+        {noJql}
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}

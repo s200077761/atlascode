@@ -93,6 +93,15 @@ export class SiteManager extends Disposable {
         return sites;
     }
 
+    public getFirstSite(productKey: string): DetailedSiteInfo {
+        const sites: DetailedSiteInfo[] = this.getSitesAvailableForKey(productKey);
+
+        if (sites.length > 0) {
+            return sites[0];
+        }
+        return emptySiteInfo;
+    }
+
     public getFirstAAID(productKey?: string): string | undefined {
         if (productKey) {
             return this.getFirstAAIDForProduct(productKey);

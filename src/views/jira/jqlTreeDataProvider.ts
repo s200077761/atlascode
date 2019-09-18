@@ -2,34 +2,36 @@ import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
-import { ProductJira } from '../../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
 import { fetchMinimalIssue } from '../../jira/fetchIssue';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
-import { MinimalIssue, Project } from '../../jira/jira-client/model/entities';
+import { MinimalIssue } from '../../jira/jira-client/model/entities';
+import { JQLEntry } from '../../config/model';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
     protected _issues: MinimalIssue[] | undefined;
-    private _jql: string | undefined;
+    private _jqlEntry: JQLEntry | undefined;
+    private _jqlSite: DetailedSiteInfo | undefined;
 
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
-    private _projectId: string | undefined;
     protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
     public get onDidChangeTreeData(): Event<AbstractBaseNode> {
         return this._onDidChangeTreeData.event;
     }
 
-    constructor(jql?: string, emptyState?: string, emptyStateCommand?: Command) {
+    constructor(jqlEntry?: JQLEntry, emptyState?: string, emptyStateCommand?: Command) {
         super();
+        this._jqlEntry = jqlEntry;
+        if (jqlEntry) {
+            this._jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
+        }
 
-        Container.jiraProjectManager.getEffectiveProject().then(p => this._projectId = p.id);
-        this._jql = jql;
         if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
         }
@@ -39,20 +41,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }
     }
 
-    public setJql(jql: string) {
+    public setJqlEntry(entry: JQLEntry) {
         this._issues = undefined;
-        this._jql = jql;
-    }
-
-    private effectiveJql(): string | undefined {
-        if (this._jql === undefined) {
-            return undefined;
-        }
-        return applyWorkingProject(this._projectId, this._jql);
-    }
-
-    setProject(project: Project) {
-        this._projectId = project.id;
+        this._jqlEntry = entry;
+        this._jqlSite = Container.siteManager.getSiteForId(ProductJira, entry.siteId);
     }
 
     setEmptyState(text: string) {
@@ -81,7 +73,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         if (parent) {
             return parent.getChildren();
         }
-        if (!this._jql) {
+        if (!this._jqlEntry) {
             return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
         } else if (this._issues) {
             return this.nodesForIssues();
@@ -97,13 +89,12 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchIssues(): Promise<IssueNode[]> {
-        const jql = this.effectiveJql();
-        if (!jql) {
+        if (!this._jqlEntry || !this._jqlSite) {
             return Promise.resolve([]);
         }
 
         // fetch issues matching the jql
-        const newIssues = await issuesForJQL(jql);
+        const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
 
         // epics don't have children filled in and children only have a ref to the parent key
         // we need to fill in the children and fetch the parents of any orphans
