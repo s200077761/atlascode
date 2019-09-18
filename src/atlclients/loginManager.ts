@@ -42,7 +42,7 @@ export class LoginManager {
                 authenticatedEvent(siteDetails[0]).then(e => { this._analyticsClient.sendTrackEvent(e); });
             }
 
-            window.showInformationMessage(`You are now authenticated with ${site.product}`);
+            window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
 
         } catch (e) {
             Logger.error(e, 'Error authenticating');
