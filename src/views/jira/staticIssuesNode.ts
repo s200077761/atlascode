@@ -10,7 +10,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
     public disposables: vscode.Disposable[] = [];
 
     constructor(issueKeys: string[], private label: string) {
-        super(undefined, 'no issues found');
+        super(undefined, 'No issues found');
         this.updateJqlEntry(issueKeys);
     }
 
