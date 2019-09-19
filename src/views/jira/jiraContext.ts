@@ -58,10 +58,6 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && configuration.changed(e, JiraJQLListKey)) {
-            //this._newIssueMonitor.setProject(project);
-        }
-
         if (initializing) {
             const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
