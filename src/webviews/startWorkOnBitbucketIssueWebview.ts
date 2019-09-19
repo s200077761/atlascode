@@ -135,40 +135,37 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
             this._panel.title = `Start work on Bitbucket issue #${issue.data.id}`;
         }
 
-        const repoData: RepoData[] = [];
         const repos = Container.bitbucketContext
             ? Container.bitbucketContext.getAllRepositores()
             : [];
-        for (let i = 0; i < repos.length; i++) {
-            const r = repos[i];
-            if (r.state.remotes.length === 0) {
-                break;
-            }
 
-            let repo: Repo | undefined = undefined;
-            let developmentBranch = undefined;
-            let href = undefined;
-            let isCloud = false;
-            if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                const remote = firstBitbucketRemote(r);
-                const bbApi = await clientForRemote(remote);
-                [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
-                href = repo.url;
-                isCloud = siteDetailsForRemote(remote)!.isCloud;
-            }
+        const repoData: RepoData[] = await Promise.all(repos
+            .filter(r => r.state.remotes.length > 0)
+            .map(async r => {
+                let repo: Repo | undefined = undefined;
+                let developmentBranch = undefined;
+                let href = undefined;
+                let isCloud = false;
+                if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                    const remote = firstBitbucketRemote(r);
+                    const bbApi = await clientForRemote(remote);
+                    [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
+                    href = repo.url;
+                    isCloud = siteDetailsForRemote(remote)!.isCloud;
+                }
 
-            await repoData.push({
-                uri: r.rootUri.toString(),
-                href: href,
-                remotes: r.state.remotes,
-                defaultReviewers: [],
-                localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                remoteBranches: [],
-                branchTypes: [],
-                developmentBranch: developmentBranch,
-                isCloud: isCloud
-            });
-        }
+                return {
+                    uri: r.rootUri.toString(),
+                    href: href,
+                    remotes: r.state.remotes,
+                    defaultReviewers: [],
+                    localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                    remoteBranches: [],
+                    branchTypes: [],
+                    developmentBranch: developmentBranch,
+                    isCloud: isCloud
+                };
+            }));
 
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
