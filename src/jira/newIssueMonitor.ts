@@ -9,11 +9,9 @@ import { showIssue } from "../commands/jira/showIssue";
 import { MinimalIssue } from "./jira-client/model/entities";
 import pSettle from "p-settle";
 
+type JQLSettleResult = { jqlName: string, issues: MinimalIssue[] };
 export class NewIssueMonitor {
   private _timestamp = new Date();
-
-  constructor() {
-  }
 
   private addCreatedTimeToQuery(jqlQuery: string, ts: string): string {
     let newQuery: string = jqlQuery;
@@ -42,7 +40,7 @@ export class NewIssueMonitor {
     const ts = format(this._timestamp, "YYYY-MM-DD HH:mm");
     try {
       const enabledJQLs = Container.config.jira.jqlList.filter(entry => entry.enabled && entry.monitor);
-      const jqlPromises: Promise<{ jqlName: string, issues: MinimalIssue[] }>[] = [];
+      const jqlPromises: Promise<JQLSettleResult>[] = [];
       enabledJQLs.forEach(entry => {
         jqlPromises.push(
           (async () => {
@@ -56,7 +54,7 @@ export class NewIssueMonitor {
         );
       });
 
-      let jqlResults = await pSettle(jqlPromises);
+      let jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
       jqlResults.forEach(result => {
         if (result.isFulfilled) {
           const newIssues = result.value.issues.filter(issue => issue.created! > this._timestamp);
