@@ -52,7 +52,7 @@ export interface JiraConfig {
 export type SiteIdAndProjectKey = {
     siteId: string;
     projectKey: string;
-}
+};
 export interface JiraStatusBar {
     enabled: boolean;
     showProduct: boolean;
