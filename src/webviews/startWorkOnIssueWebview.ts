@@ -5,7 +5,7 @@ import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
-import { Repository, RefType, Remote } from '../typings/git';
+import { Repository, RefType } from '../typings/git';
 import { RepoData, BranchType } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
@@ -148,59 +148,54 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                 this._panel.title = `Start work on Jira issue ${issue.key}`;
             }
 
-            const repoData: RepoData[] = [];
             const repos = Container.bitbucketContext
                 ? Container.bitbucketContext.getAllRepositores()
                 : [];
-            for (let i = 0; i < repos.length; i++) {
-                const r = repos[i];
-                const remotes: Remote[] = r.state.remotes.length > 0
-                    ? r.state.remotes
-                    : [{ name: 'NO_GIT_REMOTE_FOUND', isReadOnly: true }];
 
-                let repo: Repo | undefined = undefined;
-                let developmentBranch = undefined;
-                let href = undefined;
-                let isCloud = false;
-                let branchTypes: BranchType[] = [];
-                if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                    const remote = firstBitbucketRemote(r);
+            const repoData: RepoData[] = await Promise.all(repos
+                .filter(r => r.state.remotes.length > 0)
+                .map(async r => {
+                    let repo: Repo | undefined = undefined;
+                    let developmentBranch = undefined;
+                    let href = undefined;
+                    let isCloud = false;
+                    let branchTypes: BranchType[] = [];
+                    if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                        const remote = firstBitbucketRemote(r);
 
-                    let branchingModel: BitbucketBranchingModel | undefined = undefined;
+                        let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
-                    const bbApi = await clientForRemote(remote);
-                    [, repo, developmentBranch, branchingModel] = await Promise.all(
-                        [r.fetch(),
-                        bbApi.repositories.get(remote),
-                        bbApi.repositories.getDevelopmentBranch(remote),
-                        bbApi.repositories.getBranchingModel(remote)
-                        ]);
-                    href = repo.url;
-                    isCloud = siteDetailsForRemote(remote)!.isCloud;
+                        const bbApi = await clientForRemote(remote);
+                        [, repo, developmentBranch, branchingModel] = await Promise.all(
+                            [r.fetch(),
+                            bbApi.repositories.get(remote),
+                            bbApi.repositories.getDevelopmentBranch(remote),
+                            bbApi.repositories.getBranchingModel(remote)
+                            ]);
+                        href = repo.url;
+                        isCloud = siteDetailsForRemote(remote)!.isCloud;
 
-                    if (branchingModel && branchingModel.branch_types) {
-                        branchTypes = [...branchingModel.branch_types]
-                            .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
-                        if (branchTypes.length > 0) {
-                            branchTypes.push(customBranchType);
+                        if (branchingModel && branchingModel.branch_types) {
+                            branchTypes = [...branchingModel.branch_types]
+                                .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
+                            if (branchTypes.length > 0) {
+                                branchTypes.push(customBranchType);
+                            }
                         }
                     }
-                }
 
-                const localBranches = await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!)));
-
-                repoData.push({
-                    uri: r.rootUri.toString(),
-                    href: href,
-                    remotes: remotes,
-                    defaultReviewers: [],
-                    localBranches: localBranches,
-                    remoteBranches: [],
-                    branchTypes: branchTypes,
-                    developmentBranch: developmentBranch,
-                    isCloud: isCloud
-                });
-            }
+                    return {
+                        uri: r.rootUri.toString(),
+                        href: href,
+                        remotes: r.state.remotes,
+                        defaultReviewers: [],
+                        localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                        remoteBranches: [],
+                        branchTypes: branchTypes,
+                        developmentBranch: developmentBranch,
+                        isCloud: isCloud
+                    };
+                }));
 
             // best effort to set issue to in-progress
             if (!issue.status.name.toLowerCase().includes('progress')) {

@@ -58,11 +58,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         this.isRefeshing = true;
         try {
-            const state: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositores();
 
-            for (let i = 0; i < repos.length; i++) {
-                const r = repos[i];
+            const state: RepoData[] = await Promise.all(repos.map(async r => {
 
                 // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
                 const remote = firstBitbucketRemote(r);
@@ -75,9 +73,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     bbApi.pullrequests.getReviewers(remote)
                 ]);
 
-                const currentUser = { accountId: (await siteDetailsForRemote(remote)!).userId };
+                const currentUser = { accountId: (siteDetailsForRemote(remote)!).userId };
 
-                await state.push({
+                return {
                     uri: r.rootUri.toString(),
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
@@ -85,18 +83,16 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     owner: repo.name,
                     remotes: r.state.remotes,
                     defaultReviewers: defaultReviewers.filter(reviewer => reviewer.accountId !== currentUser.accountId),
-                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                    remoteBranches: await Promise.all(
-                        r.state.refs
-                            .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                            .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
-                    ),
+                    localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                    remoteBranches: r.state.refs
+                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
+                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name })),
                     branchTypes: [],
                     developmentBranch: developmentBranch,
                     hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
                     isCloud: siteDetailsForRemote(remote)!.isCloud
-                });
-            }
+                };
+            }));
 
             this.postMessage({ type: 'createPullRequestData', repositories: state });
         } catch (e) {
