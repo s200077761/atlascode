@@ -34,7 +34,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
-        const repos = Container.bitbucketContext.getBitbucketRepositores();
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
         if (repos.length > 0) {
             return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
         }
@@ -58,7 +58,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         this.isRefeshing = true;
         try {
-            const repos = Container.bitbucketContext.getBitbucketRepositores();
+            const repos = Container.bitbucketContext.getBitbucketRepositories();
 
             const state: RepoData[] = await Promise.all(repos.map(async r => {
 
