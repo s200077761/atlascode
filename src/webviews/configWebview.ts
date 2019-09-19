@@ -3,7 +3,7 @@ import { IConfig, SettingSource } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction } from '../ipc/configActions';
-import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo } from '../atlclients/authInfo';
+import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -151,7 +151,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 }
                 case 'fetchJqlOptions': {
                     handled = true;
-                    if (isFetchJqlDataAction(msg)) {
+                    if (isFetchJqlDataAction(msg) && !isEmptySiteInfo(msg.site)) {
                         try {
                             const client = await Container.clientManager.jiraClient(msg.site);
                             const data = await client.getJqlDataFromPath(msg.path);
