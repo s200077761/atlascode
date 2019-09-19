@@ -43,7 +43,6 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
             if (isAction(msg)) {
                 switch (msg.action) {
                     case 'fetchIssues': {
-                        //TODO: [VSCODE-588] Add nonce handling
                         handled = true;
                         if (isFetchQueryAndSite(msg)) {
                             try {
@@ -67,7 +66,6 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                         break;
                     }
                     case 'fetchSelectOptions': {
-                        //TODO: [VSCODE-588] Add nonce handling
                         handled = true;
                         if (isFetchQueryAndSite(msg)) {
                             try {
