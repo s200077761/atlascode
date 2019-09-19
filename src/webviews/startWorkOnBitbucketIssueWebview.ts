@@ -136,7 +136,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         }
 
         const repos = Container.bitbucketContext
-            ? Container.bitbucketContext.getAllRepositores()
+            ? Container.bitbucketContext.getAllRepositories()
             : [];
 
         const repoData: RepoData[] = await Promise.all(repos

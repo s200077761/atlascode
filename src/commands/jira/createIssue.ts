@@ -81,7 +81,7 @@ function descriptionForUri(uri: Uri) {
 
     const linesText = getLineRange();
 
-    const repos = Container.bitbucketContext.getAllRepositores();
+    const repos = Container.bitbucketContext.getAllRepositories();
 
     const urlArrays = repos.map((repo) => {
         return bitbucketUrlsInRepo(repo, fullPath, linesText);

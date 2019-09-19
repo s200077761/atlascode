@@ -7,7 +7,7 @@ import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer'
 import { CacheMap, Interval } from '../util/cachemap';
 import { PullRequest, User } from './model';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
-import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from './bbUtils';
+import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote, firstBitbucketRemote, getBitbucketCloudRemotes } from './bbUtils';
 import { bbAPIConnectivityError } from '../constants';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
@@ -72,7 +72,7 @@ export class BitbucketContext extends Disposable {
 
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
-            const prs = await Promise.all(this.getBitbucketRepositores().map(async repo => {
+            const prs = await Promise.all(this.getBitbucketRepositories().map(async repo => {
                 const remote = firstBitbucketRemote(repo);
                 const bbClient = await clientForRemote(remote);
                 return (await bbClient.pullrequests.getRecentAllStatus(repo, remote)).data;
@@ -87,7 +87,7 @@ export class BitbucketContext extends Disposable {
     private async refreshRepos() {
         this._pullRequestCache.clear();
         this._repoMap.clear();
-        await Promise.all(this.getAllRepositores().map(async repo => {
+        await Promise.all(this.getAllRepositories().map(async repo => {
             // sometimes the remote info is not populated during initialization
             // this is a workaround to wait for that information to be available
             if (repo.state.remotes.length === 0) {
@@ -111,7 +111,7 @@ export class BitbucketContext extends Disposable {
         }
     }
 
-    public getAllRepositores(): Repository[] {
+    public getAllRepositories(): Repository[] {
         return this._gitApi.repositories;
     }
 
@@ -119,8 +119,16 @@ export class BitbucketContext extends Disposable {
         return getBitbucketRemotes(repo).length > 0;
     }
 
-    public getBitbucketRepositores(): Repository[] {
-        return this.getAllRepositores().filter(this.isBitbucketRepo);
+    public isBitbucketCloudRepo(repo: Repository): boolean {
+        return getBitbucketCloudRemotes(repo).length > 0;
+    }
+
+    public getBitbucketRepositories(): Repository[] {
+        return this.getAllRepositories().filter(this.isBitbucketRepo);
+    }
+
+    public getBitbucketCloudRepositories(): Repository[] {
+        return this.getAllRepositories().filter(this.isBitbucketCloudRepo);
     }
 
     public getRepository(repoUri: Uri): Repository | undefined {
