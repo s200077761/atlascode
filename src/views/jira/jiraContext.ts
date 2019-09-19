@@ -3,7 +3,7 @@ import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from "../../constants";
+import { setCommandContext, CommandContext, CustomJQLTreeId } from "../../constants";
 import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
@@ -13,7 +13,7 @@ import { SitesAvailableUpdateEvent } from "../../siteManager";
 
 export class JiraContext extends Disposable {
 
-    private _explorers: JiraExplorer[] = [];
+    private _explorer: JiraExplorer | undefined;
     private _disposable: Disposable;
     private _newIssueMonitor: NewIssueMonitor;
     private _refreshTimer: RefreshTimer;
@@ -43,8 +43,8 @@ export class JiraContext extends Disposable {
             if (!Container.config.jira.explorer.enabled) {
                 this.dispose();
             } else {
-                if (initializing || this._explorers.length === 0) {
-                    this._explorers.push(new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot()));
+                if (initializing || !this._explorer) {
+                    this._explorer = new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot());
                 }
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
@@ -58,33 +58,31 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, JiraDefaultSiteConfigurationKey) || configuration.changed(e, JiraDefaultProjectsConfigurationKey))) {
-            const project = await Container.jiraProjectManager.getEffectiveProject(Container.siteManager.effectiveSite(ProductJira));
-            this._explorers.forEach(t => t.project = project);
-            this._newIssueMonitor.setProject(project);
-        }
-
         if (initializing) {
             const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            const project = await Container.jiraProjectManager.getEffectiveProject(Container.siteManager.effectiveSite(ProductJira));
-            this._newIssueMonitor.setProject(project);
+            //this._newIssueMonitor.setProject(project);
         }
     }
 
     dispose() {
         this._disposable.dispose();
-        this._explorers.forEach(tree => {
-            tree.dispose();
-        });
-        this._explorers = [];
+        if (this._explorer) {
+            this._explorer.dispose();
+            this._explorer = undefined;
+        }
+
     }
 
     async refresh() {
         if (!Container.onlineDetector.isOnline() || !Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return;
         }
-        this._explorers.forEach(e => e.refresh());
+
+        if (this._explorer) {
+            this._explorer.refresh();
+        }
+
         this._newIssueMonitor.checkForNewIssues();
     }
 
@@ -98,11 +96,8 @@ export class JiraContext extends Disposable {
 
     async findIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
         let issue: MinimalORIssueLink | undefined = undefined;
-        for (let explorer of this._explorers) {
-            issue = await explorer.findIssue(issueKey);
-            if (issue !== undefined) {
-                break;
-            }
+        if (this._explorer) {
+            issue = await this._explorer.findIssue(issueKey);
         }
 
         return issue;

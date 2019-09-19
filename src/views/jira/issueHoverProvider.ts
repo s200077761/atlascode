@@ -1,12 +1,11 @@
 import * as vscode from "vscode";
 import { HoverProvider } from "vscode";
 import TurnDownService from "turndown";
-import { fetchMinimalIssue } from "../../jira/fetchIssue";
 import { Commands } from "../../commands";
 import { viewScreenEvent } from "../../analytics";
 import { Container } from "../../container";
 import { IssueKeyRegEx } from "../../jira/issueKeyParser";
-import { ProductJira } from "../../atlclients/authInfo";
+import { issueForKey } from "../../jira/issueForKey";
 
 export class IssueHoverProvider implements HoverProvider {
   async provideHover(doc: vscode.TextDocument, position: vscode.Position) {
@@ -19,9 +18,12 @@ export class IssueHoverProvider implements HoverProvider {
   }
 
   private async getIssueDetails(key: string): Promise<vscode.Hover> {
-    // TODO: make sure the key exists in our list of known project before we try to fetch the issue
-    // e.g. if the issue key is in a different site, or is completely made up, we shouldn't fetch.
-    const issue = await fetchMinimalIssue(key, Container.siteManager.effectiveSite(ProductJira));
+    let issue = undefined;
+    try {
+      issue = await issueForKey(key);
+    } catch (e) {
+      return Promise.reject(`issue not found ${key}`);
+    }
 
     const summaryText = issue.summary ? issue.summary : "";
     const statusText = issue.status.name;
@@ -39,9 +41,8 @@ export class IssueHoverProvider implements HoverProvider {
     let text = [];
     text.push(new vscode.MarkdownString(header));
     text.push(new vscode.MarkdownString(descriptionText));
-    const encodedKey = encodeURIComponent(JSON.stringify([key]));
-
-    const showIssueCommandString = `(command:${Commands.ShowIssue}?${encodedKey} "View Issue")`;
+    const encodedKey = encodeURIComponent(JSON.stringify([issue.siteDetails.id, key]));
+    const showIssueCommandString = `(command:${Commands.ShowIssueForSiteIdAndKey}?${encodedKey} "View Issue")`;
     const issueUrlString = `(${issue.siteDetails.baseLinkUrl}/browse/${key})`;
     const issueLinksLine =
       `[Open Issue View]${showIssueCommandString} | [Open In Browser]${issueUrlString}`;

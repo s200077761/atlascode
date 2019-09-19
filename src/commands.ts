@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
-import { showProjectSelectionDialog } from './commands/jira/selectProject';
-import { showSiteSelectionDialog } from './commands/jira/selectSite';
 import { Container } from './container';
 import { assignIssue } from './commands/jira/assignIssue';
 import { IssueNode } from './views/nodes/issueNode';
 import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
 import { viewScreenEvent, Registry } from './analytics';
-import { showIssue } from './commands/jira/showIssue';
+import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { createIssue } from './commands/jira/createIssue';
 import { BitbucketIssue } from './bitbucket/model';
-import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSiteOrKey } from './jira/jira-client/model/entities';
+import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSite } from './jira/jira-client/model/entities';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { SettingSource } from './config/model';
 
@@ -28,8 +26,6 @@ export enum Commands {
     BitbucketDeleteComment = 'atlascode.bb.deleteComment',
     BitbucketEditComment = 'atlascode.bb.editComment',
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
-    SelectProject = 'atlascode.jira.selectProject',
-    SelectSite = 'atlascode.jira.selectSite',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowJiraIssueSettings = "atlascode.jira.showJiraIssueSettings",
@@ -37,7 +33,11 @@ export enum Commands {
     ShowPipelineSettings = "atlascode.bb.showPipelineSettings",
     ShowBitbucketIssueSettings = "atlascode.bb.showBitbucketIssueSettings",
     ShowIssue = 'atlascode.jira.showIssue',
+    ShowIssueForKey = 'atlascode.jira.showIssueForKey',
+    ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
     ShowConfigPage = 'atlascode.showConfigPage',
+    ShowJiraAuth = 'atlascode.showJiraAuth',
+    ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
@@ -59,16 +59,18 @@ export enum Commands {
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
     vscodeContext.subscriptions.push(
         vscode.commands.registerCommand(Commands.ShowConfigPage, () => Container.configWebview.createOrShowConfig(SettingSource.Default), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowJiraAuth, () => Container.configWebview.createOrShowConfig(SettingSource.JiraAuth), Container.configWebview),
+        vscode.commands.registerCommand(Commands.ShowBitbucketAuth, () => Container.configWebview.createOrShowConfig(SettingSource.BBAuth), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowJiraIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.JiraIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
-        vscode.commands.registerCommand(Commands.SelectProject, showProjectSelectionDialog),
-        vscode.commands.registerCommand(Commands.SelectSite, showSiteSelectionDialog),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
-        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => await showIssue(issueOrKey)),
+        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite) => await showIssue(issueOrKeyAndSite)),
+        vscode.commands.registerCommand(Commands.ShowIssueForKey, async (issueKey?: string) => await showIssueForKey(issueKey)),
+        vscode.commands.registerCommand(Commands.ShowIssueForSiteIdAndKey, async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),

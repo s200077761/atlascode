@@ -8,11 +8,11 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
 
     constructor(private _bbCtx: BitbucketContext) {
-        this._bbCtx.getBitbucketRepositores().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
+        this._bbCtx.getBitbucketRepositories().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
     }
 
     checkForNewActivity() {
-        const promises = this._bbCtx.getBitbucketRepositores().map(async repo => {
+        const promises = this._bbCtx.getBitbucketRepositories().map(async repo => {
             const remote = firstBitbucketRemote(repo);
             const bbApi = await clientForRemote(remote);
 

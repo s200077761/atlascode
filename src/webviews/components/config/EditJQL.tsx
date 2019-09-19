@@ -8,7 +8,6 @@ import { FieldValidators, chain } from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
-import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -25,14 +24,12 @@ const IconValue = (props: any) => (
 
 export default class EditJQL extends PureComponent<{
   jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
-  defaultSiteId: string;
-  workingProject: string;
   sites: DetailedSiteInfo[];
   jqlEntry: JQLEntry;
   nameEditable?: boolean;
   onCancel: () => void;
   onRestoreDefault?: (jqlEntry: JQLEntry) => void;
-  onSave: (siteId: string, jqlEntry: JQLEntry) => void;
+  onSave: (jqlEntry: JQLEntry) => void;
 }, {
   selectedSite: DetailedSiteInfo;
   nameValue: string;
@@ -45,7 +42,7 @@ export default class EditJQL extends PureComponent<{
   constructor(props: any) {
     super(props);
 
-    let defaultSite = this.props.sites.find(site => site.id === this.props.defaultSiteId);
+    let defaultSite = this.props.sites.find(site => site.id === this.props.jqlEntry.siteId);
     if (!defaultSite && this.props.sites.length > 0) {
       defaultSite = this.props.sites[0];
     } else if (!defaultSite) {
@@ -75,9 +72,8 @@ export default class EditJQL extends PureComponent<{
   }
 
   validationRequest = async (jql: string) => {
-    const effectiveJql = applyWorkingProject(this.props.workingProject, jql);
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${effectiveJql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -120,7 +116,7 @@ export default class EditJQL extends PureComponent<{
   onSave = () => {
     var entry = this.props.jqlEntry;
 
-    this.props.onSave(this.state.selectedSite.id, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
+    this.props.onSave(Object.assign({}, entry, { siteId: this.state.selectedSite.id, name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onRestoreDefault = () => {
@@ -216,7 +212,6 @@ export default class EditJQL extends PureComponent<{
               jqlError={this.state.jqlError}
             />
           }
-          <p><strong>Tip:</strong> You can use <code>project = {WorkingProjectDisplayName}</code> to restrict the query to issues in your working project. It's not actually valid JQL, but we'll take care of it.</p>
           <div style={{
             marginTop: '24px',
             display: 'flex',

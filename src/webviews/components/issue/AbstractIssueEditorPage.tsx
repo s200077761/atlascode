@@ -5,7 +5,7 @@ import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditEr
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators, chain } from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
-import { MinimalIssueOrKeyAndSiteOrKey } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
@@ -177,7 +177,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => {
+    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite) => {
         let issueObj = issueOrKey;
 
         if (typeof issueOrKey === 'string') {

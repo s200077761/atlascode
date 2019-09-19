@@ -6,7 +6,7 @@ import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction } from '../../../ipc/configActions';
-import { DetailedSiteInfo, AuthInfo, SiteInfo } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import BitbucketExplorer from './BBExplorer';
@@ -26,11 +26,9 @@ import Form from '@atlaskit/form';
 import BitbucketIssuesConfig from './BBIssuesConfig';
 import MultiOptionList from './MultiOptionList';
 import ErrorBanner from '../ErrorBanner';
-import { BBAuth } from './BBAuth';
-import { JiraAuth } from './JiraAuth';
+import { SiteEditor } from './SiteEditor';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import ProductEnabler from './ProductEnabler';
-import { Project } from '../../../jira/jira-client/model/entities';
 import { Time } from '../../../util/time';
 
 type changeObject = { [key: string]: any };
@@ -62,8 +60,6 @@ const emptyState: ViewState = {
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
-    private nonce: string;
-    private newProjects: Project[] = [];
     private jqlDataMap: { [key: string]: any } = {};
 
     constructor(props: any) {
@@ -92,15 +88,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 this.setState({ jiraSites: e.jiraSites, bitbucketSites: e.bitbucketSites, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
-            case 'projectMappingUpdate': {
-                this.setState({ siteProjectMapping: e.siteProjectMapping, isErrorBannerOpen: false, errorDetails: undefined });
-                break;
-            }
-            case 'projectList': {
-                this.newProjects = (e as ProjectList).availableProjects;
-                this.nonce = e.nonce;
-                break;
-            }
             case 'jqlData': {
                 this.jqlDataMap[e.nonce] = e.data;
                 break;
@@ -119,22 +106,6 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
-    }
-
-    handleDefaultSite = (site: DetailedSiteInfo) => {
-        const changes = Object.create(null);
-        changes['jira.defaultSite'] = site.id;
-        this.onConfigChange(changes);
-    }
-
-    handleDefaultProject = (site: DetailedSiteInfo, project: Project) => {
-        const changes = Object.create(null);
-
-        const current = this.state.config.jira.defaultProjects;
-        current[site.id] = project.key;
-
-        changes['jira.defaultProjects'] = current;
-        this.onConfigChange(changes);
     }
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
@@ -175,9 +146,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
         const jiraDisabledModifier = this.state.config.jira.enabled ? 0 : 1;
         const bitbucketDisabledModifier = this.state.config.bitbucket.enabled ? 0 : 1;
-        if (this.state.openedSettings === SettingSource.Default || this.state.openedSettings === SettingSource.JiraIssue) {
+        if (this.state.openedSettings === SettingSource.Default 
+            || this.state.openedSettings === SettingSource.JiraIssue 
+            || this.state.openedSettings === SettingSource.JiraAuth) {
             this.setState({ tabIndex: 0 });
-        } else if (this.state.openedSettings === SettingSource.BBIssue || this.state.openedSettings === SettingSource.BBPipeline || this.state.openedSettings === SettingSource.BBPullRequest) {
+        } else if (this.state.openedSettings === SettingSource.BBIssue 
+            || this.state.openedSettings === SettingSource.BBPipeline 
+            || this.state.openedSettings === SettingSource.BBPullRequest
+            || this.state.openedSettings === SettingSource.BBAuth) {
             this.setState({ tabIndex: 1 - jiraDisabledModifier });
         } else {
             this.setState({ tabIndex: 2 - jiraDisabledModifier - bitbucketDisabledModifier });
@@ -207,36 +183,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
     }
-
-    loadProjectOptions = (site: DetailedSiteInfo, input: string): Promise<any> => {
-        this.setState({ isProjectsLoading: true });
-        return new Promise(resolve => {
-            this.newProjects = [];
-
-            const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchProjects', query: input, site: site, nonce: nonce });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                const gotProjects = (this.newProjects.length > 0 && this.nonce === nonce);
-                const timeIsUp = (end - start) > 15 * Time.SECONDS;
-
-                if (gotProjects || timeIsUp) {
-                    this.setState({ isProjectsLoading: false });
-                    clearInterval(timer);
-                    resolve(this.newProjects);
-                }
-            }, 100);
-        });
-    }
-
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    shouldDefaultExpand = (setting: SettingSource) => {
-        if (setting === this.state.openedSettings) {
+    shouldDefaultExpand = (setting: SettingSource, secondSetting?: SettingSource) => {
+        if (setting === this.state.openedSettings || secondSetting === this.state.openedSettings) {
             return { isDefaultExpanded: true };
         } else {
             return;
@@ -290,17 +242,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         </TabList>
                                         {this.state.config.jira.enabled &&
                                             <TabPanel>
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Jira')}>
-                                                    <JiraAuth
-                                                        defaultSite={this.state.config.jira.defaultSite}
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.JiraAuth)} header={panelHeader('Authentication', 'configure authentication for Jira')}>
+                                                    <SiteEditor
                                                         sites={this.state.jiraSites}
-                                                        siteProjectMapping={this.state.siteProjectMapping}
+                                                        product={ProductJira}
                                                         handleDeleteSite={this.handleLogout}
-                                                        handleSaveSite={this.handleLogin}
-                                                        handleDefaultSite={this.handleDefaultSite}
-                                                        loadProjectOptions={this.loadProjectOptions}
-                                                        handleDefaultProject={this.handleDefaultProject} />
-                                                    {/* TODO: [VSCODE-509] move default site selection to auth list */}
+                                                        handleSaveSite={this.handleLogin} />
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
@@ -333,9 +280,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
-                                                    <BBAuth
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.BBAuth)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
+                                                     <SiteEditor
                                                         sites={this.state.bitbucketSites}
+                                                        product={ProductBitbucket}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin}
                                                     />

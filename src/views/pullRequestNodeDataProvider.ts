@@ -88,7 +88,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         if (!this._childrenMap) {
             this._childrenMap = new Map();
         }
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketRepositories();
         const expand = repos.length === 1;
 
         // dispose any removed repos
@@ -130,7 +130,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
             return emptyBitbucketNodes;
         }

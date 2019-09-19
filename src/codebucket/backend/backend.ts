@@ -35,7 +35,7 @@ export class Backend {
       editorUri = queryParams.repoUri;
     }
 
-    const result = Container.bitbucketContext.getBitbucketRepositores().find(repo => editorUri.startsWith(repo.rootUri.toString()));
+    const result = Container.bitbucketContext.getBitbucketRepositories().find(repo => editorUri.startsWith(repo.rootUri.toString()));
     if (!result) {
       throw new Error('Unable to find a bitbucket repository');
     }

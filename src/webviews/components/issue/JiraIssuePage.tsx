@@ -343,7 +343,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <div className='ac-breadcrumbs'>
                         {(epicLinkValue && epicLinkKey !== '') &&
                             <React.Fragment>
-                                <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue(epicLinkKey)} />
+                                <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: epicLinkKey })} />
                                 <span className='ac-breadcrumb-divider'>/</span>
                             </React.Fragment>
                         }
@@ -352,7 +352,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 <NavItem
                                     text={this.state.fieldValues['parent'].key}
                                     iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
-                                    onItemClick={() => this.handleOpenIssue(this.state.fieldValues['parent'])} />
+                                    onItemClick={() => this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: this.state.fieldValues['parent'] })} />
                                 <span className='ac-breadcrumb-divider'>/</span>
                             </React.Fragment>
                         }

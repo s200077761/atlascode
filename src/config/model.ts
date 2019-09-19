@@ -7,6 +7,8 @@ export enum SettingSource {
     BBPullRequest = 'bbPullRequest',
     BBPipeline = 'bbPipeline',
     BBIssue = 'bbIssue',
+    JiraAuth = 'jiraAuth',
+    BBAuth = 'bbAuth',
     Default = 'default'
 }
 
@@ -33,21 +35,24 @@ export interface IConfig {
 
 }
 
-export type DefaultProjects = { [key: string]: string };
 export interface JiraConfig {
     enabled: boolean;
     workingProject: WorkingProjectV1;
     workingSite: AccessibleResourceV1;
-    defaultSite: string;
-    defaultProjects: DefaultProjects;
+    lastCreateSiteAndProject: SiteIdAndProjectKey;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
     hover: JiraHover;
-    customJql: SiteJQL[];
+    customJql: SiteJQLV1[];
+    jqlList: JQLEntry[];
     todoIssues: TodoIssues;
 }
 
+export type SiteIdAndProjectKey = {
+    siteId: string;
+    projectKey: string;
+};
 export interface JiraStatusBar {
     enabled: boolean;
     showProduct: boolean;
@@ -75,9 +80,9 @@ export interface JiraHover {
     enabled: boolean;
 }
 
-export interface SiteJQL {
+export interface SiteJQLV1 {
     siteId: string;
-    jql: JQLEntry[];
+    jql: JQLEntryV1[];
 }
 
 export interface TodoIssues {
@@ -86,6 +91,15 @@ export interface TodoIssues {
 }
 
 export interface JQLEntry {
+    id: string;
+    enabled: boolean;
+    name: string;
+    query: string;
+    siteId: string;
+    monitor: boolean;
+}
+
+export interface JQLEntryV1 {
     id: string;
     enabled: boolean;
     name: string;
@@ -195,8 +209,10 @@ export const emptyJiraHover: JiraHover = {
 export const emptyJQLEntry: JQLEntry = {
     id: "",
     enabled: true,
+    monitor: true,
     name: "",
-    query: ""
+    query: "",
+    siteId: "",
 };
 
 export const emptyTodoIssues: TodoIssues = {
@@ -208,13 +224,13 @@ export const emptyJiraConfig: JiraConfig = {
     enabled: true,
     workingProject: emptyWorkingProjectV1,
     workingSite: emptyAccessibleResourceV1,
-    defaultSite: "",
-    defaultProjects: {},
+    lastCreateSiteAndProject: { siteId: "", projectKey: "" },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: [],
+    jqlList: [],
     todoIssues: emptyTodoIssues
 };
 

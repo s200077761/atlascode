@@ -17,12 +17,12 @@ import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
-import { issuesForJQL } from '../jira/issuesForJql';
-import { fetchMinimalIssue } from '../jira/fetchIssue';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
+import pSettle from "p-settle";
 
 interface PRState {
     prData: PRData;
@@ -283,15 +283,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
-            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-                const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
-                const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
-                if (jiraIssues.length > 0) {
-                    return jiraIssues[0];
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+                const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
+                if (jiraIssueKeys.length > 0) {
+                    try {
+                        return await issueForKey(jiraIssueKeys[0]);
+                    } catch (e) {
+                        Logger.debug('error fetching main jira issue: ', e);
+                    }
                 }
             }
 
-            const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
+            const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
             const bbApi = await clientForRemote(pr.remote);
             if (bbApi.issues) {
                 const bbIssues = await bbApi.issues.getIssuesForKeys(pr.repository, bbIssueKeys);
@@ -307,18 +310,34 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
-        let result: MinimalIssue[] = [];
+        let foundIssues: MinimalIssue[] = [];
         try {
-            if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchMinimalIssue(issueKey, Container.siteManager.effectiveSite(ProductJira))));
+
+                const jqlPromises: Promise<MinimalIssue>[] = [];
+                issueKeys.forEach(key => {
+                    jqlPromises.push(
+                        (async () => {
+                            return await issueForKey(key);
+                        })()
+                    );
+                });
+
+                let issueResults = await pSettle<MinimalIssue>(jqlPromises);
+
+                issueResults.forEach(result => {
+                    if (result.isFulfilled) {
+                        foundIssues.push(result.value);
+                    }
+                });
             }
         }
         catch (e) {
-            result = [];
+            foundIssues = [];
             Logger.debug('error fetching related jira issues: ', e);
         }
-        return result;
+        return foundIssues;
     }
 
     private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<BitbucketIssue[]> {
@@ -406,7 +425,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
                 });
-                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.sourceRemote!);
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
                 if (site) {
                     prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                 }
