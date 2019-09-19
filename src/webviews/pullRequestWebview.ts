@@ -22,6 +22,7 @@ import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
+import pSettle from "p-settle";
 
 interface PRState {
     prData: PRData;
@@ -309,22 +310,34 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
-        let result: MinimalIssue[] = [];
+        let foundIssues: MinimalIssue[] = [];
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(
-                    issueKeys.map(async (issueKey) => {
-                        return await issueForKey(issueKey);
-                    })
-                );
+
+                const jqlPromises: Promise<MinimalIssue>[] = [];
+                issueKeys.forEach(key => {
+                    jqlPromises.push(
+                        (async () => {
+                            return await issueForKey(key);
+                        })()
+                    );
+                });
+
+                let issueResults = await pSettle<MinimalIssue>(jqlPromises);
+
+                issueResults.forEach(result => {
+                    if (result.isFulfilled) {
+                        foundIssues.push(result.value);
+                    }
+                });
             }
         }
         catch (e) {
-            result = [];
+            foundIssues = [];
             Logger.debug('error fetching related jira issues: ', e);
         }
-        return result;
+        return foundIssues;
     }
 
     private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<BitbucketIssue[]> {
