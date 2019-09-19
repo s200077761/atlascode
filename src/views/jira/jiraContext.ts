@@ -3,7 +3,7 @@ import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraJQLListKey } from "../../constants";
+import { setCommandContext, CommandContext, CustomJQLTreeId } from "../../constants";
 import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";

@@ -16,6 +16,10 @@ export class JiraSettingsManager extends Disposable {
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
 
+    constructor() {
+        super(() => this.dispose());
+    }
+
     public async getIssueLinkTypes(site: DetailedSiteInfo): Promise<IssueLinkType[]> {
         if (!this._issueLinkTypesStore.has(site.id)) {
             let ilts: IssueLinkType[] = [];
