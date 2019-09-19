@@ -11,9 +11,12 @@ import Form, { FormFooter } from '@atlaskit/form';
 import { FieldUI, ValueType, UIType } from '../../../jira/jira-client/model/fieldUI';
 import { AtlLoader } from '../AtlLoader';
 import { IssueKeyAndSite } from '../../../jira/jira-client/model/entities';
-import { emptySiteInfo } from '../../../atlclients/authInfo';
+import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
+import Select, { components } from '@atlaskit/select';
+import { Field } from '@atlaskit/form';
+import { chain } from '../fieldValidators';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -29,6 +32,19 @@ const emptyState: ViewState = {
     createdIssue: { key: '', siteDetails: emptySiteInfo },
 
 };
+
+const IconOption = (props: any) => (
+    <components.Option {...props}>
+        <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </components.Option>
+);
+
+const IconValue = (props: any) => (
+    <components.SingleValue {...props}>
+        <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    </components.SingleValue>
+
+);
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
@@ -133,6 +149,14 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: this.state.fieldValues });
 
         return undefined;
+    }
+
+    handleSiteChange = (site: DetailedSiteInfo) => {
+        this.setState({ siteDetails: site, loadingField: 'site', isSomethingLoading: true });
+        this.postMessage({
+            action: 'getScreensForSite'
+            , site: site
+        });
     }
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
@@ -240,6 +264,28 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             >
                                 {(frmArgs: any) => {
                                     return (<form {...frmArgs.formProps}>
+                                        <Field label='Select Site'
+                                            id='site'
+                                            name='site'
+                                            defaultValue={this.state.siteDetails}
+                                        >
+                                            {
+                                                (fieldArgs: any) => {
+                                                    return (
+                                                        <Select
+                                                            {...fieldArgs.fieldProps}
+                                                            className="ac-select-container"
+                                                            classNamePrefix="ac-select"
+                                                            getOptionLabel={(option: any) => option.name}
+                                                            getOptionValue={(option: any) => option.id}
+                                                            options={this.state.selectFieldOptions['site']}
+                                                            components={{ Option: IconOption, SingleValue: IconValue }}
+                                                            onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                                                        />
+                                                    );
+                                                }
+                                            }
+                                        </Field>
                                         {this.getCommonFieldMarkup()}
                                         <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
                                             <div>{this.getAdvancedFieldMarkup()}</div>

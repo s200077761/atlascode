@@ -46,18 +46,6 @@
     "contributes": {
         "commands": [
             {
-                "command": "atlascode.jira.selectProject",
-                "title": "Select Working Jira Project",
-                "icon": "resources/atlassian-icon.svg",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.selectSite",
-                "title": "Select Working Jira Site",
-                "icon": "resources/atlassian-icon.svg",
-                "category": "Atlassian"
-            },
-            {
                 "command": "atlascode.jira.createIssue",
                 "title": "Create New Jira Issue",
                 "icon": {
@@ -111,7 +99,7 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.showIssue",
+                "command": "atlascode.jira.showIssueForKey",
                 "title": "Open Jira Issue",
                 "category": "Atlassian"
             },
@@ -352,17 +340,9 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
-                },
-                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
-                },
-                {
-                    "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
                 },
                 {
                     "command": "atlascode.jira.refreshExplorer",
@@ -517,15 +497,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.jira.showIssue",
-                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
-                },
-                {
-                    "command": "atlascode.jira.selectProject",
-                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
-                },
-                {
-                    "command": "atlascode.jira.selectSite",
+                    "command": "atlascode.jira.showIssueForKey",
                     "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ]
@@ -697,18 +669,18 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
-                "atlascode.jira.defaultSite": {
-                    "type": "string",
-                    "description": "Jira site ID for workspace",
-                    "scope": "resource"
-                },
-                "atlascode.jira.defaultProjects": {
+                "atlascode.jira.lastCreateSiteAndProject": {
                     "type": "object",
-                    "description": "mapping of site to default project",
+                    "description": "the last used site id and project key for create issue",
                     "scope": "resource",
-                    "patternProperties": {
-                        ".*": {
-                            "type": "string"
+                    "properties": {
+                        "siteId": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "projectKey": {
+                            "type": "string",
+                            "default": ""
                         }
                     }
                 },
@@ -744,6 +716,38 @@
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                },
+                "atlascode.jira.jqlList": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "default": true
+                            },
+                            "monitor": {
+                                "type": "boolean",
+                                "default": true
+                            },
+                            "name": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "query": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "siteId": {
+                                "type": "string",
+                                "default": ""
                             }
                         }
                     }
@@ -969,6 +973,8 @@
         "macaddress": "^0.2.9",
         "p-any": "^2.1.0",
         "p-timeout": "^3.1.0",
+        "p-settle": "^3.1.0",
+        "p-debounce": "^2.1.0",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.1",
         "passport-bitbucket-oauth2": "^0.1.2",

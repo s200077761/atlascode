@@ -4,7 +4,6 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
-import NonCustomJQL from './NonCustomJQL';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 
 type changeObject = { [key: string]: any };
@@ -56,12 +55,6 @@ export default class JiraExplorer extends React.Component<{
         return (count < 2);
     }
 
-    selectedSiteName = () => {
-        const siteId = this.props.configData.config.jira.defaultSite;
-        const site = this.props.sites.find(site => site.id === siteId);
-        return site ? site.name : "<default site not set>";
-    }
-
     render() {
         const config = this.props.configData.config;
         return (
@@ -90,32 +83,11 @@ export default class JiraExplorer extends React.Component<{
                     paddingLeft: '24px',
                     paddingTop: '10px'
                 }}>
-                    <h4>Common Filters</h4>
-                    <NonCustomJQL
-                        yourIssuesJql={config.jira.explorer.assignedIssueJql}
-                        yourIssuesIsEnabled={config.jira.explorer.showAssignedIssues}
-                        openIssuesJql={config.jira.explorer.openIssueJql}
-                        openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
-                        onConfigChange={this.props.onConfigChange}
-                        jqlFetcher={this.props.jqlFetcher}
-                        defaultSiteId={config.jira.defaultSite}
-                        workingProject={config.jira.workingProject.id}
-                        sites={this.props.sites} />
-                </div>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    paddingLeft: '24px',
-                    paddingTop: '10px'
-                }}>
                     <h4>Custom JQL</h4>
                     <CustomJQL
-                        siteJqlList={config.jira.customJql}
+                        JqlList={config.jira.jqlList}
                         onConfigChange={this.props.onConfigChange}
                         jqlFetcher={this.props.jqlFetcher}
-                        defaultSiteName={this.selectedSiteName()}
-                        defaultSiteId={config.jira.defaultSite}
-                        workingProject={config.jira.workingProject.id}
                         sites={this.props.sites} />
                 </div>
                 <div style={{
@@ -133,7 +105,7 @@ export default class JiraExplorer extends React.Component<{
                             return (
                                 <Checkbox
                                     {...fieldArgs.fieldProps}
-                                    label="Show notifications when new issues are created for default site and project"
+                                    label="Show notifications when new issues are created matching the above JQL(s)"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isDisabled={!this.props.configData.config.jira.explorer.enabled}
                                     isChecked={this.props.configData.config.jira.explorer.monitorEnabled}

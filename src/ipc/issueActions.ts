@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSiteOrKey, User, IssueType, isIssueType, Project } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSite, User, IssueType, isIssueType, Project } from "../jira/jira-client/model/entities";
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -14,7 +14,7 @@ export interface EditIssueAction extends Action {
 
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
-    issue: MinimalIssueOrKeyAndSiteOrKey;
+    issue: MinimalIssueOrKeyAndSite;
     transition: Transition;
 }
 
@@ -38,7 +38,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueOrKey: MinimalIssueOrKeyAndSiteOrKey;
+    issueOrKey: MinimalIssueOrKeyAndSite;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
@@ -65,6 +65,10 @@ export interface FetchIssueFieldOptionsByJQLAction extends Action {
 export interface ScreensForProjectsAction extends Action {
     project: Project;
     fieldValues: FieldValues;
+}
+
+export interface ScreensForSiteAction extends Action {
+    site: DetailedSiteInfo;
 }
 
 export interface CreateSelectOptionAction extends Action {
@@ -175,6 +179,10 @@ export function isFetchOptionsJQL(a: Action): a is FetchIssueFieldOptionsByJQLAc
 
 export function isScreensForProjects(a: Action): a is ScreensForProjectsAction {
     return (<ScreensForProjectsAction>a).project !== undefined;
+}
+
+export function isScreensForSite(a: Action): a is ScreensForSiteAction {
+    return (<ScreensForSiteAction>a).site !== undefined;
 }
 
 export function isCreateSelectOption(a: Action): a is CreateSelectOptionAction {

@@ -9,11 +9,8 @@ import { configuration } from '../config/configuration';
 import { Container } from '../container';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
-import { isFetchQueryAndSite } from '../ipc/issueActions';
-import { JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
-import { JiraSiteProjectMappingUpdateEvent } from '../jira/projectManager';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -23,7 +20,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
             Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
-            Container.jiraProjectManager.onDidSiteProjectMappingChange(this.onSiteProjectMappingChange, this),
         );
     }
 
@@ -63,7 +59,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
 
             const feedbackUser = await getFeedbackUser();
-            const siteProjectMapping = await Container.jiraProjectManager.getSiteProjectMapping();
 
             this.postMessage({
                 type: 'init',
@@ -71,7 +66,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 feedbackUser: feedbackUser,
-                siteProjectMapping: siteProjectMapping,
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
@@ -95,10 +89,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             , jiraSites: jiraSitesAvailable
             , bitbucketSites: bitbucketSitesAvailable
         });
-    }
-
-    private onSiteProjectMappingChange(e: JiraSiteProjectMappingUpdateEvent) {
-        this.postMessage({ type: 'projectMappingUpdate', siteProjectMapping: e.projectSiteMapping });
     }
 
     private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
@@ -178,20 +168,21 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
                                 const value = msg.changes[key];
 
-                                if (key === JiraDefaultSiteConfigurationKey) {
-                                    await configuration.setDefaultSite(value === inspect.defaultValue ? undefined : value);
-                                } else if (key === JiraDefaultProjectsConfigurationKey) {
-                                    await configuration.setDefaultProjects(value === inspect.defaultValue ? undefined : value);
-                                } else {
-                                    await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
-                                }
+
+                                await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
                                 }
 
-                                if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.siteManager.effectiveSite(ProductJira)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                if (key === 'jira.jqlList') {
+                                    if (Array.isArray(value) && value.length > 0) {
+                                        // TODO: figure out which one changed
+                                        const site = Container.siteManager.getSiteForId(ProductJira, value[0].siteId);
+                                        if (site) {
+                                            customJQLCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                        }
+                                    }
                                 }
                             }
 
@@ -207,14 +198,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                         }
                     }
 
-                    break;
-                }
-                case 'fetchProjects': {
-                    handled = true;
-                    if (isFetchQueryAndSite(msg)) {
-                        const projects = await Container.jiraProjectManager.getProjects(msg.site, 'name', msg.query);
-                        this.postMessage({ type: 'projectList', availableProjects: projects, nonce: msg.nonce });
-                    }
                     break;
                 }
                 case 'sourceLink': {

@@ -5,10 +5,13 @@ import debounce from 'lodash.debounce';
 import { SiteManager } from "../siteManager";
 import { CredentialManager } from "../atlclients/authStore";
 import { OAuthRefesher } from "../atlclients/oauthRefresher";
-import { configuration, DefaultProjects } from "../config/configuration";
+import { configuration, JQLEntry, SiteJQLV1 } from "../config/configuration";
 import axios from 'axios';
+import { v4 } from "uuid";
+import { JiraJQLListKey } from "../constants";
 
 const keychainServiceNameV1 = "atlascode-authinfo";
+const WorkingProjectToken = 'currentProject()';
 
 export class V1toV2Migrator {
     private _debouncedKeychain = new Object();
@@ -71,6 +74,7 @@ export class V1toV2Migrator {
 
     private async migrateJiraData(info: AuthInfoV1, provider: OAuthProvider, accessToken: string) {
         const newSites: DetailedSiteInfo[] = [];
+        const newJQL: JQLEntry[] = [];
 
         for (const resource of info.accessibleResources!) {
             Logger.debug('processing resource', resource.name);
@@ -117,26 +121,83 @@ export class V1toV2Migrator {
             Logger.debug('added site', newSite);
 
             if (this._defaultSiteId === resource.id) {
-                this.updateDefaultSiteInfo(newSite);
+                newJQL.push(...this.migrateCommonJQL(resource.id));
             }
+
+            newJQL.push(...this.migrateCustomJQL(resource.id));
             newSites.push(newSite);
         }
         this._siteManager.addSites(newSites);
+        configuration.updateEffective(JiraJQLListKey, newJQL);
+        if (this._deleteV1) {
+            configuration.updateEffective('jira.customJql', undefined);
+        }
     }
 
-    private async updateDefaultSiteInfo(newSite: DetailedSiteInfo) {
+    private migrateCommonJQL(siteId: string): JQLEntry[] {
+        const newJql: JQLEntry[] = [];
+        const v1Assigned: string = configuration.get<string>('jira.explorer.assignedIssueJql');
+        const v1Opened: string = configuration.get<string>('jira.explorer.openIssueJql');
+
+        if (v1Assigned.trim() !== '') {
+            const query = this._workingProject ? v1Assigned.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : v1Assigned.replace(`project = ${WorkingProjectToken}`, '');
+            const name = this._workingProject ? `My ${this._workingProject.key} Issues` : 'My Issues';
+            newJql.push({
+                id: v4(),
+                enabled: configuration.get<boolean>('jira.explorer.showAssignedIssues'),
+                monitor: true,
+                name: name,
+                query: query,
+                siteId: siteId
+            });
+        }
+
+        if (v1Opened.trim() !== '') {
+            const query = this._workingProject ? v1Opened.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : v1Opened.replace(`project = ${WorkingProjectToken}`, '');
+            const name = this._workingProject ? `Open ${this._workingProject.key} Issues` : 'Open Issues';
+            newJql.push({
+                id: v4(),
+                enabled: configuration.get<boolean>('jira.explorer.showOpenIssues'),
+                monitor: true,
+                name: name,
+                query: query,
+                siteId: siteId
+            });
+        }
+
         if (this._deleteV1) {
             configuration.clearVersion1WorkingSite();
             configuration.clearVersion1WorkingProject();
+            configuration.updateEffective('jira.explorer.assignedIssueJql', undefined);
+            configuration.updateEffective('jira.explorer.openIssueJql', undefined);
+            configuration.updateEffective('jira.explorer.showAssignedIssues', undefined);
+            configuration.updateEffective('jira.explorer.showOpenIssues', undefined);
         }
 
-        await configuration.setDefaultSite(newSite.id);
+        return newJql;
 
-        const defaultProjects: DefaultProjects = {};
-        defaultProjects[newSite.id] = this._workingProject.key;
-        await configuration.setDefaultProjects(defaultProjects);
+    }
 
-        Logger.debug('set default site site', newSite);
+    private migrateCustomJQL(siteId: string): JQLEntry[] {
+        const newJql: JQLEntry[] = [];
+        const v1Custom: SiteJQLV1[] = configuration.get<SiteJQLV1[]>('jira.customJql').filter(entry => entry.siteId === siteId);
+
+        v1Custom.forEach(siteJql => {
+            siteJql.jql.forEach(jqlEntry => {
+                const query = this._workingProject ? jqlEntry.query.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
+                newJql.push({
+                    id: jqlEntry.id,
+                    enabled: jqlEntry.enabled,
+                    monitor: true,
+                    name: jqlEntry.name,
+                    query: query,
+                    siteId: siteId
+                });
+            });
+
+        });
+
+        return newJql;
     }
 
     private async migrateBitbucketData(info: AuthInfoV1, provider: OAuthProvider, accessToken: string) {

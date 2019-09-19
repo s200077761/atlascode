@@ -12,9 +12,9 @@ import {
     Disposable,
     WorkspaceConfiguration
 } from 'vscode';
-import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraDefaultSiteConfigurationKey, JiraDefaultProjectsConfigurationKey } from '../constants';
+import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraCreateSiteAndProjectKey } from '../constants';
 import { Container } from '../container';
-import { DefaultProjects } from './model';
+import { SiteIdAndProjectKey } from './model';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -99,50 +99,26 @@ export class Configuration extends Disposable {
     // Migrates the workspace level site settings. This needs to be done for every workspace /directory
     // the first time it's opened unlike global migrations that can happen on first run of the extension only.
     async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
-        let siteId: string | undefined = undefined;
         let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
         if (inspect && inspect.workspaceValue) {
-            const legacyValue: any = inspect.workspaceValue;
-            siteId = legacyValue.id;
-            if (siteId) {
-                const config = this.configForOpenWorkspace();
-                if (config) {
-                    await config.update(JiraDefaultSiteConfigurationKey, siteId);
-                    if (deletePrevious) {
-                        await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
-                    }
-                }
+            const config = this.configForOpenWorkspace();
+            if (config && deletePrevious) {
+                await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
             }
         }
-
-        if (siteId) {
-            inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
-            if (inspect && inspect.workspaceValue) {
-                const legacyValue: any = inspect.workspaceValue;
-                if (legacyValue.key) {
-                    const config = this.configForOpenWorkspace();
-                    if (config) {
-                        const defaultProjects: DefaultProjects = {};
-                        defaultProjects[siteId] = legacyValue.key;
-                        await config.update(JiraDefaultProjectsConfigurationKey, defaultProjects);
-                        if (deletePrevious) {
-                            await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
-                        }
-                    }
-                }
+        inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
+        if (inspect && inspect.workspaceValue) {
+            const config = this.configForOpenWorkspace();
+            if (config && deletePrevious) {
+                await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
             }
         }
     }
 
-    async setDefaultSite(siteId?: string) {
-        await this.updateForWorkspace(JiraDefaultSiteConfigurationKey, siteId);
+    async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
+        await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject);
     }
 
-    async setDefaultProjects(defaultProjects: DefaultProjects) {
-        await this.updateForWorkspace(JiraDefaultProjectsConfigurationKey, defaultProjects);
-    }
-
-    // Moving from V1 to V2 working project became defaultProjects.
     async clearVersion1WorkingProject() {
         await this.updateForWorkspace(JiraV1WorkingProjectConfigurationKey, undefined);
     }
@@ -169,7 +145,7 @@ export class Configuration extends Disposable {
     }
 
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
-        const inspect = await this.inspect(section, resource)!;
+        const inspect = this.inspect(section, resource)!;
         if (inspect.workspaceValue !== undefined) {
             if (value === inspect.workspaceValue) { return; }
 

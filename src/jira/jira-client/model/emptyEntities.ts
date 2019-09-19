@@ -91,6 +91,12 @@ export const emptyMinimalIssue: MinimalIssue = {
     epicLink: ''
 };
 
+export const issueNotFoundIssue: MinimalIssue = { ...emptyMinimalIssue, ...{ key: 'NOTFOUND' } };
+
+export function isNotFoundIssue(p: MinimalIssue): p is MinimalIssue {
+    return p && (<MinimalIssue>p).key === 'NOTFOUND';
+}
+
 export const emptyIssueLinkIssue: IssueLinkIssue = {
     key: '',
     id: '',

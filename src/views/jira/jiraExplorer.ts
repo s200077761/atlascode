@@ -3,7 +3,7 @@ import { ProductJira } from '../../atlclients/authInfo';
 import { Explorer, BaseTreeDataProvider } from '../Explorer';
 import { CustomJQLRoot } from './customJqlRoot';
 import { IssueNode } from '../nodes/issueNode';
-import { MinimalORIssueLink, Project } from '../../jira/jira-client/model/entities';
+import { MinimalORIssueLink } from '../../jira/jira-client/model/entities';
 import { CustomJQLTree } from './customJqlTree';
 
 export interface Refreshable {
@@ -24,12 +24,6 @@ export class JiraExplorer extends Explorer implements Refreshable {
 
     product() {
         return ProductJira;
-    }
-
-    set project(project: Project) {
-        if (this.treeDataProvder) {
-            this.treeDataProvder.setProject(project);
-        }
     }
 
     refresh() {

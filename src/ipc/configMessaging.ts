@@ -1,7 +1,6 @@
 import { Message } from "./messaging";
 import { IConfig, emptyConfig } from "../config/model";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { JiraSiteProjectMapping } from "../jira/projectManager";
 
 export interface FeedbackUser {
     userName: string;
@@ -13,7 +12,6 @@ export interface ConfigData extends Message {
     jiraSites: DetailedSiteInfo[];
     bitbucketSites: DetailedSiteInfo[];
     feedbackUser: FeedbackUser;
-    siteProjectMapping: JiraSiteProjectMapping;
 }
 
 export const emptyConfigData: ConfigData = {
@@ -25,7 +23,6 @@ export const emptyConfigData: ConfigData = {
         userName: '',
         emailAddress: ''
     },
-    siteProjectMapping: {}
 };
 
 export interface ConfigUpdate extends Message {
