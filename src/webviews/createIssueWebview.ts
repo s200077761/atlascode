@@ -110,7 +110,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         Container.pmfStats.touchActivity();
     }
 
-    async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void> {
+    async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
         const issueTypeUI: IssueTypeUI = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
 
         if (!Array.isArray(issueTypeUI.fieldValues[fieldKey])) {
@@ -138,7 +138,8 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             type: 'optionCreated',
             fieldValues: { [fieldKey]: issueTypeUI.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: issueTypeUI.selectFieldOptions[fieldKey] },
-            fieldKey: fieldKey
+            fieldKey: fieldKey,
+            nonce: nonce
         };
 
         this.postMessage(optionMessage);
@@ -309,11 +310,11 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         return [payload, worklog, issuelinks, attachments];
     }
 
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
+            switch (msg.action) {
                 case 'refresh': {
                     handled = true;
                     this.invalidate();
@@ -322,16 +323,16 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
                 case 'setIssueType': {
                     handled = true;
-                    if (isSetIssueType(e)) {
-                        this.updateIssueType(e.issueType, e.fieldValues);
+                    if (isSetIssueType(msg)) {
+                        this.updateIssueType(msg.issueType, msg.fieldValues);
                     }
                     break;
                 }
 
                 case 'getScreensForProject': {
                     handled = true;
-                    if (isScreensForProjects(e)) {
-                        await this.forceUpdateFields(e.project, e.fieldValues);
+                    if (isScreensForProjects(msg)) {
+                        await this.forceUpdateFields(msg.project, msg.fieldValues);
                     }
                     break;
                 }
@@ -339,14 +340,14 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                 //TODO: refactor this
                 case 'createIssue': {
                     handled = true;
-                    if (isCreateIssue(e)) {
+                    if (isCreateIssue(msg)) {
                         try {
-                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(e);
+                            const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
-                            let client = await Container.clientManager.jiraClient(e.site);
+                            let client = await Container.clientManager.jiraClient(msg.site);
                             const resp = await client.createIssue({ fields: payload, update: worklog });
 
-                            issueCreatedEvent(e.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueCreatedEvent(msg.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                             if (issuelinks) {
                                 this.formatIssueLinks(resp.key, issuelinks).forEach(async (link: any) => {
@@ -360,14 +361,14 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
-                            this.postMessage({ type: 'issueCreated', issueData: { ...resp, siteDetails: e.site } });
+                            this.postMessage({ type: 'issueCreated', issueData: { ...resp, siteDetails: msg.site }, nonce: msg.nonce });
 
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key);
 
                         } catch (e) {
                             Logger.error(new Error(`error creating comment: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue'), nonce: msg.nonce });
                         }
 
                     }

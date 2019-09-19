@@ -9,7 +9,7 @@ import { ValueType } from "../jira/jira-client/model/fieldUI";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
-    abstract async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void>;
+    abstract async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void>;
 
     protected formatSelectOptions(result: any, valueType?: ValueType): any[] {
         let suggestions: any[] = [];
@@ -58,10 +58,10 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     suggestions = await client.getIssuePickerSuggestions(msg.query);
                                 }
 
-                                this.postMessage({ type: 'issueSuggestionsList', issues: suggestions });
+                                this.postMessage({ type: 'issueSuggestionsList', issues: suggestions, nonce: msg.nonce });
                             } catch (e) {
                                 Logger.error(new Error(`error posting comment: ${e}`));
-                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues') });
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues'), nonce: msg.nonce });
                             }
                         }
                         break;
@@ -78,10 +78,10 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                     suggestions = this.formatSelectOptions(result);
                                 }
 
-                                this.postMessage({ type: 'selectOptionsList', options: suggestions });
+                                this.postMessage({ type: 'selectOptionsList', options: suggestions, nonce: msg.nonce });
                             } catch (e) {
                                 Logger.error(new Error(`error posting comment: ${e}`));
-                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues') });
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues'), nonce: msg.nonce });
                             }
                         }
                         break;
@@ -99,10 +99,10 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                             try {
                                 let client = await Container.clientManager.jiraClient(msg.siteDetails);
                                 const result = await client.postCreateUrl(msg.createUrl, msg.createData);
-                                await this.handleSelectOptionCreated(msg.fieldKey, result);
+                                await this.handleSelectOptionCreated(msg.fieldKey, result, msg.nonce);
                             } catch (e) {
                                 Logger.error(new Error(`error creating select option: ${e}`));
-                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating select option') });
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating select option'), nonce: msg.nonce });
                             }
                         }
                         break;

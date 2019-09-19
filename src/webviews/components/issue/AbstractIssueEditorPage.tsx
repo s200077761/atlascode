@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
-import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList, isCreatedSelectOption } from "../../../ipc/issueMessaging";
+import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import { FieldValidators, chain } from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
@@ -27,6 +27,9 @@ import { distanceInWordsToNow } from 'date-fns';
 import Avatar from '@atlaskit/avatar';
 import { colorToLozengeAppearanceMap } from '../colors';
 import Lozenge from "@atlaskit/lozenge";
+import { ReactPromiseUtil } from '../../../util/reactpromise';
+import { Time } from '../../../util/time';
+import uuid from 'uuid';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -74,8 +77,6 @@ const shouldShowCreateOption = (inputValue: any, selectValue: any, selectOptions
 };
 
 export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, ER, EP, ES extends CommonEditorViewState> extends WebviewComponent<EA, ER, EP, ES> {
-    private selectSuggestions: any[] | undefined = undefined;
-    private waitForCreateOptionResponse: boolean = false;
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
@@ -115,7 +116,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         switch (e.type) {
             case 'error': {
                 handled = true;
-                this.waitForCreateOptionResponse = false;
                 if (isIssueEditError(e)) {
                     this.setState({ isSomethingLoading: false, loadingField: '', isErrorBannerOpen: true, errorDetails: e.reason, fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
                 } else {
@@ -126,30 +126,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             case 'fieldValueUpdate': {
                 handled = true;
                 this.setState({ isSomethingLoading: false, loadingField: '', fieldValues: { ...this.state.fieldValues, ...e.fieldValues } });
-                break;
-            }
-            case 'issueSuggestionsList': {
-                handled = true;
-                this.selectSuggestions = (e as IssueSuggestionsList).issues;
-                break;
-            }
-            case 'selectOptionsList': {
-                handled = true;
-                this.selectSuggestions = e.options;
-                break;
-            }
-            case 'optionCreated': {
-                handled = true;
-                if (isCreatedSelectOption(e)) {
-                    this.waitForCreateOptionResponse = false;
-                    this.setState(
-                        {
-                            isSomethingLoading: false,
-                            loadingField: '',
-                            fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
-                            selectFieldOptions: { ...this.state.selectFieldOptions, ...e.selectFieldOptions },
-                        });
-                }
                 break;
             }
             case 'pmfStatus': {
@@ -208,9 +184,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             issueObj = { key: issueOrKey, siteDetails: this.state.siteDetails };
         }
 
+        const nonce: string = uuid.v4();
         this.postMessage({
             action: "openJiraIssue",
             issueOrKey: issueObj,
+            nonce: nonce
         });
     }
 
@@ -219,51 +197,50 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.handleInlineEdit(field, val);
     }
 
+
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
+        console.log(`loading issues`);
         return new Promise(resolve => {
-            this.selectSuggestions = undefined;
-            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if (this.selectSuggestions !== undefined || (end - start) > 2000) {
-                    if (this.selectSuggestions === undefined) {
-                        this.selectSuggestions = [];
-                    }
-
-                    clearInterval(timer);
-                    this.setState({ isSomethingLoading: false, loadingField: '' });
-                    resolve(this.selectSuggestions);
+            const nonce: string = uuid.v4();
+            console.log(`posting issues msg`);
+            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
+            (async () => {
+                try {
+                    console.log(`waiting for issues`);
+                    const listEvent = await ReactPromiseUtil.winEventPromise('issueSuggestionsList', 10 * Time.SECONDS, nonce);
+                    console.log(`got list`, listEvent);
+                    console.log(`resolving`, listEvent as IssueSuggestionsList);
+                    resolve((listEvent as IssueSuggestionsList).issues);
+                    console.log(`resolved`, (listEvent as IssueSuggestionsList).issues);
+                } catch (e) {
+                    console.log(`got error`, e);
+                    resolve([]);
                 }
-            }, 100);
+            })();
         });
     }
 
-    protected loadSelectOptionsForField = async (field: SelectFieldUI, input: string): Promise<any[]> => {
+    protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
         return this.loadSelectOptions(input, field.autoCompleteUrl);
     }
 
-    protected loadSelectOptions = async (input: string, url: string): Promise<any[]> => {
+    protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
         return new Promise(resolve => {
-            this.selectSuggestions = undefined;
-            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if (this.selectSuggestions !== undefined || (end - start) > 2000) {
-                    if (this.selectSuggestions === undefined) {
-                        this.selectSuggestions = [];
-                    }
-
-                    clearInterval(timer);
-                    this.setState({ isSomethingLoading: false, loadingField: '' });
-                    resolve(this.selectSuggestions);
+            const nonce: string = uuid.v4();
+            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url, nonce });
+            (async () => {
+                try {
+                    const listEvent = await ReactPromiseUtil.winEventPromise('selectOptionsList', 10 * Time.SECONDS, nonce);
+                    this.setState({ isSomethingLoading: false });
+                    resolve(listEvent.options);
+                } catch (e) {
+                    this.setState({ isSomethingLoading: false });
+                    resolve([]);
                 }
-            }, 100);
+
+            })();
         });
     }
 
@@ -272,34 +249,54 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     // see: https://github.com/JedWatson/react-select/issues/2477
     // and more importantly: https://github.com/JedWatson/react-select/issues/2326
     handleSelectOptionCreate = debounce((field: SelectFieldUI, input: string): void => {
-        if (!this.waitForCreateOptionResponse) {
-            if (field.createUrl.trim() !== '') {
-                this.waitForCreateOptionResponse = true;
-                this.setState({ isSomethingLoading: true, loadingField: field.key });
-                this.postMessage({
-                    action: 'createOption',
-                    fieldKey: field.key,
-                    siteDetails: this.state.siteDetails,
-                    createUrl: field.createUrl,
-                    createData: { name: input, project: this.getProjectKey() }
 
-                });
+        if (field.createUrl.trim() !== '') {
+            this.setState({ isSomethingLoading: true, loadingField: field.key });
+            const nonce: string = uuid.v4();
+            this.postMessage({
+                action: 'createOption',
+                fieldKey: field.key,
+                siteDetails: this.state.siteDetails,
+                createUrl: field.createUrl,
+                createData: { name: input, project: this.getProjectKey() },
+                nonce: nonce
 
-                const start = Date.now();
-                let timer = setInterval(() => {
-                    const end = Date.now();
-                    if (!this.waitForCreateOptionResponse || (end - start) > 2000) {
-                        this.waitForCreateOptionResponse = false;
-                        clearInterval(timer);
-                    }
-                }, 100);
+            });
+
+            /*
+            case 'optionCreated': {
+                handled = true;
+                if (isCreatedSelectOption(e)) {
+                    this.waitForCreateOptionResponse = false;
+                    this.setState(
+                        {
+                            isSomethingLoading: false,
+                            loadingField: '',
+                            fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
+                            selectFieldOptions: { ...this.state.selectFieldOptions, ...e.selectFieldOptions },
+                        });
+                }
+                break;
             }
+            */
+            (async () => {
+                try {
+                    const createEvent = await ReactPromiseUtil.winEventPromise('optionCreated', 10 * Time.SECONDS, nonce);
+                    this.setState(
+                        {
+                            isSomethingLoading: false,
+                            loadingField: '',
+                            fieldValues: { ...this.state.fieldValues, ...createEvent.fieldValues },
+                            selectFieldOptions: { ...this.state.selectFieldOptions, ...createEvent.selectFieldOptions },
+                        });
+                } catch (e) {
+                    this.setState({ isSomethingLoading: false });
+                }
+
+            })();
         }
     }, 100);
 
-    /*
-    Attachment = 'attachment',
-    */
     protected getInputMarkup(field: FieldUI, editmode: boolean = false): any {
         switch (field.uiType) {
             case UIType.Input: {
@@ -514,7 +511,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         linkTypes={this.state.selectFieldOptions[field.key]}
                         onSave={(val: any) => { this.handleInlineEdit(field, val); }}
                         isLoading={this.state.loadingField === field.key}
-                        onFetchIssues={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
+                        //onFetchIssues={async (input: string) => ReactPromiseUtil.debouncePromise<IssuePickerIssue[]>(() => this.loadIssueOptions(field as SelectFieldUI, input), 100)()}
+                        onFetchIssues={async (input: string) => await this.loadIssueOptions(field as SelectFieldUI, input)}
                     />;
                 } else {
                     let validateFunc = (field.required) ? FieldValidators.validateSingleSelect : undefined;
@@ -569,7 +567,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 isMulti={true}
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select"
-                                                loadOptions={async (input: string) => this.loadIssueOptions(field as SelectFieldUI, input)}
+                                                loadOptions={async (input: string) => await this.loadIssueOptions(field as SelectFieldUI, input)}
                                                 getOptionLabel={(option: any) => option.key}
                                                 getOptionValue={(option: any) => option.key}
                                                 placeholder="Search for an issue"
@@ -757,7 +755,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     defaultOptions={this.state.selectFieldOptions[field.key]}
                                     isLoading={this.state.loadingField === field.key}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
+                                    loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                 />
                             );
                         }
@@ -788,7 +786,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     defaultOptions={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
                                                     onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
-                                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
+                                                    loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 />
                                                 {errDiv}
                                             </React.Fragment>
@@ -827,7 +825,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     onCreateOption={onCreateFunc}
                                     getNewOptionData={newDataValue}
                                     onChange={(selected: any) => { this.handleSelectChange(selectField, selected); }}
-                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
+                                    loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                 >
                                 </AsyncCreatableSelect>
                             );
@@ -863,7 +861,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     onCreateOption={onCreateFunc}
                                                     getNewOptionData={newDataValue}
                                                     onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
-                                                    loadOptions={async (input: any) => this.loadSelectOptionsForField(field as SelectFieldUI, input)}
+                                                    loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 >
                                                 </AsyncCreatableSelect>
                                                 {errDiv}

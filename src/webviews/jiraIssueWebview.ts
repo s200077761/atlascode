@@ -182,7 +182,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         }
     }
 
-    async handleSelectOptionCreated(fieldKey: string, newValue: any): Promise<void> {
+    async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
         if (!Array.isArray(this._editUIData.fieldValues[fieldKey])) {
             this._editUIData.fieldValues[fieldKey] = [];
         }
@@ -209,7 +209,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             type: 'optionCreated',
             fieldValues: { [fieldKey]: this._editUIData.fieldValues[fieldKey] },
             selectFieldOptions: { [fieldKey]: this._editUIData.selectFieldOptions[fieldKey] },
-            fieldKey: fieldKey
+            fieldKey: fieldKey,
+            nonce: nonce
         };
 
         this.postMessage(optionMessage);
@@ -244,7 +245,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         const client = await Container.clientManager.jiraClient(this._issue.siteDetails);
                         await client.editIssue(this._issue!.key, newFieldValues);
                         this._editUIData.fieldValues = { ...this._editUIData.fieldValues, ...newFieldValues };
-                        this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues });
+                        this.postMessage({ type: 'fieldValueUpdate', fieldValues: newFieldValues, nonce: msg.nonce });
 
                         Object.keys(newFieldValues).forEach(key => {
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, key, this.fieldNameForKey(key)).then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -254,7 +255,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     }
                     catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error updating issue'), fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)) });
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error updating issue'), fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)), nonce: msg.nonce });
                     }
                     break;
                 }
@@ -267,13 +268,13 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'comment': this._editUIData.fieldValues['comment'] }
+                                , fieldValues: { 'comment': this._editUIData.fieldValues['comment'], nonce: msg.nonce }
                             });
 
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment'), nonce: msg.nonce });
                         }
                     }
                     break;
@@ -291,14 +292,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['subtasks'].push(picked);
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'subtasks': this._editUIData.fieldValues['subtasks'] }
+                                , fieldValues: { 'subtasks': this._editUIData.fieldValues['subtasks'], nonce: msg.nonce }
                             });
                             issueCreatedEvent(msg.site, resp.key).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
                         } catch (e) {
                             Logger.error(new Error(`error creating issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue'), nonce: msg.nonce });
                         }
 
                     }
@@ -315,7 +316,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
+                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -323,7 +324,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                         } catch (e) {
                             Logger.error(new Error(`error creating issue link: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating issue issue link'), nonce: msg.nonce });
                         }
 
                     }
@@ -350,14 +351,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'] }
+                                , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error deleting issuelink: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting issuelink') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting issuelink'), nonce: msg.nonce });
                         }
 
                     }
@@ -381,14 +382,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['worklog'].worklogs.push(resp);
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'] }
+                                , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'worklog', this.fieldNameForKey('worklog')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error creating worklog: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating worklog') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error creating worklog'), nonce: msg.nonce });
                         }
 
                     }
@@ -416,14 +417,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding watcher: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding watcher'), nonce: msg.nonce });
                         }
 
                     }
@@ -455,14 +456,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'] }
+                                , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error removing watcher: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing watcher') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing watcher'), nonce: msg.nonce });
                         }
 
                     }
@@ -488,14 +489,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
+                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding vote: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding vote') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding vote'), nonce: msg.nonce });
                         }
 
                     }
@@ -524,14 +525,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'] }
+                                , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error removing vote: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing vote') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error removing vote'), nonce: msg.nonce });
                         }
 
                     }
@@ -557,14 +558,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
+                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error adding attachments: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding attachments') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding attachments'), nonce: msg.nonce });
                         }
 
                     }
@@ -587,14 +588,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'] }
+                                , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
 
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
                             Logger.error(new Error(`error deleting attachments: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting attachments') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error deleting attachments'), nonce: msg.nonce });
                         }
 
                     }
@@ -609,14 +610,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             this._editUIData.fieldValues['status'] = msg.transition.to;
                             this.postMessage({
                                 type: 'fieldValueUpdate'
-                                , fieldValues: { 'status': this._editUIData.fieldValues['status'] }
+                                , fieldValues: { 'status': this._editUIData.fieldValues['status'], nonce: msg.nonce }
                             });
 
                             commands.executeCommand(Commands.RefreshJiraExplorer);
 
                         } catch (e) {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error transitioning issue') });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error transitioning issue'), nonce: msg.nonce });
                         }
 
                     }
@@ -639,7 +640,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
-                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}` });
+                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}`, nonce: msg.nonce });
                         }
                         break;
                     }
