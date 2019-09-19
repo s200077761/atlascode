@@ -1,11 +1,9 @@
-import { Disposable, ConfigurationChangeEvent } from "vscode";
+import { Disposable } from "vscode";
 
 import { Container } from "../container";
-import { ProductJira, DetailedSiteInfo } from "../atlclients/authInfo";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Logger } from "../logger";
-import { configuration } from "../config/configuration";
 import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
-import { JiraDefaultSiteConfigurationKey } from "../constants";
 import { IssueLinkType } from "./jira-client/model/entities";
 import { readField, Fields } from "./jira-client/model/fieldMetadata";
 
@@ -14,31 +12,12 @@ export const detailedIssueFields: string[] = ["summary", "description", "comment
 export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "status", "priority", "description", "created", "updated", "parent", "subtasks", "issuelinks"];
 
 export class JiraSettingsManager extends Disposable {
-    private _disposable: Disposable;
     private _epicStore: Map<string, EpicFieldInfo> = new Map<string, EpicFieldInfo>();
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
 
     constructor() {
         super(() => this.dispose());
-
-        this._disposable = Disposable.from(
-            configuration.onDidChange(this.onConfigurationChanged, this)
-        );
-
-    }
-
-    dispose() {
-        this._disposable.dispose();
-    }
-
-    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
-        const initializing = configuration.initializing(e);
-
-        if (initializing || configuration.changed(e, JiraDefaultSiteConfigurationKey)) {
-            const newSite = await Container.siteManager.effectiveSite(ProductJira);
-            this.getEpicFieldsForSite(newSite);
-        }
     }
 
     public async getIssueLinkTypes(site: DetailedSiteInfo): Promise<IssueLinkType[]> {

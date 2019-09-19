@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import Button from "@atlaskit/button";
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, ProductBitbucket } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, ProductBitbucket, Product, ProductJira } from "../../../atlclients/authInfo";
 import AuthForm from "./AuthForm";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 
-interface BBAuthProps {
+interface AuthProps {
     sites: DetailedSiteInfo[];
+    product: Product;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
 }
@@ -31,11 +32,14 @@ const Delete = (data: ItemData) => {
     );
 };
 
-export const BBAuth: React.FunctionComponent<BBAuthProps> = ({ sites, handleDeleteSite, handleSaveSite }) => {
+export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, handleDeleteSite, handleSaveSite }) => {
     const [addingSite, setAddingSite] = useState(false);
+    const loginText = `Login to ${product.name} Cloud`;
+    const addSiteText = `Add Custom ${product.name} Site`;
 
-    const handleCloud = () => {
-        handleSaveSite({ hostname: "www.bitbucket.org", product: ProductBitbucket },
+    const handleCloudProd = () => {
+        const hostname = (product.key === ProductJira.key) ? 'atlassian.net' : 'bitbucket.org';
+        handleSaveSite({ hostname: hostname, product: product },
             { user: emptyUserInfo });
     };
 
@@ -54,12 +58,11 @@ export const BBAuth: React.FunctionComponent<BBAuthProps> = ({ sites, handleDele
             }
             <div className='ac-vpadding'>
                 <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
-                    <Button className="ac-button" style={{ marginRight: '4px' }} onClick={handleCloud}>Log in to Bitbucket Cloud</Button>
-                    <Button className="ac-button" onClick={() => setAddingSite(true)}>Add Custom Bitbucket Site</Button>
+                    <Button className="ac-button" style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
+                    <Button className="ac-button" onClick={() => setAddingSite(true)}>{addSiteText}</Button>
                 </div>
             </div>
             <TableTree
-                headers={['Site Name', '']}
                 columns={[Name, Delete]}
                 columnWidths={['100%', '20px']}
                 items={sites.map(site => {

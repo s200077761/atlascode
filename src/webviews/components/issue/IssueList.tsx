@@ -3,15 +3,15 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { MinimalIssueOrKeyAndSiteOrKey, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSite, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
 import { colorToLozengeAppearanceMap } from '../colors';
 
-type ItemData = { issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void };
+type ItemData = { issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void };
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issuetype.name}><img src={data.issue.issuetype.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.onIssueClick(data.issue.key)}>
+        <Button appearance="subtle-link" onClick={() => data.onIssueClick({ siteDetails: data.issue.siteDetails, key: data.issue.key })}>
             {data.issue.key}
         </Button>
     </div>;
@@ -23,7 +23,7 @@ const StatusColumn = (data: ItemData) => {
     return (<Lozenge appearence={lozColor}>{data.issue.status.name}</Lozenge>);
 };
 
-export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSiteOrKey) => void }, {}> {
+export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void }, {}> {
     constructor(props: any) {
         super(props);
     }

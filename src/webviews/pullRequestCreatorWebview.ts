@@ -14,11 +14,11 @@ import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { issuesForJQL } from '../jira/issuesForJql';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
 
@@ -204,31 +204,35 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     async fetchIssueForBranch(e: FetchIssue) {
         let issue: MinimalIssue | BitbucketIssueData | undefined = undefined;
-        if (await Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name);
-            const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
-            if (jiraIssues.length > 0) {
-                issue = jiraIssues[0];
-            }
-        }
+        if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            const jiraIssueKeys = parseJiraIssueKeys(e.sourceBranch.name!);
 
-        if (!issue) {
-            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name);
-            if (bbIssueKeys.length > 0) {
-                const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
-                const remote = firstBitbucketRemote(repo);
-                const bbApi = await clientForRemote(remote);
-                const bbIssues = await bbApi.issues!.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
-                if (bbIssues.length > 0) {
-                    issue = bbIssues[0].data;
+            if (jiraIssueKeys.length > 0) {
+                try {
+                    issue = await issueForKey(jiraIssueKeys[0]);
+                } catch (e) {
+                    //not found
                 }
             }
-        }
 
-        this.postMessage({
-            type: 'fetchIssueResult',
-            issue: issue
-        });
+            if (!issue) {
+                const bbIssueKeys = parseBitbucketIssueKeys(e.sourceBranch.name);
+                if (bbIssueKeys.length > 0) {
+                    const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
+                    const remote = firstBitbucketRemote(repo);
+                    const bbApi = await clientForRemote(remote);
+                    const bbIssues = await bbApi.issues!.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
+                    if (bbIssues.length > 0) {
+                        issue = bbIssues[0].data;
+                    }
+                }
+            }
+
+            this.postMessage({
+                type: 'fetchIssueResult',
+                issue: issue
+            });
+        }
     }
 
     private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue | BitbucketIssueData) {
