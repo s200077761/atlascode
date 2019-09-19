@@ -97,7 +97,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             this.postMessage({ type: 'createPullRequestData', repositories: state });
         } catch (e) {
             Logger.error(new Error(`error fetching PR form: ${e}`));
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -126,7 +126,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                             await this.fetchDetails(e);
                         } catch (e) {
                             Logger.error(new Error(`error fetching details: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -152,7 +152,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -178,7 +178,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                             await this.createPullRequest(e);
                         } catch (e) {
                             Logger.error(new Error(`error creating pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;

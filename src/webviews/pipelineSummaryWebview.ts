@@ -60,7 +60,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             this.isRefeshing = false;
             return;
         }
@@ -82,7 +82,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
             });
         } catch (e) {
             Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             return;
         } finally {
             this.isRefeshing = false;

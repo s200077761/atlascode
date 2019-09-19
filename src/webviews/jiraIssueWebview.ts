@@ -120,7 +120,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -640,7 +640,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
-                            this.postMessage({ type: 'error', reason: `error opening pullrequest: ${msg.prHref}`, nonce: msg.nonce });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`), nonce: msg.nonce });
                         }
                         break;
                     }

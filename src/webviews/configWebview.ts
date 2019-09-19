@@ -79,7 +79,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating configuration: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -141,7 +141,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                             } catch (e) {
                                 let err = new Error(`Authentication error: ${e}`);
                                 Logger.error(err);
-                                this.postMessage({ type: 'error', reason: `Authentication error: ${e}` });
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
                             }
                         } else {
                             authenticateCloud(msg.siteInfo);
@@ -259,7 +259,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                         } catch (e) {
                             let err = new Error(`error updating configuration: ${e}`);
                             Logger.error(err);
-                            this.postMessage({ type: 'error', reason: `error updating configuration: ${e}` });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
 

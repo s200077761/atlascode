@@ -103,7 +103,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                             }
                         }
                         catch (e) {
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                 }
@@ -188,7 +188,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         }
         catch (e) {
             Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }

@@ -240,7 +240,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         } catch (e) {
             let err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
