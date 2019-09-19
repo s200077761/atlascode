@@ -12,21 +12,9 @@ export const detailedIssueFields: string[] = ["summary", "description", "comment
 export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "status", "priority", "description", "created", "updated", "parent", "subtasks", "issuelinks"];
 
 export class JiraSettingsManager extends Disposable {
-    private _disposable: Disposable;
     private _epicStore: Map<string, EpicFieldInfo> = new Map<string, EpicFieldInfo>();
     private _fieldStore: Map<string, Fields> = new Map<string, Fields>();
     private _issueLinkTypesStore: Map<string, IssueLinkType[]> = new Map<string, IssueLinkType[]>();
-
-    constructor() {
-        super(() => this.dispose());
-    }
-
-    dispose() {
-        if (this._disposable) {
-            this._disposable.dispose();
-        }
-
-    }
 
     public async getIssueLinkTypes(site: DetailedSiteInfo): Promise<IssueLinkType[]> {
         if (!this._issueLinkTypesStore.has(site.id)) {
