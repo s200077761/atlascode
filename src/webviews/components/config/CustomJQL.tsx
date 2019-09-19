@@ -211,7 +211,7 @@ export default class CustomJQL extends React.Component<
             value={element.id}
             isChecked={element.monitor}
             onChange={this.toggleMonitor}
-            label='include in issue monitor'
+            label='include in issue notifications'
           />
         </div>
 
