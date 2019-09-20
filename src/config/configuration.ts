@@ -41,7 +41,7 @@ export class Configuration extends Disposable {
         this._onDidChange.dispose();
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
         if (!e.affectsConfiguration(extensionId, null!)) { return; }
 
@@ -57,7 +57,7 @@ export class Configuration extends Disposable {
     };
 
     // get returns a strongly type config section/value
-    get<T>(section?: string, resource?: Uri | null, defaultValue?: T) {
+    get<T>(section?: string, resource?: Uri | null, defaultValue?: T): T {
         return defaultValue === undefined
             ? workspace
                 .getConfiguration(section === undefined ? undefined : extensionId, resource!)
@@ -68,24 +68,24 @@ export class Configuration extends Disposable {
     }
 
     // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
-    changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null) {
+    changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null): boolean {
         return e.affectsConfiguration(`${extensionId}.${section}`, resource!);
     }
 
     // initializing takes an event and returns if it is an initalizing event or not
-    initializing(e: ConfigurationChangeEvent) {
+    initializing(e: ConfigurationChangeEvent): boolean {
         return e === this.initializingChangeEvent;
     }
 
     // inspect returns details of the given config section
-    inspect(section?: string, resource?: Uri | null) {
+    inspect<T>(section?: string, resource?: Uri | null): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T, workspaceFolderValue?: T } | undefined {
         return workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-            .inspect(section === undefined ? extensionId : section);
+            .inspect<T>(section === undefined ? extensionId : section);
     }
 
     // update does what it sounds like
-    public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null): Promise<void> {
         const inspect = this.inspect(section, resource)!;
 
         if (
@@ -161,26 +161,26 @@ export class Configuration extends Disposable {
     }
 
     // this tries to figure out where the current value is set and update it there
-    async updateEffective(section: string, value: any, resource: Uri | null = null) {
+    async updateEffective(section: string, value: any, resource: Uri | null = null): Promise<void> {
         const inspect = this.inspect(section, resource)!;
 
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return undefined; }
 
-            return void configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
+            return configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
             if (value === inspect.workspaceValue) { return undefined; }
 
-            return void configuration.update(section, value, ConfigurationTarget.Workspace);
+            return configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
         if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
             return undefined;
         }
 
-        return void configuration.update(
+        return configuration.update(
             section,
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global
