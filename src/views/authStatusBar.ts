@@ -26,7 +26,7 @@ export class AuthStatusBar extends Disposable {
   }
 
   onDidSitesChange(e: SitesAvailableUpdateEvent) {
-    this.updateAuthenticationStatusBar(e.product);
+    this.generateStatusbarItem(e.product);
   }
 
   async generateStatusbarItem(product: Product): Promise<void> {
@@ -35,10 +35,9 @@ export class AuthStatusBar extends Disposable {
 
     if(!isEmptySiteInfo(site)) {
       authInfo = await Container.credentialManager.getAuthInfo(site);
-    } else {
-      site = undefined;
     }
-    await this.updateAuthenticationStatusBar(product, site, authInfo);
+
+    await this.updateAuthenticationStatusBar(product, authInfo);
   }
 
   protected async onConfigurationChanged(e: ConfigurationChangeEvent) {
@@ -75,7 +74,6 @@ export class AuthStatusBar extends Disposable {
 
   private async updateAuthenticationStatusBar(
     product: Product,
-    siteInfo?:DetailedSiteInfo,
     authInfo?: AuthInfo,
     
   ): Promise<void> {
@@ -83,7 +81,7 @@ export class AuthStatusBar extends Disposable {
     if ((product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) ||
       (product.name === 'Bitbucket' && Container.config.bitbucket.enabled && Container.config.bitbucket.statusbar.enabled)) {
       const statusBarItem = this.ensureStatusItem(product);
-      await this.updateStatusBarItem(statusBarItem, product, siteInfo, authInfo);
+      await this.updateStatusBarItem(statusBarItem, product, authInfo);
     } else {
       statusBarItem.hide();
     }
@@ -92,7 +90,6 @@ export class AuthStatusBar extends Disposable {
   private async updateStatusBarItem(
     statusBarItem: StatusBarItem,
     product: Product,
-    siteInfo?: DetailedSiteInfo,
     authInfo?: AuthInfo,
     
   ): Promise<void> {
@@ -105,15 +102,8 @@ export class AuthStatusBar extends Disposable {
       case ProductJira.key: {
         if (authInfo) {
           text = `$(person) ${product.name}: ${authInfo.user.displayName}`;
-          let siteName = undefined;
           if (tmpl) {
-
-            if(siteInfo) {
-              siteName = siteInfo.name;
-            }
-            
-
-            const data = { product: product.name, user: authInfo.user.displayName, site: siteName };
+            const data = { product: product.name, user: authInfo.user.displayName };
             const ctx = { ...Container.config.jira.statusbar, ...data };
             command = Commands.ShowJiraAuth;
             text = tmpl(ctx);

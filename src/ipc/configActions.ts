@@ -25,11 +25,20 @@ export interface LoginAuthAction extends AuthAction {
 
 }
 
+export enum ConfigTarget {
+    User = 'user',
+    Workspace = 'workspace'
+}
 export interface SaveSettingsAction extends Action {
+    target: ConfigTarget;
     changes: {
         [key: string]: any;
     };
     removes?: string[];
+}
+
+export interface OpenJsonAction extends Action {
+    target: ConfigTarget;
 }
 
 export interface SubmitFeedbackAction extends Action {
@@ -62,7 +71,12 @@ export function isLoginAuthAction(a: Action): a is LoginAuthAction {
 }
 
 export function isSaveSettingsAction(a: Action): a is SaveSettingsAction {
-    return (<SaveSettingsAction>a).changes !== undefined;
+    return a && (<SaveSettingsAction>a).changes !== undefined
+        && (<SaveSettingsAction>a).target !== undefined;
+}
+
+export function isOpenJsonAction(a: Action): a is OpenJsonAction {
+    return a && (<OpenJsonAction>a).target !== undefined;
 }
 
 export function isSubmitFeedbackAction(a: Action): a is SubmitFeedbackAction {

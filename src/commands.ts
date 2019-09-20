@@ -10,6 +10,7 @@ import { BitbucketIssue } from './bitbucket/model';
 import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSite } from './jira/jira-client/model/entities';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { SettingSource } from './config/model';
+import { openWorkspaceSettingsJson } from './commands/openWorkspaceSettingsJson';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -53,7 +54,8 @@ export enum Commands {
     StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
     BBPRCancelCommentEdit = 'atlascode.bb.cancelCommentEdit',
     BBPRSubmitCommentEdit = 'atlascode.bb.saveCommentEdit',
-    ViewDiff = 'atlascode.viewDiff'
+    ViewDiff = 'atlascode.viewDiff',
+    OpenWSJSON = 'atlascode.openWorkspaceSettingsJson'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
@@ -82,6 +84,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
-        vscode.commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) => Container.bitbucketIssueViewManager.createOrShow(issue))
+        vscode.commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) => Container.bitbucketIssueViewManager.createOrShow(issue)),
+        vscode.commands.registerCommand(Commands.OpenWSJSON, openWorkspaceSettingsJson),
     );
 }

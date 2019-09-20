@@ -5,7 +5,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
-import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction } from '../../../ipc/configActions';
+import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction, ConfigTarget } from '../../../ipc/configActions';
 import { DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
@@ -30,6 +30,7 @@ import { SiteEditor } from './SiteEditor';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import ProductEnabler from './ProductEnabler';
 import { Time } from '../../../util/time';
+import Select from '@atlaskit/select';
 
 type changeObject = { [key: string]: any };
 
@@ -48,6 +49,7 @@ interface ViewState extends ConfigData {
     openedSettings: SettingSource;
     tabIndex: number;
     errorDetails: any;
+    target: ConfigTarget;
 }
 
 const emptyState: ViewState = {
@@ -56,7 +58,8 @@ const emptyState: ViewState = {
     isErrorBannerOpen: false,
     tabIndex: 0,
     openedSettings: SettingSource.Default,
-    errorDetails: undefined
+    errorDetails: undefined,
+    target: ConfigTarget.User,
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
@@ -104,8 +107,17 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     }
 
+    handleTargetChange = (selected: any) => {
+        console.log('target selected', selected);
+        this.setState({ target: selected.value });
+    }
+
+    handleOpenJson = () => {
+        this.postMessage({ action: 'openJson', target: this.state.target });
+    }
+
     public onConfigChange = (change: changeObject, removes?: string[]) => {
-        this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
+        this.postMessage({ action: 'saveSettings', changes: change, removes: removes, target: this.state.target });
     }
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
@@ -146,12 +158,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
         const jiraDisabledModifier = this.state.config.jira.enabled ? 0 : 1;
         const bitbucketDisabledModifier = this.state.config.bitbucket.enabled ? 0 : 1;
-        if (this.state.openedSettings === SettingSource.Default 
-            || this.state.openedSettings === SettingSource.JiraIssue 
+        if (this.state.openedSettings === SettingSource.Default
+            || this.state.openedSettings === SettingSource.JiraIssue
             || this.state.openedSettings === SettingSource.JiraAuth) {
             this.setState({ tabIndex: 0 });
-        } else if (this.state.openedSettings === SettingSource.BBIssue 
-            || this.state.openedSettings === SettingSource.BBPipeline 
+        } else if (this.state.openedSettings === SettingSource.BBIssue
+            || this.state.openedSettings === SettingSource.BBPipeline
             || this.state.openedSettings === SettingSource.BBPullRequest
             || this.state.openedSettings === SettingSource.BBAuth) {
             this.setState({ tabIndex: 1 - jiraDisabledModifier });
@@ -196,6 +208,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public render() {
+        console.log('state', this.state);
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
@@ -215,6 +228,25 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
                         <h2>Settings</h2>
+                        <div style={{ paddingTop: '20px', paddingBottom: '20px' }}>
+                            <div><label className='ac-field-label'>save settings to: </label></div>
+                            <div className='ac-flex'>
+                                <div style={{ width: '160px' }}>
+                                    <Select
+                                        name="target"
+                                        id="target"
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        options={[{ value: ConfigTarget.User, label: ConfigTarget.User }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace }]}
+                                        formatOptionLabel={(option: any) => option.label.toUpperCase()}
+                                        value={{ value: this.state.target, label: this.state.target }}
+                                        onChange={this.handleTargetChange}
+                                    />
+                                </div>
+                                <div className='ac-breadcrumbs' style={{ marginLeft: '10px' }}><a type='button' className='ac-link-button' onClick={this.handleOpenJson}><span>Edit in settings.json</span></a></div>
+                            </div>
+                        </div>
+
                     </GridColumn>
                 </Grid>
                 <Grid spacing='comfortable' layout='fixed'>
@@ -281,7 +313,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.BBAuth)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
-                                                     <SiteEditor
+                                                    <SiteEditor
                                                         sites={this.state.bitbucketSites}
                                                         product={ProductBitbucket}
                                                         handleDeleteSite={this.handleLogout}

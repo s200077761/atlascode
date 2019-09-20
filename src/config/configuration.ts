@@ -85,7 +85,23 @@ export class Configuration extends Disposable {
     }
 
     // update does what it sounds like
-    private async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+        const inspect = this.inspect(section, resource)!;
+
+        if (
+            (value === inspect.defaultValue || value === undefined)
+            && (
+                (target === ConfigurationTarget.Global && inspect.globalValue === undefined)
+                || (target === ConfigurationTarget.Workspace && inspect.workspaceValue === undefined)
+            )
+        ) {
+            return undefined;
+        }
+
+        if (value === inspect.defaultValue) {
+            value = undefined;
+        }
+
         return await workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
@@ -144,20 +160,27 @@ export class Configuration extends Disposable {
         }
     }
 
+    // this tries to figure out where the current value is set and update it there
     async updateEffective(section: string, value: any, resource: Uri | null = null) {
         const inspect = this.inspect(section, resource)!;
-        if (inspect.workspaceValue !== undefined) {
-            if (value === inspect.workspaceValue) { return; }
 
-            await this.update(section, value, ConfigurationTarget.Workspace, resource);
-            return;
+        if (inspect.workspaceFolderValue !== undefined) {
+            if (value === inspect.workspaceFolderValue) { return undefined; }
+
+            return void configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
+        }
+
+        if (inspect.workspaceValue !== undefined) {
+            if (value === inspect.workspaceValue) { return undefined; }
+
+            return void configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
         if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
-            return;
+            return undefined;
         }
 
-        await this.update(
+        return void configuration.update(
             section,
             value === inspect.defaultValue ? undefined : value,
             ConfigurationTarget.Global

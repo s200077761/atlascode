@@ -84,42 +84,6 @@ export default class JiraStatusBar extends React.Component<{ configData: ConfigD
                         </CheckboxField>
 
                         <CheckboxField
-                            name='jira-status-site'
-                            id='jira-status-site'
-                            value='jira.statusbar.showSite'>
-                            {
-                                (fieldArgs: any) => {
-                                    return (
-                                        <Checkbox {...fieldArgs.fieldProps}
-                                            label='Show default site'
-                                            onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                            isDisabled={!this.props.configData.config.jira.statusbar.enabled}
-                                            isChecked={this.props.configData.config.jira.statusbar.showSite}
-                                        />
-                                    );
-                                }
-                            }
-                        </CheckboxField>
-
-                        <CheckboxField
-                            name='jira-status-project'
-                            id='jira-status-project'
-                            value='jira.statusbar.showProject'>
-                            {
-                                (fieldArgs: any) => {
-                                    return (
-                                        <Checkbox {...fieldArgs.fieldProps}
-                                            label='Show default project'
-                                            onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                            isDisabled={!this.props.configData.config.jira.statusbar.enabled}
-                                            isChecked={this.props.configData.config.jira.statusbar.showProject}
-                                        />
-                                    );
-                                }
-                            }
-                        </CheckboxField>
-
-                        <CheckboxField
                             name='jira-status-login'
                             id='jira-status-login'
                             value='jira.statusbar.showLogin'>

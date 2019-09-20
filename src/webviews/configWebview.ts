@@ -1,8 +1,8 @@
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { IConfig, SettingSource } from '../config/model';
+import { IConfig, SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
-import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
-import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction } from '../ipc/configActions';
+import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget } from 'vscode';
+import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
 import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
@@ -11,6 +11,7 @@ import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { Commands } from '../commands';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -139,6 +140,22 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                     }
                     break;
                 }
+                case 'openJson': {
+                    handled = true;
+                    if (isOpenJsonAction(msg)) {
+                        switch (msg.target) {
+                            case ConfigTarget.User: {
+                                commands.executeCommand('workbench.action.openSettingsJson');
+                                break;
+                            }
+                            case ConfigTarget.Workspace: {
+                                commands.executeCommand(Commands.OpenWSJSON);
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
                 case 'fetchJqlOptions': {
                     handled = true;
                     if (isFetchJqlDataAction(msg) && !isEmptySiteInfo(msg.site)) {
@@ -162,33 +179,42 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                     handled = true;
                     if (isSaveSettingsAction(msg)) {
                         try {
+                            const target = msg.target === ConfigTarget.Workspace ? ConfigurationTarget.Workspace : ConfigurationTarget.Global;
 
                             for (const key in msg.changes) {
-                                const inspect = configuration.inspect(key)!;
 
                                 const value = msg.changes[key];
 
+                                // if this is a jql edit, we need to figure out which one changed
+                                let jqlSiteId: string | undefined = undefined;
 
-                                await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
+                                if (key === 'jira.jqlList') {
+                                    if (Array.isArray(value) && value.length > 0) {
+                                        const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
+                                        const newJqls = value.filter((entry: JQLEntry) => currentJQLs.find(cur => cur.id === entry.id) === undefined);
+                                        if (newJqls.length > 0) {
+                                            jqlSiteId = newJqls[0].siteId;
+                                        }
+                                    }
+                                }
+
+                                await configuration.update(key, value, target);
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
                                 }
 
-                                if (key === 'jira.jqlList') {
-                                    if (Array.isArray(value) && value.length > 0) {
-                                        // TODO: figure out which one changed
-                                        const site = Container.siteManager.getSiteForId(ProductJira, value[0].siteId);
-                                        if (site) {
-                                            customJQLCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                                        }
+                                if (key === 'jira.jqlList' && jqlSiteId) {
+                                    const site = Container.siteManager.getSiteForId(ProductJira, jqlSiteId);
+                                    if (site) {
+                                        customJQLCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                                     }
                                 }
                             }
 
                             if (msg.removes) {
                                 for (const key of msg.removes) {
-                                    await configuration.updateEffective(key, undefined);
+                                    await configuration.update(key, undefined, target);
                                 }
                             }
                         } catch (e) {
