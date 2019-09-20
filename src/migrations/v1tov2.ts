@@ -47,11 +47,11 @@ export class V1toV2Migrator {
         Logger.debug('converting auth provider', provider);
         try {
             let infoEntry = await this.getV1JsonAuthInfoFromKeychain(provider) || undefined;
-            Logger.debug('got legacy auth info', infoEntry);
+            Logger.debug(`legacy auth info for provider? ${infoEntry !== undefined}`);
             if (infoEntry) {
                 let info: AuthInfoV1 = JSON.parse(infoEntry);
                 const newAccess = await this._refresher.getNewAccessToken(provider, info.refresh);
-                Logger.debug('new access token is', newAccess);
+                Logger.debug(`successfuly refreshed token? ${newAccess !== undefined}`);
 
                 if (provider.startsWith('jira')) {
                     if (newAccess && info.accessibleResources) {
