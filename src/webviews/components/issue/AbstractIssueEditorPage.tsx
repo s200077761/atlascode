@@ -199,21 +199,14 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
-        console.log(`loading issues`);
         return new Promise(resolve => {
             const nonce: string = uuid.v4();
-            console.log(`posting issues msg`);
             this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
-                    console.log(`waiting for issues`);
                     const listEvent = await ReactPromiseUtil.winEventPromise('issueSuggestionsList', 10 * Time.SECONDS, nonce);
-                    console.log(`got list`, listEvent);
-                    console.log(`resolving`, listEvent as IssueSuggestionsList);
                     resolve((listEvent as IssueSuggestionsList).issues);
-                    console.log(`resolved`, (listEvent as IssueSuggestionsList).issues);
                 } catch (e) {
-                    console.log(`got error`, e);
                     resolve([]);
                 }
             })();
@@ -263,22 +256,6 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
             });
 
-            /*
-            case 'optionCreated': {
-                handled = true;
-                if (isCreatedSelectOption(e)) {
-                    this.waitForCreateOptionResponse = false;
-                    this.setState(
-                        {
-                            isSomethingLoading: false,
-                            loadingField: '',
-                            fieldValues: { ...this.state.fieldValues, ...e.fieldValues },
-                            selectFieldOptions: { ...this.state.selectFieldOptions, ...e.selectFieldOptions },
-                        });
-                }
-                break;
-            }
-            */
             (async () => {
                 try {
                     const createEvent = await ReactPromiseUtil.winEventPromise('optionCreated', 10 * Time.SECONDS, nonce);
