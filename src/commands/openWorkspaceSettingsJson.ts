@@ -5,15 +5,12 @@ this code is originally from https://github.com/Naturalclar/workspaceSettings
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-export function openWorkspaceSettingsJson() {
-    if (!vscode.workspace.rootPath) {
-        return;
-    }
+export function openWorkspaceSettingsJson(rootPath: string) {
     const editor = new vscode.WorkspaceEdit();
 
     // set filepath for settings.json
     const filePath = path.join(
-        vscode.workspace.rootPath,
+        rootPath,
         ".vscode",
         "settings.json"
     );

@@ -11,7 +11,8 @@ import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
-import { Commands } from '../commands';
+import * as vscode from 'vscode';
+import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -149,7 +150,12 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 break;
                             }
                             case ConfigTarget.Workspace: {
-                                commands.executeCommand(Commands.OpenWSJSON);
+                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 1) {
+                                    commands.executeCommand('workbench.action.openWorkspaceConfigFile');
+                                } else if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+                                    openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                                }
+
                                 break;
                             }
                         }
