@@ -1,6 +1,5 @@
 import { window, commands } from "vscode";
 import { Container } from "../container";
-import { Commands } from "../commands";
 import { Logger } from "../logger";
 import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
@@ -86,8 +85,11 @@ export class NewIssueMonitor {
   }
 
   private showNotification(newIssues: MinimalIssue[]) {
+    if (newIssues.length === 0) {
+      return;
+    }
+
     const issueNames = newIssues.map(issue => `[${issue.key}] "${issue.summary}"`);
-    commands.executeCommand(Commands.RefreshJiraExplorer);
     var message = "";
     if (newIssues.length === 1) {
       message = `${issueNames[0]} added to explorer`;
