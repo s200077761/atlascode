@@ -494,7 +494,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             <InlineDialog
                                 content={
                                     <WatchesForm
-                                        onFetchUsers={this.fetchUsers}
+                                        onFetchUsers={async (input: string) => await this.fetchUsers(input)}
                                         onAddWatcher={this.handleAddWatcher}
                                         onRemoveWatcher={this.handleRemoveWatcher}
                                         currentUser={this.state.currentUser}
