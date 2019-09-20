@@ -27,7 +27,6 @@ import { distanceInWordsToNow } from 'date-fns';
 import Avatar from '@atlaskit/avatar';
 import { colorToLozengeAppearanceMap } from '../colors';
 import Lozenge from "@atlaskit/lozenge";
-import { ReactPromiseUtil } from '../../../util/reactpromise';
 import { Time } from '../../../util/time';
 import uuid from 'uuid';
 
@@ -201,10 +200,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
             const nonce: string = uuid.v4();
-            this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
+            // this.postMessage({ action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce });
             (async () => {
                 try {
-                    const listEvent = await ReactPromiseUtil.winEventPromise('issueSuggestionsList', 10 * Time.SECONDS, nonce);
+                    const listEvent = await this.postMessageWithEventPromise(
+                        { action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce }
+                        , 'issueSuggestionsList', 10 * Time.SECONDS, nonce);
                     resolve((listEvent as IssueSuggestionsList).issues);
                 } catch (e) {
                     resolve([]);
@@ -222,10 +223,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.setState({ isSomethingLoading: true });
         return new Promise(resolve => {
             const nonce: string = uuid.v4();
-            this.postMessage({ action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url, nonce });
             (async () => {
                 try {
-                    const listEvent = await ReactPromiseUtil.winEventPromise('selectOptionsList', 10 * Time.SECONDS, nonce);
+                    const listEvent = await this.postMessageWithEventPromise(
+                        { action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url, nonce }
+                        , 'selectOptionsList', 10 * Time.SECONDS, nonce);
+
                     this.setState({ isSomethingLoading: false });
                     resolve(listEvent.options);
                 } catch (e) {
@@ -246,19 +249,21 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         if (field.createUrl.trim() !== '') {
             this.setState({ isSomethingLoading: true, loadingField: field.key });
             const nonce: string = uuid.v4();
-            this.postMessage({
-                action: 'createOption',
-                fieldKey: field.key,
-                siteDetails: this.state.siteDetails,
-                createUrl: field.createUrl,
-                createData: { name: input, project: this.getProjectKey() },
-                nonce: nonce
-
-            });
 
             (async () => {
                 try {
-                    const createEvent = await ReactPromiseUtil.winEventPromise('optionCreated', 10 * Time.SECONDS, nonce);
+                    const createEvent = await this.postMessageWithEventPromise(
+                        {
+                            action: 'createOption',
+                            fieldKey: field.key,
+                            siteDetails: this.state.siteDetails,
+                            createUrl: field.createUrl,
+                            createData: { name: input, project: this.getProjectKey() },
+                            nonce: nonce
+
+                        }
+                        , 'optionCreated', 10 * Time.SECONDS, nonce);
+
                     this.setState(
                         {
                             isSomethingLoading: false,
