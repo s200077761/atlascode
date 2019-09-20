@@ -40,7 +40,7 @@ export class Logger {
 
         if (this.output !== undefined) {
             this.output.appendLine(
-                ([message, ...params]).join(' ')
+                ([this.timestamp, message, ...params]).join(' ')
             );
         }
     }
@@ -54,7 +54,7 @@ export class Logger {
 
         if (this.output !== undefined) {
             this.output.appendLine(
-                ([message, ...params]).join(' ')
+                ([this.timestamp, message, ...params]).join(' ')
             );
         }
     }
@@ -68,7 +68,7 @@ export class Logger {
 
         if (this.output !== undefined) {
             this.output.appendLine(
-                ([classOrMethod, ...params, ex]).join(' ')
+                ([this.timestamp, classOrMethod, ...params, ex]).join(' ')
             );
         }
     }
