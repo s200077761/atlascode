@@ -36,7 +36,7 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
-import { BitbucketIssueData } from '../../../bitbucket/model';
+import { BitbucketIssueData, ApprovalStatus } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 
@@ -92,11 +92,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.state = emptyState;
     }
 
-    handleApprove = (approved: boolean) => {
+    handleApprove = (status: ApprovalStatus) => {
         this.setState({ isApproveButtonLoading: true });
         this.postMessage({
             action: 'updateApproval',
-            approved: approved
+            status: status
         });
     }
 
@@ -272,11 +272,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
         const isPrOpen = pr.state === "OPEN";
 
-        let currentUserApproved = false;
+        let currentUserApprovalStatus: ApprovalStatus = 'UNAPPROVED';
         if (pr.participants) {
-            currentUserApproved = pr.participants!
-                .filter((participant) => participant.accountId === this.state.pr.currentUser!.accountId)
-                .reduce((acc, curr) => !!acc || !!curr.approved, false as boolean);
+            const foundCurrentUser = pr.participants!.find((participant) => participant.accountId === this.state.pr.currentUser!.accountId);
+            if (foundCurrentUser) {
+                currentUserApprovalStatus = foundCurrentUser.status;
+            }
         }
         const issue = this.state.pr.mainIssue;
         const issueDetails = issue ?
@@ -311,10 +312,20 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const actionsContent = (
             <div className='ac-inline-grid'>
                 <Reviewers {...this.state.pr} />
+                {!pr.siteDetails.isCloud &&
+                    <Tooltip content={currentUserApprovalStatus === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}>
+                        <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? undefined : 'ac-button'}
+                            appearance={currentUserApprovalStatus === 'NEEDS_WORK' ? 'warning' : 'default'}
+                            isLoading={this.state.isApproveButtonLoading}
+                            onClick={() => this.handleApprove(currentUserApprovalStatus === 'NEEDS_WORK' ? 'UNAPPROVED' : 'NEEDS_WORK')}>
+                            Needs work
+                        </Button>
+                    </Tooltip>
+                }
                 <Button className='ac-button' iconBefore={<CheckCircleOutlineIcon label='approve' />}
                     isLoading={this.state.isApproveButtonLoading}
-                    onClick={() => this.handleApprove(!currentUserApproved)}>
-                    {currentUserApproved ? 'Unapprove' : 'Approve'}
+                    onClick={() => this.handleApprove(currentUserApprovalStatus === 'APPROVED' ? 'UNAPPROVED' : 'APPROVED')}>
+                    {currentUserApprovalStatus === 'APPROVED' ? 'Unapprove' : 'Approve'}
                 </Button>
 
                 <div className='ac-inline-dialog'>

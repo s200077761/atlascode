@@ -61,6 +61,13 @@ export async function clientForHostname(hostname: string): Promise<BitbucketApi>
 // Use only for bitbucket repositories
 export function firstBitbucketRemote(repo: Repository): Remote {
     const remotes = getBitbucketRemotes(repo);
-    const remote = remotes.find(r => r.name === 'origin') || remotes[0];
-    return remote;
+
+    let remote: Remote | undefined;
+    if (remote = remotes.find(r => r.name === 'origin')) {
+        return remote;
+    }
+    if (remote = remotes.find(r => r.name === 'upstream')) {
+        return remote;
+    }
+    return remotes[0];
 }

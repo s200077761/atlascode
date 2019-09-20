@@ -1,6 +1,6 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
-import { Reviewer, BitbucketIssueData } from "../bitbucket/model";
+import { Reviewer, BitbucketIssueData, ApprovalStatus } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 
 export interface DeleteComment extends Action {
@@ -35,11 +35,11 @@ export interface RefreshPullRequest extends Action {
 
 export interface UpdateApproval extends Action {
     action: 'updateApproval';
-    approved: boolean;
+    status: ApprovalStatus;
 }
 
 export function isUpdateApproval(a: Action): a is UpdateApproval {
-    return (<UpdateApproval>a).approved !== undefined;
+    return (<UpdateApproval>a).status !== undefined;
 }
 
 export interface Merge extends Action {
