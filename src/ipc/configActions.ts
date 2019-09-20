@@ -27,10 +27,12 @@ export interface LoginAuthAction extends AuthAction {
 
 export enum ConfigTarget {
     User = 'user',
-    Workspace = 'workspace'
+    Workspace = 'workspace',
+    WorkspaceFolder = 'workspacefolder'
 }
 export interface SaveSettingsAction extends Action {
     target: ConfigTarget;
+    targetUri: string;
     changes: {
         [key: string]: any;
     };

@@ -13,6 +13,7 @@ import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import * as vscode from 'vscode';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
+import { ConfigWorkspaceFolder } from '../ipc/configMessaging';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -62,11 +63,18 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             const feedbackUser = await getFeedbackUser();
 
+            let workspaceFolders: ConfigWorkspaceFolder[] = [];
+
+            if (vscode.workspace.workspaceFolders) {
+                workspaceFolders = vscode.workspace.workspaceFolders.map(folder => { return { name: folder.name, uri: folder.uri.toString() }; });
+            }
+
             this.postMessage({
                 type: 'init',
                 config: config,
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
+                workspaceFolders: workspaceFolders,
                 feedbackUser: feedbackUser,
             });
         } catch (e) {
@@ -185,7 +193,23 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                     handled = true;
                     if (isSaveSettingsAction(msg)) {
                         try {
-                            const target = msg.target === ConfigTarget.Workspace ? ConfigurationTarget.Workspace : ConfigurationTarget.Global;
+                            let target = ConfigurationTarget.Global;
+                            const targetUri: Uri | null = (msg.targetUri !== "") ? Uri.parse(msg.targetUri) : null;
+
+                            switch (msg.target) {
+                                case ConfigTarget.User: {
+                                    target = ConfigurationTarget.Global;
+                                    break;
+                                }
+                                case ConfigTarget.Workspace: {
+                                    target = ConfigurationTarget.Workspace;
+                                    break;
+                                }
+                                case ConfigTarget.WorkspaceFolder: {
+                                    target = ConfigurationTarget.WorkspaceFolder;
+                                    break;
+                                }
+                            }
 
                             for (const key in msg.changes) {
 
@@ -204,7 +228,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                     }
                                 }
 
-                                await configuration.update(key, value, target);
+                                await configuration.update(key, value, target, targetUri);
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
@@ -220,7 +244,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
                             if (msg.removes) {
                                 for (const key of msg.removes) {
-                                    await configuration.update(key, undefined, target);
+                                    await configuration.update(key, undefined, target, targetUri);
                                 }
                             }
                         } catch (e) {

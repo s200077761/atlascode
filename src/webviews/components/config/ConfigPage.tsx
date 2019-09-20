@@ -50,6 +50,7 @@ interface ViewState extends ConfigData {
     tabIndex: number;
     errorDetails: any;
     target: ConfigTarget;
+    targetUri: string;
 }
 
 const emptyState: ViewState = {
@@ -60,6 +61,7 @@ const emptyState: ViewState = {
     openedSettings: SettingSource.Default,
     errorDetails: undefined,
     target: ConfigTarget.User,
+    targetUri: "",
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
@@ -109,7 +111,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     handleTargetChange = (selected: any) => {
         console.log('target selected', selected);
-        this.setState({ target: selected.value });
+        this.setState({ target: selected.value, targetUri: selected.uri });
     }
 
     handleOpenJson = () => {
@@ -117,7 +119,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
-        this.postMessage({ action: 'saveSettings', changes: change, removes: removes, target: this.state.target });
+        this.postMessage({ action: 'saveSettings', changes: change, removes: removes, target: this.state.target, targetUri: this.state.targetUri });
     }
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
@@ -212,6 +214,19 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
+        // Note: we will figure out what can be put on the resource level in the near future
+        let targetOptions = [];
+        // if (this.state.workspaceFolders.length > 1) {
+        //     targetOptions = [{ label: '', options: [{ value: ConfigTarget.User, label: ConfigTarget.User, uri: "" }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: "" }] }
+        //         , {
+        //         label: 'workspace folders', options: this.state.workspaceFolders.map(folder => {
+        //             return { value: ConfigTarget.WorkspaceFolder, label: folder.name, uri: folder.uri };
+        //         })
+        //     }];
+        // } else {
+        targetOptions = [{ value: ConfigTarget.User, label: ConfigTarget.User, uri: "" }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: "" }];
+        //}
+
         return (
             <Page>
                 {this.state.isErrorBannerOpen &&
@@ -237,7 +252,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         id="target"
                                         className="ac-select-container"
                                         classNamePrefix="ac-select"
-                                        options={[{ value: ConfigTarget.User, label: ConfigTarget.User }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace }]}
+                                        options={targetOptions}
                                         formatOptionLabel={(option: any) => option.label.toUpperCase()}
                                         value={{ value: this.state.target, label: this.state.target }}
                                         onChange={this.handleTargetChange}

@@ -7,10 +7,15 @@ export interface FeedbackUser {
     emailAddress: string;
 }
 
+export interface ConfigWorkspaceFolder {
+    name: string;
+    uri: string;
+}
 export interface ConfigData extends Message {
     config: IConfig;
     jiraSites: DetailedSiteInfo[];
     bitbucketSites: DetailedSiteInfo[];
+    workspaceFolders: ConfigWorkspaceFolder[];
     feedbackUser: FeedbackUser;
 }
 
@@ -19,6 +24,7 @@ export const emptyConfigData: ConfigData = {
     config: emptyConfig,
     jiraSites: [],
     bitbucketSites: [],
+    workspaceFolders: [],
     feedbackUser: {
         userName: '',
         emailAddress: ''
