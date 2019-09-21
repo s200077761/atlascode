@@ -1,5 +1,5 @@
 import { Message } from "./messaging";
-import { IConfig, emptyConfig } from "../config/model";
+import { IConfig } from "../config/model";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 export interface FeedbackUser {
@@ -11,8 +11,10 @@ export interface ConfigWorkspaceFolder {
     name: string;
     uri: string;
 }
+
+export type ConfigInspect = { [key: string]: any };
 export interface ConfigData extends Message {
-    config: IConfig;
+    inspect: ConfigInspect;
     jiraSites: DetailedSiteInfo[];
     bitbucketSites: DetailedSiteInfo[];
     workspaceFolders: ConfigWorkspaceFolder[];
@@ -21,7 +23,7 @@ export interface ConfigData extends Message {
 
 export const emptyConfigData: ConfigData = {
     type: 'init',
-    config: emptyConfig,
+    inspect: {},
     jiraSites: [],
     bitbucketSites: [],
     workspaceFolders: [],

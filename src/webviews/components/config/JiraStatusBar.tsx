@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class JiraStatusBar extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class JiraStatusBar extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -34,7 +34,7 @@ export default class JiraStatusBar extends React.Component<{ configData: ConfigD
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Enable Jira Status Bar'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isChecked={this.props.configData.config.jira.statusbar.enabled}
+                                        isChecked={this.props.config.jira.statusbar.enabled}
                                     />
                                 );
                             }
@@ -57,8 +57,8 @@ export default class JiraStatusBar extends React.Component<{ configData: ConfigD
                                         <Checkbox {...fieldArgs.fieldProps}
                                             label='Show product name'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                            isDisabled={!this.props.configData.config.jira.statusbar.enabled}
-                                            isChecked={this.props.configData.config.jira.statusbar.showProduct}
+                                            isDisabled={!this.props.config.jira.statusbar.enabled}
+                                            isChecked={this.props.config.jira.statusbar.showProduct}
                                         />
                                     );
                                 }
@@ -75,8 +75,8 @@ export default class JiraStatusBar extends React.Component<{ configData: ConfigD
                                         <Checkbox {...fieldArgs.fieldProps}
                                             label="Show user's name"
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                            isDisabled={!this.props.configData.config.jira.statusbar.enabled}
-                                            isChecked={this.props.configData.config.jira.statusbar.showUser}
+                                            isDisabled={!this.props.config.jira.statusbar.enabled}
+                                            isChecked={this.props.config.jira.statusbar.showUser}
                                         />
                                     );
                                 }
@@ -93,8 +93,8 @@ export default class JiraStatusBar extends React.Component<{ configData: ConfigD
                                         <Checkbox {...fieldArgs.fieldProps}
                                             label='Show login button when not authenticated'
                                             onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                            isDisabled={!this.props.configData.config.jira.statusbar.enabled}
-                                            isChecked={this.props.configData.config.jira.statusbar.showLogin}
+                                            isDisabled={!this.props.config.jira.statusbar.enabled}
+                                            isChecked={this.props.config.jira.statusbar.showLogin}
                                         />
                                     );
                                 }

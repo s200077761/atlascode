@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class BBStatusBar extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class BBStatusBar extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -33,7 +33,7 @@ export default class BBStatusBar extends React.Component<{ configData: ConfigDat
                                 <Checkbox {...fieldArgs.fieldProps}
                                     label='Enable Bitbucket Status Bar'
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.configData.config.bitbucket.statusbar.enabled}
+                                    isChecked={this.props.config.bitbucket.statusbar.enabled}
                                 />
                             );
                         }
@@ -56,8 +56,8 @@ export default class BBStatusBar extends React.Component<{ configData: ConfigDat
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show product name'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.statusbar.showProduct}
+                                        isDisabled={!this.props.config.bitbucket.statusbar.enabled}
+                                        isChecked={this.props.config.bitbucket.statusbar.showProduct}
                                     />
                                 );
                             }
@@ -74,8 +74,8 @@ export default class BBStatusBar extends React.Component<{ configData: ConfigDat
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label="Show user's name"
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.statusbar.showUser}
+                                        isDisabled={!this.props.config.bitbucket.statusbar.enabled}
+                                        isChecked={this.props.config.bitbucket.statusbar.showUser}
                                     />
                                 );
                             }
@@ -92,8 +92,8 @@ export default class BBStatusBar extends React.Component<{ configData: ConfigDat
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show login button when not authenticated'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.statusbar.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.statusbar.showLogin}
+                                        isDisabled={!this.props.config.bitbucket.statusbar.enabled}
+                                        isChecked={this.props.config.bitbucket.statusbar.showLogin}
                                     />
                                 );
                             }

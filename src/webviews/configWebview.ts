@@ -1,5 +1,5 @@
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { IConfig, SettingSource, JQLEntry } from '../config/model';
+import { SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
@@ -13,7 +13,7 @@ import { SitesAvailableUpdateEvent } from '../siteManager';
 import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import * as vscode from 'vscode';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
-import { ConfigWorkspaceFolder } from '../ipc/configMessaging';
+import { ConfigWorkspaceFolder, ConfigInspect } from '../ipc/configMessaging';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -57,7 +57,6 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             }
 
             this.isRefeshing = true;
-            const config: IConfig = configuration.get<IConfig>();
 
             const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
 
@@ -71,7 +70,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             this.postMessage({
                 type: 'init',
-                config: config,
+                inspect: this.getInspect(),
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 workspaceFolders: workspaceFolders,
@@ -88,9 +87,19 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 
-        this.postMessage({ type: 'configUpdate', config: configuration.get<IConfig>() });
+        this.postMessage({ type: 'configUpdate', inspect: this.getInspect() });
     }
 
+    private getInspect(): ConfigInspect {
+        const inspect = configuration.inspect();
+
+        return {
+            "default": (inspect.defaultValue) ? inspect.defaultValue : {},
+            "user": (inspect.globalValue) ? inspect.globalValue : {},
+            "workspace": (inspect.workspaceValue) ? inspect.workspaceValue : {},
+            "workspacefolder": (inspect.workspaceFolderValue) ? inspect.workspaceFolderValue : {},
+        };
+    }
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
         const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
 

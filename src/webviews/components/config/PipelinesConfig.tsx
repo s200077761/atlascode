@@ -1,13 +1,13 @@
 import * as React from "react";
 import { Checkbox } from "@atlaskit/checkbox";
 import { CheckboxField } from "@atlaskit/form";
-import { ConfigData } from "../../../ipc/configMessaging";
 import { chain } from "../fieldValidators";
 import MultiOptionList from "./MultiOptionList";
+import { IConfig } from "../../../config/model";
 
 type changeObject = { [key: string]: any };
 
-export default class PipelinesConfig extends React.Component<{ configData: ConfigData; onConfigChange: (changes: changeObject, removes?: string[]) => void; }, {}> {
+export default class PipelinesConfig extends React.Component<{ config: IConfig; onConfigChange: (changes: changeObject, removes?: string[]) => void; }, {}> {
   constructor(props: any) {
     super(props);
   }
@@ -31,12 +31,12 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
   }
 
   getIsExplorerIndeterminate = (): boolean => {
-    if (!this.props.configData.config.bitbucket.pipelines.explorerEnabled) {
+    if (!this.props.config.bitbucket.pipelines.explorerEnabled) {
       return false;
     }
 
     let count = 0;
-    if (this.props.configData.config.bitbucket.pipelines.monitorEnabled) {
+    if (this.props.config.bitbucket.pipelines.monitorEnabled) {
       count++;
     }
 
@@ -57,7 +57,7 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                 {...fieldArgs.fieldProps}
                 label="Enable Bitbucket Pipelines Explorer"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                isChecked={this.props.configData.config.bitbucket.pipelines.explorerEnabled}
+                isChecked={this.props.config.bitbucket.pipelines.explorerEnabled}
                 isIndeterminate={this.getIsExplorerIndeterminate()}
               />
             );
@@ -81,8 +81,8 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                   {...fieldArgs.fieldProps}
                   label="Show notifications when new Bitbucket pipelines are created"
                   onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                  isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
-                  isChecked={this.props.configData.config.bitbucket.pipelines.monitorEnabled}
+                  isDisabled={!this.props.config.bitbucket.pipelines.explorerEnabled}
+                  isChecked={this.props.config.bitbucket.pipelines.monitorEnabled}
                 />
               );
             }}
@@ -92,9 +92,9 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           <span>Refresh explorer every: </span>
           <input className='ac-inputField-inline' style={{ width: '60px' }} name="pipelines-refresh-interval"
             type="number" min="0"
-            value={this.props.configData.config.bitbucket.pipelines.refreshInterval}
+            value={this.props.config.bitbucket.pipelines.refreshInterval}
             onChange={(e: any) => this.handleNumberChange(e, "bitbucket.pipelines.refreshInterval")}
-            disabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled} />
+            disabled={!this.props.config.bitbucket.pipelines.explorerEnabled} />
           <span> minutes (setting to 0 disables auto-refresh)</span>
         </div>
 
@@ -110,8 +110,8 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
                 {...fieldArgs.fieldProps}
                 label="Hide Bitbucket pipelines with no results"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                isDisabled={!this.props.configData.config.bitbucket.pipelines.explorerEnabled}
-                isChecked={this.props.configData.config.bitbucket.pipelines.hideEmpty}
+                isDisabled={!this.props.config.bitbucket.pipelines.explorerEnabled}
+                isChecked={this.props.config.bitbucket.pipelines.hideEmpty}
               />
             );
           }}
@@ -120,10 +120,10 @@ export default class PipelinesConfig extends React.Component<{ configData: Confi
           onConfigChange={this.props.onConfigChange}
           enabledConfig={'bitbucket.pipelines.hideFiltered'}
           optionsConfig={'bitbucket.pipelines.branchFilters'}
-          enabledValue={this.props.configData.config.bitbucket.pipelines.hideFiltered}
+          enabledValue={this.props.config.bitbucket.pipelines.hideFiltered}
           enabledDescription={'Show only Bitbucket pipelines matching filters'}
           promptString={'Add Filter'}
-          options={this.props.configData.config.bitbucket.pipelines.branchFilters.slice()} />
+          options={this.props.config.bitbucket.pipelines.branchFilters.slice()} />
 
 
       </div>

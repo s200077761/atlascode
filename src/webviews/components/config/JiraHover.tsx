@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class JiraHover extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class JiraHover extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -31,7 +31,7 @@ export default class JiraHover extends React.Component<{ configData: ConfigData,
                             <Checkbox {...fieldArgs.fieldProps}
                                 label='Show details when hovering over issue keys in the editor'
                                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                isChecked={this.props.configData.config.jira.hover.enabled}
+                                isChecked={this.props.config.jira.hover.enabled}
                             />
                         );
                     }

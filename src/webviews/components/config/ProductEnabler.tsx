@@ -21,6 +21,7 @@ export default class ProductEnabler extends React.Component<{
     }
 
     componentWillReceiveProps = (nextProps: any) => {
+        console.log('enabler props', nextProps);
         this.setState({ jiraEnabled: nextProps.jiraEnabled, bbEnabled: nextProps.bbEnabled, });
     }
 

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class BitbucketExplorer extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class BitbucketExplorer extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -30,18 +30,18 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
     }
 
     getIsExplorerIndeterminate = (): boolean => {
-        if (!this.props.configData.config.bitbucket.explorer.enabled) {
+        if (!this.props.config.bitbucket.explorer.enabled) {
             return false;
         }
 
         let count = 0;
-        if (this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+        if (this.props.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             count++;
         }
-        if (this.props.configData.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
+        if (this.props.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             count++;
         }
-        if (this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated) {
+        if (this.props.config.bitbucket.explorer.notifications.pullRequestCreated) {
             count++;
         }
 
@@ -62,7 +62,7 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                     label='Enable Bitbucket Pull Request Explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.configData.config.bitbucket.explorer.enabled}
+                                    isChecked={this.props.config.bitbucket.explorer.enabled}
                                 />
                             );
                         }
@@ -85,8 +85,8 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show related Jira issues for Bitbucket pull requests'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.explorer.relatedJiraIssues.enabled}
+                                        isDisabled={!this.props.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.config.bitbucket.explorer.relatedJiraIssues.enabled}
                                     />
                                 );
                             }
@@ -102,8 +102,8 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show related Bitbucket issues for pull requests'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.explorer.relatedBitbucketIssues.enabled}
+                                        isDisabled={!this.props.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.config.bitbucket.explorer.relatedBitbucketIssues.enabled}
                                     />
                                 );
                             }
@@ -119,8 +119,8 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show notifications when new Bitbucket pull requests are created'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isDisabled={!this.props.configData.config.bitbucket.explorer.enabled}
-                                        isChecked={this.props.configData.config.bitbucket.explorer.notifications.pullRequestCreated}
+                                        isDisabled={!this.props.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.config.bitbucket.explorer.notifications.pullRequestCreated}
                                     />
                                 );
                             }
@@ -131,9 +131,9 @@ export default class BitbucketExplorer extends React.Component<{ configData: Con
                     <span>Refresh explorer every: </span>
                     <input className='ac-inputField-inline' style={{ width: '60px' }} name="pr-explorer-refresh-interval"
                         type="number" min="0"
-                        value={this.props.configData.config.bitbucket.explorer.refreshInterval}
+                        value={this.props.config.bitbucket.explorer.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "bitbucket.explorer.refreshInterval")}
-                        disabled={!this.props.configData.config.bitbucket.explorer.enabled} />
+                        disabled={!this.props.config.bitbucket.explorer.enabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
             </div>

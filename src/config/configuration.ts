@@ -78,15 +78,17 @@ export class Configuration extends Disposable {
     }
 
     // inspect returns details of the given config section
-    inspect<T>(section?: string, resource?: Uri | null): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T, workspaceFolderValue?: T } | undefined {
-        return workspace
+    inspect<T>(section?: string, resource?: Uri | null): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T, workspaceFolderValue?: T } {
+        const inspect = workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
             .inspect<T>(section === undefined ? extensionId : section);
+
+        return (inspect) ? inspect : { key: "" };
     }
 
     // update does what it sounds like
     public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null): Promise<void> {
-        const inspect = this.inspect(section, resource)!;
+        const inspect = this.inspect(section, resource);
 
         if (
             (value === inspect.defaultValue || value === undefined)
@@ -116,14 +118,14 @@ export class Configuration extends Disposable {
     // the first time it's opened unlike global migrations that can happen on first run of the extension only.
     async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
         let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
-        if (inspect && inspect.workspaceValue) {
+        if (inspect.workspaceValue) {
             const config = this.configForOpenWorkspace();
             if (config && deletePrevious) {
                 await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
             }
         }
         inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
-        if (inspect && inspect.workspaceValue) {
+        if (inspect.workspaceValue) {
             const config = this.configForOpenWorkspace();
             if (config && deletePrevious) {
                 await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
@@ -162,7 +164,7 @@ export class Configuration extends Disposable {
 
     // this tries to figure out where the current value is set and update it there
     async updateEffective(section: string, value: any, resource: Uri | null = null): Promise<void> {
-        const inspect = this.inspect(section, resource)!;
+        const inspect = this.inspect(section, resource);
 
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return undefined; }
