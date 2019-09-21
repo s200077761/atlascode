@@ -255,6 +255,7 @@ pre {
 
 .ac-breadcrumbs .ac-link-button:hover, .ac-breadcrumbs .ac-link-button:hover span {
   color: var(--vscode-breadcrumb-focusForeground)!important;
+  cursor: pointer;
 }
 
 .ac-breadcrumb-divider {
@@ -519,7 +520,7 @@ section button span {
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], div[role=dialog], [class^=Modal__Dialog], [class^=Radio__Label], [class^=Field__FieldWrapper-]>label>span {
+[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], div[role=dialog], [class^=Modal__Dialog], [class^=Radio__Label], [class^=Field__FieldWrapper-]>label>span {
   color: var(--vscode-foreground) !important
 }
 
@@ -741,11 +742,11 @@ section button span {
 
 /*-------------------- BEGIN - checkboxes/radios --------------------*/
 
-[class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
+[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
   color: var(--vscode-button-background) !important
 }
 
-[class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
+[type=checkbox]+span rect, [type=radio]+span circle, [class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
   stroke: var(--vscode-button-background) !important
 }
 

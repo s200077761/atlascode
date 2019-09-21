@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class WelcomeConfig extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class WelcomeConfig extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -33,7 +33,7 @@ export default class WelcomeConfig extends React.Component<{ configData: ConfigD
                             <Checkbox {...fieldArgs.fieldProps}
                                 label='Show welcome screen when extension is updated'
                                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                isChecked={this.props.configData.config.showWelcomeOnInstall}
+                                isChecked={this.props.config.showWelcomeOnInstall}
                             />
                         );
                     }

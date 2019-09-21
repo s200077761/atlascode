@@ -602,18 +602,6 @@
                     "description": "Shows the user's name in the status bar",
                     "scope": "window"
                 },
-                "atlascode.jira.statusbar.showSite": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows the default site name in the status bar",
-                    "scope": "window"
-                },
-                "atlascode.jira.statusbar.showProject": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows the default project name in the status bar",
-                    "scope": "window"
-                },
                 "atlascode.jira.statusbar.showLogin": {
                     "type": "boolean",
                     "default": true,
@@ -672,7 +660,7 @@
                 "atlascode.jira.lastCreateSiteAndProject": {
                     "type": "object",
                     "description": "the last used site id and project key for create issue",
-                    "scope": "resource",
+                    "scope": "window",
                     "properties": {
                         "siteId": {
                             "type": "string",
@@ -722,6 +710,8 @@
                 },
                 "atlascode.jira.jqlList": {
                     "type": "array",
+                    "scope": "window",
+                    "description": "The list of JQL queries that populate the issue list view",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -971,10 +961,11 @@
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
         "macaddress": "^0.2.9",
+        "merge-anything": "^2.4.1",
         "p-any": "^2.1.0",
-        "p-timeout": "^3.1.0",
-        "p-settle": "^3.1.0",
         "p-debounce": "^2.1.0",
+        "p-settle": "^3.1.0",
+        "p-timeout": "^3.1.0",
         "passport": "^0.4.0",
         "passport-atlassian-oauth2": "^1.0.1",
         "passport-bitbucket-oauth2": "^0.1.2",

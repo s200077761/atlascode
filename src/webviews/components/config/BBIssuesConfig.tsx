@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { ConfigData } from '../../../ipc/configMessaging';
 import { chain } from '../fieldValidators';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
-export default class BitbucketIssuesConfig extends React.Component<{ configData: ConfigData, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
+export default class BitbucketIssuesConfig extends React.Component<{ config: IConfig, onConfigChange: (changes: changeObject, removes?: string[]) => void }, {}> {
     constructor(props: any) {
         super(props);
     }
@@ -42,7 +42,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                                 <Checkbox {...fieldArgs.fieldProps}
                                     label='Enable Bitbucket Issues Explorer'
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.configData.config.bitbucket.issues.explorerEnabled}
+                                    isChecked={this.props.config.bitbucket.issues.explorerEnabled}
                                 />
                             );
                         }
@@ -60,8 +60,8 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                                     {...fieldArgs.fieldProps}
                                     label="Show notifications when new Bitbucket issues are created"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isDisabled={!this.props.configData.config.bitbucket.issues.explorerEnabled}
-                                    isChecked={this.props.configData.config.bitbucket.issues.monitorEnabled}
+                                    isDisabled={!this.props.config.bitbucket.issues.explorerEnabled}
+                                    isChecked={this.props.config.bitbucket.issues.monitorEnabled}
                                 />
                             );
                         }}
@@ -71,9 +71,9 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                     <span>Refresh explorer every: </span>
                     <input className='ac-inputField-inline' style={{ width: '60px' }} name='bb-issues-refresh-interval'
                         type='number' min='0'
-                        value={this.props.configData.config.bitbucket.issues.refreshInterval}
+                        value={this.props.config.bitbucket.issues.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, 'bitbucket.issues.refreshInterval')}
-                        disabled={!this.props.configData.config.bitbucket.issues.explorerEnabled} />
+                        disabled={!this.props.config.bitbucket.issues.explorerEnabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
                 <div>
@@ -87,7 +87,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ configData:
                                     <Checkbox {...fieldArgs.fieldProps}
                                         label='Show Create Jira Issue button on Bitbucket issue screens'
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                        isChecked={this.props.configData.config.bitbucket.issues.createJiraEnabled}
+                                        isChecked={this.props.config.bitbucket.issues.createJiraEnabled}
                                     />
                                 );
                             }

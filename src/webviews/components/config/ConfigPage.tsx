@@ -5,7 +5,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
-import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction } from '../../../ipc/configActions';
+import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction, ConfigTarget } from '../../../ipc/configActions';
 import { DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
 import JiraExplorer from './JiraExplorer';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
@@ -19,7 +19,7 @@ import BitbucketContextMenus from './BBContextMenus';
 import WelcomeConfig from './WelcomeConfig';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import PipelinesConfig from './PipelinesConfig';
-import { SettingSource } from '../../../config/model';
+import { SettingSource, IConfig, emptyConfig } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import Form from '@atlaskit/form';
@@ -30,6 +30,9 @@ import { SiteEditor } from './SiteEditor';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import ProductEnabler from './ProductEnabler';
 import { Time } from '../../../util/time';
+import Select from '@atlaskit/select';
+import { AtlLoader } from '../AtlLoader';
+import merge from 'merge-anything'
 
 type changeObject = { [key: string]: any };
 
@@ -48,15 +51,21 @@ interface ViewState extends ConfigData {
     openedSettings: SettingSource;
     tabIndex: number;
     errorDetails: any;
+    target: ConfigTarget;
+    targetUri: string;
+    config: IConfig;
 }
 
 const emptyState: ViewState = {
     ...emptyConfigData,
+    config: emptyConfig,
     isProjectsLoading: false,
     isErrorBannerOpen: false,
     tabIndex: 0,
     openedSettings: SettingSource.Default,
-    errorDetails: undefined
+    errorDetails: undefined,
+    target: ConfigTarget.User,
+    targetUri: "",
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
@@ -67,6 +76,30 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.state = emptyState;
     }
 
+
+    private configForTarget = (target: ConfigTarget, inspect?: any): IConfig => {
+        if (!inspect) {
+            inspect = this.state.inspect;
+        }
+        /* NOTE: we use merge-anything here because Object.assign and spread operators delete entries
+           in the target object if they are undefined in the source object. They also do shallow copies
+           which just contain refs to the original objects.
+           merge-anything is a lot less heavy than all the other merge libs including lodash and doesn't
+           mutate the inputs as most other libs do.
+        */
+        switch (target) {
+            case ConfigTarget.User: {
+                return merge(inspect['default'], inspect['user']) as IConfig;
+            }
+            case ConfigTarget.Workspace: {
+                return merge(inspect['default'], inspect['workspace']) as IConfig;
+            }
+            case ConfigTarget.WorkspaceFolder: {
+                return merge(inspect['default'], inspect['workspacefolder']) as IConfig;
+            }
+        }
+    }
+
     public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
@@ -75,13 +108,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 break;
             }
             case 'init': {
-                this.setState({ ...e as ConfigData, isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({ ...e as ConfigData, config: this.configForTarget(this.state.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
                 this.updateTabIndex();
                 this.refreshBySwitchingTabs();
                 break;
             }
             case 'configUpdate': {
-                this.setState({ config: e.config, isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({ inspect: e.inspect, config: this.configForTarget(this.state.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
             case 'sitesAvailableUpdate': {
@@ -104,8 +137,17 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     }
 
+    handleTargetChange = (selected: any) => {
+        const config = this.configForTarget(selected.value);
+        this.setState({ target: selected.value, targetUri: selected.uri, config: config });
+    }
+
+    handleOpenJson = () => {
+        this.postMessage({ action: 'openJson', target: this.state.target });
+    }
+
     public onConfigChange = (change: changeObject, removes?: string[]) => {
-        this.postMessage({ action: 'saveSettings', changes: change, removes: removes });
+        this.postMessage({ action: 'saveSettings', changes: change, removes: removes, target: this.state.target, targetUri: this.state.targetUri });
     }
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
@@ -146,12 +188,12 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
         const jiraDisabledModifier = this.state.config.jira.enabled ? 0 : 1;
         const bitbucketDisabledModifier = this.state.config.bitbucket.enabled ? 0 : 1;
-        if (this.state.openedSettings === SettingSource.Default 
-            || this.state.openedSettings === SettingSource.JiraIssue 
+        if (this.state.openedSettings === SettingSource.Default
+            || this.state.openedSettings === SettingSource.JiraIssue
             || this.state.openedSettings === SettingSource.JiraAuth) {
             this.setState({ tabIndex: 0 });
-        } else if (this.state.openedSettings === SettingSource.BBIssue 
-            || this.state.openedSettings === SettingSource.BBPipeline 
+        } else if (this.state.openedSettings === SettingSource.BBIssue
+            || this.state.openedSettings === SettingSource.BBPipeline
             || this.state.openedSettings === SettingSource.BBPullRequest
             || this.state.openedSettings === SettingSource.BBAuth) {
             this.setState({ tabIndex: 1 - jiraDisabledModifier });
@@ -199,6 +241,22 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
 
+        // Note: we will figure out what can be put on the resource level in the near future
+        let targetOptions = [];
+        // if (this.state.workspaceFolders.length > 1) {
+        //     targetOptions = [{ label: '', options: [{ value: ConfigTarget.User, label: ConfigTarget.User, uri: "" }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: "" }] }
+        //         , {
+        //         label: 'workspace folders', options: this.state.workspaceFolders.map(folder => {
+        //             return { value: ConfigTarget.WorkspaceFolder, label: folder.name, uri: folder.uri };
+        //         })
+        //     }];
+        // } else {
+        targetOptions = [{ value: ConfigTarget.User, label: ConfigTarget.User, uri: "" }, { value: ConfigTarget.Workspace, label: ConfigTarget.Workspace, uri: "" }];
+        //}
+
+        if (Object.keys(this.state.config).length < 1 && !this.state.isErrorBannerOpen) {
+            return <AtlLoader />;
+        }
         return (
             <Page>
                 {this.state.isErrorBannerOpen &&
@@ -215,6 +273,25 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
                         <h2>Settings</h2>
+                        <div style={{ paddingTop: '20px', paddingBottom: '20px' }}>
+                            <div><label className='ac-field-label'>save settings to: </label></div>
+                            <div className='ac-flex'>
+                                <div style={{ width: '160px' }}>
+                                    <Select
+                                        name="target"
+                                        id="target"
+                                        className="ac-select-container"
+                                        classNamePrefix="ac-select"
+                                        options={targetOptions}
+                                        formatOptionLabel={(option: any) => option.label.toUpperCase()}
+                                        value={{ value: this.state.target, label: this.state.target }}
+                                        onChange={this.handleTargetChange}
+                                    />
+                                </div>
+                                <div className='ac-breadcrumbs' style={{ marginLeft: '10px' }}><a type='button' className='ac-link-button' onClick={this.handleOpenJson}><span>Edit in settings.json</span></a></div>
+                            </div>
+                        </div>
+
                     </GridColumn>
                 </Grid>
                 <Grid spacing='comfortable' layout='fixed'>
@@ -251,14 +328,14 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
-                                                    <JiraExplorer configData={this.state}
+                                                    <JiraExplorer config={this.state.config}
                                                         jqlFetcher={this.handleFetchJqlOptions}
                                                         sites={this.state.jiraSites}
                                                         onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Jira Issue Hovers', 'configure hovering for Jira issue keys')}>
-                                                    <JiraHover configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <JiraHover config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Create Jira Issue Triggers', 'configure creation of Jira issues from TODOs and similar')}>
@@ -273,7 +350,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Status Bar', 'configure the status bar display for Jira')}>
-                                                    <JiraStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <JiraStatusBar config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                             </TabPanel>
                                         }
@@ -281,7 +358,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         {this.state.config.bitbucket.enabled &&
                                             <TabPanel>
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.Default, SettingSource.BBAuth)} header={panelHeader('Authentication', 'configure authentication for Bitbucket')}>
-                                                     <SiteEditor
+                                                    <SiteEditor
                                                         sites={this.state.bitbucketSites}
                                                         product={ProductBitbucket}
                                                         handleDeleteSite={this.handleLogout}
@@ -290,28 +367,28 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.BBPullRequest)} header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>
-                                                    <BitbucketExplorer configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <BitbucketExplorer config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.BBPipeline)} header={panelHeader('Bitbucket Pipelines Explorer', 'configure the Bitbucket pipelines explorer and notifications')}>
-                                                    <PipelinesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <PipelinesConfig config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer and notifications')}>
-                                                    <BitbucketIssuesConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <BitbucketIssuesConfig config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
                                                 <Panel header={panelHeader('Context Menus', 'configure the context menus in editor')}>
-                                                    <BitbucketContextMenus configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <BitbucketContextMenus config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                                 <Panel header={panelHeader('Status Bar', 'configure the status bar display for Bitbucket')}>
-                                                    <BBStatusBar configData={this.state} onConfigChange={this.onConfigChange} />
+                                                    <BBStatusBar config={this.state.config} onConfigChange={this.onConfigChange} />
                                                 </Panel>
                                             </TabPanel>
                                         }
                                         <TabPanel>
                                             <Panel isDefaultExpanded header={<div><p className='subheader'>miscellaneous settings</p></div>}>
-                                                <WelcomeConfig configData={this.state} onConfigChange={this.onConfigChange} />
+                                                <WelcomeConfig config={this.state.config} onConfigChange={this.onConfigChange} />
                                             </Panel>
                                         </TabPanel>
                                     </Tabs>

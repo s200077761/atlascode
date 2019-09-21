@@ -5,11 +5,12 @@ import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { IConfig } from '../../../config/model';
 
 type changeObject = { [key: string]: any };
 
 export default class JiraExplorer extends React.Component<{
-    configData: ConfigData,
+    config: IConfig,
     jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>,
     sites: DetailedSiteInfo[],
     onConfigChange: (changes: changeObject, removes?: string[]) => void
@@ -40,15 +41,15 @@ export default class JiraExplorer extends React.Component<{
     }
 
     getIsExplorerIndeterminate = (): boolean => {
-        if (!this.props.configData.config.jira.explorer.enabled) {
+        if (!this.props.config.jira.explorer.enabled) {
             return false;
         }
 
         let count = 0;
-        if (this.props.configData.config.jira.explorer.showAssignedIssues) {
+        if (this.props.config.jira.explorer.showAssignedIssues) {
             count++;
         }
-        if (this.props.configData.config.jira.explorer.showOpenIssues) {
+        if (this.props.config.jira.explorer.showOpenIssues) {
             count++;
         }
 
@@ -56,7 +57,7 @@ export default class JiraExplorer extends React.Component<{
     }
 
     render() {
-        const config = this.props.configData.config;
+        const config = this.props.config;
         return (
 
             <div>
@@ -71,7 +72,7 @@ export default class JiraExplorer extends React.Component<{
                                     label='Enable Jira Issue Explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.configData.config.jira.explorer.enabled}
+                                    isChecked={this.props.config.jira.explorer.enabled}
                                 />
                             );
                         }
@@ -107,8 +108,8 @@ export default class JiraExplorer extends React.Component<{
                                     {...fieldArgs.fieldProps}
                                     label="Show notifications when new issues are created matching the above JQL(s)"
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isDisabled={!this.props.configData.config.jira.explorer.enabled}
-                                    isChecked={this.props.configData.config.jira.explorer.monitorEnabled}
+                                    isDisabled={!this.props.config.jira.explorer.enabled}
+                                    isChecked={this.props.config.jira.explorer.monitorEnabled}
                                 />
                             );
                         }}
@@ -118,9 +119,9 @@ export default class JiraExplorer extends React.Component<{
                     <span>Refresh explorer every: </span>
                     <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"
                         type="number" min="0"
-                        value={this.props.configData.config.jira.explorer.refreshInterval}
+                        value={this.props.config.jira.explorer.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "jira.explorer.refreshInterval")}
-                        disabled={!this.props.configData.config.jira.explorer.enabled} />
+                        disabled={!this.props.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
             </div>
