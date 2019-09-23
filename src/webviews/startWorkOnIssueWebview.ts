@@ -197,20 +197,22 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     };
                 }));
 
+            let issueClone: MinimalIssue = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
-            if (!issue.status.name.toLowerCase().includes('progress')) {
-                const inProgressTransition = issue.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
+            if (!issueClone.status.name.toLowerCase().includes('progress')) {
+                const inProgressTransition = issueClone.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
                 if (inProgressTransition) {
-                    issue.status = inProgressTransition.to;
+                    issueClone.status = inProgressTransition.to;
                 } else {
-                    const firstNonInitialTransition = issue.transitions.find(t => !t.isInitial);
-                    issue.status = firstNonInitialTransition ? firstNonInitialTransition.to : issue.status;
+                    const firstNonInitialTransition = issueClone.transitions.find(t => !t.isInitial);
+                    issueClone.status = firstNonInitialTransition ? firstNonInitialTransition.to : issueClone.status;
                 }
             }
 
+            //Pass in the modified issue but keep the original issue as-is so that we're able to see if its status has changed later
             const msg: StartWorkOnIssueData = {
                 type: 'update',
-                issue: issue,
+                issue: issueClone,
                 repoData: repoData
             };
             this.postMessage(msg);

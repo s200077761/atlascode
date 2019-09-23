@@ -3,7 +3,7 @@ import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { startIssueCreationEvent } from '../../analytics';
 import { CommentData, BBData } from '../../webviews/createIssueWebview';
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote } from '../../bitbucket/bbUtils';
+import { parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketIssue } from '../../bitbucket/model';
 
 export interface TodoIssueData {
@@ -77,52 +77,45 @@ async function updateBBIssue(data: BBData) {
 }
 
 function descriptionForUri(uri: Uri) {
-    var fullPath = uri.fsPath;
-
     const linesText = getLineRange();
 
     const repos = Container.bitbucketContext.getAllRepositories();
 
-    const urlArrays = repos.map((repo) => {
-        return bitbucketUrlsInRepo(repo, fullPath, linesText);
-    });
-    const urls = urlArrays.reduce((p, c) => {
-        return p.concat(c);
-    }, []);
+    const urls = repos
+        .map((repo) => bitbucketUrlsInRepo(repo, uri, linesText))
+        .filter(url => url !== undefined);
+
     if (urls.length === 0) {
-        return `${workspace.asRelativePath(fullPath)}${linesText}`;
-    } else if (urls.length === 1) {
-        return urls[0];
-    } else {
-        return urls.join('\r');
+        return `${workspace.asRelativePath(uri)}${linesText}`;
     }
+
+    return urls.join('\r');
 }
 
-function bitbucketUrlsInRepo(repo: Repository, fullPath: string, linesText: string): string[] {
+function bitbucketUrlsInRepo(repo: Repository, fileUri: Uri, linesText: string): string | undefined {
     const head = repo.state.HEAD;
     if (!head) {
-        return [];
+        return undefined;
     }
-    const rootPath = repo.rootUri.fsPath;
-    if (!fullPath.includes(rootPath)) {
-        return [];
+    const rootPath = repo.rootUri.path;
+    const filePath = fileUri.path;
+    if (!filePath.startsWith(repo.rootUri.path)) {
+        return undefined;
     }
-    const relativePath = fullPath.replace(rootPath, "");
+    const relativePath = filePath.replace(rootPath, "");
     if (Container.bitbucketContext.isBitbucketRepo(repo)) {
-        const remotes = getBitbucketRemotes(repo);
-        const branch = head.commit;
-        return remotes.map((remote) => {
-            const parsed = parseGitUrl(urlForRemote(remote));
-            if (branch) {
-                const url = `https://${parsed.resource}/${parsed.owner}/${parsed.name}/src/${branch}${relativePath}${linesText}`;
-                return url;
-            }
-            return undefined;
-        }).filter(r => {
-            return (r !== undefined);
-        }) as string[];
+        const remote = firstBitbucketRemote(repo);
+        const commit = head.commit;
+        const parsed = parseGitUrl(urlForRemote(remote));
+        const site = siteDetailsForRemote(remote)!;
+        if (commit) {
+            return site.isCloud
+                ? `${site.baseLinkUrl}/${parsed.owner}/${parsed.name}/src/${commit}${relativePath}${linesText ? `#lines-${linesText}` : ''}`
+                : `${site.baseLinkUrl}/projects/${parsed.owner}/repos/${parsed.name}/browse${relativePath}?at=${commit}${linesText ? `#${linesText.replace(':', '-')}` : ''}`;
+        }
     }
-    return [];
+
+    return undefined;
 }
 
 function getLineRange(): string {
@@ -133,7 +126,7 @@ function getLineRange(): string {
     const selection = editor.selection;
     // vscode provides 0-based line numbers but Bitbucket line numbers start with 1.
     if (selection.start.line === selection.end.line) {
-        return `#lines-${selection.start.line + 1}`;
+        return `${selection.start.line + 1}`;
     }
-    return `#lines-${selection.start.line + 1}:${selection.end.line + 1}`;
+    return `${selection.start.line + 1}:${selection.end.line + 1}`;
 }

@@ -30,8 +30,18 @@ export function getBitbucketCloudRemotes(repository: Repository): Remote[] {
 }
 
 export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefined {
-    let parsed = parseGitUrl(urlForRemote(remote));
-    return Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
+    const parsed = parseGitUrl(urlForRemote(remote));
+    const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
+    if (site) {
+        return site;
+    }
+
+    const hostname = parsed.source;
+    if (hostname.includes('bitbucket.org') || hostname.includes('bitbucket_org') || hostname.includes('bitbucket-org')) {
+        return Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+    }
+
+    return undefined;
 }
 
 export function urlForRemote(remote: Remote): string {

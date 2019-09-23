@@ -278,6 +278,8 @@ export default class CustomJQL extends React.Component<
 
     const jql = this.readJqlListFromProps();
     const noJql = jql.length === 0 ? <p><em>No custom jql configured</em></p> : <React.Fragment />;
+    const dragTip = <p><strong>Tip:</strong> You can drag/drop JQL entries in the list to change their display order in the explorer tree</p>;
+
     return (
       <React.Fragment>
         {this.state.editingEntry && (
@@ -290,6 +292,7 @@ export default class CustomJQL extends React.Component<
           />
         )}
         {noJql}
+        {dragTip}
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
