@@ -17,7 +17,7 @@ export class BitbucketServerHost extends BitbucketSite {
   public getSourceUrl(revision: string, filePath: string, lineRanges: string[]): string {
     const { project, repo } = this.parseRepo();
     const hash = lineRanges.map(range => range.replace(':', '-')).join(',');
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}#${hash}`;
+    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}?at=${revision}#${hash}`;
   }
 
   public getPullRequestUrl(id: number, filePath: string): string {
