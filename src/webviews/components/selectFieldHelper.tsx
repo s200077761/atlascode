@@ -8,8 +8,8 @@ import { colorToLozengeAppearanceMap } from "./colors";
 type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;
 
-const returnOptionOrValueFunc = (option: any) => {
-    let value: string = '';
+const returnOptionOrValueFunc = (option: any): any => {
+    let value: any = '';
     if (typeof option === 'object') {
         if (option.value) {
             value = option.value;
@@ -18,7 +18,10 @@ const returnOptionOrValueFunc = (option: any) => {
         }
     } else if (typeof option === 'string') {
         value = option;
+    } else if (typeof option === 'number') {
+        value = '' + option;
     }
+
     return value;
 };
 
@@ -149,18 +152,21 @@ const LabelValue = (props: any) => {
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
         else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
+    } else if (typeof props.data === 'number') {
+        value = '' + props.data;
     } else {
         value = JSON.stringify(props.data);
     }
 
-    value = value.replace('<b>', '').replace('</b>', '');
+    value = value.replace(/<b>/g, '').replace(/<\/b>/g, '');
     return (
-        <components.Option {...props}>
+        <components.SingleValue {...props}>
             <div ref={props.innerRef} {...props.innerProps}>{value}</div>
-        </components.Option>
+        </components.SingleValue>
     );
 };
 
@@ -169,12 +175,16 @@ const MultiLabelValue = (props: any) => {
     if (typeof props.data === 'object') {
         if (props.data.name) { value = props.data.name; }
         else if (props.data.displayName) { value = props.data.displayName; }
+        else if (props.data.label) { value = props.data.label; }
         else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
+    } else if (typeof props.data === 'number') {
+        value = '' + props.data;
     } else {
         value = JSON.stringify(props.data);
     }
+    value = value.replace(/<b>/g, '').replace(/<\/b>/g, '');
     return (
         <components.MultiValueLabel {...props}>
             <div ref={props.innerRef} {...props.innerProps}>{value}</div>

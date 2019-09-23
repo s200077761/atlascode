@@ -188,11 +188,15 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             default: {
                 let typedVal = newValue;
 
-                if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                if (typedVal && field.valueType === ValueType.Number && typeof newValue !== 'number') {
                     typedVal = parseFloat(newValue);
                 }
                 //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
                 this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
+
+                    if (typedVal === undefined) {
+                        typedVal = null;
+                    }
                     this.handleEditIssue(field.key, typedVal);
                 });
                 break;
@@ -678,6 +682,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                         triggerTagName='label'
                                         easing='ease-out'
                                         transitionTime={150}
+                                        overflowWhenOpen='visible'
                                     >
                                         {this.advancedSidebar()}
                                     </Collapsible>
@@ -708,6 +713,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                             triggerTagName='label'
                                             easing='ease-out'
                                             transitionTime={150}
+                                            overflowWhenOpen='visible'
                                         >
                                             {this.advancedSidebar()}
                                         </Collapsible>

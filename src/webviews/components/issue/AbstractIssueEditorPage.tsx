@@ -91,6 +91,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     protected formatEditValue(field: FieldUI, newValue: any): any {
         let val = newValue;
+
+        if (val === undefined || val === null) {
+            return undefined;
+        }
+
         if ((field.valueType === ValueType.String || field.valueType === ValueType.Number)
             && (typeof newValue !== 'string' && typeof newValue !== 'number')) {
             if (Array.isArray(newValue)) {
@@ -598,8 +603,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 // Note: react-select doesn't let you set an initial value as a string.
                 // it must be an object or an array (ugh.)
                 let defVal = this.state.fieldValues[field.key];
-                if (typeof this.state.fieldValues[field.key] === 'string') {
-                    defVal = { label: defVal, value: defVal };
+                if (typeof this.state.fieldValues[field.key] === 'string' || typeof this.state.fieldValues[field.key] === 'number') {
+                    defVal = { label: '' + defVal, value: '' + defVal };
                 }
 
                 const commonProps: any = {
