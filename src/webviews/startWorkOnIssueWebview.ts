@@ -110,7 +110,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                             issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                 }
@@ -217,7 +217,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -232,7 +232,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
             }
             catch (e) {
                 Logger.error(e);
-                this.postMessage({ type: 'error', reason: e });
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             }
         }
     }

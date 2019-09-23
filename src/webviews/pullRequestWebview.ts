@@ -94,7 +94,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.updateApproval(msg.status);
                         } catch (e) {
                             Logger.error(new Error(`error approving PR: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -106,7 +106,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.merge(msg);
                         } catch (e) {
                             Logger.error(new Error(`error merging pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -118,7 +118,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.postComment(msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -129,7 +129,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             this.deleteComment(msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -140,7 +140,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             this.editComment(msg.content, msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error editing comment on the pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -152,7 +152,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             await this.checkout(msg.branch, msg.isSourceBranch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -207,7 +207,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -227,7 +227,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating pull request: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -432,7 +432,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                this.postMessage({ type: 'error', reason: e });
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             });
     }
 

@@ -98,7 +98,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
         } catch (e) {
             let err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -130,7 +130,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        this.postMessage({ type: 'error', reason: e });
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                     }
 
                     break;
@@ -148,7 +148,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             }
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
 
                     }
@@ -169,7 +169,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             }
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
 
                     }
@@ -201,7 +201,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;

@@ -76,7 +76,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
             this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
         } catch (e) {
             Logger.error(new Error(`error updating issue fields: ${e}`));
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -100,7 +100,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                             await this.createIssue(e);
                         } catch (e) {
                             Logger.error(new Error(`error creating bitbucket issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
