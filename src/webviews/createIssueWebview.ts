@@ -12,11 +12,10 @@ import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { ValueType, FieldValues, FieldUIs } from '../jira/jira-client/model/fieldUI';
+import { ValueType, FieldValues } from '../jira/jira-client/model/fieldUI';
 import { CreateMetaTransformerResult, emptyCreateMetaResult, IssueTypeUI } from '../jira/jira-client/model/editIssueUI';
 import { IssueType, Project } from '../jira/jira-client/model/entities';
 import { configuration } from '../config/configuration';
-
 export interface PartialIssue {
     uri?: Uri;
     position?: Position;
@@ -205,7 +204,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             this._selectedIssueTypeId = this._screenData.selectedIssueType.id;
 
             if (fieldValues) {
-                const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId].fields, fieldValues);
+                const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId], fieldValues, ['site', 'project', 'issuetype']);
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues, ...overrides };
             }
 
@@ -247,10 +246,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
 
     updateIssueType(issueType: IssueType, fieldValues: FieldValues) {
-        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id].fields, fieldValues);
+        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues, ['site', 'project']);
         this._screenData.issueTypeUIs[issueType.id].fieldValues = { ...this._screenData.issueTypeUIs[issueType.id].fieldValues, ...fieldOverrides };
 
-        const selectOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id].fields, this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions);
+        const selectOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions);
         this._screenData.issueTypeUIs[issueType.id].selectFieldOptions = { ...this._screenData.issueTypeUIs[issueType.id].selectFieldOptions, ...selectOverrides };
 
         this._screenData.issueTypeUIs[issueType.id].fieldValues['issuetype'] = issueType;
@@ -262,11 +261,14 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         this.postMessage(createData);
     }
 
-    getValuesForExisitngKeys(fields: FieldUIs, values: FieldValues): any {
+    getValuesForExisitngKeys(issueTypeUI: IssueTypeUI, values: FieldValues, keep?: string[]): any {
         const foundVals: FieldValues = {};
 
-        Object.keys(fields).forEach(key => {
-            if (values[key]) {
+        Object.keys(issueTypeUI.fields).forEach(key => {
+            if (keep && keep.includes(key)) {
+                // we need to use the current value
+                foundVals[key] = issueTypeUI.fieldValues[key];
+            } else if (values[key]) {
                 foundVals[key] = values[key];
             }
         });

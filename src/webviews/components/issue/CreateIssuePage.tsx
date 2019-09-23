@@ -84,7 +84,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 case 'issueCreated': {
                     handled = true;
                     if (isIssueCreated(e)) {
-                        this.setState({ isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
+                        this.setState({ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '', isCreateBannerOpen: true, createdIssue: e.issueData, fieldValues: { ...this.state.fieldValues, ...{ description: createdFromAtlascodeFooter, summary: '' } } });
                     }
                     break;
                 }
@@ -162,6 +162,11 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
         let typedVal = newValue;
         let fieldkey = field.key;
+
+        if (typedVal === undefined) {
+            this.setState({ fieldValues: { ...this.state.fieldValues, ...{ [fieldkey]: typedVal } } });
+            return;
+        }
 
         if (field.valueType === ValueType.Number && typeof newValue !== 'number') {
             typedVal = parseFloat(newValue);
