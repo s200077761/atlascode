@@ -316,6 +316,7 @@ screen:
     description: |
       event when user views pull requests explorer
     attributes:
+      - name: instanceType
   - id: 14447
     name: atlascodeSettings
     description: |
@@ -326,6 +327,7 @@ screen:
     description: |
       Event when a user views a pull request deatils (summary) screen
     attributes:
+      - name: instanceType
   - id: 14450
     name: feedbackForm
     description: |
@@ -336,6 +338,7 @@ screen:
     description: |
       Event when a user views an issue view screen
     attributes:
+      - name: instanceType
   - id: 14453
     name: atlascodeWelcomeScreen
     description: |
@@ -346,11 +349,13 @@ screen:
     description: |
       Event when a user views a pull request diff screen
     attributes:
+      - name: instanceType
   - id: 14459
     name: issueHover
     description: |
       Event when a user sees an issue popup when hovering
     attributes:
+      - name: instanceType
   - id: 15622
     name: atlascode.views.jira.customJql
     description: |
@@ -361,26 +366,31 @@ screen:
     description: |
       jira issue create screen
     attributes:
+      - name: instanceType
   - id: 15624
     name: pipelineSummaryScreen
     description: |
       pipeline build details screen
     attributes:
+      - name: instanceType
   - id: 15625
     name: createPullRequestScreen
     description: |
       create BB PR screen
     attributes:
+      - name: instanceType
   - id: 15626
     name: startWorkOnIssueScreen
     description: |
       start work on issue screen
     attributes:
+      - name: instanceType
   - id: 15627
     name: atlascode.views.bb.pipelinesTreeView
     description: |
       pipelines tree view
     attributes:
+      - name: instanceType
   - id: 18462
     name: atlascodePmf
     description: |
@@ -396,16 +406,19 @@ screen:
     description: |
       viewed createBitbucketIssueScreen
     attributes:
+      - name: instanceType
   - id: 16144
     name: atlascode.views.bb.issuesTreeView
     description: |
       viewed atlascode.views.bb.issuesTreeView
     attributes:
+      - name: instanceType
   - id: 16145
     name: bitbucketIssueScreen
     description: |
       viewed bitbucketIssueScreen
     attributes:
+      - name: instanceType
 ui:
   - id: 14444
     action: clicked
