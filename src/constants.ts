@@ -29,7 +29,6 @@ export enum CommandContext {
     BitbucketExplorer = 'atlascode:bitbucketExplorerEnabled',
     PipelineExplorer = 'atlascode:pipelineExplorerEnabled',
     BitbucketIssuesExplorer = 'atlascode:bitbucketIssuesExplorerEnabled',
-    CustomJQLExplorer = 'atlascode:customJQLExplorerEnabled',
     OpenIssuesTree = 'atlascode:openIssuesTreeEnabled',
     AssignedIssuesTree = 'atlascode:assignedIssuesTreeEnabled',
     JiraLoginTree = 'atlascode:jiraLoginTreeEnabled',

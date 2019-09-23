@@ -264,7 +264,7 @@
                 {
                     "id": "atlascode.views.jira.customJql",
                     "name": "Jira Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled && config.atlascode.jira.enabled"
+                    "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",

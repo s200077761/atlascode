@@ -15,7 +15,8 @@ export class PipelinesExplorer extends BitbucketExplorer {
         super(ctx);
 
         Container.context.subscriptions.push(
-            commands.registerCommand(Commands.RefreshPipelines, this.refresh, this)
+            commands.registerCommand(Commands.RefreshPipelines, this.refresh, this),
+            this.ctx.onDidChangeBitbucketContext(() => this.updateExplorerState())
         );
     }
 
@@ -48,8 +49,12 @@ export class PipelinesExplorer extends BitbucketExplorer {
         const initializing = configuration.initializing(e);
 
         if (initializing || configuration.changed(e, 'bitbucket.pipelines.explorerEnabled')) {
-            const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
-            setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled && hasCloudRepos);
+            this.updateExplorerState();
         }
+    }
+
+    private updateExplorerState() {
+        const hasCloudRepos = this.ctx.getBitbucketCloudRepositories().length > 0;
+        setCommandContext(CommandContext.PipelineExplorer, Container.config.bitbucket.pipelines.explorerEnabled && hasCloudRepos);
     }
 }

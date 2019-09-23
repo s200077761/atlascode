@@ -5,7 +5,6 @@ import {
   ConfigurationChangeEvent
 } from "vscode";
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
 import { ProductJira } from '../../atlclients/authInfo';
@@ -28,7 +27,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   constructor() {
     super();
     this._jqlList = this.getCustomJqlSiteList();
-    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
 
     this._children = [];
 
@@ -65,6 +63,10 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       return this._children;
     }
 
+    if (this._jqlList.length === 0) {
+      return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
+    }
+
     return this._jqlList.map((jql: JQLEntry) => {
       const childTree = new CustomJQLTree(jql);
       this._children.push(childTree);
@@ -76,7 +78,6 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     this._children.forEach(child => child.dispose());
     this._children = [];
     this._jqlList = this.getCustomJqlSiteList();
-    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
 
     this._onDidChangeTreeData.fire();
   }
