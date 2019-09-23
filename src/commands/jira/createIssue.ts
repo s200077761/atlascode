@@ -1,4 +1,4 @@
-import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn } from 'vscode';
+import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn, Range } from 'vscode';
 import { Repository } from "../../typings/git";
 import { Container } from '../../container';
 import { startIssueCreationEvent } from '../../analytics';
@@ -89,12 +89,14 @@ function descriptionForUri(uri: Uri) {
         return `${workspace.asRelativePath(uri)}${linesText}`;
     }
 
-    return urls.join('\r');
+    const selectionText = getSelectionText();
+
+    return urls.join('\r') + selectionText;
 }
 
 function bitbucketUrlsInRepo(repo: Repository, fileUri: Uri, linesText: string): string | undefined {
     const head = repo.state.HEAD;
-    if (!head) {
+    if (!head || head.name === undefined) {
         return undefined;
     }
     const rootPath = repo.rootUri.path;
@@ -105,9 +107,9 @@ function bitbucketUrlsInRepo(repo: Repository, fileUri: Uri, linesText: string):
     const relativePath = filePath.replace(rootPath, "");
     if (Container.bitbucketContext.isBitbucketRepo(repo)) {
         const remote = firstBitbucketRemote(repo);
-        const commit = head.commit;
         const parsed = parseGitUrl(urlForRemote(remote));
         const site = siteDetailsForRemote(remote)!;
+        const commit = head.upstream && head.ahead && head.ahead > 0 ? head.name : head.commit;
         if (commit) {
             return site.isCloud
                 ? `${site.baseLinkUrl}/${parsed.owner}/${parsed.name}/src/${commit}${relativePath}${linesText ? `#lines-${linesText}` : ''}`
@@ -129,4 +131,21 @@ function getLineRange(): string {
         return `${selection.start.line + 1}`;
     }
     return `${selection.start.line + 1}:${selection.end.line + 1}`;
+}
+
+function getSelectionText(): string {
+    const editor = window.activeTextEditor;
+    if (!editor || !editor.selection) {
+        return "";
+    }
+
+    let result = "";
+    const selection = editor.selection;
+    if (selection.start.line === selection.end.line) {
+        result = editor.document.lineAt(selection.start.line).text;
+    } else {
+        result = editor.document.getText(new Range(editor.selection.start, editor.selection.end));
+    }
+
+    return `\r{code}${result}{code}`;
 }
