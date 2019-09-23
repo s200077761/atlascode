@@ -32,7 +32,7 @@ import ProductEnabler from './ProductEnabler';
 import { Time } from '../../../util/time';
 import Select from '@atlaskit/select';
 import { AtlLoader } from '../AtlLoader';
-import merge from 'merge-anything'
+import merge from 'merge-anything';
 
 type changeObject = { [key: string]: any };
 
