@@ -205,9 +205,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
             if (fieldValues) {
                 const overrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[this._selectedIssueTypeId], fieldValues, ['site', 'project', 'issuetype']);
-
-                // Note: we only want to override vals if they exist in the new list of values.
-                // anything that doesn't exist is thrown away with our custom merge extension
                 this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues = { ...this._screenData.issueTypeUIs[this._selectedIssueTypeId].fieldValues, ...overrides };
             }
 
