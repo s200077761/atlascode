@@ -100,7 +100,9 @@ export class NewIssueMonitor {
     else {
       message = `${issueNames.slice(0, 2).join(', ')} and ${newIssues.length - 2} other new issues added to explorer`;
     }
-    window.showInformationMessage(message, "View Atlassian Explorer")
+
+    const title = (newIssues.length === 1) ? "Open Issue" : "View Atlassian Explorer";
+    window.showInformationMessage(message, title)
       .then((selection) => {
         if (selection) {
           if (newIssues.length === 1) {
