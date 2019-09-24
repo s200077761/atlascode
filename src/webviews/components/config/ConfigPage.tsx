@@ -240,7 +240,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
-
+        const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/atlassian/workspace/snippets/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
         // Note: we will figure out what can be put on the resource level in the near future
         let targetOptions = [];
         // if (this.state.workspaceFolders.length > 1) {
@@ -328,6 +328,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                 </Panel>
 
                                                 <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
+                                                    {snippetTip}
                                                     <JiraExplorer config={this.state.config}
                                                         jqlFetcher={this.handleFetchJqlOptions}
                                                         sites={this.state.jiraSites}

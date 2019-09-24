@@ -255,6 +255,7 @@ export default class StartWorkPage extends WebviewComponent<
 
     const issue = this.state.data.issue;
     const repo = this.state.repo;
+    const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/atlassian/workspace/snippets/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
 
     let pageHeader =
       <GridColumn medium={8}>
@@ -458,6 +459,7 @@ export default class StartWorkPage extends WebviewComponent<
             <div className='ac-vpadding'>
               {!this.state.result.successMessage && <Button className='ac-button' isLoading={this.state.isStartButtonLoading} onClick={this.handleStart}>Start</Button>}
             </div>
+            {snippetTip}
           </GridColumn>
         </Grid>
       </Page >
