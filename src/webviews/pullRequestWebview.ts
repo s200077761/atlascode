@@ -237,7 +237,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         if (!this._pr || !this._panel) {
             return;
         }
-        console.log('postCompleteState');
         if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
 
         const bbApi = await clientForRemote(this._pr.remote);
