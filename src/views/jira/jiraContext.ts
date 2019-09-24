@@ -1,4 +1,4 @@
-import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
+import { Disposable, commands, ConfigurationChangeEvent, ConfigurationTarget } from "vscode";
 import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
@@ -10,6 +10,7 @@ import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
 import { MinimalORIssueLink } from "../../jira/jira-client/model/entities";
 import { SitesAvailableUpdateEvent } from "../../siteManager";
+import { v4 } from "uuid";
 
 export class JiraContext extends Disposable {
 
@@ -88,6 +89,17 @@ export class JiraContext extends Disposable {
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
+            if (e.sites.length === 1 && Container.config.jira.jqlList.length < 1) {
+                configuration.update('jira.jqlList', {
+                    id: v4(),
+                    enabled: true,
+                    name: `My ${e.sites[0].name} Issues`,
+                    query: 'assignee = currentUser() ORDER BY lastViewed ASC ',
+                    siteId: e.sites[0].id,
+                    monitor: true
+                }, ConfigurationTarget.Global);
+            }
+
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
