@@ -60,6 +60,7 @@ export class BitbucketContext extends Disposable {
             if (!foundUser) {
                 const bbClient = await clientForRemote(remote);
                 foundUser = await bbClient.pullrequests.getCurrentUser(site)!;
+                this._currentUsers.set(site.hostname, foundUser);
             }
 
             if (foundUser) {

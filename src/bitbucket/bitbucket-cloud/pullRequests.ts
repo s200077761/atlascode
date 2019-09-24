@@ -189,7 +189,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.convertDataToComment(data, remote);
+        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
+        return this.convertDataToComment(data, userId);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -227,7 +228,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 deleted: true
             } as any;
         });
-        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.remote)))));
+        const userId = (await Container.bitbucketContext.currentUser(pr.remote)).accountId;
+        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, userId)))));
         const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
             data: visibleComments,
@@ -398,11 +400,12 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return await this.convertDataToComment(data, remote);
+        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
+        return await this.convertDataToComment(data, userId);
     }
 
-    private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
-        const commentBelongsToUser: boolean = data.user.account_id === (await Container.bitbucketContext.currentUser(remote)).accountId;
+    private async convertDataToComment(data: any, userId: string): Promise<Comment> {
+        const commentBelongsToUser: boolean = data.user.account_id === userId;
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,

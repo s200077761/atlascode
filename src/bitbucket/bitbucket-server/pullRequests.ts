@@ -239,8 +239,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             },
             {}
         );
-
-        return this.convertDataToComment(res.data, remote);
+        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
+        return this.convertDataToComment(res.data, remote, userId);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -261,9 +261,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 : true
             );
 
+        const userId = (await Container.bitbucketContext.currentUser(pr.remote)).accountId;
         return {
             data: (await Promise.all(
-                activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
+                activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote, userId)))
             )
                 .filter(comment => this.shouldDisplayComment(comment))
         };
@@ -290,18 +291,18 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async toNestedCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote): Promise<Comment> {
-        let commentModel: Comment = await this.convertDataToComment(comment, remote, commentAnchor);
-        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(c, commentAnchor, comment.id, remote)));
+    private async toNestedCommentModel(comment: any, commentAnchor: any, parentId: number | undefined, remote: Remote, userId: string): Promise<Comment> {
+        let commentModel: Comment = await this.convertDataToComment(comment, remote, userId, commentAnchor);
+        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(c, commentAnchor, comment.id, remote, userId)));
         if (this.hasUndeletedChild(commentModel)) {
             commentModel.deletable = false;
         }
         return commentModel;
     }
 
-    private async convertDataToComment(data: any, remote: Remote, commentAnchor?: any): Promise<Comment> {
+    private async convertDataToComment(data: any, remote: Remote, userId: string, commentAnchor?: any): Promise<Comment> {
         const user = data.author ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author) : UnknownUser;
-        const commentBelongsToUser: boolean = user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
+        const commentBelongsToUser: boolean = user.accountId === userId;
         return {
             id: data.id,
             parentId: data.parentId,
@@ -450,8 +451,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 avatarSize: 64
             }
         );
-
-        return this.convertDataToComment(data, remote);
+        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
+        return this.convertDataToComment(data, remote, userId);
     }
 
     private async getTaskCount(pr: PullRequest): Promise<number> {
