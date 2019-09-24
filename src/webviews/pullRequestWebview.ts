@@ -67,7 +67,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
 
-        this.updatePullRequest();
         Container.pmfStats.touchActivity();
     }
 
@@ -77,7 +76,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
 
-        if (this._pr !== undefined) {
+        if (this._pr && this._panel) {
             await this.updatePullRequest();
         }
     }
@@ -223,6 +222,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
         try {
+            this.isRefeshing = true;
             await this.postCompleteState();
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
@@ -234,10 +234,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private async postCompleteState() {
-        if (!this._pr) {
+        if (!this._pr || !this._panel) {
             return;
         }
-
+        console.log('postCompleteState');
         if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
 
         const bbApi = await clientForRemote(this._pr.remote);
