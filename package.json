@@ -527,7 +527,7 @@
                 "atlascode.offlineMode": {
                     "type": "boolean",
                     "default": false,
-                    "description": "puts atlasscode into offline mode if true",
+                    "description": "Enables offline mode",
                     "scope": "window"
                 },
                 "atlascode.showWelcomeOnInstall": {
