@@ -92,55 +92,61 @@ function newPMFPayload(aaid: string, version: string, date: string, pageId: stri
 
 export async function submitPMF(pmfData: PMFData): Promise<void> {
     let aaid = await getAAID();
-    let pmfIds = Container.isDebugging ? devPMF : prodPMF;
-    if (aaid) {
-        let payload = newPMFPayload(aaid, Container.version, format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'), pmfIds.pageId, pmfIds.q1Id, pmfIds.q1Choices[pmfData.q1]);
-
-        if (pmfData.q2) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q2
-                    }
-                ],
-                id: pmfIds.q2Id
-            });
-        }
-
-        if (pmfData.q3) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q3
-                    }
-                ],
-                id: pmfIds.q3Id
-            });
-        }
-
-        if (pmfData.q4) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q4
-                    }
-                ],
-                id: pmfIds.q4Id
-            });
-        }
-
-        axios(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${pmfIds.pmf}`
-            },
-            data: JSON.stringify(payload)
-
-        });
-
-        pmfSubmitted(pmfData.q1).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+    if (!aaid) {
+        // if we don't have an actual aaid, we'll send the machineId.
+        // this doesn't really matter since we're going to send off an amplitude event anyway
+        aaid = `deviceId:${Container.machineId}`;
     }
+
+    let pmfIds = Container.isDebugging ? devPMF : prodPMF;
+
+    let payload = newPMFPayload(aaid, Container.version, format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'), pmfIds.pageId, pmfIds.q1Id, pmfIds.q1Choices[pmfData.q1]);
+
+    if (pmfData.q2) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q2
+                }
+            ],
+            id: pmfIds.q2Id
+        });
+    }
+
+    if (pmfData.q3) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q3
+                }
+            ],
+            id: pmfIds.q3Id
+        });
+    }
+
+    if (pmfData.q4) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q4
+                }
+            ],
+            id: pmfIds.q4Id
+        });
+    }
+
+    axios(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${pmfIds.pmf}`
+        },
+        data: JSON.stringify(payload)
+
+    });
+
+    pmfSubmitted(pmfData.q1).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
 }
 
 async function getAAID(): Promise<string | undefined> {
