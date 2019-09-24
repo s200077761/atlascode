@@ -28,9 +28,9 @@ export function provideCodeLenses(document: TextDocument, token: CancellationTok
 function findTodos(document: TextDocument) {
     const triggers = Container.config.jira.todoIssues.triggers;
     const matches: LensMatch[] = [];
-    
+
     //Cut off execution immediately if there are no triggers
-    if(triggers.length === 0){
+    if (triggers.length === 0) {
         return matches;
     }
 
@@ -51,12 +51,12 @@ function findTodos(document: TextDocument) {
 
         //Find a match in the line given the regex
         const reMatches = masterRegex.exec(line);
-        if(reMatches){
+        if (reMatches) {
             const issueKeys = parseJiraIssueKeys(line);
             if (issueKeys.length === 0) {
                 const index = reMatches.index;
                 const word = reMatches[0];
-                const range = new Range(new Position(i, index), new Position(i, index + word.length - 2));
+                const range = new Range(new Position(i, index), new Position(i, index + word.length - 1));
                 const ersatzSummary = line.substr(index + word.length).trim();
                 matches.push({ document: document, text: ersatzSummary, range: range });
             }

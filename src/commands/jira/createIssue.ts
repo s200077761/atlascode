@@ -59,7 +59,8 @@ function isUri(a: any): a is Uri {
 function annotateComment(data: CommentData) {
     const we = new WorkspaceEdit();
 
-    we.insert(data.uri, data.position, ` [${data.issueKey}]`);
+    const summary = data.summary && data.summary.length > 0 ? ` ${data.summary}` : '';
+    we.insert(data.uri, data.position, ` [${data.issueKey}]${summary}`);
     workspace.applyEdit(we);
 }
 
