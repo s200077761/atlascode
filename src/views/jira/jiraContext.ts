@@ -94,7 +94,7 @@ export class JiraContext extends Disposable {
                     id: v4(),
                     enabled: true,
                     name: `My ${e.sites[0].name} Issues`,
-                    query: 'assignee = currentUser() ORDER BY lastViewed ASC ',
+                    query: 'assignee = currentUser() ORDER BY lastViewed DESC ',
                     siteId: e.sites[0].id,
                     monitor: true
                 }, ConfigurationTarget.Global);
