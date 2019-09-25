@@ -21,7 +21,7 @@ export class BitbucketContext extends Disposable {
     private _pullRequestsExplorer: PullRequestsExplorer;
     private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
     private _disposable: Disposable;
-    private _currentUsers: Map<string, User>;
+    private _currentUsers: CacheMap;
     private _pullRequestCache = new CacheMap();
     public readonly prCommentController: PullRequestCommentController;
 
@@ -30,7 +30,7 @@ export class BitbucketContext extends Disposable {
         this._gitApi = gitApi;
         this._pullRequestsExplorer = new PullRequestsExplorer(this);
         this._bitbucketIssuesExplorer = new BitbucketIssuesExplorer(this);
-        this._currentUsers = new Map<string, User>();
+        this._currentUsers = new CacheMap();
 
         Container.context.subscriptions.push(
             Container.siteManager.onDidSitesAvailableChange((e) => {
@@ -56,11 +56,11 @@ export class BitbucketContext extends Disposable {
         const site = siteDetailsForRemote(remote);
 
         if (site) {
-            let foundUser = this._currentUsers.get(site.hostname);
+            let foundUser = this._currentUsers.getItem<User>(site.hostname);
             if (!foundUser) {
                 const bbClient = await clientForRemote(remote);
                 foundUser = await bbClient.pullrequests.getCurrentUser(site)!;
-                this._currentUsers.set(site.hostname, foundUser);
+                this._currentUsers.setItem(site.hostname, foundUser, 10 * Interval.MINUTE);
             }
 
             if (foundUser) {
@@ -101,12 +101,12 @@ export class BitbucketContext extends Disposable {
 
     private updateUsers(sites: DetailedSiteInfo[]) {
         const removed: string[] = [];
-        this._currentUsers.forEach((_, hostname) => {
-            if (!sites.some(s => s.hostname === hostname)) {
-                removed.push(hostname);
+        this._currentUsers.getItems<User>().forEach(entry => {
+            if (!sites.some(s => s.hostname === entry.key)) {
+                removed.push(entry.key);
             }
         });
-        removed.forEach(hostname => this._currentUsers.delete(hostname));
+        removed.forEach(hostname => this._currentUsers.deleteItem(hostname));
         if (removed.length > 0) {
             this._onDidChangeBitbucketContext.fire();
         }

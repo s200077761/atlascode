@@ -84,14 +84,14 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { q: `state="OPEN" and author.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -105,7 +105,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
@@ -189,8 +189,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
-        return this.convertDataToComment(data, userId);
+        return this.convertDataToComment(data, remote);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
@@ -228,8 +227,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 deleted: true
             } as any;
         });
-        const userId = (await Container.bitbucketContext.currentUser(pr.remote)).accountId;
-        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, userId)))));
+        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.remote)))));
         const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
             data: visibleComments,
@@ -400,12 +398,12 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        const userId = (await Container.bitbucketContext.currentUser(remote)).accountId;
-        return await this.convertDataToComment(data, userId);
+        return await this.convertDataToComment(data, remote);
     }
 
-    private async convertDataToComment(data: any, userId: string): Promise<Comment> {
-        const commentBelongsToUser: boolean = data.user.account_id === userId;
+    private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
+        const site = siteDetailsForRemote(remote);
+        const commentBelongsToUser: boolean = site ? data.user.account_id === site.userId : false;
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,

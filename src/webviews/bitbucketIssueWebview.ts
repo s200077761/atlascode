@@ -126,7 +126,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                     handled = true;
                     try {
                         const bbApi = await clientForRemote(this._issue!.remote);
-                        await bbApi.issues!.assign(this._issue!, (await Container.bitbucketContext.currentUser(this._issue!.remote)).accountId!);
+                        await bbApi.issues!.assign(this._issue!, siteDetailsForRemote(this._issue!.remote)!.userId);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));

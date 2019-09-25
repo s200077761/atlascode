@@ -30,6 +30,18 @@ export class CacheMap {
         return item ? item.content : undefined;
     }
 
+    public getItems<T>(): {key:string,value:T}[] {
+        const found: {key:string,value:T}[] = [];
+
+        this._data.forEach((item, key) => {
+            if (item && !this.isItemExpired(item)) {
+                found.push({key:key,value:item.content});
+            }
+        });
+
+        return found;
+    }
+
     public setItem(key: string, content: any, ttl:number = Infinity) {
         let meta = {
             ttl: ttl,
