@@ -34,7 +34,7 @@ import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
 import { AttachmentsModal } from './AttachmentsModal';
 import { AtlLoader } from '../AtlLoader';
-import { distanceInWordsToNow } from "date-fns";
+import { distanceInWordsToNow, format } from "date-fns";
 import { AttachmentList } from './AttachmentList';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
@@ -361,7 +361,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </React.Fragment>
                         }
 
-                        <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                        <Tooltip content={`Created on ${format(this.state.fieldValues['created'], 'YYYY-MM-DD h:mm A')}`}>
+                            <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                        </Tooltip>
                     </div>
                     <h2>
                         {this.getInputMarkup(this.state.fields['summary'], true)}
