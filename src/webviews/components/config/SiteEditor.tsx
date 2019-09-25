@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Button from "@atlaskit/button";
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, ProductBitbucket, Product, ProductJira } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, Product, ProductJira } from "../../../atlclients/authInfo";
 import AuthForm from "./AuthForm";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
