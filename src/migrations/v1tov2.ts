@@ -113,7 +113,7 @@ export class V1toV2Migrator {
                 product: ProductJira,
                 isCloud: true,
                 userId: info.user.id,
-                credentialId: info.user.id,
+                credentialId: Buffer.from(resource.id + '::' + info.user.id).toString('base64'),
             };
 
             await this._credentialManager.saveAuthInfo(newSite, newInfo);
@@ -227,7 +227,7 @@ export class V1toV2Migrator {
             product: ProductBitbucket,
             isCloud: true,
             userId: info.user.id,
-            credentialId: info.user.id,
+            credentialId: Buffer.from(provider + '::' + info.user.id).toString('base64'),
         };
 
         this._siteManager.addSites([newSite]);

@@ -6,7 +6,6 @@ import { OAuthDancer } from "./oauthDancer";
 import { SiteManager } from "../siteManager";
 import { CredentialManager } from "./authStore";
 import { AnalyticsClient } from "../analytics-node-client/src";
-import { v4 } from "uuid";
 import axios from 'axios';
 import { Time } from "../util/time";
 
@@ -37,11 +36,11 @@ export class LoginManager {
 
             const siteDetails = await this.getOAuthSiteDetails(site.product, provider, resp.user.id, resp.accessibleResources);
 
-            if (siteDetails.length > 0) {
-                await this._credentialManager.saveAuthInfo(siteDetails[0], oauthInfo);
-                this._siteManager.addSites(siteDetails);
-                authenticatedEvent(siteDetails[0]).then(e => { this._analyticsClient.sendTrackEvent(e); });
-            }
+            siteDetails.forEach(async siteInfo => {
+                await this._credentialManager.saveAuthInfo(siteInfo, oauthInfo);
+                this._siteManager.addSites([siteInfo]);
+                authenticatedEvent(siteInfo).then(e => { this._analyticsClient.sendTrackEvent(e); });
+            });
 
             window.showInformationMessage(`You are now authenticated with ${site.product.name}`);
 
@@ -66,6 +65,8 @@ export class LoginManager {
                     const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
                     const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
 
+                    const credentialId = this.generateCredentialId(resource.id, userId);
+
                     // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
                     newSites = [{
                         avatarUrl: "",
@@ -77,7 +78,7 @@ export class LoginManager {
                         product: ProductBitbucket,
                         isCloud: true,
                         userId: userId,
-                        credentialId: userId,
+                        credentialId: credentialId,
                     }];
                 }
                 break;
@@ -87,7 +88,10 @@ export class LoginManager {
                 //TODO: [VSCODE-505] call serverInfo endpoint when it supports OAuth
                 //const baseUrlString = await getJiraCloudBaseUrl(`https://${apiUri}/ex/jira/${newResource.id}/rest/2`, authInfo.access);
 
+
                 newSites = resources.map(r => {
+                    const credentialId = this.generateCredentialId(r.id, userId);
+
                     return {
                         avatarUrl: r.avatarUrl,
                         baseApiUrl: `https://${apiUri}/ex/jira/${r.id}/rest`,
@@ -98,7 +102,7 @@ export class LoginManager {
                         product: ProductJira,
                         isCloud: true,
                         userId: userId,
-                        credentialId: userId,
+                        credentialId: credentialId,
                     };
                 });
                 break;
@@ -123,7 +127,6 @@ export class LoginManager {
         const authHeader = 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
         // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances will
         // have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
-        const credentialId = v4();
 
         let siteDetailsUrl = '';
         let avatarUrl = '';
@@ -159,6 +162,9 @@ export class LoginManager {
         });
         const json = res.data;
 
+        const userId = site.product.key === ProductJira.key ? json.id : json.slug;
+        const credentialId = this.generateCredentialId(site.hostname, credentials.username);
+
         const siteDetails = {
             product: site.product,
             isCloud: false,
@@ -168,7 +174,7 @@ export class LoginManager {
             baseLinkUrl: `https://${site.hostname}`,
             id: site.hostname,
             name: site.hostname,
-            userId: site.product.key === ProductJira.key ? json.id : json.slug,
+            userId: userId,
             credentialId: credentialId,
         };
 
@@ -192,5 +198,9 @@ export class LoginManager {
         this._siteManager.addSites([siteDetails]);
 
         return json;
+    }
+
+    private generateCredentialId(siteId: string, userId: string): string {
+        return Buffer.from(siteId + '::' + userId).toString('base64');
     }
 }
