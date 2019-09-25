@@ -1,4 +1,4 @@
-## What's New In 2.0.0
+## What's New In 2.0.0-beta1
 ### Improvements
 * Support for Jira Server and Bitbucket Server
 * Support for a wider range of Jira features and configurations
