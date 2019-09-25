@@ -84,21 +84,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                     <li>Not having a resolution field</li>
                                     <li>And more!</li>
                                 </ul>
-                                <li>Editing and deleting comments in pull-requests</li>
+                                <li>View JQL from multiple sites at once in Jira explorer</li>
                                 <li>Improved Settings</li>
                                 <ul>
                                     <li>Jira and Bitbucket now have their own sections in the settings</li>
                                     <li>Jira or Bitbucket features can now be completely disabled</li>
                                     <li>Settings can now be saved at either the user level or the workspace level</li>
-                                    <li>Notifications can be managed and disabled for individual JQL queries</li>
                                 </ul>
-                                <li>Can now collapse all comments on a pull-request</li>
-                                <li>Can include selected code will now be included in description when creating issue from a TODO</li>
+                                <li>Notifications can be managed and disabled for individual JQL queries</li>
+                                <li>Can now collapse all comments on a pull request</li>
+                                <li>Selected code will now be included in description when creating issue from a TODO</li>
                                 <li>Get the latest information by refreshing any webview</li>
-                                <li>Improved performance when creating pull-requests or starting work on issues</li>
+                                <li>Improved performance when creating pull requests or starting work on issues</li>
                                 <li>Easily edit the branch name when starting work on an issue</li>
                                 <li>Pre-filled mention picker when creating pull requests and Bitbucket issues</li>
-                                <li>View JQL from multiple sites at once in Jira explorer</li>
+                                <li>Editing and deleting comments in pull requests</li>
                             </ul>
                         </section>
                         <section>
@@ -106,9 +106,9 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <ul>
                                 <li>Build statuses now link to the tool that created them</li>
                                 <li>Fixed URL creation on Windows</li>
-                                <li>TODO triggers no longer require a trailing space</li>
+                                <li><code>TODO</code> triggers no longer require a trailing space</li>
                                 <li>Subtasks now report the correct status</li>
-                                <li>Pipelines builds triggered manually or by tags now show up in the pipelines side bar</li>
+                                <li>Pipelines builds triggered manually or by tag creation now show up in the pipelines side bar</li>
                             </ul>
                         </section>
                         <h3>🎉 What's New in 1.4.3 🎉</h3>

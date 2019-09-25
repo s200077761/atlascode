@@ -6,26 +6,26 @@
   * Adding sprints to issues
   * Not having a resolution field
   * And more!
-* Editing and deleting comments in pull-requests
+* View JQL from multiple sites at once in Jira explorer
 * Improved Settings
   * Jira and Bitbucket now have their own sections in the settings
   * Jira or Bitbucket features can now be completely disabled
   * Settings can now be saved at either the user level or the workspace level
   * Notifications can be managed and disabled for individual JQL queries
 * Can now collapse all comments on a pull-request
-* Can include selected code will now be included in description when creating issue from a TODO
+* Selected code will now be included in description when creating issue from a TODO
 * Get the latest information by refreshing any webview
 * Improved performance when creating pull-requests or starting work on issues
 * Easily edit the branch name when starting work on an issue
 * Pre-filled mention picker when creating pull requests and Bitbucket issues
-* View JQL from multiple sites at once in Jira explorer
 
 ### Bugs fixed
 * Build statuses now link to the tool that created them
 * Fixed URL creation on Windows
-* TODO triggers no longer require a trailing space
+* `TODO` triggers no longer require a trailing space
 * Subtasks now report the correct status
-* Pipelines builds triggered manually or by tags now show up in the pipelines side bar
+* Pipelines builds triggered manually or by tag creation now notify correctly and show up in the pipelines side bar
+* Editing and deleting comments in pull requests
 
 ## What's New In 1.4.3
 ### Improvements
