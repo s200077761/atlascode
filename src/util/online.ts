@@ -5,7 +5,7 @@ import { Logger } from "../logger";
 import { Time } from "./time";
 import pAny from "p-any";
 import pTimeout from "p-timeout";
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -21,6 +21,7 @@ export class OnlineDetector extends Disposable {
     private _isOfflineMode: boolean;
     private _onlineTimer: any | undefined;
     private _offlineTimer: any | undefined;
+    private _transport: AxiosInstance;
 
     private _onDidOnlineChange = new EventEmitter<OnlineInfoEvent>();
     public get onDidOnlineChange(): Event<OnlineInfoEvent> {
@@ -33,6 +34,10 @@ export class OnlineDetector extends Disposable {
         this._disposable = Disposable.from(
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
+
+        this._transport = axios.create({
+            timeout: 10 * Time.SECONDS,
+        });
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
 
@@ -76,11 +81,11 @@ export class OnlineDetector extends Disposable {
     private async runOnlineChecks(): Promise<boolean> {
         const promise = pAny([
             (async () => {
-                await axios(`http://atlassian.com`, { method: "HEAD" });
+                await this._transport(`http://atlassian.com`, { method: "HEAD" });
                 return true;
             })(),
             (async () => {
-                await axios(`https://bitbucket.org`, { method: "HEAD" });
+                await this._transport(`https://bitbucket.org`, { method: "HEAD" });
                 return true;
             })()
         ]);
