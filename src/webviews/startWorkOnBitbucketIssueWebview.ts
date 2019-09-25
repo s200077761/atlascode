@@ -91,7 +91,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                             const remote = repo.state.remotes.find(r => r.name === e.remote);
 
                             const bbApi = await clientForRemote(remote!);
-                            await bbApi.issues!.assign(issue, (await Container.bitbucketContext.currentUser(remote!)).accountId!);
+                            await bbApi.issues!.assign(issue, siteDetailsForRemote(remote!)!.userId);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`

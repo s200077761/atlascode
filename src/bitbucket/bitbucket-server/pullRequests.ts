@@ -5,7 +5,6 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
 import { ServerRepositoriesApi } from './repositories';
-import { Container } from '../../container';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -239,7 +238,6 @@ export class ServerPullRequestApi implements PullRequestApi {
             },
             {}
         );
-
         return this.convertDataToComment(res.data, remote);
     }
 
@@ -301,7 +299,8 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     private async convertDataToComment(data: any, remote: Remote, commentAnchor?: any): Promise<Comment> {
         const user = data.author ? ServerPullRequestApi.toUser(siteDetailsForRemote(remote)!, data.author) : UnknownUser;
-        const commentBelongsToUser: boolean = user.accountId === (await Container.bitbucketContext.currentUser(remote)).accountId;
+        const site = siteDetailsForRemote(remote);
+        const commentBelongsToUser: boolean = site ? user.accountId === site.userId : false;
         return {
             id: data.id,
             parentId: data.parentId,
@@ -450,7 +449,6 @@ export class ServerPullRequestApi implements PullRequestApi {
                 avatarSize: 64
             }
         );
-
         return this.convertDataToComment(data, remote);
     }
 
