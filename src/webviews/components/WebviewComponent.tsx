@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Action, PMFData } from '../../ipc/messaging';
 import { darken, lighten, opacity } from './colors';
-import { ReactPromiseUtil } from '../../util/reactpromise';
+import { OnMessageEventPromise } from '../../util/reactpromise';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;
@@ -106,7 +106,7 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
 
     protected postMessageWithEventPromise(send: any, waitForEvent: string, timeout: number, nonce?: string): Promise<any> {
         this._api.postMessage(send);
-        return ReactPromiseUtil.OnMessageEventPromise(waitForEvent, timeout, nonce);
+        return OnMessageEventPromise(waitForEvent, timeout, nonce);
     }
 
 }

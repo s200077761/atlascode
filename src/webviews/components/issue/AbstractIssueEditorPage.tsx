@@ -3,7 +3,7 @@ import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
-import { FieldValidators, chain } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -15,7 +15,7 @@ import InlineSubtaskEditor from './InlineSubtaskEditor';
 import InlineIssueLinksEditor from './InlineIssueLinkEditor';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
 import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { SelectFieldHelper } from '../selectFieldHelper';
+import * as SelectFieldHelper from '../selectFieldHelper';
 import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
 import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
 import { ParticipantList } from './ParticipantList';
@@ -347,14 +347,14 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     style={{ width: '100%', display: 'block' }}
                                     className='ac-inputField'
                                     disabled={this.state.isSomethingLoading}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })} />;
+                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })} />;
                                 if ((field as InputFieldUI).isMultiline) {
                                     markup = <textarea {...fieldArgs.fieldProps}
                                         style={{ width: '100%', display: 'block' }}
                                         className='ac-textarea'
                                         rows={5}
                                         disabled={this.state.isSomethingLoading}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineInputEdit(field, val); })}
                                     />;
                                 }
                                 return (
@@ -412,7 +412,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                             isDisabled={this.state.isSomethingLoading}
                                             className="ac-select-container"
                                             selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
+                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
                                         />
                                         {errDiv}
                                     </div>
@@ -467,7 +467,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                             className="ac-select-container"
                                             datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                             timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
+                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
                                         />
                                         {errDiv}
                                     </div>
@@ -531,7 +531,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     placeholder="Select link type"
                                                     isDisabled={this.state.isSomethingLoading}
                                                     options={this.state.selectFieldOptions[field.key]}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                         const subField = { ...field, ...{ key: `${field.key}.type` } };
                                                         this.handleInlineEdit(subField, val);
                                                     })}
@@ -560,7 +560,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 placeholder="Search for an issue"
                                                 isLoading={this.state.loadingField === field.key}
                                                 isDisabled={this.state.isSomethingLoading}
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                     const subField = { ...field, ...{ key: `${field.key}.issue` } };
                                                     this.handleInlineEdit(subField, val);
                                                 })}
@@ -659,7 +659,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     options={this.state.selectFieldOptions[field.key]}
                                                     isDisabled={this.state.isSomethingLoading}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                 />
                                                 {errDiv}
                                             </React.Fragment>
@@ -719,7 +719,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     isLoading={this.state.loadingField === field.key}
                                                     isValidNewOption={shouldShowCreateOption}
                                                     onCreateOption={(input: any): void => { this.handleSelectOptionCreate(selectField, input); }}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                 />
                                                 {errDiv}
                                             </React.Fragment>
@@ -772,7 +772,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     isClearable={this.isClearableSelect(selectField)}
                                                     defaultOptions={this.state.selectFieldOptions[field.key]}
                                                     isLoading={this.state.loadingField === field.key}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                     loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 />
                                                 {errDiv}
@@ -847,7 +847,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                     isValidNewOption={shouldShowCreateOption}
                                                     onCreateOption={onCreateFunc}
                                                     getNewOptionData={newDataValue}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (selected: any) => { this.handleSelectChange(selectField, selected); })}
                                                     loadOptions={async (input: any) => await this.loadSelectOptionsForField(field as SelectFieldUI, input)}
                                                 >
                                                 </AsyncCreatableSelect>
@@ -896,7 +896,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             {
                                 (fieldArgs: any) => {
                                     return (<Checkbox {...fieldArgs.fieldProps}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) => { this.handleInlineEdit(field, e.target.checked); })}
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => { this.handleInlineEdit(field, e.target.checked); })}
                                         label={value.value} />);
                                 }
                             }
@@ -950,7 +950,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         {
                             (fieldArgs: any) => {
                                 return (<RadioGroup {...fieldArgs.fieldProps}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
+                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => { this.handleInlineEdit(field, val); })}
                                     options={radioItems} />);
                             }
                         }
@@ -998,7 +998,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     return (
                                         <div>
                                             <input {...fieldArgs.fieldProps}
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                     const subField = { ...field, ...{ key: `${field.key}.originalEstimate` } };
                                                     this.handleInlineInputEdit(subField, val);
                                                 })}
@@ -1027,7 +1027,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     return (
                                         <div>
                                             <input {...fieldArgs.fieldProps}
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                     const subField = { ...field, ...{ key: `${field.key}.remainingEstimate` } };
                                                     this.handleInlineInputEdit(subField, val);
                                                 })}
@@ -1058,7 +1058,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                 name={`${field.key}.enabled`}>
                                 {
                                     (fieldArgs: any) => <Checkbox {...fieldArgs.fieldProps}
-                                        onChange={chain(fieldArgs.fieldProps.onChange, (e: any) => {
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
                                             const subField = { ...field, ...{ key: `${field.key}.enabled` } };
                                             this.handleInlineEdit(subField, e.target.checked);
                                         })}
@@ -1084,7 +1084,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 return (
                                                     <div>
                                                         <input {...fieldArgs.fieldProps}
-                                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                                 const subField = { ...field, ...{ key: `${field.key}.timeSpent` } };
                                                                 this.handleInlineInputEdit(subField, val);
                                                             })}
@@ -1112,7 +1112,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                 return (
                                                     <div>
                                                         <input {...fieldArgs.fieldProps}
-                                                            onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                                 const subField = { ...field, ...{ key: `${field.key}.newEstimate` } };
                                                                 this.handleInlineInputEdit(subField, val);
                                                             })}
@@ -1145,7 +1145,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                         timeIsEditable
                                                         datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                                         timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                             const subField = { ...field, ...{ key: `${field.key}.started` } };
                                                             this.handleInlineEdit(subField, val);
                                                         })}
@@ -1174,7 +1174,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                                         style={{ width: '100%', display: 'block' }}
                                                         className='ac-textarea'
                                                         rows={5}
-                                                        onChange={chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                                             const subField = { ...field, ...{ key: `${field.key}.comment` } };
                                                             this.handleInlineInputEdit(subField, val);
                                                         })}

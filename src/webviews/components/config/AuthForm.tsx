@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import { Field, ErrorMessage, HelperMessage } from '@atlaskit/form';
-import { FieldValidators, chain } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
 import { AuthInfo, SiteInfo, Product, ProductBitbucket, emptyUserInfo, emptyAuthInfo, BasicAuthInfo } from "../../../atlclients/authInfo";
 
@@ -135,7 +135,7 @@ export default class AuthForm extends PureComponent<{
                                         <input {...fieldArgs.fieldProps}
                                             style={{ width: '100%', display: 'block' }}
                                             className='ac-inputField'
-                                            onChange={chain(fieldArgs.fieldProps.onChange, this.onBaseUrlChange)} />
+                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onBaseUrlChange)} />
                                         {errDiv}
                                     </div>
                                 );
@@ -162,7 +162,7 @@ export default class AuthForm extends PureComponent<{
                                                 <input {...fieldArgs.fieldProps}
                                                     style={{ width: '100%', display: 'block' }}
                                                     className='ac-inputField'
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onUsernameChange)} />
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onUsernameChange)} />
                                                 {errDiv}
                                             </div>
                                         );
@@ -192,7 +192,7 @@ export default class AuthForm extends PureComponent<{
                                                     type='password'
                                                     style={{ width: '100%', display: 'block' }}
                                                     className='ac-inputField'
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onPasswordChange)} />
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onPasswordChange)} />
                                                 {errDiv}
                                             </div>
                                         );

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import Form, { FormFooter, Field, ErrorMessage, HelperMessage, CheckboxField } from '@atlaskit/form';
-import { FieldValidators, chain } from '../fieldValidators';
+import * as FieldValidators from '../fieldValidators';
 import { DatePicker } from '@atlaskit/datetime-picker';
 import { Checkbox } from '@atlaskit/checkbox';
 import { format } from 'date-fns';
@@ -112,7 +112,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                     style={{ width: '100%', display: 'block' }}
                                                     className='ac-textarea'
                                                     rows={3}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
                                                         this.setState({ comment: item.target.value, }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
@@ -144,7 +144,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                     {...fieldArgs.fieldProps}
                                                     className="ac-select-container"
                                                     selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
                                                         this.setState({ started: item }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
@@ -173,7 +173,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                 <input {...fieldArgs.fieldProps}
                                                     style={{ width: '100%', display: 'block' }}
                                                     className='ac-inputField'
-                                                    onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
                                                         this.setState({ timeSpent: item.target.value, }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
@@ -196,7 +196,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                         return (
                                             <Checkbox {...fieldArgs.fieldProps}
                                                 label='Auto adjust remaining estimate'
-                                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
                                                     this.setState({ autoAdjust: item.target.checked, }, () => {
                                                         this.setState({ savingDisabled: this.disableSaving() });
                                                     });
@@ -225,7 +225,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                                         disabled={this.state.autoAdjust}
                                                         style={{ width: '100%', display: 'block' }}
                                                         className='ac-inputField'
-                                                        onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
                                                             this.setState({ newEstimate: item.target.value, }, () => {
                                                                 this.setState({ savingDisabled: this.disableSaving() });
                                                             });

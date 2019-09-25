@@ -13,7 +13,7 @@ import Button from "@atlaskit/button";
 import Form, { FormFooter, Field, ErrorMessage } from '@atlaskit/form';
 import Select from '@atlaskit/select';
 import ErrorBanner from "../ErrorBanner";
-import { FieldValidators } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import Offline from "../Offline";
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';

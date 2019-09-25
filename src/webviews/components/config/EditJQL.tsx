@@ -4,7 +4,7 @@ import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import { JQLEntry } from "src/config/model";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import Select, { components } from '@atlaskit/select';
-import { FieldValidators, chain } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
@@ -157,7 +157,7 @@ export default class EditJQL extends PureComponent<{
                       style={{ width: '100%', display: 'block' }}
                       className='ac-inputField'
                       readOnly={this.props.nameEditable !== undefined && !this.props.nameEditable}
-                      onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
+                      onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
                 );
@@ -183,7 +183,7 @@ export default class EditJQL extends PureComponent<{
                       getOptionValue={(option: any) => option.id}
                       options={this.props.sites}
                       components={{ Option: IconOption, SingleValue: IconValue }}
-                      onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                      onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
                     />
                   );
                 }

@@ -5,7 +5,7 @@ import Form, { FormFooter, Field, ErrorMessage } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import Select from '@atlaskit/select';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { FieldValidators, chain } from '../fieldValidators';
+import * as FieldValidators from '../fieldValidators';
 import { FeedbackUser } from '../../../ipc/configMessaging';
 
 type MyState = { isOpen: boolean, description: string, canBeContacted: boolean };
@@ -115,7 +115,7 @@ export default class DisplayFeedback extends React.Component<{ userDetails: Feed
                                 style={{ width: '100%', display: 'block' }}
                                 className='ac-textarea'
                                 rows={3}
-                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { this.setState({ description: item.target.value }); })}
+                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => { this.setState({ description: item.target.value }); })}
                               />
                               {errDiv}
                             </div>
@@ -134,7 +134,7 @@ export default class DisplayFeedback extends React.Component<{ userDetails: Feed
                             <Checkbox
                               defaultChecked
                               {...fieldArgs.fieldProps}
-                              onChange={chain(fieldArgs.fieldProps.onChange, this.toggleCanBeContacted)}
+                              onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.toggleCanBeContacted)}
                               label='Atlassian can contact me about this feedback' />
                           );
                         }

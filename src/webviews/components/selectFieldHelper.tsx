@@ -227,180 +227,178 @@ const IssueLinkTypeValue = (props: any) => (
 
 );
 
-export namespace SelectFieldHelper {
-    export const IssueSuggestionOption = (props: any) => (
-        <components.Option {...props}>
-            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
-        </components.Option>
-    );
+export const IssueSuggestionOption = (props: any) => (
+    <components.Option {...props}>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '10px' }}>{props.data.key}</span><span style={{ marginLeft: '1em' }}>{props.data.summaryText}</span></div>
+    </components.Option>
+);
 
-    export const IssueSuggestionValue = (props: any) => (
-        <components.SingleValue {...props}>
-            <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
-        </components.SingleValue>
+export const IssueSuggestionValue = (props: any) => (
+    <components.SingleValue {...props}>
+        <div ref={props.innerRef} {...props.innerProps} className='ac-flex'><span style={{ marginLeft: '4px' }}>{props.data.key}</span><span style={{ marginLeft: '4px', marginRight: '4px' }}>{props.data.summaryText}</span></div>
+    </components.SingleValue>
 
-    );
+);
 
-    export enum SelectComponentType {
-        Select = 'select',
-        Creatable = 'creatable',
-        Async = 'async',
-        AsyncCreatable = 'asynccreatable'
+export enum SelectComponentType {
+    Select = 'select',
+    Creatable = 'creatable',
+    Async = 'async',
+    AsyncCreatable = 'asynccreatable'
+}
+
+export function selectComponentType(field: SelectFieldUI): SelectComponentType {
+    if (field.isCreateable && (field.autoCompleteUrl.trim() !== '')) {
+        return SelectComponentType.AsyncCreatable;
     }
 
-    export function selectComponentType(field: SelectFieldUI): SelectComponentType {
-        if (field.isCreateable && (field.autoCompleteUrl.trim() !== '')) {
-            return SelectComponentType.AsyncCreatable;
-        }
-
-        if (field.isCreateable) {
-            return SelectComponentType.Creatable;
-        }
-
-        if (field.autoCompleteUrl.trim() !== '') {
-            return SelectComponentType.Async;
-        }
-
-        return SelectComponentType.Select;
+    if (field.isCreateable) {
+        return SelectComponentType.Creatable;
     }
 
-    export function labelFuncForValueType(vt: ValueType): OptionFunc {
-        switch (vt) {
-            case ValueType.Number:
-            case ValueType.String: {
-                return returnOptionOrLabelFunc;
-            }
-            case ValueType.IssueLinks:
-            case ValueType.Component:
-            case ValueType.Version:
-            case ValueType.Project:
-            case ValueType.IssueType:
-            case ValueType.Transition:
-            case ValueType.Priority: {
-                return returnNameFunc;
-            }
+    if (field.autoCompleteUrl.trim() !== '') {
+        return SelectComponentType.Async;
+    }
 
-            case ValueType.Option: {
-                return returnValueFunc;
-            }
+    return SelectComponentType.Select;
+}
 
-            case ValueType.User:
-            case ValueType.Watches: {
-                return returnDisplayNameFunc;
-            }
+export function labelFuncForValueType(vt: ValueType): OptionFunc {
+    switch (vt) {
+        case ValueType.Number:
+        case ValueType.String: {
+            return returnOptionOrLabelFunc;
+        }
+        case ValueType.IssueLinks:
+        case ValueType.Component:
+        case ValueType.Version:
+        case ValueType.Project:
+        case ValueType.IssueType:
+        case ValueType.Transition:
+        case ValueType.Priority: {
+            return returnNameFunc;
+        }
 
-            default: {
-                return returnOptionOrLabelFunc;
-            }
+        case ValueType.Option: {
+            return returnValueFunc;
+        }
+
+        case ValueType.User:
+        case ValueType.Watches: {
+            return returnDisplayNameFunc;
+        }
+
+        default: {
+            return returnOptionOrLabelFunc;
         }
     }
+}
 
-    export function valueFuncForValueType(vt: ValueType): OptionFunc {
-        switch (vt) {
-            case ValueType.Number:
-            case ValueType.String: {
-                return returnOptionOrValueFunc;
-            }
-            case ValueType.Component:
-            case ValueType.Version:
-            case ValueType.Project:
-            case ValueType.IssueType:
-            case ValueType.Priority:
-            case ValueType.Transition:
-            case ValueType.Option: {
-                return returnIdFunc;
-            }
+export function valueFuncForValueType(vt: ValueType): OptionFunc {
+    switch (vt) {
+        case ValueType.Number:
+        case ValueType.String: {
+            return returnOptionOrValueFunc;
+        }
+        case ValueType.Component:
+        case ValueType.Version:
+        case ValueType.Project:
+        case ValueType.IssueType:
+        case ValueType.Priority:
+        case ValueType.Transition:
+        case ValueType.Option: {
+            return returnIdFunc;
+        }
 
-            case ValueType.IssueLinks: {
-                return returnNameFunc;
-            }
+        case ValueType.IssueLinks: {
+            return returnNameFunc;
+        }
 
-            case ValueType.Group: {
-                return returnValueOrNameFunc;
-            }
+        case ValueType.Group: {
+            return returnValueOrNameFunc;
+        }
 
-            case ValueType.User:
-            case ValueType.Watches: {
-                return returnAccountIdFunc;
-            }
+        case ValueType.User:
+        case ValueType.Watches: {
+            return returnAccountIdFunc;
+        }
 
-            default: {
-                return returnOptionOrValueFunc;
-            }
+        default: {
+            return returnOptionOrValueFunc;
         }
     }
+}
 
-    export function getComponentsForValueType(vt: ValueType): Object {
-        return {
-            ...{ Option: getOptionComponentForValueType(vt) },
-            ...getValueComponentForValueType(vt)
-        };
-    }
+export function getComponentsForValueType(vt: ValueType): Object {
+    return {
+        ...{ Option: getOptionComponentForValueType(vt) },
+        ...getValueComponentForValueType(vt)
+    };
+}
 
-    function getOptionComponentForValueType(vt: ValueType): ComponentFunc {
-        switch (vt) {
-            case ValueType.Priority:
-            case ValueType.IssueType: {
-                return IconOption;
-            }
+function getOptionComponentForValueType(vt: ValueType): ComponentFunc {
+    switch (vt) {
+        case ValueType.Priority:
+        case ValueType.IssueType: {
+            return IconOption;
+        }
 
-            case ValueType.Project:
-            case ValueType.User:
-            case ValueType.Watches: {
-                return AvatarOption;
-            }
+        case ValueType.Project:
+        case ValueType.User:
+        case ValueType.Watches: {
+            return AvatarOption;
+        }
 
-            case ValueType.Transition: {
-                return StatusOption;
-            }
+        case ValueType.Transition: {
+            return StatusOption;
+        }
 
-            case ValueType.IssueLinks: {
-                return IssueLinkTypeOption;
-            }
+        case ValueType.IssueLinks: {
+            return IssueLinkTypeOption;
+        }
 
-            default: {
-                return LabelOption;
-            }
+        default: {
+            return LabelOption;
         }
     }
+}
 
-    function getValueComponentForValueType(vt: ValueType): Object {
-        switch (vt) {
-            case ValueType.Priority:
-            case ValueType.IssueType: {
-                return {
-                    SingleValue: SingleIconValue,
-                    MultiValueLabel: MultiIconValue
-                };
-            }
+function getValueComponentForValueType(vt: ValueType): Object {
+    switch (vt) {
+        case ValueType.Priority:
+        case ValueType.IssueType: {
+            return {
+                SingleValue: SingleIconValue,
+                MultiValueLabel: MultiIconValue
+            };
+        }
 
-            case ValueType.Project:
-            case ValueType.User:
-            case ValueType.Watches: {
-                return {
-                    SingleValue: SingleAvatarValue,
-                    MultiValueLabel: MultiAvatarValue
-                };
-            }
+        case ValueType.Project:
+        case ValueType.User:
+        case ValueType.Watches: {
+            return {
+                SingleValue: SingleAvatarValue,
+                MultiValueLabel: MultiAvatarValue
+            };
+        }
 
-            case ValueType.Transition: {
-                return {
-                    SingleValue: StatusValue
-                };
-            }
+        case ValueType.Transition: {
+            return {
+                SingleValue: StatusValue
+            };
+        }
 
-            case ValueType.IssueLinks: {
-                return {
-                    SingleValue: IssueLinkTypeValue
-                };
-            }
+        case ValueType.IssueLinks: {
+            return {
+                SingleValue: IssueLinkTypeValue
+            };
+        }
 
-            default: {
-                return {
-                    SingleValue: LabelValue,
-                    MultiValueLabel: MultiLabelValue
-                };
-            }
+        default: {
+            return {
+                SingleValue: LabelValue,
+                MultiValueLabel: MultiLabelValue
+            };
         }
     }
 }

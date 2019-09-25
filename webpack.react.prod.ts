@@ -1,22 +1,18 @@
 
 
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-//import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
-//import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import path from 'path';
-//import HtmlWebpackPlugin from "html-webpack-plugin";
 import webpack from "webpack";
 
-//const extractTextPlugin = new MiniCssExtractPlugin();
 const appSrc = path.resolve(__dirname, 'src');
 
 const config: webpack.Configuration = {
-    mode: "development",
+    mode: "production",
     entry: "./src/index.tsx",
-    devtool: 'cheap-module-source-map',
     output: {
         path: path.resolve(__dirname, 'build'),
-        chunkFilename: 'static/js/[name].chunk.js',
+        filename: 'static/js/[name].[chunkhash:8].js',
+        chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js',
         devtoolModuleFilenameTemplate: info =>
             path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
@@ -53,7 +49,7 @@ const config: webpack.Configuration = {
                             // you can specify a publicPath here
                             // by default it uses publicPath in webpackOptions.output
                             publicPath: '../',
-                            hmr: process.env.NODE_ENV === 'development',
+                            hmr: false,
                         },
                     },
                     'css-loader',

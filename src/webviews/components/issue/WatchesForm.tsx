@@ -5,7 +5,7 @@ import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
 import { AsyncSelect } from '@atlaskit/select';
-import { SelectFieldHelper } from '../selectFieldHelper';
+import * as SelectFieldHelper from '../selectFieldHelper';
 import { ValueType } from '../../../jira/jira-client/model/fieldUI';
 import debounce from "lodash.debounce";
 

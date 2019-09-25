@@ -3,7 +3,7 @@ import Select, { AsyncSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { IssueLinkTypeSelectOption, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
-import { SelectFieldHelper } from '../selectFieldHelper';
+import * as SelectFieldHelper from '../selectFieldHelper';
 
 export type LinkTypeAndIssue = {
     issueKey: string;
