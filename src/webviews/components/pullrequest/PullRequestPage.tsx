@@ -39,6 +39,7 @@ import PMFBBanner from '../pmfBanner';
 import { BitbucketIssueData, ApprovalStatus } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
+import { format, distanceInWordsToNow } from 'date-fns';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -395,7 +396,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
                             >
-                                <p>{pr.title}</p>
+                                <Tooltip content={`Created on ${format(pr.ts, 'YYYY-MM-DD h:mm A')}`}>
+                                    <React.Fragment>
+                                        <p>{pr.title}</p>
+                                        <p style={{fontSize: 13, color: 'silver'}}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
+                                    </React.Fragment>
+                                </Tooltip>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
                                 <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
