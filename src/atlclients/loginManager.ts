@@ -8,6 +8,7 @@ import { CredentialManager } from "./authStore";
 import { AnalyticsClient } from "../analytics-node-client/src";
 import { v4 } from "uuid";
 import axios from 'axios';
+import { Time } from "../util/time";
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -142,7 +143,16 @@ export class LoginManager {
                 break;
         }
 
-        const res = await axios(siteDetailsUrl, {
+        const transport = axios.create({
+            timeout: 10 * Time.SECONDS,
+            headers: {
+                'X-Atlassian-Token': 'no-check',
+                'x-atlassian-force-account-id': 'true',
+                "Accept-Encoding": "gzip, deflate"
+            }
+        });
+
+        const res = await transport(siteDetailsUrl, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

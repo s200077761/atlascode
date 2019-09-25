@@ -5,6 +5,7 @@ import { Container } from "../container";
 import { ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 import { truncate } from 'lodash';
 import { FeedbackUser } from '../ipc/configMessaging';
+import { Time } from '../util/time';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',
@@ -108,7 +109,16 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
         ]
     };
 
-    axios(`https://jsd-widget.atlassian.com/api/embeddable/b1d25f9a-a527-40a4-9671-a98182dd78b1/request?requestTypeId=202`, {
+    const transport = axios.create({
+        timeout: 10 * Time.SECONDS,
+        headers: {
+            'X-Atlassian-Token': 'no-check',
+            'x-atlassian-force-account-id': 'true',
+            "Accept-Encoding": "gzip, deflate"
+        }
+    });
+
+    transport(`https://jsd-widget.atlassian.com/api/embeddable/b1d25f9a-a527-40a4-9671-a98182dd78b1/request?requestTypeId=202`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
