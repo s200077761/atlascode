@@ -44,24 +44,14 @@ export class SiteManager extends Disposable {
             return;
         }
         const productKey = newSites[0].product.key;
-        let notify = true;
-        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`);
-        if (allSites) {
-            newSites = newSites.filter(s => !allSites!.some(s2 => s2.id === s.id && s2.userId === s.userId));
-            if (newSites.length === 0) {
-                notify = false;
-            }
-            allSites = allSites.concat(newSites);
-        } else {
-            allSites = newSites;
-        }
+        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`) || [];
+        allSites = allSites.filter(site => !newSites.some(newSite => newSite.id === site.id && newSite.userId === site.userId));
+        allSites = allSites.concat(newSites);
 
         this._globalStore.update(`${productKey}${SitesSuffix}`, allSites);
         this._sitesAvailable.set(productKey, allSites);
 
-        if (notify) {
-            this._onDidSitesAvailableChange.fire({ sites: allSites, product: allSites[0].product });
-        }
+        this._onDidSitesAvailableChange.fire({ sites: allSites, product: allSites[0].product });
     }
 
     onDidAuthChange(e: AuthInfoEvent) {

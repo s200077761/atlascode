@@ -56,14 +56,12 @@ export class LoginManager {
     }
 
     private async getOAuthSiteDetails(product: Product, provider: OAuthProvider, userId: string, resources: AccessibleResource[]): Promise<DetailedSiteInfo[]> {
-        const knownSites = this._siteManager.getSitesAvailable(product);
         let newSites: DetailedSiteInfo[] = [];
 
         switch (product.key) {
             case ProductBitbucket.key:
-                const bbResources = resources.filter(resource => !knownSites.some(site => resource.url.endsWith(site.hostname)));
-                if (bbResources.length > 0) {
-                    let resource = bbResources[0];
+                if (resources.length > 0) {
+                    let resource = resources[0];
                     const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
                     const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
                     const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
