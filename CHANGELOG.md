@@ -18,6 +18,7 @@
 * Improved performance when creating pull-requests or starting work on issues
 * Easily edit the branch name when starting work on an issue
 * Pre-filled mention picker when creating pull requests and Bitbucket issues
+* Editing and deleting comments in pull requests
 
 ### Bugs fixed
 * Build statuses now link to the tool that created them
@@ -25,7 +26,6 @@
 * `TODO` triggers no longer require a trailing space
 * Subtasks now report the correct status
 * Pipelines builds triggered manually or by tag creation now notify correctly and show up in the pipelines side bar
-* Editing and deleting comments in pull requests
 
 ## What's New In 1.4.3
 ### Improvements
