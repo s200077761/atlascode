@@ -154,7 +154,7 @@ export class AuthStatusBar extends Disposable {
 
     statusBarItem.text = text;
     statusBarItem.command = command;
-    statusBarItem.tooltip = `${product}`;
+    statusBarItem.tooltip = `${product.name}`;
 
     if (showIt) {
       statusBarItem.show();
