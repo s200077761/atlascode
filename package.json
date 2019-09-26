@@ -710,6 +710,7 @@
                 },
                 "atlascode.jira.jqlList": {
                     "type": "array",
+                    "default": [],
                     "scope": "window",
                     "description": "The list of JQL queries that populate the issue list view",
                     "items": {
