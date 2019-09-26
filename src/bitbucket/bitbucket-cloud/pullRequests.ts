@@ -95,7 +95,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        const { data } = await this.client.get(next!);
+        const { data } = await this.client.getURL(next!);
 
         const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
         return { repository: repository, remote: remote, data: prs, next: data.next };

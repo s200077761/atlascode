@@ -337,9 +337,11 @@ export class BitbucketIssuesApiImpl {
     }
 
     async nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        const { data } = await this.client.get(next!);
+        const { data } = await this.client.getURL(next!);
 
-        return { repository: repository, remote: remote, data: data.values || [], next: data.next };
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
+
+        return { repository: repository, remote: remote, data: issues || [], next: data.next };
     }
 
     // ---- END - Issue specific actions ----
