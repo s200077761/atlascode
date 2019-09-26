@@ -755,6 +755,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/p-queue@^3.2.1":
+  version "3.2.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/p-queue/-/p-queue-3.2.1.tgz#614957d9ed05cf6e02d08ed8f09041c4d100ef70"
+  integrity sha1-YUlX2e0Fz24C0I7Y8JBBxNEA73A=
+  dependencies:
+    p-queue "*"
+
 "@types/passport-oauth2@^1.4.8":
   version "1.4.8"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/passport-oauth2/-/passport-oauth2-1.4.8.tgz#b11cb3323970a88db3d170fe3d4dcdd0af02d8bf"
@@ -4175,6 +4182,11 @@ eventemitter3@^3.0.0:
   version "3.1.2"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/eventemitter3/-/eventemitter3-3.1.2.tgz#2d3d48f9c346698fce83a85d7d664e98535df6e7"
   integrity sha512-tvtQIeLVHjDkJYnzf2dgVMxfuSGJeM/7UCG17TT4EumTfNtF+0nebF/4zWOIkCreAbtNqhGEboB6BWrwqNaw4Q==
+
+eventemitter3@^4.0.0:
+  version "4.0.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/eventemitter3/-/eventemitter3-4.0.0.tgz#d65176163887ee59f386d64c82610b696a4a74eb"
+  integrity sha1-1lF2FjiH7lnzhtZMgmELaWpKdOs=
 
 events@^3.0.0:
   version "3.0.0"
@@ -7858,6 +7870,14 @@ p-map@^1.1.1:
   version "1.2.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-map/-/p-map-1.2.0.tgz#e4e94f311eabbc8633a1e79908165fca26241b6b"
   integrity sha512-r6zKACMNhjPJMTl8KcFH4li//gkrXWfbD6feV8l6doRHlzljFWGJ2AP6iKaCJXyZmAUMOPtvbW7EXkbWO/pLEA==
+
+p-queue@*, p-queue@^6.1.1:
+  version "6.1.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/p-queue/-/p-queue-6.1.1.tgz#eedbaf7335b4931ef857e2e58063fed461b97e80"
+  integrity sha1-7tuvczW0kx74V+LlgGP+1GG5foA=
+  dependencies:
+    eventemitter3 "^4.0.0"
+    p-timeout "^3.1.0"
 
 p-reflect@^2.0.0:
   version "2.1.0"
