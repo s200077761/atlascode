@@ -207,7 +207,7 @@ export function getSecretForAuthInfo(info: any): string {
 }
 
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {
-    if (site.hostname.endsWith('atlassian.net')) {
+    if (site.hostname.endsWith('atlassian.net') || site.hostname.endsWith('jira.com')) {
         return OAuthProvider.JiraCloud;
     }
 
