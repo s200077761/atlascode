@@ -1449,3 +1449,7 @@ img::after is triggered only if img loading fails */
 [role=gridcell]>[class^=styled__OverflowContainer-] {
   width: 100%;
 }
+
+.vscode-dark .spinner svg {
+  stroke: var(--vscode-editor-foreground);
+}

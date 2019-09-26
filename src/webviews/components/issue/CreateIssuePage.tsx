@@ -17,6 +17,7 @@ import { PMFData } from '../../../ipc/messaging';
 import Select, { components } from '@atlaskit/select';
 import { Field } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
+import Spinner from '@atlaskit/spinner';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
@@ -262,7 +263,9 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                             {this.state.isErrorBannerOpen &&
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
-                            <h2>Create Issue</h2>
+                            <div className='ac-vpadding'>
+                                <div className='ac-flex'><h2>Create Issue</h2>{this.state.isSomethingLoading && <div className='spinner' style={{ marginLeft: '15px' }}><Spinner size='medium' /></div>}</div>
+                            </div>
                             <Form
                                 name="create-issue"
                                 onSubmit={this.handleSubmit}
