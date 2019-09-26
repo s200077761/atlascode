@@ -140,6 +140,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     handleTargetChange = (selected: any) => {
         const config = this.configForTarget(selected.value);
         this.setState({ target: selected.value, targetUri: selected.uri, config: config });
+        const change = Object.create(null);
+        change['configurationTarget'] = selected.value;
+
+        this.postMessage({ action: 'saveSettings', changes: change, removes: undefined, target: ConfigTarget.User, targetUri: "" });
     }
 
     handleOpenJson = () => {

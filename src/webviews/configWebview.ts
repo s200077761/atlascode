@@ -68,12 +68,15 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 workspaceFolders = vscode.workspace.workspaceFolders.map(folder => { return { name: folder.name, uri: folder.uri.toString() }; });
             }
 
+            const target = configuration.get<string>('configurationTarget');
+
             this.postMessage({
                 type: 'init',
                 inspect: this.getInspect(),
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 workspaceFolders: workspaceFolders,
+                target: target,
                 feedbackUser: feedbackUser,
             });
         } catch (e) {
@@ -100,6 +103,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             "workspacefolder": (inspect.workspaceFolderValue) ? inspect.workspaceFolderValue : {},
         };
     }
+
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
         const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
 

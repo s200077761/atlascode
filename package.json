@@ -518,6 +518,12 @@
                     "description": "Specifies how much (if any) output will be sent to the Atlassian output channel",
                     "scope": "window"
                 },
+                "atlascode.configurationTarget": {
+                    "type": "string",
+                    "default": "user",
+                    "enum": ["user", "workspace"],
+                    "description": "Location to which configuration changes are saved"
+                },
                 "atlascode.enableCharles": {
                     "type": "boolean",
                     "default": false,
