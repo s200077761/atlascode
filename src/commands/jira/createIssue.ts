@@ -66,7 +66,7 @@ function annotateComment(data: CommentData) {
 
 async function updateBBIssue(data: BBData) {
     const bbApi = await clientForRemote(data.bbIssue.remote);
-    await bbApi.issues!.postComment(data.bbIssue, `linked to:${data.issueKey}`);
+    await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
 
     const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {
