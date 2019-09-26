@@ -662,6 +662,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/deep-equal@^1.0.1":
+  version "1.0.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/deep-equal/-/deep-equal-1.0.1.tgz#71cfabb247c22bcc16d536111f50c0ed12476b03"
+  integrity sha1-cc+rskfCK8wW1TYRH1DA7RJHawM=
+
 "@types/escape-string-regexp@^1.0.0":
   version "1.0.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/escape-string-regexp/-/escape-string-regexp-1.0.0.tgz#052d16d87db583b72daceae4eaabddb66954424c"
@@ -3569,7 +3574,7 @@ decompress-response@^3.3.0:
   dependencies:
     mimic-response "^1.0.0"
 
-deep-equal@^1.0.1:
+deep-equal@^1.0.1, deep-equal@^1.1.0:
   version "1.1.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/deep-equal/-/deep-equal-1.1.0.tgz#3103cdf8ab6d32cf4a8df7865458f2b8d33f3745"
   integrity sha512-ZbfWJq/wN1Z273o7mUSjILYqehAktR2NVoSrOukDkU9kg2v/Uv89yU4Cvz8seJeAmtN5oqiefKq8FPuXOboqLw==

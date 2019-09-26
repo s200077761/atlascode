@@ -234,12 +234,9 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                             jqlSiteId = newJqls[0].siteId;
                                         }
                                     }
-
-                                    await configuration.update(key, value.length === 0 ? undefined : value, target, targetUri);
-                                } else {
-                                    await configuration.update(key, value, target, targetUri);
                                 }
 
+                                await configuration.update(key, value, target, targetUri);
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
