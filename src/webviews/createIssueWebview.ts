@@ -247,7 +247,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
 
     updateIssueType(issueType: IssueType, fieldValues: FieldValues) {
-        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues, ['site', 'project']);
+        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues);
         this._screenData.issueTypeUIs[issueType.id].fieldValues = { ...this._screenData.issueTypeUIs[issueType.id].fieldValues, ...fieldOverrides };
 
         const selectOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions);
