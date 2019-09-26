@@ -9,6 +9,8 @@ import { configuration, JQLEntry, SiteJQLV1 } from "../config/configuration";
 import axios from 'axios';
 import { v4 } from "uuid";
 import { JiraJQLListKey } from "../constants";
+import { Container } from "../container";
+import { ConfigurationTarget } from "vscode";
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const WorkingProjectToken = 'currentProject()';
@@ -119,9 +121,10 @@ export class V1toV2Migrator {
             await this._credentialManager.saveAuthInfo(newSite, newInfo);
 
             Logger.debug('added site', newSite);
-
+            const projectKey = this._workingProject ? this._workingProject.key : undefined;
             if (this._defaultSiteId === resource.id) {
-                newJQL.push(...this.migrateCommonJQL(resource.id));
+
+                newJQL.push(...this.migrateCommonJQL(resource.id, projectKey));
             }
 
             newJQL.push(...this.migrateCustomJQL(resource.id));
@@ -134,14 +137,14 @@ export class V1toV2Migrator {
         }
     }
 
-    private migrateCommonJQL(siteId: string): JQLEntry[] {
+    private migrateCommonJQL(siteId: string, projectKey?: string): JQLEntry[] {
         const newJql: JQLEntry[] = [];
         const v1Assigned: string = configuration.get<string>('jira.explorer.assignedIssueJql');
         const v1Opened: string = configuration.get<string>('jira.explorer.openIssueJql');
 
         if (v1Assigned.trim() !== '') {
-            const query = this._workingProject ? v1Assigned.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : v1Assigned.replace(`project = ${WorkingProjectToken}`, '');
-            const name = this._workingProject ? `My ${this._workingProject.key} Issues` : 'My Issues';
+            const query = projectKey ? v1Assigned.replace(WorkingProjectToken, `"${projectKey}"`) : v1Assigned.replace(`project = ${WorkingProjectToken}`, '');
+            const name = projectKey ? `My ${projectKey} Issues` : 'My Issues';
             newJql.push({
                 id: v4(),
                 enabled: configuration.get<boolean>('jira.explorer.showAssignedIssues'),
@@ -153,8 +156,8 @@ export class V1toV2Migrator {
         }
 
         if (v1Opened.trim() !== '') {
-            const query = this._workingProject ? v1Opened.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : v1Opened.replace(`project = ${WorkingProjectToken}`, '');
-            const name = this._workingProject ? `Open ${this._workingProject.key} Issues` : 'Open Issues';
+            const query = projectKey ? v1Opened.replace(WorkingProjectToken, `"${projectKey}"`) : v1Opened.replace(`project = ${WorkingProjectToken}`, '');
+            const name = projectKey ? `Open ${projectKey} Issues` : 'Open Issues';
             newJql.push({
                 id: v4(),
                 enabled: configuration.get<boolean>('jira.explorer.showOpenIssues'),
@@ -181,10 +184,10 @@ export class V1toV2Migrator {
     private migrateCustomJQL(siteId: string): JQLEntry[] {
         const newJql: JQLEntry[] = [];
         const v1Custom: SiteJQLV1[] = configuration.get<SiteJQLV1[]>('jira.customJql').filter(entry => entry.siteId === siteId);
-
+        const projectKey = this._workingProject ? Container.config.jira.workingProject.key : undefined;
         v1Custom.forEach(siteJql => {
             siteJql.jql.forEach(jqlEntry => {
-                const query = this._workingProject ? jqlEntry.query.replace(WorkingProjectToken, `"${this._workingProject.key}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
+                const query = projectKey ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
                 newJql.push({
                     id: jqlEntry.id,
                     enabled: jqlEntry.enabled,
@@ -300,6 +303,35 @@ export class V1toV2Migrator {
     private async removeV1AuthInfo(provider: string) {
         if (keychain) {
             await keychain.deletePassword(keychainServiceNameV1, provider);
+        }
+    }
+}
+
+export function migrateAllWorkspaceCustomJQLS(deleteV1: boolean): void {
+    const newJql: JQLEntry[] = [];
+    const inspect = configuration.inspect('jira.customJql');
+    if (Array.isArray(inspect.workspaceValue)) {
+        const projectKey = Container.config.jira.workingProject ? Container.config.jira.workingProject.key : undefined;
+        inspect.workspaceValue.forEach((siteJql: SiteJQLV1) => {
+            siteJql.jql.forEach(jqlEntry => {
+                const query = projectKey ? jqlEntry.query.replace(WorkingProjectToken, `"${projectKey}"`) : jqlEntry.query.replace(`project = ${WorkingProjectToken}`, '');
+                newJql.push({
+                    id: jqlEntry.id,
+                    enabled: jqlEntry.enabled,
+                    monitor: true,
+                    name: jqlEntry.name,
+                    query: query,
+                    siteId: siteJql.siteId
+                });
+            });
+
+        });
+    }
+
+    if (newJql.length > 0) {
+        configuration.update(JiraJQLListKey, newJql, ConfigurationTarget.Workspace);
+        if (deleteV1) {
+            configuration.update('jira.customJql', undefined, ConfigurationTarget.Workspace);
         }
     }
 }

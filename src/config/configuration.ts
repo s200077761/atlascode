@@ -138,7 +138,8 @@ export class Configuration extends Disposable {
     }
 
     async clearVersion1WorkingProject() {
-        await this.updateForWorkspace(JiraV1WorkingProjectConfigurationKey, undefined);
+        // for now, we keep the global v1 project so we can use it to migrate jql later
+        await this.update(JiraV1WorkingProjectConfigurationKey, undefined, ConfigurationTarget.Workspace);
     }
 
     private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
