@@ -44,7 +44,16 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
         const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(repository, remote, pr, 0));
-        const next = data.next;
+        const next = data.isLastPage === true
+            ? undefined
+            : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    ...queryParams,
+                    start: data.nextPageStart
+                }
+            );
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
             return { repository: repository, remote: remote, data: prs, next: next };
@@ -82,7 +91,10 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        return { repository: repository, remote: remote, data: [], next: undefined };
+        const { data } = await this.client.getURL(next!);
+
+        const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(repository, remote, pr, 0));
+        return { repository: repository, remote: remote, data: prs, next: undefined };
     }
 
     async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
@@ -162,7 +174,15 @@ export class ServerPullRequestApi implements PullRequestApi {
                 oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
                 newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
             })),
-            next: data.next
+            next: data.isLastPage === true
+                ? undefined
+                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
+                    {
+                        markup: true,
+                        avatarSize: 64,
+                        start: data.nextPageStart
+                    }
+                )
         };
     }
 
@@ -199,7 +219,16 @@ export class ServerPullRequestApi implements PullRequestApi {
                 url: undefined,
                 htmlSummary: "",
                 rawSummary: ""
-            }))
+            })),
+            next: data.isLastPage === true
+                ? undefined
+                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
+                    {
+                        markup: true,
+                        avatarSize: 64,
+                        start: data.nextPageStart
+                    }
+                )
         };
     }
 
@@ -252,7 +281,21 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        const activities = (data.values as Array<any>)
+        const accumulatedActivities = data.values as any[];
+        while (data.isLastPage === false) {
+            const nextPage = await this.client.getURL(this.client.generateUrl(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/activities`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    start: data.nextPageStart
+                }
+            ));
+            data = nextPage.data;
+            accumulatedActivities.push(...(data.values || []));
+        }
+
+        const activities = accumulatedActivities
             .filter(activity => activity.action === 'COMMENTED')
             .filter(activity => activity.commentAnchor
                 ? activity.commentAnchor.diffType === 'EFFECTIVE' && activity.commentAnchor.orphaned === false
@@ -263,7 +306,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             data: (await Promise.all(
                 activities.map(activity => this.toNestedCommentModel(activity.comment, activity.commentAnchor, undefined, pr.remote)))
             )
-                .filter(comment => this.shouldDisplayComment(comment))
+                .filter(comment => this.shouldDisplayComment(comment)),
+            next: undefined
         };
     }
 
