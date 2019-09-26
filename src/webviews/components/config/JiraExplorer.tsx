@@ -6,6 +6,7 @@ import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';
+import Tooltip from '@atlaskit/tooltip';
 
 type changeObject = { [key: string]: any };
 
@@ -84,7 +85,19 @@ export default class JiraExplorer extends React.Component<{
                     paddingLeft: '24px',
                     paddingTop: '10px'
                 }}>
-                    <h4>Custom JQL</h4>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-start'
+                    }}>
+                        <div style={{marginRight: '10px'}}>
+                            <h4>Custom JQL</h4>
+                        </div>
+                        <Tooltip content="Use JQL to populate the 'JIRA ISSUES' panel in the sidebar">
+                            <a href="https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14">
+                                What is JQL?
+                            </a>
+                        </Tooltip>
+                    </div>
                     <CustomJQL
                         JqlList={config.jira.jqlList}
                         onConfigChange={this.props.onConfigChange}
