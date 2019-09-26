@@ -15,6 +15,7 @@ import {
 import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraCreateSiteAndProjectKey } from '../constants';
 import { Container } from '../container';
 import { SiteIdAndProjectKey } from './model';
+import deepEqual from 'deep-equal';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -89,9 +90,9 @@ export class Configuration extends Disposable {
     // update does what it sounds like
     public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null): Promise<void> {
         const inspect = this.inspect(section, resource);
-
+        const isDefault: boolean = deepEqual(value, inspect.defaultValue);
         if (
-            (value === inspect.defaultValue || value === undefined)
+            (isDefault || value === undefined)
             && (
                 (target === ConfigurationTarget.Global && inspect.globalValue === undefined)
                 || (target === ConfigurationTarget.Workspace && inspect.workspaceValue === undefined)
@@ -100,7 +101,7 @@ export class Configuration extends Disposable {
             return undefined;
         }
 
-        if (value === inspect.defaultValue) {
+        if (isDefault) {
             value = undefined;
         }
 
@@ -167,6 +168,8 @@ export class Configuration extends Disposable {
     async updateEffective(section: string, value: any, resource: Uri | null = null): Promise<void> {
         const inspect = this.inspect(section, resource);
 
+        const isDefault: boolean = deepEqual(value, inspect.defaultValue);
+
         if (inspect.workspaceFolderValue !== undefined) {
             if (value === inspect.workspaceFolderValue) { return undefined; }
 
@@ -179,13 +182,13 @@ export class Configuration extends Disposable {
             return configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
-        if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
+        if (inspect.globalValue === value || (inspect.globalValue === undefined && isDefault)) {
             return undefined;
         }
 
         return configuration.update(
             section,
-            value === inspect.defaultValue ? undefined : value,
+            isDefault ? undefined : value,
             ConfigurationTarget.Global
         );
     }

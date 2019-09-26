@@ -167,12 +167,11 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 break;
                             }
                             case ConfigTarget.Workspace: {
-                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 1) {
-                                    commands.executeCommand('workbench.action.openWorkspaceConfigFile');
-                                } else if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-                                    openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+                                    vscode.workspace.workspaceFile
+                                        ? await commands.executeCommand('workbench.action.openWorkspaceConfigFile')
+                                        : openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
                                 }
-
                                 break;
                             }
                         }
@@ -228,7 +227,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 let jqlSiteId: string | undefined = undefined;
 
                                 if (key === 'jira.jqlList') {
-                                    if (Array.isArray(value) && value.length > 0) {
+                                    if (Array.isArray(value)) {
                                         const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
                                         const newJqls = value.filter((entry: JQLEntry) => currentJQLs.find(cur => cur.id === entry.id) === undefined);
                                         if (newJqls.length > 0) {
