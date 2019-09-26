@@ -108,7 +108,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 break;
             }
             case 'init': {
-                this.setState({ ...e as ConfigData, config: this.configForTarget(this.state.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({ ...e as ConfigData, config: this.configForTarget(e.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
                 this.updateTabIndex();
                 this.refreshBySwitchingTabs();
                 break;
