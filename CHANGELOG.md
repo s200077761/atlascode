@@ -1,3 +1,13 @@
+## What's New In 2.0.0-beta2
+### Improvements
+* Added a refresh button on Jira issue view
+
+### Bugs fixed
+* Transitions are now reloaded when an issue is transitioned to get any new available options
+* Fixed bad default JQL in settings.json
+* Fixed error when checking for an empty user object
+* Fixed issue with credentials not saving for all sites
+
 ## What's New In 2.0.0-beta1
 ### Improvements
 * Support for Jira Server and Bitbucket Server
