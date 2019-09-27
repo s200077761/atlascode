@@ -1,48 +1,58 @@
-
-
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-//import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
-//import TsConfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import path from 'path';
-//import HtmlWebpackPlugin from "html-webpack-plugin";
-import webpack from "webpack";
+import fs from 'fs';
+import webpack from 'webpack';
+import ForkTsCheckerNotifierWebpackPlugin from 'fork-ts-checker-notifier-webpack-plugin';
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
+import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
 
-//const extractTextPlugin = new MiniCssExtractPlugin();
-const appSrc = path.resolve(__dirname, 'src');
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath);
+delete process.env.TS_NODE_PROJECT;
 
 const config: webpack.Configuration = {
     mode: "development",
-    entry: "./src/index.tsx",
+    entry: resolveApp("./src/index.tsx"),
     devtool: 'cheap-module-source-map',
     output: {
+        pathinfo: true,
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
-        devtoolModuleFilenameTemplate: info =>
-            path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+        filename: 'static/js/bundle.js',
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
-        extensions: [".ts", ".tsx", ".js", ".json"]
+        extensions: [".ts", ".tsx", ".js", ".json"],
+        plugins: [new TsconfigPathsPlugin({ configFile: resolveApp("./tsconfig.json") })],
     },
     plugins: [
         new MiniCssExtractPlugin(),
-        //extractTextPlugin,
-        //new ModuleScopePlugin(appSrc, [path.resolve(__dirname, 'package.json')]),
+        new ManifestPlugin({
+            fileName: 'asset-manifest.json',
+        }),
+        new webpack.IgnorePlugin(/iconv-loader\.js/),
+        new webpack.WatchIgnorePlugin([
+            /\.js$/,
+            /\.d\.ts$/
+        ]),
+        new ForkTsCheckerWebpackPlugin({
+            watch: resolveApp('src'),
+            tsconfig: resolveApp('tsconfig.json'),
+            tslint: resolveApp('tslint.json'),
+        }),
+        new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
 
     ],
     module: {
         rules: [
             {
-                test: /\.(js|jsx|mjs)$/,
-                loader: 'source-map-loader',
-                enforce: 'pre',
-                include: appSrc,
-            },
-            {
                 // Include ts, tsx, js, and jsx files.
                 test: /\.(ts|js)x?$/,
                 exclude: /node_modules/,
-                loader: 'babel-loader',
+                use: [
+                    { loader: 'ts-loader', options: { transpileOnly: true, onlyCompileBundledFiles: true } }
+                ],
             },
             {
                 test: /\.css$/,

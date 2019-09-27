@@ -10,8 +10,9 @@ delete process.env.TS_NODE_PROJECT;
 const main: webpack.Configuration = {
     bail: true,
     name: 'extension',
-    mode: 'production',
+    mode: 'development',
     target: 'node',
+    devtool: 'cheap-module-eval-source-map',
     entry: {
         extension: './src/extension.ts'
     },
@@ -50,7 +51,6 @@ const main: webpack.Configuration = {
     ]
 };
 const uninstall: webpack.Configuration = {
-    bail: true,
     name: 'uninstall',
     mode: 'production',
     target: 'node',
