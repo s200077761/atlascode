@@ -16,7 +16,9 @@ export const emptyUser: User = {
 };
 
 export function isEmptyUser(u: any): u is User {
-    return u && (<User>u).accountId.trim() === '';
+    return u 
+    && ((<User>u).accountId === undefined
+    || (<User>u).accountId.trim() === '');
 }
 
 export const emptyIssueType: IssueType = {
