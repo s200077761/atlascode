@@ -85,7 +85,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Transitions are now reloaded when an issue is transitioned to get any new available options</li>
                                 <li>Fixed bad default JQL in settings.json</li>
                                 <li>Fixed error when checking for an empty user object</li>
-                                <li>Fixed issue with creadentials not saving for all sites</li>
+                                <li>Fixed issue with credentials not saving for all sites</li>
                             </ul>
                         </section>
                         <h3>🎉 What's New in 2.0.0-beta1 🎉</h3>

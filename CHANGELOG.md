@@ -6,7 +6,7 @@
 * Transitions are now reloaded when an issue is transitioned to get any new available options
 * Fixed bad default JQL in settings.json
 * Fixed error when checking for an empty user object
-* Fixed issue with creadentials not saving for all sites
+* Fixed issue with credentials not saving for all sites
 
 ## What's New In 2.0.0-beta1
 ### Improvements
