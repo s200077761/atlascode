@@ -35,10 +35,7 @@ async function performTranstion(issueKey: string, transition: Transition, site: 
         const client = await Container.clientManager.jiraClient(site);
         await client.transitionIssue(issueKey, transition.id);
 
-        vscode.commands.executeCommand(Commands.RefreshJiraExplorer)
-            .then(b => {
-                Container.jiraIssueViewManager.refreshAll();
-            });
+        vscode.commands.executeCommand(Commands.RefreshJiraExplorer);
 
         issueTransitionedEvent(site, issueKey).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
