@@ -273,7 +273,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'comment': this._editUIData.fieldValues['comment'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
@@ -387,7 +386,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'worklog', this.fieldNameForKey('worklog')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -422,7 +420,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -461,7 +458,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -494,7 +490,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -530,7 +525,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -563,7 +557,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -593,7 +586,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
