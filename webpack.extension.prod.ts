@@ -2,6 +2,7 @@ import path from 'path';
 import webpack from 'webpack';
 import fs from 'fs';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath);
@@ -39,6 +40,32 @@ const main: webpack.Configuration = {
         filename: '[name].js',
         path: path.resolve(__dirname, 'build', 'extension'),
         libraryTarget: "commonjs"
+    },
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                extractComments: false,
+                terserOptions: {
+                    compress: {
+                        comparisons: false,
+                    },
+                    output: {
+                        comments: false,
+                        ascii_only: true
+                    }
+                }
+            })
+        ],
+        splitChunks: {
+            cacheGroups: {
+                styles: {
+                    name: 'main',
+                    test: /\.css$/,
+                    chunks: 'all',
+                    enforce: true,
+                },
+            },
+        }
     },
     externals: ['vscode'],
     plugins: [

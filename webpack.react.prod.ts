@@ -7,7 +7,7 @@ import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-//import UglifyJsPlugin from 'uglifyjs-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 import autoprefixer from 'autoprefixer';
 
 const appDirectory = fs.realpathSync(process.cwd());
@@ -25,30 +25,18 @@ const config: webpack.Configuration = {
     },
     optimization: {
         minimizer: [new OptimizeCSSAssetsPlugin({}),
-            // new UglifyJsPlugin({
-            //     uglifyOptions: {
-            //         parse: {
-            //             ecma: 8,
-            //         },
-            //         compress: {
-            //             ecma: 5,
-            //             warnings: false,
-            //             comparisons: false,
-            //             inline: 1,
-            //         },
-            //         output: {
-            //             ecma: 5,
-            //             comments: false,
-            //             ascii_only: true,
-            //         },
-            //     },
-            //     // Use multi-process parallel running to improve the build speed
-            //     // Default number of concurrent runs: os.cpus().length - 1
-            //     parallel: true,
-            //     // Enable file caching
-            //     cache: true,
-            // })
-
+        new TerserPlugin({
+            extractComments: false,
+            terserOptions: {
+                compress: {
+                    comparisons: false,
+                },
+                output: {
+                    comments: false,
+                    ascii_only: true
+                }
+            }
+        })
         ],
         splitChunks: {
             cacheGroups: {
@@ -120,7 +108,7 @@ const config: webpack.Configuration = {
                                 require('postcss-flexbugs-fixes'),
                                 autoprefixer({
                                     overrideBrowserslist: [
-                                        'Chrome > 0'
+                                        'last 4 Chrome versions'
                                     ],
                                     flexbox: 'no-2009',
                                 }),
