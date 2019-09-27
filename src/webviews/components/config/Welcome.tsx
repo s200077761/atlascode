@@ -72,6 +72,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h3>🎉 What's New in 2.0.0-beta2 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added a refresh button on Jira issue view</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Transitions are now reloaded when an issue is transitioned to get any new available options</li>
+                                <li>Fixed bad default JQL in settings.json</li>
+                                <li>Fixed error when checking for an empty user object</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.0.0-beta1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
