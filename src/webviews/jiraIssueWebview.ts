@@ -4,7 +4,7 @@ import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue, User } from "../j
 import { Action, onlineStatus } from "../ipc/messaging";
 import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { Container } from "../container";
-import { fetchEditIssueUI } from "../jira/fetchIssue";
+import { fetchEditIssueUI, fetchMinimalIssue } from "../jira/fetchIssue";
 import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
 import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction, isDeleteByIDAction, isOpenStartWorkPageAction } from "../ipc/issueActions";
@@ -79,12 +79,15 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         return values;
     }
 
-    private async forceUpdateIssue() {
+    private async forceUpdateIssue(refetchMinimalIssue: boolean = false) {
         if (this.isRefeshing) {
             return;
         }
         this.isRefeshing = true;
         try {
+            if (refetchMinimalIssue) {
+                this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
+            }
             const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
 
             if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
@@ -270,7 +273,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'comment': this._editUIData.fieldValues['comment'], nonce: msg.nonce }
                             });
-
                         }
                         catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
@@ -353,7 +355,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'issuelinks': this._editUIData.fieldValues['issuelinks'], nonce: msg.nonce }
                             });
-
+                            commands.executeCommand(Commands.RefreshJiraExplorer);
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'issuelinks', this.fieldNameForKey('issuelinks')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -384,7 +386,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'worklog': this._editUIData.fieldValues['worklog'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'worklog', this.fieldNameForKey('worklog')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -419,7 +420,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -458,7 +458,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'watches': this._editUIData.fieldValues['watches'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'watches', this.fieldNameForKey('watches')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -491,7 +490,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -527,7 +525,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'votes': this._editUIData.fieldValues['votes'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'votes', this.fieldNameForKey('votes')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -560,7 +557,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -590,7 +586,6 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'attachment': this._editUIData.fieldValues['attachment'], nonce: msg.nonce }
                             });
-
                             issueUpdatedEvent(this._issue.siteDetails, this._issue.key, 'attachment', this.fieldNameForKey('attachment')).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
                         } catch (e) {
@@ -605,15 +600,12 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isTransitionIssue(msg)) {
                         handled = true;
                         try {
+                            // note, this will refresh the explorer
                             await transitionIssue(msg.issue, msg.transition);
 
                             this._editUIData.fieldValues['status'] = msg.transition.to;
-                            this.postMessage({
-                                type: 'fieldValueUpdate'
-                                , fieldValues: { 'status': this._editUIData.fieldValues['status'], nonce: msg.nonce }
-                            });
-
-                            commands.executeCommand(Commands.RefreshJiraExplorer);
+                            // we need to force an update in case any new tranisitions are available
+                            await this.forceUpdateIssue(true);
 
                         } catch (e) {
                             Logger.error(new Error(`error transitioning issue: ${e}`));
@@ -623,12 +615,22 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     }
                     break;
                 }
+                case 'refreshIssue': {
+                    handled = true;
+                    try {
+                        await this.forceUpdateIssue(true);
+                    } catch (e) {
+                        Logger.error(new Error(`error refreshing issue: ${e}`));
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error refeshing issue') });
+                    }
+                    break;
+                }
                 case 'openStartWorkPage': {
                     if (isOpenStartWorkPageAction(msg)) {
                         handled = true;
                         startWorkOnIssue(this._issue);
-                        break;
                     }
+                    break;
                 }
                 case 'openPullRequest': {
                     if (isOpenPullRequest(msg)) {

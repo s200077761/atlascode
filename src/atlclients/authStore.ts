@@ -4,9 +4,9 @@ import { window, Disposable, EventEmitter, Event, version } from 'vscode';
 import { Logger } from '../logger';
 import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
-import debounce from 'lodash.debounce';
 import { OAuthRefesher } from './oauthRefresher';
 import { AnalyticsClient } from '../analytics-node-client/src';
+import PQueue from 'p-queue';
 
 const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
 
@@ -14,7 +14,7 @@ interface CredentialIdToAuthInfo { [k: string]: AuthInfo; }
 
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
-    private _debouncedKeychain = new Object();
+    private _queue = new PQueue({ concurrency: 1 });
     private _refresher = new OAuthRefesher();
 
     constructor(private _analyticsClient: AnalyticsClient) {
@@ -98,7 +98,7 @@ export class CredentialManager implements Disposable {
                     }
                     credentialsForProduct[site.credentialId] = info;
 
-                    await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(credentialsForProduct));
+                    await this.saveToKeychain(site.product.key, JSON.stringify(credentialsForProduct));
                 }
                 catch (e) {
                     Logger.debug("error saving auth info to keychain: ", e);
@@ -142,6 +142,14 @@ export class CredentialManager implements Disposable {
         //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
+    private async saveToKeychain(productKey: string, value: string) {
+        await this._queue.add(async () => {
+            if (keychain) {
+                await keychain.setPassword(keychainServiceNameV2, productKey, value);
+            }
+        }, { priority: 1 });
+    }
+
     private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
         let svcName = keychainServiceNameV2;
 
@@ -149,10 +157,13 @@ export class CredentialManager implements Disposable {
             svcName = serviceName;
         }
 
-        if (!this._debouncedKeychain[productKey]) {
-            this._debouncedKeychain[productKey] = debounce(async () => await keychain!.getPassword(svcName, productKey), 500, { leading: true });
-        }
-        return await this._debouncedKeychain[productKey]();
+        let authInfo: string | null = null;
+        await this._queue.add(async () => {
+            if (keychain) {
+                authInfo = await keychain.getPassword(svcName, productKey);
+            }
+        }, { priority: 0 });
+        return authInfo;
     }
 
     public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
@@ -188,8 +199,7 @@ export class CredentialManager implements Disposable {
                 let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
                 wasKeyDeleted = Object.keys(infos).includes(site.credentialId);
                 delete infos[site.credentialId];
-
-                await keychain.setPassword(keychainServiceNameV2, site.product.key, JSON.stringify(infos));
+                await this.saveToKeychain(site.product.key, JSON.stringify(infos));
             }
         }
 

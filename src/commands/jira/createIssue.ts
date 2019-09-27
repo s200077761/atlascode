@@ -59,13 +59,14 @@ function isUri(a: any): a is Uri {
 function annotateComment(data: CommentData) {
     const we = new WorkspaceEdit();
 
-    we.insert(data.uri, data.position, ` [${data.issueKey}]`);
+    const summary = data.summary && data.summary.length > 0 ? ` ${data.summary}` : '';
+    we.insert(data.uri, data.position, ` [${data.issueKey}]${summary}`);
     workspace.applyEdit(we);
 }
 
 async function updateBBIssue(data: BBData) {
     const bbApi = await clientForRemote(data.bbIssue.remote);
-    await bbApi.issues!.postComment(data.bbIssue, `linked to:${data.issueKey}`);
+    await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
 
     const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
     if (comps && Array.isArray(comps)) {

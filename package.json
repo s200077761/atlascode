@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.35.0"
+        "vscode": "^1.37.0"
     },
     "categories": [
         "Other"
@@ -518,6 +518,12 @@
                     "description": "Specifies how much (if any) output will be sent to the Atlassian output channel",
                     "scope": "window"
                 },
+                "atlascode.configurationTarget": {
+                    "type": "string",
+                    "default": "user",
+                    "enum": ["user", "workspace"],
+                    "description": "Location to which configuration changes are saved"
+                },
                 "atlascode.enableCharles": {
                     "type": "boolean",
                     "default": false,
@@ -710,6 +716,7 @@
                 },
                 "atlascode.jira.jqlList": {
                     "type": "array",
+                    "default": [],
                     "scope": "window",
                     "description": "The list of JQL queries that populate the issue list view",
                     "items": {
@@ -961,6 +968,7 @@
         "analytics-node": "^3.3.0",
         "axios": "^0.19.0",
         "date-fns": "^1.30.1",
+        "deep-equal": "^1.1.0",
         "escape-string-regexp": "^1.0.5",
         "express": "^4.17.1",
         "filesize": "^4.1.2",
@@ -974,6 +982,7 @@
         "merge-anything": "^2.4.1",
         "p-any": "^2.1.0",
         "p-debounce": "^2.1.0",
+        "p-queue": "^6.1.1",
         "p-settle": "^3.1.0",
         "p-timeout": "^3.1.0",
         "passport": "^0.4.0",
@@ -1008,6 +1017,7 @@
         "@babel/preset-react": "^7.0.0",
         "@babel/preset-typescript": "^7.6.0",
         "@types/analytics-node": "^3.1.1",
+        "@types/deep-equal": "^1.0.1",
         "@types/escape-string-regexp": "^1.0.0",
         "@types/filesize": "^4.1.0",
         "@types/git-url-parse": "^9.0.0",
@@ -1018,6 +1028,7 @@
         "@types/mini-css-extract-plugin": "^0.8.0",
         "@types/mocha": "^5.2.2",
         "@types/node": "^12.6.9",
+        "@types/p-queue": "^3.2.1",
         "@types/passport": "^1.0.1",
         "@types/passport-oauth2": "^1.4.8",
         "@types/react": "^16.8.19",

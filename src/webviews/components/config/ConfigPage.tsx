@@ -108,7 +108,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 break;
             }
             case 'init': {
-                this.setState({ ...e as ConfigData, config: this.configForTarget(this.state.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({ ...e as ConfigData, config: this.configForTarget(e.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
                 this.updateTabIndex();
                 this.refreshBySwitchingTabs();
                 break;
@@ -140,6 +140,10 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     handleTargetChange = (selected: any) => {
         const config = this.configForTarget(selected.value);
         this.setState({ target: selected.value, targetUri: selected.uri, config: config });
+        const change = Object.create(null);
+        change['configurationTarget'] = selected.value;
+
+        this.postMessage({ action: 'saveSettings', changes: change, removes: undefined, target: ConfigTarget.User, targetUri: "" });
     }
 
     handleOpenJson = () => {

@@ -32,6 +32,7 @@ export default class AuthForm extends PureComponent<{
     isCloudUrl = (url: URL): boolean => {
         return (
             url.hostname.endsWith("atlassian.net")
+            || url.hostname.endsWith("jira.com")
             || url.hostname.endsWith("jira-dev.com")
             || url.hostname.endsWith("bitbucket.org")
             || url.hostname.endsWith("bb-inf.net")

@@ -29,6 +29,7 @@ export interface CommentData {
     uri: Uri;
     position: Position;
     issueKey: string;
+    summary: string;
 }
 
 export interface BBData {
@@ -246,7 +247,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
 
     updateIssueType(issueType: IssueType, fieldValues: FieldValues) {
-        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues, ['site', 'project']);
+        const fieldOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], fieldValues);
         this._screenData.issueTypeUIs[issueType.id].fieldValues = { ...this._screenData.issueTypeUIs[issueType.id].fieldValues, ...fieldOverrides };
 
         const selectOverrides = this.getValuesForExisitngKeys(this._screenData.issueTypeUIs[issueType.id], this._screenData.issueTypeUIs[this._selectedIssueTypeId].selectFieldOptions);
@@ -276,9 +277,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         return foundVals;
     }
 
-    fireCallback(issueKey: string) {
+    fireCallback(issueKey: string, summary: string) {
         if (this._partialIssue && this._partialIssue.uri && this._partialIssue.position && this._partialIssue.onCreated) {
-            this._partialIssue.onCreated({ uri: this._partialIssue.uri, position: this._partialIssue.position, issueKey: issueKey });
+            const createdSummary = this._partialIssue.summary && this._partialIssue.summary.trim().length > 0 ? '' : summary;
+            this._partialIssue.onCreated({ uri: this._partialIssue.uri, position: this._partialIssue.position, issueKey: issueKey, summary: createdSummary });
             this.hide();
         } else if (this._relatedBBIssue && this._partialIssue && this._partialIssue.onCreated) {
             this._partialIssue.onCreated({ bbIssue: this._relatedBBIssue, issueKey: issueKey });
@@ -406,7 +408,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             this.postMessage({ type: 'issueCreated', issueData: { ...resp, siteDetails: msg.site }, nonce: msg.nonce });
 
                             commands.executeCommand(Commands.RefreshJiraExplorer);
-                            this.fireCallback(resp.key);
+                            this.fireCallback(resp.key, payload.summary);
 
                             await configuration.setLastCreateSiteAndProject({ siteId: this._siteDetails.id, projectKey: this._currentProject!.key });
 

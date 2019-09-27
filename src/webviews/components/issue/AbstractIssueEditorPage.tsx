@@ -290,6 +290,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 let validateFunc = this.getValidateFunction(field, editmode);
                 let validationFailMessage = "";
                 let valType = field.valueType;
+
+                const defaultVal = this.state.fieldValues[field.key] === undefined ? '' : this.state.fieldValues[field.key];
                 switch (valType) {
                     case ValueType.Number: {
                         validationFailMessage = `${field.name} must be a number`;
@@ -314,12 +316,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         if (this.state.fieldValues[`${field.key}.rendered`] !== undefined) {
                             markup = <p id={field.key} dangerouslySetInnerHTML={{ __html: this.state.fieldValues[`${field.key}.rendered`] }} />;
                         } else {
-                            markup = <p id={field.key} >{this.state.fieldValues[field.key]}</p>;
+                            markup = <p id={field.key} >{defaultVal}</p>;
                         }
                     } else {
                         markup = <EdiText
                             type={this.inlineEditTypeForValueType(field.valueType)}
-                            value={(this.state.fieldValues[field.key]) ? this.state.fieldValues[field.key] : ""}
+                            value={defaultVal}
                             onSave={(val: string) => { this.handleInlineEdit(field, val); }}
                             validation={validateFunc}
                             validationMessage={validationFailMessage}
@@ -334,8 +336,9 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     return markup;
                 }
 
+
                 return (
-                    <Field defaultValue={this.state.fieldValues[field.key]} label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
+                    <Field defaultValue={defaultVal} label={field.name} isRequired={field.required} id={field.key} name={field.key} validate={validateFunc}>
                         {
                             (fieldArgs: any) => {
                                 let errDiv = <span />;

@@ -17,7 +17,7 @@ import { window, Memento } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
-import { V1toV2Migrator } from './migrations/v1tov2';
+import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
 
 const AnalyticDelay = 5000;
 
@@ -84,9 +84,12 @@ async function migrateConfig(globalState: Memento): Promise<void> {
             cfg.jira.workingSite);
         await migrator.convertLegacyAuthInfo();
         await globalState.update(AuthInfoVersionKey, 2);
+        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
+    } else {
+        // we've already migrated to 2.x but we might need to migrate workspace JQL
+        migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
+        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
     }
-
-    await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

@@ -138,11 +138,11 @@ export interface Priority {
 export interface Transition {
     hasScreen: boolean;
     id: string;
+    name: string;
+    to: Status;
     isConditional: boolean;
     isGlobal: boolean;
     isInitial: boolean;
-    name: string;
-    to: Status;
 }
 
 export interface IssueType {
@@ -327,7 +327,11 @@ export function isPriority(a: any): a is Priority {
 }
 
 export function isTransition(a: any): a is Transition {
-    return a && (<Transition>a).to !== undefined && (<Transition>a).hasScreen !== undefined;
+    return a && (<Transition>a).to !== undefined
+        && (<Transition>a).id !== undefined
+        && (<Transition>a).id !== ''
+        && (<Transition>a).name !== undefined
+        && (<Transition>a).name !== '';
 }
 
 export function isProject(a: any): a is Project {

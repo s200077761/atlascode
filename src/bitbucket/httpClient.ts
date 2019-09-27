@@ -110,6 +110,13 @@ export class Client {
         return { data: res.data, headers: res.headers };
     }
 
+    generateUrl(urlSlug: string, queryParams?: any): string {
+        let url = `${this.baseUrl}${urlSlug}`;
+        url = this.addQueryParams(url, queryParams);
+
+        return url;
+    }
+
     private addQueryParams(url: string, queryParams?: any): string {
         let result = url;
         if (queryParams) {

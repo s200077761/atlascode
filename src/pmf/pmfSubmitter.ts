@@ -3,6 +3,7 @@ import { Container } from "../container";
 import { format } from 'date-fns';
 import axios from 'axios';
 import { pmfSubmitted } from "../analytics";
+import { Time } from "../util/time";
 
 const devPMF = {
     collectorId: "235854834",
@@ -135,7 +136,16 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
         });
     }
 
-    axios(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
+    const transport = axios.create({
+        timeout: 10 * Time.SECONDS,
+        headers: {
+            'X-Atlassian-Token': 'no-check',
+            'x-atlassian-force-account-id': 'true',
+            "Accept-Encoding": "gzip, deflate"
+        }
+    });
+
+    transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

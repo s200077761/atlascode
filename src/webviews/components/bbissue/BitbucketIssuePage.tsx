@@ -35,6 +35,7 @@ import ErrorBanner from "../ErrorBanner";
 import { BitbucketIssueData, UnknownUser } from "../../../bitbucket/model";
 import { FetchUsersResult } from "../../../ipc/prMessaging";
 import { FetchUsers } from "../../../ipc/prActions";
+import { distanceInWordsToNow, format } from "date-fns";
 
 type SizeMetrics = {
     width: number;
@@ -238,7 +239,12 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                         <BreadcrumbsItem component={() => <NavItem text={`Issue #${issue.id}`} href={issue.links!.html!.href} onCopy={this.handleCopyLink} />} />
                                     </BreadcrumbsStateless>}
                                 >
-                                    <p>{issue.title}</p>
+                                    <Tooltip content={`Created on ${format(issue.created_on, 'YYYY-MM-DD h:mm A')}`}>
+                                        <React.Fragment>
+                                            <p>{issue.title}</p>
+                                            <p style={{fontSize: 13, color: 'silver'}}>{`Created ${distanceInWordsToNow(issue.created_on)} ago`}</p>
+                                        </React.Fragment>
+                                    </Tooltip>
                                 </PageHeader>
                                 <p dangerouslySetInnerHTML={{ __html: issue.content!.html! }} />
 

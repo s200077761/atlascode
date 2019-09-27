@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Button from "@atlaskit/button";
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, ProductBitbucket, Product, ProductJira } from "../../../atlclients/authInfo";
+import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, Product, ProductJira } from "../../../atlclients/authInfo";
 import AuthForm from "./AuthForm";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
@@ -54,7 +54,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                 <AuthForm
                     onCancel={() => setAddingSite(false)}
                     onSave={handleSave}
-                    product={ProductBitbucket} />
+                    product={product} />
             }
             <div className='ac-vpadding'>
                 <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>

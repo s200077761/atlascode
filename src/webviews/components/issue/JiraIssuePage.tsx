@@ -34,10 +34,11 @@ import WatchesForm from './WatchesForm';
 import VotesForm from './VotesForm';
 import { AttachmentsModal } from './AttachmentsModal';
 import { AtlLoader } from '../AtlLoader';
-import { distanceInWordsToNow } from "date-fns";
+import { distanceInWordsToNow, format } from "date-fns";
 import { AttachmentList } from './AttachmentList';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 
 type Emit = CommonEditorPageEmit | EditIssueAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
@@ -318,6 +319,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
     }
 
+    handleRefresh = () => {
+        this.setState({ isSomethingLoading: true, loadingField: 'refresh' });
+        this.postMessage({ action: 'refreshIssue' });
+    }
+
     handleDeleteIssuelink = (issuelink: any) => {
         this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
@@ -361,7 +367,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </React.Fragment>
                         }
 
-                        <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                        <Tooltip content={`Created on ${format(this.state.fieldValues['created'], 'YYYY-MM-DD h:mm A')}`}>
+                            <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                        </Tooltip>
                     </div>
                     <h2>
                         {this.getInputMarkup(this.state.fields['summary'], true)}
@@ -456,6 +464,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return (
             <React.Fragment>
                 <ButtonGroup>
+                    <Tooltip content="Refesh">
+                        <Button className='ac-button'
+                            onClick={this.handleRefresh}
+                            iconBefore={<RefreshIcon label="refresh" />}
+                            isLoading={this.state.loadingField === 'refresh'} />
+                    </Tooltip>
                     {this.state.fields['worklog'] &&
                         <div className='ac-inline-dialog'>
                             <InlineDialog

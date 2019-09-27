@@ -84,18 +84,18 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and author.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { q: `state="OPEN" and author.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
         return this.getList(
             repository,
             remote,
-            { q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        const { data } = await this.client.get(next!);
+        const { data } = await this.client.getURL(next!);
 
         const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
         return { repository: repository, remote: remote, data: prs, next: data.next };
@@ -105,7 +105,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.getList(
             repository,
             remote,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${(await Container.bitbucketContext.currentUser(remote)).accountId}"` });
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
     }
 
     async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
@@ -402,7 +402,8 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
-        const commentBelongsToUser: boolean = data.user.account_id === (await Container.bitbucketContext.currentUser(remote)).accountId;
+        const site = siteDetailsForRemote(remote);
+        const commentBelongsToUser: boolean = site ? data.user.account_id === site.userId : false;
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,

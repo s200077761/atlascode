@@ -214,6 +214,7 @@ export default class EditJQL extends PureComponent<{
           }
           <div style={{
             marginTop: '24px',
+            marginBottom: '10px',
             display: 'flex',
             justifyContent: 'flex-end'
           }}>

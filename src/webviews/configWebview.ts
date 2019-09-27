@@ -68,12 +68,15 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 workspaceFolders = vscode.workspace.workspaceFolders.map(folder => { return { name: folder.name, uri: folder.uri.toString() }; });
             }
 
+            const target = configuration.get<string>('configurationTarget');
+
             this.postMessage({
                 type: 'init',
                 inspect: this.getInspect(),
                 jiraSites: jiraSitesAvailable,
                 bitbucketSites: bitbucketSitesAvailable,
                 workspaceFolders: workspaceFolders,
+                target: target,
                 feedbackUser: feedbackUser,
             });
         } catch (e) {
@@ -100,6 +103,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
             "workspacefolder": (inspect.workspaceFolderValue) ? inspect.workspaceFolderValue : {},
         };
     }
+
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
         const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
 
@@ -167,12 +171,11 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 break;
                             }
                             case ConfigTarget.Workspace: {
-                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 1) {
-                                    commands.executeCommand('workbench.action.openWorkspaceConfigFile');
-                                } else if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-                                    openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+                                    vscode.workspace.workspaceFile
+                                        ? await commands.executeCommand('workbench.action.openWorkspaceConfigFile')
+                                        : openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
                                 }
-
                                 break;
                             }
                         }
@@ -228,7 +231,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                                 let jqlSiteId: string | undefined = undefined;
 
                                 if (key === 'jira.jqlList') {
-                                    if (Array.isArray(value) && value.length > 0) {
+                                    if (Array.isArray(value)) {
                                         const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
                                         const newJqls = value.filter((entry: JQLEntry) => currentJQLs.find(cur => cur.id === entry.id) === undefined);
                                         if (newJqls.length > 0) {
