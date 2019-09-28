@@ -3,8 +3,8 @@ import { Action, onlineStatus } from '../ipc/messaging';
 import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { RefType, Repository, Remote } from '../typings/git';
-import { RepoData } from '../ipc/prMessaging';
+import { RefType, Repository, Remote, Branch } from '../typings/git';
+import { RepoData, FileDiff, FileStatus } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
@@ -13,12 +13,13 @@ import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
-import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { isOpenBitbucketIssueAction, isUpdateDiffAction } from '../ipc/bitbucketIssueActions';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
+import { Shell } from '../util/shell';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
 
@@ -49,6 +50,17 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             this.postMessage(onlineStatus(false));
         }
         Container.pmfStats.touchActivity();
+    }
+
+    async getCurrentRepo(repoData: RepoData): Promise<Repository> {
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
+
+        const currentRepo: Repository | undefined = repos.find(r => r.rootUri.toString() === repoData.uri);
+        if(currentRepo) {
+            return currentRepo;
+        } else {
+            return Promise.reject(new Error('Could not match repoData object to local repository'));
+        }
     }
 
     async updateFields() {
@@ -171,6 +183,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     }
                     break;
                 }
+                case 'updateDiff': {
+                    if(isUpdateDiffAction(e)){
+                        let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
+
+                        this.postMessage({type: 'diffResult', fileDiffs: fileDiffs});
+                    }
+                    break;
+                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
@@ -200,6 +220,39 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             type: 'commitsResult',
             commits: result
         });
+    }
+
+    async updateDestinationBranch(sourceBranch: Branch, destinationBranch: Branch, shell: Shell): Promise<void> {
+        await shell.exec(`git checkout ${destinationBranch.name}`);
+        await shell.exec(`git pull ${destinationBranch.name}`);
+        await shell.exec(`git checkout ${sourceBranch.name}`);
+    }
+
+    async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
+        const regex = new RegExp(/\/[[a-zA-Z0-9]+\//);
+        const regexResults = regex.exec(repo.uri)![0];
+        const workingDirectory: string = repo.uri.slice(repo.uri.indexOf(regexResults), repo.uri.length);
+        const shell = new Shell(workingDirectory);
+        
+        await this.updateDestinationBranch(sourceBranch, destinationBranch, shell);
+        //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
+        //We want seperate each line and extract this data so we can create file diff
+        const diffOutput = await shell.output(`git diff --numstat ${destinationBranch.commit} ${sourceBranch.commit}`);
+        let diffOutputLines = diffOutput.split(/\r?\n/); //Using \r or \n ensure this will work on Windows and Unix-based systems
+
+        //The bitbucket website also provides a status for each file (modified, added, deleted, etc.), so we need to get this info too.
+        //git diff-index --name-status will return lines in the form {status}        {name of file}
+        //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
+        const statusOutput = await shell.output(`git diff-index --name-status ${destinationBranch.commit}`);
+        let statusOutputLines = statusOutput.split(/\r?\n/);
+
+        let fileDiffs: FileDiff[] = [];
+        for(let i = 0; i < diffOutputLines.length; i++){
+            const wordsInLine = diffOutputLines[i].split(/\s+/);
+            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: wordsInLine[2], status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
+        }
+
+        return fileDiffs;
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
