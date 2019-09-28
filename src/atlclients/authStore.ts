@@ -89,24 +89,15 @@ export class CredentialManager implements Disposable {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
             }
 
-            if (keychain) {
-                try {
-                    let credentialsForProduct: CredentialIdToAuthInfo = {};
-                    let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
-                    if (infoEntry) {
-                        credentialsForProduct = JSON.parse(infoEntry);
-                    }
-                    credentialsForProduct[site.credentialId] = info;
-
-                    await this.saveToKeychain(site.product.key, JSON.stringify(credentialsForProduct));
-                }
-                catch (e) {
-                    Logger.debug("error saving auth info to keychain: ", e);
-                }
+            try {
+                this.addSiteInformationToKeychain(site.product.key, site.credentialId, info);
 
                 const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
                 this._onDidAuthChange.fire(updateEvent);
+            } catch (e) {
+                Logger.debug("error saving auth info to keychain: ", e);
             }
+
         }
     }
 
@@ -142,12 +133,37 @@ export class CredentialManager implements Disposable {
         //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
-    private async saveToKeychain(productKey: string, value: string) {
+    private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
         await this._queue.add(async () => {
             if (keychain) {
-                await keychain.setPassword(keychainServiceNameV2, productKey, value);
+                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
+                let infoDict: CredentialIdToAuthInfo = {};
+                if (infoEntry) {
+                    infoDict = JSON.parse(infoEntry);
+                }
+                infoDict[credentialId] = info;
+                await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
             }
         }, { priority: 1 });
+    }
+
+    private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
+        let wasKeyDeleted = false;
+        await this._queue.add(async () => {
+            if (keychain) {
+                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
+                let infoDict: CredentialIdToAuthInfo = {};
+                if (infoEntry) {
+                    infoDict = JSON.parse(infoEntry);
+                    wasKeyDeleted = Object.keys(infoDict).includes(credentialId);
+                    if (wasKeyDeleted) {
+                        delete infoDict[credentialId];
+                        await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
+                    }
+                }
+            }
+        }, { priority: 1 });
+        return wasKeyDeleted;
     }
 
     private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
@@ -193,15 +209,7 @@ export class CredentialManager implements Disposable {
             this._memStore.set(site.product.key, productAuths);
         }
 
-        if (keychain) {
-            let infoEntry = await this.getJsonAuthInfoFromKeychain(site.product.key) || undefined;
-            if (infoEntry) {
-                let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
-                wasKeyDeleted = Object.keys(infos).includes(site.credentialId);
-                delete infos[site.credentialId];
-                await this.saveToKeychain(site.product.key, JSON.stringify(infos));
-            }
-        }
+        wasKeyDeleted = await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
 
         if (wasMemDeleted || wasKeyDeleted) {
             const cmdctx = this.commandContextFor(site.product);
