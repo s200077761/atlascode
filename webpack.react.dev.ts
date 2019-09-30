@@ -13,7 +13,7 @@ delete process.env.TS_NODE_PROJECT;
 
 const config: webpack.Configuration = {
     mode: "development",
-    entry: resolveApp("./src/index.tsx"),
+    entry: resolveApp("./src/webviews/components/index.tsx"),
     devtool: 'cheap-module-source-map',
     output: {
         pathinfo: true,

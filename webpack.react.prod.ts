@@ -17,7 +17,7 @@ delete process.env.TS_NODE_PROJECT;
 const config: webpack.Configuration = {
     bail: true,
     mode: "production",
-    entry: resolveApp("./src/index.tsx"),
+    entry: resolveApp("./src/webviews/components/index.tsx"),
     output: {
         path: path.resolve(__dirname, 'build'),
         filename: 'static/js/[name].[chunkhash:8].js',
@@ -97,7 +97,13 @@ const config: webpack.Configuration = {
                             hmr: false,
                         },
                     },
-                    'css-loader',
+                    {
+                        loader: require.resolve('css-loader'),
+                        options: {
+                            importLoaders: 1,
+                            sourceMap: true,
+                        },
+                    },
                     {
                         loader: 'postcss-loader',
                         options: {
