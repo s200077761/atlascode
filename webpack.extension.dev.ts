@@ -12,7 +12,7 @@ const main: webpack.Configuration = {
     name: 'extension',
     mode: 'development',
     target: 'node',
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-source-map',
     entry: {
         extension: './src/extension.ts'
     },
