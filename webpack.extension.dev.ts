@@ -39,7 +39,8 @@ const main: webpack.Configuration = {
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'build', 'extension'),
-        libraryTarget: "commonjs"
+        libraryTarget: "commonjs",
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
     },
     externals: ['vscode'],
     plugins: [

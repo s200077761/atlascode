@@ -20,6 +20,7 @@ const config: webpack.Configuration = {
         path: path.resolve(__dirname, 'build'),
         chunkFilename: 'static/js/[name].chunk.js',
         filename: 'static/js/bundle.js',
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
     },
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
