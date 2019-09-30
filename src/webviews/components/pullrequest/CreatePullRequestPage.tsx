@@ -223,6 +223,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 sourceBranch: this.state.sourceBranch!.value,
                 destinationBranch: this.state.destinationBranch!.value
             });
+        } else {
+            this.setState({ fileDiffsLoading: false, fileDiffs: []});
         }
     }
 
@@ -576,6 +578,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                     <ul className='commit-files-summary' id='commit-files-summary'>
                                                         {this.generateDiffList()}
                                                     </ul>
+                                                }
+                                                {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
+                                                    <p>There are no changes to display.</p>
                                                 }
                                             </Panel>
                                         </GridColumn>
