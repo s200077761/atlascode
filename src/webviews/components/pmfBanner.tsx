@@ -5,7 +5,7 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import Form, { FormFooter, Field } from '@atlaskit/form';
 import { RadioGroup } from '@atlaskit/radio';
-import { FieldValidators, chain } from './fieldValidators';
+import * as FieldValidators from './fieldValidators';
 
 const q1 = { id: "q1", question: "How would you feel if you could no longer use this extension?" };
 const q2 = { id: "q2", question: "(optional) How can we improve this extension for you?" };
@@ -86,7 +86,7 @@ export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visib
                                             {
                                                 (fieldArgs: any) => {
                                                     return (<RadioGroup {...fieldArgs.fieldProps} options={radioItems}
-                                                        onChange={chain(fieldArgs.fieldProps.onChange, this.updateQ1)}
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.updateQ1)}
                                                     />);
                                                 }
                                             }

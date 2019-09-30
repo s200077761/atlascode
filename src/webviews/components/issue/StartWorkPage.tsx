@@ -26,7 +26,7 @@ import { BitbucketIssueData } from "../../../bitbucket/model";
 import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-client/model/entities";
 import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
 import EdiText from 'react-editext';
-import { FieldValidators } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import { AtlLoader } from "../AtlLoader";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;

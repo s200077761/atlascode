@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { IssueType } from "../../../jira/jira-client/model/entities";
 import EdiText from 'react-editext';
-import { FieldValidators } from '../fieldValidators';
+import * as FieldValidators from '../fieldValidators';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import { emptyIssueType } from '../../../jira/jira-client/model/emptyEntities';

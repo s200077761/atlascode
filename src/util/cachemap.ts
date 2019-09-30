@@ -18,7 +18,7 @@ export enum Interval {
 }
 
 export class CacheMap {
-    private _data:Map<string,ICacheItem> = new Map<string,ICacheItem>();
+    private _data: Map<string, ICacheItem> = new Map<string, ICacheItem>();
 
     public getItem<T>(key: string): T | undefined {
         let item = this._data.get(key);
@@ -47,8 +47,8 @@ export class CacheMap {
             ttl: ttl,
             createdAt: Date.now()
         };
-        
-        this._data.set(key,{
+
+        this._data.set(key, {
             content: content,
             meta: meta
         });
@@ -59,7 +59,7 @@ export class CacheMap {
 
         if (item) {
             item.content = content;
-            this._data.set(key,item);
+            this._data.set(key, item);
         }
     }
 
