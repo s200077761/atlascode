@@ -43,11 +43,10 @@ export class ClientManager implements Disposable {
 
   // used to add and remove the proxy agent when charles setting changes.
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
-    const section = "enableCharles";
 
     const initializing = configuration.initializing(e);
 
-    if (initializing || configuration.changed(e, section)) {
+    if (initializing || configuration.changed(e, 'enableCharles') || configuration.changed(e, 'charlesCertPath') || configuration.changed(e, 'charlesDebugOnly')) {
       this._agentChanged = true;
 
       this._agent = getAgent();
