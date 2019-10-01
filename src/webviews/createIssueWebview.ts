@@ -350,7 +350,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
             switch (msg.action) {
                 case 'refresh': {
                     handled = true;
-                    this.invalidate();
+                    this.forceUpdateFields();
                     break;
                 }
 

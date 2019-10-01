@@ -262,6 +262,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const pr = this.state.pr.pr!;
 
         if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         } else if (!pr && !this.state.isOnline) {
             return (
@@ -399,7 +400,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <Tooltip content={`Created on ${format(pr.ts, 'YYYY-MM-DD h:mm A')}`}>
                                     <React.Fragment>
                                         <p>{pr.title}</p>
-                                        <p style={{fontSize: 13, color: 'silver'}}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
+                                        <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
                                     </React.Fragment>
                                 </Tooltip>
                             </PageHeader>

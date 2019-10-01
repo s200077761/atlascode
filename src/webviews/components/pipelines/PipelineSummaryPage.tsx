@@ -328,6 +328,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
   render() {
     if (this.state.pipeline.uuid === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      this.postMessage({ action: 'refresh' });
       return <AtlLoader />;
     }
 

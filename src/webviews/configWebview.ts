@@ -136,6 +136,11 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
         if (!handled) {
             switch (msg.action) {
+                case 'refresh': {
+                    handled = true;
+                    this.invalidate();
+                    break;
+                }
                 case 'login': {
                     handled = true;
                     if (isLoginAuthAction(msg)) {

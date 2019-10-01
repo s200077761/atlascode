@@ -3,7 +3,6 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import SizeDetector from "@atlaskit/size-detector";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import Panel from '@atlaskit/panel';
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
@@ -36,6 +35,7 @@ import { BitbucketIssueData, UnknownUser } from "../../../bitbucket/model";
 import { FetchUsersResult } from "../../../ipc/prMessaging";
 import { FetchUsers } from "../../../ipc/prActions";
 import { distanceInWordsToNow, format } from "date-fns";
+import { AtlLoader } from "../AtlLoader";
 
 type SizeMetrics = {
     width: number;
@@ -204,7 +204,8 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         const issue = this.state.data.issueData as BitbucketIssueData;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
+            this.postMessage({ action: 'refreshIssue' });
+            return <AtlLoader />;
         } else if (!issue.repository && !this.state.isOnline) {
             return <div><Offline /></div>;
         }
@@ -224,15 +225,15 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                 }
                                 <PageHeader
                                     actions={
-                                    <ButtonGroup>
-                                        <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
-                                        {this.state.data.showJiraButton &&
-                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
-                                        }
-                                        <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
-                                            <RefreshIcon label="refresh" size="small"></RefreshIcon>
-                                        </Button>
-                                    </ButtonGroup>}
+                                        <ButtonGroup>
+                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
+                                            {this.state.data.showJiraButton &&
+                                                <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
+                                            }
+                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
+                                                <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                                            </Button>
+                                        </ButtonGroup>}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                                         <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />
                                         <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issue.repository!.links!.html!.href}/issues`} />} />
@@ -242,7 +243,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     <Tooltip content={`Created on ${format(issue.created_on, 'YYYY-MM-DD h:mm A')}`}>
                                         <React.Fragment>
                                             <p>{issue.title}</p>
-                                            <p style={{fontSize: 13, color: 'silver'}}>{`Created ${distanceInWordsToNow(issue.created_on)} ago`}</p>
+                                            <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(issue.created_on)} ago`}</p>
                                         </React.Fragment>
                                     </Tooltip>
                                 </PageHeader>

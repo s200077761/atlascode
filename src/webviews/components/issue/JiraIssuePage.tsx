@@ -676,6 +676,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     public render() {
         if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;
         }
 
