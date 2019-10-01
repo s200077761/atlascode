@@ -169,14 +169,14 @@ export async function viewScreenEvent(screenName: string, site?: DetailedSiteInf
     const e = {
         tenantIdType: null,
         name: screenName,
-        screenEvent: {
+        screenEvent: instanceType({
             origin: 'desktop',
             platform: AnalyticsPlatform.for(process.platform),
-        }
+        }, site)
     };
 
     const tenantId: string | undefined = (site) ? site.id : undefined;
-    return instanceType<ScreenEvent>(anyUserOrAnonymous<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId)));
+    return anyUserOrAnonymous<ScreenEvent>(tenantOrNull<ScreenEvent>(e, tenantId));
 }
 
 // UI Events
@@ -256,10 +256,10 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
 async function instanceTrackEvent(site: DetailedSiteInfo, action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
 
     let event: TrackEvent = (site.isCloud && site.product.key === ProductJira.key) ?
-        await tenantTrackEvent(site.id, action, actionSubject, attributes)
-        : await trackEvent(action, actionSubject, attributes);
+        await tenantTrackEvent(site.id, action, actionSubject, instanceType(attributes, site))
+        : await trackEvent(action, actionSubject, instanceType(attributes, site));
 
-    return instanceType<TrackEvent>(event, site);
+    return event;
 }
 
 async function trackEvent(action: string, actionSubject: string, attributes: any = {}): Promise<TrackEvent> {
@@ -317,16 +317,16 @@ function tenantOrNull<T>(e: Object, tenantId?: string): T {
     return newObj as T;
 }
 
-function instanceType<T>(e: Object, site?: DetailedSiteInfo): T {
+function instanceType(attributes: Object, site?: DetailedSiteInfo): Object {
     let newObj: Object;
 
     if (site && !isEmptySiteInfo(site)) {
         const instanceType: string = site.isCloud ? 'cloud' : 'server';
-        newObj = { ...e, ...{ instanceType: instanceType } };
+        newObj = { ...attributes, ...{ instanceType: instanceType } };
     } else {
-        newObj = e;
+        newObj = attributes;
     }
 
-    return newObj as T;
+    return newObj;
 
 }
