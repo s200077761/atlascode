@@ -1,4 +1,4 @@
-## What's New In 2.0.0-beta2
+## What's New In 2.0.0-beta3
 ### Improvements
 * Added support for merge commit messages
 
