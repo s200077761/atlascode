@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import axios from 'axios';
 import { pmfSubmitted } from "../analytics";
 import { Time } from "../util/time";
+import { getAgent } from "../atlclients/charles";
 
 const devPMF = {
     collectorId: "235854834",
@@ -142,7 +143,8 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',
             "Accept-Encoding": "gzip, deflate"
-        }
+        },
+        httpsAgent: getAgent()
     });
 
     transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {

@@ -533,6 +533,18 @@
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
                     "scope": "window"
                 },
+                "atlascode.charlesCertPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "The absolute path to the generated charles ssl certificate (pem file)",
+                    "scope": "window"
+                },
+                "atlascode.charlesDebugOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables charles *only* when debugging the extension (for internal use)",
+                    "scope": "window"
+                },
                 "atlascode.offlineMode": {
                     "type": "boolean",
                     "default": false,

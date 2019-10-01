@@ -13,10 +13,7 @@ import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import EventEmitter from 'eventemitter3';
 import { v4 } from 'uuid';
-import { Container } from '../container';
-import { configuration } from '../config/configuration';
-var tunnel = require("tunnel");
-import * as fs from "fs";
+import { getAgent } from './charles';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
@@ -164,22 +161,23 @@ export class OAuthDancer implements Disposable {
 
                 if (e.req.query && e.req.query.code && e.req.query.state && e.req.query.state === myState) {
                     try {
+                        const agent = getAgent();
                         let tokens: Tokens = { accessToken: "", refreshToken: "" };
                         let accessibleResources: AccessibleResource[] = [];
                         let user: UserInfo = emptyUserInfo;
 
                         if (product === ProductJira) {
-                            tokens = await this.getJiraTokens(e.strategy, e.req.query.code);
-                            accessibleResources = await this.getJiraResources(e.strategy, tokens.accessToken);
+                            tokens = await this.getJiraTokens(e.strategy, e.req.query.code, agent);
+                            accessibleResources = await this.getJiraResources(e.strategy, tokens.accessToken, agent);
                             if (accessibleResources.length > 0) {
-                                user = await this.getJiraUser(e.provider, tokens.accessToken, accessibleResources[0]);
+                                user = await this.getJiraUser(e.provider, tokens.accessToken, accessibleResources[0], agent);
                             } else {
                                 throw new Error(`No accessible resources found for ${provider}`);
                             }
 
                         } else {
-                            tokens = await this.getBitbucketTokens(e.strategy, e.req.query.code);
-                            user = await this.getBitbucketUser(e.strategy, tokens.accessToken);
+                            tokens = await this.getBitbucketTokens(e.strategy, e.req.query.code, agent);
+                            user = await this.getBitbucketUser(e.strategy, tokens.accessToken, agent);
                         }
 
                         this._authsInFlight.delete(e.provider);
@@ -235,7 +233,7 @@ export class OAuthDancer implements Disposable {
         });
     }
 
-    private async getJiraTokens(strategy: any, code: string): Promise<Tokens> {
+    private async getJiraTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
         const tokenResponse = await this._axios(strategy.tokenURL, {
             method: "POST",
             headers: {
@@ -248,14 +246,14 @@ export class OAuthDancer implements Disposable {
                 code: code,
                 redirect_uri: strategy.callbackURL,
             }),
-            httpsAgent: this.getAgent()
+            httpsAgent: agent
         });
 
         const data = tokenResponse.data;
         return { accessToken: data.access_token, refreshToken: data.refresh_token };
     }
 
-    private async getBitbucketTokens(strategy: any, code: string): Promise<Tokens> {
+    private async getBitbucketTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
         const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
 
         const tokenResponse = await this._axios(strategy.tokenURL, {
@@ -265,14 +263,14 @@ export class OAuthDancer implements Disposable {
                 Authorization: `Basic ${basicAuth}`
             },
             data: `grant_type=authorization_code&code=${code}`,
-            httpsAgent: this.getAgent()
+            httpsAgent: agent
         });
 
         const data = tokenResponse.data;
         return { accessToken: data.access_token, refreshToken: data.refresh_token };
     }
 
-    private async getJiraResources(strategy: any, accessToken: string): Promise<AccessibleResource[]> {
+    private async getJiraResources(strategy: any, accessToken: string, agent?: any): Promise<AccessibleResource[]> {
         const resources: AccessibleResource[] = [];
 
         const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
@@ -282,7 +280,7 @@ export class OAuthDancer implements Disposable {
                 Accept: "application/json",
                 Authorization: `Bearer ${accessToken}`
             },
-            httpsAgent: this.getAgent()
+            httpsAgent: agent
         });
 
         resourcesResponse.data.forEach((resource: AccessibleResource) => {
@@ -292,7 +290,7 @@ export class OAuthDancer implements Disposable {
         return resources;
     }
 
-    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource): Promise<UserInfo> {
+    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent?: any): Promise<UserInfo> {
         let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
         const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
 
@@ -303,7 +301,7 @@ export class OAuthDancer implements Disposable {
                 Accept: "application/json",
                 Authorization: `Bearer ${accessToken}`
             },
-            httpsAgent: this.getAgent()
+            httpsAgent: agent
         });
 
         const data = userResponse.data;
@@ -316,7 +314,7 @@ export class OAuthDancer implements Disposable {
         };
     }
 
-    private async getBitbucketUser(strategy: any, accessToken: string): Promise<UserInfo> {
+    private async getBitbucketUser(strategy: any, accessToken: string, agent?: any): Promise<UserInfo> {
         const userResponse = await this._axios(strategy.profileURL, {
             method: "GET",
             headers: {
@@ -324,7 +322,7 @@ export class OAuthDancer implements Disposable {
                 Accept: "application/json",
                 Authorization: `Bearer ${accessToken}`
             },
-            httpsAgent: this.getAgent()
+            httpsAgent: agent
         });
 
         let email = 'do-not-reply@atlassian.com';
@@ -336,7 +334,7 @@ export class OAuthDancer implements Disposable {
                     Accept: "application/json",
                     Authorization: `Bearer ${accessToken}`
                 },
-                httpsAgent: this.getAgent()
+                httpsAgent: agent
             });
 
             if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
@@ -357,30 +355,6 @@ export class OAuthDancer implements Disposable {
             email: email,
             avatarUrl: userData.links.avatar.href,
         };
-    }
-
-    private getAgent(): any {
-        let agent = undefined;
-        const section = "enableCharles";
-        try {
-            if (Container.isDebugging && configuration.get<boolean>(section)) {
-                let pemFile = fs.readFileSync(Resources.charlesCert);
-
-                agent = tunnel.httpsOverHttp({
-                    ca: [pemFile],
-                    proxy: {
-                        host: "127.0.0.1",
-                        port: 8888
-                    }
-                });
-            } else {
-                agent = undefined;
-            }
-
-        } catch (err) {
-            agent = undefined;
-        }
-        return agent;
     }
 
     private maybeShutdown() {

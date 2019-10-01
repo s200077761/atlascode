@@ -11,6 +11,7 @@ import { v4 } from "uuid";
 import { JiraJQLListKey } from "../constants";
 import { Container } from "../container";
 import { ConfigurationTarget } from "vscode";
+import { getAgent } from "../atlclients/charles";
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const WorkingProjectToken = 'currentProject()';
@@ -246,7 +247,8 @@ export class V1toV2Migrator {
                     'X-Atlassian-Token': 'no-check',
                     'x-atlassian-force-account-id': 'true',
                     "Accept-Encoding": "gzip, deflate"
-                }
+                },
+                httpsAgent: getAgent()
             });
 
             const userUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;

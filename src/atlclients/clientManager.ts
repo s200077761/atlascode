@@ -7,10 +7,7 @@ import { JiraClient } from "../jira/jira-client/client";
 import { SiteInfo, DetailedSiteInfo, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
 import { Container } from "../container";
 import { CacheMap, Interval } from "../util/cachemap";
-var tunnel = require("tunnel");
-import * as fs from "fs";
 import { configuration } from "../config/configuration";
-import { Resources } from "../resources";
 import { Logger } from "../logger";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
 import { cannotGetClientFor } from "../constants";
@@ -23,6 +20,7 @@ import { PipelineApiImpl } from "../pipelines/pipelines";
 import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
 import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
+import { getAgent } from "./charles";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -52,26 +50,7 @@ export class ClientManager implements Disposable {
     if (initializing || configuration.changed(e, section)) {
       this._agentChanged = true;
 
-      try {
-        if (Container.isDebugging && configuration.get<boolean>(section)) {
-          let pemFile = fs.readFileSync(Resources.charlesCert);
-
-          this._agent = tunnel.httpsOverHttp({
-            ca: [pemFile],
-            proxy: {
-              host: "127.0.0.1",
-              port: 8888
-            }
-          });
-        } else {
-          this._agent = undefined;
-        }
-
-        this._clients.clear();
-
-      } catch (err) {
-        this._agent = undefined;
-      }
+      this._agent = getAgent();
     }
   }
 

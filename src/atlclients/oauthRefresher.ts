@@ -4,11 +4,7 @@ import { OAuthProvider, ProductJira, ProductBitbucket } from './authInfo';
 import axios, { AxiosInstance } from 'axios';
 import { Time } from '../util/time';
 import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
-import { Container } from '../container';
-import { configuration } from '../config/configuration';
-import { Resources } from '../resources';
-import * as fs from "fs";
-var tunnel = require("tunnel");
+import { getAgent } from './charles';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance = axios.create({
@@ -41,7 +37,7 @@ export class OAuthRefesher implements Disposable {
                     refresh_token: refreshToken,
                     redirect_uri: strategy.callbackURL,
                 }),
-                httpsAgent: this.getAgent()
+                httpsAgent: getAgent()
             });
 
             const data = tokenResponse.data;
@@ -58,35 +54,11 @@ export class OAuthRefesher implements Disposable {
                     Authorization: `Basic ${basicAuth}`
                 },
                 data: `grant_type=refresh_token&refresh_token=${refreshToken}`,
-                httpsAgent: this.getAgent()
+                httpsAgent: getAgent()
             });
 
             const data = tokenResponse.data;
             return data.access_token;
         }
-    }
-
-    private getAgent(): any {
-        let agent = undefined;
-        const section = "enableCharles";
-        try {
-            if (Container.isDebugging && configuration.get<boolean>(section)) {
-                let pemFile = fs.readFileSync(Resources.charlesCert);
-
-                agent = tunnel.httpsOverHttp({
-                    ca: [pemFile],
-                    proxy: {
-                        host: "127.0.0.1",
-                        port: 8888
-                    }
-                });
-            } else {
-                agent = undefined;
-            }
-
-        } catch (err) {
-            agent = undefined;
-        }
-        return agent;
     }
 }
