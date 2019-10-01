@@ -250,6 +250,7 @@ export default class StartWorkPage extends WebviewComponent<
 
   render() {
     if (isStartWorkOnIssueData(this.state.data) && this.state.data.issue.key === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
+      this.postMessage({ action: 'refreshIssue' });
       return <AtlLoader />;
     }
 

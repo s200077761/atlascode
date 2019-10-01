@@ -2,8 +2,6 @@ import * as React from "react";
 import * as path from 'path';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import Spinner from '@atlaskit/spinner';
-import Tooltip from '@atlaskit/tooltip';
 import { CreateBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
@@ -15,6 +13,7 @@ import Select from '@atlaskit/select';
 import ErrorBanner from "../ErrorBanner";
 import * as FieldValidators from "../fieldValidators";
 import Offline from "../Offline";
+import { AtlLoader } from "../AtlLoader";
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -84,7 +83,8 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
 
     render() {
         if ((!Array.isArray(this.state.repoData) || this.state.repoData.length === 0) && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
+            this.postMessage({ action: 'refresh' });
+            return <AtlLoader />;
         } else if ((!Array.isArray(this.state.repoData) || this.state.repoData.length === 0) && !this.state.isOnline) {
             return <div><Offline /></div>;
         }

@@ -356,6 +356,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     render() {
 
         if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         }
 

@@ -308,6 +308,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         const pr = this.state.pr.pr!;
 
         if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         } else if (!pr && !this.state.isOnline) {
             return (
