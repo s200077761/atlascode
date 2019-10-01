@@ -227,10 +227,10 @@ export class OAuthDancer implements Disposable {
         }
 
 
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
+        vscode.env.openExternal(vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
 
         return pTimeout<OAuthResponse, OAuthResponse>(cancelPromise, this._browserTimeout, (): Promise<OAuthResponse> => {
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
+            vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
             return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
         });
     }
