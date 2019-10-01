@@ -166,6 +166,8 @@ pre {
   padding-left: 6px;
   padding-right: 6px;
   min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ac-inline-input-view-p:hover {

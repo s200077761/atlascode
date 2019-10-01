@@ -36,10 +36,12 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
-import { BitbucketIssueData, ApprovalStatus } from '../../../bitbucket/model';
+import { BitbucketIssueData, ApprovalStatus, MergeStrategy } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 import { format, distanceInWordsToNow } from 'date-fns';
+import EdiText from 'react-editext';
+import { isValidString } from '../fieldValidators';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -52,7 +54,8 @@ interface ViewState {
     isAnyCommentLoading: boolean;
     mergeDialogOpen: boolean;
     issueSetupEnabled: boolean;
-    mergeStrategy: { label: string, value: 'merge_commit' | 'squash' | 'fast_forward' | undefined };
+    commitMessage: string;
+    mergeStrategy: { label: string, value: string | undefined };
     closeSourceBranch?: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
@@ -64,6 +67,7 @@ const emptyPR = {
     type: '',
     remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
+    mergeStrategies: [],
     relatedJiraIssues: [],
     relatedBitbucketIssues: []
 };
@@ -76,6 +80,7 @@ const emptyState: ViewState = {
     isAnyCommentLoading: false,
     mergeDialogOpen: false,
     issueSetupEnabled: false,
+    commitMessage: '',
     mergeStrategy: { label: 'Default merge strategy', value: undefined },
     closeSourceBranch: undefined,
     isErrorBannerOpen: false,
@@ -106,6 +111,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.postMessage({
             action: 'merge',
             mergeStrategy: this.state.mergeStrategy.value,
+            commitMessage: this.state.commitMessage,
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
@@ -256,7 +262,47 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     toggleCloseSourceBranch = () => this.setState({ closeSourceBranch: !this.state.closeSourceBranch });
 
-    handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item });
+    handleCommitMessageChange = (text: string) => this.setState({ commitMessage: text });
+
+    handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item }, this.resetCommitMessage);
+
+    resetCommitMessage = () => {
+        const mergeStrategy = this.state.mergeStrategy.value;
+        if (mergeStrategy === 'fast_forward') {
+            this.setState({ commitMessage: '' });
+        }
+
+        const { id, source, title } = this.state.pr.pr!;
+
+        const branchInfo = `Merged in ${source && source.branchName}`;
+        const pullRequestInfo = `(pull request #${id})`;
+
+        let defaultCommitMessage = `${branchInfo} ${pullRequestInfo}\n\n${title}`;
+
+        if (mergeStrategy === 'squash') {
+            const commits = this.state.pr.commits || [];
+            // Minor optimization: if there's exactly 1 commit, and the commit
+            // message already matches the pull request title, no need to display the
+            // same text twice.
+            if (commits.length !== 1 || commits[0].message !== title) {
+                const commitMessages = commits
+                    .reverse()
+                    .map(commit => `* ${commit.message}`)
+                    .join('\n');
+                defaultCommitMessage += `\n\n${commitMessages}`;
+            }
+        }
+
+        const approvers = this.state.pr.pr!.participants.filter(p => p.status === 'APPROVED');
+        if (approvers.length > 0) {
+            const approverInfo = approvers
+                .map(approver => `Approved-by: ${approver.displayName}`)
+                .join('\n');
+            defaultCommitMessage += `\n\n${approverInfo}`;
+        }
+
+        this.setState({ commitMessage: defaultCommitMessage });
+    }
 
     render() {
         const pr = this.state.pr.pr!;
@@ -332,22 +378,36 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 <div className='ac-inline-dialog'>
                     <InlineDialog placement='bottom-end'
                         content={
-                            <div>
+                            <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
                                     <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
                                     <Select
-                                        options={[
-                                            { label: 'Default merge strategy', value: undefined },
-                                            { label: 'Merge commit', value: 'merge_commit' },
-                                            { label: 'Squash', value: 'squash' },
-                                            { label: 'Fast forward', value: 'fast_forward' }
-                                        ]}
+                                        options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"
                                         classNamePrefix="ac-select"
+                                        getOptionLabel={(option: MergeStrategy) => `${option.label}${option.isDefault ? ' (default)' : ''}`}
+                                        getOptionValue={(option: MergeStrategy) => option.value}
                                         value={this.state.mergeStrategy}
                                         onChange={this.handleMergeStrategyChange} />
                                 </div>
+                                {this.state.mergeStrategy.value !== undefined && this.state.mergeStrategy.value !== 'fast_forward' &&
+                                    <div className='ac-vpadding'>
+                                        <EdiText
+                                            type='textarea'
+                                            value={this.state.commitMessage}
+                                            onSave={this.handleCommitMessageChange}
+                                            validation={isValidString}
+                                            validationMessage='Commit message is required'
+                                            inputProps={{ className: 'ac-inputField' }}
+                                            viewProps={{ id: 'commit-message', className: 'ac-inline-input-view-p' }}
+                                            editButtonClassName='ac-inline-edit-button'
+                                            cancelButtonClassName='ac-inline-cancel-button'
+                                            saveButtonClassName='ac-inline-save-button'
+                                            editOnViewClick={true}
+                                        />
+                                    </div>
+                                }
                                 {issueDetails}
                                 <div className='ac-vpadding'>
                                     <div className='ac-flex-space-between'>
@@ -399,7 +459,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <Tooltip content={`Created on ${format(pr.ts, 'YYYY-MM-DD h:mm A')}`}>
                                     <React.Fragment>
                                         <p>{pr.title}</p>
-                                        <p style={{fontSize: 13, color: 'silver'}}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
+                                        <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
                                     </React.Fragment>
                                 </Tooltip>
                             </PageHeader>

@@ -44,7 +44,8 @@ export function isUpdateApproval(a: Action): a is UpdateApproval {
 
 export interface Merge extends Action {
     action: 'merge';
-    mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward';
+    mergeStrategy?: string;
+    commitMessage: string;
     closeSourceBranch?: boolean;
     issue?: MinimalIssue | BitbucketIssueData;
 }

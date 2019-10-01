@@ -1,4 +1,4 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData } from '../model';
+import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -136,6 +136,24 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const taskCount = await this.getTaskCount(pr);
         return ServerPullRequestApi.toPullRequestModel(pr.repository, pr.remote, data, taskCount);
+    }
+
+    async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/settings/pull-requests`,
+            {
+                markup: true,
+                avatarSize: 64
+            }
+        );
+
+        return data.mergeConfig.strategies.map((strategy: any) => ({
+            label: strategy.name,
+            value: strategy.id,
+            isDefault: strategy.id === data.mergeConfig.defaultStrategy.id
+        }));
     }
 
     async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -455,14 +473,17 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
+    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
+
+        const body = mergeStrategy === undefined
+            ? {}
+            : { autoSubject: false, strategyId: mergeStrategy, message: commitMessage };
 
         await this.client.post(
             `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/merge`,
-            {
-                version: pr.data.version
-            }
+            body,
+            { version: pr.data.version }
         );
     }
 

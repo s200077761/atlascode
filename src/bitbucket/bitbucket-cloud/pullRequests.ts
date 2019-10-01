@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
@@ -16,6 +16,11 @@ export const maxItemsSupported = {
 };
 export const defaultPagelen = 25;
 const dummyRemote = { name: '', isReadOnly: true };
+const mergeStrategyLabels = {
+    'merge_commit': 'Merge commit',
+    'squash': 'Squash',
+    'fast_forward': 'Fast forward'
+};
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
@@ -123,6 +128,23 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         return CloudPullRequestApi.toPullRequestData(pr.repository, pr.remote, data);
+    }
+
+    async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
+        let parsed = parseGitUrl(urlForRemote(pr.remote));
+
+        const { data } = await this.client.get(
+            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}`,
+            {
+                fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy'
+            }
+        );
+
+        return data.destination.branch.merge_strategies.map((strategy: string) => ({
+            label: mergeStrategyLabels[strategy],
+            value: strategy,
+            isDefault: strategy === data.destination.branch.default_merge_strategy
+        }));
     }
 
     async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
@@ -361,12 +383,18 @@ export class CloudPullRequestApi implements PullRequestApi {
             );
     }
 
-    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward') {
+    async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let body = Object.create({});
         body = closeSourceBranch ? { ...body, close_source_branch: closeSourceBranch } : body;
-        body = mergeStrategy ? { ...body, merge_strategy: mergeStrategy } : body;
+        if (mergeStrategy !== undefined) {
+            body = {
+                ...body,
+                merge_strategy: mergeStrategy,
+                message: commitMessage
+            };
+        }
 
         await this.client.post(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/merge`,
