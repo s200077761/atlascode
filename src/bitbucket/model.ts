@@ -73,6 +73,12 @@ export type BuildStatus = {
     ts: string;
 };
 
+export type MergeStrategy = {
+    label: string;
+    value: string;
+    isDefault: boolean;
+};
+
 export type FileChange = {
     status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
     oldPath?: string;
@@ -186,10 +192,11 @@ export interface PullRequestApi {
     editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
     deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
+    getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getReviewers(remote: Remote, query?: string): Promise<User[]>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
-    merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward'): Promise<void>;
+    merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
     postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
 }
 

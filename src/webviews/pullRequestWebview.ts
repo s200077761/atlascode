@@ -31,7 +31,7 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [] } };
+const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
@@ -244,9 +244,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.get(this._pr),
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
-            bbApi.pullrequests.getBuildStatuses(this._pr)
+            bbApi.pullrequests.getBuildStatuses(this._pr),
+            bbApi.pullrequests.getMergeStrategies(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies] = await prDetailsPromises;
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -272,6 +273,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
                 mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
+                mergeStrategies: mergeStrategies,
                 errors: (commits.next || comments.next) ? 'You may not be seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
             }
         };
@@ -372,7 +374,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         await bbApi.pullrequests.merge(
             { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
             m.closeSourceBranch,
-            m.mergeStrategy
+            m.mergeStrategy,
+            m.commitMessage
         );
 
         const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
