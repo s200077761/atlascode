@@ -1616,11 +1616,6 @@ base64-js@^1.0.2:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/base64-js/-/base64-js-1.3.1.tgz#58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
   integrity sha512-mLQ4i2QO1ytvGWFWmcngKO//JXAQueZvwEKtjgQFM4jIK0kU+ytMfplL8j+n5mspOfjHwoAg+9yhb7BwAHm36g==
 
-base64url@3.x.x:
-  version "3.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/base64url/-/base64url-3.0.1.tgz#6399d572e2bc3f90a9a8b22d5dbb0a32d33f788d"
-  integrity sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==
-
 base@^0.11.1:
   version "0.11.2"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/base/-/base-0.11.2.tgz#7bde5ced145b6d551a90db87f83c558b4eb48a8f"
@@ -5498,11 +5493,6 @@ oauth-sign@~0.9.0:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/oauth-sign/-/oauth-sign-0.9.0.tgz#47a7b016baa68b5fa0ecf3dee08a85c679ac6455"
   integrity sha512-fexhUFFPTGV8ybAtSIGbV6gOkSv8UtRbDBnAyLQw4QPKkgNlsH2ByPGtMUqdWkos6YCRmAqViwgZrJc/mRDzZQ==
 
-oauth@0.9.x:
-  version "0.9.15"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/oauth/-/oauth-0.9.15.tgz#bd1fefaf686c96b75475aed5196412ff60cfb9c1"
-  integrity sha1-vR/vr2hslrdUda7VGWQS/2DPucE=
-
 object-assign@^4.0.1, object-assign@^4.1.0, object-assign@^4.1.1:
   version "4.1.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
@@ -5681,7 +5671,7 @@ p-any@^2.1.0:
 p-cancelable@^2.0.0:
   version "2.0.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-cancelable/-/p-cancelable-2.0.0.tgz#4a3740f5bdaf5ed5d7c3e34882c6fb5d6b266a6e"
-  integrity sha512-wvPXDmbMmu2ksjkB4Z3nZWTSkJEb9lqVdMaCKpZUGJG9TMiNp9XcbG3fn9fPKjem04fJMJnXoyFPk2FmgiaiNg==
+  integrity sha1-SjdA9b2vXtXXw+NIgsb7XWsmam4=
 
 p-debounce@^2.1.0:
   version "2.1.0"
@@ -5873,50 +5863,6 @@ pascalcase@^0.1.1:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/pascalcase/-/pascalcase-0.1.1.tgz#b363e55e8006ca6fe21784d2db22bd15d7917f14"
   integrity sha1-s2PlXoAGym/iF4TS2yK9FdeRfxQ=
 
-passport-atlassian-oauth2@^1.0.1:
-  version "1.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport-atlassian-oauth2/-/passport-atlassian-oauth2-1.0.1.tgz#7e4a4e2d6236e168ac1cbed9d88591f068e1bc38"
-  integrity sha512-owUp51CKInyOBhQ8Swxnp7Hy+Penmjo9N0fFiPNqYcFhnVuWBVH3wJmJ70XtdBB0tNxPXQZi1x9asc1Qnd/yOg==
-  dependencies:
-    passport-oauth2 "^1.4.0"
-
-passport-bitbucket-oauth2@^0.1.2:
-  version "0.1.2"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport-bitbucket-oauth2/-/passport-bitbucket-oauth2-0.1.2.tgz#eb3af5cdd0d06830adc49b76acae4ad82290693b"
-  integrity sha1-6zr1zdDQaDCtxJt2rK5K2CKQaTs=
-  dependencies:
-    passport-oauth2 "^1.1.2"
-    pkginfo "0.2.x"
-
-passport-oauth2-refresh@^1.1.0:
-  version "1.1.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport-oauth2-refresh/-/passport-oauth2-refresh-1.1.0.tgz#4e77702bd64f1ec39ddc4142edec85a4f5086f43"
-  integrity sha512-UsmDntTlEKj8GAME/u6hvgTgq/WC/1lh9wGKs7QEf5/e+pBo9dnphJ1qLfmwFck21lz3wHHHiPFJrihLkFSaXg==
-
-passport-oauth2@^1.1.2, passport-oauth2@^1.4.0, passport-oauth2@^1.5.0:
-  version "1.5.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport-oauth2/-/passport-oauth2-1.5.0.tgz#64babbb54ac46a4dcab35e7f266ed5294e3c4108"
-  integrity sha512-kqBt6vR/5VlCK8iCx1/KpY42kQ+NEHZwsSyt4Y6STiNjU+wWICG1i8ucc1FapXDGO15C5O5VZz7+7vRzrDPXXQ==
-  dependencies:
-    base64url "3.x.x"
-    oauth "0.9.x"
-    passport-strategy "1.x.x"
-    uid2 "0.0.x"
-    utils-merge "1.x.x"
-
-passport-strategy@1.x.x:
-  version "1.0.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport-strategy/-/passport-strategy-1.0.0.tgz#b5539aa8fc225a3d1ad179476ddf236b440f52e4"
-  integrity sha1-tVOaqPwiWj0a0XlHbd8ja0QPUuQ=
-
-passport@^0.4.0:
-  version "0.4.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/passport/-/passport-0.4.0.tgz#c5095691347bd5ad3b5e180238c3914d16f05811"
-  integrity sha1-xQlWkTR71a07XhgCOMORTRbwWBE=
-  dependencies:
-    passport-strategy "1.x.x"
-    pause "0.0.1"
-
 patch-package@^6.1.2:
   version "6.1.2"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/patch-package/-/patch-package-6.1.2.tgz#9ed0b3defb5c34ecbef3f334ddfb13e01b3d3ff6"
@@ -5988,11 +5934,6 @@ path-type@^3.0.0:
   dependencies:
     pify "^3.0.0"
 
-pause@0.0.1:
-  version "0.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/pause/-/pause-0.0.1.tgz#1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d"
-  integrity sha1-HUCLP9t2kjuVQ9lvtMnf1TXZy10=
-
 pbkdf2@^3.0.3:
   version "3.0.17"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/pbkdf2/-/pbkdf2-3.0.17.tgz#976c206530617b14ebb32114239f7b09336e93a6"
@@ -6044,11 +5985,6 @@ pkg-up@2.0.0:
   integrity sha1-yBmscoBZpGHKscOImivjxJoATX8=
   dependencies:
     find-up "^2.1.0"
-
-pkginfo@0.2.x:
-  version "0.2.3"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/pkginfo/-/pkginfo-0.2.3.tgz#7239c42a5ef6c30b8f328439d9b9ff71042490f8"
-  integrity sha1-cjnEKl72wwuPMoQ52bn/cQQkkPg=
 
 pn@^1.1.0:
   version "1.1.0"
@@ -8108,11 +8044,6 @@ uglify-js@^3.1.4:
     commander "~2.20.0"
     source-map "~0.6.1"
 
-uid2@0.0.x:
-  version "0.0.3"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/uid2/-/uid2-0.0.3.tgz#483126e11774df2f71b8b639dcd799c376162b82"
-  integrity sha1-SDEm4Rd03y9xuLY53NeZw3YWK4I=
-
 union-value@^1.0.0:
   version "1.0.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/union-value/-/union-value-1.0.1.tgz#0b6fe7b835aecda61c6ea4d4f02c14221e109847"
@@ -8270,7 +8201,7 @@ util@^0.11.0:
   dependencies:
     inherits "2.0.3"
 
-utils-merge@1.0.1, utils-merge@1.x.x:
+utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/utils-merge/-/utils-merge-1.0.1.tgz#9f95710f50a267947b2ccc124741c1028427e713"
   integrity sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=

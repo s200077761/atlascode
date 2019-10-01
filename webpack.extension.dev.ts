@@ -12,7 +12,7 @@ const main: webpack.Configuration = {
     name: 'extension',
     mode: 'development',
     target: 'node',
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-source-map',
     entry: {
         extension: './src/extension.ts'
     },
@@ -39,7 +39,8 @@ const main: webpack.Configuration = {
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'build', 'extension'),
-        libraryTarget: "commonjs"
+        libraryTarget: "commonjs",
+        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
     },
     externals: ['vscode'],
     plugins: [

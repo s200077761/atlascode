@@ -101,6 +101,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     }
 
     public onMessageReceived(e: any): boolean {
+        console.log('got config event', e);
         switch (e.type) {
             case 'error': {
                 this.setState({ isProjectsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });

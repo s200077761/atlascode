@@ -57,7 +57,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                     product={product} />
             }
             <div className='ac-vpadding'>
-                <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+                <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
                     <Button className="ac-button" style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
                     <Button className="ac-button" onClick={() => setAddingSite(true)}>{addSiteText}</Button>
                 </div>
