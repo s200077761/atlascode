@@ -138,7 +138,7 @@ export class LoginManager {
                 apiUrl = `https://${site.hostname}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username}?avatarSize=64`;
+                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username.replace("@", "_")}?avatarSize=64`;
                 avatarUrl = '';
                 apiUrl = `https://${site.hostname}`;
                 break;

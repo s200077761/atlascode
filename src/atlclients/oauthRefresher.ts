@@ -1,75 +1,92 @@
-const BitbucketStrategy = require('passport-bitbucket-oauth2');
-const AtlassianStrategy = require('passport-atlassian-oauth2');
-import * as refresh from 'passport-oauth2-refresh';
-import { Logger } from '../logger';
-import * as passport from 'passport';
+
 import { Disposable } from 'vscode';
-import { OAuthProvider } from './authInfo';
+import { OAuthProvider, ProductJira, ProductBitbucket } from './authInfo';
+import axios, { AxiosInstance } from 'axios';
+import { Time } from '../util/time';
+import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
+import { Container } from '../container';
+import { configuration } from '../config/configuration';
+import { Resources } from '../resources';
+import * as fs from "fs";
+var tunnel = require("tunnel");
 
 export class OAuthRefesher implements Disposable {
-    private _bbCloudStrategy: any;
-    private _bbCloudStrategyStaging: any;
-    private _jiraCloudStrategy: any;
-    private _jiraCloudStrategyStaging: any;
-
-    public constructor() {
-        passport.serializeUser(function (user, done) {
-            done(null, user);
-        });
-
-        passport.deserializeUser(function (obj, done) {
-            done(null, obj);
-        });
-
-        this._bbCloudStrategy = new BitbucketStrategy.Strategy({
-            clientID: "3hasX42a7Ugka2FJja",
-            clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S"
-        }, () => { });
-
-        this._bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
-            clientID: "7jspxC7fgemuUbnWQL",
-            clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
-            tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token"
-        }, () => { });
-
-        this._jiraCloudStrategy = new AtlassianStrategy({
-            clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
-            clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-            scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-        }, () => { });
-
-        this._jiraCloudStrategyStaging = new AtlassianStrategy({
-            clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
-            clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
-            scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-            tokenURL: "https://auth.stg.atlassian.com/oauth/token",
-        }, () => { });
-
-        refresh.use(OAuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        refresh.use(OAuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        refresh.use(OAuthProvider.JiraCloud, this._jiraCloudStrategy);
-        refresh.use(OAuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
-
-    }
+    private _axios: AxiosInstance = axios.create({
+        timeout: 30 * Time.SECONDS,
+        headers: {
+            'User-Agent': 'atlascode/2.x',
+            "Accept-Encoding": "gzip, deflate"
+        }
+    });
 
     dispose() {
 
     }
 
     public async getNewAccessToken(provider: OAuthProvider, refreshToken: string): Promise<string | undefined> {
-        return new Promise<string>((resolve, reject) => {
-            refresh.requestNewAccessToken(provider, refreshToken, (err: Error, accessToken: string, newRefreshToken: string) => {
-                if (err) {
-                    Logger.error(err, "refresh error");
-                    reject(undefined);
-                }
-                if (accessToken && accessToken !== '') {
-                    resolve(accessToken);
-                } else {
-                    // the refresh token may have been revoked, in which case BB returns valid token info with the access token removed instead of an error.
-                    reject(undefined);
-                }
+
+        const product = (provider.startsWith('jira')) ? ProductJira : ProductBitbucket;
+
+        if (product === ProductJira) {
+            const strategy = provider.endsWith('staging') ? JiraStagingStrategy : JiraProdStrategy;
+            const tokenResponse = await this._axios(strategy.tokenURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify({
+                    grant_type: 'refresh_token',
+                    client_id: strategy.clientID,
+                    client_secret: strategy.clientSecret,
+                    refresh_token: refreshToken,
+                    redirect_uri: strategy.callbackURL,
+                }),
+                httpsAgent: this.getAgent()
             });
-        });
+
+            const data = tokenResponse.data;
+            return data.access_token;
+
+        } else {
+            const strategy = provider.endsWith('staging') ? BitbucketStagingStrategy : BitbucketProdStrategy;
+            const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
+
+            const tokenResponse = await this._axios(strategy.tokenURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Authorization: `Basic ${basicAuth}`
+                },
+                data: `grant_type=refresh_token&refresh_token=${refreshToken}`,
+                httpsAgent: this.getAgent()
+            });
+
+            const data = tokenResponse.data;
+            return data.access_token;
+        }
+    }
+
+    private getAgent(): any {
+        let agent = undefined;
+        const section = "enableCharles";
+        try {
+            if (Container.isDebugging && configuration.get<boolean>(section)) {
+                let pemFile = fs.readFileSync(Resources.charlesCert);
+
+                agent = tunnel.httpsOverHttp({
+                    ca: [pemFile],
+                    proxy: {
+                        host: "127.0.0.1",
+                        port: 8888
+                    }
+                });
+            } else {
+                agent = undefined;
+            }
+
+        } catch (err) {
+            agent = undefined;
+        }
+        return agent;
     }
 }

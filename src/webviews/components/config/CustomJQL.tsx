@@ -260,6 +260,7 @@ export default class CustomJQL extends React.Component<
     return (
       <div
         id="jql-row-container"
+        key={index}
         data-index={index}
       >
         <div id="jql-row-drop-overlay"
@@ -296,7 +297,7 @@ export default class CustomJQL extends React.Component<
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
-        <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+        <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
           <Button className="ac-button" onClick={this.onNewQuery}>
             Add Query
         </Button>
