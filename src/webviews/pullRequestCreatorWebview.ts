@@ -223,34 +223,32 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
     }
 
-    async findForkPoint(repoData: RepoData, sourceBranch: Branch, destinationBranch: Branch, shell: Shell): Promise<string> {
+    async findForkPoint(repoData: RepoData, sourceBranch: Branch, destinationBranch: Branch): Promise<string> {
         const repo: Repository = await this.getCurrentRepo(repoData);
 
         //When fetching the destination branch, we need to slice the remote off the branch name because the branch isn't actually called {remoteName}/{branchName}
         await repo.fetch(destinationBranch.remote, destinationBranch.name!.slice(destinationBranch.remote!.length + 1));
-        const commonCommit = await shell.output(`git merge-base --fork-point ${destinationBranch.name} ${sourceBranch.commit}`);
+        const commonCommit = await repo.getMergeBase(destinationBranch.name!, sourceBranch.name!);
         return commonCommit;
     }
 
     async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
         const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
         
-        const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch, shell);
+        const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch);
 
         //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
         //We want to seperate each line and extract this data so we can create a file diff
-        const diffOutput = await shell.output(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
-        let diffOutputLines = diffOutput.split(/\r?\n/); //Using \r or \n ensure this will work on Windows and Unix-based systems
+        const diffOutputLines = await shell.lines(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
 
-        if(diffOutput === ""){
+        if(diffOutputLines.length === 0){
             return [];
         }
 
         //The bitbucket website also provides a status for each file (modified, added, deleted, etc.), so we need to get this info too.
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
-        const statusOutput = await shell.output(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
-        let statusOutputLines = statusOutput.split(/\r?\n/);
+        const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
 
         let fileDiffs: FileDiff[] = [];
         for(let i = 0; i < diffOutputLines.length; i++){

@@ -180,7 +180,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleBranchChange = () => {
-        this.setState({fileDiffsLoading: true}); //Activates spinner for file diff panel
+        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
         const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch
             ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.remote.value.name
                 ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.upstream.name}`
@@ -207,6 +207,17 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 repoUri: this.state.repo!.value.uri,
                 sourceBranch: this.state.sourceBranch.value
             });
+        }
+
+        if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch) {
+            this.postMessage(
+                { 
+                    action: 'updateDiff', 
+                    repoData: this.state.repo!.value, 
+                    sourceBranch: this.state.sourceBranch!.value, 
+                    destinationBranch: this.state.destinationBranch!.value
+                }
+            );
         }
 
         if (this.state.repo &&
@@ -327,13 +338,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                 ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1)}${createdFromAtlascodeFooter}`
                                 : `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
                             : this.state.summary
-                    }, 
-                        () => {
-                            this.postMessage(
-                                { action: 'updateDiff', repoData: this.state.repo!.value, sourceBranch: this.state.sourceBranch!.value, destinationBranch: this.state.destinationBranch!.value}
-                            );
-                        }
-                    );
+                    });
                 }
                 break;
             }
