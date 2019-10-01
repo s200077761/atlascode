@@ -8,6 +8,7 @@ import { CredentialManager } from "./authStore";
 import { AnalyticsClient } from "../analytics-node-client/src";
 import axios from 'axios';
 import { Time } from "../util/time";
+import { getAgent } from "./charles";
 
 export class LoginManager {
     private _dancer: OAuthDancer = OAuthDancer.Instance;
@@ -158,7 +159,9 @@ export class LoginManager {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
-            }
+            },
+            httpsAgent: getAgent()
+
         });
         const json = res.data;
 
