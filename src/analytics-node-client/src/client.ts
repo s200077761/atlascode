@@ -4,6 +4,8 @@ import { TrackEvent, UIEvent, AnalyticsClientInit, ScreenEvent, TrackEventData, 
 
 import Analytics from 'analytics-node';
 import { requireValue, validateTrackEvent, validateUIEvent, validateScreenEvent } from './preconditions';
+import { getAgent } from "../../atlclients/charles";
+import { Container } from "../../container";
 
 const ANALYTICS_WRITE_KEY = 'BLANK';
 const TRACK_EVENT_TYPE = 'track';
@@ -99,7 +101,8 @@ class AnalyticsClient {
         this.analyticsClient = new Analytics(ANALYTICS_WRITE_KEY, {
             flushAt: flushAt || DEFAULT_QUEUE_FLUSH_SIZE,
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
-            host: baseUrl || getUrlFromEnvironment(env)
+            host: baseUrl || getUrlFromEnvironment(env),
+            agent: (Container.isDebugging) ? getAgent() : undefined,
         });
 
         this.deviceId = deviceId;

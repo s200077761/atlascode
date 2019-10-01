@@ -72,6 +72,20 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
                             <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                         </section>
+                        <h3>🎉 What's New in 2.0.0-beta3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for merge commit messages</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Username was not slugified when making calls during Bitbucket server auth flow</li>
+                                <li>Sometimes webviews would not load data</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.0.0-beta2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
