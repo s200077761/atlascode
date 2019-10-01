@@ -1,5 +1,14 @@
 ## What's New In 2.0.0-beta2
 ### Improvements
+* Added support for merge commit messages
+
+
+### Bugs fixed
+* Username was not slugified when making calls during Bitbucket server auth flow
+* Sometimes webviews would not load data
+
+## What's New In 2.0.0-beta2
+### Improvements
 * Added a refresh button on Jira issue view
 
 ### Bugs fixed
