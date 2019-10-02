@@ -17,6 +17,7 @@ import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
 import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -98,11 +99,17 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             );
 
+            let ws: Disposable = new Disposable(() => { });
+            if (Container.isDebugging) {
+                ws = new UIWebsocket(13988).start(this.onMessageReceived.bind(this));
+            }
+
             this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
-                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this)
+                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
+                ws,
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);

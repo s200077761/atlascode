@@ -49,7 +49,7 @@ export class AtlascodeUriHandler extends Disposable implements UriHandler {
 
 export class Container {
     static initialize(context: ExtensionContext, config: IConfig, version: string) {
-        let analyticsEnv: string = this.isDebugging ? 'staging' : 'prod';
+        let analyticsEnv: string = this.isDebugging ? 'prod' : 'prod';
         this._analyticsClient = new AnalyticsClient({
             origin: 'desktop',
             env: analyticsEnv,

@@ -974,6 +974,7 @@
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
         "@deviniti/jql-autocomplete": "^1.0.2",
+        "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
@@ -1011,7 +1012,8 @@
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
         "turndown": "^5.0.3",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "websocket": "^1.0.30"
     },
     "devDependencies": {
         "@types/analytics-node": "^3.1.1",

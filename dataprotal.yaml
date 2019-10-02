@@ -16,11 +16,8 @@ attributes:
     description: "the version they installed"
     required: true
   - name: instanceType
-    type: enum
+    type: string
     description: "the type of instance. (server | cloud)"
-    enumeration:
-      - "server"
-      - "cloud"
 
 # Extension lifecycle events
 track:
