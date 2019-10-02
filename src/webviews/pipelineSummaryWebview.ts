@@ -8,7 +8,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 
 export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
@@ -31,6 +31,10 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     initialize(pipelineInfo: PipelineInfo) {

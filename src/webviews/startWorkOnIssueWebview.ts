@@ -16,7 +16,7 @@ import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
 import { showIssue } from '../commands/jira/showIssue';
 import { transitionIssue } from '../jira/transitionIssue';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 
 const customBranchType: BranchType = { kind: "Custom", prefix: "" };
 
@@ -37,6 +37,10 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         return this._state.siteDetails;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductJira;
     }
 
     async createOrShowIssue(data: MinimalIssue) {

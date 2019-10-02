@@ -10,6 +10,7 @@ import { BitbucketIssue } from './bitbucket/model';
 import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSite } from './jira/jira-client/model/entities';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { SettingSource } from './config/model';
+import { ProductBitbucket } from './atlclients/authInfo';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -75,7 +76,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, vscode.Uri, vscode.Uri, string]) => {
-            viewScreenEvent(Registry.screen.pullRequestDiffScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then(e => { Container.analyticsClient.sendScreenEvent(e); });
             diffArgs[0]();
             vscode.commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
         }),
