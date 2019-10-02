@@ -16,7 +16,7 @@ import { viewScreenEvent, pmfSnoozed, pmfClosed } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -72,6 +72,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     abstract get id(): string;
     abstract async invalidate(): Promise<void>;
     abstract get siteOrUndefined(): DetailedSiteInfo | undefined;
+    abstract get productOrUndefined(): Product | undefined;
 
     get visible() {
         return this._panel === undefined ? false : this._panel.visible;
@@ -129,7 +130,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             this.invalidate().then(() => {
                 if (!this._viewEventSent) {
                     this._viewEventSent = true;
-                    viewScreenEvent(this.id, this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
                 }
             });
         }

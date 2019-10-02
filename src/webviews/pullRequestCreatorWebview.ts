@@ -10,7 +10,7 @@ import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
@@ -40,6 +40,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     public async invalidate() {

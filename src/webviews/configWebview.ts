@@ -3,7 +3,7 @@ import { SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
-import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo } from '../atlclients/authInfo';
+import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -39,6 +39,10 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
 
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
         return undefined;
     }
 
