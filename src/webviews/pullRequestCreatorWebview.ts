@@ -176,7 +176,6 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 case 'updateDiff': {
                     if(isUpdateDiffAction(e)){
                         let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
-
                         this.postMessage({type: 'diffResult', fileDiffs: fileDiffs});
                     }
                     break;
@@ -253,7 +252,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         let fileDiffs: FileDiff[] = [];
         for(let i = 0; i < diffOutputLines.length; i++){
             const wordsInLine = diffOutputLines[i].split(/\s+/);
-            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: wordsInLine[2], status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
+
+            //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
+            //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
+            const fileName = wordsInLine.slice(2).join(' ');
+            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: fileName, status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
         }
 
         return fileDiffs;

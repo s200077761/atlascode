@@ -180,7 +180,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     handleBranchChange = () => {
-        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
         const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch
             ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.remote.value.name
                 ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.upstream.name}`
@@ -209,17 +208,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             });
         }
 
-        if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch) {
-            this.postMessage(
-                { 
-                    action: 'updateDiff', 
-                    repoData: this.state.repo!.value, 
-                    sourceBranch: this.state.sourceBranch!.value, 
-                    destinationBranch: this.state.destinationBranch!.value
-                }
-            );
-        }
-
+        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
         if (this.state.repo &&
             this.state.remote &&
             this.state.sourceBranch &&
@@ -234,6 +223,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 sourceBranch: this.state.sourceBranch!.value,
                 destinationBranch: this.state.destinationBranch!.value
             });
+
+            this.postMessage(
+                { 
+                    action: 'updateDiff', 
+                    repoData: this.state.repo!.value, 
+                    sourceBranch: this.state.sourceBranch!.value, 
+                    destinationBranch: this.state.destinationBranch!.value
+                }
+            );
         } else {
             this.setState({ fileDiffsLoading: false, fileDiffs: []});
         }
