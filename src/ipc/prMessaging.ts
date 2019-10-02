@@ -29,6 +29,21 @@ export interface BranchType {
     prefix: string;
 }
 
+export interface FileDiff {
+    file: string;
+    status: FileStatus;
+    linesAdded: number;
+    linesRemoved: number;
+}
+
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    CONFLICT = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R'
+}
+
 export interface RepoData {
     uri: string;
     href?: string;
@@ -76,4 +91,13 @@ export interface FetchUsersResult extends Message {
 
 export function isCommitsResult(a: Message): a is CommitsResult {
     return (<CommitsResult>a).type === 'commitsResult';
+}
+
+export interface DiffResult extends Message {
+    type: 'diffResult';
+    fileDiffs: FileDiff[];
+}
+
+export function isDiffResult(a: Message): a is DiffResult {
+    return (<DiffResult>a).type === 'diffResult';
 }
