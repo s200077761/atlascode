@@ -330,11 +330,7 @@ function instanceType(eventProps: Object, site?: DetailedSiteInfo, product?: Pro
     }
 
     if (attrs) {
-        if (newObj['attributes']) {
-            newObj['attributes'] = { ...newObj['attributes'], ...attrs };
-        } else {
-            Object.assign(newObj, { attributes: attrs });
-        }
+        newObj['attributes'] = { ...newObj['attributes'], ...attrs };
     }
 
     return newObj;
