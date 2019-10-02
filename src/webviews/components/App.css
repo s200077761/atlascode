@@ -1455,3 +1455,76 @@ img::after is triggered only if img loading fails */
 .vscode-dark .spinner svg {
   stroke: var(--vscode-editor-foreground);
 }
+
+
+/* Pull Request Diff View Styling (taken from the bitbucket website) */
+
+.commit-files-summary {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.commit-files-summary li {
+  line-height: 1.5;
+  margin-top: 2px;
+  padding-left: 90px;
+}
+
+
+.commit-files-summary .commit-file-diff-stats span {
+  float: left;
+  height: 16px;
+  line-height: 1.33333333;
+  padding: 0;
+  text-align: center;
+  width: 40px;
+}
+
+.commit-files-summary .commit-file-diff-stats {
+  font-family: monospace,monospace;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+  margin-left: -90px;
+  vertical-align: top;
+}
+
+.lines-added {
+  background-color: #cfc;
+  color: #399839;
+  border-radius: 4px 0 0 4px;
+  margin-top: 2px;
+  padding: 2px 5px;
+}
+
+.lines-removed {
+  background-color: #fdd;
+  border-radius: 0 3px 3px 0;
+  color: #c33;
+  margin-left: 3px;
+  margin-top: 2px;
+  padding: 2px 5px;
+}
+
+.aui-lozenge {
+  cursor: default;
+    border-radius: 3px;
+    border-width: 1px;
+    border-style: solid;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+    text-transform: uppercase;
+    margin: 2px 4px 0;
+    width: 16px!important;
+    height: 14px!important;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;
+}
+
+.commit-files-summary .commit-files-summary--filename {
+  margin-left: 5px;
+}
+
+

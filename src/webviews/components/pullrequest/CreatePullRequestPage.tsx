@@ -8,11 +8,11 @@ import Panel from '@atlaskit/panel';
 import { Field } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
-import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData } from '../../../ipc/prMessaging';
+import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult, FileDiff, FileStatus } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
+import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { Commits } from './Commits';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import { Remote, Branch, Ref } from '../../../typings/git';
@@ -31,11 +31,13 @@ import { PMFData } from '../../../ipc/messaging';
 import { Commit, BitbucketIssueData, User } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
+import Tooltip from '@atlaskit/tooltip';
+import Spinner from '@atlaskit/spinner';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction;
-type Receive = CreatePRData | CommitsResult;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction;
+type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
     data: CreatePRData;
@@ -61,6 +63,8 @@ interface MyState {
     isOnline: boolean;
     showPMF: boolean;
     isSomethingLoading: boolean;
+    fileDiffs: FileDiff[];
+    fileDiffsLoading: boolean;
 }
 
 const emptyState = {
@@ -82,7 +86,9 @@ const emptyState = {
     errorDetails: undefined,
     isOnline: true,
     showPMF: false,
-    isSomethingLoading: false
+    isSomethingLoading: false,
+    fileDiffs: [],
+    fileDiffsLoading: true
 };
 
 const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
@@ -202,6 +208,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             });
         }
 
+        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
         if (this.state.repo &&
             this.state.remote &&
             this.state.sourceBranch &&
@@ -216,6 +223,17 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 sourceBranch: this.state.sourceBranch!.value,
                 destinationBranch: this.state.destinationBranch!.value
             });
+
+            this.postMessage(
+                { 
+                    action: 'updateDiff', 
+                    repoData: this.state.repo!.value, 
+                    sourceBranch: this.state.sourceBranch!.value, 
+                    destinationBranch: this.state.destinationBranch!.value
+                }
+            );
+        } else {
+            this.setState({ fileDiffsLoading: false, fileDiffs: []});
         }
     }
 
@@ -322,6 +340,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 }
                 break;
             }
+            case 'diffResult': {
+                if (isDiffResult(e)) {
+                    this.setState({
+                        fileDiffs: e.fileDiffs,
+                        fileDiffsLoading: false
+                    });
+                }
+            }
             case 'fetchIssueResult': {
                 this.setState({ issue: e.issue });
                 break;
@@ -349,12 +375,53 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         return true;
     }
 
+    mapFileStatusToColorScheme = (status: FileStatus) => {
+        if(status === FileStatus.ADDED){
+            return {backgroundColor: '#fff', borderColor: '#60b070', color: '#14892c'};
+        } else if(status === FileStatus.MODIFIED){
+            return {backgroundColor: '#fff', borderColor: '#a5b3c2', color: '#4a6785'};
+        } else if(status === FileStatus.DELETED){
+            return {backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437'};
+        } else if(status === FileStatus.RENAMED){
+            return {backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a'};
+        } else {
+            return {backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900'};
+        }
+
+    }
+
+    diffPanelHeader = () => {
+        return <h3>
+            Files Changed {this.state.fileDiffsLoading ? '' : `(${this.state.fileDiffs.length})`}
+        </h3>;
+    }
+
+    generateDiffList = () => {
+        return this.state.fileDiffs.map(fileDiff => 
+            <li className='iterable-item file-summary file-modified'>
+                <div className="commit-file-diff-stats">
+                    <span className="lines-added">
+                        +{fileDiff.linesAdded}
+                    </span>
+                    <span className="lines-removed">
+                        -{fileDiff.linesRemoved}
+                    </span>
+                    <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
+                        {fileDiff.status}
+                    </span>
+                    <a className="commit-files-summary--filename">
+                        {fileDiff.file}
+                    </a>
+                </div>
+            </li>
+        );
+    }
+
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
     render() {
-
         if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
@@ -504,6 +571,23 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             name="push-local-branch-enabled" />
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
+                                        <GridColumn medium={12}>
+                                            <Panel style={{marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                                {this.state.fileDiffsLoading &&
+                                                    <Tooltip content='waiting for data...'>
+                                                        <Spinner delay={100} size='large' />
+                                                    </Tooltip>
+                                                }
+                                                {!this.state.fileDiffsLoading &&
+                                                    <ul className='commit-files-summary' id='commit-files-summary'>
+                                                        {this.generateDiffList()}
+                                                    </ul>
+                                                }
+                                                {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
+                                                    <p>There are no changes to display.</p>
+                                                }
+                                            </Panel>
+                                        </GridColumn>
                                         <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
@@ -569,6 +653,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         }}
                     </Form>
                 </Page>
+                
             </div>
         );
     }

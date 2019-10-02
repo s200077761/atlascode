@@ -1,5 +1,7 @@
 import { Action } from "./messaging";
 import { BitbucketIssueData } from "../bitbucket/model";
+import { Branch } from "src/typings/git";
+import { RepoData } from "./prMessaging";
 
 export interface CopyBitbucketIssueLink extends Action {
     action: 'copyBitbucketIssueLink';
@@ -48,6 +50,17 @@ export interface OpenBitbucketIssueAction extends Action {
 
 export function isOpenBitbucketIssueAction(a: Action): a is OpenBitbucketIssueAction {
     return (<OpenBitbucketIssueAction>a).issue !== undefined;
+}
+
+export interface UpdateDiffAction extends Action {
+    action: 'updateDiff';
+    repoData: RepoData;
+    sourceBranch: Branch;
+    destinationBranch: Branch;
+}
+
+export function isUpdateDiffAction(a: Action): a is UpdateDiffAction {
+    return (<UpdateDiffAction>a).action === 'updateDiff';
 }
 
 export interface OpenStartWorkPageAction extends Action {
