@@ -100,7 +100,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             );
 
             let ws: Disposable = new Disposable(() => { });
-            if (Container.isDebugging) {
+            if (Container.isDebugging && Container.config.enableUIWS) {
                 ws = new UIWebsocket(13988).start(this.onMessageReceived.bind(this));
             }
 
