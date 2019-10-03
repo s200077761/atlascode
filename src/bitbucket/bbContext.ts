@@ -23,6 +23,7 @@ export class BitbucketContext extends Disposable {
     private _disposable: Disposable;
     private _currentUsers: CacheMap;
     private _pullRequestCache = new CacheMap();
+    private _mirrorsCache = new CacheMap();
     public readonly prCommentController: PullRequestCommentController;
 
     constructor(gitApi: GitApi) {
@@ -36,6 +37,7 @@ export class BitbucketContext extends Disposable {
             Container.siteManager.onDidSitesAvailableChange((e) => {
                 if (e.product.key === ProductBitbucket.key) {
                     this.updateUsers(e.sites);
+                    this.refreshRepos();
                 }
             })
         );
@@ -96,6 +98,12 @@ export class BitbucketContext extends Disposable {
             }
             this._repoMap.set(repo.rootUri.toString(), repo);
         }));
+
+        for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
+            const bbApi = await Container.clientManager.bbClient(site);
+            this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
+        }
+
         this._onDidChangeBitbucketContext.fire();
     }
 
@@ -134,6 +142,10 @@ export class BitbucketContext extends Disposable {
 
     public getRepository(repoUri: Uri): Repository | undefined {
         return this._repoMap.get(repoUri.toString());
+    }
+
+    public getMirrors(hostname: string): string[] {
+        return this._mirrorsCache.getItem<string[]>(hostname) || [];
     }
 
     dispose() {
