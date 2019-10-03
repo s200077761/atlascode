@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './reset.css';
 import './App.css';
+import { ResourceContext } from './context';
 
 // @ts-ignore
 // __webpack_public_path__ is used to set the public path for the js files - https://webpack.js.org/guides/public-path/
@@ -24,11 +25,14 @@ const routes = {
 
 const view = document.getElementById('reactView') as HTMLElement;
 const root = document.getElementById('root') as HTMLElement;
+
 const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <Page />
+            <ResourceContext.Provider value="vscode-resource:">
+                <Page />
+            </ResourceContext.Provider>
         </React.Suspense>
     );
 };

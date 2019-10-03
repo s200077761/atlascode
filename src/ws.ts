@@ -2,7 +2,7 @@ import { server, IMessage } from 'websocket';
 import * as http from 'http';
 import { Disposable } from 'vscode';
 
-export class UIWebsocket {
+export class UIWebsocket implements Disposable {
 
     private _port: number;
     private _srv: http.Server | undefined;
@@ -13,7 +13,7 @@ export class UIWebsocket {
         this._port = port;
     }
 
-    public start(messageHandler: (e: any) => any): Disposable {
+    public start(messageHandler: (e: any) => any): void {
         const port = this._port;
         const clients = this._clients;
         this._srv = http.createServer(function (request, response) {
@@ -36,7 +36,14 @@ export class UIWebsocket {
             // user sent some message
             connection.on('message', (message: IMessage) => {
                 console.log((new Date()) + ` got message ${message}.`);
-                messageHandler(message.utf8Data);
+                if (message.utf8Data) {
+                    try {
+                        const json = JSON.parse(message.utf8Data);
+                        messageHandler(json);
+                    } catch (e) {
+                        console.log('error parsing message', e);
+                    }
+                }
             });
 
             connection.on('close', (code: number, desc: string) => {
@@ -46,8 +53,13 @@ export class UIWebsocket {
             });
 
         });
+    }
 
-        return new Disposable(this.dispose.bind(this));
+    public send(message: any) {
+        var json = JSON.stringify({ type: 'message', data: message });
+        this._clients.forEach(client => {
+            client.sendUTF(json);
+        });
     }
 
     public dispose() {

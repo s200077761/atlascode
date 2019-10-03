@@ -52,6 +52,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private _onDidPanelDispose = new EventEmitter<void>();
     protected isRefeshing: boolean = false;
     private _viewEventSent: boolean = false;
+    private ws: UIWebsocket;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -60,6 +61,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
         Container.context.subscriptions.push(
             Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this),
         );
+
+        // Note: this is supe rlightweight and does nothing until you call start()
+        this.ws = new UIWebsocket(13988);
     }
 
     private onDidOnlineChange(e: OnlineInfoEvent) {
@@ -99,9 +103,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             );
 
-            let ws: Disposable = new Disposable(() => { });
+
             if (Container.isDebugging && Container.config.enableUIWS) {
-                ws = new UIWebsocket(13988).start(this.onMessageReceived.bind(this));
+                this.ws.start(this.onMessageReceived.bind(this));
             }
 
             this._disposablePanel = Disposable.from(
@@ -109,7 +113,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
                 this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
-                ws,
+                this.ws,
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
@@ -193,6 +197,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);
+
+        if (Container.isDebugging && Container.config.enableUIWS) {
+            this.ws.send(message);
+        }
 
         return result;
     }

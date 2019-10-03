@@ -5,16 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
-    <meta id="reactView" name="reactView" content="atlascodeSettings" />
+    <meta id="reactView" name="reactView" content="<%= view %>" />
     <title>Atlassian Webview</title>
-
+    <link rel="stylesheet" type="text/css" href="http://localhost:8080/devhtml/vscode-<%= theme %>.css" />
 </head>
 
-<body class="vscode-dark">
+<body class="vscode-<%= theme %>">
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <script type="text/javascript">
-        navigator.registerProtocolHandler('vscode-resource', 'http://localhost:8080/%s', 'codies');
-    </script>
     <div id="root"></div>
 
 </body>
