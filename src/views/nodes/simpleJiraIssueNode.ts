@@ -1,13 +1,13 @@
 import { TreeItem, TreeItemCollapsibleState, Command } from 'vscode';
 import { IssueNode } from './issueNode';
-import { emptyIssue } from '../../jira/jiraIssue';
+import { emptyMinimalIssue } from '../../jira/jira-client/model/emptyEntities';
 
 export class SimpleJiraIssueNode extends IssueNode {
 
     private command: Command | undefined;
 
     constructor(private text: string, command?: Command) {
-        super(emptyIssue);
+        super(emptyMinimalIssue);
         this.command = command;
     }
 

@@ -1,18 +1,20 @@
-import { Disposable, commands, ConfigurationChangeEvent } from "vscode";
+import { Disposable, commands, ConfigurationChangeEvent, ConfigurationTarget } from "vscode";
 import { Commands } from "../../commands";
 import { JiraExplorer } from "./jiraExplorer";
 import { Container } from "../../container";
-import { AuthInfoEvent } from "../../atlclients/authStore";
 import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId, JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
+import { setCommandContext, CommandContext, CustomJQLTreeId } from "../../constants";
+import { ProductJira } from "../../atlclients/authInfo";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { RefreshTimer } from "../RefreshTimer";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
+import { MinimalORIssueLink } from "../../jira/jira-client/model/entities";
+import { SitesAvailableUpdateEvent } from "../../siteManager";
+import { v4 } from "uuid";
 
 export class JiraContext extends Disposable {
 
-    private _explorers: JiraExplorer[] = [];
+    private _explorer: JiraExplorer | undefined;
     private _disposable: Disposable;
     private _newIssueMonitor: NewIssueMonitor;
     private _refreshTimer: RefreshTimer;
@@ -25,7 +27,7 @@ export class JiraContext extends Disposable {
         this._refreshTimer = new RefreshTimer('jira.explorer.enabled', 'jira.explorer.refreshInterval', () => this.refresh());
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             this._refreshTimer
         );
 
@@ -42,8 +44,8 @@ export class JiraContext extends Disposable {
             if (!Container.config.jira.explorer.enabled) {
                 this.dispose();
             } else {
-                if (initializing || this._explorers.length === 0) {
-                    this._explorers.push(new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot()));
+                if (initializing || !this._explorer) {
+                    this._explorer = new JiraExplorer(CustomJQLTreeId, new CustomJQLRoot());
                 }
             }
             setCommandContext(CommandContext.JiraExplorer, Container.config.jira.explorer.enabled);
@@ -57,42 +59,59 @@ export class JiraContext extends Disposable {
             setCommandContext(CommandContext.AssignedIssuesTree, Container.config.jira.explorer.showAssignedIssues);
         }
 
-        if (!initializing && (configuration.changed(e, JiraWorkingProjectConfigurationKey) || configuration.changed(e, JiraWorkingSiteConfigurationKey))) {
-            const project = await Container.jiraSiteManager.getEffectiveProject();
-            this._explorers.forEach(t => t.project = project);
-            this._newIssueMonitor.setProject(project);
-        }
-
         if (initializing) {
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            const project = await Container.jiraSiteManager.getEffectiveProject();
-            this._newIssueMonitor.setProject(project);
+            //this._newIssueMonitor.setProject(project);
         }
     }
 
     dispose() {
         this._disposable.dispose();
-        this._explorers.forEach(tree => {
-            tree.dispose();
-        });
-        this._explorers = [];
+        if (this._explorer) {
+            this._explorer.dispose();
+            this._explorer = undefined;
+        }
+
     }
 
     async refresh() {
-        if (!Container.onlineDetector.isOnline() || !await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+        if (!Container.onlineDetector.isOnline() || !Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             return;
         }
-        this._explorers.forEach(e => e.refresh());
+
+        if (this._explorer) {
+            this._explorer.refresh();
+        }
+
         this._newIssueMonitor.checkForNewIssues();
     }
 
-    async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud) {
+    async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductJira.key) {
+            if (e.sites.length === 1 && Container.config.jira.jqlList.length < 1) {
+                configuration.update('jira.jqlList', [{
+                    id: v4(),
+                    enabled: true,
+                    name: `My ${e.sites[0].name} Issues`,
+                    query: 'assignee = currentUser() ORDER BY lastViewed DESC ',
+                    siteId: e.sites[0].id,
+                    monitor: true
+                }], ConfigurationTarget.Global);
+            }
 
-            const isLoggedIn = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud);
+            const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();
         }
+    }
+
+    async findIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
+        let issue: MinimalORIssueLink | undefined = undefined;
+        if (this._explorer) {
+            issue = await this._explorer.findIssue(issueKey);
+        }
+
+        return issue;
     }
 }

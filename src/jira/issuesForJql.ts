@@ -1,32 +1,16 @@
 import { Container } from "../container";
-import { Issue, issueExpand, issueFromJsonObject } from "./jiraModel";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { MinimalIssue } from "./jira-client/model/entities";
+import { readSearchResults } from "./jira-client/model/responses";
 
-export async function issuesForJQL(jql: string): Promise<Issue[]> {
-  let client = await Container.clientManager.jirarequest();
 
-  if (client) {
+export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue[]> {
+  const client = await Container.clientManager.jiraClient(site);
+  const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
+  const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);
 
-    let site = Container.jiraSiteManager.effectiveSite;
-    let fields = await Container.jiraFieldManager.getIssueFieldsForSite(site);
-    let epicFieldInfo = await Container.jiraFieldManager.getEpicFieldsForSite(site);
+  const res = await client.searchForIssuesUsingJqlGet(jql, fields);
+  const searchResults = await readSearchResults(res, site, epicFieldInfo);
 
-    return client.search
-      .searchForIssuesUsingJqlGet({
-        expand: issueExpand,
-        jql: jql,
-        fields: fields
-      })
-      .then((res: JIRA.Response<JIRA.Schema.SearchResultsBean>) => {
-        const issues = res.data.issues;
-        if (issues) {
-          return issues.map((issue: any) => {
-            return issueFromJsonObject(issue, site, epicFieldInfo);
-          });
-        }
-        return [];
-      });
-  } else {
-  }
-
-  return Promise.reject();
+  return searchResults.issues;
 }

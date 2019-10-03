@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from './abstractBaseNode';
-import { PullRequest } from '../../bitbucket/model';
+import { PullRequest, Comment, Commit } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
 import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { ProductBitbucket } from '../../atlclients/authInfo';
 
 export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     private _delegate: StaticBitbucketIssuesNode;
@@ -13,8 +13,9 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
-        if (!Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
+    public static async create(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
+        // TODO: [VSCODE-503] handle related issues across cloud/server
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductBitbucket) || !Container.config.bitbucket.explorer.relatedBitbucketIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractBitbucketIssueKeys(pr, commits, allComments);

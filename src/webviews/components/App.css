@@ -1,8 +1,44 @@
-/*-------------------- BEGIN - general containers --------------------*/
+/*-------------------- BEGIN - fix css-reset --------------------*/
 
-p {
-  color: var(--vscode-foreground);
+body {
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-weight: var(--vscode-font-weight);
+  font-size: var(--vscode-font-size);
+  margin: 0;
+  padding: 0px;
 }
+
+a {
+  color: var(--vscode-textLink-foreground);
+}
+
+a:hover {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+a:focus, input:focus, select:focus, textarea:focus {
+  outline: 1px solid -webkit-focus-ring-color;
+  outline-offset: -1px;
+}
+
+p, h1, h2, h3, h4, h5, h6, label, span, .ac-inline-edit-p {
+  color: var(--vscode-editor-foreground);
+  margin: 0px;
+}
+
+section {
+  margin: 1em;
+}
+
+small {
+  color: var(--vscode-editorCodeLens-foreground);
+}
+
+/*-------------------- END - fix css-reset --------------------*/
+
+/*-------------------- BEGIN - general containers --------------------*/
 
 hr {
   height: 1px;
@@ -41,7 +77,6 @@ pre {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -64,6 +99,13 @@ pre {
   align-items: center;
   padding-left: 0.25em;
   padding-right: 0.25em;
+}
+
+.ac-inline-grid {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 0.25em;
 }
 
 .ac-hmargin {
@@ -94,24 +136,153 @@ pre {
   align-items: center;
 }
 
+.ac-issue-created-updated {
+  color: var(--vscode-editorCodeLens-foreground);
+}
+
 /*-------------------- END - general containers --------------------*/
+
+/*----------------- BEGIN - inline edit containers -----------------*/
+
+.ac-inline-edit-buttons-container {
+  display: flex;
+  margin-left: 5px;
+}
+
+.ac-field-label {
+  font-weight: bold;
+}
+
+.ac-inline-edit-main_container-left-margin {
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+  width: 70%;
+}
+
+.ac-inline-input-view-p {
+  width: 100%;
+  color: var(--vscode-input-foreground);
+  padding-left: 6px;
+  padding-right: 6px;
+  min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-inline-input-view-p:hover {
+  background: var(--vscode-editor-selectionHighlightBackground) !important;
+  /* color: var(--vscode-input-foreground) !important; */
+}
+
+.ac-hidden {
+  visibility: hidden;
+}
+
+.ac-inline-cancel-button, .ac-inline-save-button, .ac-inline-add-button, .ac-inline-edit-button {
+  background: var(--vscode-button-background)!important;
+  color: var(--vscode-button-foreground)!important;
+  border-width: 0px;
+  border-radius: 3px;
+  transition: background 0.1s ease-out 0s, box-shadow 0.15s cubic-bezier(0.47, 0.03, 0.49, 1.38) 0s;
+  outline: none !important;
+  margin-right: 3px;
+  padding: 0.6em;
+}
+
+.ac-inline-cancel-button:hover, .ac-inline-save-button:hover, .ac-inline-add-button:hover, .ac-inline-edit-button:hover {
+  background: var(--vscode-button-hoverBackground) !important
+}
+
+.ac-inline-cancel-button:active, .ac-inline-save-button:active, .ac-inline-add-button:active, .ac-inline-edit-button:active {
+  background: var(--vscode-button-background--darken-05) !important;
+  color: var(--vscode-button-foreground) !important
+}
+
+.ac-inline-save-button:before {
+  content: '\2713';
+  margin: 3px;
+}
+
+.ac-inline-cancel-button:before {
+  content: '\2715';
+  margin: 3px;
+}
+
+.label-and-button {
+  width: 100%;
+  display: inline-flex;
+}
+
+.ac-inline-add-button {
+  margin-left: auto;
+}
+
+.ac-inline-add-button:before {
+  content: '\002B';
+  margin: 2px;
+}
+
+.ac-inline-add-button:disabled, .ac-inline-save-button:disabled {
+  background: var(--vscode-button-background--50) !important;
+}
+
+.ac-inline-edit-button:before {
+  content: '\270E';
+  margin: 3px;
+}
+
+/*------------------ END - inline edit containers ------------------*/
 
 /*-------------------- BEGIN - page header --------------------*/
 
-[class^=styled__StyledTitle-] p {
+.ac-page-header h2 {
+  color: var(--vscode-editor-foreground);
+  margin: 10px 0px;
+}
+
+.ac-page-header a {
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ac-breadcrumbs .ac-link-button span {
+  color: var(--vscode-breadcrumb-foreground)!important;
+}
+
+.ac-breadcrumbs .ac-link-button:hover, .ac-breadcrumbs .ac-link-button:hover span {
+  color: var(--vscode-breadcrumb-focusForeground)!important;
+  cursor: pointer;
+}
+
+.ac-breadcrumb-divider {
+  color: var(--vscode-breadcrumb-foreground);
+  margin: 0px 8px;
+}
+
+/* [class^=styled__StyledTitle-] p {
   margin: 0px;
   color: var(--vscode-editor-foreground);
 }
 
 [class^=styled__StyledTitle-] {
   margin: 0px;
-}
+} */
 
 /*-------------------- END - page header --------------------*/
 
 /*-------------------- BEGIN - panels --------------------*/
 
 [class^=styledPanel__PanelHeader] h3 {
+  margin: 5px;
+}
+
+[class^=styledPanel__PanelHeader] h4 {
   margin: 5px;
 }
 
@@ -150,8 +321,12 @@ pre {
 
 /*-------------------- BEGIN - modal dialogs --------------------*/
 
-[class^=Modal__Dialog] {
-  background: var(--vscode-editor-background) !important
+.vscode-dark [class^=Modal__Dialog], .vscode-dark div[role=dialog] {
+  background-color: var(--vscode-editor-background--lighten-05) !important;
+}
+
+.vscode-light [class^=Modal__Dialog], .vscode-light div[role=dialog] {
+  background-color: var(--vscode-editor-background--darken-05) !important;
 }
 
 /*-------------------- END - modal dialogs --------------------*/
@@ -252,17 +427,87 @@ div#empty-jql-row {
 
 /*-------------------- BEGIN - section messages --------------------*/
 
-section[class^=styled__Container-], section[class^=styled__Container-] h1, section[class^=styled__Container-] p {
-  color: #4c4c4c !important;
-  margin: 6px;
+section p, section span {
+  color: #4c4c4c;
+}
+
+section button span {
+  color: var(--vscode-textLink-foreground);
 }
 
 /*-------------------- END - section messages --------------------*/
 
 /*-------------------- BEGIN - inline dialog --------------------*/
 
-.ac-inline-dialog [class^=styled__Container-] {
-  background: var(--vscode-editor-background--lighten-05);
+.ac-inline-dialog>div {
+  color: var(--vscode-editor-foreground);
+}
+
+.vscode-dark .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--lighten-05);
+}
+
+.vscode-light .ac-inline-dialog>div {
+  background-color: var(--vscode-editor-background--darken-05);
+}
+
+.ac-inline-items-container {
+  width: 100%
+}
+
+.ac-inline-item {
+  display: block;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: var(--vscode-editor-background--lighten-05)
+}
+
+.ac-inline-watcher {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  padding-left: 9px;
+  padding-right: 9px;
+}
+
+.ac-inline-watcher-list-heading {
+  font-size: .8em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+
+.ac-inline-watcher-name {
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.ac-inline-watcher-delete {
+  margin-left: 15px;
+  cursor: pointer
+}
+
+.vscode-dark .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--lighten-15)
+}
+
+.vscode-light .ac-inline-watcher-delete:hover {
+  background-color: var(--vscode-editor-background--darken-15)
+}
+
+.ac-inline-watcher-delete:after {
+  content: "\2715"
+}
+
+.vscode-dark .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--lighten-075)
+}
+
+.vscode-light .ac-inline-watcher-hover:hover {
+  background-color: var(--vscode-editor-background--darken-075)
 }
 
 /*-------------------- END - inline dialog --------------------*/
@@ -277,7 +522,7 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], [class^=Modal__Dialog], [class^=Radio__Label] {
+[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], div[role=dialog], [class^=Modal__Dialog], [class^=Radio__Label], [class^=Field__FieldWrapper-]>label>span {
   color: var(--vscode-foreground) !important
 }
 
@@ -310,15 +555,15 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - links --------------------*/
 
-.vscode-light .ac-link-button:hover, .vscode-light .ac-link-button>span {
-  color: var(--vscode-textlink-foreground) !important
+.ac-link-button span {
+  color: var(--vscode-textLink-foreground);
 }
 
-.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button>span {
-  color: var(--vscode-foreground) !important
+.ac-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
 }
 
-.ac-link-button>button {
+.ac-link-button {
   padding: 0 !important
 }
 
@@ -328,9 +573,45 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   text-decoration: underline;
 }
 
-.ac-banner-link-button>button {
+.ac-banner-link-button {
   padding: 0 !important
 }
+
+.ac-banner-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
+
+.ac-banner-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+/* .vscode-light .ac-link-button:hover, .vscode-light .ac-link-button span {
+  color: var(--vscode-textlink-foreground) !important
+}
+
+.vscode-dark .ac-link-button:hover, .vscode-dark .ac-link-button span {
+  color: var(--vscode-foreground) !important
+}
+
+.ac-link-button button {
+  padding: 0 !important
+}
+
+.ac-banner-link-button span {
+  color: var(--vscode-textLink-foreground);
+}
+
+.ac-banner-link-button:hover span {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.ac-banner-link-button:hover, .ac-banner-link-button span {
+  text-decoration: underline;
+}
+
+.ac-banner-link-button button {
+  padding: 0 !important
+} */
 
 /*-------------------- END - links --------------------*/
 
@@ -348,8 +629,8 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   background: var(--vscode-input-background) !important;
   color: var(--vscode-input-foreground) !important;
   font: inherit;
-  width: inherit;
-  padding: 6px;
+  width: 100%;
+  padding-left: 6px;
   box-sizing: border-box;
   border: 1px solid var(--vscode-settings-textInputBorder) !important;
   outline: 0 !important
@@ -373,7 +654,22 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .refreshInterval {
   margin-top: 10px;
+  margin-bottom: 10px;
   color: var(--vscode-foreground) !important;
+}
+
+.productEnabler {
+  margin-top: 0px;
+  margin-bottom: 25px;
+  display: flex;
+  color: var(--vscode-foreground) !important;
+}
+
+.ac-textarea-toolbar {
+  margin-top: -5px;
+  margin-bottom: 5px;
+  border: 1px solid var(--vscode-settings-textInputBorder) !important;
+  border-top: none;
 }
 
 /*-------------------- END - form input/text --------------------*/
@@ -390,9 +686,13 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   border-color: var(--vscode-focusBorder) !important
 }
 
-.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list, .ac-select__single-value {
-  background: var(--vscode-dropdown-background) !important;
-  color: var(--vscode-input-foreground) !important;
+.ac-select__indicator, .ac-select__input, .ac-select__menu, .ac-select__menu-list {
+  background: var(--vscode-dropdown-background)!important;
+  color: var(--vscode-input-foreground)!important;
+}
+
+.ac-select__single-value {
+  color: var(--vscode-input-foreground)!important;
 }
 
 .ac-select__multi-value__label {
@@ -400,8 +700,13 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
   font-size: 100% !important;
 }
 
+.ac-select__multi-value__label span {
+  color: var(--vscode-editor-foreground--darken-10) !important
+}
+
 .ac-select__option {
-  cursor: pointer !important
+  cursor: pointer !important;
+  width: auto!important;
 }
 
 .ac-select__placeholder {
@@ -439,11 +744,11 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- BEGIN - checkboxes/radios --------------------*/
 
-[class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
+[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__IconWrapper-], [class^=Radio__IconWrapper-] {
   color: var(--vscode-button-background) !important
 }
 
-[class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
+[type=checkbox]+span rect, [type=radio]+span circle, [class^=Checkbox__IconWrapper-] rect, [class^=Radio__IconWrapper-] circle {
   stroke: var(--vscode-button-background) !important
 }
 
@@ -485,6 +790,18 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 /*-------------------- END - calendar controls --------------------*/
 
+/*-------------------- BEGIN - BB cloud rendered html classes --------------------*/
+
+.vscode-light .ap-mention, .vscode-light .user-mention {
+  background: var(--vscode-editor-background--darken-15);
+}
+
+.vscode-dark .ap-mention, .vscode-dark .user-mention {
+  background: var(--vscode-editor-background--lighten-15);
+}
+
+/*-------------------- END - BB cloud rendered html classes --------------------*/
+
 /*-------------------- BEGIN - PR branch lozenges --------------------*/
 
 .ac-branch-lozenge {
@@ -515,10 +832,11 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 
 .ac-branch-lozenge, .ac-branch-lozenge__Text {
   -webkit-box-sizing: border-box;
-  box-sizing: border-box
+  box-sizing: border-box;
 }
 
 .ac-branch-lozenge__Text {
+  color: var(--vscode-button-foreground);
   display: inline-block;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
@@ -630,18 +948,28 @@ section[class^=styled__Container-], section[class^=styled__Container-] h1, secti
 }
 
 .branch-container {
-  /* display: flex; */
+  display: flex;
   flex-direction: row;
-  align-items: stretch;
+  border: 1px solid var(--vscode-settings-textInputBorder);
 }
 
 .branch-container .prefix-container {
-  border: solid var(--vscode-settings-textInputBorder) !important;
-  border-right-width: 0px !important;
-  flex-grow: 1;
-  /* display: flex; */
-  flex-direction: row;
+  display: flex;
   align-items: center;
+  padding: 0 1em;
+}
+
+.vscode-light .branch-container .prefix-container {
+  background: var(--vscode-editor-background--darken-15);
+}
+
+.vscode-dark .branch-container .prefix-container {
+  background: var(--vscode-editor-background--lighten-15);
+}
+
+.branch-container .branch-name {
+  flex-grow: 1;
+  background: var(--vscode-input-background);
 }
 
 .start-work-success code {
@@ -722,8 +1050,21 @@ pre.pipeline-logs {
 
 /*-------------------- BEGIN - Comments --------------------*/
 
+.ac-comment-form {
+  display: flex;
+  margin-top: 10px;
+}
+
 .ac-comments [class^="LayoutStyles__Container"] {
   padding-top: 0px !important;
+}
+
+.ac-comments [class^="LayoutStyles__ContentSectionDiv"] {
+  margin-bottom: 10px !important;
+}
+
+.ac-comments [class^="LayoutStyles__NestedCommentsDiv"] {
+  margin: 5px !important;
 }
 
 .ac-comments .emoji {
@@ -738,7 +1079,7 @@ pre.pipeline-logs {
 img::after is triggered only if img loading fails */
 
 .bitbucket-page img::after {
-  content: '⚠️ Error loading the image - please open the pull request on bitbucket.org to view the image.' !important;
+  content: '⚠️ Error loading the image - open this pull request in your browser to view the image.' !important;
 }
 
 .problem-table {
@@ -784,3 +1125,402 @@ img::after is triggered only if img loading fails */
 [class^=GridColumnElement__GridColumn] {
   border: 2px solid blue;
 } */
+
+/*   TABS   */
+
+.react-tabs {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.react-tabs__tab-list {
+  border-bottom: 1px solid var(--vscode-panel-border);
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.react-tabs__tab {
+  display: inline-block;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 5px 5px 0 0;
+  margin-left: 1px;
+  bottom: -1px;
+  position: relative;
+  list-style: none;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.react-tabs__tab--selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  border-color: var(--vscode-focusBorder);
+  color: var(--vscode-list-activeSelectionForeground);
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 0 5px var(--vscode-focusBorder);
+}
+
+.react-tabs__tab--disabled {
+  color: GrayText;
+  cursor: default;
+}
+
+.react-tabs__tab:focus {
+  box-shadow: 0 0 5px var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder);
+  outline: none;
+}
+
+.react-tabs__tab:focus:after, .react-tabs__tab--selected:after {
+  content: "";
+  height: 0px;
+}
+
+.react-tabs__tab-panel {
+  display: none;
+}
+
+.react-tabs__tab-panel--selected {
+  display: block;
+}
+
+.ac-collapsible-trigger {
+  color: var(--vscode-textLink-foreground);
+  display: block;
+  margin: 5px;
+  cursor: pointer;
+}
+
+/* .ac-collapsible-trigger::after {
+  font-family: 'FontAwesome';
+  content: '\f107';
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: block;
+  transition: transform 300ms;
+}
+
+.ac-collapsible-trigger.is-open::after {
+  transform: rotateZ(180deg);
+} */
+
+.ac-collapsible-trigger:hover {
+  color: var(--vscode-textLink-activeForeground);
+}
+
+/* the borders on TableTrees */
+
+[class^=styled__TreeRowContainer] {
+  border-color: var(--vscode-editorRuler-foreground)!important;
+}
+
+.ac-attachment-dropzone {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 200px;
+  border-radius: 3px;
+  border: 2px dashed var(--vscode-editorRuler-foreground);
+  outline: none!important
+}
+
+.ac-attachment-dropzone-inline {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  height: 50px;
+  border-radius: 3px;
+  border: 2px dashed var(--vscode-editorRuler-foreground);
+  outline: none!important
+}
+
+.ac-attachment-instructions {
+  display: block;
+  float: left;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%)
+}
+
+.ac-attachment-filesbg {
+  float: left;
+  width: 115px;
+  border: 0px;
+}
+
+.ac-attachment-filesbg-inline {
+  float: left;
+  border: 0px;
+}
+
+.ac-attachment-drag-and-button {
+  float: left;
+}
+
+.ac-attachment-drag-text {
+  display: block;
+  margin-left: 10px;
+  white-space: nowrap;
+  margin-top: 15px;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-attachment-drag-text-inline {
+  display: block;
+  margin-left: 10px;
+  white-space: nowrap;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-attachment-upload-button {
+  margin-left: 10px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.ac-attachment-thumbs-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  margin-left: 32px;
+  margin-bottom: 16px;
+}
+
+.ac-attachment-thumb {
+  /* display: inline-flex;
+  border-radius: 2px;
+  border: 1px solid var(--vscode-editorRuler-foreground); */
+  margin-bottom: 8px;
+  margin-right: 10px;
+  /* padding: 0px;
+  box-sizing: border-box;
+  align-items: center; */
+}
+
+.vscode-dark .ac-attachment-thumb {
+  background-color: var(--vscode-editor-background--lighten-15)
+}
+
+.vscode-light .ac-attachment-thumb {
+  background-color: var(--vscode-editor-background--darken-15)
+}
+
+.ac-attachment-thumb-item {
+  height: 108px;
+  max-height: 100%;
+  width: 162px;
+  max-width: 100%;
+  /* align-items: center;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 8px; */
+}
+
+.ac-attachment-thumb-inner {
+  line-height: normal;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.ac-attachment-thumb-img-wrapper {
+  position: relative;
+  width: inherit;
+  height: inherit;
+  display: block;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.ac-attachment-thumb-img {
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.ac-attachment-thumb-img-inline {
+  width: 34px;
+  height: 34px;
+}
+
+.ac-attachment-overlay-container {
+  position: relative;
+  height: inherit;
+}
+
+.ac-attachment-overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(9, 30, 66, 0.5);
+  border-radius: inherit;
+}
+
+.ac-attachment-filename-container {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  color: rgb(255, 255, 255);
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: break-word;
+  padding: 8px;
+}
+
+.ac-attachment-filename {
+  width: 135px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-attachment-delete-container {
+  display: flex;
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  color: rgb(255, 255, 255);
+  padding: 8px;
+}
+
+.ac-attachment-delete {
+  height: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.ac-delete {
+  height: 18px;
+  width: 18px;
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+}
+
+.ac-icon-button {
+  cursor: pointer;
+  color: var(--vscode-editor-foreground);
+}
+
+@keyframes hideshow {
+  0% {
+    opacity: .3
+  }
+  100% {
+    opacity: .1
+  }
+}
+
+.ac-atl-loader-container {
+  margin-top: 100px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ac-atl-loader-container div {
+  color: var(--vscode-editor-foreground);
+  opacity: .7
+}
+
+.ac-atl-loader {
+  width: 400px;
+  height: 400px;
+  color: var(--vscode-editor-foreground);
+  animation-name: hideshow;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+[role=gridcell][class^=styled__Cell-] {
+  padding: 8px;
+}
+
+[role=gridcell]>[class^=styled__OverflowContainer-] {
+  width: 100%;
+}
+
+.vscode-dark .spinner svg {
+  stroke: var(--vscode-editor-foreground);
+}
+
+/* Pull Request Diff View Styling (taken from the bitbucket website) */
+
+.commit-files-summary {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.commit-files-summary li {
+  line-height: 1.5;
+  margin-top: 2px;
+  padding-left: 90px;
+}
+
+.commit-files-summary .commit-file-diff-stats span {
+  float: left;
+  height: 16px;
+  line-height: 1.33333333;
+  padding: 0;
+  text-align: center;
+  width: 40px;
+}
+
+.commit-files-summary .commit-file-diff-stats {
+  font-family: monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+  margin-left: -90px;
+  vertical-align: top;
+}
+
+.lines-added {
+  background-color: #cfc;
+  color: #399839;
+  border-radius: 4px 0 0 4px;
+  margin-top: 2px;
+  padding: 2px 5px;
+}
+
+.lines-removed {
+  background-color: #fdd;
+  border-radius: 0 3px 3px 0;
+  color: #c33;
+  margin-left: 3px;
+  margin-top: 2px;
+  padding: 2px 5px;
+}
+
+.aui-lozenge {
+  cursor: default;
+  border-radius: 3px;
+  border-width: 1px;
+  border-style: solid;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  text-transform: uppercase;
+  margin: 2px 4px 0;
+  width: 16px!important;
+  height: 14px!important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.commit-files-summary .commit-files-summary--filename {
+  margin-left: 5px;
+}

@@ -7,8 +7,8 @@ import { configuration, Configuration, IConfig } from './config/configuration';
 import { Logger } from './logger';
 import { GitExtension } from './typings/git';
 import { Container } from './container';
-import { AuthProvider } from './atlclients/authInfo';
-import { setCommandContext, CommandContext, GlobalStateVersionKey } from './constants';
+import { ProductJira, ProductBitbucket } from './atlclients/authInfo';
+import { setCommandContext, CommandContext, GlobalStateVersionKey, AuthInfoVersionKey } from './constants';
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
@@ -17,6 +17,7 @@ import { window, Memento } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
+import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
 
 const AnalyticDelay = 5000;
 
@@ -27,26 +28,32 @@ export async function activate(context: ExtensionContext) {
     const previousVersion = context.globalState.get<string>(GlobalStateVersionKey);
 
     registerResources(context);
+
     Configuration.configure(context);
     Logger.configure(context);
 
-    const cfg = await migrateConfig();
+    try {
+        Container.initialize(context, configuration.get<IConfig>(), atlascodeVersion);
 
-    Container.initialize(context, cfg, atlascodeVersion);
+        registerCommands(context);
+        activateCodebucket(context);
 
-    setCommandContext(CommandContext.IsJiraAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false));
-    setCommandContext(CommandContext.IsBBAuthenticated, await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud));
+        await migrateConfig(context.globalState);
 
-    registerCommands(context);
-    activateCodebucket(context);
+        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
+        setCommandContext(CommandContext.IsBBAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
 
-    const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
-    if (gitExtension) {
-        const gitApi = gitExtension.exports.getAPI(1);
-        const bbContext = new BitbucketContext(gitApi);
-        Container.initializeBitbucket(bbContext);
-    } else {
-        Logger.error(new Error('vscode.git extension not found'));
+        const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
+        if (gitExtension) {
+            const gitApi = gitExtension.exports.getAPI(1);
+            const bbContext = new BitbucketContext(gitApi);
+            Container.initializeBitbucket(bbContext);
+        } else {
+            Logger.error(new Error('vscode.git extension not found'));
+        }
+
+    } catch (e) {
+        Logger.error(e, 'Error initializing atlascode!');
     }
 
     showWelcomePage(atlascodeVersion, previousVersion);
@@ -65,14 +72,24 @@ export async function activate(context: ExtensionContext) {
     Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
-async function migrateConfig(): Promise<IConfig> {
-    const cfg = configuration.get<IConfig>();
-    if (cfg.jira.workingSite &&
-        (!cfg.jira.workingSite.baseUrlSuffix || cfg.jira.workingSite.baseUrlSuffix.length < 1)) {
-        await configuration.setWorkingSite({ ...cfg.jira.workingSite, baseUrlSuffix: 'atlassian.net' });
-        return configuration.get<IConfig>();
+async function migrateConfig(globalState: Memento): Promise<void> {
+    const authModelVersion = globalState.get<number>(AuthInfoVersionKey);
+
+    if (!authModelVersion || authModelVersion < 2) {
+        const cfg = configuration.get<IConfig>();
+        const migrator = new V1toV2Migrator(Container.siteManager,
+            Container.credentialManager,
+            !Container.isDebugging,
+            Container.config.jira.workingProject,
+            cfg.jira.workingSite);
+        await migrator.convertLegacyAuthInfo();
+        await globalState.update(AuthInfoVersionKey, 2);
+        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
+    } else {
+        // we've already migrated to 2.x but we might need to migrate workspace JQL
+        migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
+        await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
     }
-    return cfg;
 }
 
 async function showWelcomePage(version: string, previousVersion: string | undefined) {

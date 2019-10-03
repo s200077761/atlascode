@@ -4,65 +4,65 @@ import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 import { JQLEntry } from "src/config/model";
 import { Field, ErrorMessage } from '@atlaskit/form';
 import Select, { components } from '@atlaskit/select';
-import { FieldValidators, chain } from "../fieldValidators";
+import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
 import SectionMessage from '@atlaskit/section-message';
-import { AccessibleResource } from "../../../atlclients/authInfo";
-import { applyWorkingProject, WorkingProjectDisplayName } from "../../../jira/JqlWorkingProjectHelper";
+import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
-    <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.avatarUrl} width="24" height="24" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
   </components.Option>
 );
 
 const IconValue = (props: any) => (
   <components.SingleValue {...props}>
-    <div style={{ display: 'flex', 'align-items': 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
+    <div style={{ display: 'flex', alignItems: 'center' }}><img src={props.data.avatarUrl} width="16" height="16" /><span style={{ marginLeft: '10px' }}>{props.data.name}</span></div>
   </components.SingleValue>
 
 );
 
 export default class EditJQL extends PureComponent<{
-  jiraAccessToken: string;
-  workingSite: AccessibleResource;
-  workingProject: string;
-  sites: AccessibleResource[];
+  jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
+  sites: DetailedSiteInfo[];
   jqlEntry: JQLEntry;
   nameEditable?: boolean;
   onCancel: () => void;
   onRestoreDefault?: (jqlEntry: JQLEntry) => void;
-  onSave: (site: AccessibleResource, jqlEntry: JQLEntry) => void;
+  onSave: (jqlEntry: JQLEntry) => void;
 }, {
-  selectedSite: AccessibleResource;
+  selectedSite: DetailedSiteInfo;
   nameValue: string;
   inputValue: string;
   openComplete: boolean;
   jqlError: string | null;
   isEditing: boolean;
 }> {
-  state = {
-    selectedSite: this.props.workingSite,
-    nameValue: this.props.jqlEntry.name,
-    inputValue: this.props.jqlEntry.query,
-    openComplete: false,
-    jqlError: null,
-    isEditing: false
-  };
+
+  constructor(props: any) {
+    super(props);
+
+    let defaultSite = this.props.sites.find(site => site.id === this.props.jqlEntry.siteId);
+    if (!defaultSite && this.props.sites.length > 0) {
+      defaultSite = this.props.sites[0];
+    } else if (!defaultSite) {
+      defaultSite = emptySiteInfo;
+    }
+
+    this.state = {
+      selectedSite: defaultSite,
+      nameValue: this.props.jqlEntry.name,
+      inputValue: this.props.jqlEntry.query,
+      openComplete: false,
+      jqlError: null,
+      isEditing: false
+    };
+  }
+
+
 
   async fetchEndpoint(endpoint: string): Promise<any> {
-    const fullUrl = `https://api.atlassian.com/ex/jira/${
-      this.state.selectedSite.id
-      }/rest/api/2/${endpoint}`;
-    const r = new Request(fullUrl, {
-      headers: {
-        Authorization: `Bearer ${this.props.jiraAccessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-    return fetch(r).then((res: Response) => {
-      return res.json();
-    });
+    return this.props.jqlFetcher(this.state.selectedSite, endpoint);
   }
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {
@@ -72,9 +72,8 @@ export default class EditJQL extends PureComponent<{
   }
 
   validationRequest = async (jql: string) => {
-    const effectiveJql = applyWorkingProject(this.props.workingProject, jql);
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${effectiveJql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -90,7 +89,7 @@ export default class EditJQL extends PureComponent<{
     return this.fetchEndpoint("jql/autocompletedata");
   }
 
-  handleSiteChange = (e: AccessibleResource) => {
+  handleSiteChange = (e: DetailedSiteInfo) => {
     this.setState({
       selectedSite: e
     });
@@ -117,7 +116,7 @@ export default class EditJQL extends PureComponent<{
   onSave = () => {
     var entry = this.props.jqlEntry;
 
-    this.props.onSave(this.state.selectedSite, Object.assign({}, entry, { name: this.state.nameValue, query: this.state.inputValue }));
+    this.props.onSave(Object.assign({}, entry, { siteId: this.state.selectedSite.id, name: this.state.nameValue, query: this.state.inputValue }));
   }
 
   onRestoreDefault = () => {
@@ -158,7 +157,7 @@ export default class EditJQL extends PureComponent<{
                       style={{ width: '100%', display: 'block' }}
                       className='ac-inputField'
                       readOnly={this.props.nameEditable !== undefined && !this.props.nameEditable}
-                      onChange={chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
+                      onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
                     {errDiv}
                   </div>
                 );
@@ -171,7 +170,7 @@ export default class EditJQL extends PureComponent<{
             <Field label='Select Site'
               id='site'
               name='site'
-              defaultValue={this.props.workingSite}
+              defaultValue={this.state.selectedSite}
             >
               {
                 (fieldArgs: any) => {
@@ -184,7 +183,7 @@ export default class EditJQL extends PureComponent<{
                       getOptionValue={(option: any) => option.id}
                       options={this.props.sites}
                       components={{ Option: IconOption, SingleValue: IconValue }}
-                      onChange={chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
+                      onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.handleSiteChange)}
                     />
                   );
                 }
@@ -213,9 +212,9 @@ export default class EditJQL extends PureComponent<{
               jqlError={this.state.jqlError}
             />
           }
-          <p><strong>Tip:</strong> You can use <code>project = {WorkingProjectDisplayName}</code> to restrict the query to issues in your working project. It's not actually valid JQL, but we'll take care of it.</p>
           <div style={{
             marginTop: '24px',
+            marginBottom: '10px',
             display: 'flex',
             justifyContent: 'flex-end'
           }}>

@@ -3,53 +3,59 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import Lozenge from "@atlaskit/lozenge";
-import { Issue, IssueLink } from '../../../jira/jiraModel';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { MinimalIssueLink, MinimalIssueOrKeyAndSite, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { colorToLozengeAppearanceMap } from '../colors';
 
-type ItemData = { linkDescription: string, issue: Issue, postMessage: (e: OpenJiraIssueAction) => void };
+interface LinkedIssuesProps {
+    issuelinks: MinimalIssueLink[];
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void;
+    onDelete: (issueLink: any) => void;
+}
 
-const colorToLozengeAppearanceMap = {
-    neutral: 'default',
-    purple: 'new',
-    blue: 'inprogress',
-    red: 'removed',
-    yellow: 'moved',
-    green: 'success',
+type ItemData = {
+    linkDescription: string,
+    issue: IssueLinkIssue,
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void,
+    onDelete: (issueLink: any) => void;
 };
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
         <p style={{ display: "inline" }}><em style={{ position: 'absolute', bottom: '2.25em' }}>{data.linkDescription}</em></p>
-        <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issueType.name}><img src={data.issue.issueType.iconUrl} /></Tooltip></div>
-        <Button appearance="subtle-link" onClick={() => data.postMessage({ action: 'openJiraIssue', issueOrKey: data.issue })}>
+        <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.issuetype.name}><img src={data.issue.issuetype.iconUrl} /></Tooltip></div>
+        <Button appearance="subtle-link" onClick={() => data.onIssueClick({ siteDetails: data.issue.siteDetails, key: data.issue.key })}>
             {data.issue.key}
         </Button>
     </div>;
 const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue.summary}</p>;
 const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
-const StatusColumn = (data: ItemData) => <p style={{ display: "inline" }}><Lozenge appearence={colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName]}>{data.issue.status.name}</Lozenge></p>;
+const StatusColumn = (data: ItemData) => {
+    const lozColor: string = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName];
+    return (<Lozenge appearance={lozColor}>{data.issue.status.name}</Lozenge>);
 
-export default class LinkedIssues extends React.Component<{ issuelinks: IssueLink[], postMessage: (e: OpenJiraIssueAction) => void }, {}> {
-    constructor(props: any) {
-        super(props);
-    }
+};
+// const Delete = (data: ItemData) => {
+//     return (<div className='ac-delete' onClick={() => data.onDelete(data.issue)}>
+//         <TrashIcon label='trash' />
+//     </div>);
+// };
 
-    render() {
-        return (
-            <TableTree
-                columns={[IssueKey, Summary, Priority, StatusColumn]}
-                columnWidths={['150px', '100%', '20px', '150px']}
-                items={this.props.issuelinks.map(issuelink => {
-                    return {
-                        id: issuelink.id,
-                        content: {
-                            linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
-                            issue: issuelink.inwardIssue || issuelink.outwardIssue,
-                            postMessage: this.props.postMessage
-                        }
-                    };
-                })}
-            />
-        );
-    }
-}
+export const LinkedIssues: React.FunctionComponent<LinkedIssuesProps> = ({ issuelinks, onIssueClick, onDelete }) => {
+    return (
+        <TableTree
+            columns={[IssueKey, Summary, Priority, StatusColumn]}
+            columnWidths={['150px', '100%', '20px', '150px']}
+            items={issuelinks.map(issuelink => {
+                return {
+                    id: issuelink.id,
+                    content: {
+                        linkDescription: issuelink.inwardIssue ? issuelink.type.inward : issuelink.type.outward,
+                        issue: issuelink.inwardIssue || issuelink.outwardIssue,
+                        onIssueClick: onIssueClick,
+                        onDelete: onDelete,
+                    }
+                };
+            })}
+        />
+    );
+};

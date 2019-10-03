@@ -2,9 +2,10 @@ import { Disposable, ConfigurationChangeEvent } from "vscode";
 import { Container } from "../container";
 import { configuration } from "../config/configuration";
 import { BitbucketContext } from "../bitbucket/bbContext";
-import { AuthProvider } from "../atlclients/authInfo";
+import { ProductBitbucket } from "../atlclients/authInfo";
 import { RefreshTimer } from "./RefreshTimer";
 import { Explorer, BaseTreeDataProvider } from "./Explorer";
+import { BitbucketEnabledKey } from "../constants";
 
 export abstract class BitbucketExplorer extends Explorer implements Disposable {
     private _disposable: Disposable;
@@ -30,6 +31,10 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     }
 
     abstract explorerEnabledConfiguration(): string;
+    bitbucketEnabledConfiguration(): string {
+        return BitbucketEnabledKey;
+    }
+
     abstract monitorEnabledConfiguration(): string;
     abstract refreshConfiguation(): string;
 
@@ -37,8 +42,8 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
     abstract newTreeDataProvider(): BaseTreeDataProvider;
     abstract newMonitor(): BitbucketActivityMonitor;
 
-    authProvider() {
-        return AuthProvider.BitbucketCloud;
+    product() {
+        return ProductBitbucket;
     }
 
     onBitbucketContextChanged() {
@@ -48,19 +53,20 @@ export abstract class BitbucketExplorer extends Explorer implements Disposable {
 
     async refresh() {
         if (!Container.onlineDetector.isOnline() ||
-            !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
+            !await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket)) {
             return;
         }
 
         if (this.treeDataProvder) {
             this.treeDataProvder.refresh();
         }
-        if (this.monitor) {
+        if (this.monitor && configuration.get<boolean>(this.bitbucketEnabledConfiguration())) {
             this.monitor.checkForNewActivity();
         }
     }
 
     dispose() {
+        console.log('bitbucket explorer disposed');
         super.dispose();
         this._disposable.dispose();
     }

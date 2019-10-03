@@ -37,7 +37,7 @@ export default class MultiOptionList extends React.Component<
 
     private htmlForOption(option: string, index: number) {
         return (
-            <div id="multi-option-row" >
+            <div id="multi-option-row" key={option + index}>
                 <input className='ac-inputField-inline'
                     id="multi-option-input"
                     name="multi-option-option"

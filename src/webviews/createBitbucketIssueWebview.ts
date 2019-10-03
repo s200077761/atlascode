@@ -1,19 +1,16 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { commands } from 'vscode';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { commands, Uri } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RepositoriesApi } from '../bitbucket/repositories';
 import { Commands } from '../commands';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
-import { CreateBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
+import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 
-type Emit = CreateBitbucketIssueData | HostErrorMessage;
-export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Action> {
+export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -24,6 +21,19 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     }
     public get id(): string {
         return "createBitbucketIssueScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
+        if (repos.length > 0) {
+            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+        }
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     public async invalidate() {
@@ -42,34 +52,35 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
         this.isRefeshing = true;
         try {
             const repoData: RepoData[] = [];
-            const repos = Container.bitbucketContext.getBitbucketRepositores();
+            const repos = Container.bitbucketContext.getBitbucketRepositories();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
-                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
-                    continue;
-                }
+                const remotes = getBitbucketRemotes(r);
+                const remote = firstBitbucketRemote(r);
 
-                const repo = await RepositoriesApi.get(bbRemotes[0]);
-                if (!repo.has_issues) {
+                const bbApi = await clientForRemote(remote);
+                const repo = await bbApi.repositories.get(remote);
+                if (!repo.issueTrackerEnabled) {
                     continue;
                 }
 
                 repoData.push({
                     uri: r.rootUri.toString(),
-                    href: repo.links!.html!.href!,
-                    avatarUrl: repo.links!.avatar!.href!,
-                    remotes: bbRemotes,
+                    href: repo.url,
+                    avatarUrl: repo.avatarUrl,
+                    remotes: remotes,
                     defaultReviewers: [],
                     localBranches: [],
-                    remoteBranches: []
+                    remoteBranches: [],
+                    branchTypes: [],
+                    isCloud: true
                 });
             }
 
             this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
         } catch (e) {
             Logger.error(new Error(`error updating issue fields: ${e}`));
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -93,7 +104,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
                             await this.createIssue(e);
                         } catch (e) {
                             Logger.error(new Error(`error creating bitbucket issue: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -112,10 +123,20 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview<Emit, Acti
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
         const { href, title, description, kind, priority } = createIssueAction;
 
-        let issue = await BitbucketIssuesApi.create(href, title, description, kind, priority);
+        // TODO [VSCODE-568] Add remote to create bitbucket issue action
+        const repo = Container.bitbucketContext.getRepository(Uri.parse(href));
+        const remote = firstBitbucketRemote(repo!);
+        const bbApi = await clientForRemote(remote);
+        let issue = await bbApi.issues!.create(href, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
-        bbIssueCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+
+        if (site) {
+            bbIssueCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
+
         this.hide();
     }
 }

@@ -11,11 +11,13 @@ import {
     window
 } from 'vscode';
 import { Resources } from '../resources';
-import { Action, isAlertable, OnlineStatusMessage, isPMFSubmitAction, PMFMessage } from '../ipc/messaging';
-import { viewScreenEvent } from '../analytics';
+import { isAlertable, isPMFSubmitAction, isAction } from '../ipc/messaging';
+import { viewScreenEvent, pmfSnoozed, pmfClosed } from '../analytics';
 import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
+import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
+import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -42,14 +44,15 @@ export function isInitializable(object: any): object is InitializingWebview<any>
 // Generic Types:
 // S = the type of ipc.Message to send to react
 // R = the type of ipc.Action to receive from react
-export abstract class AbstractReactWebview<S, R extends Action> implements ReactWebview {
+export abstract class AbstractReactWebview implements ReactWebview {
     private _disposablePanel: Disposable | undefined;
     protected _panel: WebviewPanel | undefined;
     private readonly _extensionPath: string;
     private static readonly viewType = 'react';
     private _onDidPanelDispose = new EventEmitter<void>();
-    protected tenantId: string | undefined;
     protected isRefeshing: boolean = false;
+    private _viewEventSent: boolean = false;
+    private ws: UIWebsocket;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -58,6 +61,9 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         Container.context.subscriptions.push(
             Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this),
         );
+
+        // Note: this is supe rlightweight and does nothing until you call start()
+        this.ws = new UIWebsocket(13988);
     }
 
     private onDidOnlineChange(e: OnlineInfoEvent) {
@@ -69,7 +75,9 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
     }
     abstract get title(): string;
     abstract get id(): string;
-    abstract invalidate(): void;
+    abstract async invalidate(): Promise<void>;
+    abstract get siteOrUndefined(): DetailedSiteInfo | undefined;
+    abstract get productOrUndefined(): Product | undefined;
 
     get visible() {
         return this._panel === undefined ? false : this._panel.visible;
@@ -81,7 +89,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
         this._panel.dispose();
     }
 
-    async createOrShow(column?: ViewColumn): Promise<void> {
+    public async createOrShow(column?: ViewColumn): Promise<void> {
         if (this._panel === undefined) {
             this._panel = window.createWebviewPanel(
                 AbstractReactWebview.viewType,
@@ -92,74 +100,113 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
                     enableFindWidget: true,
                     enableCommandUris: true,
                     enableScripts: true,
-                    localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build'))]
+                    localResourceRoots: [Uri.file(path.join(this._extensionPath, 'build')), Uri.file(path.join(this._extensionPath, 'images'))]
                 }
             );
+
+
+            if (Container.isDebugging && Container.config.enableUIWS) {
+                this.ws.start(this.onMessageReceived.bind(this));
+            }
 
             this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
-                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this)
+                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
+                this.ws,
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
         }
         else {
             this._panel.webview.html = this._getHtmlForWebview(this.id);
-            this._panel.reveal(ViewColumn.Active); // , false);
+            this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
 
-        viewScreenEvent(this.id, this.tenantId).then(e => { Container.analyticsClient.sendScreenEvent(e); });
     }
 
     private onViewStateChanged(e: WebviewPanelOnDidChangeViewStateEvent) {
         // HACK: Because messages aren't sent to the webview when hidden, we need make sure it is up-to-date
         if (e.webviewPanel.visible) {
             this.postMessage({ type: 'onlineStatus', isOnline: Container.onlineDetector.isOnline() });
-            this.postMessage({ type: 'pmfStatus', showPMF: Container.pmfStats.shouldShowSurvey() });
 
+            const shouldShowSurvey: boolean = Container.pmfStats.shouldShowSurvey();
+            this.postMessage({ type: 'pmfStatus', showPMF: shouldShowSurvey });
 
-            this.invalidate();
+            if (shouldShowSurvey) {
+                viewScreenEvent("atlascodePmfBanner", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            }
+
+            this.invalidate().then(() => {
+                if (!this._viewEventSent) {
+                    this._viewEventSent = true;
+                    viewScreenEvent(this.id, this.siteOrUndefined, this.productOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                }
+            });
         }
     }
 
-    protected async onMessageReceived(a: R): Promise<boolean> {
-        switch (a.action) {
-            case 'alertError': {
-                if (isAlertable(a)) {
-                    window.showErrorMessage(a.message);
+    protected async onMessageReceived(a: any): Promise<boolean> {
+        if (isAction(a)) {
+            switch (a.action) {
+                case 'alertError': {
+                    if (isAlertable(a)) {
+                        window.showErrorMessage(a.message);
+                    }
+                    return true;
                 }
-                return true;
-            }
-            case 'pmfLater': {
-                Container.pmfStats.snoozeSurvey();
-                return true;
-            }
-            case 'pmfNever': {
-                Container.pmfStats.touchSurveyed();
-                return true;
-            }
-            case 'pmfSubmit': {
-                if (isPMFSubmitAction(a)) {
-                    submitPMF(a.pmfData);
+                case 'pmfOpen': {
+                    viewScreenEvent("atlascodePmf", this.siteOrUndefined).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+                    return true;
                 }
-                Container.pmfStats.touchSurveyed();
-                return true;
+                case 'pmfLater': {
+                    Container.pmfStats.snoozeSurvey();
+                    pmfSnoozed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    return true;
+                }
+                case 'pmfNever': {
+                    Container.pmfStats.touchSurveyed();
+                    pmfClosed().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    return true;
+                }
+                case 'pmfSubmit': {
+                    if (isPMFSubmitAction(a)) {
+                        submitPMF(a.pmfData);
+                    }
+                    Container.pmfStats.touchSurveyed();
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    protected postMessage(message: S | OnlineStatusMessage | PMFMessage) {
+    protected formatErrorReason(e: any, title?: string): any {
+        if (e.response) {
+            if (e.response.data && e.response.data !== "") {
+                return (title) ? { ...e.response.data, ...{ title: title } } : e.response.data;
+            }
+        } else if (e.message) {
+            return (title) ? { title: title, errorMessages: [e.message] } : e.message;
+        }
+
+        return (title) ? { title: title, errorMessages: [`${e}`] } : e;
+    }
+
+    protected postMessage(message: any) {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);
 
+        if (Container.isDebugging && Container.config.enableUIWS) {
+            this.ws.send(message);
+        }
+
         return result;
     }
 
-    private onPanelDisposed() {
+    protected onPanelDisposed() {
         if (this._disposablePanel) { this._disposablePanel.dispose(); }
         this._panel = undefined;
         this._onDidPanelDispose.fire();
@@ -187,7 +234,7 @@ export abstract class AbstractReactWebview<S, R extends Action> implements React
                 view: viewName,
                 styleUri: styleUri,
                 scriptUri: scriptUri,
-                baseUri: Uri.file(path.join(this._extensionPath, 'build')).with({ scheme: 'vscode-resource' })
+                baseUri: Uri.file(this._extensionPath).with({ scheme: 'vscode-resource' }),
             });
         } else {
             return Resources.htmlNotFound({ resource: 'reactHtml' });

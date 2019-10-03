@@ -1,15 +1,15 @@
 import { Disposable, TreeViewVisibilityChangeEvent, TreeView, TreeDataProvider, window, TreeItem } from "vscode";
 import { viewScreenEvent } from "../analytics";
 import { Container } from "../container";
-import { AuthProvider } from "../atlclients/authInfo";
+import { Product } from "../atlclients/authInfo";
 import { AbstractBaseNode } from "./nodes/abstractBaseNode";
-import { WorkingProject } from "../config/model";
+import { Project } from "../jira/jira-client/model/entities";
 
 export abstract class Explorer extends Disposable {
     protected treeDataProvder: BaseTreeDataProvider | undefined;
 
     abstract viewId(): string;
-    abstract authProvider(): AuthProvider;
+    abstract product(): Product;
 
     protected newTreeView(): TreeView<AbstractBaseNode> | undefined {
         if (this.treeDataProvder) {
@@ -21,12 +21,13 @@ export abstract class Explorer extends Disposable {
     }
 
     private async onDidChangeVisibility(event: TreeViewVisibilityChangeEvent) {
-        if (event.visible && await Container.authManager.isAuthenticated(this.authProvider())) {
-            viewScreenEvent(this.viewId()).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+        if (event.visible && await Container.siteManager.productHasAtLeastOneSite(this.product())) {
+            viewScreenEvent(this.viewId(), undefined, this.product()).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         }
     }
 
     dispose() {
+        console.log('explorer disposed');
         if (this.treeDataProvder) {
             this.treeDataProvder.dispose();
         }
@@ -39,7 +40,7 @@ export abstract class BaseTreeDataProvider implements TreeDataProvider<AbstractB
     }
 
     abstract getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]>;
-    setProject(project: WorkingProject) { }
+    setProject(project: Project) { }
 
     refresh() { }
     dispose() { }

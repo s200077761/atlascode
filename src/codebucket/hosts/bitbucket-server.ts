@@ -1,39 +1,34 @@
-import { Host, HostConfig } from './host-base';
+import { BitbucketSite } from './bitbucket-site-base';
+import { parseGitUrl } from '../../bitbucket/bbUtils';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Remote } from '../../typings/git';
 
-export class BitbucketServerHost extends Host {
+export class BitbucketServerHost extends BitbucketSite {
 
-  constructor(cfg: HostConfig) {
-    super(cfg);
+  constructor(site: DetailedSiteInfo, remote: Remote) {
+    super(site, remote);
   }
 
   public getChangeSetUrl(revision: string, filePath: string): string {
     const { project, repo } = this.parseRepo();
-    return `${this.webHost}/projects/${project}/repos/${repo}/commits/${revision}#${encodeURIComponent(filePath)}`;
+    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/commits/${revision}#${encodeURIComponent(filePath)}`;
   }
 
   public getSourceUrl(revision: string, filePath: string, lineRanges: string[]): string {
     const { project, repo } = this.parseRepo();
     const hash = lineRanges.map(range => range.replace(':', '-')).join(',');
-    return `${this.webHost}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}#${hash}`;
+    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}?at=${revision}#${hash}`;
   }
 
   public getPullRequestUrl(id: number, filePath: string): string {
     const { project, repo } = this.parseRepo();
-    return `${this.webHost}/projects/${project}/repos/${repo}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
+    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
   }
 
   private parseRepo(): { project: string; repo: string } {
-    const path = this.repo.split('/');
-    const proj = path.shift();
+    const parsed = parseGitUrl(this.remote.fetchUrl! || this.remote.pushUrl!);
 
-    if (!proj) {
-      throw new Error(`Unexpected repository format: ${this.repo}`);
-    }
-
-    const project = encodeURIComponent(proj.toUpperCase());
-    const repo = path.map(segment => encodeURIComponent(segment)).join('/');
-
-    return { project, repo };
+    return { project: parsed.owner, repo: parsed.name };
   }
 
 }

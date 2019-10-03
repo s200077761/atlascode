@@ -1,36 +1,37 @@
 import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
-import { Issue } from '../../jira/jiraModel';
 import { IssueNode } from '../nodes/issueNode';
 import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
 import { issuesForJQL } from '../../jira/issuesForJql';
-import { fetchIssue } from '../../jira/fetchIssue';
+import { fetchMinimalIssue } from '../../jira/fetchIssue';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { WorkingProject } from '../../config/model';
-import { applyWorkingProject } from '../../jira/JqlWorkingProjectHelper';
+import { MinimalIssue } from '../../jira/jira-client/model/entities';
+import { JQLEntry } from '../../config/model';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
-    protected _issues: Issue[] | undefined;
-    private _jql: string | undefined;
+    protected _issues: MinimalIssue[] | undefined;
+    private _jqlEntry: JQLEntry | undefined;
+    private _jqlSite: DetailedSiteInfo | undefined;
 
     private _emptyState = "No issues";
     private _emptyStateCommand: Command | undefined;
-    private _projectId: string | undefined;
     protected _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
     public get onDidChangeTreeData(): Event<AbstractBaseNode> {
         return this._onDidChangeTreeData.event;
     }
 
-    constructor(jql?: string, emptyState?: string, emptyStateCommand?: Command) {
+    constructor(jqlEntry?: JQLEntry, emptyState?: string, emptyStateCommand?: Command) {
         super();
+        this._jqlEntry = jqlEntry;
+        if (jqlEntry) {
+            this._jqlSite = Container.siteManager.getSiteForId(ProductJira, jqlEntry.siteId);
+        }
 
-        Container.jiraSiteManager.getEffectiveProject().then(p => this._projectId = p.id);
-        this._jql = jql;
         if (emptyState && emptyState !== "") {
             this._emptyState = emptyState;
         }
@@ -40,20 +41,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         }
     }
 
-    public setJql(jql: string) {
+    public setJqlEntry(entry: JQLEntry) {
         this._issues = undefined;
-        this._jql = jql;
-    }
-
-    private effectiveJql(): string | undefined {
-        if (this._jql === undefined) {
-            return undefined;
-        }
-        return applyWorkingProject(this._projectId, this._jql);
-    }
-
-    setProject(project: WorkingProject) {
-        this._projectId = project.id;
+        this._jqlEntry = entry;
+        this._jqlSite = Container.siteManager.getSiteForId(ProductJira, entry.siteId);
     }
 
     setEmptyState(text: string) {
@@ -75,19 +66,21 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         this._disposables = [];
     }
 
-    async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+    async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            return [new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })];
         }
         if (parent) {
             return parent.getChildren();
         }
-        if (!this._jql) {
-            return Promise.resolve([new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)]);
+        if (!this._jqlEntry) {
+            return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
         } else if (this._issues) {
-            return Promise.resolve(this.nodesForIssues());
-        } else {
+            return this.nodesForIssues();
+        } else if (allowFetch) {
             return await this.fetchIssues();
+        } else {
+            return [];
         }
     }
 
@@ -96,20 +89,19 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchIssues(): Promise<IssueNode[]> {
-        const jql = this.effectiveJql();
-        if (!jql) {
+        if (!this._jqlEntry || !this._jqlSite) {
             return Promise.resolve([]);
         }
 
         // fetch issues matching the jql
-        const newIssues = await issuesForJQL(jql);
+        const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
 
         // epics don't have children filled in and children only have a ref to the parent key
         // we need to fill in the children and fetch the parents of any orphans
         const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues);
 
-        const issuesMissingParents: Issue[] = [];
-        const standAloneIssues: Issue[] = [];
+        const issuesMissingParents: MinimalIssue[] = [];
+        const standAloneIssues: MinimalIssue[] = [];
 
         newIssues.forEach(i => {
             if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
@@ -130,13 +122,17 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return this.nodesForIssues();
     }
 
-    private async fetchParentIssues(subIssues: Issue[]): Promise<Issue[]> {
+    private async fetchParentIssues(subIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
+        if (subIssues.length < 1) {
+            return [];
+        }
+        const site = subIssues[0].siteDetails;
         const parentKeys: string[] = Array.from(new Set(subIssues.map(i => i.parentKey!)));
 
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey);
+                    const parent = await fetchMinimalIssue(issueKey, site);
                     // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                     parent.subtasks = [];
                     return parent;
@@ -147,7 +143,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return parentIssues;
     }
 
-    private async resolveEpics(allIssues: Issue[]): Promise<[Issue[], string[]]> {
+    private async resolveEpics(allIssues: MinimalIssue[]): Promise<[MinimalIssue[], string[]]> {
         const allIssueKeys = allIssues.map(i => i.key);
         const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
         const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
@@ -160,7 +156,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [[], []];
         }
 
-        let finalEpics: Issue[] = await Promise.all(
+        let finalEpics: MinimalIssue[] = await Promise.all(
             epics
                 .map(async epic => {
                     if (epic.epicChildren.length < 1) {
@@ -174,13 +170,17 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return [finalEpics, epicChildKeys];
     }
 
-    private async fetchEpicIssues(childIssues: Issue[]): Promise<Issue[]> {
+    private async fetchEpicIssues(childIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
+        if (childIssues.length < 1) {
+            return [];
+        }
+        const site = childIssues[0].siteDetails;
         const parentKeys: string[] = Array.from(new Set(childIssues.map(i => i.epicLink!)));
 
         const parentIssues = await Promise.all(
             parentKeys
                 .map(async issueKey => {
-                    const parent = await fetchIssue(issueKey);
+                    const parent = await fetchMinimalIssue(issueKey, site);
                     return parent;
                 }));
 

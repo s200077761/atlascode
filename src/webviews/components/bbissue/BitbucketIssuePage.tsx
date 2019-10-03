@@ -3,7 +3,6 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import SizeDetector from "@atlaskit/size-detector";
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import Panel from '@atlaskit/panel';
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
@@ -17,7 +16,8 @@ import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
 import TaskIcon from '@atlaskit/icon/glyph/task';
 import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
 import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
-import { BitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
 import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
 import Comments from "../pullrequest/Comments";
@@ -31,6 +31,11 @@ import { HostErrorMessage } from "../../../ipc/messaging";
 import { RefreshIssueAction } from "../../../ipc/issueActions";
 import Offline from "../Offline";
 import ErrorBanner from "../ErrorBanner";
+import { BitbucketIssueData, UnknownUser } from "../../../bitbucket/model";
+import { FetchUsersResult } from "../../../ipc/prMessaging";
+import { FetchUsers } from "../../../ipc/prActions";
+import { distanceInWordsToNow, format } from "date-fns";
+import { AtlLoader } from "../AtlLoader";
 
 type SizeMetrics = {
     width: number;
@@ -58,12 +63,13 @@ type Emit = PostComment
     | AssignToMe
     | RefreshIssueAction
     | OpenStartWorkPageAction
-    | CreateJiraIssueAction;
+    | CreateJiraIssueAction
+    | FetchUsers;
 
-type Receive = BitbucketIssueData | HostErrorMessage;
+type Receive = BitbucketIssueMessageData | FetchUsersResult | HostErrorMessage;
 
 type MyState = {
-    data: BitbucketIssueData;
+    data: BitbucketIssueMessageData;
     isStatusButtonLoading: boolean;
     isAnyCommentLoading: boolean;
     isErrorBannerOpen: boolean;
@@ -73,8 +79,9 @@ type MyState = {
 
 const emptyIssueData = {
     type: "updateBitbucketIssue",
-    issue: { type: "" },
-    currentUser: { type: "" },
+    issueData: { type: "" },
+    remote: { name: 'dummy_remote', isReadOnly: true },
+    currentUser: UnknownUser,
     comments: [],
     hasMore: false,
     showJiraButton: false,
@@ -90,12 +97,14 @@ const emptyState = {
 };
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private userSuggestions: any;
+
     constructor(props: any) {
         super(props);
         this.state = emptyState;
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isStatusButtonLoading: false, isAnyCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
@@ -103,6 +112,10 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
             }
             case 'updateBitbucketIssue': {
                 this.setState({ data: e, isStatusButtonLoading: false, isAnyCommentLoading: false });
+                break;
+            }
+            case 'fetchUsersResult': {
+                this.userSuggestions = e.users;
                 break;
             }
             case 'onlineStatus': {
@@ -115,7 +128,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 break;
             }
         }
-
+        return true;
     }
 
     handleCopyLink = () => this.postMessage({ action: 'copyBitbucketIssueLink' });
@@ -135,7 +148,28 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
-    renderDetails(issue: Bitbucket.Schema.Issue) {
+    loadUserOptions = (input: string): Promise<any> => {
+        return new Promise(resolve => {
+            this.userSuggestions = undefined;
+            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.data.remote });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                    if (this.userSuggestions === undefined) {
+                        this.userSuggestions = [];
+                    }
+
+                    clearInterval(timer);
+                    resolve(this.userSuggestions);
+                }
+            }, 100);
+        });
+    }
+
+
+    renderDetails(issue: BitbucketIssueData) {
         return <div style={{ padding: '2em' }}>
             <h3>Status</h3>
             <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
@@ -150,7 +184,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                     primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
                 />
             </Tooltip>
-            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.account_id) &&
+            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.accountId) &&
                 <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
             <h3>Reporter</h3>
             <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>
@@ -167,10 +201,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        const issue = this.state.data.issue as Bitbucket.Schema.Issue;
+        const issue = this.state.data.issueData as BitbucketIssueData;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
-            return <Tooltip content='waiting for data...'><Spinner delay={500} size='large' /></Tooltip>;
+            this.postMessage({ action: 'refreshIssue' });
+            return <AtlLoader />;
         } else if (!issue.repository && !this.state.isOnline) {
             return <div><Offline /></div>;
         }
@@ -189,19 +224,28 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                 }
                                 <PageHeader
-                                    actions={<ButtonGroup>
-                                        <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
-                                        {this.state.data.showJiraButton &&
-                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
-                                        }
-                                    </ButtonGroup>}
+                                    actions={
+                                        <ButtonGroup>
+                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
+                                            {this.state.data.showJiraButton &&
+                                                <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
+                                            }
+                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
+                                                <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                                            </Button>
+                                        </ButtonGroup>}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                                         <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />
                                         <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issue.repository!.links!.html!.href}/issues`} />} />
                                         <BreadcrumbsItem component={() => <NavItem text={`Issue #${issue.id}`} href={issue.links!.html!.href} onCopy={this.handleCopyLink} />} />
                                     </BreadcrumbsStateless>}
                                 >
-                                    <p>{issue.title}</p>
+                                    <Tooltip content={`Created on ${format(issue.created_on, 'YYYY-MM-DD h:mm A')}`}>
+                                        <React.Fragment>
+                                            <p>{issue.title}</p>
+                                            <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(issue.created_on)} ago`}</p>
+                                        </React.Fragment>
+                                    </Tooltip>
                                 </PageHeader>
                                 <p dangerouslySetInnerHTML={{ __html: issue.content!.html! }} />
 
@@ -214,7 +258,12 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                         </div>
                                     }
                                     <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={undefined} />
-                                    <CommentForm currentUser={this.state.data!.currentUser!} visible={true} isAnyCommentLoading={this.state.isAnyCommentLoading} onSave={this.handlePostComment} />
+                                    <CommentForm
+                                        currentUser={this.state.data!.currentUser!}
+                                        visible={true}
+                                        isAnyCommentLoading={this.state.isAnyCommentLoading}
+                                        onSave={this.handlePostComment}
+                                        loadUserOptions={this.loadUserOptions} />
                                 </Panel>
                             </GridColumn>
 

@@ -1,28 +1,28 @@
 import { AbstractReactWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Uri, commands } from 'vscode';
 import { Logger } from '../logger';
 import { Container } from '../container';
-import { RefType } from '../typings/git';
-import { CreatePRData, RepoData, CommitsResult, FetchIssueResult } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue } from '../ipc/prActions';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RepositoriesApi } from '../bitbucket/repositories';
+import { RefType, Repository, Remote, Branch } from '../typings/git';
+import { RepoData, FileDiff, FileStatus } from '../ipc/prMessaging';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
 import { Commands } from '../commands';
-import { PullRequest } from '../bitbucket/model';
+import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { Issue, isIssue } from '../jira/jiraModel';
-import { transitionIssue } from '../commands/jira/transitionIssue';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
-import { AuthProvider } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
-import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { issuesForJQL } from '../jira/issuesForJql';
+import { isOpenBitbucketIssueAction, isUpdateDiffAction } from '../ipc/bitbucketIssueActions';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
+import { showIssue } from '../commands/jira/showIssue';
+import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
+import { Shell } from '../util/shell';
+import * as vscode from 'vscode';
 
-type Emit = CreatePRData | CommitsResult | FetchIssueResult | HostErrorMessage;
-export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action> {
+export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -33,6 +33,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
     }
     public get id(): string {
         return "createPullRequestScreen";
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
+        if (repos.length > 0) {
+            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+        }
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     public async invalidate() {
@@ -51,45 +64,46 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
 
         this.isRefeshing = true;
         try {
-            const state: RepoData[] = [];
-            const repos = Container.bitbucketContext.getBitbucketRepositores();
-            const currentUser = await Container.bitbucketContext.currentUser();
-            for (let i = 0; i < repos.length; i++) {
-                const r = repos[i];
-                const bbRemotes = PullRequestApi.getBitbucketRemotes(r);
-                if (Array.isArray(bbRemotes) && bbRemotes.length === 0) {
-                    continue;
-                }
+            const repos = Container.bitbucketContext.getBitbucketRepositories();
 
+            const state: RepoData[] = await Promise.all(repos.map(async r => {
+
+                // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
+                const remote = firstBitbucketRemote(r);
+
+                const bbApi = await clientForRemote(remote);
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
                     r.fetch(),
-                    RepositoriesApi.get(bbRemotes[0]),
-                    RepositoriesApi.getDevelopmentBranch(bbRemotes[0]),
-                    PullRequestApi.getDefaultReviewers(bbRemotes[0])
+                    bbApi.repositories.get(remote),
+                    bbApi.repositories.getDevelopmentBranch(remote),
+                    bbApi.pullrequests.getReviewers(remote)
                 ]);
-                await state.push({
+
+                const currentUser = { accountId: (siteDetailsForRemote(remote)!).userId };
+
+                return {
                     uri: r.rootUri.toString(),
-                    href: repo.links!.html!.href,
-                    avatarUrl: repo.links!.avatar!.href,
-                    name: repo.name,
-                    owner: repo.owner!.username,
+                    href: repo.url,
+                    avatarUrl: repo.avatarUrl,
+                    name: repo.displayName,
+                    owner: repo.name,
                     remotes: r.state.remotes,
-                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.uuid !== currentUser.uuid),
-                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                    remoteBranches: await Promise.all(
-                        r.state.refs
-                            .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                            .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name }))
-                    ),
+                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.accountId !== currentUser.accountId),
+                    localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                    remoteBranches: r.state.refs
+                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
+                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name })),
+                    branchTypes: [],
                     developmentBranch: developmentBranch,
-                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0
-                });
-            }
+                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
+                    isCloud: siteDetailsForRemote(remote)!.isCloud
+                };
+            }));
 
             this.postMessage({ type: 'createPullRequestData', repositories: state });
         } catch (e) {
             Logger.error(new Error(`error fetching PR form: ${e}`));
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -118,7 +132,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                             await this.fetchDetails(e);
                         } catch (e) {
                             Logger.error(new Error(`error fetching details: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -135,10 +149,24 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     }
                     break;
                 }
+                case 'fetchUsers': {
+                    if (isFetchUsers(e)) {
+                        handled = true;
+                        try {
+                            const bbApi = await clientForRemote(e.remote);
+                            const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        showIssue(e.issueOrKey);
                         break;
                     }
                 }
@@ -149,6 +177,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                     }
                     break;
                 }
+                case 'updateDiff': {
+                    if(isUpdateDiffAction(e)){
+                        let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
+                        this.postMessage({type: 'diffResult', fileDiffs: fileDiffs});
+                    }
+                    break;
+                }
                 case 'createPullRequest': {
                     if (isCreatePullRequest(e)) {
                         handled = true;
@@ -156,7 +191,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
                             await this.createPullRequest(e);
                         } catch (e) {
                             Logger.error(new Error(`error creating pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -172,48 +207,110 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
-        const result = await RepositoriesApi.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
+        const bbApi = await clientForRemote(remote);
+        const result = await bbApi.repositories.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
         this.postMessage({
             type: 'commitsResult',
             commits: result
         });
     }
 
-    async fetchIssueForBranch(e: FetchIssue) {
-        let issue: Issue | Bitbucket.Schema.Issue | undefined = undefined;
-        if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            const jiraIssueKeys = await parseJiraIssueKeys(e.sourceBranch.name!);
-            const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
-            if (jiraIssues.length > 0) {
-                issue = jiraIssues[0];
-            }
-        }
+    async getCurrentRepo(repoData: RepoData): Promise<Repository> {
+        const repos = Container.bitbucketContext.getBitbucketRepositories();
 
-        if (!issue) {
-            const bbIssueKeys = await parseBitbucketIssueKeys(e.sourceBranch.name!);
-            if (bbIssueKeys.length > 0) {
-                const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
-                if (bbIssues.length > 0) {
-                    issue = bbIssues[0];
-                }
-            }
+        const currentRepo: Repository | undefined = repos.find(r => r.rootUri.toString() === repoData.uri);
+        if(currentRepo) {
+            return currentRepo;
+        } else {
+            return Promise.reject(new Error('Could not match repoData object to local repository'));
         }
-
-        this.postMessage({
-            type: 'fetchIssueResult',
-            issue: issue
-        });
     }
 
-    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+    async findForkPoint(repoData: RepoData, sourceBranch: Branch, destinationBranch: Branch): Promise<string> {
+        const repo: Repository = await this.getCurrentRepo(repoData);
+
+        //When fetching the destination branch, we need to slice the remote off the branch name because the branch isn't actually called {remoteName}/{branchName}
+        await repo.fetch(destinationBranch.remote, destinationBranch.name!.slice(destinationBranch.remote!.length + 1));
+        const commonCommit = await repo.getMergeBase(destinationBranch.name!, sourceBranch.name!);
+        return commonCommit;
+    }
+
+    async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
+        const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
+        
+        const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch);
+
+        //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
+        //We want to seperate each line and extract this data so we can create a file diff
+        const diffOutputLines = await shell.lines(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
+
+        if(diffOutputLines.length === 0){
+            return [];
+        }
+
+        //The bitbucket website also provides a status for each file (modified, added, deleted, etc.), so we need to get this info too.
+        //git diff-index --name-status will return lines in the form {status}        {name of file}
+        //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
+        const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
+
+        let fileDiffs: FileDiff[] = [];
+        for(let i = 0; i < diffOutputLines.length; i++){
+            const wordsInLine = diffOutputLines[i].split(/\s+/);
+
+            //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
+            //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
+            const fileName = wordsInLine.slice(2).join(' ');
+            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: fileName, status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
+        }
+
+        return fileDiffs;
+    }
+
+    async fetchIssueForBranch(e: FetchIssue) {
+        let issue: MinimalIssue | BitbucketIssueData | undefined = undefined;
+        if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+            const jiraIssueKeys = parseJiraIssueKeys(e.sourceBranch.name!);
+
+            if (jiraIssueKeys.length > 0) {
+                try {
+                    issue = await issueForKey(jiraIssueKeys[0]);
+                } catch (e) {
+                    //not found
+                }
+            }
+
+            if (!issue) {
+                const bbIssueKeys = parseBitbucketIssueKeys(e.sourceBranch.name);
+                if (bbIssueKeys.length > 0) {
+                    const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
+                    const remote = firstBitbucketRemote(repo);
+                    const bbApi = await clientForRemote(remote);
+                    const bbIssues = await bbApi.issues!.getIssuesForKeys(Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!, [bbIssueKeys[0]]);
+                    if (bbIssues.length > 0) {
+                        issue = bbIssues[0].data;
+                    }
+                }
+            }
+
+            this.postMessage({
+                type: 'fetchIssueResult',
+                issue: issue
+            });
+        }
+    }
+
+    private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue | BitbucketIssueData) {
         if (!issue) {
             return;
         }
-        if (isIssue(issue)) {
+        if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
-            await transitionIssue(issue, transition);
+            if (transition) {
+                await transitionIssue(issue, transition);
+            }
         } else {
-            await BitbucketIssuesApi.postChange(issue, issue.state!);
+            const bbApi = await clientForRemote(remote);
+            await bbApi.issues!.postChange({ repository: repo, remote: remote, data: issue }, issue.state!);
         }
     }
 
@@ -228,34 +325,31 @@ export class PullRequestCreatorWebview extends AbstractReactWebview<Emit, Action
             await repo.push(remote.name, sourceBranchName);
         }
 
-        let pr: Bitbucket.Schema.Pullrequest = {
-            type: 'pullrequest',
-            title: title,
-            summary: {
-                raw: summary
-            },
-            source: {
-                branch: {
-                    name: sourceBranchName
-                }
-            },
-            destination: {
-                branch: {
-                    name: destinationBranchName
-                }
-            },
-            reviewers: reviewers,
-            close_source_branch: closeSourceBranch
-        };
+        const bbApi = await clientForRemote(remote);
 
-        await PullRequestApi.create({ repository: repo, remote: remote, data: pr })
+        await bbApi.pullrequests
+            .create(
+                repo,
+                remote,
+                {
+                    title: title,
+                    summary: summary,
+                    sourceBranchName: sourceBranchName,
+                    destinationBranchName: destinationBranchName,
+                    closeSourceBranch: closeSourceBranch,
+                    reviewerAccountIds: reviewers.map(reviewer => reviewer.accountId)
+                }
+            )
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-                prCreatedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
+                if (site) {
+                    prCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                }
             });
 
-        await this.updateIssue(issue);
+        await this.updateIssue(repo, remote, issue);
         this.hide();
     }
 }

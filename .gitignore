@@ -2,9 +2,13 @@ out
 build
 node_modules
 .vscode-test/
+.vscode/*
+launch.json
+!.vscode/launch.json.example
 *.vsix
 .yo-*
 yarn-error.log
-.vscode/
 charles-ssl-proxying-certificate.pem
 *.pem
+TEMP-*
+.DS_Store

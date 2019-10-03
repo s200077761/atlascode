@@ -1,7 +1,7 @@
 {
     "name": "atlascode",
     "displayName": "Jira and Bitbucket (Official)",
-    "description": "Bringing the power of Jira Cloud and Bitbucket Cloud to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
+    "description": "Bringing the power of Jira and Bitbucket to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
         "jira",
@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.35.0"
+        "vscode": "^1.37.0"
     },
     "categories": [
         "Other"
@@ -44,30 +44,7 @@
     ],
     "main": "./build/extension/extension",
     "contributes": {
-        "commands": [
-            {
-                "command": "atlascode.bb.authenticate",
-                "title": "Authenticate With Bitbucket",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.bb.clearAuth",
-                "title": "Logout From Bitbucket",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.selectProject",
-                "title": "Select Working Jira Project",
-                "icon": "resources/atlassian-icon.svg",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.selectSite",
-                "title": "Select Working Jira Site",
-                "icon": "resources/atlassian-icon.svg",
-                "category": "Atlassian"
-            },
-            {
+        "commands": [{
                 "command": "atlascode.jira.createIssue",
                 "title": "Create New Jira Issue",
                 "icon": {
@@ -75,6 +52,32 @@
                     "light": "resources/light/add.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.deleteComment",
+                "title": "Delete",
+                "icon": {
+                    "dark": "resources/dark/delete.svg",
+                    "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.editComment",
+                "title": "Edit",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.saveCommentEdit",
+                "title": "Save Changes"
+            },
+            {
+                "command": "atlascode.bb.cancelCommentEdit",
+                "title": "Cancel"
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
@@ -86,23 +89,17 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.authenticate",
-                "title": "Authenticate With Jira",
+                "command": "atlascode.jira.showJiraIssueSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.jira.clearAuth",
-                "title": "Logout from Jira",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.showIssue",
+                "command": "atlascode.jira.showIssueForKey",
                 "title": "Open Jira Issue",
-                "category": "Atlassian"
-            },
-            {
-                "command": "atlascode.jira.transitionIssue",
-                "title": "Transition Issue",
                 "category": "Atlassian"
             },
             {
@@ -125,12 +122,31 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.showPullRequestSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.viewInWebBrowser",
                 "title": "View in Browser",
                 "category": "Atlassian"
             },
             {
                 "command": "atlascode.showConfigPage",
+                "title": "Open Settings",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showJiraAuth",
+                "title": "Open Settings",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.showBitbucketAuth",
                 "title": "Open Settings",
                 "category": "Atlassian"
             },
@@ -183,6 +199,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.showPipelineSettings",
+                "title": "Settings",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.createIssue",
                 "title": "Create Bitbucket Issue",
                 "icon": {
@@ -201,79 +226,102 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.showBitbucketIssueSettings",
+                "title": "Refresh Bitbucket Issues",
+                "icon": {
+                    "dark": "resources/dark/settings.svg",
+                    "light": "resources/light/settings.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.addComment",
                 "title": "Add comment",
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.toggleCommentsVisibility",
+                "title": "Show/hide comments",
+                "icon": {
+                    "dark": "resources/dark/comment.svg",
+                    "light": "resources/light/comment.svg"
+                },
                 "category": "Atlassian"
             }
         ],
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "atlascode-drawer",
-                    "title": "Atlassian",
-                    "icon": "resources/atlassian-icon.svg"
-                }
-            ]
+            "activitybar": [{
+                "id": "atlascode-drawer",
+                "title": "Atlassian",
+                "icon": "resources/atlassian-icon.svg"
+            }]
         },
         "views": {
-            "atlascode-drawer": [
-                {
+            "atlascode-drawer": [{
                     "id": "atlascode.views.jira.customJql",
                     "name": "Jira Issues",
-                    "when": "atlascode:jiraExplorerEnabled && atlascode:customJQLExplorerEnabled"
+                    "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pullrequestsTreeView",
                     "name": "Bitbucket pull requests",
-                    "when": "atlascode:bitbucketExplorerEnabled"
+                    "when": "atlascode:bitbucketExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.pipelinesTreeView",
                     "name": "Bitbucket pipelines",
-                    "when": "atlascode:pipelineExplorerEnabled"
+                    "when": "atlascode:pipelineExplorerEnabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "id": "atlascode.views.bb.issuesTreeView",
                     "name": "Bitbucket issues",
-                    "when": "atlascode:bitbucketIssuesExplorerEnabled"
+                    "when": "atlascode:bitbucketIssuesExplorerEnabled && config.atlascode.bitbucket.enabled"
                 }
             ]
         },
         "menus": {
-            "editor/context": [
-                {
+            "editor/title": [{
+                "command": "atlascode.bb.toggleCommentsVisibility",
+                "when": "resourceScheme == atlascode.bbpr",
+                "group": "navigation"
+            }],
+            "editor/context": [{
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.jira.enabled"
                 },
                 {
                     "command": "atlascode.bb.createPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.openInBitbucket",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.openChangeset",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.viewPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
                 },
                 {
                     "command": "atlascode.bb.copyPullRequest",
                     "group": "atlascode",
-                    "when": "config.atlascode.bitbucket.contextMenus.enabled"
+                    "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.bitbucket.enabled"
+                },
+                {
+                    "command": "atlascode.bb.toggleCommentsVisibility",
+                    "group": "atlascode",
+                    "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
-            "view/title": [
-                {
+            "view/title": [{
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -284,21 +332,33 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "atlascode.jira.selectProject",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
-                },
-                {
                     "command": "atlascode.jira.createIssue",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
                     "group": "navigation"
                 },
                 {
-                    "command": "atlascode.jira.selectSite",
-                    "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated"
-                },
-                {
                     "command": "atlascode.jira.refreshExplorer",
                     "when": "view =~ /(atlascode.views.jira.customJql)/ && atlascode:isJiraAuthenticated",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.jira.showJiraIssueSettings",
+                    "when": "view =~ /(atlascode.views.jira.customJql)/",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showPullRequestSettings",
+                    "when": "view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showPipelineSettings",
+                    "when": "view =~ /(atlascode.views.bb.pipelinesTreeView)/",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.showBitbucketIssueSettings",
+                    "when": "view == atlascode.views.bb.issuesTreeView",
                     "group": "navigation"
                 },
                 {
@@ -317,13 +377,7 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": [
-                {
-                    "command": "atlascode.jira.transitionIssue",
-                    "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
-                    "group": "jiraContextMenuGroup1"
-                },
-                {
+            "view/item/context": [{
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -352,13 +406,38 @@
                     "when": "viewItem == pipelineBranch"
                 }
             ],
-            "comments/commentThread/context": [
+            "comments/commentThread/context": [{
+                "command": "atlascode.bb.addComment",
+                "group": "inline"
+            }],
+            "comments/comment/title": [{
+                    "command": "atlascode.bb.editComment",
+                    "group": "inline@1",
+                    "when": "comment =~ /canEdit/"
+                },
                 {
-                    "command": "atlascode.bb.addComment",
-                    "group": "inline"
+                    "command": "atlascode.bb.deleteComment",
+                    "group": "inline@2",
+                    "when": "comment =~ /canDelete/"
                 }
             ],
-            "commandPalette": [
+            "comments/comment/context": [{
+                    "command": "atlascode.bb.cancelCommentEdit",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "atlascode.bb.saveCommentEdit",
+                    "group": "inline@1"
+                }
+            ],
+            "commandPalette": [{
+                    "command": "atlascode.showJiraAuth",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.showBitbucketAuth",
+                    "when": "false"
+                },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "false"
@@ -388,36 +467,24 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.jira.showIssue",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.selectProject",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.selectSite",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.authenticate",
-                    "when": "!atlascode:isJiraAuthenticated && !atlascode:isJiraStagingAuthenticated"
-                },
-                {
-                    "command": "atlascode.bb.authenticate",
-                    "when": "!atlascode:isBBAuthenticated"
-                },
-                {
-                    "command": "atlascode.jira.clearAuth",
-                    "when": "atlascode:isJiraAuthenticated"
-                },
-                {
-                    "command": "atlascode.bb.clearAuth",
-                    "when": "atlascode:isBBAuthenticated"
-                },
-                {
                     "command": "atlascode.bb.addComment",
                     "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.deleteComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.editComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleCommentsVisibility",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.jira.showIssueForKey",
+                    "when": "atlascode:isJiraAuthenticated && config.atlascode.jira.enabled"
                 }
             ]
         },
@@ -437,22 +504,55 @@
                     "description": "Specifies how much (if any) output will be sent to the Atlassian output channel",
                     "scope": "window"
                 },
+                "atlascode.configurationTarget": {
+                    "type": "string",
+                    "default": "user",
+                    "enum": [
+                        "user",
+                        "workspace"
+                    ],
+                    "description": "Location to which configuration changes are saved"
+                },
                 "atlascode.enableCharles": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enables proxying requests through the Charles Web Debugger when debugging",
                     "scope": "window"
                 },
+                "atlascode.charlesCertPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "The absolute path to the generated charles ssl certificate (pem file)",
+                    "scope": "window"
+                },
+                "atlascode.charlesDebugOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables charles *only* when debugging the extension (for internal use)",
+                    "scope": "window"
+                },
+                "atlascode.enableUIWS": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables UI websocket for debugging webviews",
+                    "scope": "window"
+                },
                 "atlascode.offlineMode": {
                     "type": "boolean",
                     "default": false,
-                    "description": "puts atlasscode into offline mode if true",
+                    "description": "Enables offline mode",
                     "scope": "window"
                 },
                 "atlascode.showWelcomeOnInstall": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enables showing the welcome screen when a new version is installed",
+                    "scope": "window"
+                },
+                "atlascode.jira.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Jira Functionality",
                     "scope": "window"
                 },
                 "atlascode.jira.explorer.enabled": {
@@ -485,6 +585,12 @@
                     "description": "JQL to retrieve issues assigned to you",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.monitorEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show notifications when new issues are created for default site and project",
+                    "scope": "window"
+                },
                 "atlascode.jira.explorer.refreshInterval": {
                     "type": "integer",
                     "default": 5,
@@ -507,18 +613,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Shows the user's name in the status bar",
-                    "scope": "window"
-                },
-                "atlascode.jira.statusbar.showSite": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows the default site name in the status bar",
-                    "scope": "window"
-                },
-                "atlascode.jira.statusbar.showProject": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Shows the default project name in the status bar",
                     "scope": "window"
                 },
                 "atlascode.jira.statusbar.showLogin": {
@@ -576,6 +670,21 @@
                     "description": "Jira site for workspace",
                     "scope": "resource"
                 },
+                "atlascode.jira.lastCreateSiteAndProject": {
+                    "type": "object",
+                    "description": "the last used site id and project key for create issue",
+                    "scope": "window",
+                    "properties": {
+                        "siteId": {
+                            "type": "string",
+                            "default": ""
+                        },
+                        "projectKey": {
+                            "type": "string",
+                            "default": ""
+                        }
+                    }
+                },
                 "atlascode.jira.customJql": {
                     "type": "array",
                     "items": {
@@ -612,6 +721,41 @@
                         }
                     }
                 },
+                "atlascode.jira.jqlList": {
+                    "type": "array",
+                    "default": [],
+                    "scope": "window",
+                    "description": "The list of JQL queries that populate the issue list view",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "default": true
+                            },
+                            "monitor": {
+                                "type": "boolean",
+                                "default": true
+                            },
+                            "name": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "query": {
+                                "type": "string",
+                                "default": ""
+                            },
+                            "siteId": {
+                                "type": "string",
+                                "default": ""
+                            }
+                        }
+                    }
+                },
                 "atlascode.jira.hover.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -638,6 +782,12 @@
                     "description": "Strings that will trigger the Jira issue create Code Lens",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Bitbucket Functionality",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.explorer.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -653,7 +803,7 @@
                 "atlascode.bitbucket.pipelines.monitorEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Watch Bitbucket Pipelines For New Build Statuses",
+                    "description": "Show notifications for new Bitbucket Pipelines build statuses",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.pipelines.refreshInterval": {
@@ -700,7 +850,7 @@
                 "atlascode.bitbucket.issues.monitorEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Watch for new Bitbucket Issues",
+                    "description": "Show notifications when new Bitbucket Issues are created",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.issues.refreshInterval": {
@@ -730,7 +880,7 @@
                 "atlascode.bitbucket.explorer.notifications.pullRequestCreated": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Periodically check for newly created pull requests and show an information message if there are any",
+                    "description": "Show notifications when new pull requests are created",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.contextMenus.enabled": {
@@ -768,110 +918,158 @@
     },
     "scripts": {
         "vscode:uninstall": "node ./build/extension/uninstall.js",
-        "vscode:prepublish": "react-scripts-ts build && webpack --env.production",
-        "compile": "react-scripts-ts build && webpack --env.development",
+        "vscode:prepublish": "npm run compile",
+        "clean": "rm -rf ./build",
+        "compile": "npm run clean && npm run compile:react && npm run compile:extension",
+        "compile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode production --config webpack.extension.prod.ts",
+        "compile:react": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode production --config webpack.react.prod.ts",
         "watch": "tsc --watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install && patch-package",
-        "test": "yarn run compile && node ./node_modules/vscode/bin/test"
+        "postinstall": "patch-package",
+        "test": "npm run compile && node ./build/test/runTest.js",
+        "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
+        "devcompile:react": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.react.dev.ts",
+        "devcompile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.extension.dev.ts",
+        "webview:atlascodeSettings:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:atlascodeSettings:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts"
     },
     "dependencies": {
-        "@atlaskit/avatar": "^14.1.2",
-        "@atlaskit/avatar-group": "^2.1.5",
-        "@atlaskit/breadcrumbs": "^6.0.10",
-        "@atlaskit/button": "^10.1.1",
-        "@atlaskit/checkbox": "^5.0.5",
-        "@atlaskit/comment": "6.0.29",
-        "@atlaskit/css-reset": "^3.0.2",
-        "@atlaskit/datetime-picker": "^6.3.24",
-        "@atlaskit/droplist": "^7.0.16",
-        "@atlaskit/field-base": "^11.0.12",
-        "@atlaskit/form": "^5.1.3",
-        "@atlaskit/icon": "^16.0.5",
-        "@atlaskit/icon-object": "^3.0.5",
-        "@atlaskit/icon-priority": "^3.0.2",
-        "@atlaskit/inline-dialog": "^9.0.13",
-        "@atlaskit/input": "^4.0.9",
-        "@atlaskit/layer-manager": "^5.0.18",
-        "@atlaskit/logo": "^9.2.5",
-        "@atlaskit/lozenge": "^6.2.2",
-        "@atlaskit/modal-dialog": "^7.1.1",
-        "@atlaskit/page": "^8.0.8",
-        "@atlaskit/page-header": "^6.0.7",
-        "@atlaskit/panel": "^0.0.10",
-        "@atlaskit/radio": "^0.4.6",
-        "@atlaskit/reduced-ui-pack": "^10.1.1",
-        "@atlaskit/section-message": "^1.0.15",
-        "@atlaskit/select": "^6.1.15",
-        "@atlaskit/size-detector": "^5.0.8",
-        "@atlaskit/spinner": "^9.0.13",
-        "@atlaskit/table-tree": "^5.0.4",
-        "@atlaskit/tag": "^6.1.0",
-        "@atlaskit/tag-group": "^6.0.8",
-        "@atlaskit/tooltip": "^12.1.9",
-        "@atlaskit/util-shared-styles": "^3.0.0",
-        "@atlassian/jira": "^0.1.0",
+        "@atlaskit/avatar": "^17.0.0",
+        "@atlaskit/avatar-group": "^4.0.13",
+        "@atlaskit/breadcrumbs": "^9.1.0",
+        "@atlaskit/button": "^13.2.0",
+        "@atlaskit/checkbox": "^9.0.9",
+        "@atlaskit/comment": "^8.0.13",
+        "@atlaskit/datetime-picker": "^8.0.16",
+        "@atlaskit/droplist": "^9.0.17",
+        "@atlaskit/field-base": "^13.0.14",
+        "@atlaskit/form": "^6.2.0",
+        "@atlaskit/icon": "^19.0.6",
+        "@atlaskit/icon-object": "^4.0.10",
+        "@atlaskit/icon-priority": "^4.0.9",
+        "@atlaskit/inline-dialog": "^12.0.15",
+        "@atlaskit/input": "^6.0.7",
+        "@atlaskit/layer-manager": "^7.1.0",
+        "@atlaskit/logo": "^12.1.8",
+        "@atlaskit/lozenge": "^9.0.7",
+        "@atlaskit/modal-dialog": "^10.2.1",
+        "@atlaskit/page": "^11.0.8",
+        "@atlaskit/page-header": "^9.0.12",
+        "@atlaskit/panel": "^0.2.5",
+        "@atlaskit/radio": "^3.0.17",
+        "@atlaskit/reduced-ui-pack": "^12.0.6",
+        "@atlaskit/section-message": "^4.0.12",
+        "@atlaskit/select": "^10.1.0",
+        "@atlaskit/size-detector": "^8.0.6",
+        "@atlaskit/spinner": "^12.0.9",
+        "@atlaskit/table-tree": "^7.1.0",
+        "@atlaskit/tag": "^9.0.7",
+        "@atlaskit/tag-group": "^9.0.4",
+        "@atlaskit/theme": "^9.2.2",
+        "@atlaskit/tooltip": "^15.0.14",
+        "@atlaskit/util-shared-styles": "^3.1.2",
         "@deviniti/jql-autocomplete": "^1.0.2",
+        "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
-        "bitbucket": "^1.14.0",
+        "axios": "^0.19.0",
         "date-fns": "^1.30.1",
+        "deep-equal": "^1.1.0",
         "escape-string-regexp": "^1.0.5",
-        "express": "^4.16.3",
+        "express": "^4.17.1",
+        "filesize": "^4.1.2",
+        "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
-        "jquery": "^3.3.1",
+        "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
         "macaddress": "^0.2.9",
+        "merge-anything": "^2.4.1",
         "p-any": "^2.1.0",
+        "p-cancelable": "^2.0.0",
+        "p-debounce": "^2.1.0",
+        "p-queue": "^6.1.1",
+        "p-settle": "^3.1.0",
         "p-timeout": "^3.1.0",
-        "passport": "^0.4.0",
-        "passport-atlassian-oauth2": "^1.0.0",
-        "passport-bitbucket-oauth2": "^0.1.2",
-        "passport-oauth2": "^1.4.0",
-        "passport-oauth2-refresh": "^1.1.0",
-        "react": "^16.3.2",
-        "react-dom": "^16.3.2",
-        "react-final-form": "^4.0.2",
-        "react-intl": "^2.8.0",
+        "react": "^16.8.6",
+        "react-collapsible": "2.6.0",
+        "react-dom": "^16.8.6",
+        "react-dropzone": "^10.1.8",
+        "react-editext": "^3.6.1",
+        "react-final-form": "^6.0.1",
+        "react-intl": "^2.9.0",
         "react-loadable": "^5.5.0",
-        "semver": "^5.6.0",
+        "react-tabs": "^3.0.0",
+        "semver": "^6.1.1",
+        "slash": "^3.0.0",
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
         "turndown": "^5.0.3",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "websocket": "^1.0.30"
     },
     "devDependencies": {
         "@types/analytics-node": "^3.1.1",
-        "@types/atlaskit__button": "^6.4.1",
+        "@types/autoprefixer": "^9.6.1",
+        "@types/deep-equal": "^1.0.1",
         "@types/escape-string-regexp": "^1.0.0",
+        "@types/filesize": "^4.1.0",
+        "@types/fork-ts-checker-webpack-plugin": "^0.4.5",
         "@types/git-url-parse": "^9.0.0",
+        "@types/glob": "^7.1.1",
         "@types/handlebars": "4.0.39",
+        "@types/html-webpack-plugin": "^3.2.1",
         "@types/jquery": "^3.3.23",
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
+        "@types/mini-css-extract-plugin": "^0.8.0",
         "@types/mocha": "^5.2.2",
-        "@types/node": "^8.10.25",
-        "@types/node-fetch": "^2.1.4",
-        "@types/passport": "^0.4.6",
-        "@types/passport-oauth2": "^1.4.6",
-        "@types/react": "^16.3.2",
-        "@types/react-dom": "^16.0.5",
+        "@types/node": "^12.6.9",
+        "@types/optimize-css-assets-webpack-plugin": "^5.0.0",
+        "@types/p-queue": "^3.2.1",
+        "@types/react": "^16.8.19",
+        "@types/react-dev-utils": "^9.0.1",
+        "@types/react-dom": "^16.8.4",
         "@types/react-loadable": "^5.4.1",
+        "@types/react-tabs": "^2.3.1",
+        "@types/react-transition-group": "^2.9.2",
         "@types/semver": "^5.5.0",
+        "@types/terser-webpack-plugin": "^1.2.1",
         "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.4",
+        "@types/vscode": "1.37.0",
+        "@types/webpack": "^4.39.1",
+        "@types/webpack-manifest-plugin": "^2.0.0",
+        "autoprefixer": "^9.6.1",
+        "cross-env": "^5.2.1",
+        "css-loader": "^3.2.0",
+        "fork-ts-checker-notifier-webpack-plugin": "^1.0.2",
+        "fork-ts-checker-webpack-plugin": "^1.5.0",
+        "html-webpack-plugin": "^3.2.0",
+        "mini-css-extract-plugin": "^0.8.0",
         "mocha": "^5.2.0",
+        "npm-run-all": "^4.1.5",
+        "optimize-css-assets-webpack-plugin": "^5.0.3",
         "patch-package": "^6.1.2",
+        "postcss-flexbugs-fixes": "^4.1.0",
+        "postcss-loader": "^3.0.0",
         "postinstall-postinstall": "^2.0.0",
-        "react-scripts-ts": "^3.1.0",
-        "ts-loader": "^5.3.1",
-        "tslint": "^5.11.0",
-        "typescript": "^3.2.2",
-        "vscode": "^1.1.26",
-        "webpack": "^4.26.1",
-        "webpack-cli": "^3.1.2"
+        "react-dev-utils": "^9.0.4",
+        "source-map-loader": "^0.2.4",
+        "terser-webpack-plugin": "^2.1.1",
+        "ts-loader": "^6.1.2",
+        "ts-node": "^8.4.1",
+        "tsconfig-paths-webpack-plugin": "^3.2.0",
+        "tslint": "^5.20.0",
+        "typescript": "^3.6.2",
+        "vscode-test": "^1.2.0",
+        "webpack": "^4.40.2",
+        "webpack-cli": "^3.3.9",
+        "webpack-dev-server": "^3.8.2",
+        "webpack-manifest-plugin": "^2.1.2"
     }
 }

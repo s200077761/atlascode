@@ -19,6 +19,7 @@ import RecentIcon from "@atlaskit/icon/glyph/recent";
 import ErrorIcon from "@atlaskit/icon/glyph/error";
 import CalendarIcon from "@atlaskit/icon/glyph/calendar";
 import Avatar from "@atlaskit/avatar";
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import { colors } from "@atlaskit/theme";
 import { distanceInWordsToNow } from "date-fns";
 import Offline from "../Offline";
@@ -27,6 +28,8 @@ import PageHeader from '@atlaskit/page-header';
 import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import NavItem from "../issue/NavItem";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
+import Button from "@atlaskit/button";
+import { AtlLoader } from "../AtlLoader";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -97,8 +100,15 @@ type State = {
 
 const emptyPipeline: PipelineData = {
   repository: {
-    type: ''
+    id: '',
+    name: '',
+    displayName: '',
+    fullName: '',
+    url: '',
+    avatarUrl: '',
+    issueTrackerEnabled: false
   },
+  remote: { name: 'dummy_remote', isReadOnly: true },
   type: "",
   build_number: 0,
   uuid: "",
@@ -109,7 +119,11 @@ const emptyPipeline: PipelineData = {
     result: { name: "", type: "" },
     stage: { name: "PENDING", type: "pipeline_step_state_pending_pending" }
   },
-  target: { ref_name: "" }
+  target: {
+    ref_name: "",
+    selector: { pattern: "", type: "" },
+    triggerName: ""
+  }
 };
 
 export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline, Properties, State> {
@@ -124,7 +138,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     };
   }
 
-  public onMessageReceived(e: any) {
+  public onMessageReceived(e: any): boolean {
     switch (e.type) {
       case 'error': {
         this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
@@ -149,6 +163,8 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         break;
       }
     }
+
+    return true;
   }
 
   handleDismissError = () => {
@@ -312,7 +328,8 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
   render() {
     if (this.state.pipeline.uuid === '' && !this.state.isErrorBannerOpen && this.state.isOnline) {
-      return (<div>waiting for data...</div>);
+      this.postMessage({ action: 'refresh' });
+      return <AtlLoader />;
     }
 
     return (
@@ -326,19 +343,21 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
         <Page>
           <Grid spacing="comfortable" layout="fixed">
             <GridColumn medium={12}>
+              <Button className='ac-button' style={{ float: "right" }} onClick={() => this.postMessage({ action: 'refresh' })}>
+                <RefreshIcon label="refresh" size="small"></RefreshIcon>
+              </Button>
               <PageHeader
                 breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
-                  <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.links!.html!.href} />} />
-                  <BreadcrumbsItem component={() => <NavItem text='Pipelines' href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home`} />} />
+                  <BreadcrumbsItem component={() => <NavItem text={this.state.pipeline.repository!.name!} href={this.state.pipeline.repository!.url} />} />
+                  <BreadcrumbsItem component={() => <NavItem text='Pipelines' href={`${this.state.pipeline.repository!.url}/addon/pipelines/home`} />} />
                   <BreadcrumbsItem component={() => <NavItem
                     text={`Pipeline #${this.state.pipeline.build_number}`}
-                    href={`${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}`}
-                    onCopy={() => this.postMessage({ action: 'copyPipelineLink', href: `${this.state.pipeline.repository!.links!.html!.href}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}` })} />} />
+                    href={`${this.state.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}`}
+                    onCopy={() => this.postMessage({ action: 'copyPipelineLink', href: `${this.state.pipeline.repository!.url}/addon/pipelines/home#!/results/${this.state.pipeline.build_number}` })} />} />
                 </BreadcrumbsStateless>}
               >
                 <p>Pipeline #{this.state.pipeline.build_number}</p>
               </PageHeader>
-
               <div
                 className="pipeline-head"
                 style={{

@@ -1,17 +1,16 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
-import { PipelineApi } from "../pipelines/pipelines";
 import { Pipeline, PipelineStep } from "../pipelines/model";
 import { PipelineInfo } from "../views/pipelines/PipelinesTree";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
+import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 
-type Emit = PipelineData | StepMessageData | HostErrorMessage;
-
-export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PipelineInfo> {
+export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -24,6 +23,18 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
     public get id(): string {
         return "pipelineSummaryScreen";
 
+    }
+
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._pipelineInfo) {
+            return siteDetailsForRemote(this._pipelineInfo.remote);
+        }
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     initialize(pipelineInfo: PipelineInfo) {
@@ -46,22 +57,24 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
         }
 
         this.isRefeshing = true;
+
+        const bbApi = await clientForRemote(this._pipelineInfo.remote);
         try {
-            let pipeline = await PipelineApi.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let pipeline = await bbApi.pipelines!.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             this.isRefeshing = false;
             return;
         }
 
         try {
-            let steps = await PipelineApi.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let steps = await bbApi.pipelines!.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
             this.updateSteps(steps);
 
             steps.map(step => {
-                PipelineApi.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
+                bbApi.pipelines!.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
                     const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
                     logs.map((log, ix) => {
                         if (ix < commands.length) {
@@ -73,7 +86,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview<Emit, Action> i
             });
         } catch (e) {
             Logger.error(e);
-            this.postMessage({ type: 'error', reason: e });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             return;
         } finally {
             this.isRefeshing = false;

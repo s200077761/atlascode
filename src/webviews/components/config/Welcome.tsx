@@ -2,25 +2,37 @@ import * as React from 'react';
 import { WebviewComponent } from '../WebviewComponent';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import Button, { ButtonGroup } from '@atlaskit/button';
+import Button from '@atlaskit/button';
 import { colors } from '@atlaskit/theme';
 import DisplayFeedback from './DisplayFeedback';
 import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import BitbucketIcon from '@atlaskit/logo/dist/esm/BitbucketLogo/Icon';
-import ConfluenceIcon from '@atlaskit/logo/dist/esm/ConfluenceLogo/Icon';
-// import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
-// import IssuesIcon from '@atlaskit/icon/glyph/issues';
-// import ArrowUpCircleIcon from '@atlaskit/icon/glyph/arrow-up-circle';
+import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
+import { FeedbackUser } from '../../../ipc/configMessaging';
+import SectionMessage from '@atlaskit/section-message';
+
+type ViewState = {
+    feedbackUser: FeedbackUser;
+};
 
 type Emit = SubmitFeedbackAction | Action;
-export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
+export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewState> {
     constructor(props: any) {
         super(props);
+        this.state = {
+            feedbackUser: { userName: '', emailAddress: '' }
+        };
     }
 
-    public onMessageReceived(e: any) {
+    public onMessageReceived(e: any): boolean {
+        switch (e.type) {
+            case 'update': {
+                this.setState({ feedbackUser: e.feedbackUser });
+                break;
+            }
+        }
 
+        return true;
     }
 
     handleConfigure = () => {
@@ -50,28 +62,85 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
         return (
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
-                    <GridColumn>
+                    <GridColumn medium={12}>
                         <PageHeader><p>Welcome To Atlassian for VSCode!</p></PageHeader>
-                        <ButtonGroup>
-                            <Button className='ac-button' onClick={this.handleConfigure}>Configure Atlassian Settings</Button>
-                            <DisplayFeedback onFeedback={this.handleFeedback} />
-                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
-                            <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
-                            <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
-                        </ButtonGroup>
                     </GridColumn>
-                </Grid>
-
-                <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={9}>
-                        <h2>🎉 First Time Here? 🎉</h2>
+                        <h3>🎉 First Time Here? 🎉</h3>
                         <section>
-                            <p>To get started, you'll need to authenticate with Jira and/or Bitbucket.</p>
-                            <p>Use the 'Configure Atlassian Settings' button above to authenticate.</p>
-                            <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
-                            <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
+                            <div>
+                                <p>To get started, you'll need to authenticate with Jira and/or Bitbucket from the configuration screen</p>
+                                <p>click the <em>Configure Atlassian Settings</em> to access the configuration 👉</p>
+                                <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
+                                <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
+                            </div>
                         </section>
-                        <h2>🎉 What's New in 1.4.3 🎉</h2>
+                        <h3>🎉 What's New in 2.0.0 🎉</h3>
+                        <SectionMessage
+                            appearance="info"
+                            title="Important Note">
+                            <div>
+                                <p>In 2.0.0 we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queires.</p>
+                                <br />
+                                <p>This means you can now see all of your JQL lists in the treeview at once regardless of site or project.</p>
+                                <br />
+                                <p>The extension does it's best to migrate any existing 1.x JQL queries, but you may find some of your queries may be missing a project qualifier in your JQL and loads too many issues.</p>
+                                <br />
+                                <p>To correct this, open the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen and use the 'Issues and JQL' editor to edit your JQL queries and ensure they have `project = SomeProjectKey` in them.</p>
+                                <br />
+                                <p>Finally, we've added a select box at the top of the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen that allows you to choose if you want the settings saved to your Global User settings or the current Workspace settings.</p>
+                                <br />
+                                <p>This enables you to set a different set of JQL trees per workspace/project.</p>
+                            </div>
+                        </SectionMessage>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Support for Jira Server and Bitbucket Server</li>
+                                <li>Support for a wider range of Jira features and configurations</li>
+                                <ul>
+                                    <li>Time tracking</li>
+                                    <li>Adding sprints to issues</li>
+                                    <li>Not having a resolution field</li>
+                                    <li>And more!</li>
+                                </ul>
+                                <li>View JQL from multiple sites at once in Jira explorer</li>
+                                <li>Improved Settings</li>
+                                <ul>
+                                    <li>Jira and Bitbucket now have their own sections in the settings</li>
+                                    <li>Jira or Bitbucket features can now be completely disabled</li>
+                                    <li>Settings can now be saved at either the user level or the workspace level</li>
+                                </ul>
+                                <li>Notifications can be managed and disabled for individual JQL queries</li>
+                                <li>Can now collapse all comments on a pull request</li>
+                                <li>Selected code will now be included in description when creating issue from a TODO</li>
+                                <li>Get the latest information by refreshing any webview</li>
+                                <li>Improved performance when creating pull requests or starting work on issues</li>
+                                <li>Easily edit the branch name when starting work on an issue</li>
+                                <li>Pre-filled mention picker when creating pull requests and Bitbucket issues</li>
+                                <li>Editing and deleting comments in pull requests</li>
+                                <li>Added support for merge commit messages</li>
+                                <li>Added diff preview in pull request views</li>
+                                <li>Added support for Bitbucket mirrors</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Build statuses now link to the tool that created them</li>
+                                <li>Fixed URL creation on Windows</li>
+                                <li><code>TODO</code> triggers no longer require a trailing space</li>
+                                <li>Subtasks now report the correct status</li>
+                                <li>Pipelines builds triggered manually or by tag creation now show up in the pipelines side bar</li>
+                                <li>Username was not slugified when making calls during Bitbucket server auth flow</li>
+                                <li>Sometimes webviews would not load data</li>
+                                <li>Transitions are now reloaded when an issue is transitioned to get any new available options</li>
+                                <li>Fixed bad default JQL in settings.json</li>
+                                <li>Fixed error when checking for an empty user object</li>
+                                <li>Fixed issue with credentials not saving for all sites</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 1.4.3 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -85,7 +154,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira issue created notifications do not show up sometimes</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.2 🎉</h2>
+                        <h3>🎉 What's New in 1.4.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -99,7 +168,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Comment API changes for VS Code May Updates</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.1 🎉</h2>
+                        <h3>🎉 What's New in 1.4.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -113,7 +182,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Panel text colours appear washed out in Jira webview</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.4.0 🎉</h2>
+                        <h3>🎉 What's New in 1.4.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -125,7 +194,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Better emoji styling in pull request webview</li>
                                 <li>Add loading indicator when posting comment on webviews</li>
                                 <li>Ticket comments should include date/time metadata</li>
-                                <li>Allow filtering of Pipelines</li>
+                                <li>Allow filtering of pipelines</li>
                                 <li>Make Bitbucket features work with SSH aliases</li>
                                 <li>Bitbucket features work with repositories cloned with https protocol</li>
                                 <li>Better date format on pull request commit list</li>
@@ -147,7 +216,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Unable to start pipeline from explorer</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.3.1 🎉</h2>
+                        <h3>🎉 What's New in 1.3.1 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -155,7 +224,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira treeviews show no issues after some time</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.3.0 🎉</h2>
+                        <h3>🎉 What's New in 1.3.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -183,14 +252,14 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Create pull request screen shows blank page when remote branch is deleted</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.3 🎉</h2>
+                        <h3>🎉 What's New in 1.2.3 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>JQL error when opening related Jira issues in the pull request tree</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.2 🎉</h2>
+                        <h3>🎉 What's New in 1.2.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -199,7 +268,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Support to add an issue link when creating a Jira issue</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.1 🎉</h2>
+                        <h3>🎉 What's New in 1.2.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -218,7 +287,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>PR create screen is not splitting the title and description correctly</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.2.0 🎉</h2>
+                        <h3>🎉 What's New in 1.2.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -239,7 +308,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Pipeline summary fails for in-progress builds</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.1.0 🎉</h2>
+                        <h3>🎉 What's New in 1.1.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -270,21 +339,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Jira issue details were not loading completely in some cases</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.4 🎉</h2>
+                        <h3>🎉 What's New in 1.0.4 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>Fixed a bug where upstream branch was not being set properly when starting work on Jira issue</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.3 🎉</h2>
+                        <h3>🎉 What's New in 1.0.3 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
                                 <li>Fixed another case causing extension to open an authentication browser tab occasionally without user interaction</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.2 🎉</h2>
+                        <h3>🎉 What's New in 1.0.2 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -309,7 +378,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                                 <li>Detect dirty working tree and ask user to commit when creating PRs</li>
                             </ul>
                         </section>
-                        <h2>🎉 What's New in 1.0.1 🎉</h2>
+                        <h3>🎉 What's New in 1.0.1 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
@@ -331,10 +400,19 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, {}> {
                             </ul>
                         </section>
                         <section>
-                            <h2>Feedback</h2>
+                            <h3>Feedback</h3>
                             <p>We can only make this extension better with your help!</p>
                             <p>Make sure to let us know how we're doing by using the feedback buttons available on this screen and the configuration screen.</p>
                         </section>
+                    </GridColumn>
+                    <GridColumn medium={3}>
+                        <Button className='ac-button' onClick={this.handleConfigure}>Configure Atlassian Settings</Button>
+                        <div className='ac-vpadding'>
+                            <DisplayFeedback userDetails={this.state.feedbackUser} onFeedback={this.handleFeedback} />
+                        </div>
+                        <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleSourceLink}>Source Code</Button>
+                        <Button className='ac-link-button' appearance="link" iconBefore={bbicon} onClick={this.handleIssueLink}>Got Issues?</Button>
+                        <Button className='ac-link-button' appearance="link" iconBefore={connyicon} onClick={this.handleDocsLink}>User Guide</Button>
                     </GridColumn>
                 </Grid>
             </Page>

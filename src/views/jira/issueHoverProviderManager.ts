@@ -1,10 +1,10 @@
 import { Disposable, ConfigurationChangeEvent, languages } from 'vscode';
 import { Container } from "../../container";
 import { configuration } from "../../config/configuration";
-import { AuthInfoEvent } from "../../atlclients/authStore";
 import { JiraHoverProviderConfigurationKey } from "../../constants";
-import { AuthProvider } from "../../atlclients/authInfo";
+import { ProductJira } from "../../atlclients/authInfo";
 import { IssueHoverProvider } from "./issueHoverProvider";
+import { SitesAvailableUpdateEvent } from '../../siteManager';
 
 export class IssueHoverProviderManager implements Disposable {
 
@@ -13,17 +13,19 @@ export class IssueHoverProviderManager implements Disposable {
 
     constructor() {
         this._disposable = Disposable.from(
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
             configuration.onDidChange(this.onConfigurationChanged, this)
         );
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
     }
 
-    private async onDidAuthChange(e: AuthInfoEvent) {
-        if (e.provider === AuthProvider.JiraCloud && await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-            this.updateHover();
-        } else {
-            this.disposeHoverProvider();
+    private async onSitesDidChange(e: SitesAvailableUpdateEvent) {
+        if (e.product.key === ProductJira.key) {
+            if (e.sites.length > 0) {
+                this.updateHover();
+            } else {
+                this.disposeHoverProvider();
+            }
         }
     }
 

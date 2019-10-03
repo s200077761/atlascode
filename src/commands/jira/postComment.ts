@@ -1,22 +1,13 @@
-import { Issue } from "../../jira/jiraIssue";
 import { Container } from "../../container";
 import { issueCommentEvent } from "../../analytics";
+import { IssueKeyAndSite, Comment } from "../../jira/jira-client/model/entities";
 
-export async function postComment(issue: Issue, comment: string) {
-  let client = await Container.clientManager.jirarequest(issue.workingSite);
+export async function postComment(issue: IssueKeyAndSite, comment: string): Promise<Comment> {
+  let client = await Container.clientManager.jiraClient(issue.siteDetails);
 
-  if (client) {
-    let resp = await client.issue.addComment({
-      issueIdOrKey: issue.id,
-      body: {
-        body: comment
-      }
-    });
+  let resp = await client.addComment(issue.key, comment);
 
-    issueCommentEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+  issueCommentEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
-    return resp;
-  } else {
-    throw new Error('error getting jira client');
-  }
+  return resp;
 }

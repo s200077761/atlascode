@@ -1,12 +1,23 @@
+import { Repo } from "../bitbucket/model";
+import { Remote } from "../typings/git";
+
+export interface PaginatedPipelines {
+    values: Pipeline[];
+    page: number;
+    size: number;
+    pagelen: number;
+}
+
 export interface Pipeline {
-    repository: Bitbucket.Schema.Repository;
+    repository: Repo;
+    remote: Remote;
     build_number: number;
     created_on: string;
     creator_name?: string;
     creator_avatar?: string;
     state: PipelineState;
     uuid: string;
-    target?: PipelineTarget;
+    target: PipelineTarget;
     completed_on?: string;
     duration_in_seconds?: number;
 }
@@ -39,8 +50,15 @@ export interface PipelineStage {
     type: string;
 }
 
+export interface PipelineSelector{
+    pattern?: string;
+    type: string;
+}
+
 export interface PipelineTarget {
-    ref_name: string;
+    ref_name?: string;
+    selector?: PipelineSelector;
+    triggerName: string; 
 }
 
 export interface PipelineStep {

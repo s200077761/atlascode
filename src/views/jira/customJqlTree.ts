@@ -9,11 +9,11 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
 
   constructor(readonly jqlEntry: JQLEntry) {
     super(undefined, "No issues match this query");
-    this.setJql(this.jqlEntry.query);
+    this.setJqlEntry(this.jqlEntry);
   }
 
-  async getChildren(parent?: IssueNode): Promise<IssueNode[]> {
-    return super.getChildren(undefined);
+  async getChildren(parent?: IssueNode, allowFetch: boolean = true): Promise<IssueNode[]> {
+    return super.getChildren(undefined, allowFetch);
   }
 
   getTreeItem(): TreeItem {

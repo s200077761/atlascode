@@ -1,9 +1,10 @@
 import { window, commands } from "vscode";
-import { PipelineApi } from "../../pipelines/pipelines";
-import { Pipeline } from "../../pipelines/model";
+import { Pipeline, PipelineTarget } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
 import { Container } from "../../container";
-import { shouldDisplay } from "./Helpers";
+import { shouldDisplay, descriptionForState, generatePipelineTitle } from "./Helpers";
+import { Commands } from "../../commands";
+import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -15,26 +16,42 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     if (!Container.config.bitbucket.pipelines.monitorEnabled) {
       return;
     }
-    await Container.clientManager.bbrequest();
     for (var i = 0; i < this._repositories.length; i++) {
       const repo = this._repositories[i];
       const previousResults = this._previousResults[repo.rootUri.path];
-      PipelineApi.getRecentActivity(repo).then(newResults => {
+
+      const remote = firstBitbucketRemote(repo);
+      const bbApi = await clientForRemote(remote);
+
+      if(!bbApi.pipelines){
+        return; //Bitbucket Server instances will not have pipelines
+      }
+      bbApi.pipelines.getRecentActivity(repo).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
-        diffs = diffs.filter(p => shouldDisplay(p.target!.ref_name));
+        diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
+        const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
         if (diffs.length > 0) {
           window.showInformationMessage(
             this.composeMessage(diffs),
-            "View Pipeline Explorer"
+            buttonText
           ).then((selection) => {
             if (selection) {
-              commands.executeCommand("workbench.view.extension.atlascode-drawer");
+              if (diffs.length === 1) {
+                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo, remote: remote });
+              } else {
+                commands.executeCommand("workbench.view.extension.atlascode-drawer");
+              }
             }
           });
         }
         this._previousResults[repo.rootUri.path] = newResults;
       });
     }
+  }
+
+  private shouldDisplayTarget(target: PipelineTarget): boolean {
+    //If there's no branch associated with this pipe, don't filter it
+    return !target.ref_name || shouldDisplay(target.ref_name);
   }
 
   private diffResults(oldResults: Pipeline[],
@@ -70,45 +87,18 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
   private composeMessage(newResults: Pipeline[]): string {
     if (newResults.length === 1) {
       const result = newResults[0];
-      return `${this.descriptionForState(result)}.`;
+      return `${descriptionForState(result)}.`;
     } else if (newResults.length === 2) {
-      return `${this.descriptionForState(newResults[0])} and ${this.descriptionForState(newResults[1])}.`;
+      return `${descriptionForState(newResults[0])} and ${descriptionForState(newResults[1])}.`;
     } else if (newResults.length === 3) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name
-        }, and ${newResults[2].target!.ref_name}.`;
-    } else if (newResults.length === 4) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name
-        }, ${newResults[2].target!.ref_name} and 1 other build.`;
-    } else if (newResults.length > 4) {
-      return `New build statuses for ${newResults[0].target!.ref_name}, ${
-        newResults[1].target!.ref_name}, ${newResults[2].target!.ref_name} and ${
-        newResults.length - 3} other builds.`;
+      return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
+        generatePipelineTitle(newResults[1])
+      }, and 1 other build.`;
+    } else if (newResults.length > 3) {
+      return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
+        generatePipelineTitle(newResults[1])
+      }, and ${newResults.length - 2} other builds.`;
     }
     return "";
-  }
-
-  private descriptionForState(result: Pipeline): string {
-    const descriptionForResult = {
-      pipeline_state_completed_successful: "was successful",
-      pipeline_state_completed_failed: "has failed",
-      pipeline_state_completed_error: "has failed",
-      pipeline_state_completed_stopped: "has been stopped"
-    };
-
-    var words = "has done something";
-    switch (result.state!.type) {
-      case "pipeline_state_completed":
-        words = descriptionForResult[result.state!.result!.type];
-        break;
-      case "pipeline_state_in_progress":
-        words = "is building";
-        break;
-      case "pipeline_state_pending":
-        words = "is pending";
-    }
-
-    return `${result.target!.ref_name} ${words}`;
   }
 }

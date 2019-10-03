@@ -1,12 +1,12 @@
 
 import { JiraIssueWebview } from './jiraIssueWebview';
 import { AbstractMultiViewManager } from './multiViewManager';
-import { Issue } from '../jira/jiraModel';
+import { MinimalIssue } from '../jira/jira-client/model/entities';
 
 // JiraIssueViewManager manages views for issue details.
-export class JiraIssueViewManager extends AbstractMultiViewManager<Issue> {
+export class JiraIssueViewManager extends AbstractMultiViewManager<MinimalIssue> {
 
-    dataKey(data: Issue): string {
+    dataKey(data: MinimalIssue): string {
         return data.key;
 
     }

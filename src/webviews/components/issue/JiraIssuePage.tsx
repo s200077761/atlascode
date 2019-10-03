@@ -1,579 +1,752 @@
-import * as React from "react";
-import Avatar, { AvatarItem } from "@atlaskit/avatar";
-import SizeDetector from "@atlaskit/size-detector";
+import * as React from 'react';
+import { CommonEditorPageEmit, CommonEditorPageAccept, CommonEditorViewState, AbstractIssueEditorPage, emptyCommonEditorState } from './AbstractIssueEditorPage';
+import { EditIssueData, emptyEditIssueData, isIssueCreated } from '../../../ipc/issueMessaging';
+import Offline from '../Offline';
+import ErrorBanner from '../ErrorBanner';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import PageHeader from '@atlaskit/page-header';
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Tooltip from '@atlaskit/tooltip';
-import { WebviewComponent } from "../WebviewComponent";
-import { IssueData, UserList, LabelList, JqlOptionsList, CreatedSomething } from "../../../ipc/issueMessaging";
-import {
-  emptyStatus,
-  emptyIssueType,
-  emptyUser,
-  emptyPriority,
-  Issue,
-  Transition,
-  IdName
-} from "../../../jira/jiraModel";
-import { emptyWorkingSite } from '../../../config/model';
-import {
-  TransitionIssueAction,
-  IssueCommentAction,
-  IssueAssignAction,
-  CopyJiraIssueLinkAction,
-  OpenStartWorkPageAction,
-  RefreshIssueAction,
-  FetchQueryAction,
-  EditIssueAction,
-  CreateSomethingAction
-} from "../../../ipc/issueActions";
-import { TransitionMenu } from "./TransitionMenu";
-import { Comments } from "./Comments";
 import Button, { ButtonGroup } from "@atlaskit/button";
-import { AsyncSelect, AsyncCreatableSelect, components } from '@atlaskit/select';
-import IssueList from "./IssueList";
-import { OpenJiraIssueAction } from "../../../ipc/issueActions";
-import NavItem from "./NavItem";
-import { HostErrorMessage, PMFData } from "../../../ipc/messaging";
-import ErrorBanner from "../ErrorBanner";
-import Offline from "../Offline";
-import { OpenPullRequest } from "../../../ipc/prActions";
-import PullRequests from "./PullRequests";
-import LinkedIssues from "./LinkedIssues";
-import PMFBBanner from "../pmfBanner";
+import NavItem from './NavItem';
+import SizeDetector from "@atlaskit/size-detector";
+import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
+import { EditIssueAction } from '../../../ipc/issueActions';
+import { CommentList } from './CommentList';
+import IssueList from './IssueList';
+import { LinkedIssues } from './LinkedIssues';
+import { TransitionMenu } from './TransitionMenu';
+import { Transition } from '../../../jira/jira-client/model/entities';
+import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
+import Tooltip from '@atlaskit/tooltip';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
+import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
+import StarIcon from '@atlaskit/icon/glyph/star';
+import InlineDialog from '@atlaskit/inline-dialog';
+import WorklogForm from './WorklogForm';
+import EditorAttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
 
-type Emit = RefreshIssueAction | EditIssueAction | CreateSomethingAction | TransitionIssueAction | IssueCommentAction | IssueAssignAction | FetchQueryAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenStartWorkPageAction | OpenPullRequest;
-type Accept = IssueData | HostErrorMessage;
+// NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
+// which totally screws up react-select when select boxes are in an initially hidden panel.
+import Collapsible from 'react-collapsible';
+import Worklogs from './Worklogs';
+import PullRequests from './PullRequests';
+import WatchesForm from './WatchesForm';
+import VotesForm from './VotesForm';
+import { AttachmentsModal } from './AttachmentsModal';
+import { AtlLoader } from '../AtlLoader';
+import { distanceInWordsToNow, format } from "date-fns";
+import { AttachmentList } from './AttachmentList';
+import PMFBBanner from '../pmfBanner';
+import { PMFData } from '../../../ipc/messaging';
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 
-const emptyIssueData: IssueData = {
-  type: "",
-  key: "",
-  id: "",
-  self: "",
-  created: new Date(0),
-  description: "",
-  descriptionHtml: "",
-  summary: "",
-  status: emptyStatus,
-  priority: emptyPriority,
-  issueType: emptyIssueType,
-  reporter: emptyUser,
-  assignee: emptyUser,
-  parentKey: undefined,
-  subtasks: [],
-  issuelinks: [],
-  comments: [],
-  labels: [],
-  attachments: [],
-  transitions: [],
-  components: [],
-  fixVersions: [],
-  workingSite: emptyWorkingSite,
-  currentUserId: '',
-  childIssues: [],
-  workInProgress: true,
-  recentPullRequests: [],
-  epicName: '',
-  epicLink: '',
-  epicChildren: [],
-  isEpic: false
-};
-
-type MyState = {
-  data: IssueData;
-  isStatusButtonLoading: boolean;
-  isCommentLoading: boolean;
-  commentInput: string;
-  isErrorBannerOpen: boolean;
-  isOnline: boolean;
-  errorDetails: any;
-  showPMF: boolean;
-};
+type Emit = CommonEditorPageEmit | EditIssueAction;
+type Accept = CommonEditorPageAccept | EditIssueData;
 
 type SizeMetrics = {
-  width: number;
-  height: number;
+    width: number;
+    height: number;
 };
 
-const UserOption = (props: any) => {
-  let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
-  return (
-    <components.Option {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='medium' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
-    </components.Option >
-  );
+interface ViewState extends CommonEditorViewState, EditIssueData {
+    showMore: boolean;
+    currentInlineDialog: string;
+}
+
+const emptyState: ViewState = {
+    ...emptyCommonEditorState,
+    ...emptyEditIssueData,
+    showMore: false,
+    currentInlineDialog: '',
 };
 
-const UserValue = (props: any) => {
-  let avatar = (props.data.avatarUrls && props.data.avatarUrls['24x24']) ? props.data.avatarUrls['24x24'] : '';
-  return (
-    <components.SingleValue {...props}>
-      <div ref={props.innerRef} {...props.innerProps} style={{ display: 'flex', 'align-items': 'center' }}><Avatar size='small' borderColor='var(--vscode-dropdown-foreground)!important' src={avatar} /><span style={{ marginLeft: '8px', color: 'var(--vscode-editor-foreground)' }}>{props.data.displayName || 'Unassigned'}</span></div>
-    </components.SingleValue>
-  );
-};
+export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept, {}, ViewState> {
+    private advancedSidebarFields: FieldUI[] = [];
+    private advancedMainFields: FieldUI[] = [];
 
-const DropdownIndicator = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.DropdownIndicator {...props} /> : null;
-
-const MultiValueRemove = (props: any) => props.selectProps && props.selectProps.menuIsOpen ? < components.MultiValueRemove {...props} /> : null;
-
-export default class JiraIssuePage extends WebviewComponent<
-  Emit,
-  Accept,
-  {},
-  MyState
-  > {
-
-  private userSuggestions: JIRA.Schema.User[] | undefined = undefined;
-  private labelSuggestions: string[] | undefined = undefined;
-  private componentSuggestions: IdName[] | undefined = undefined;
-  private fixVersionSuggestions: IdName[] | undefined = undefined;
-  private newOption: any = undefined;
-
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      data: emptyIssueData,
-      isStatusButtonLoading: false,
-      isCommentLoading: false,
-      commentInput: "",
-      isErrorBannerOpen: false,
-      isOnline: true,
-      errorDetails: undefined,
-      showPMF: false,
-    };
-  }
-
-
-  public onMessageReceived(e: any) {
-    switch (e.type) {
-      case 'error': {
-        this.setState({ isStatusButtonLoading: false, isCommentLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
-        break;
-      }
-      case 'userList': {
-        this.userSuggestions = (e as UserList).users;
-        break;
-      }
-      case 'labelList': {
-        this.labelSuggestions = (e as LabelList).labels;
-        break;
-      }
-      case 'componentList': {
-        this.componentSuggestions = (e as JqlOptionsList).options;
-        break;
-      }
-      case 'fixVersionList': {
-        this.fixVersionSuggestions = (e as JqlOptionsList).options;
-        break;
-      }
-      case 'optionCreated': {
-        this.newOption = (e as CreatedSomething).createdData;
-        break;
-      }
-      case 'update': {
-        this.setState({ data: e, isStatusButtonLoading: false, isCommentLoading: false, isErrorBannerOpen: false, errorDetails: undefined });
-        break;
-      }
-      case 'onlineStatus': {
-        this.setState({ isOnline: e.isOnline });
-
-        if (e.isOnline) {
-          this.postMessage({ action: 'refreshIssue' });
-        }
-
-        break;
-      }
-      case 'pmfStatus': {
-        this.setState({ showPMF: e.showPMF });
-        break;
-      }
-    }
-  }
-
-
-  handleSave = (issue: Issue, comment: string) => {
-    this.postMessage({
-      action: "comment",
-      issue: issue,
-      comment: comment
-    });
-    this.setState({ commentInput: "", isCommentLoading: true });
-  }
-
-  handleAssign = (issue: Issue, value: any) => {
-    this.setState({ data: { ...this.state.data, assignee: value } });
-
-    this.postMessage({
-      action: "assign",
-      issue: issue,
-      userId: value.accountId
-    });
-  }
-
-  editIssue = (fieldName: string, value: any) => {
-    const editedIssueData = { ...this.state.data, [fieldName]: value };
-    this.setState({ data: editedIssueData });
-
-    this.postMessage({
-      action: 'editIssue',
-      fields: {
-        [fieldName]: editedIssueData[fieldName]
-      }
-    });
-  }
-
-  handleOpenIssue = (issueKey: string) => {
-    this.postMessage({
-      action: "openJiraIssue",
-      issueOrKey: issueKey
-    });
-  }
-
-  onHandleStatusChange = (item: Transition) => {
-    this.setState({ isStatusButtonLoading: true });
-    this.postMessage({
-      action: "transitionIssue",
-      transition: item,
-      issue: this.state.data
-    });
-  }
-
-  handleCopyIssueLink = () => {
-    this.postMessage({
-      action: 'copyJiraIssueLink'
-    });
-  }
-
-  handleDismissError = () => {
-    this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-  }
-
-  loadUserOptions = (input: string): Promise<any> => {
-    return new Promise(resolve => {
-      this.userSuggestions = undefined;
-      this.postMessage({ action: 'fetchUsers', query: input });
-
-      const start = Date.now();
-      let timer = setInterval(() => {
-        const end = Date.now();
-        if (this.userSuggestions !== undefined || (end - start) > 2000) {
-          if (this.userSuggestions === undefined) {
-            this.userSuggestions = [];
-          }
-
-          clearInterval(timer);
-          resolve(this.userSuggestions);
-        }
-      }, 100);
-    });
-  }
-
-  loadLabelOptions = (input: string): Promise<any> => {
-    return new Promise(resolve => {
-      this.labelSuggestions = undefined;
-      this.postMessage({ action: 'fetchLabels', query: input });
-
-      const start = Date.now();
-      let timer = setInterval(() => {
-        const end = Date.now();
-        if (this.labelSuggestions !== undefined || (end - start) > 2000) {
-          if (this.labelSuggestions === undefined) {
-            this.labelSuggestions = [];
-          }
-
-          clearInterval(timer);
-          resolve(this.labelSuggestions);
-        }
-      }, 100);
-    });
-  }
-
-  loadComponentOptions = (input: string): Promise<any> => {
-    if (this.componentSuggestions) {
-      return Promise.resolve(this.componentSuggestions);
+    constructor(props: any) {
+        super(props);
+        this.state = emptyState;
     }
 
-    return new Promise(resolve => {
-      this.componentSuggestions = undefined;
-      this.postMessage({ action: 'fetchComponents', query: input });
-
-      const start = Date.now();
-      let timer = setInterval(() => {
-        const end = Date.now();
-        if (this.componentSuggestions !== undefined || (end - start) > 2000) {
-          if (this.componentSuggestions === undefined) {
-            this.componentSuggestions = [];
-          }
-
-          clearInterval(timer);
-          resolve(this.componentSuggestions);
-        }
-      }, 100);
-    });
-  }
-
-  loadFixVersionOptions = (input: string): Promise<any> => {
-    if (this.fixVersionSuggestions) {
-      return Promise.resolve(this.fixVersionSuggestions);
+    getProjectKey = (): string => {
+        return this.state.key.substring(0, this.state.key.indexOf('-'));
     }
 
-    return new Promise(resolve => {
-      this.fixVersionSuggestions = undefined;
-      this.postMessage({ action: 'fetchFixVersions', query: input });
+    onMessageReceived(e: any): boolean {
+        let handled = super.onMessageReceived(e);
 
-      const start = Date.now();
-      let timer = setInterval(() => {
-        const end = Date.now();
-        if (this.fixVersionSuggestions !== undefined || (end - start) > 2000) {
-          if (this.fixVersionSuggestions === undefined) {
-            this.fixVersionSuggestions = [];
-          }
-
-          clearInterval(timer);
-          resolve(this.fixVersionSuggestions);
-        }
-      }, 100);
-    });
-  }
-
-  handleOptionCreate = (fieldName: string, input: any) => {
-    this.newOption = undefined;
-    this.postMessage({ action: 'createOption', createData: { fieldKey: fieldName, name: input } });
-
-    const start = Date.now();
-    let timer = setInterval(() => {
-      const end = Date.now();
-      if (this.newOption && this.newOption.id.length > 0) {
-        clearInterval(timer);
-        this.editIssue(fieldName, [...(this.state.data[fieldName] || []), this.newOption]);
-      } else if ((end - start) > 2000) {
-        clearInterval(timer);
-      }
-    }, 100);
-  }
-
-  header(issue: any): any {
-    return (
-      <div>
-        {!this.state.isOnline &&
-          <Offline />
-        }
-        {this.state.isErrorBannerOpen &&
-          <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
-        }
-
-        {this.state.showPMF &&
-          <PMFBBanner onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
-        }
-        <PageHeader
-          actions={<ButtonGroup>
-            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
-          </ButtonGroup>}
-          breadcrumbs={
-            <BreadcrumbsStateless onExpand={() => { }}>
-              {(issue.epicLink && issue.epicLink !== '') &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.epicLink}`} onItemClick={() => this.handleOpenIssue(issue.epicLink)} />} />
-              }
-              {issue.parentKey &&
-                <BreadcrumbsItem component={() => <NavItem text={`${issue.parentKey}`} onItemClick={() => this.handleOpenIssue(issue.parentKey)} />} />
-              }
-              <BreadcrumbsItem component={() => <NavItem text={`${issue.key}`} href={`https://${issue.workingSite.name}.${issue.workingSite.baseUrlSuffix}/browse/${issue.key}`} iconUrl={issue.issueType.iconUrl} onCopy={this.handleCopyIssueLink} />} />
-            </BreadcrumbsStateless>
-          }>
-          <p>{issue.summary}</p>
-        </PageHeader>
-        <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
-      </div>
-    );
-  }
-
-  details(issue: Issue): any {
-    return (
-      <div>
-        <h3>Status</h3>
-        <TransitionMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={this.onHandleStatusChange} />
-        <h3>Priority</h3>
-        <div className="ac-icon-with-text">
-          <img src={issue.priority.iconUrl} />
-          <span>{issue.priority.name}</span>
-        </div>
-        <h3>Assignee</h3>
-        <AsyncSelect
-          className="ac-select-container-control-on-hover"
-          classNamePrefix="ac-select"
-          defaultOptions={[
-            {
-              label: 'Start typing to search for users',
-              options: [
-                { accountId: undefined, displayName: 'Unassign' },
-                { accountId: this.state.data.currentUserId, displayName: 'Assign to me' }
-              ]
+        if (!handled) {
+            switch (e.type) {
+                case 'update': {
+                    const issueData = e as EditIssueData;
+                    this.updateInternals(issueData);
+                    this.setState({ ...issueData, ...{ isErrorBannerOpen: false, errorDetails: undefined, isSomethingLoading: false, loadingField: '' } });
+                    break;
+                }
+                case 'epicChildrenUpdate': {
+                    this.setState({ isSomethingLoading: false, loadingField: '', epicChildren: e.epicChildren });
+                    break;
+                }
+                case 'pullRequestUpdate': {
+                    this.setState({ recentPullRequests: e.recentPullRequests });
+                }
+                case 'currentUserUpdate': {
+                    this.setState({ currentUser: e.currentUser });
+                }
+                case 'issueCreated': {
+                    if (isIssueCreated(e)) {
+                        this.setState({ isSomethingLoading: false, loadingField: '' });
+                    }
+                    break;
+                }
             }
-          ]}
-          loadOptions={this.loadUserOptions}
-          value={issue.assignee}
-          getOptionLabel={(option: any) => option.name}
-          getOptionValue={(option: any) => option.accountId}
-          formatGroupLabel={(data: any) => <em>{data.label}</em>}
-          placeholder="Search for a User"
-          components={{ Option: UserOption, SingleValue: UserValue, DropdownIndicator: DropdownIndicator }}
-          onChange={(val: any) => this.handleAssign(issue, val)}
-        />
-        <h3>Reporter</h3>
-        <AvatarItem
-          avatar={<Avatar src={issue.reporter.avatarUrls["24x24"]} size='small' />}
-          primaryText={issue.reporter.displayName || "Unknown"}
-        />
-
-        <h3>Labels</h3>
-        <AsyncCreatableSelect
-          className="ac-select-container-control-on-hover"
-          classNamePrefix="ac-select"
-          isMulti
-          isClearable={false}
-          loadOptions={this.loadLabelOptions}
-          value={issue.labels}
-          getOptionLabel={(option: any) => option}
-          getOptionValue={(option: any) => option}
-          placeholder="None"
-          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
-          onChange={(val: any) => this.editIssue('labels', val)}
-          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option === inputValue) === undefined}
-          getNewOptionData={(inputValue: any, optionLabel: any) => (inputValue)}
-        />
-
-        <h3>Components</h3>
-        <AsyncCreatableSelect
-          className="ac-select-container-control-on-hover"
-          classNamePrefix="ac-select"
-          isMulti
-          isClearable={false}
-          loadOptions={this.loadComponentOptions}
-          value={issue.components}
-          getOptionLabel={(option: any) => option.name}
-          getOptionValue={(option: any) => option.id}
-          placeholder="None"
-          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
-          onChange={(val: any) => this.editIssue('components', val)}
-          onCreateOption={(val: any) => this.handleOptionCreate('components', val)}
-          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
-          getNewOptionData={(inputValue: any, optionLabel: any) => ({
-            id: inputValue,
-            name: optionLabel,
-          })}
-        />
-
-        <h3>Fix Versions</h3>
-        <AsyncCreatableSelect
-          className="ac-select-container-control-on-hover"
-          classNamePrefix="ac-select"
-          isMulti
-          isClearable={false}
-          loadOptions={this.loadFixVersionOptions}
-          value={issue.fixVersions}
-          getOptionLabel={(option: any) => option.name}
-          getOptionValue={(option: any) => option.id}
-          placeholder="None"
-          components={{ DropdownIndicator: DropdownIndicator, MultiValueRemove: MultiValueRemove }}
-          onChange={(val: any) => this.editIssue('fixVersions', val)}
-          onCreateOption={(val: any) => this.handleOptionCreate('fixVersions', val)}
-          isValidNewOption={(inputValue: any, selectValue: any, selectOptions: any[]) => inputValue.trim().length > 0 && selectOptions.find(option => option.name === inputValue) === undefined}
-          getNewOptionData={(inputValue: any, optionLabel: any) => ({
-            id: inputValue,
-            name: optionLabel,
-          })}
-        />
-
-        {this.state.data.recentPullRequests && this.state.data.recentPullRequests.length > 0 &&
-          <React.Fragment>
-            <Tooltip content='Recent pull requests from workspace repositories'><h3>Recent pull requests</h3></Tooltip>
-            {this.state.data.recentPullRequests.map(pr => {
-              return <PullRequests pullRequests={this.state.data.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.links!.self!.href! })} />;
-            })}
-          </React.Fragment>
         }
-      </div>
-    );
-  }
-
-
-
-  render() {
-    const issue = this.state.data;
-
-    if (issue.type === "" && !this.state.isErrorBannerOpen && this.state.isOnline) {
-      return (<div>waiting for data...</div>);
+        return handled;
     }
 
-    const subtasks = (Array.isArray(this.state.data.subtasks) && this.state.data.subtasks.length === 0)
-      ? <React.Fragment></React.Fragment>
-      : <React.Fragment>
-        <h3>Subtasks</h3>
-        <IssueList issues={this.state.data.subtasks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
-      </React.Fragment>;
+    updateInternals(data: EditIssueData) {
+        const orderedValues: FieldUI[] = this.sortFieldValues(data.fields);
+        this.advancedMainFields = [];
+        this.advancedSidebarFields = [];
 
-    const epicChildren = (!Array.isArray(issue.epicChildren) || (Array.isArray(issue.epicChildren) && issue.epicChildren.length === 0))
-      ? <React.Fragment></React.Fragment>
-      : <React.Fragment>
-        <h3>Issues in this epic</h3>
-        <IssueList issues={issue.epicChildren} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
-      </React.Fragment>;
+        orderedValues.forEach(field => {
+            if (field.advanced) {
+                if (field.uiType === UIType.Input && (field as InputFieldUI).isMultiline) {
+                    this.advancedMainFields.push(field);
+                } else {
+                    this.advancedSidebarFields.push(field);
+                }
+            }
+        });
+    }
 
-    const childIssues = (Array.isArray(this.state.data.childIssues) && this.state.data.childIssues.length === 0)
-      ? <React.Fragment></React.Fragment>
-      : <React.Fragment>
-        <h3>Child issues</h3>
-        <IssueList issues={this.state.data.childIssues} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
-      </React.Fragment>;
+    handleCopyIssueLink = () => {
+        this.postMessage({
+            action: 'copyJiraIssueLink'
+        });
+    }
 
-    const issuelinks = (Array.isArray(this.state.data.issuelinks) && this.state.data.issuelinks.length === 0)
-      ? <React.Fragment></React.Fragment>
-      : <React.Fragment>
-        <h3>Linked issues</h3>
-        <LinkedIssues issuelinks={this.state.data.issuelinks} postMessage={(e: OpenJiraIssueAction) => this.postMessage(e)} />
-      </React.Fragment>;
+    handleStartWorkOnIssue = () => {
+        this.postMessage({
+            action: 'openStartWorkPage'
+            , issue: { key: this.state.key, siteDetails: this.state.siteDetails }
+        });
+    }
 
-    return (
-      <Page>
+    fetchUsers = (input: string) => {
+        return this.loadSelectOptions(input, `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`);
+    }
 
-        <SizeDetector>
-          {(size: SizeMetrics) => {
-            if (size.width < 800) {
-              return (
-                <div>
-                  {this.header(issue)}
-                  {this.details(issue)}
-                  {subtasks}
-                  {epicChildren}
-                  {childIssues}
-                  {issuelinks}
-                  <h3>Comments</h3>
-                  <Comments issue={issue} isCommentLoading={this.state.isCommentLoading} onSave={this.handleSave} />
+    protected handleInlineEdit = (field: FieldUI, newValue: any) => {
+        switch (field.uiType) {
+            case UIType.Subtasks: {
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                const payload: any = newValue;
+                payload.project = { key: this.getProjectKey() };
+                payload.parent = { key: this.state.key };
+                this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: { fields: payload } });
+
+                break;
+            }
+            case UIType.IssueLinks: {
+                this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+
+                this.postMessage({
+                    action: 'createIssueLink'
+                    , site: this.state.siteDetails
+                    , issueLinkData: {
+                        type: {
+                            id: newValue.type.id
+                        },
+                        inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
+                        outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
+                    }
+                    , issueLinkType: newValue.type
+                });
+                break;
+            }
+            case UIType.Timetracking: {
+                let newValObject = this.state.fieldValues[field.key];
+                if (newValObject) {
+                    newValObject.originalEstimate = newValue;
+                } else {
+                    newValObject = {
+                        originalEstimate: newValue
+                    };
+                }
+                this.setState({ loadingField: field.key, isSomethingLoading: true, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: newValObject } } }, () => {
+                    this.handleEditIssue(`${field.key}`, { originalEstimate: newValue });
+                });
+                break;
+            }
+            case UIType.Worklog: {
+                this.setState({ isSomethingLoading: true, loadingField: field.key });
+                this.postMessage({ action: 'createWorklog', site: this.state.siteDetails, worklogData: newValue, issueKey: this.state.key });
+                break;
+            }
+
+            default: {
+                let typedVal = newValue;
+
+                if (typedVal && field.valueType === ValueType.Number && typeof newValue !== 'number') {
+                    typedVal = parseFloat(newValue);
+                }
+                //NOTE: we need to update the state here so if there's an error we will detect the change and re-render with the old value
+                this.setState({ loadingField: field.key, fieldValues: { ...this.state.fieldValues, ...{ [field.key]: typedVal } } }, () => {
+
+                    if (typedVal === undefined) {
+                        typedVal = null;
+                    }
+                    this.handleEditIssue(field.key, typedVal);
+                });
+                break;
+            }
+        }
+    }
+
+    handleEditIssue = (fieldKey: string, newValue: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: fieldKey });
+        this.postMessage({
+            action: 'editIssue',
+            fields: {
+                [fieldKey]: newValue
+            }
+        });
+    }
+
+    protected handleCommentSave = (comment: string) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'comment' });
+        this.postMessage({
+            action: "comment",
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails },
+            comment: comment
+        });
+    }
+
+    handleStatusChange = (transition: Transition) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'status' });
+        this.postMessage({
+            action: "transitionIssue",
+            transition: transition,
+            issue: { key: this.state.key, siteDetails: this.state.siteDetails }
+        });
+    }
+
+    handleOpenWorklogEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'worklog') {
+            this.setState({ currentInlineDialog: 'worklog', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleOpenWatchesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'watches') {
+            this.setState({ currentInlineDialog: 'watches', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+
+    }
+
+    handleOpenVotesEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'votes') {
+            this.setState({ currentInlineDialog: 'votes', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleOpenAttachmentEditor = () => {
+        // Note: we set isSomethingLoading: true to disable all fields while the form is open
+        if (this.state.currentInlineDialog !== 'attachment') {
+            this.setState({ currentInlineDialog: 'attachment', isSomethingLoading: true });
+        } else {
+            this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        }
+    }
+
+    handleInlineDialogClose = () => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+    }
+
+    handleInlineDialogSave = (field: FieldUI, value: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false });
+        this.handleInlineEdit(field, value);
+    }
+
+    handleAddWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'addWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
+    }
+
+    handleRemoveWatcher = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
+        this.postMessage({ action: 'removeWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
+    }
+
+    handleAddVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'addVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
+    handleRemoveVote = (user: any) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
+        this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
+    }
+
+    handleAddAttachments = (files: any[]) => {
+        this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
+        const serFiles = files.map((file: any) => {
+            return {
+                lastModified: file.lastModified,
+                lastModifiedDate: file.lastModifiedDate,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                path: file.path,
+            };
+        });
+        this.postMessage({ action: 'addAttachments', site: this.state.siteDetails, issueKey: this.state.key, files: serFiles });
+    }
+
+    handleDeleteAttachment = (file: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'attachment' });
+        this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
+    }
+
+    handleRefresh = () => {
+        this.setState({ isSomethingLoading: true, loadingField: 'refresh' });
+        this.postMessage({ action: 'refreshIssue' });
+    }
+
+    handleDeleteIssuelink = (issuelink: any) => {
+        this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
+        this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
+    }
+
+    getMainPanelMarkup(): any {
+        const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];
+        let epicLinkKey: string = '';
+
+        if (epicLinkValue) {
+            if (typeof epicLinkValue === 'object' && epicLinkValue.value) {
+                epicLinkKey = epicLinkValue.value;
+            } else if (typeof epicLinkValue === 'string') {
+                epicLinkKey = epicLinkValue;
+            }
+        }
+
+        return (
+            <div>
+                {!this.state.isOnline &&
+                    <Offline />
+                }
+                {this.state.showPMF &&
+                    <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                }
+                <div className='ac-page-header'>
+                    <div className='ac-breadcrumbs'>
+                        {(epicLinkValue && epicLinkKey !== '') &&
+                            <React.Fragment>
+                                <NavItem text={epicLinkKey} onItemClick={() => this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: epicLinkKey })} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+                        {this.state.fieldValues['parent'] &&
+                            <React.Fragment>
+                                <NavItem
+                                    text={this.state.fieldValues['parent'].key}
+                                    iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
+                                    onItemClick={() => this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: this.state.fieldValues['parent'] })} />
+                                <span className='ac-breadcrumb-divider'>/</span>
+                            </React.Fragment>
+                        }
+
+                        <Tooltip content={`Created on ${format(this.state.fieldValues['created'], 'YYYY-MM-DD h:mm A')}`}>
+                            <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                        </Tooltip>
+                    </div>
+                    <h2>
+                        {this.getInputMarkup(this.state.fields['summary'], true)}
+                    </h2>
                 </div>
-              );
-            }
-            return (
-              <div style={{ maxWidth: '1200px', margin: 'auto' }}>
-                <Grid layout="fluid">
-                  <GridColumn medium={8}>
-                    {this.header(issue)}
-                    {subtasks}
-                    {epicChildren}
-                    {childIssues}
-                    {issuelinks}
-                    <h3>Comments</h3>
-                    <Comments issue={issue} isCommentLoading={this.state.isCommentLoading} onSave={this.handleSave} />
-                  </GridColumn>
+                {this.state.isErrorBannerOpen &&
+                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                }
+                {this.state.fields['description'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['description'].name}</label>
+                        {this.getInputMarkup(this.state.fields['description'], true)}
+                    </div>
+                }
+                {this.state.fieldValues['attachment'] && this.state.fieldValues['attachment'].length > 0
+                    &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
+                        <AttachmentList onDelete={this.handleDeleteAttachment} attachments={this.state.fieldValues['attachment']} />
 
-                  <GridColumn medium={4}>{this.details(issue)}</GridColumn>
-                </Grid>
-              </div>
-            );
-          }}
-        </SizeDetector>
-      </Page>
-    );
-  }
+                    </div>
+                }
+
+                {this.state.fieldValues['environment']
+                    && this.state.fieldValues['environment'].trim() !== ''
+                    &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['environment'].name}</label>
+                        {this.getInputMarkup(this.state.fields['environment'], true)}
+                    </div>
+                }
+
+                {this.state.isEpic && this.state.epicChildren.length > 0
+                    &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>Issues in this epic</label>
+                        <IssueList issues={this.state.epicChildren} onIssueClick={this.handleOpenIssue} />
+                    </div>
+                }
+
+                {this.state.fields['subtasks']
+                    && !this.state.isEpic
+                    && !this.state.fieldValues['issuetype'].subtask
+                    &&
+                    <div className='ac-vpadding'>
+                        {this.getInputMarkup(this.state.fields['subtasks'], true)}
+                        <IssueList issues={this.state.fieldValues['subtasks']} onIssueClick={this.handleOpenIssue} />
+                    </div>
+                }
+                {this.state.fields['issuelinks'] &&
+                    <div className='ac-vpadding'>
+                        {this.getInputMarkup(this.state.fields['issuelinks'], true)}
+                        <LinkedIssues issuelinks={this.state.fieldValues['issuelinks']} onIssueClick={this.handleOpenIssue} onDelete={this.handleDeleteIssuelink} />
+                    </div>
+                }
+                {this.state.fields['worklog'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['worklog'].name}</label>
+                        <Worklogs worklogs={this.state.fieldValues['worklog']} />
+                    </div>
+                }
+                {
+                    this.advancedMain()
+                }
+                {this.state.fields['comment'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['comment'].name}</label>
+                        <CommentList comments={this.state.fieldValues['comment'].comments} />
+                        {this.getInputMarkup(this.state.fields['comment'], true)}
+                    </div>
+                }
+            </div>
+        );
+    }
+
+    commonSidebar(): any {
+        const originalEstimate: string = (this.state.fieldValues['timetracking']) ? this.state.fieldValues['timetracking'].originalEstimate : '';
+        const numWatches: string = (
+            this.state.fieldValues['watches']
+            && this.state.fieldValues['watches'].watchCount > 0) ? this.state.fieldValues['watches'].watchCount : '';
+
+        const numVotes: string = (
+            this.state.fieldValues['votes']
+            && this.state.fieldValues['votes'].votes > 0) ? this.state.fieldValues['votes'].votes : '';
+
+        const allowVoting: boolean = (
+            this.state.fieldValues['reporter']
+            && this.state.currentUser
+            && this.state.fieldValues['reporter'].accountId !== this.state.currentUser.accountId
+        );
+
+        return (
+            <React.Fragment>
+                <ButtonGroup>
+                    <Tooltip content="Refesh">
+                        <Button className='ac-button'
+                            onClick={this.handleRefresh}
+                            iconBefore={<RefreshIcon label="refresh" />}
+                            isLoading={this.state.loadingField === 'refresh'} />
+                    </Tooltip>
+                    {this.state.fields['worklog'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <WorklogForm
+                                        onSave={(val: any) => this.handleInlineDialogSave(this.state.fields['worklog'], val)}
+                                        onCancel={this.handleInlineDialogClose}
+                                        originalEstimate={originalEstimate} />
+                                }
+                                isOpen={this.state.currentInlineDialog === 'worklog'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Log work">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWorklogEditor}
+                                        iconBefore={<EmojiFrequentIcon label="Log Work" />}
+                                        isLoading={this.state.loadingField === 'worklog'} />
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+                    }
+                    {this.state.fields['attachment'] &&
+                        <div className='ac-inline-dialog'>
+                            <Tooltip content="Add Attachment">
+                                <Button className='ac-button'
+                                    onClick={this.handleOpenAttachmentEditor}
+                                    iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
+                                    isLoading={this.state.loadingField === 'attachment'} />
+                            </Tooltip>
+
+                            <AttachmentsModal
+                                isOpen={this.state.currentInlineDialog === 'attachment'}
+                                onCancel={this.handleInlineDialogClose}
+                                onSave={this.handleAddAttachments} />
+                        </div>
+                    }
+                    {this.state.fields['watches'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <WatchesForm
+                                        onFetchUsers={async (input: string) => await this.fetchUsers(input)}
+                                        onAddWatcher={this.handleAddWatcher}
+                                        onRemoveWatcher={this.handleRemoveWatcher}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        watches={this.state.fieldValues['watches']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'watches'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Watch options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenWatchesEditor}
+                                        iconBefore={
+                                            this.state.fieldValues['watches'].isWatching
+                                                ? <WatchFilledIcon label="Watches" />
+                                                : <WatchIcon label="Watches" />
+                                        }
+                                        isLoading={this.state.loadingField === 'watches'} >
+                                        {numWatches}
+                                    </Button>
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+
+                    }
+                    {this.state.fields['votes'] &&
+                        <div className='ac-inline-dialog'>
+                            <InlineDialog
+                                content={
+                                    <VotesForm
+                                        onAddVote={this.handleAddVote}
+                                        onRemoveVote={this.handleRemoveVote}
+                                        currentUser={this.state.currentUser}
+                                        onClose={this.handleInlineDialogClose}
+                                        allowVoting={allowVoting}
+                                        votes={this.state.fieldValues['votes']} />
+
+                                }
+                                isOpen={this.state.currentInlineDialog === 'votes'}
+                                onClose={this.handleInlineDialogClose}
+                                placement='left-start'
+                            >
+                                <Tooltip content="Vote options">
+                                    <Button className='ac-button'
+                                        onClick={this.handleOpenVotesEditor}
+                                        iconBefore={
+                                            this.state.fieldValues['votes'].hasVoted
+                                                ? <StarFilledIcon label="Votes" />
+                                                : <StarIcon label="Votes" />
+                                        }
+                                        isLoading={this.state.loadingField === 'votes'}>
+                                        {numVotes}
+                                    </Button>
+                                </Tooltip>
+                            </InlineDialog>
+                        </div>
+                    }
+                    <Tooltip content="Start work on issue">
+                        <Button className='ac-button'
+                            onClick={this.handleStartWorkOnIssue}
+                            iconBefore={<VidPlayIcon label="Start work" />}
+                            isLoading={false}>
+                            Start work
+                                    </Button>
+                    </Tooltip>
+                </ButtonGroup>
+                <div className='ac-vpadding'>
+                    <label className='ac-field-label'>{this.state.fields['status'].name}</label>
+                    <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
+                </div>
+                {this.state.fields['assignee'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['assignee'].name}</label>
+                        {this.getInputMarkup(this.state.fields['assignee'], true)}
+                    </div>
+                }
+                {this.state.fields['reporter'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['reporter'].name}</label>
+                        {this.getInputMarkup(this.state.fields['reporter'], true)}
+                    </div>
+                }
+                {this.state.fields['labels'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['labels'].name}</label>
+                        {this.getInputMarkup(this.state.fields['labels'], true)}
+                    </div>
+                }
+                {this.state.fields['priority'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['priority'].name}</label>
+                        {this.getInputMarkup(this.state.fields['priority'], true)}
+                    </div>
+                }
+                {this.state.fields['components'] &&
+                    <div className='ac-vpadding' onClick={(e: any) => e.stopPropagation()}>
+                        <label className='ac-field-label'>{this.state.fields['components'].name}</label>
+                        {this.getInputMarkup(this.state.fields['components'], true)}
+                    </div>
+                }
+                {this.state.fields['fixVersions'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['fixVersions'].name}</label>
+                        {this.getInputMarkup(this.state.fields['fixVersions'], true)}
+                    </div>
+                }
+
+            </React.Fragment>
+        );
+    }
+
+    advancedSidebar(): any {
+        let markups: any[] = [];
+
+        this.advancedSidebarFields.forEach(field => {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
+                if (field.uiType === UIType.Timetracking) {
+                    field.name = "Original estimate";
+                }
+                markups.push(
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        {this.getInputMarkup(field, true)}
+                    </div>
+                );
+            }
+
+        });
+
+        if (this.state.recentPullRequests && this.state.recentPullRequests.length > 0) {
+            markups.push(<div className='ac-vpadding'>
+                <label className='ac-field-label'>Recent pull requests</label>
+                {this.state.recentPullRequests.map(pr => {
+                    return <PullRequests pullRequests={this.state.recentPullRequests} onClick={(pr: any) => this.postMessage({ action: 'openPullRequest', prHref: pr.url })} />;
+                })}
+            </div>);
+        }
+
+        return markups;
+    }
+
+    advancedMain(): any {
+        let markups: any[] = [];
+
+        this.advancedMainFields.forEach(field => {
+            if (field.advanced && field.uiType !== UIType.NonEditable) {
+                markups.push(
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{field.name}</label>
+                        {this.getInputMarkup(field, true)}
+                    </div>
+                );
+            }
+
+        });
+
+        return markups;
+    }
+
+    public render() {
+        if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
+            this.postMessage({ action: 'refreshIssue' });
+            return <AtlLoader />;
+        }
+
+        return (
+            <Page>
+                <SizeDetector>
+                    {(size: SizeMetrics) => {
+                        if (size.width < 800) {
+                            return (
+                                <div style={{ marginTop: '20px' }}>
+                                    {this.getMainPanelMarkup()}
+                                    {this.commonSidebar()}
+                                    <Collapsible
+                                        trigger='show more'
+                                        triggerWhenOpen='show less'
+                                        triggerClassName='ac-collapsible-trigger'
+                                        triggerOpenedClassName='ac-collapsible-trigger'
+                                        triggerTagName='label'
+                                        easing='ease-out'
+                                        transitionTime={150}
+                                        overflowWhenOpen='visible'
+                                    >
+                                        {this.advancedSidebar()}
+                                    </Collapsible>
+                                    <div className='ac-issue-created-updated'>
+                                        {this.state.fieldValues['created'] &&
+                                            <div>Created {this.state.fieldValues['created']}</div>
+                                        }
+                                        {this.state.fieldValues['updated'] &&
+                                            <div>Updated {this.state.fieldValues['updated']}</div>
+                                        }
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div style={{ maxWidth: '1200px', margin: '20px auto 0 auto' }}>
+                                <Grid layout="fluid">
+                                    <GridColumn medium={8}>
+                                        {this.getMainPanelMarkup()}
+                                    </GridColumn>
+                                    <GridColumn medium={4}>
+                                        {this.commonSidebar()}
+                                        <Collapsible
+                                            trigger='show more'
+                                            triggerWhenOpen='show less'
+                                            triggerClassName='ac-collapsible-trigger'
+                                            triggerOpenedClassName='ac-collapsible-trigger'
+                                            triggerTagName='label'
+                                            easing='ease-out'
+                                            transitionTime={150}
+                                            overflowWhenOpen='visible'
+                                        >
+                                            {this.advancedSidebar()}
+                                        </Collapsible>
+                                        <div className='ac-issue-created-updated'>
+                                            {this.state.fieldValues['created'] &&
+                                                <div>Created {`${distanceInWordsToNow(this.state.fieldValues['created'])} ago`}</div>
+                                            }
+                                            {this.state.fieldValues['updated'] &&
+                                                <div>Updated {`${distanceInWordsToNow(this.state.fieldValues['updated'])} ago`}</div>
+                                            }
+                                        </div>
+                                    </GridColumn>
+                                </Grid>
+                            </div>
+                        );
+                    }}
+                </SizeDetector>
+            </Page>
+        );
+    }
 }

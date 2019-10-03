@@ -1,6 +1,16 @@
 'use strict';
 
-import { AccessibleResource } from "../atlclients/authInfo";
+import { AccessibleResourceV1, emptyAccessibleResourceV1 } from "../atlclients/authInfo";
+
+export enum SettingSource {
+    JiraIssue = 'jiraIssue',
+    BBPullRequest = 'bbPullRequest',
+    BBPipeline = 'bbPipeline',
+    BBIssue = 'bbIssue',
+    JiraAuth = 'jiraAuth',
+    BBAuth = 'bbAuth',
+    Default = 'default'
+}
 
 export enum OutputLevel {
     Silent = 'silent',
@@ -9,7 +19,7 @@ export enum OutputLevel {
     Debug = 'debug'
 }
 
-export interface WorkingProject {
+export interface WorkingProjectV1 {
     name: string;
     id: string;
     key: string;
@@ -18,30 +28,38 @@ export interface WorkingProject {
 export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles: boolean;
+    charlesCertPath: string;
+    charlesDebugOnly: boolean;
     offlineMode: boolean;
     showWelcomeOnInstall: boolean;
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
+    enableUIWS: boolean;
 
 }
 
 export interface JiraConfig {
-    workingProject: WorkingProject;
-    workingSite: AccessibleResource;
+    enabled: boolean;
+    workingProject: WorkingProjectV1;
+    workingSite: AccessibleResourceV1;
+    lastCreateSiteAndProject: SiteIdAndProjectKey;
     explorer: JiraExplorer;
     issueMonitor: JiraIssueMonitor;
     statusbar: JiraStatusBar;
     hover: JiraHover;
-    customJql: SiteJQL[];
+    customJql: SiteJQLV1[];
+    jqlList: JQLEntry[];
     todoIssues: TodoIssues;
 }
 
+export type SiteIdAndProjectKey = {
+    siteId: string;
+    projectKey: string;
+};
 export interface JiraStatusBar {
     enabled: boolean;
     showProduct: boolean;
     showUser: boolean;
-    showSite: boolean;
-    showProject: boolean;
     showLogin: boolean;
 }
 
@@ -51,6 +69,7 @@ export interface JiraIssueMonitor {
 
 export interface JiraExplorer {
     enabled: boolean;
+    monitorEnabled: boolean;
     showOpenIssues: boolean;
     openIssueJql: string;
     showAssignedIssues: boolean;
@@ -62,9 +81,9 @@ export interface JiraHover {
     enabled: boolean;
 }
 
-export interface SiteJQL {
+export interface SiteJQLV1 {
     siteId: string;
-    jql: JQLEntry[];
+    jql: JQLEntryV1[];
 }
 
 export interface TodoIssues {
@@ -77,9 +96,19 @@ export interface JQLEntry {
     enabled: boolean;
     name: string;
     query: string;
+    siteId: string;
+    monitor: boolean;
+}
+
+export interface JQLEntryV1 {
+    id: string;
+    enabled: boolean;
+    name: string;
+    query: string;
 }
 
 export interface BitbucketConfig {
+    enabled: boolean;
     explorer: BitbucketExplorer;
     statusbar: BitbucketStatusBar;
     contextMenus: BitbucketContextMenus;
@@ -135,44 +164,25 @@ export interface BitbucketContextMenus {
     enabled: boolean;
 }
 
-export const emptyWorkingSite: AccessibleResource = {
-    name: '',
-    id: '',
-    scopes: [],
-    avatarUrl: '',
-    baseUrlSuffix: 'atlassian.net'
-};
-
-export function isEmptySite(s: AccessibleResource): boolean {
-    return ((s.name === undefined || s.name === '')
-        && (s.id === undefined || s.id === '')
-        && (s.avatarUrl === undefined || s.avatarUrl === '')
-        && (s.scopes === undefined || s.scopes === []))
-        ;
-}
-
-export const emptyWorkingProject: WorkingProject = {
+export const emptyWorkingProjectV1: WorkingProjectV1 = {
     name: '',
     id: '',
     key: ''
 };
 
-export function notEmptyProject(p: WorkingProject): p is WorkingProject {
-    return (<WorkingProject>p).name !== undefined
-        && (<WorkingProject>p).name !== ''
-        && (<WorkingProject>p).id !== undefined
-        && (<WorkingProject>p).id !== ''
-        && (<WorkingProject>p).key !== undefined
-        && (<WorkingProject>p).key !== ''
+export function notEmptyProjectV1(p: WorkingProjectV1): p is WorkingProjectV1 {
+    return (<WorkingProjectV1>p).name !== undefined
+        && (<WorkingProjectV1>p).name !== ''
+        && (<WorkingProjectV1>p).id !== undefined
+        && (<WorkingProjectV1>p).id !== ''
+        && (<WorkingProjectV1>p).key !== undefined
+        && (<WorkingProjectV1>p).key !== ''
         ;
-}
-
-export function isStagingSite(s: AccessibleResource): boolean {
-    return s.baseUrlSuffix === 'jira-dev.com';
 }
 
 export const emptyJiraExplorer: JiraExplorer = {
     enabled: true,
+    monitorEnabled: true,
     showOpenIssues: true,
     openIssueJql: "",
     showAssignedIssues: true,
@@ -188,8 +198,6 @@ export const emptyJiraStatusBar: JiraStatusBar = {
     enabled: true,
     showProduct: true,
     showUser: true,
-    showSite: false,
-    showProject: false,
     showLogin: true
 };
 
@@ -200,8 +208,10 @@ export const emptyJiraHover: JiraHover = {
 export const emptyJQLEntry: JQLEntry = {
     id: "",
     enabled: true,
+    monitor: true,
     name: "",
-    query: ""
+    query: "",
+    siteId: "",
 };
 
 export const emptyTodoIssues: TodoIssues = {
@@ -210,13 +220,16 @@ export const emptyTodoIssues: TodoIssues = {
 };
 
 export const emptyJiraConfig: JiraConfig = {
-    workingProject: emptyWorkingProject,
-    workingSite: emptyWorkingSite,
+    enabled: true,
+    workingProject: emptyWorkingProjectV1,
+    workingSite: emptyAccessibleResourceV1,
+    lastCreateSiteAndProject: { siteId: "", projectKey: "" },
     explorer: emptyJiraExplorer,
     issueMonitor: emtpyIssueMonitor,
     statusbar: emptyJiraStatusBar,
     hover: emptyJiraHover,
     customJql: [],
+    jqlList: [],
     todoIssues: emptyTodoIssues
 };
 
@@ -269,6 +282,7 @@ export const emptyIssuesConfig: BitbucketIssuesConfig = {
 };
 
 export const emptyBitbucketConfig: BitbucketConfig = {
+    enabled: true,
     explorer: emptyBitbucketExplorer,
     statusbar: emptyBitbucketStatusBar,
     contextMenus: emptyBitbucketContextMenus,
@@ -279,8 +293,11 @@ export const emptyBitbucketConfig: BitbucketConfig = {
 export const emptyConfig: IConfig = {
     outputLevel: OutputLevel.Silent,
     enableCharles: false,
+    charlesCertPath: '',
+    charlesDebugOnly: false,
     offlineMode: false,
     showWelcomeOnInstall: true,
     jira: emptyJiraConfig,
-    bitbucket: emptyBitbucketConfig
+    bitbucket: emptyBitbucketConfig,
+    enableUIWS: false,
 };

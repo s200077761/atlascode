@@ -5,21 +5,20 @@ import {
   ConfigurationChangeEvent
 } from "vscode";
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { setCommandContext, CommandContext } from "../../constants";
 import { CustomJQLTree } from "./customJqlTree";
 import { Container } from '../../container';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { ProductJira } from '../../atlclients/authInfo';
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
-import { JQLEntry, SiteJQL, WorkingProject, configuration } from "../../config/configuration";
+import { JQLEntry, configuration } from "../../config/configuration";
 import { BaseTreeDataProvider } from "../Explorer";
-import { JQLTreeDataProvider } from "./jqlTreeDataProvider";
+import { IssueNode } from "../nodes/issueNode";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
   private _disposable: Disposable;
   private _jqlList: JQLEntry[];
-  private _children: JQLTreeDataProvider[];
+  private _children: CustomJQLTree[];
   private _onDidChangeTreeData = new EventEmitter<AbstractBaseNode>();
   public get onDidChangeTreeData(): Event<AbstractBaseNode> {
     return this._onDidChangeTreeData.event;
@@ -27,13 +26,12 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
   constructor() {
     super();
-    this._jqlList = this.customJqlForWorkingSite();
-    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
+    this._jqlList = this.getCustomJqlSiteList();
 
     this._children = [];
 
     this._disposable = Disposable.from(
-      Container.jiraSiteManager.onDidSiteChange(this.refresh, this),
+      Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
     );
 
     Container.context.subscriptions.push(
@@ -42,7 +40,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   onConfigurationChanged(e: ConfigurationChangeEvent) {
-    if (configuration.changed(e, 'jira.customJql') ||
+    if (configuration.changed(e, 'jira.jqlList') ||
       (configuration.changed(e, 'jira.explorer'))) {
       this.refresh();
     }
@@ -52,13 +50,21 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     return element.getTreeItem();
   }
 
-  async getChildren(element: AbstractBaseNode | undefined) {
-    if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-      return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.AuthenticateJira, title: "Login to Jira" })]);
+  async getChildren(element: IssueNode | undefined) {
+    if (!Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+      return Promise.resolve([new SimpleJiraIssueNode("Please login to Jira", { command: Commands.ShowConfigPage, title: "Login to Jira", arguments: [ProductJira] })]);
     }
 
     if (element) {
       return element.getChildren();
+    }
+
+    if (this._children.length > 0) {
+      return this._children;
+    }
+
+    if (this._jqlList.length === 0) {
+      return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
     }
 
     return this._jqlList.map((jql: JQLEntry) => {
@@ -69,35 +75,15 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   refresh() {
-    this._jqlList = this.customJqlForWorkingSite();
-    setCommandContext(CommandContext.CustomJQLExplorer, (this._jqlList.length > 0));
+    this._children.forEach(child => child.dispose());
+    this._children = [];
+    this._jqlList = this.getCustomJqlSiteList();
 
     this._onDidChangeTreeData.fire();
   }
 
-  setProject(project: WorkingProject) {
-    this._onDidChangeTreeData.fire();
-  }
-
-  customJqlForWorkingSite(): JQLEntry[] {
-    const siteJql = Container.config.jira.customJql.find((item: SiteJQL) => item.siteId === Container.jiraSiteManager.effectiveSite.id);
-
-    const base: JQLEntry[] = [];
-
-    if (Container.config.jira.explorer.showAssignedIssues) {
-      base.push({ id: "YOURS", enabled: true, name: "Your Issues", query: Container.config.jira.explorer.assignedIssueJql });
-    }
-
-    if (Container.config.jira.explorer.showOpenIssues) {
-      base.push({ id: "OPEN", enabled: true, name: "Open Issues", query: Container.config.jira.explorer.openIssueJql });
-    }
-
-    if (siteJql) {
-      return base.concat(siteJql.jql.filter((jql: JQLEntry) => {
-        return jql.enabled;
-      }));
-    }
-    return base;
+  getCustomJqlSiteList(): JQLEntry[] {
+    return Container.config.jira.jqlList.filter(jqlEntry => jqlEntry.enabled);
   }
 
   dispose() {

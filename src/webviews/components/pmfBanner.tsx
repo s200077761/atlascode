@@ -5,20 +5,23 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import Form, { FormFooter, Field } from '@atlaskit/form';
 import { RadioGroup } from '@atlaskit/radio';
-import { FieldValidators, chain } from './fieldValidators';
+import * as FieldValidators from './fieldValidators';
 
 const q1 = { id: "q1", question: "How would you feel if you could no longer use this extension?" };
 const q2 = { id: "q2", question: "(optional) How can we improve this extension for you?" };
 const q3 = { id: "q3", question: "(optional) What would you use as an alternative if this extension were no longer available?" };
 const q4 = { id: "q4", question: "(optional) What is the main benefit you receive from this extension?" };
 
-export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
+export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visible: boolean) => void, onPMFOpen: () => void, onPMFLater: () => void, onPMFNever: () => void, onPMFSubmit: (data: PMFData) => void }, { isOpen: boolean, q1Value: string | undefined }> {
     constructor(props: any) {
         super(props);
         this.state = { isOpen: false, q1Value: undefined };
     }
 
-    handleOpen = () => this.setState({ isOpen: true });
+    handleOpen = () => {
+        this.props.onPMFOpen();
+        this.setState({ isOpen: true });
+    }
     handleLater = () => {
         this.props.onPMFLater();
         this.props.onPMFVisiblity(false);
@@ -83,7 +86,7 @@ export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visib
                                             {
                                                 (fieldArgs: any) => {
                                                     return (<RadioGroup {...fieldArgs.fieldProps} options={radioItems}
-                                                        onChange={chain(fieldArgs.fieldProps.onChange, this.updateQ1)}
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.updateQ1)}
                                                     />);
                                                 }
                                             }

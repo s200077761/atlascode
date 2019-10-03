@@ -1,168 +1,135 @@
 import * as vscode from 'vscode';
-const BitbucketStrategy = require('passport-bitbucket-oauth2');
-const AtlassianStrategy = require('passport-atlassian-oauth2');
-import * as refresh from 'passport-oauth2-refresh';
 import { Logger } from '../logger';
 import * as express from 'express';
-import * as passport from 'passport';
 import * as http from 'http';
-import * as authinfo from './authInfo';
 import { Resources } from '../resources';
 import { Time } from '../util/time';
-import { ProductBitbucket, ProductJira } from './authInfo';
+import { OAuthProvider, OAuthResponse, ProductJira, ProductBitbucket, AccessibleResource, UserInfo, emptyUserInfo } from './authInfo';
+import { Disposable } from 'vscode';
+import axios, { AxiosInstance } from 'axios';
+import { URL } from 'url';
+import { JiraProdStrategy, JiraStagingStrategy, BitbucketProdStrategy, BitbucketStagingStrategy } from './strategy';
+import PCancelable from 'p-cancelable';
+import pTimeout from 'p-timeout';
+import EventEmitter from 'eventemitter3';
+import { v4 } from 'uuid';
+import { getAgent } from './charles';
 
-const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://file' : 'vscode://file';
+const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
-export class OAuthDancer {
+declare interface ResponseEvent {
+    provider: OAuthProvider;
+    strategy: any;
+    req: express.Request;
+    res: express.Response;
+}
+
+declare interface Tokens {
+    accessToken: string;
+    refreshToken: string;
+}
+
+export class OAuthDancer implements Disposable {
+    private static _instance: OAuthDancer;
+
     private _srv: http.Server | undefined;
     private _app: any;
-    private _authInfo: Map<string, authinfo.AuthInfo> = new Map();
-    private _authErrors: Map<string, string> = new Map();
-    private _authsInFlight: string[] = [];
-    private _timeoutTimers: Map<string, any> = new Map();
+    private _axios: AxiosInstance = axios.create({
+        timeout: 30 * Time.SECONDS,
+        headers: {
+            'User-Agent': 'atlascode/2.x',
+            "Accept-Encoding": "gzip, deflate"
+        }
+    });
+    private _authErrors: Map<OAuthProvider, string> = new Map();
+    private _authsInFlight: Map<OAuthProvider, PCancelable<OAuthResponse>> = new Map();
+    private _oauthResponseEventEmitter: EventEmitter = new EventEmitter();
+    private _shutdownCheck: any;
+    private _shutdownCheckInterval = 5 * Time.MINUTES;
     private _browserTimeout = 5 * Time.MINUTES;
 
-    private _bbCloudStrategy = new BitbucketStrategy.Strategy({
-        clientID: "3hasX42a7Ugka2FJja",
-        clientSecret: "st7a4WtBYVh7L2mZMU8V5ehDtvQcWs9S",
-        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloud
-    }, this.verify.bind(this));
-
-    private _bbCloudStrategyStaging = new BitbucketStrategy.Strategy({
-        clientID: "7jspxC7fgemuUbnWQL",
-        clientSecret: "sjHugFh6SVVshhVE7PUW3bgXbbQDVjJD",
-        callbackURL: "http://127.0.0.1:31415/" + authinfo.AuthProvider.BitbucketCloudStaging,
-        authorizationURL: "https://staging.bb-inf.net/site/oauth2/authorize",
-        tokenURL: "https://staging.bb-inf.net/site/oauth2/access_token",
-        userProfileURL: "https://api-staging.bb-inf.net/2.0/user"
-    }, this.verify.bind(this));
-
-    private _jiraCloudStrategy = new AtlassianStrategy({
-        clientID: 'bJChVgBQd0aNUPuFZ8YzYBVZz3X4QTe2',
-        clientSecret: 'P0sl4EwwnXUHZoZgMLi2G6jzeCS1rRI8-w8X0kPf6A1XXQRC5_-F252BhbxgeI3b',
-        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloud,
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-    }, this.verify.bind(this));
-
-    private _jiraCloudStrategyStaging = new AtlassianStrategy({
-        clientID: 'pmzXmUav3Rr5XEL0Sie7Biec0WGU8BKg',
-        clientSecret: 'u8PPS8h23z5575nWvy5fsI77J1UBw1J-IlvTgfZXV9mibpXsQF9aJcbYf7e8yeSu',
-        authorizationURL: "https://auth.stg.atlassian.com/authorize",
-        tokenURL: "https://auth.stg.atlassian.com/oauth/token",
-        profileURL: "https://api.stg.atlassian.com/me",
-        accessibleResourcesURL: 'https://api.stg.atlassian.com/oauth/token/accessible-resources',
-        callbackURL: 'http://127.0.0.1:31415/' + authinfo.AuthProvider.JiraCloudStaging,
-        scope: 'read:jira-user read:jira-work write:jira-work offline_access manage:jira-project',
-    }, this.verifyJiraStaging.bind(this));
-
-    public constructor() {
-        passport.serializeUser(function (user, done) {
-            done(null, user);
-        });
-
-        passport.deserializeUser(function (obj, done) {
-            done(null, obj);
-        });
-
-        this._jiraCloudStrategyStaging.authorizationParams = () => {
-            return {
-                audience: 'api.stg.atlassian.com',
-                prompt: 'consent',
-            };
-        };
-
-        passport.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        passport.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        passport.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-        passport.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
-        refresh.use(authinfo.AuthProvider.BitbucketCloud, this._bbCloudStrategy);
-        refresh.use(authinfo.AuthProvider.BitbucketCloudStaging, this._bbCloudStrategyStaging);
-        refresh.use(authinfo.AuthProvider.JiraCloud, this._jiraCloudStrategy);
-        refresh.use(authinfo.AuthProvider.JiraCloudStaging, this._jiraCloudStrategyStaging);
-
+    private constructor() {
         this._app = this.createApp();
+    }
+
+    public static get Instance(): OAuthDancer {
+        return this._instance || (this._instance = new this());
+    }
+
+    dispose() {
+        this.forceShutdownAll();
+    }
+
+    private getAuthorizeURL(provider: OAuthProvider, state: string): string {
+        let finalUrl = '';
+
+        switch (provider) {
+            case OAuthProvider.JiraCloud: {
+                const url = new URL(JiraProdStrategy.authorizationURL);
+                url.searchParams.append('client_id', JiraProdStrategy.clientID);
+                url.searchParams.append('redirect_uri', JiraProdStrategy.callbackURL);
+                url.searchParams.append('response_type', 'code');
+                url.searchParams.append('scope', JiraProdStrategy.scope);
+                url.searchParams.append('audience', JiraProdStrategy.authParams.audience);
+                url.searchParams.append('prompt', JiraProdStrategy.authParams.prompt);
+                url.searchParams.append('state', state);
+
+                finalUrl = url.toString();
+                break;
+            }
+            case OAuthProvider.JiraCloudStaging: {
+                const url = new URL(JiraStagingStrategy.authorizationURL);
+                url.searchParams.append('client_id', JiraStagingStrategy.clientID);
+                url.searchParams.append('redirect_uri', JiraStagingStrategy.callbackURL);
+                url.searchParams.append('response_type', 'code');
+                url.searchParams.append('scope', JiraStagingStrategy.scope);
+                url.searchParams.append('audience', JiraStagingStrategy.authParams.audience);
+                url.searchParams.append('prompt', JiraStagingStrategy.authParams.prompt);
+                url.searchParams.append('state', state);
+
+                finalUrl = url.toString();
+                break;
+            }
+            case OAuthProvider.BitbucketCloud: {
+                const url = new URL(BitbucketProdStrategy.authorizationURL);
+                url.searchParams.append('client_id', BitbucketProdStrategy.clientID);
+                url.searchParams.append('response_type', 'code');
+                url.searchParams.append('state', state);
+
+                finalUrl = url.toString();
+                break;
+            }
+            case OAuthProvider.BitbucketCloudStaging: {
+                const url = new URL(BitbucketStagingStrategy.authorizationURL);
+                url.searchParams.append('client_id', BitbucketStagingStrategy.clientID);
+                url.searchParams.append('response_type', 'code');
+                url.searchParams.append('state', state);
+
+                finalUrl = url.toString();
+                break;
+            }
+        }
+
+        return finalUrl;
     }
 
     private createApp(): any {
         let app = express();
-        app.use(passport.initialize());
-        app.use(passport.session());
 
-        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloud,
-            passport.authenticate(authinfo.AuthProvider.BitbucketCloud),
-            function (req, res) {
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
-
-        app.get('/auth/' + authinfo.AuthProvider.BitbucketCloudStaging,
-            passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging),
-            function (req, res) {
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
-
-        app.get('/auth/' + authinfo.AuthProvider.JiraCloud,
-            passport.authenticate(authinfo.AuthProvider.JiraCloud),
-            function (req, res) {
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
-
-        app.get('/auth/' + authinfo.AuthProvider.JiraCloudStaging,
-            passport.authenticate(authinfo.AuthProvider.JiraCloudStaging),
-            function (req, res) {
-                // The request will be redirected to Bitbucket for authentication, so this
-                // function will not be called.
-            });
-
-        app.get('/' + authinfo.AuthProvider.BitbucketCloud, passport.authenticate(authinfo.AuthProvider.BitbucketCloud, { failureRedirect: '/error' }), (req, res) => {
-
-            res.send(Resources.html.get('authSuccessHtml')!({
-                product: ProductBitbucket,
-                vscodeurl: vscodeurl
-            }));
-            this.shutdown(authinfo.AuthProvider.BitbucketCloud);
+        app.get('/' + OAuthProvider.BitbucketCloud, (req, res) => {
+            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.BitbucketCloud, strategy: BitbucketProdStrategy, req: req, res: res });
         });
 
-        app.get('/' + authinfo.AuthProvider.BitbucketCloudStaging, passport.authenticate(authinfo.AuthProvider.BitbucketCloudStaging, { failureRedirect: '/error' }), (req, res) => {
-
-            res.send(Resources.html.get('authSuccessHtml')!({
-                product: ProductBitbucket,
-                vscodeurl: vscodeurl
-            }));
-            this.shutdown(authinfo.AuthProvider.BitbucketCloudStaging);
+        app.get('/' + OAuthProvider.BitbucketCloudStaging, (req, res) => {
+            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.BitbucketCloudStaging, strategy: BitbucketStagingStrategy, req: req, res: res });
         });
 
-        app.get('/' + authinfo.AuthProvider.JiraCloud, passport.authenticate(authinfo.AuthProvider.JiraCloud, { failureRedirect: '/error' }), (req, res) => {
-
-            res.send(Resources.html.get('authSuccessHtml')!({
-                product: ProductJira,
-                vscodeurl: vscodeurl
-            }));
-            this.shutdown(authinfo.AuthProvider.JiraCloud);
+        app.get('/' + OAuthProvider.JiraCloud, (req, res) => {
+            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.JiraCloud, strategy: JiraProdStrategy, req: req, res: res });
         });
 
-        app.get('/' + authinfo.AuthProvider.JiraCloudStaging, passport.authenticate(authinfo.AuthProvider.JiraCloudStaging, { failureRedirect: '/error' }), (req, res) => {
-
-            res.send(Resources.html.get('authSuccessHtml')!({
-                product: ProductJira,
-                vscodeurl: vscodeurl
-            }));
-            this.shutdown(authinfo.AuthProvider.JiraCloudStaging);
-
-        });
-
-        app.get('/error', (req, res) => {
-            // NOTE: If this fires, it means something went very wrong inside of passort or our verify method.
-            // At this point we have no option but to shut everyone down!
-            Logger.debug("got authentication error", req.query);
-            res.send(Resources.html.get('authFailureHtml')!({
-                errMessage: "We weren't able to authorize your account.",
-                actionMessage: 'Give it a moment and try again.',
-                vscodeurl: vscodeurl
-            }));
-            this.forceShutdownAll();
+        app.get('/' + OAuthProvider.JiraCloudStaging, (req, res) => {
+            this._oauthResponseEventEmitter.emit('response', { provider: OAuthProvider.JiraCloudStaging, strategy: JiraStagingStrategy, req: req, res: res });
         });
 
         app.get('/timeout', (req, res) => {
@@ -174,147 +141,246 @@ export class OAuthDancer {
                 actionMessage: 'Please try again.',
                 vscodeurl: vscodeurl
             }));
-            this.shutdown(req.query.provider);
         });
 
         return app;
     }
 
-    private verify(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        let resources: authinfo.AccessibleResource[] = [];
+    public async doDance(provider: OAuthProvider): Promise<OAuthResponse> {
+        const currentlyInflight = this._authsInFlight.get(provider);
+        if (currentlyInflight) {
+            currentlyInflight.cancel(`Authentication for ${provider} has been cancelled.`);
+            this._authsInFlight.delete(provider);
+        }
 
-        const isBitbucketStaging: boolean = (profile.profileUrl && profile.profileUrl.indexOf('bb-inf.net') !== -1) ? true : false;
+        const state = v4();
+        const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
+            const myState = state;
+            const responseListener = async (e: ResponseEvent) => {
+                const product = (e.provider.startsWith('jira')) ? ProductJira : ProductBitbucket;
 
-        if (profile.accessibleResources) {
-            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
-                resources.push(resource);
+                if (e.req.query && e.req.query.code && e.req.query.state && e.req.query.state === myState) {
+                    try {
+                        const agent = getAgent();
+                        let tokens: Tokens = { accessToken: "", refreshToken: "" };
+                        let accessibleResources: AccessibleResource[] = [];
+                        let user: UserInfo = emptyUserInfo;
+
+                        if (product === ProductJira) {
+                            tokens = await this.getJiraTokens(e.strategy, e.req.query.code, agent);
+                            accessibleResources = await this.getJiraResources(e.strategy, tokens.accessToken, agent);
+                            if (accessibleResources.length > 0) {
+                                user = await this.getJiraUser(e.provider, tokens.accessToken, accessibleResources[0], agent);
+                            } else {
+                                throw new Error(`No accessible resources found for ${provider}`);
+                            }
+
+                        } else {
+                            tokens = await this.getBitbucketTokens(e.strategy, e.req.query.code, agent);
+                            user = await this.getBitbucketUser(e.strategy, tokens.accessToken, agent);
+                        }
+
+                        this._authsInFlight.delete(e.provider);
+
+                        e.res.send(Resources.html.get('authSuccessHtml')!({
+                            product: product,
+                            vscodeurl: vscodeurl
+                        }));
+
+                        const oauthResponse: OAuthResponse = {
+                            access: tokens.accessToken,
+                            refresh: tokens.refreshToken,
+                            user: user,
+                            accessibleResources: accessibleResources
+                        };
+
+                        resolve(oauthResponse);
+
+                    } catch (err) {
+                        this._authsInFlight.delete(e.provider);
+
+                        e.res.send(Resources.html.get('authFailureHtml')!({
+                            errMessage: `Error authenticating with ${provider}: ${e}`,
+                            actionMessage: 'Give it a moment and try again.',
+                            vscodeurl: vscodeurl
+                        }));
+
+                        reject(`Error authenticating with ${provider}: ${e}`);
+                    }
+                }
+            };
+
+            this._oauthResponseEventEmitter.addListener('response', responseListener);
+
+            onCancel(() => {
+                this._authsInFlight.delete(provider);
             });
-        }
-
-        let provider = profile.provider === 'atlassian' ? authinfo.AuthProvider.JiraCloud : authinfo.AuthProvider.BitbucketCloud;
-        if (isBitbucketStaging) {
-            provider = authinfo.AuthProvider.BitbucketCloudStaging;
-        }
-
-        this._authInfo.set(provider, {
-            access: accessToken,
-            refresh: refreshToken,
-            user: {
-                id: profile.id,
-                displayName: profile.displayName,
-                provider: provider
-            },
-            accessibleResources: resources
         });
 
-        return done(null, profile.id);
-    }
-
-    private verifyJiraStaging(accessToken: string, refreshToken: string, profile: any, done: any): void {
-        let resources: authinfo.AccessibleResource[] = [];
-        if (profile.accessibleResources) {
-            profile.accessibleResources.forEach((resource: authinfo.AccessibleResource) => {
-                let newresource = resource;
-                newresource.baseUrlSuffix = 'jira-dev.com';
-                resources.push(newresource);
-            });
-        }
-
-        this._authInfo.set(authinfo.AuthProvider.JiraCloudStaging, {
-            access: accessToken,
-            refresh: refreshToken,
-            user: {
-                id: profile.id,
-                displayName: profile.displayName,
-                provider: authinfo.AuthProvider.JiraCloudStaging
-            },
-            accessibleResources: resources
-        });
-
-        return done(null, profile.id);
-    }
-
-    private sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    public async doDance(provider: string): Promise<authinfo.AuthInfo> {
-        if (this._authsInFlight.includes(provider)) {
-            this.shutdown(provider);
-            await this.sleep(1 * Time.SECONDS);
-        }
-
-        this._authsInFlight.push(provider);
+        this._authsInFlight.set(provider, cancelPromise);
 
         if (!this._srv) {
             this._srv = http.createServer(this._app).listen(31415, () => console.log('server started on port 31415'));
+            this.startShutdownChecker();
         }
 
-        vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/auth/${provider}`));
-        this.startTimeoutTimer(provider);
 
-        return new Promise<authinfo.AuthInfo>((resolve, reject) => {
-            const myProvider = provider;
+        vscode.env.openExternal(vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
 
-            const checkId = setInterval(() => {
-
-                let authInfo = this._authInfo.get(myProvider);
-                let authError = this._authErrors.get(myProvider);
-
-                if (!authInfo && !authError && !this._authsInFlight.includes(myProvider)) {
-                    clearInterval(checkId);
-                    reject({ cancelled: true, message: `Authentication for ${myProvider} has been cancelled.` });
-                    return;
-                }
-
-                if (authInfo) {
-                    clearInterval(checkId);
-                    this._authInfo.delete(myProvider);
-                    resolve(authInfo);
-                    return;
-                }
-
-                if (authError) {
-                    clearInterval(checkId);
-                    this._authErrors.delete(myProvider);
-                    reject(authError);
-                    return;
-                }
-
-            }, 1 * Time.SECONDS);
-
+        return pTimeout<OAuthResponse, OAuthResponse>(cancelPromise, this._browserTimeout, (): Promise<OAuthResponse> => {
+            vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
+            return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
         });
     }
 
-    private shutdown(provider: string) {
-        let myIndex = this._authsInFlight.indexOf(provider);
-        if (myIndex > -1) {
-            this._authsInFlight.splice(myIndex, 1);
+    private async getJiraTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
+        const tokenResponse = await this._axios(strategy.tokenURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            data: JSON.stringify({
+                grant_type: 'authorization_code',
+                client_id: strategy.clientID,
+                client_secret: strategy.clientSecret,
+                code: code,
+                redirect_uri: strategy.callbackURL,
+            }),
+            httpsAgent: agent
+        });
+
+        const data = tokenResponse.data;
+        return { accessToken: data.access_token, refreshToken: data.refresh_token };
+    }
+
+    private async getBitbucketTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
+        const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
+
+        const tokenResponse = await this._axios(strategy.tokenURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Basic ${basicAuth}`
+            },
+            data: `grant_type=authorization_code&code=${code}`,
+            httpsAgent: agent
+        });
+
+        const data = tokenResponse.data;
+        return { accessToken: data.access_token, refreshToken: data.refresh_token };
+    }
+
+    private async getJiraResources(strategy: any, accessToken: string, agent?: any): Promise<AccessibleResource[]> {
+        const resources: AccessibleResource[] = [];
+
+        const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}`
+            },
+            httpsAgent: agent
+        });
+
+        resourcesResponse.data.forEach((resource: AccessibleResource) => {
+            resources.push(resource);
+        });
+
+        return resources;
+    }
+
+    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent?: any): Promise<UserInfo> {
+        let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
+        const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
+
+        const userResponse = await this._axios(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}`
+            },
+            httpsAgent: agent
+        });
+
+        const data = userResponse.data;
+
+        return {
+            id: data.accountId,
+            displayName: data.displayName,
+            email: data.emailAddress,
+            avatarUrl: data.avatarUrls["48x48"],
+        };
+    }
+
+    private async getBitbucketUser(strategy: any, accessToken: string, agent?: any): Promise<UserInfo> {
+        const userResponse = await this._axios(strategy.profileURL, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${accessToken}`
+            },
+            httpsAgent: agent
+        });
+
+        let email = 'do-not-reply@atlassian.com';
+        try {
+            const emailsResponse = await this._axios(strategy.emailsURL, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${accessToken}`
+                },
+                httpsAgent: agent
+            });
+
+            if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
+                const primary = emailsResponse.data.values.filter((val: any) => val.is_primary);
+                if (primary.length > 0) {
+                    email = primary[0].email;
+                }
+            }
+        } catch (e) {
+            //ignore
         }
 
-        const timer = this._timeoutTimers.get(provider);
-        if (timer) {
-            clearTimeout(timer);
-            this._timeoutTimers.delete(provider);
-        }
+        const userData = userResponse.data;
 
-        if (this._srv && this._authsInFlight.length < 1) {
-            this._srv.close();
-            this._srv = undefined;
-            console.log('server on port 31415 has been shutdown');
+        return {
+            id: userData.account_id,
+            displayName: userData.displayName,
+            email: email,
+            avatarUrl: userData.links.avatar.href,
+        };
+    }
+
+    private maybeShutdown() {
+        if (this._authsInFlight.entries.length < 1) {
+            if (this._shutdownCheck) {
+                clearInterval(this._shutdownCheck);
+            }
+
+            if (this._srv) {
+                this._srv.close();
+                this._srv = undefined;
+                console.log('server on port 31415 has been shutdown');
+            }
         }
     }
 
     private forceShutdownAll() {
-        this._authsInFlight.forEach(provider => {
-            const timer = this._timeoutTimers.get(provider);
-            if (timer) {
-                clearTimeout(timer);
-                this._timeoutTimers.delete(provider);
-            }
+        this._authsInFlight.forEach((promise) => {
+            promise.cancel();
         });
 
-        this._authsInFlight = [];
+        this._authsInFlight.clear();
+
+        if (this._shutdownCheck) {
+            clearInterval(this._shutdownCheck);
+        }
 
         if (this._srv) {
             this._srv.close();
@@ -323,35 +389,13 @@ export class OAuthDancer {
         }
     }
 
-    private startTimeoutTimer(provider: string) {
+    private startShutdownChecker() {
         //make sure we clear the old one in case they click multiple times
-        const oldTimer = this._timeoutTimers.get(provider);
+        const oldTimer = this._shutdownCheck;
         if (oldTimer) {
-            clearTimeout(oldTimer);
-            this._timeoutTimers.delete(provider);
+            clearInterval(oldTimer);
         }
 
-        this._timeoutTimers.set(provider, setTimeout(() => {
-            vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
-        }, this._browserTimeout));
-    }
-
-    public async refresh(authInfo: authinfo.AuthInfo): Promise<authinfo.AuthInfo> {
-        return new Promise<authinfo.AuthInfo>((resolve, reject) => {
-            refresh.requestNewAccessToken(authInfo.user.provider, authInfo.refresh, (err: Error, accessToken: string, refreshToken: string) => {
-                if (err) {
-                    Logger.debug("refresh error: " + err);
-                }
-                let newAuth: authinfo.AuthInfo = authInfo;
-                newAuth.access = accessToken;
-
-                if (newAuth.access && newAuth.access !== '') {
-                    resolve(newAuth);
-                } else {
-                    // the refresh token may have been revoked, in which case BB returns valid token info with the access token removed instead of an error.
-                    reject("invalid refresh token");
-                }
-            });
-        });
+        this._shutdownCheck = setInterval(this.maybeShutdown, this._shutdownCheckInterval);
     }
 }

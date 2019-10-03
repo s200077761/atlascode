@@ -7,8 +7,9 @@ export default class MergeChecks extends React.Component<PRData, {}> {
     }
 
     render() {
-        const openTaskCount = this.props.pr!.task_count || 0;
-        const approvalCount = this.props.pr!.participants!.filter(p => p.approved && p.user!.uuid !== this.props.currentUser!.uuid).length;
+        const openTaskCount = this.props.pr!.taskCount;
+        const approvalCount = this.props.pr!.participants!.filter(p => p.status === "APPROVED").length;
+        const needsWorkCount = this.props.pr!.participants!.filter(p => p.status === "NEEDS_WORK").length;
         let unsuccessfulBuilds = false;
         if (Array.isArray(this.props.pr!.buildStatuses) && this.props.pr!.buildStatuses.length > 0) {
             const successes = this.props.pr!.buildStatuses.filter(status => status.state === 'SUCCESSFUL');
@@ -16,6 +17,7 @@ export default class MergeChecks extends React.Component<PRData, {}> {
         }
         const mergeChecks = <React.Fragment>
             {openTaskCount > 0 && <p>️⚠️ Pull request has unresolved tasks</p>}
+            {needsWorkCount > 0 && <p>️⚠️ Pull request has been marked as - Needs work</p>}
             {approvalCount === 0 ? <p>⚠️ Pull request has no approvals</p> : <p>Pull request has {approvalCount} {approvalCount === 1 ? 'approval' : 'approvals'}</p>}
             {unsuccessfulBuilds && <p>️⚠️ Pull request has unsuccessful builds</p>}
         </React.Fragment>;

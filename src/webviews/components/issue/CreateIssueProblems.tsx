@@ -1,19 +1,20 @@
 import * as React from 'react';
 import { WebviewComponent } from "../WebviewComponent";
-import { TransformerProblems } from "../../../jira/createIssueMeta";
 import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
-import { WorkingProject, emptyWorkingProject } from '../../../config/model';
+import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/editIssueUI';
+import { Project } from '../../../jira/jira-client/model/entities';
+import { emptyProject } from '../../../jira/jira-client/model/emptyEntities';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
 interface ViewState {
     isErrorBannerOpen: boolean;
     errorDetails: any;
-    problems: TransformerProblems;
-    project: WorkingProject;
+    problems: CreateMetaTransformerProblems;
+    project: Project;
 }
 
 export default class CreateIssueProblems extends WebviewComponent<Action, Accept, {}, ViewState> {
@@ -23,11 +24,11 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
             isErrorBannerOpen: false,
             errorDetails: undefined,
             problems: {},
-            project: emptyWorkingProject
+            project: emptyProject
         };
     }
 
-    onMessageReceived(e: any): void {
+    onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
                 this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
@@ -35,12 +36,12 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
                 break;
             }
             case 'screenRefresh': {
-                console.log('got problems?', e.problems);
                 this.setState({ problems: e.problems, project: e.project, isErrorBannerOpen: false, errorDetails: undefined });
                 break;
             }
 
         }
+        return true;
     }
 
     handleDismissError = () => {
@@ -55,9 +56,9 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
             problem.nonRenderableFields.forEach(fieldProblem => {
                 issueTypeFields.push(
                     <tr>
-                        <td>{fieldProblem.field.name}</td>
-                        <td>{fieldProblem.field.key}</td>
-                        <td style={{ textAlign: 'center' }}>{String(fieldProblem.field.required)}</td>
+                        <td>{fieldProblem.name}</td>
+                        <td>{fieldProblem.key}</td>
+                        <td style={{ textAlign: 'center' }}>{String(fieldProblem.required)}</td>
                         <td>{fieldProblem.schema}</td>
                         <td>{fieldProblem.message}</td>
                     </tr>

@@ -1,8 +1,10 @@
 import { PMFData } from "../ipc/messaging";
-import { AuthInfo, AuthProvider } from "../atlclients/authInfo";
 import { Container } from "../container";
 import { format } from 'date-fns';
-import fetch from 'node-fetch';
+import axios from 'axios';
+import { pmfSubmitted } from "../analytics";
+import { Time } from "../util/time";
+import { getAgent } from "../atlclients/charles";
 
 const devPMF = {
     collectorId: "235854834",
@@ -92,72 +94,73 @@ function newPMFPayload(aaid: string, version: string, date: string, pageId: stri
 
 export async function submitPMF(pmfData: PMFData): Promise<void> {
     let aaid = await getAAID();
+    if (!aaid) {
+        // if we don't have an actual aaid, we'll send the machineId.
+        // this doesn't really matter since we're going to send off an amplitude event anyway
+        aaid = `deviceId:${Container.machineId}`;
+    }
+
     let pmfIds = Container.isDebugging ? devPMF : prodPMF;
-    if (aaid) {
-        let payload = newPMFPayload(aaid, Container.version, format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'), pmfIds.pageId, pmfIds.q1Id, pmfIds.q1Choices[pmfData.q1]);
 
-        if (pmfData.q2) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q2
-                    }
-                ],
-                id: pmfIds.q2Id
-            });
-        }
+    let payload = newPMFPayload(aaid, Container.version, format(new Date(), 'YYYY-MM-DD[T]HH:mm:ssZZ'), pmfIds.pageId, pmfIds.q1Id, pmfIds.q1Choices[pmfData.q1]);
 
-        if (pmfData.q3) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q3
-                    }
-                ],
-                id: pmfIds.q3Id
-            });
-        }
-
-        if (pmfData.q4) {
-            payload.pages[0].questions.push({
-                answers: [
-                    {
-                        text: pmfData.q4
-                    }
-                ],
-                id: pmfIds.q4Id
-            });
-        }
-
-        fetch(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${pmfIds.pmf}`
-            },
-            body: JSON.stringify(payload)
-
+    if (pmfData.q2) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q2
+                }
+            ],
+            id: pmfIds.q2Id
         });
     }
+
+    if (pmfData.q3) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q3
+                }
+            ],
+            id: pmfIds.q3Id
+        });
+    }
+
+    if (pmfData.q4) {
+        payload.pages[0].questions.push({
+            answers: [
+                {
+                    text: pmfData.q4
+                }
+            ],
+            id: pmfIds.q4Id
+        });
+    }
+
+    const transport = axios.create({
+        timeout: 10 * Time.SECONDS,
+        headers: {
+            'X-Atlassian-Token': 'no-check',
+            'x-atlassian-force-account-id': 'true',
+            "Accept-Encoding": "gzip, deflate"
+        },
+        httpsAgent: getAgent()
+    });
+
+    transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${pmfIds.pmf}`
+        },
+        data: JSON.stringify(payload)
+
+    });
+
+    pmfSubmitted(pmfData.q1).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
 }
 
 async function getAAID(): Promise<string | undefined> {
-    let authInfo: AuthInfo | undefined = undefined;
-
-    authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-    if (!authInfo) {
-        authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloud);
-    }
-    if (!authInfo) {
-        authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
-    }
-    if (!authInfo) {
-        authInfo = await Container.authManager.getAuthInfo(AuthProvider.BitbucketCloudStaging);
-    }
-
-    if (authInfo) {
-        return authInfo.user.id;
-    }
-
-    return undefined;
+    return Container.siteManager.getFirstAAID();
 }

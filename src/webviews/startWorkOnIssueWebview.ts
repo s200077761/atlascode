@@ -1,31 +1,31 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
-import { StartWorkOnIssueData, StartWorkOnIssueResult } from '../ipc/issueMessaging';
-import { Issue, emptyIssue, issueOrKey, isIssue } from '../jira/jiraModel';
-import { fetchIssue } from "../jira/fetchIssue";
+import { Action, onlineStatus } from '../ipc/messaging';
+import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Logger } from '../logger';
 import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
 import { Container } from '../container';
-import { isEmptySite } from '../config/model';
-import { providerForSite } from '../atlclients/authInfo';
-import { Commands } from '../commands';
-import { RepositoriesApi } from '../bitbucket/repositories';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { Repository, RefType, Remote } from '../typings/git';
-import { RepoData } from '../ipc/prMessaging';
+import { Repository, RefType } from '../typings/git';
+import { RepoData, BranchType } from '../ipc/prMessaging';
 import { assignIssue } from '../commands/jira/assignIssue';
-import { transitionIssue } from '../commands/jira/transitionIssue';
 import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
+import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { MinimalIssue } from '../jira/jira-client/model/entities';
+import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
+import { showIssue } from '../commands/jira/showIssue';
+import { transitionIssue } from '../jira/transitionIssue';
+import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 
-type EMIT = StartWorkOnIssueData | StartWorkOnIssueResult | HostErrorMessage;
-export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> implements InitializingWebview<issueOrKey> {
-    private _state: Issue = emptyIssue;
+const customBranchType: BranchType = { kind: "Custom", prefix: "" };
+
+export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
+    private _state: MinimalIssue = emptyMinimalIssue;
     private _issueKey: string = "";
 
     constructor(extensionPath: string) {
         super(extensionPath);
-        this.tenantId = Container.jiraSiteManager.effectiveSite.id;
     }
 
     public get title(): string {
@@ -35,48 +35,38 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         return "startWorkOnIssueScreen";
     }
 
-    async createOrShowIssue(data: issueOrKey) {
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return this._state.siteDetails;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductJira;
+    }
+
+    async createOrShowIssue(data: MinimalIssue) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    async initialize(data: issueOrKey) {
-        if (isIssue(data)) {
-            this._issueKey = data.key;
-        } else {
-            this._issueKey = data;
-        }
-
+    async initialize(data: MinimalIssue) {
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
         }
 
-        if (isIssue(data)) {
-            if (this._state.key !== data.key) {
-                this.postMessage({
-                    type: 'update',
-                    issue: emptyIssue,
-                    repoData: []
-                });
-            }
-            this.updateIssue(data);
-            return;
+        if (this._state.key !== data.key) {
+            this.postMessage({
+                type: 'update',
+                issue: emptyMinimalIssue,
+                repoData: []
+            });
         }
-
-        try {
-            const issue = await fetchIssue(data);
-            this.updateIssue(issue);
-        } catch (e) {
-            let err = new Error(`error updating issue: ${e}`);
-            Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
-        }
-
+        this.updateIssue(data);
+        return;
     }
 
-    public invalidate() {
-        this.forceUpdateIssue();
+    public async invalidate() {
+        await this.forceUpdateIssue();
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {
@@ -92,16 +82,16 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                 case 'openJiraIssue': {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        showIssue(e.issueOrKey);
                         break;
                     }
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;
-                    const linkUrl = `https://${this._state.workingSite.name}.${this._state.workingSite.baseUrlSuffix}/browse/${this._state.key}`;
+                    const linkUrl = `${this._state.siteDetails.baseLinkUrl}/browse/${this._state.key}`;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
-                    issueUrlCopiedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                    issueUrlCopiedEvent(this._state.siteDetails.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                     break;
                 }
                 case 'startWork': {
@@ -112,20 +102,19 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
                                 const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                                 await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
                             }
-                            const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
-                            const currentUserId = authInfo!.user.id;
+                            const currentUserId = issue.siteDetails.userId;
                             await assignIssue(issue, currentUserId);
-                            if (e.setupJira) {
+                            if (e.setupJira && issue.status.id !== e.transition.to.id) {
                                 await transitionIssue(issue, e.transition);
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
                             });
-                            issueWorkStartedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                            issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         }
                         catch (e) {
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                 }
@@ -150,7 +139,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         await repo.checkout(destBranch);
     }
 
-    public async updateIssue(issue: Issue) {
+    public async updateIssue(issue: MinimalIssue) {
         if (this.isRefeshing) {
             return;
         }
@@ -158,86 +147,98 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview<EMIT, Action> 
         this.isRefeshing = true;
         try {
             this._state = issue;
-            if (!isEmptySite(issue.workingSite)) {
-                this.tenantId = issue.workingSite.id;
-            }
 
             if (this._panel) {
                 this._panel.title = `Start work on Jira issue ${issue.key}`;
             }
 
-            const repoData: RepoData[] = [];
             const repos = Container.bitbucketContext
-                ? Container.bitbucketContext.getAllRepositores()
+                ? Container.bitbucketContext.getAllRepositories()
                 : [];
-            for (let i = 0; i < repos.length; i++) {
-                const r = repos[i];
-                const remotes: Remote[] = r.state.remotes.length > 0
-                    ? r.state.remotes
-                    : [{ name: 'NO_GIT_REMOTE_FOUND', isReadOnly: true }];
 
-                let repo: Bitbucket.Schema.Repository | undefined = undefined;
-                let developmentBranch = undefined;
-                let href = undefined;
-                let branchingModel: Bitbucket.Schema.BranchingModel | undefined = undefined;
-                if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                    [, repo, developmentBranch, branchingModel] = await Promise.all(
-                        [r.fetch(),
-                        RepositoriesApi.get(PullRequestApi.getBitbucketRemotes(r)[0]),
-                        RepositoriesApi.getDevelopmentBranch(PullRequestApi.getBitbucketRemotes(r)[0]),
-                        RepositoriesApi.getBranchingModel(PullRequestApi.getBitbucketRemotes(r)[0])
-                        ]);
-                    href = repo.links!.html!.href;
-                }
+            const repoData: RepoData[] = await Promise.all(repos
+                .filter(r => r.state.remotes.length > 0)
+                .map(async r => {
+                    let repo: Repo | undefined = undefined;
+                    let developmentBranch = undefined;
+                    let href = undefined;
+                    let isCloud = false;
+                    let branchTypes: BranchType[] = [];
+                    if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                        const remote = firstBitbucketRemote(r);
 
-                await repoData.push({
-                    uri: r.rootUri.toString(),
-                    href: href,
-                    remotes: remotes,
-                    defaultReviewers: [],
-                    localBranches: await Promise.all(r.state.refs.filter(ref => ref.type === RefType.Head && ref.name).map(ref => r.getBranch(ref.name!))),
-                    remoteBranches: [],
-                    developmentBranch: developmentBranch,
-                    branchingModel: branchingModel
-                });
-            }
+                        let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
+                        const bbApi = await clientForRemote(remote);
+                        [, repo, developmentBranch, branchingModel] = await Promise.all(
+                            [r.fetch(),
+                            bbApi.repositories.get(remote),
+                            bbApi.repositories.getDevelopmentBranch(remote),
+                            bbApi.repositories.getBranchingModel(remote)
+                            ]);
+                        href = repo.url;
+                        isCloud = siteDetailsForRemote(remote)!.isCloud;
+
+                        if (branchingModel && branchingModel.branch_types) {
+                            branchTypes = [...branchingModel.branch_types]
+                                .sort((a, b) => { return (a.kind.localeCompare(b.kind)); });
+                            if (branchTypes.length > 0) {
+                                branchTypes.push(customBranchType);
+                            }
+                        }
+                    }
+
+                    return {
+                        uri: r.rootUri.toString(),
+                        href: href,
+                        remotes: r.state.remotes,
+                        defaultReviewers: [],
+                        localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                        remoteBranches: [],
+                        branchTypes: branchTypes,
+                        developmentBranch: developmentBranch,
+                        isCloud: isCloud
+                    };
+                }));
+
+            let issueClone: MinimalIssue = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
-            if (!issue.status.name.toLowerCase().includes('progress')) {
-                const inProgressTransition = issue.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
+            if (!issueClone.status.name.toLowerCase().includes('progress')) {
+                const inProgressTransition = issueClone.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));
                 if (inProgressTransition) {
-                    issue.status = inProgressTransition.to;
+                    issueClone.status = inProgressTransition.to;
                 } else {
-                    const firstNonInitialTransition = issue.transitions.find(t => !t.isInitial);
-                    issue.status = firstNonInitialTransition ? firstNonInitialTransition.to : issue.status;
+                    const firstNonInitialTransition = issueClone.transitions.find(t => !t.isInitial);
+                    issueClone.status = firstNonInitialTransition ? firstNonInitialTransition.to : issueClone.status;
                 }
             }
 
+            //Pass in the modified issue but keep the original issue as-is so that we're able to see if its status has changed later
             const msg: StartWorkOnIssueData = {
                 type: 'update',
-                issue: issue,
+                issue: issueClone,
                 repoData: repoData
             };
             this.postMessage(msg);
         } catch (e) {
             let err = new Error(`error updating issue: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
     }
 
-    private async forceUpdateIssue(issue?: Issue) {
-        let key = issue !== undefined ? issue.key : this._issueKey;
+    private async forceUpdateIssue() {
+        let key = this._issueKey;
         if (key !== "") {
             try {
-                let issue = await fetchIssue(key, this._state.workingSite);
+                let issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
             }
             catch (e) {
                 Logger.error(e);
-                this.postMessage({ type: 'error', reason: e });
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             }
         }
     }

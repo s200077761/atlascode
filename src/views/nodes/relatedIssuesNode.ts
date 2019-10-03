@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import { AbstractBaseNode } from './abstractBaseNode';
 import { StaticIssuesNode } from '../jira/staticIssuesNode';
 import { IssueNode } from './issueNode';
-import { PullRequest } from '../../bitbucket/model';
+import { PullRequest, Comment, Commit } from '../../bitbucket/model';
 import { Container } from '../../container';
 import { extractIssueKeys } from '../../bitbucket/issueKeysExtractor';
-import { AuthProvider } from '../../atlclients/authInfo';
+import { ProductJira } from '../../atlclients/authInfo';
 
 export class RelatedIssuesNode extends AbstractBaseNode {
     private _delegate: StaticIssuesNode;
@@ -14,8 +14,9 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         super();
     }
 
-    public static async create(pr: PullRequest, commits: Bitbucket.Schema.Commit[], allComments: Bitbucket.Schema.Comment[]): Promise<AbstractBaseNode | undefined> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.JiraCloud) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
+    public static async create(pr: PullRequest, commits: Commit[], allComments: Comment[]): Promise<AbstractBaseNode | undefined> {
+        // TODO: [VSCODE-503] handle related issues across cloud/server
+        if (!Container.siteManager.productHasAtLeastOneSite(ProductJira) || !Container.config.bitbucket.explorer.relatedJiraIssues.enabled) {
             return undefined;
         }
         const issueKeys = await extractIssueKeys(pr, commits, allComments);

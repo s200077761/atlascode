@@ -1,45 +1,27 @@
-import { Issue, isIssue } from "../../jira/jiraIssue";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
-import { providerForSite } from "../../atlclients/authInfo";
 import { IssueNode } from "../../views/nodes/issueNode";
+import { currentUserJira } from "./currentUser";
+import { MinimalIssue, isMinimalIssue } from "../../jira/jira-client/model/entities";
 
-export async function assignIssue(param: Issue | IssueNode, accountId?: string) {
-  const issue = isIssue(param) ? param : param.issue;
-  let client = await Container.clientManager.jirarequest(issue.workingSite);
-  if (!client) {
-    return;
-  }
+export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: string) {
+  const issue = isMinimalIssue(param) ? param : param.issue;
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
   if (!accountId) {
-    const authInfo = await Container.authManager.getAuthInfo(providerForSite(issue.workingSite));
-    accountId = authInfo ? authInfo.user.id : undefined;
+    const me = await currentUserJira(issue.siteDetails);
+    accountId = me ? me.accountId : undefined;
   }
 
-  const response = await client.issue
-    .assignIssue({
-      issueIdOrKey: issue.id,
-      body: {
-        accountId: accountId
-      }
-    });
+  const response = await client.assignIssue(issue.id, accountId);
   Logger.info(response);
   Container.jiraExplorer.refresh();
 }
 
-export async function unassignIssue(issue: Issue) {
-  const client = await Container.clientManager.jirarequest(issue.workingSite);
-  if (!client) {
-    return;
-  }
+export async function unassignIssue(issue: MinimalIssue) {
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
-  const response = await client.issue
-    .assignIssue({
-      issueIdOrKey: issue.id,
-      body: {
-        accountId: undefined
-      }
-    });
+  const response = await client.assignIssue(issue.id, undefined);
   Logger.info(response);
   Container.jiraExplorer.refresh();
 }

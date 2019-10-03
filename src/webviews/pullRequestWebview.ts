@@ -1,29 +1,28 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits } from '../bitbucket/model';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { PRData, CheckoutResult } from '../ipc/prMessaging';
-import { Action, HostErrorMessage, onlineStatus } from '../ipc/messaging';
+import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue, ApprovalStatus } from '../bitbucket/model';
+import { PRData } from '../ipc/prMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
-import { fetchIssue } from '../jira/fetchIssue';
 import { Commands } from '../commands';
-import { Issue, isIssue } from '../jira/jiraModel';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
 import { Container } from '../container';
-import { RepositoriesApi } from '../bitbucket/repositories';
-import { isOpenPipelineBuild } from '../ipc/pipelinesActions';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
+import { isOpenBuildStatus } from '../ipc/prActions';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { AuthProvider } from '../atlclients/authInfo';
-import { issuesForJQL } from '../jira/issuesForJql';
-import { transitionIssue } from '../commands/jira/transitionIssue';
+import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
+import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
+import { showIssue } from '../commands/jira/showIssue';
+import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { transitionIssue } from '../jira/transitionIssue';
+import { issueForKey } from '../jira/issueForKey';
+import pSettle from "p-settle";
 
 interface PRState {
     prData: PRData;
@@ -32,9 +31,8 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', currentBranch: '', relatedJiraIssues: [] } };
-type Emit = PRData | CheckoutResult | HostErrorMessage;
-export class PullRequestWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<PullRequest> {
+const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
+export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
 
@@ -53,6 +51,18 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return "pullRequestDetailsScreen";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._pr) {
+            return siteDetailsForRemote(this._pr.remote);
+        }
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
+    }
+
     initialize(data: PullRequest) {
         this._pr = data;
 
@@ -61,7 +71,6 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             return;
         }
 
-        this.updatePullRequest(data);
         Container.pmfStats.touchActivity();
     }
 
@@ -71,70 +80,82 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
             return;
         }
 
-        if (this._state.repository && this._state.remote && this._state.prData.pr) {
-            this.forceUpdatePullRequest();
-        } else if (this._pr !== undefined) {
-            await this.postInitialState(this._pr);
-            await this.postAugmentedState(this._pr);
+        if (this._pr && this._panel) {
+            await this.updatePullRequest();
         }
     }
 
-    private validatePRState(s: PRState): boolean {
-        return !!s.repository
-            && !!s.remote
-            && !!s.prData.pr
-            && !!s.prData.currentUser
-            && !!s.prData.commits
-            && !!s.prData.comments;
-    }
-
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
-                case 'approve': {
+            switch (msg.action) {
+                case 'updateApproval': {
                     handled = true;
-                    try {
-                        await this.approve();
-                    } catch (e) {
-                        Logger.error(new Error(`error approving PR: ${e}`));
-                        this.postMessage({ type: 'error', reason: e });
+                    if (isUpdateApproval(msg)) {
+                        try {
+                            await this.updateApproval(msg.status);
+                        } catch (e) {
+                            Logger.error(new Error(`error approving PR: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
                     }
                     break;
                 }
                 case 'merge': {
                     handled = true;
-                    if (isMerge(e)) {
+                    if (isMerge(msg)) {
                         try {
-                            await this.merge(e);
+                            await this.merge(msg);
                         } catch (e) {
                             Logger.error(new Error(`error merging pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
                 }
                 case 'comment': {
-                    if (isPostComment(e)) {
+                    if (isPostComment(msg)) {
                         handled = true;
                         try {
-                            await this.postComment(e.content, e.parentCommentId);
+                            await this.postComment(msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteComment': {
+                    if (isDeleteComment(msg)) {
+                        try {
+                            this.deleteComment(msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'editComment': {
+                    if (isEditComment(msg)) {
+                        try {
+                            this.editComment(msg.content, msg.commentId);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing comment on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
                 }
                 case 'checkout': {
-                    if (isCheckout(e)) {
+                    if (isCheckout(msg)) {
                         handled = true;
                         try {
-                            await this.checkout(e.branch, e.isSourceBranch);
+                            await this.checkout(msg.branch, msg.isSourceBranch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
                     break;
@@ -145,31 +166,53 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                     break;
                 }
                 case 'openJiraIssue': {
-                    if (isOpenJiraIssue(e)) {
+                    if (isOpenJiraIssue(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowIssue, e.issueOrKey);
+                        showIssue(msg.issueOrKey);
                         break;
                     }
                 }
                 case 'openBitbucketIssue': {
-                    if (isOpenBitbucketIssueAction(e)) {
+                    if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
                     }
                     break;
                 }
-                case 'openPipelineBuild': {
-                    if (isOpenPipelineBuild(e)) {
+                case 'openBuildStatus': {
+                    if (isOpenBuildStatus(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: e.pipelineUUID } as PipelineInfo);
+                        if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
+                            const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                        } else {
+                            vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
+                        }
                         break;
                     }
                 }
                 case 'copyPullRequestLink': {
                     handled = true;
-                    const linkUrl = this._state.prData.pr!.links!.html!.href!;
+                    const linkUrl = this._state.prData.pr!.url;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied pull request link to clipboard - ${linkUrl}`);
+                    break;
+                }
+                case 'fetchUsers': {
+                    if (isFetchUsers(msg)) {
+                        handled = true;
+                        try {
+                            const bbApi = await clientForRemote(msg.remote);
+                            const reviewers = await bbApi.pullrequests.getReviewers(msg.remote, msg.query);
+                            if (reviewers.length === 0) {
+                                reviewers.push(...this._pr!.data.participants);
+                            }
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
                     break;
                 }
             }
@@ -178,106 +221,91 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return handled;
     }
 
-    private async updatePullRequest(pr: PullRequest) {
+    private async updatePullRequest() {
         if (this.isRefeshing) {
             return;
         }
-
         try {
-
-            if (this._panel) { this._panel.title = `Pull Request #${pr.data.id}`; }
-
-            if (this.validatePRState(this._state)) {
-                this._state.prData.type = 'update';
-                this._state.prData.currentBranch = pr.repository.state.HEAD!.name!;
-                this.postMessage(this._state.prData);
-                this.isRefeshing = false;
-                return;
-            }
-
-            await this.postInitialState(pr);
-            await this.postAugmentedState(pr);
+            this.isRefeshing = true;
+            await this.postCompleteState();
         } catch (e) {
             let err = new Error(`error updating pull request: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating  pull request: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
     }
 
-    private async postInitialState(pr: PullRequest) {
-        const isStagingRepo = pr.remote && RepositoriesApi.isStagingUrl(pr.remote.fetchUrl!);
-        const currentUser = await Container.bitbucketContext.currentUser(isStagingRepo);
-        this._state = {
-            repository: pr.repository,
-            remote: pr.remote,
-            sourceRemote: pr.sourceRemote || pr.remote,
-            prData: {
-                type: 'update',
-                pr: pr.data,
-                currentUser: currentUser,
-                currentBranch: pr.repository.state.HEAD!.name!,
-                commits: undefined,
-                comments: undefined,
-                relatedJiraIssues: undefined,
-                relatedBitbucketIssues: undefined,
-                mainIssue: undefined,
-                errors: undefined
-            }
-        };
+    private async postCompleteState() {
+        if (!this._pr || !this._panel) {
+            return;
+        }
+        if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
 
-        this.postMessage(this._state.prData);
-    }
-
-    private async postAugmentedState(pr: PullRequest) {
+        const bbApi = await clientForRemote(this._pr.remote);
         const prDetailsPromises = Promise.all([
-            PullRequestApi.getCommits(pr),
-            PullRequestApi.getComments(pr),
-            PullRequestApi.getBuildStatuses(pr)
+            bbApi.pullrequests.get(this._pr),
+            bbApi.pullrequests.getCommits(this._pr),
+            bbApi.pullrequests.getComments(this._pr),
+            bbApi.pullrequests.getBuildStatuses(this._pr),
+            bbApi.pullrequests.getMergeStrategies(this._pr)
         ]);
-        const [commits, comments, buildStatuses] = await prDetailsPromises;
-
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies] = await prDetailsPromises;
+        this._pr = updatedPR;
         const issuesPromises = Promise.all([
-            this.fetchRelatedJiraIssues(pr, commits, comments),
-            this.fetchRelatedBitbucketIssues(pr, commits, comments),
-            this.fetchMainIssue(pr)
+            this.fetchRelatedJiraIssues(this._pr, commits, comments),
+            this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
+            this.fetchMainIssue(this._pr)
         ]);
-        const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
 
-        this._state.prData = {
-            ...this._state.prData,
-            ...{
+        const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
+        const currentUser = await Container.bitbucketContext.currentUser(this._pr.remote);
+        this._state = {
+            remote: this._pr.remote,
+            sourceRemote: this._pr.sourceRemote,
+            repository: this._pr.repository,
+            prData: {
+                pr: this._pr.data,
+                remote: this._pr.remote,
+                currentUser: currentUser,
+                currentBranch: this._pr.repository.state.HEAD!.name!,
                 type: 'update',
                 commits: commits.data,
                 comments: comments.data,
                 relatedJiraIssues: relatedJiraIssues,
-                relatedBitbucketIssues: relatedBitbucketIssues,
+                relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
                 mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
-                errors: (commits.next || comments.next) ? 'You may not seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
+                mergeStrategies: mergeStrategies,
+                errors: (commits.next || comments.next) ? 'You may not be seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
             }
         };
-
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<Issue | Bitbucket.Schema.Issue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssueData | undefined> {
         try {
-            const branchAndTitleText = `${pr.data.source!.branch!.name!} ${pr.data.title!}`;
+            const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
-            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
-                const jiraIssueKeys = await parseJiraIssueKeys(branchAndTitleText);
-                const jiraIssues = jiraIssueKeys.length > 0 ? await issuesForJQL(`issuekey in (${jiraIssueKeys.join(',')})`) : [];
-                if (jiraIssues.length > 0) {
-                    return jiraIssues[0];
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
+                const jiraIssueKeys = parseJiraIssueKeys(branchAndTitleText);
+                if (jiraIssueKeys.length > 0) {
+                    try {
+                        return await issueForKey(jiraIssueKeys[0]);
+                    } catch (e) {
+                        Logger.debug('error fetching main jira issue: ', e);
+                    }
                 }
             }
 
-            const bbIssueKeys = await parseBitbucketIssueKeys(branchAndTitleText);
-            const bbIssues = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, bbIssueKeys);
-            if (bbIssues.length > 0) {
-                return bbIssues[0];
+            const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
+            const bbApi = await clientForRemote(pr.remote);
+            if (bbApi.issues) {
+                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.repository, bbIssueKeys);
+                if (bbIssues.length > 0) {
+                    return bbIssues[0].data;
+                }
             }
         }
         catch (e) {
@@ -286,26 +314,45 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Issue[]> {
-        let result: Issue[] = [];
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
+        let foundIssues: MinimalIssue[] = [];
         try {
-            if (await Container.authManager.isAuthenticated(AuthProvider.JiraCloud)) {
+            if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
-                result = await Promise.all(issueKeys.map(async (issueKey) => await fetchIssue(issueKey)));
+
+                const jqlPromises: Promise<MinimalIssue>[] = [];
+                issueKeys.forEach(key => {
+                    jqlPromises.push(
+                        (async () => {
+                            return await issueForKey(key);
+                        })()
+                    );
+                });
+
+                let issueResults = await pSettle<MinimalIssue>(jqlPromises);
+
+                issueResults.forEach(result => {
+                    if (result.isFulfilled) {
+                        foundIssues.push(result.value);
+                    }
+                });
             }
         }
         catch (e) {
-            result = [];
+            foundIssues = [];
             Logger.debug('error fetching related jira issues: ', e);
         }
-        return result;
+        return foundIssues;
     }
 
-    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<Bitbucket.Schema.Issue[]> {
-        let result: Bitbucket.Schema.Issue[] = [];
+    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<BitbucketIssue[]> {
+        let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
-            result = await BitbucketIssuesApi.getIssuesForKeys(pr.repository, issueKeys);
+            const bbApi = await clientForRemote(pr.remote);
+            if (bbApi.issues) {
+                result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);
+            }
         }
         catch (e) {
             result = [];
@@ -314,34 +361,50 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
         return result;
     }
 
-    private async approve() {
-        await PullRequestApi.approve({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
-        prApproveEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        await this.forceUpdatePullRequest();
+    private async updateApproval(status: ApprovalStatus) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, status);
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prApproveEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
+        await this.updatePullRequest();
     }
 
     private async merge(m: Merge) {
-        await PullRequestApi.merge(
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.merge(
             { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
             m.closeSourceBranch,
-            m.mergeStrategy
+            m.mergeStrategy,
+            m.commitMessage
         );
-        prMergeEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+
+        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+
+        if (site) {
+            prMergeEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
-        await this.forceUpdatePullRequest();
+        await this.updatePullRequest();
     }
 
-    private async updateIssue(issue?: Issue | Bitbucket.Schema.Issue) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssueData) {
         if (!issue) {
             return;
         }
-        if (isIssue(issue)) {
+        if (isMinimalIssue(issue)) {
             const transition = issue.transitions.find(t => t.to.id === issue.status.id);
-            await transitionIssue(issue, transition);
+            if (transition) {
+                await transitionIssue(issue, transition);
+            }
         } else {
-            await BitbucketIssuesApi.postChange(issue, issue.state!);
+            const bbApi = await clientForRemote(this._state.remote!);
+            await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);
         }
     }
 
@@ -357,46 +420,46 @@ export class PullRequestWebview extends AbstractReactWebview<Emit, Action> imple
                 .catch(async _ => {
                     await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
                 });
+
+            await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
         }
-        await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branch!.name);
-        this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branch!.name!)
+
+        this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branchName)
             .then(() => {
                 this._state.prData.currentBranch = this._state.repository!.state.HEAD!.name!;
                 this.postMessage({
                     type: 'checkout',
                     currentBranch: this._state.repository!.state.HEAD!.name!
                 });
-                prCheckoutEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
+                if (site) {
+                    prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                }
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                this.postMessage({ type: 'error', reason: e });
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             });
     }
 
     private async postComment(text: string, parentId?: number) {
-        await PullRequestApi.postComment(this._state.remote!, this._state.prData.pr!.id!, text, parentId);
-        await this.forceUpdateComments();
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.postComment(this._state.remote!, this._pr!.data.id, text, parentId);
+        this.updatePullRequest();
     }
 
-    private async forceUpdatePullRequest() {
-        try {
-            const result = await PullRequestApi.get({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! });
-            this._state.prData.pr = result.data;
-            this._state.prData.currentBranch = result.repository.state.HEAD!.name!;
-            await this.updatePullRequest(result);
-        } catch (e) {
-            let err = new Error(`error updating pull request: ${e}`);
-            Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating pull request: ${e}` });
-        }
-
+    private async deleteComment(commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
+        this.updatePullRequest();
     }
 
-    private async forceUpdateComments() {
-        const pr = { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! };
-        const paginatedComments = await PullRequestApi.getComments(pr);
-        this._state.prData.comments = paginatedComments.data;
-        await this.updatePullRequest(pr);
+    private async editComment(content: string, commentId: number) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
+        this.updatePullRequest();
     }
+
+
+
 }

@@ -1,25 +1,32 @@
 import {
-  window,
   ConfigurationChangeEvent,
   ExtensionContext,
   Disposable,
 } from "vscode";
-import * as BitbucketKit from "bitbucket";
-import * as JiraKit from "@atlassian/jira";
-import { AuthProvider, AuthInfo, productForProvider, AccessibleResource } from "./authInfo";
+import { JiraClient } from "../jira/jira-client/client";
+import { SiteInfo, DetailedSiteInfo, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
 import { Container } from "../container";
-import { OAuthDancer } from "./oauthDancer";
 import { CacheMap, Interval } from "../util/cachemap";
-var tunnel = require("tunnel");
-import * as fs from "fs";
-import { configuration, isEmptySite, isStagingSite } from "../config/configuration";
-import { Resources } from "../resources";
-import { authenticatedEvent } from "../analytics";
+import { configuration } from "../config/configuration";
 import { Logger } from "../logger";
+//import { getJiraCloudBaseUrl } from "./serverInfo";
+import { cannotGetClientFor } from "../constants";
+import { JiraCloudClient } from "../jira/jira-client/cloudClient";
+import { JiraServerClient } from "../jira/jira-client/serverClient";
+import { BitbucketApi } from "../bitbucket/model";
+import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
+import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
+import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
+import { getAgent } from "./charles";
+
+const oauthTTL: number = 45 * Interval.MINUTE;
+const serverTTL: number = Interval.FOREVER;
 
 export class ClientManager implements Disposable {
   private _clients: CacheMap = new CacheMap();
-  private _dancer: OAuthDancer = new OAuthDancer();
   private _agent: any | undefined;
   private _agentChanged: boolean = false;
 
@@ -32,198 +39,136 @@ export class ClientManager implements Disposable {
 
   dispose() {
     this._clients.clear();
-
   }
 
   // used to add and remove the proxy agent when charles setting changes.
   private onConfigurationChanged(e: ConfigurationChangeEvent) {
-    const section = "enableCharles";
 
     const initializing = configuration.initializing(e);
 
-    if (initializing || configuration.changed(e, section)) {
+    if (initializing || configuration.changed(e, 'enableCharles') || configuration.changed(e, 'charlesCertPath') || configuration.changed(e, 'charlesDebugOnly')) {
       this._agentChanged = true;
 
-      try {
-        if (Container.isDebugging && configuration.get<boolean>(section)) {
-          let pemFile = fs.readFileSync(Resources.charlesCert);
+      this._agent = getAgent();
+    }
+  }
 
-          this._agent = tunnel.httpsOverHttp({
-            ca: [pemFile],
-            proxy: {
-              host: "127.0.0.1",
-              port: 8888
-            }
-          });
+  public async bbClient(site: DetailedSiteInfo): Promise<BitbucketApi> {
+    return this.getClient<BitbucketApi>(
+      site,
+      info => {
+        let result: BitbucketApi;
+        if (site.isCloud) {
+          result = {
+            repositories: isOAuthInfo(info)
+              ? new CloudRepositoriesApi(site, info.access, this._agent)
+              : undefined!,
+            pullrequests: isOAuthInfo(info)
+              ? new CloudPullRequestApi(site, info.access, this._agent)
+              : undefined!,
+            issues: isOAuthInfo(info)
+              ? new BitbucketIssuesApiImpl(site, info.access, this._agent)
+              : undefined!,
+            pipelines: isOAuthInfo(info)
+              ? new PipelineApiImpl(site, info.access, this._agent)
+              : undefined!
+          };
         } else {
-          this._agent = undefined;
+          result = {
+            repositories: isBasicAuthInfo(info)
+              ? new ServerRepositoriesApi(site, info.username, info.password, this._agent)
+              : undefined!,
+            pullrequests: isBasicAuthInfo(info)
+              ? new ServerPullRequestApi(site, info.username, info.password, this._agent)
+              : undefined!,
+            issues: undefined,
+            pipelines: undefined
+          };
         }
 
-        this._clients.clear();
-
-      } catch (err) {
-        this._agent = undefined;
+        return result;
       }
-    }
+    );
+
   }
 
-  // this is *only* called when login buttons are clicked by the user
-  public async userInitiatedLogin(provider: string): Promise<void> {
-
-    try {
-      let info = await this._dancer.doDance(provider);
-      await Container.authManager.saveAuthInfo(info.user.provider, info);
-      const product = productForProvider(info.user.provider);
-      window.showInformationMessage(`You are now authenticated with ${product}`);
-      authenticatedEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-    } catch (e) {
-      Logger.error(e, 'Error authenticating');
-      if (typeof e === 'object' && e.cancelled !== undefined) {
-        window.showWarningMessage(`${e.message}`);
-      } else {
-        window.showErrorMessage(`There was an error authenticating with provider '${provider}': ${e}`);
-      }
-
-    }
-  }
-
-  public async bbrequest(): Promise<BitbucketKit | undefined> {
-    return this.getClient<BitbucketKit>(
-      AuthProvider.BitbucketCloud,
+  public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient> {
+    return this.getClient<JiraClient>(
+      site,
       info => {
-        let extraOptions = {};
-        if (this._agent) {
-          extraOptions = { agent: this._agent };
+        let client: any = undefined;
+
+        if (isOAuthInfo(info)) {
+          client = new JiraCloudClient(info.access, site, this._agent);
+        } else if (isBasicAuthInfo(info)) {
+          client = new JiraServerClient(info.username, info.password, site, this._agent);
         }
 
-        let bbclient = new BitbucketKit({ options: extraOptions });
-        bbclient.authenticate({ type: "token", token: info.access });
-
-        return bbclient;
-      }, false
+        return client;
+      }
     );
   }
 
-  public async bbrequestStaging(): Promise<BitbucketKit | undefined> {
-    return this.getClient<BitbucketKit>(
-      AuthProvider.BitbucketCloudStaging,
-      info => {
-        let extraOptions = {};
-        if (this._agent) {
-          extraOptions = { agent: this._agent };
-        }
-
-        let bbclient = new BitbucketKit({ baseUrl: "https://api-staging.bb-inf.net/2.0", options: extraOptions });
-        bbclient.authenticate({ type: "token", token: info.access });
-
-        return bbclient;
-      }, false
-    );
-  }
-
-  public async jirarequest(workingSite?: AccessibleResource): Promise<JiraKit | undefined> {
-    // if workingSite is passed in and is different from the one in config, 
-    // it is for a one-off request (eg. a request from webview from previously configured workingSite)
-    const useEphemeralClient = workingSite && workingSite.id !== Container.config.jira.workingSite.id;
-
-    if (!workingSite || isEmptySite(workingSite)) {
-      workingSite = Container.config.jira.workingSite;
-    }
-
-    let provider = (workingSite && isStagingSite(workingSite)) ? AuthProvider.JiraCloudStaging : AuthProvider.JiraCloud;
-    let apiUri = (workingSite && isStagingSite(workingSite)) ? "api.stg.atlassian.com" : "api.atlassian.com";
-
-    return this.getClient<JiraKit>(provider, info => {
-      let cloudId: string = "";
-
-      if (Array.isArray(info.accessibleResources) && info.accessibleResources.length > 0) {
-        if (workingSite && !isEmptySite(workingSite)) {
-          const foundSite = info.accessibleResources.find(site => site.id === workingSite!.id);
-          if (foundSite) {
-            cloudId = foundSite.id;
-          }
-        }
-        if (cloudId === "") {
-          cloudId = info.accessibleResources[0].id;
-        }
-      }
-
-      if (!cloudId || cloudId.length < 1) {
-        return undefined;
-      }
-
-      let extraOptions = {};
-      if (this._agent) {
-        extraOptions = { agent: this._agent };
-      }
-
-      let jraclient = new JiraKit({
-        baseUrl: `https://${apiUri}/ex/jira/${cloudId}/rest/`,
-        options: extraOptions,
-        headers: { "x-atlassian-force-account-id": "true" }
-      });
-      jraclient.authenticate({ type: "token", token: info.access });
-
-      return jraclient;
-    }, useEphemeralClient);
-  }
-
-  private async getClient<T>(
-    provider: string,
-    factory: (info: AuthInfo) => any,
-    useEphemeralClient: boolean = true
-  ): Promise<T | undefined> {
-
-    let client = await this._clients.getItem<T>(provider);
+  private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
+    let client: T | undefined = this._clients.getItem<T>(site.hostname);
 
     if (!client) {
-      let info = await Container.authManager.getAuthInfo(provider);
-
-      if (!info) {
-        return undefined;
+      try {
+        await Container.credentialManager.refreshAccessToken(site);
+      } catch (e) {
+        Logger.debug(`error refreshing token ${e}`);
+        return Promise.reject(`${cannotGetClientFor}: ${site.product.name} ... ${e}`);
       }
-      else {
-        try {
-          let newInfo = await this._dancer.refresh(info);
-          info = newInfo;
-          await Container.authManager.saveAuthInfo(provider, info);
-        } catch (e) {
-          Logger.debug(`error refreshing token ${e}`);
-          return undefined;
-        }
-      }
+      const credentials = await Container.credentialManager.getAuthInfo(site);
 
-      client = factory(info);
-
-      await this._clients.setItem(provider, client, 45 * Interval.MINUTE);
-    }
-
-    if (useEphemeralClient) {
-      let info = await Container.authManager.getAuthInfo(provider);
-      if (info) {
-        client = factory(info);
+      if (credentials) {
+        client = factory(credentials);
+        this._clients.setItem(site.hostname, client, isOAuthInfo(credentials) ? oauthTTL : serverTTL);
+      } else {
+        Logger.debug(`No credentials for ${site.name}!`);
       }
     }
 
     if (this._agentChanged) {
-      let info = await Container.authManager.getAuthInfo(provider);
+      const credentials = await Container.credentialManager.getAuthInfo(site);
 
-      if (info) {
-        client = factory(info);
+      if (credentials) {
+        client = factory(credentials);
 
-        if (!useEphemeralClient) {
-          await this._clients.updateItem(provider, client);
-        }
+        this._clients.updateItem(site.hostname, client);
       }
-
       this._agentChanged = false;
     }
 
-    return client;
+    return client ? client : Promise.reject(new Error(`${cannotGetClientFor}: ${site.product.name}`));
   }
 
-  public async removeClient(provider: string) {
-    this._clients.deleteItem(provider);
+  // TODO: [VSCODE-598] Get rid of getValidAccessToken method
+  public async getValidAccessToken(site: DetailedSiteInfo): Promise<string> {
+    if (!site.isCloud) {
+      return Promise.reject(`site ${site.name} is not a cloud instance`);
+    }
+
+    let client: any = this._clients.getItem(site.hostname);
+    let info = await Container.credentialManager.getAuthInfo(site);
+    let newAccessToken: string | undefined = undefined;
+
+    if (isOAuthInfo(info)) {
+      if (!client) {
+        try {
+          newAccessToken = await Container.credentialManager.refreshAccessToken(site);
+        } catch (e) {
+          Logger.debug(`error refreshing token ${e}`);
+          return Promise.reject(e);
+        }
+      } else {
+        newAccessToken = info.access;
+      }
+    }
+    return newAccessToken ? newAccessToken : Promise.reject('authInfo is not a valid OAuthInfo instance');
   }
 
+  public async removeClient(site: SiteInfo) {
+    this._clients.deleteItem(site.hostname);
+  }
 }

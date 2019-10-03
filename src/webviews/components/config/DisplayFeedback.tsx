@@ -1,30 +1,34 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import { FeedbackData } from '../../../ipc/configActions';
-import Form, { FormFooter, Field, ErrorMessage, CheckboxField } from '@atlaskit/form';
+import Form, { FormFooter, Field, ErrorMessage } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import Select from '@atlaskit/select';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { FieldValidators, chain } from '../fieldValidators';
+import * as FieldValidators from '../fieldValidators';
+import { FeedbackUser } from '../../../ipc/configMessaging';
 
-type MyState = { isOpen: boolean, description: string };
+type MyState = { isOpen: boolean, description: string, canBeContacted: boolean };
 
-export default class DisplayFeedback extends React.Component<{ onFeedback: (feedback: FeedbackData) => void }, MyState> {
+export default class DisplayFeedback extends React.Component<{ userDetails: FeedbackUser, onFeedback: (feedback: FeedbackData) => void }, MyState> {
 
   constructor(props: any) {
     super(props);
-    this.state = { isOpen: false, description: '' };
+    this.state = { isOpen: false, description: '', canBeContacted: true };
   }
 
   handleOpen = () => this.setState({ isOpen: true });
   handleClose = () => this.setState({ isOpen: false, description: '' });
+  toggleCanBeContacted = () => this.setState({ canBeContacted: !this.state.canBeContacted });
 
   handleFeedback = (formData: any) => {
 
     const feedback: FeedbackData = {
       description: formData.description,
       type: formData.type.value,
-      canBeContacted: (formData.canBeContacted && formData.canBeContacted.length > 0)
+      canBeContacted: formData.canBeContacted,
+      userName: formData.userName,
+      emailAddress: formData.email || 'do-not-reply@atlassian.com'
     };
 
     if (this.props.onFeedback) {
@@ -111,7 +115,7 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                                 style={{ width: '100%', display: 'block' }}
                                 className='ac-textarea'
                                 rows={3}
-                                onChange={chain(fieldArgs.fieldProps.onChange, (item: any) => { this.setState({ description: item.target.value }); })}
+                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => { this.setState({ description: item.target.value }); })}
                               />
                               {errDiv}
                             </div>
@@ -120,20 +124,73 @@ export default class DisplayFeedback extends React.Component<{ onFeedback: (feed
                       }
                     </Field>
 
-                    <CheckboxField
+                    <Field
                       name='canBeContacted'
                       id='canBeContacted'
-                      value='canBeContacted'
-                      defaultIsChecked={true}>
+                      defaultValue={this.state.canBeContacted}>
                       {
                         (fieldArgs: any) => {
                           return (
-                            <Checkbox {...fieldArgs.fieldProps}
+                            <Checkbox
+                              defaultChecked
+                              {...fieldArgs.fieldProps}
+                              onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.toggleCanBeContacted)}
                               label='Atlassian can contact me about this feedback' />
                           );
                         }
                       }
-                    </CheckboxField>
+                    </Field>
+
+                    <Field label='Your name'
+                      isRequired={false}
+                      id='userName'
+                      name='userName'
+                      defaultValue={this.props.userDetails.userName}>
+                      {
+                        (fieldArgs: any) => {
+                          let errDiv = <span />;
+                          if (fieldArgs.error === 'EMPTY') {
+                            errDiv = <ErrorMessage>userName is required</ErrorMessage>;
+                          }
+                          return (
+                            <div>
+                              <input {...fieldArgs.fieldProps}
+                                style={{ width: '100%', display: 'block' }}
+                                className='ac-inputField'
+                              />
+                              {errDiv}
+                            </div>
+                          );
+                        }
+                      }
+                    </Field>
+
+                    {this.state.canBeContacted &&
+                      <Field label='Your contact email'
+                        isRequired={true}
+                        id='email'
+                        name='email'
+                        validate={FieldValidators.validateEmail}
+                        defaultValue={this.props.userDetails.emailAddress}>
+                        {
+                          (fieldArgs: any) => {
+                            let errDiv = <span />;
+                            if (fieldArgs.error === 'EMPTY') {
+                              errDiv = <ErrorMessage>email is required</ErrorMessage>;
+                            }
+                            return (
+                              <div>
+                                <input {...fieldArgs.fieldProps}
+                                  style={{ width: '100%', display: 'block' }}
+                                  className='ac-inputField'
+                                />
+                                {errDiv}
+                              </div>
+                            );
+                          }
+                        }
+                      </Field>
+                    }
 
                     <FormFooter actions={{}}>
                       <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>

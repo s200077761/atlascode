@@ -4,15 +4,16 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import CustomJQL from './CustomJQL';
-import NonCustomJQL from './NonCustomJQL';
-import { AccessibleResource } from '../../../atlclients/authInfo';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { IConfig } from '../../../config/model';
+import Tooltip from '@atlaskit/tooltip';
 
 type changeObject = { [key: string]: any };
 
 export default class JiraExplorer extends React.Component<{
-    configData: ConfigData,
-    jiraAccessToken: string,
-    sites: AccessibleResource[],
+    config: IConfig,
+    jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>,
+    sites: DetailedSiteInfo[],
     onConfigChange: (changes: changeObject, removes?: string[]) => void
 }, ConfigData> {
 
@@ -41,15 +42,15 @@ export default class JiraExplorer extends React.Component<{
     }
 
     getIsExplorerIndeterminate = (): boolean => {
-        if (!this.props.configData.config.jira.explorer.enabled) {
+        if (!this.props.config.jira.explorer.enabled) {
             return false;
         }
 
         let count = 0;
-        if (this.props.configData.config.jira.explorer.showAssignedIssues) {
+        if (this.props.config.jira.explorer.showAssignedIssues) {
             count++;
         }
-        if (this.props.configData.config.jira.explorer.showOpenIssues) {
+        if (this.props.config.jira.explorer.showOpenIssues) {
             count++;
         }
 
@@ -57,7 +58,7 @@ export default class JiraExplorer extends React.Component<{
     }
 
     render() {
-        const config = this.props.configData.config;
+        const config = this.props.config;
         return (
 
             <div>
@@ -72,50 +73,68 @@ export default class JiraExplorer extends React.Component<{
                                     label='Enable Jira Issue Explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
-                                    isChecked={this.props.configData.config.jira.explorer.enabled}
+                                    isChecked={this.props.config.jira.explorer.enabled}
                                 />
                             );
                         }
                     }
                 </CheckboxField>
-                <h3>Common Filters</h3>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     paddingLeft: '24px',
+                    paddingTop: '10px'
                 }}>
-                    <NonCustomJQL
-                        yourIssuesJql={config.jira.explorer.assignedIssueJql}
-                        yourIssuesIsEnabled={config.jira.explorer.showAssignedIssues}
-                        openIssuesJql={config.jira.explorer.openIssueJql}
-                        openIssuesIsEnabled={config.jira.explorer.showOpenIssues}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-start'
+                    }}>
+                        <div style={{marginRight: '10px'}}>
+                            <h4>Custom JQL</h4>
+                        </div>
+                        <Tooltip content="Use JQL to populate the 'JIRA ISSUES' panel in the sidebar">
+                            <a href="https://www.atlassian.com/blog/jira-software/jql-the-most-flexible-way-to-search-jira-14">
+                                What is JQL?
+                            </a>
+                        </Tooltip>
+                    </div>
+                    <CustomJQL
+                        JqlList={config.jira.jqlList}
                         onConfigChange={this.props.onConfigChange}
-                        jiraAccessToken={this.props.jiraAccessToken}
-                        workingSite={config.jira.workingSite}
-                        workingProject={config.jira.workingProject.id}
+                        jqlFetcher={this.props.jqlFetcher}
                         sites={this.props.sites} />
                 </div>
-                <h3>Custom JQL</h3>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     paddingLeft: '24px',
+                    paddingTop: '10px'
                 }}>
-                    <CustomJQL
-                        siteJqlList={config.jira.customJql}
-                        onConfigChange={this.props.onConfigChange}
-                        jiraAccessToken={this.props.jiraAccessToken}
-                        workingSite={config.jira.workingSite}
-                        workingProject={config.jira.workingProject.id}
-                        sites={this.props.sites} />
+                    <CheckboxField
+                        name="jira-explorer-monitor-enabled"
+                        id="jira-explorer-monitor-enabled"
+                        value="jira.explorer.monitorEnabled"
+                    >
+                        {(fieldArgs: any) => {
+                            return (
+                                <Checkbox
+                                    {...fieldArgs.fieldProps}
+                                    label="Show notifications when new issues are created matching the above JQL(s)"
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isDisabled={!this.props.config.jira.explorer.enabled}
+                                    isChecked={this.props.config.jira.explorer.monitorEnabled}
+                                />
+                            );
+                        }}
+                    </CheckboxField>
                 </div>
                 <div className="refreshInterval">
                     <span>Refresh explorer every: </span>
                     <input className='ac-inputField-inline' style={{ width: '60px' }} name="jira-explorer-refresh-interval"
                         type="number" min="0"
-                        value={this.props.configData.config.jira.explorer.refreshInterval}
+                        value={this.props.config.jira.explorer.refreshInterval}
                         onChange={(e: any) => this.handleNumberChange(e, "jira.explorer.refreshInterval")}
-                        disabled={!this.props.configData.config.jira.explorer.enabled} />
+                        disabled={!this.props.config.jira.explorer.enabled} />
                     <span> minutes (setting to 0 disables auto-refresh)</span>
                 </div>
             </div>

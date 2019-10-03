@@ -1,3 +1,41 @@
+## What's New In 2.0.0
+### Improvements
+* Support for Jira Server and Bitbucket Server
+* Support for a wider range of Jira features and configurations
+  * Time tracking
+  * Adding sprints to issues
+  * Not having a resolution field
+  * And more!
+* View JQL from multiple sites at once in Jira explorer
+* Improved Settings
+  * Jira and Bitbucket now have their own sections in the settings
+  * Jira or Bitbucket features can now be completely disabled
+  * Settings can now be saved at either the user level or the workspace level
+  * Notifications can be managed and disabled for individual JQL queries
+* Can now collapse all comments on a pull-request
+* Selected code will now be included in description when creating issue from a TODO
+* Get the latest information by refreshing any webview
+* Improved performance when creating pull-requests or starting work on issues
+* Easily edit the branch name when starting work on an issue
+* Pre-filled mention picker when creating pull requests and Bitbucket issues
+* Editing and deleting comments in pull requests
+* Added support for merge commit messages
+* Added diff preview in pull request views
+* Added support for Bitbucket mirrors
+
+### Bugs fixed
+* Build statuses now link to the tool that created them
+* Fixed URL creation on Windows
+* `TODO` triggers no longer require a trailing space
+* Subtasks now report the correct status
+* Pipelines builds triggered manually or by tag creation now notify correctly and show up in the pipelines side bar
+* Username was not slugified when making calls during Bitbucket server auth flow
+* Sometimes webviews would not load data
+* Transitions are now reloaded when an issue is transitioned to get any new available options
+* Fixed bad default JQL in settings.json
+* Fixed error when checking for an empty user object
+* Fixed issue with credentials not saving for all sites
+
 ## What's New In 1.4.3
 ### Improvements
 * Show Jira issue key in explorer

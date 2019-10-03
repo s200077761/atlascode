@@ -1,11 +1,135 @@
 import { Repository, Remote } from "../typings/git";
-import * as Bitbucket from 'bitbucket';
+import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+
+export type User = {
+    accountId: string;
+    displayName: string;
+    emailAddress?: string;
+    url: string;
+    avatarUrl: string;
+    mention: string;
+};
+
+export const UnknownUser = {
+    accountId: '',
+    displayName: 'Unknown User',
+    url: '',
+    avatarUrl: '',
+    mention: ''
+};
+
+export type Reviewer = User & {
+    status: ApprovalStatus;
+    role: "PARTICIPANT" | "REVIEWER";
+};
+
+export type Repo = {
+    id: string;
+    scm?: Repository;
+    name: string;
+    displayName: string;
+    fullName: string;
+    url: string;
+    avatarUrl: string;
+    mainbranch?: string;
+    issueTrackerEnabled: boolean;
+};
+
+export type Comment = {
+    id: number;
+    parentId?: number;
+    deletable: boolean;
+    editable: boolean;
+    user: User;
+    htmlContent: string;
+    rawContent: string;
+    ts: string;
+    updatedTs: string;
+    deleted: boolean;
+    inline?: {
+        from?: number;
+        path: string;
+        to?: number;
+    };
+    children: Comment[];
+};
+
+export type Commit = {
+    author: User;
+    ts: string;
+    hash: string;
+    message: string;
+    url: string;
+    htmlSummary: string;
+    rawSummary: string;
+};
+
+export type BuildStatus = {
+    name: string;
+    state: "SUCCESSFUL" | "FAILED" | "INPROGRESS" | "STOPPED";
+    url: string;
+    ts: string;
+};
+
+export type MergeStrategy = {
+    label: string;
+    value: string;
+    isDefault: boolean;
+};
+
+export type FileChange = {
+    status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
+    oldPath?: string;
+    newPath?: string;
+};
+
+export type CreatePullRequestData = {
+    reviewerAccountIds: string[];
+    title: string;
+    summary: string;
+    sourceBranchName: string;
+    destinationBranchName: string;
+    closeSourceBranch: boolean;
+};
+
+export type ApprovalStatus = "APPROVED" | "UNAPPROVED" | "NEEDS_WORK";
+
+export type PullRequestData = {
+    siteDetails: DetailedSiteInfo;
+    id: number;
+    version: number;
+    url: string;
+    author: User;
+    reviewers: Reviewer[];
+    participants: Reviewer[];
+    source: {
+        repo: Repo;
+        branchName: string;
+        commitHash: string;
+    },
+    destination: {
+        repo: Repo;
+        branchName: string;
+        commitHash: string;
+    },
+    title: string;
+    htmlSummary: string;
+    rawSummary: string;
+    ts: string;
+    updatedTs: string;
+    state: "MERGED" | "SUPERSEDED" | "OPEN" | "DECLINED";
+    closeSourceBranch: boolean;
+    taskCount: number;
+    buildStatuses?: BuildStatus[];
+};
 
 export interface PullRequest {
     repository: Repository;
     remote: Remote;
     sourceRemote?: Remote;
-    data: Bitbucket.Schema.Pullrequest;
+    data: PullRequestData;
 }
 
 export interface PaginatedPullRequests {
@@ -18,28 +142,82 @@ export interface PaginatedPullRequests {
 }
 
 export interface PaginatedCommits {
-    data: Bitbucket.Schema.Commit[];
+    data: Commit[];
     next?: string;
 }
 
 export interface PaginatedComments {
-    data: Bitbucket.Schema.PullrequestComment[];
+    data: Comment[];
     next?: string;
 }
 
 export interface PaginatedFileChanges {
-    data: Bitbucket.Schema.Diffstat[];
+    data: FileChange[];
     next?: string;
 }
 
 export interface PaginatedBitbucketIssues {
     repository: Repository;
     remote: Remote;
-    data: Bitbucket.Schema.Issue[];
+    data: BitbucketIssue[];
     next?: string;
 }
 
-export interface PaginatedIssueChange {
-    data: Bitbucket.Schema.IssueChange[];
+export interface PaginatedBranchNames {
+    data: string[];
     next?: string;
+}
+
+export type BitbucketIssue = {
+    repository: Repository;
+    remote: Remote;
+    data: BitbucketIssueData;
+};
+
+export type BitbucketIssueData = any;
+export type BitbucketBranchingModel = any;
+
+export interface PullRequestApi {
+    getCurrentUser(site: DetailedSiteInfo): Promise<User>;
+    getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
+    getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    get(pr: PullRequest): Promise<PullRequest>;
+    getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
+    getCommits(pr: PullRequest): Promise<PaginatedCommits>;
+    getComments(pr: PullRequest): Promise<PaginatedComments>;
+    editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
+    deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
+    getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
+    getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
+    getReviewers(remote: Remote, query?: string): Promise<User[]>;
+    create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
+    updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
+    merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
+    postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+}
+
+export interface RepositoriesApi {
+    getMirrorHosts(): Promise<string[]>;
+    get(remote: Remote): Promise<Repo>;
+    getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
+    getDevelopmentBranch(remote: Remote): Promise<string>;
+    getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
+    getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
+    getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]>;
+}
+
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
+    issues?: BitbucketIssuesApiImpl;
+    pipelines?: PipelineApiImpl;
+}
+
+export interface BitbucketApi {
+    repositories: RepositoriesApi;
+    pullrequests: PullRequestApi;
 }

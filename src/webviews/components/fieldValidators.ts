@@ -1,58 +1,93 @@
 // used to chain onChange function so we can provide custom functionality after internal state changes
 export const chain = (...fns: any[]) => (...args: any[]) => fns.forEach(fn => fn(...args));
 
-export namespace FieldValidators {
-    export function validateSingleSelect(value: string, state: any): string | undefined {
-        return (value !== undefined) ? undefined : "EMPTY";
-    }
+export function validateSingleSelect(value: string, state?: any): string | undefined {
+    return (value !== undefined) ? undefined : "EMPTY";
+}
 
-    export function validateMultiSelect(value: string, state: any): string | undefined {
-        return undefined;
-        //return (value !== undefined && value.length > 0) ? undefined : "EMPTY";
-    }
+export function validateMultiSelect(value: string, state: any): string | undefined {
+    return undefined;
+    //return (value !== undefined && value.length > 0) ? undefined : "EMPTY";
+}
 
-    export function validateString(value: string, state: any): string | undefined {
-        return (value === undefined || value.length < 1) ? 'EMPTY' : undefined;
-    }
+export function validateString(value: string, state?: any): string | undefined {
+    return (value === undefined || value.trim().length < 1) ? 'EMPTY' : undefined;
+}
 
-    export function validateNumber(value: any, state: any): string | undefined {
-        let err = undefined;
+export function isValidString(value: string): boolean {
+    return validateString(value) === undefined;
+}
 
-        if (value !== undefined && value.length > 0) {
-            err = (isNaN(value)) ? 'NOT_NUMBER' : undefined;
+export function validateEmail(value: string, state?: any): string | undefined {
+    return (value === undefined || value.length < 1 || !/^\S+@\S+$/.test(value)) ? 'EMPTY' : undefined;
+}
+
+export function validateNumber(value: any, state?: any): string | undefined {
+    let err = undefined;
+
+    if (value !== undefined && value.length > 0) {
+        let numVal: number = NaN;
+
+        if (typeof value === 'number') {
+            numVal = value;
+        } else {
+            numVal = parseFloat(value);
         }
 
-
-        return err;
+        err = (isNaN(numVal)) ? 'NOT_NUMBER' : undefined;
     }
 
-    export function validateUrl(value: string, state: any): string | undefined {
-        let err = undefined;
 
-        // if(value !== undefined && value.length > 0) {
-        //     err = (!this.validURL(value)) ? 'NOT_URL' : undefined;
-        // }
+    return err;
+}
 
-        return err;
-    }
+export function isValidNumber(value: string): boolean {
+    return validateNumber(value) === undefined;
+}
 
-    export function validateRequiredNumber(value: any, state: any): string | undefined {
-        let err = validateString(value, state);
+export function validateUrl(value: string, state?: any): string | undefined {
+    let err = undefined;
 
-        if (err === undefined) {
-            err = (isNaN(value)) ? 'NOT_NUMBER' : undefined;
+    try {
+        const url = new URL(value);
+        if (url.hostname === '') {
+            err = 'NOT_URL';
         }
-
-        return err;
+    } catch (e) {
+        err = 'NOT_URL';
     }
 
-    export function validateRequiredUrl(value: string, state: any): string | undefined {
-        let err = validateString(value, state);
+    return err;
+}
 
-        // if(err === undefined) {
-        //     err = (!this.validURL(value)) ? 'NOT_URL' : undefined;
-        // }
+export function isValidUrl(value: string): boolean {
+    return validateUrl(value) === undefined;
+}
 
-        return err;
+export function validateRequiredNumber(value: any, state?: any): string | undefined {
+    let err = validateString(value, state);
+
+    if (err === undefined) {
+        err = validateNumber(value);
     }
+
+    return err;
+}
+
+export function isValidRequiredNumber(value: string): boolean {
+    return validateRequiredNumber(value) === undefined;
+}
+
+export function validateRequiredUrl(value: string, state?: any): string | undefined {
+    let err = validateString(value, state);
+
+    if (err === undefined) {
+        err = validateUrl(value, state);
+    }
+
+    return err;
+}
+
+export function isValidRequiredUrl(value: string): boolean {
+    return validateRequiredUrl(value) === undefined;
 }

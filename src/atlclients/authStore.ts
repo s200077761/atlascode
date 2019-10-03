@@ -1,22 +1,26 @@
-import { AuthInfo, AuthProvider, emptyAuthInfo, productForProvider } from './authInfo';
+import { AuthInfo, Product, OAuthProvider, ProductJira, ProductBitbucket, getSecretForAuthInfo, emptyAuthInfo, AuthInfoEvent, AuthChangeType, DetailedSiteInfo, UpdateAuthInfoEvent, RemoveAuthInfoEvent, oauthProviderForSite, isOAuthInfo } from './authInfo';
 import { keychain } from '../util/keychain';
-import { window, Disposable, EventEmitter, Event } from 'vscode';
+import { window, Disposable, EventEmitter, Event, version } from 'vscode';
 import { Logger } from '../logger';
 import { setCommandContext, CommandContext } from '../constants';
 import { loggedOutEvent } from '../analytics';
-import { Container } from '../container';
-import debounce from 'lodash.debounce';
+import { OAuthRefesher } from './oauthRefresher';
+import { AnalyticsClient } from '../analytics-node-client/src';
+import PQueue from 'p-queue';
 
-const keychainServiceName = "atlascode-authinfo";
+const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
 
-export type AuthInfoEvent = {
-    authInfo: AuthInfo | undefined;
-    provider: string;
-};
+interface CredentialIdToAuthInfo { [k: string]: AuthInfo; }
 
-export class AuthManager implements Disposable {
-    private _memStore: Map<string, AuthInfo> = new Map<string, AuthInfo>();
-    private _debouncedKeychain = new Object();
+export class CredentialManager implements Disposable {
+    private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
+    private _queue = new PQueue({ concurrency: 1 });
+    private _refresher = new OAuthRefesher();
+
+    constructor(private _analyticsClient: AnalyticsClient) {
+        this._memStore.set(ProductJira.key, new Map<string, AuthInfo>());
+        this._memStore.set(ProductBitbucket.key, new Map<string, AuthInfo>());
+    }
 
     private _onDidAuthChange = new EventEmitter<AuthInfoEvent>();
     public get onDidAuthChange(): Event<AuthInfoEvent> {
@@ -28,141 +32,212 @@ export class AuthManager implements Disposable {
         this._onDidAuthChange.dispose();
     }
 
-    private async getPassword(provider: string): Promise<string | null> {
-        if (!this._debouncedKeychain[provider]) {
-            this._debouncedKeychain[provider] = debounce(async () => await keychain!.getPassword(keychainServiceName, provider), 500, { leading: true });
-        }
-        return await this._debouncedKeychain[provider]();
-    }
+    public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
+        let foundInfo: AuthInfo | undefined = undefined;
 
-    public async isAuthenticated(provider: string, anyJira: boolean = true): Promise<boolean> {
-        let info: AuthInfo | undefined = await this.getAuthInfo(provider);
-        let isAuthed: boolean = (info !== undefined && info !== emptyAuthInfo);
+        let productAuths = this._memStore.get(product.key);
 
-        if (!isAuthed && anyJira && provider === AuthProvider.JiraCloud) {
-            info = await this.getAuthInfo(AuthProvider.JiraCloudStaging);
-            isAuthed = (info !== undefined && info !== emptyAuthInfo);
-        }
-        return isAuthed;
-    }
-
-    public async getAuthInfo(provider: string): Promise<AuthInfo | undefined> {
-        if (this._memStore.has(provider)) {
-            const ai = await this._memStore.get(provider) as AuthInfo;
-
-            // clean up bad auth
-            if (ai.user && ai.user.provider && ai.user.provider !== provider) {
-                await this.removeAuthInfo(provider);
-                return undefined;
-            }
-
-            return ai;
+        if (productAuths) {
+            foundInfo = productAuths.values().next().value;
         }
 
-        if (keychain) {
+
+        if (!foundInfo && keychain) {
             try {
-                let infoEntry = await this.getPassword(provider) || undefined;
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(product.key) || undefined;
                 if (infoEntry) {
-                    let info: AuthInfo = JSON.parse(infoEntry);
-                    if (info.accessibleResources) {
-                        info.accessibleResources.forEach(resource => {
-                            if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
-                                resource.baseUrlSuffix = "atlassian.net";
+                    let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
+                    if (infos) {
+                        let entry = Object.entries(infos).values().next().value;
+
+                        if (entry) {
+                            foundInfo = entry[1];
+                            if (foundInfo && productAuths) {
+                                this._memStore.set(product.key, productAuths.set(entry[0], foundInfo));
                             }
-                        });
+                        }
                     }
-
-                    //clean up bad auth
-                    if (info.user && info.user.provider && info.user.provider !== provider) {
-                        await this.removeAuthInfo(provider);
-                        return undefined;
-                    }
-
-                    this._memStore.set(provider, info);
-                    return info;
                 }
             } catch (e) {
                 Logger.info(`keychain error ${e}`);
             }
         }
 
-        return undefined;
+        return foundInfo;
     }
 
-    public async saveAuthInfo(provider: string, info: AuthInfo): Promise<void> {
-        if (info.user && info.user.provider && info.user.provider !== provider) {
-            return;
+    public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
+        return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId);
+    }
+
+    public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
+        const oldInfo = await this.getAuthInfo(site);
+
+        let productAuths = this._memStore.get(site.product.key);
+
+        if (!productAuths) {
+            productAuths = new Map<string, AuthInfo>();
         }
 
-        const oldInfo = await this.getAuthInfo(provider);
+        this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
-        if (info.accessibleResources) {
-            info.accessibleResources.forEach(resource => {
-                if (!resource.baseUrlSuffix || resource.baseUrlSuffix.length < 1) {
-                    resource.baseUrlSuffix = "atlassian.net";
-                }
-            });
-        }
-
-        this._memStore.set(provider, info);
-
-        const hasNewInfo = (!oldInfo || (oldInfo && oldInfo.access !== info.access));
+        const hasNewInfo = (!oldInfo || (oldInfo && getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)));
 
         if (hasNewInfo) {
-            const cmdctx = this.commandContextFor(provider);
+            const cmdctx = this.commandContextFor(site.product);
             if (cmdctx !== undefined) {
                 setCommandContext(cmdctx, info !== emptyAuthInfo ? true : false);
             }
 
-            if (keychain) {
-                try {
-                    await keychain.setPassword(keychainServiceName, provider, JSON.stringify(info));
-                }
-                catch (e) {
-                    Logger.debug("error saving auth info to keychain: ", e);
-                }
+            try {
+                this.addSiteInformationToKeychain(site.product.key, site.credentialId, info);
+
+                const updateEvent: UpdateAuthInfoEvent = { type: AuthChangeType.Update, site: site };
+                this._onDidAuthChange.fire(updateEvent);
+            } catch (e) {
+                Logger.debug("error saving auth info to keychain: ", e);
             }
 
-            this._onDidAuthChange.fire({ authInfo: info, provider: provider });
         }
     }
 
-    private commandContextFor(provider: string): string | undefined {
-        switch (provider) {
-            case AuthProvider.JiraCloud:
-            case AuthProvider.JiraCloudStaging:
-                return CommandContext.IsJiraAuthenticated;
-            case AuthProvider.BitbucketCloud:
-                return CommandContext.IsBBAuthenticated;
-            case AuthProvider.BitbucketCloudStaging:
-                return undefined;
+    private async getAuthInfoForProductAndCredentialId(productKey: string, credentialId: string): Promise<AuthInfo | undefined> {
+        let foundInfo: AuthInfo | undefined = undefined;
+        let productAuths = this._memStore.get(productKey);
+
+        if (productAuths && productAuths.has(credentialId)) {
+            foundInfo = productAuths.get(credentialId);
         }
-        return undefined;
+
+        if (!foundInfo && keychain) {
+            try {
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
+                if (infoEntry) {
+                    let infoForProduct: CredentialIdToAuthInfo = JSON.parse(infoEntry);
+
+                    let info = infoForProduct[credentialId];
+
+                    if (info && productAuths) {
+                        this._memStore.set(productKey, productAuths.set(credentialId, info));
+
+                        foundInfo = info;
+                    }
+
+                }
+            } catch (e) {
+                Logger.info(`keychain error ${e}`);
+            }
+        }
+
+        return foundInfo;
+        //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
-    public async removeAuthInfo(provider: string): Promise<boolean> {
-        const product = productForProvider(provider);
+    private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
+        await this._queue.add(async () => {
+            if (keychain) {
+                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
+                let infoDict: CredentialIdToAuthInfo = {};
+                if (infoEntry) {
+                    infoDict = JSON.parse(infoEntry);
+                }
+                infoDict[credentialId] = info;
+                await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
+            }
+        }, { priority: 1 });
+    }
 
-        let wasMemDeleted = this._memStore.delete(provider);
+    private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
         let wasKeyDeleted = false;
+        await this._queue.add(async () => {
+            if (keychain) {
+                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
+                let infoDict: CredentialIdToAuthInfo = {};
+                if (infoEntry) {
+                    infoDict = JSON.parse(infoEntry);
+                    wasKeyDeleted = Object.keys(infoDict).includes(credentialId);
+                    if (wasKeyDeleted) {
+                        delete infoDict[credentialId];
+                        await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
+                    }
+                }
+            }
+        }, { priority: 1 });
+        return wasKeyDeleted;
+    }
 
-        if (keychain) {
-            wasKeyDeleted = await keychain.deletePassword(keychainServiceName, provider);
+    private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
+        let svcName = keychainServiceNameV2;
+
+        if (serviceName) {
+            svcName = serviceName;
         }
+
+        let authInfo: string | null = null;
+        await this._queue.add(async () => {
+            if (keychain) {
+                authInfo = await keychain.getPassword(svcName, productKey);
+            }
+        }, { priority: 0 });
+        return authInfo;
+    }
+
+    public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
+        const credentials = await this.getAuthInfo(site);
+        if (!isOAuthInfo(credentials)) {
+            return undefined;
+        }
+
+        const provider: OAuthProvider | undefined = oauthProviderForSite(site);
+        let newAccessToken = undefined;
+        if (provider && credentials) {
+            newAccessToken = await this._refresher.getNewAccessToken(provider, credentials.refresh);
+            if (newAccessToken) {
+                credentials.access = newAccessToken;
+                this.saveAuthInfo(site, credentials);
+            }
+        }
+        return newAccessToken;
+    }
+
+    public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
+        let productAuths = this._memStore.get(site.product.key);
+        let wasKeyDeleted = false;
+        let wasMemDeleted = false;
+        if (productAuths) {
+            wasMemDeleted = productAuths.delete(site.credentialId);
+            this._memStore.set(site.product.key, productAuths);
+        }
+
+        wasKeyDeleted = await this.removeSiteInformationFromKeychain(site.product.key, site.credentialId);
 
         if (wasMemDeleted || wasKeyDeleted) {
-            const cmdctx = this.commandContextFor(provider);
+            const cmdctx = this.commandContextFor(site.product);
             if (cmdctx) {
                 setCommandContext(cmdctx, false);
             }
 
-            this._onDidAuthChange.fire({ authInfo: undefined, provider: provider });
-            window.showInformationMessage(`You have been logged out of ${product}`);
+            let name = site.name;
 
-            loggedOutEvent(product).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+            const removeEvent: RemoveAuthInfoEvent = { type: AuthChangeType.Remove, product: site.product, credentialId: site.credentialId };
+            this._onDidAuthChange.fire(removeEvent);
+
+            window.showInformationMessage(`You have been logged out of ${site.product.name}: ${name}`);
+
+            loggedOutEvent(site).then(e => { this._analyticsClient.sendTrackEvent(e); });
             return true;
         }
 
         return false;
+    }
+
+    private commandContextFor(product: Product): string | undefined {
+        switch (product.key) {
+            case ProductJira.key:
+                return CommandContext.IsJiraAuthenticated;
+            case ProductBitbucket.key:
+                return CommandContext.IsBBAuthenticated;
+        }
+        return undefined;
     }
 }

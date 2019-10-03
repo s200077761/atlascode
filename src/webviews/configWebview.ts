@@ -1,35 +1,33 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { IConfig } from '../config/model';
-import { Action, HostErrorMessage } from '../ipc/messaging';
-import { commands, ConfigurationChangeEvent, Uri } from 'vscode';
-import { Commands } from '../commands';
-import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
-import { AuthProvider, emptyAuthInfo, AccessibleResource } from '../atlclients/authInfo';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
+import { SettingSource, JQLEntry } from '../config/model';
+import { Action } from '../ipc/messaging';
+import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget } from 'vscode';
+import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
+import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
-import { ConfigData } from '../ipc/configMessaging';
-import { AuthInfoEvent } from '../atlclients/authStore';
-import { JiraSiteUpdateEvent } from '../jira/siteManager';
-import { submitFeedback } from './feedbackSubmitter';
+import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
 import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
-import { isFetchQuery } from '../ipc/issueActions';
-import { ProjectList } from '../ipc/issueMessaging';
-import { JiraWorkingProjectConfigurationKey, JiraWorkingSiteConfigurationKey } from '../constants';
-import { Project } from '../jira/jiraModel';
+import { SitesAvailableUpdateEvent } from '../siteManager';
+import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import * as vscode from 'vscode';
+import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
+import { ConfigWorkspaceFolder, ConfigInspect } from '../ipc/configMessaging';
 
-type Emit = ConfigData | ProjectList | HostErrorMessage;
-
-export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
+export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
     constructor(extensionPath: string) {
         super(extensionPath);
 
         Container.context.subscriptions.push(
             configuration.onDidChange(this.onConfigurationChanged, this),
-            Container.authManager.onDidAuthChange(this.onDidAuthChange, this),
-            Container.jiraSiteManager.onDidSiteChange(this.onDidSiteChange, this),
+            Container.siteManager.onDidSitesAvailableChange(this.onSitesAvailableChange, this),
         );
+    }
+
+    initialize(settingSource: SettingSource) {
+        this.postMessage({ type: 'setOpenedSettings', openedSettings: settingSource });
     }
 
     public get title(): string {
@@ -39,103 +37,132 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
         return "atlascodeSettings";
     }
 
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return undefined;
+    }
+
+    async createOrShowConfig(data: SettingSource) {
+
+        await super.createOrShow();
+
+        this.initialize(data);
+
+    }
+
     public async invalidate() {
-        if (this.isRefeshing) {
-            return;
-        }
-
-        this.isRefeshing = true;
         try {
-            const config: IConfig = await configuration.get<IConfig>();
-            config.jira.workingSite = Container.jiraSiteManager.effectiveSite;
-
-            var authInfo = await Container.authManager.getAuthInfo(AuthProvider.JiraCloud);
-            if (!authInfo) {
-                authInfo = emptyAuthInfo;
+            if (!this._panel || this.isRefeshing) {
+                return;
             }
 
-            var authInfoStaging = await Container.authManager.getAuthInfo(AuthProvider.JiraCloudStaging);
-            if (!authInfoStaging) {
-                authInfoStaging = emptyAuthInfo;
+            this.isRefeshing = true;
+
+            const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+
+            const feedbackUser = await getFeedbackUser();
+
+            let workspaceFolders: ConfigWorkspaceFolder[] = [];
+
+            if (vscode.workspace.workspaceFolders) {
+                workspaceFolders = vscode.workspace.workspaceFolders.map(folder => { return { name: folder.name, uri: folder.uri.toString() }; });
             }
 
-            const isJiraStagingAuthenticated = await Container.authManager.isAuthenticated(AuthProvider.JiraCloudStaging, false);
-            const isJiraAuthed = await Container.authManager.isAuthenticated(AuthProvider.JiraCloud, false);
-            const isBBAuthed = await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud);
+            const target = configuration.get<string>('configurationTarget');
 
-            let sitesAvailable: AccessibleResource[] = [];
-            let stagingEnabled = false;
-            let projects: Project[] = [];
-
-            if (isJiraAuthed || isJiraStagingAuthenticated) {
-                sitesAvailable = await Container.jiraSiteManager.getSitesAvailable();
-                stagingEnabled = (sitesAvailable.find(site => site.name === 'hello') !== undefined || isJiraStagingAuthenticated);
-                projects = await Container.jiraSiteManager.getProjects();
-            }
-
-            this.updateConfig({
-                type: 'update',
-                config: config,
-                sites: sitesAvailable,
-                projects: projects,
-                isJiraAuthenticated: isJiraAuthed,
-                isJiraStagingAuthenticated: isJiraStagingAuthenticated,
-                isBitbucketAuthenticated: isBBAuthed,
-                jiraAccessToken: authInfo!.access,
-                jiraStagingAccessToken: authInfoStaging!.access,
-                isStagingEnabled: stagingEnabled
+            this.postMessage({
+                type: 'init',
+                inspect: this.getInspect(),
+                jiraSites: jiraSitesAvailable,
+                bitbucketSites: bitbucketSitesAvailable,
+                workspaceFolders: workspaceFolders,
+                target: target,
+                feedbackUser: feedbackUser,
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating configuration: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
-        this.invalidate();
+    private async onConfigurationChanged(e: ConfigurationChangeEvent) {
+
+        this.postMessage({ type: 'configUpdate', inspect: this.getInspect() });
     }
 
-    private onDidAuthChange(e: AuthInfoEvent) {
-        this.invalidate();
+    private getInspect(): ConfigInspect {
+        const inspect = configuration.inspect();
+
+        return {
+            "default": (inspect.defaultValue) ? inspect.defaultValue : {},
+            "user": (inspect.globalValue) ? inspect.globalValue : {},
+            "workspace": (inspect.workspaceValue) ? inspect.workspaceValue : {},
+            "workspacefolder": (inspect.workspaceFolderValue) ? inspect.workspaceFolderValue : {},
+        };
     }
 
-    private onDidSiteChange(e: JiraSiteUpdateEvent) {
-        this.invalidate();
+    private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
+        const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+
+        this.postMessage({
+            type: 'sitesAvailableUpdate'
+            , jiraSites: jiraSitesAvailable
+            , bitbucketSites: bitbucketSitesAvailable
+        });
     }
 
-    public async updateConfig(config: ConfigData) {
-        this.postMessage(config);
+    private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
+        const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
+        const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
+        let jiraSitesAvailable: DetailedSiteInfo[] = [];
+        let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
+
+        if (isJiraConfigured) {
+            jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        }
+
+        if (isBBConfigured) {
+            bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
+        }
+
+        return [jiraSitesAvailable, bitbucketSitesAvailable];
     }
 
-    async createOrShow(): Promise<void> {
-        await super.createOrShow();
-        await this.invalidate();
-    }
-
-    protected async onMessageReceived(e: Action): Promise<boolean> {
-        let handled = await super.onMessageReceived(e);
+    protected async onMessageReceived(msg: Action): Promise<boolean> {
+        let handled = await super.onMessageReceived(msg);
 
         if (!handled) {
-            switch (e.action) {
+            switch (msg.action) {
+                case 'refresh': {
+                    handled = true;
+                    try {
+                        await this.invalidate();
+                    } catch (e) {
+                        Logger.error(new Error(`error refreshing config: ${e}`));
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error refeshing config') });
+                    }
+                    break;
+                }
                 case 'login': {
                     handled = true;
-                    if (isAuthAction(e)) {
-                        switch (e.provider) {
-                            case AuthProvider.JiraCloud: {
-                                commands.executeCommand(Commands.AuthenticateJira);
-                                break;
+                    if (isLoginAuthAction(msg)) {
+                        if (isBasicAuthInfo(msg.authInfo)) {
+                            try {
+                                await authenticateServer(msg.siteInfo, msg.authInfo);
+                            } catch (e) {
+                                let err = new Error(`Authentication error: ${e}`);
+                                Logger.error(err);
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Authentication error') });
                             }
-                            case AuthProvider.BitbucketCloud: {
-                                commands.executeCommand(Commands.AuthenticateBitbucket);
-                                break;
-                            }
-                            case AuthProvider.JiraCloudStaging: {
-                                commands.executeCommand(Commands.AuthenticateJiraStaging);
-                                break;
-                            }
+                        } else {
+                            authenticateCloud(msg.siteInfo);
                         }
                         authenticateButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
@@ -143,73 +170,116 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'logout': {
                     handled = true;
-                    if (isAuthAction(e)) {
-                        switch (e.provider) {
-                            case AuthProvider.JiraCloud: {
-                                commands.executeCommand(Commands.ClearJiraAuth);
+                    if (isAuthAction(msg)) {
+                        clearAuth(msg.siteInfo);
+                        logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                    }
+                    break;
+                }
+                case 'openJson': {
+                    handled = true;
+                    if (isOpenJsonAction(msg)) {
+                        switch (msg.target) {
+                            case ConfigTarget.User: {
+                                commands.executeCommand('workbench.action.openSettingsJson');
                                 break;
                             }
-                            case AuthProvider.JiraCloudStaging: {
-                                commands.executeCommand(Commands.ClearJiraAuthStaging);
-                                break;
-                            }
-                            case AuthProvider.BitbucketCloud: {
-                                commands.executeCommand(Commands.ClearBitbucketAuth);
+                            case ConfigTarget.Workspace: {
+                                if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+                                    vscode.workspace.workspaceFile
+                                        ? await commands.executeCommand('workbench.action.openWorkspaceConfigFile')
+                                        : openWorkspaceSettingsJson(vscode.workspace.workspaceFolders[0].uri.fsPath);
+                                }
                                 break;
                             }
                         }
-                        logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
+                    }
+                    break;
+                }
+                case 'fetchJqlOptions': {
+                    handled = true;
+                    if (isFetchJqlDataAction(msg) && !isEmptySiteInfo(msg.site)) {
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const data = await client.getJqlDataFromPath(msg.path);
+                            this.postMessage({ type: 'jqlData', data: data, nonce: msg.nonce });
+                        } catch (e) {
+                            let errData = { errorMessages: [`${e}`] };
+                            if (e.response && e.response.data) {
+                                errData = e.response.data;
+                            }
+                            let err = new Error(`JQL fetch error: ${e}`);
+                            Logger.error(err);
+                            this.postMessage({ type: 'jqlData', data: errData, nonce: msg.nonce });
+                        }
                     }
                     break;
                 }
                 case 'saveSettings': {
                     handled = true;
-                    if (isSaveSettingsAction(e)) {
+                    if (isSaveSettingsAction(msg)) {
                         try {
+                            let target = ConfigurationTarget.Global;
+                            const targetUri: Uri | null = (msg.targetUri !== "") ? Uri.parse(msg.targetUri) : null;
 
-                            for (const key in e.changes) {
-                                const inspect = await configuration.inspect(key)!;
-
-                                const value = e.changes[key];
-
-                                if (key === JiraWorkingSiteConfigurationKey) {
-                                    await configuration.setWorkingSite(value === inspect.defaultValue ? undefined : value);
-                                } else if (key === JiraWorkingProjectConfigurationKey) {
-                                    await configuration.setWorkingProject(value === inspect.defaultValue ? undefined : value);
-                                } else {
-                                    await configuration.updateEffective(key, value === inspect.defaultValue ? undefined : value);
+                            switch (msg.target) {
+                                case ConfigTarget.User: {
+                                    target = ConfigurationTarget.Global;
+                                    break;
                                 }
+                                case ConfigTarget.Workspace: {
+                                    target = ConfigurationTarget.Workspace;
+                                    break;
+                                }
+                                case ConfigTarget.WorkspaceFolder: {
+                                    target = ConfigurationTarget.WorkspaceFolder;
+                                    break;
+                                }
+                            }
+
+                            for (const key in msg.changes) {
+
+                                const value = msg.changes[key];
+
+                                // if this is a jql edit, we need to figure out which one changed
+                                let jqlSiteId: string | undefined = undefined;
+
+                                if (key === 'jira.jqlList') {
+                                    if (Array.isArray(value)) {
+                                        const currentJQLs = configuration.get<JQLEntry[]>('jira.jqlList');
+                                        const newJqls = value.filter((entry: JQLEntry) => currentJQLs.find(cur => cur.id === entry.id) === undefined);
+                                        if (newJqls.length > 0) {
+                                            jqlSiteId = newJqls[0].siteId;
+                                        }
+                                    }
+                                }
+
+                                await configuration.update(key, value, target, targetUri);
 
                                 if (typeof value === "boolean") {
                                     featureChangeEvent(key, value).then(e => { Container.analyticsClient.sendTrackEvent(e).catch(r => Logger.debug('error sending analytics')); });
                                 }
 
-                                if (key === 'jira.customJql') {
-                                    customJQLCreatedEvent(Container.jiraSiteManager.effectiveSite.id).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                if (key === 'jira.jqlList' && jqlSiteId) {
+                                    const site = Container.siteManager.getSiteForId(ProductJira, jqlSiteId);
+                                    if (site) {
+                                        customJQLCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                                    }
                                 }
                             }
 
-                            if (e.removes) {
-                                for (const key of e.removes) {
-                                    await configuration.updateEffective(key, undefined);
+                            if (msg.removes) {
+                                for (const key of msg.removes) {
+                                    await configuration.update(key, undefined, target, targetUri);
                                 }
                             }
                         } catch (e) {
                             let err = new Error(`error updating configuration: ${e}`);
                             Logger.error(err);
-                            this.postMessage({ type: 'error', reason: `error updating configuration: ${e}` });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
 
-                    break;
-                }
-                case 'fetchProjects': {
-                    handled = true;
-                    if (isFetchQuery(e)) {
-                        Container.jiraSiteManager.getProjects('name', e.query).then(projects => {
-                            this.postMessage({ type: 'projectList', availableProjects: projects });
-                        });
-                    }
                     break;
                 }
                 case 'sourceLink': {
@@ -229,8 +299,8 @@ export class ConfigWebview extends AbstractReactWebview<Emit, Action> {
                 }
                 case 'submitFeedback': {
                     handled = true;
-                    if (isSubmitFeedbackAction(e)) {
-                        submitFeedback(e.feedback, 'atlascodeSettings');
+                    if (isSubmitFeedbackAction(msg)) {
+                        submitFeedback(msg.feedback, 'atlascodeSettings');
                     }
                     break;
                 }

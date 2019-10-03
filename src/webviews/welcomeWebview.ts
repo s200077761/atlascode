@@ -3,9 +3,10 @@ import { Action } from '../ipc/messaging';
 import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
-import { submitFeedback } from './feedbackSubmitter';
+import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
+import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 
-export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
+export class WelcomeWebview extends AbstractReactWebview {
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -18,8 +19,21 @@ export class WelcomeWebview extends AbstractReactWebview<{}, Action> {
         return "atlascodeWelcomeScreen";
     }
 
-    public async invalidate() {
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return undefined;
+    }
 
+    public get productOrUndefined(): Product | undefined {
+        return undefined;
+    }
+
+    public async invalidate() {
+        const currentUser = await getFeedbackUser();
+
+        this.postMessage({
+            type: 'update',
+            feedbackUser: currentUser
+        });
     }
 
     protected async onMessageReceived(e: Action): Promise<boolean> {

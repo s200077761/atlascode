@@ -1,23 +1,47 @@
 import { Message } from "./messaging";
-import { Issue } from "../jira/jiraModel";
 import { Branch, Remote } from "../typings/git";
+import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData, MergeStrategy } from "../bitbucket/model";
+import { MinimalIssue } from "../jira/jira-client/model/entities";
+
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
-    pr?: Bitbucket.Schema.Pullrequest;
-    currentUser?: Bitbucket.Schema.User;
+    pr?: PullRequestData;
+    remote: Remote;
+    currentUser?: User;
     currentBranch: string;
-    commits?: Bitbucket.Schema.Commit[];
-    comments?: Bitbucket.Schema.Comment[];
-    relatedJiraIssues?: Issue[];
-    relatedBitbucketIssues?: Bitbucket.Schema.Issue[];
-    mainIssue?: Issue | Bitbucket.Schema.Issue;
-    buildStatuses?: Bitbucket.Schema.Commitstatus[];
+    commits?: Commit[];
+    comments?: Comment[];
+    relatedJiraIssues?: MinimalIssue[];
+    relatedBitbucketIssues?: BitbucketIssueData[];
+    mainIssue?: MinimalIssue | BitbucketIssueData;
+    buildStatuses?: BuildStatus[];
+    mergeStrategies: MergeStrategy[];
     errors?: string;
 }
 
 export function isPRData(a: Message): a is PRData {
     return (<PRData>a).type === 'update';
+}
+
+export interface BranchType {
+    kind: string;
+    prefix: string;
+}
+
+export interface FileDiff {
+    file: string;
+    status: FileStatus;
+    linesAdded: number;
+    linesRemoved: number;
+}
+
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    CONFLICT = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R'
 }
 
 export interface RepoData {
@@ -27,12 +51,14 @@ export interface RepoData {
     name?: string;
     owner?: string;
     remotes: Remote[];
-    defaultReviewers: Bitbucket.Schema.User[];
+    defaultReviewers: User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
+    branchTypes: BranchType[];
     developmentBranch?: string;
     hasLocalChanges?: boolean;
-    branchingModel?: Bitbucket.Schema.BranchingModel;
+    branchingModel?: BitbucketBranchingModel;
+    isCloud: boolean;
 }
 
 export interface CreatePRData extends Message {
@@ -50,14 +76,28 @@ export interface CheckoutResult extends Message {
 export interface CommitsResult extends Message {
     type: 'commitsResult';
     error?: string;
-    commits: Bitbucket.Schema.Commit[];
+    commits: Commit[];
 }
 
 export interface FetchIssueResult extends Message {
     type: 'fetchIssueResult';
-    issue?: Issue | Bitbucket.Schema.Issue;
+    issue?: MinimalIssue | BitbucketIssueData;
+}
+
+export interface FetchUsersResult extends Message {
+    type: 'fetchUsersResult';
+    users: Reviewer[];
 }
 
 export function isCommitsResult(a: Message): a is CommitsResult {
     return (<CommitsResult>a).type === 'commitsResult';
+}
+
+export interface DiffResult extends Message {
+    type: 'diffResult';
+    fileDiffs: FileDiff[];
+}
+
+export function isDiffResult(a: Message): a is DiffResult {
+    return (<DiffResult>a).type === 'diffResult';
 }

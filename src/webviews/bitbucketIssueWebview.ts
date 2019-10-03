@@ -1,19 +1,22 @@
 import * as vscode from "vscode";
 import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
-import { Action, onlineStatus, HostErrorMessage } from '../ipc/messaging';
-import { BitbucketIssueData } from "../ipc/bitbucketIssueMessaging";
-import { BitbucketIssuesApi } from "../bitbucket/bbIssues";
+import { Action, onlineStatus } from '../ipc/messaging';
+import { BitbucketIssueMessageData } from "../ipc/bitbucketIssueMessaging";
 import { isPostComment, isPostChange, isOpenStartWorkPageAction, isCreateJiraIssueAction } from "../ipc/bitbucketIssueActions";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Commands } from "../commands";
 import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } from "../analytics";
+import { BitbucketIssue, User } from "../bitbucket/model";
+import { clientForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
+import { isFetchUsers } from "../ipc/prActions";
+import { DetailedSiteInfo, Product, ProductBitbucket } from "../atlclients/authInfo";
 
-type Emit = BitbucketIssueData | HostErrorMessage;
 
-export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> implements InitializingWebview<Bitbucket.Schema.Issue> {
+export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
 
-    private _issue?: Bitbucket.Schema.Issue;
+    private _issue?: BitbucketIssue;
+    private _participants: User[] = [];
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -27,7 +30,19 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         return "bitbucketIssueScreen";
     }
 
-    initialize(data: Bitbucket.Schema.Issue) {
+    public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        if (this._issue) {
+            return siteDetailsForRemote(this._issue.remote);
+        }
+
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
+    }
+
+    initialize(data: BitbucketIssue) {
         this._issue = data;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -44,14 +59,14 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
     }
 
-    private async update(issue: Bitbucket.Schema.Issue) {
+    private async update(issue: BitbucketIssue) {
         if (this.isRefeshing) {
             return;
         }
 
         this.isRefeshing = true;
 
-        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.id}`; }
+        if (this._panel) { this._panel.title = `Bitbucket issue #${issue.data.id}`; }
 
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
@@ -59,68 +74,35 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
         }
 
         try {
-
-
+            const bbApi = await clientForRemote(this._issue!.remote);
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
-                Container.bitbucketContext.currentUser(),
-                BitbucketIssuesApi.refetch(issue),
-                BitbucketIssuesApi.getComments(issue),
-                BitbucketIssuesApi.getChanges(issue)]
+                Container.bitbucketContext.currentUser(issue.remote),
+                bbApi.issues!.refetch(issue),
+                bbApi.issues!.getComments(issue),
+                bbApi.issues!.getChanges(issue)]
             );
-            const updatedChanges = changes.data
-                .map(change => {
-                    let content = '';
-                    if (change.changes!.state) {
-                        content += `<li><em>changed status from <strong>${change.changes!.state!.old}</strong> to <strong>${change.changes!.state!.new}</strong></em></li>`;
-                    }
-                    if (change.changes!.kind) {
-                        content += `<li><em>changed issue type from <strong>${change.changes!.kind!.old}</strong> to <strong>${change.changes!.kind!.new}</strong></em></li>`;
-                    }
-                    if (change.changes!.priority) {
-                        content += `<li><em>changed issue priority from <strong>${change.changes!.priority!.old}</strong> to <strong>${change.changes!.priority!.new}</strong></em></li>`;
-                    }
-                    //@ts-ignore
-                    if (change.changes!.attachment && change.changes!.attachment!.new) {
-                        //@ts-ignore
-                        content += `<li><em>added attachment <strong>${change.changes!.attachment!.new}</strong></em></li>`;
-                    }
-                    //@ts-ignore
-                    if (change.changes!.assignee_account_id) {
-                        content += `<li><em>updated assignee</em></li>`;
-                    }
-                    if (change.changes!.content) {
-                        content += `<li><em>updated description</em></li>`;
-                    }
-                    if (change.changes!.title) {
-                        content += `<li><em>updated title</em></li>`;
-                    }
 
-                    if (content === '') {
-                        content += `<li><em>updated issue</em></li>`;
-                    }
-                    return { ...change, content: { html: `<p><ul>${content}</ul>${change.message!.html}</p>` } };
-                });
+            this._participants = comments.data.map(c => c.user);
 
-        //@ts-ignore
-        // replace comment with change data which contains additional details
-        const updatedComments = comments.data.map(comment => updatedChanges.find(
-            change =>
-                //@ts-ignore
-                change.id! === comment.id!) || comment);
-        const msg = {
-            type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
-            issue: issueLatest,
-            currentUser: currentUser,
-            comments: updatedComments,
-            hasMore: !!comments.next || !!changes.next,
-            showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
-        } as BitbucketIssueData;
+            //@ts-ignore
+            // replace comment with change data which contains additional details
+            const updatedComments = comments.data.map(comment =>
+                changes.data.find(change => change.id! === comment.id!) || comment);
+            const msg: BitbucketIssueMessageData = {
+                type: 'updateBitbucketIssue' as 'updateBitbucketIssue',
+                issueData: issueLatest.data,
+                remote: issueLatest.remote,
+                currentUser: currentUser,
+                comments: updatedComments,
+                hasMore: !!comments.next || !!changes.next,
+                showJiraButton: Container.config.bitbucket.issues.createJiraEnabled
+            };
 
             this.postMessage(msg);
         } catch (e) {
             let err = new Error(`error updating issue fields: ${e}`);
             Logger.error(err);
-            this.postMessage({ type: 'error', reason: `error updating issue fields: ${e}` });
+            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {
             this.isRefeshing = false;
         }
@@ -138,7 +120,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
 
                 case 'copyBitbucketIssueLink': {
                     handled = true;
-                    const linkUrl = this._issue!.links!.html!.href!;
+                    const linkUrl = this._issue!.data.links!.html!.href!;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied issue link to clipboard - ${linkUrl}`);
                     bbIssueUrlCopiedEvent().then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -147,11 +129,12 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'assign': {
                     handled = true;
                     try {
-                        await BitbucketIssuesApi.assign(this._issue!, (await Container.bitbucketContext.currentUser()).account_id!);
+                        const bbApi = await clientForRemote(this._issue!.remote);
+                        await bbApi.issues!.assign(this._issue!, siteDetailsForRemote(this._issue!.remote)!.userId);
                         await this.update(this._issue!);
                     } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
-                        this.postMessage({ type: 'error', reason: e });
+                        this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                     }
 
                     break;
@@ -160,12 +143,16 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostComment(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postComment(this._issue!, e.content);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postComment(this._issue!, e.content);
                             await this.update(this._issue!);
-                            bbIssueCommentEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueCommentEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
 
                     }
@@ -175,13 +162,18 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                     if (isPostChange(e)) {
                         handled = true;
                         try {
-                            await BitbucketIssuesApi.postChange(this._issue!, e.newStatus, e.content);
-                            this._issue = await BitbucketIssuesApi.refetch(this._issue!);
+                            const bbApi = await clientForRemote(this._issue!.remote);
+                            await bbApi.issues!.postChange(this._issue!, e.newStatus, e.content);
+                            this._issue = await bbApi.issues!.refetch(this._issue!);
                             await this.update(this._issue!);
-                            bbIssueTransitionedEvent().then(e => Container.analyticsClient.sendTrackEvent(e));
+
+                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._issue!.remote);
+                            if (site) {
+                                bbIssueTransitionedEvent(site).then(e => Container.analyticsClient.sendTrackEvent(e));
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error posting change: ${e}`));
-                            this.postMessage({ type: 'error', reason: e });
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
 
                     }
@@ -197,7 +189,24 @@ export class BitbucketIssueWebview extends AbstractReactWebview<Emit, Action> im
                 case 'createJiraIssue': {
                     if (isCreateJiraIssueAction(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.CreateIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.CreateIssue, this._issue);
+                    }
+                    break;
+                }
+                case 'fetchUsers': {
+                    if (isFetchUsers(e)) {
+                        handled = true;
+                        try {
+                            const bbApi = await clientForRemote(e.remote);
+                            const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
+                            if (reviewers.length === 0) {
+                                reviewers.push(...this._participants);
+                            }
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
                     }
                     break;
                 }

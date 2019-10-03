@@ -4,16 +4,11 @@ import { BitbucketContext } from '../bitbucket/bbContext';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { AuthProvider } from '../atlclients/authInfo';
-import { PullRequestApi } from '../bitbucket/pullRequests';
-import { RepositoriesApi } from '../bitbucket/repositories';
-import { Repository } from '../typings/git';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
-import { BitbucketIssuesApi } from '../bitbucket/bbIssues';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
-import { SimpleNode } from './nodes/simpleNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
+import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -26,7 +21,8 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         super();
         this._disposable = Disposable.from(
             commands.registerCommand(Commands.BitbucketIssuesNextPage, async (issues: PaginatedBitbucketIssues) => {
-                const result = await BitbucketIssuesApi.nextPage(issues);
+                const bbApi = await clientForRemote(issues.remote);
+                const result = await bbApi.issues!.nextPage(issues);
                 this.addItems(result);
                 bbIssuesPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
@@ -41,10 +37,11 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             this._childrenMap = new Map();
         }
         this._childrenMap.clear();
-        const repos = this.ctx.getBitbucketRepositores();
+        const repos = this.ctx.getBitbucketCloudRepositories();
         const expand = repos.length === 1;
         repos.forEach(repo => {
-            this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, expand));
+            const remote = firstBitbucketRemote(repo);
+            this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, remote, expand));
         });
     }
 
@@ -67,37 +64,24 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
-        if (!await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloud)) {
-            return [new SimpleNode("Please login to Bitbucket", { command: Commands.AuthenticateBitbucket, title: "Login to Bitbucket" })];
+        const repos = this.ctx.getBitbucketRepositories();
+        if (repos.length < 1) {
+            return emptyBitbucketNodes;
         }
+
         if (element) {
             return element.getChildren();
         }
+
         if (!this._childrenMap) {
             this.updateChildren();
         }
-        if (this.repoHasStagingRemotes()
-            && !await Container.authManager.isAuthenticated(AuthProvider.BitbucketCloudStaging)) {
-            return [new SimpleNode("Please login to Bitbucket Staging", { command: Commands.AuthenticateBitbucketStaging, title: "Login to Bitbucket Staging" })];
-        }
-        if (this.ctx.getBitbucketRepositores().length === 0) {
-            return emptyBitbucketNodes;
-        }
+
         return Array.from(this._childrenMap!.values());
     }
 
     dispose() {
         this._disposable.dispose();
         this._onDidChangeTreeData.dispose();
-    }
-
-    private repoHasStagingRemotes(): boolean {
-        return !!this.ctx.getBitbucketRepositores()
-            .find(repo => this.isStagingRepo(repo));
-    }
-
-    private isStagingRepo(repo: Repository): boolean {
-        return !!PullRequestApi.getBitbucketRemotes(repo)
-            .find(remote => RepositoriesApi.isStagingUrl(RepositoriesApi.urlForRemote(remote)));
     }
 }

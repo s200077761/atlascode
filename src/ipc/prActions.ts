@@ -1,10 +1,28 @@
 import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
-import { Issue } from "../jira/jiraModel";
+import { Reviewer, BitbucketIssueData, ApprovalStatus } from "../bitbucket/model";
+import { MinimalIssue } from "../jira/jira-client/model/entities";
+
+export interface DeleteComment extends Action {
+    commentId: number;
+}
+
+export interface EditComment extends Action {
+    content: string;
+    commentId: number;
+}
 
 export interface PostComment extends Action {
     content: string;
     parentCommentId?: number;
+}
+
+export function isDeleteComment(a: Action): a is DeleteComment {
+    return (<DeleteComment>a).commentId !== undefined;
+}
+
+export function isEditComment(a: Action): a is EditComment {
+    return (<EditComment>a).content !== undefined && (<EditComment>a).commentId !== undefined;
 }
 
 export function isPostComment(a: Action): a is PostComment {
@@ -15,15 +33,21 @@ export interface RefreshPullRequest extends Action {
     action: 'refreshPR';
 }
 
-export interface Approve extends Action {
-    action: 'approve';
+export interface UpdateApproval extends Action {
+    action: 'updateApproval';
+    status: ApprovalStatus;
+}
+
+export function isUpdateApproval(a: Action): a is UpdateApproval {
+    return (<UpdateApproval>a).status !== undefined;
 }
 
 export interface Merge extends Action {
     action: 'merge';
-    mergeStrategy?: 'merge_commit' | 'squash' | 'fast_forward';
+    mergeStrategy?: string;
+    commitMessage: string;
     closeSourceBranch?: boolean;
-    issue?: Issue | Bitbucket.Schema.Issue;
+    issue?: MinimalIssue | BitbucketIssueData;
 }
 
 export function isMerge(a: Action): a is Merge {
@@ -53,14 +77,14 @@ export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     repoUri: string;
     remote: Remote;
-    reviewers: Bitbucket.Schema.User[];
+    reviewers: Reviewer[];
     title: string;
     summary: string;
     sourceBranch: Branch;
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
-    issue?: Issue | Bitbucket.Schema.Issue;
+    issue?: MinimalIssue | BitbucketIssueData;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
@@ -91,4 +115,23 @@ export function isFetchIssue(a: Action): a is FetchIssue {
 
 export function isOpenPullRequest(a: Action): a is OpenPullRequest {
     return (<OpenPullRequest>a).action === 'openPullRequest';
+}
+
+export interface FetchUsers extends Action {
+    action: 'fetchUsers';
+    query: string;
+    remote: Remote;
+}
+
+export function isFetchUsers(a: Action): a is FetchUsers {
+    return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
+}
+
+export interface OpenBuildStatusAction extends Action {
+    action: 'openBuildStatus';
+    buildStatusUri: string;
+}
+
+export function isOpenBuildStatus(a: Action): a is OpenBuildStatusAction {
+    return (<OpenBuildStatusAction>a).buildStatusUri !== undefined;
 }

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Action, PMFData } from '../../ipc/messaging';
 import { darken, lighten, opacity } from './colors';
+import { OnMessageEventPromise } from '../../util/reactpromise';
 
 interface VsCodeApi {
     postMessage(msg: {}): void;
@@ -19,7 +20,7 @@ export interface WebviewComponent<A extends Action, R, P = {}, S = {}> extends R
 // P = the type of react properties
 // S = the type of react state
 export abstract class WebviewComponent<A extends Action, R, P, S> extends React.Component<P, S> {
-    private readonly _api: VsCodeApi;
+    protected readonly _api: VsCodeApi;
 
     constructor(props: Readonly<P>) {
         super(props);
@@ -88,16 +89,24 @@ export abstract class WebviewComponent<A extends Action, R, P, S> extends React.
     protected onPMFSubmit(data: PMFData) {
         this._api.postMessage({ action: 'pmfSubmit', pmfData: data });
     }
+    protected onPMFOpen() {
+        this._api.postMessage({ action: 'pmfOpen' });
+    }
 
     private onMessageEvent(e: MessageEvent) {
         const msg = e.data as R;
         this.onMessageReceived(msg);
     }
 
-    abstract onMessageReceived(e: R): void;
+    abstract onMessageReceived(e: R): boolean;
 
     protected postMessage(e: A) {
         this._api.postMessage(e);
+    }
+
+    protected postMessageWithEventPromise(send: any, waitForEvent: string, timeout: number, nonce?: string): Promise<any> {
+        this._api.postMessage(send);
+        return OnMessageEventPromise(waitForEvent, timeout, nonce);
     }
 
 }

@@ -1,25 +1,11 @@
 import * as React from "react";
 import { Field, ErrorMessage } from '@atlaskit/form';
-import { FieldValidators, chain } from '../fieldValidators';
+import * as FieldValidators from '../fieldValidators';
 
-export default class CreatePRTitleSummary extends React.Component<{ title?: string, summary?: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }, { title: string, summary: string }> {
+export default class CreatePRTitleSummary extends React.Component<{ title: string, summary: string, onTitleChange: (e: any) => void, onSummaryChange: (e: any) => void }> {
 
     constructor(props: any) {
         super(props);
-        this.state = {
-            title: '',
-            summary: ''
-        };
-    }
-
-    componentWillReceiveProps(nextProps: any) {
-        if (nextProps.title === this.state.title && nextProps.summary === this.state.summary) {
-            return;
-        }
-        this.setState({
-            title: nextProps.title,
-            summary: nextProps.summary
-        });
     }
 
     render() {
@@ -30,7 +16,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                     id='title'
                     name='title'
                     validate={FieldValidators.validateString}
-                    defaultValue={this.state.title}
+                    defaultValue={this.props.title}
                 >
                     {
                         (fieldArgs: any) => {
@@ -43,7 +29,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                                     <input {...fieldArgs.fieldProps}
                                         style={{ width: '100%', display: 'block' }}
                                         className='ac-inputField'
-                                        onChange={chain(fieldArgs.fieldProps.onChange, this.props.onTitleChange)} />
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.props.onTitleChange)} />
                                     {errDiv}
                                 </div>
                             );
@@ -54,7 +40,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                     isRequired={false}
                     id='summary'
                     name='summary'
-                    defaultValue={this.state.summary}
+                    defaultValue={this.props.summary}
                 >
                     {
                         (fieldArgs: any) => {
@@ -62,7 +48,7 @@ export default class CreatePRTitleSummary extends React.Component<{ title?: stri
                                 <textarea {...fieldArgs.fieldProps}
                                     className='ac-textarea'
                                     rows={5}
-                                    onChange={chain(fieldArgs.fieldProps.onChange, this.props.onSummaryChange)} />
+                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.props.onSummaryChange)} />
                             );
                         }
                     }

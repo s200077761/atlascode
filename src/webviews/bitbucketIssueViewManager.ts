@@ -1,13 +1,14 @@
 import { AbstractMultiViewManager } from './multiViewManager';
 import { BitbucketIssueWebview } from "./bitbucketIssueWebview";
+import { BitbucketIssue } from '../bitbucket/model';
 
-export class BitbucketIssueViewManager extends AbstractMultiViewManager<Bitbucket.Schema.Issue> {
+export class BitbucketIssueViewManager extends AbstractMultiViewManager<BitbucketIssue> {
     constructor(extensionPath: string) {
         super(extensionPath);
     }
 
-    dataKey(data: Bitbucket.Schema.Issue): string {
-        return (data.links!.self!.href!);
+    dataKey(issue: BitbucketIssue): string {
+        return (issue.data.links!.self!.href!);
     }
 
     createView(extensionPath: string) {

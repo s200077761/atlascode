@@ -9,12 +9,13 @@ import {
     ExtensionContext,
     Uri,
     workspace,
-    Disposable
+    Disposable,
+    WorkspaceConfiguration
 } from 'vscode';
-import { extensionId, JiraWorkingSiteConfigurationKey, JiraWorkingProjectConfigurationKey } from '../constants';
+import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraCreateSiteAndProjectKey } from '../constants';
 import { Container } from '../container';
-import { Project } from 'src/jira/jiraModel';
-import { AccessibleResource } from 'src/atlclients/authInfo';
+import { SiteIdAndProjectKey } from './model';
+import deepEqual from 'deep-equal';
 
 /*
 Configuration is a helper to manage configuration changes in various parts of the system.
@@ -41,7 +42,7 @@ export class Configuration extends Disposable {
         this._onDidChange.dispose();
     }
 
-    private onConfigurationChanged(e: ConfigurationChangeEvent) {
+    private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
         if (!e.affectsConfiguration(extensionId, null!)) { return; }
 
@@ -57,7 +58,7 @@ export class Configuration extends Disposable {
     };
 
     // get returns a strongly type config section/value
-    get<T>(section?: string, resource?: Uri | null, defaultValue?: T) {
+    get<T>(section?: string, resource?: Uri | null, defaultValue?: T): T {
         return defaultValue === undefined
             ? workspace
                 .getConfiguration(section === undefined ? undefined : extensionId, resource!)
@@ -68,83 +69,126 @@ export class Configuration extends Disposable {
     }
 
     // changed can be called to see if the passed in section (minus the extensionId) was affect by the change
-    changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null) {
+    changed(e: ConfigurationChangeEvent, section: string, resource?: Uri | null): boolean {
         return e.affectsConfiguration(`${extensionId}.${section}`, resource!);
     }
 
     // initializing takes an event and returns if it is an initalizing event or not
-    initializing(e: ConfigurationChangeEvent) {
+    initializing(e: ConfigurationChangeEvent): boolean {
         return e === this.initializingChangeEvent;
     }
 
     // inspect returns details of the given config section
-    inspect(section?: string, resource?: Uri | null) {
-        return workspace
+    inspect<T>(section?: string, resource?: Uri | null): { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T, workspaceFolderValue?: T } {
+        const inspect = workspace
             .getConfiguration(section === undefined ? undefined : extensionId, resource!)
-            .inspect(section === undefined ? extensionId : section);
+            .inspect<T>(section === undefined ? extensionId : section);
+
+        return (inspect) ? inspect : { key: "" };
     }
 
     // update does what it sounds like
-    private async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null) {
+    public async update(section: string, value: any, target: ConfigurationTarget, resource?: Uri | null): Promise<void> {
+        const inspect = this.inspect(section, resource);
+        const isDefault: boolean = deepEqual(value, inspect.defaultValue);
+        if (
+            (isDefault || value === undefined)
+            && (
+                (target === ConfigurationTarget.Global && inspect.globalValue === undefined)
+                || (target === ConfigurationTarget.Workspace && inspect.workspaceValue === undefined)
+            )
+        ) {
+            return undefined;
+        }
+
+        if (isDefault) {
+            value = undefined;
+        }
+
         return await workspace
             .getConfiguration(extensionId, target === ConfigurationTarget.Global ? undefined : resource!)
             .update(section, value, target);
     }
 
-    async setWorkingSite(site?: AccessibleResource) {
-        await this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, site);
-        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, undefined);
+    // Moving from V1 to V2 working site became default site.
+    async clearVersion1WorkingSite() {
+        await this.updateForWorkspace(JiraLegacyWorkingSiteConfigurationKey, undefined);
     }
 
-    async setWorkingProject(project?: Project) {
-        // It's possible that the working site is being read from the global settings while we're writing to WorkspaceFolder settings. 
-        // Re-write it to be sure that the site and project are written to the same ConfigurationTarget.
-        const inspect = configuration.inspect(JiraWorkingSiteConfigurationKey);
-        if (inspect && !inspect.workspaceFolderValue) {
-            this.updateForWorkspaceFolder(JiraWorkingSiteConfigurationKey, inspect.globalValue);
+    // Migrates the workspace level site settings. This needs to be done for every workspace /directory
+    // the first time it's opened unlike global migrations that can happen on first run of the extension only.
+    async migrateLocalVersion1WorkingSite(deletePrevious: boolean) {
+        let inspect = configuration.inspect(JiraLegacyWorkingSiteConfigurationKey);
+        if (inspect.workspaceValue) {
+            const config = this.configForOpenWorkspace();
+            if (config && deletePrevious) {
+                await config.update(JiraLegacyWorkingSiteConfigurationKey, undefined);
+            }
         }
-        await this.updateForWorkspaceFolder(JiraWorkingProjectConfigurationKey, project ? {
-            id: project.id,
-            name: project.name,
-            key: project.key
-        } : undefined);
+        inspect = configuration.inspect(JiraV1WorkingProjectConfigurationKey);
+        if (inspect.workspaceValue) {
+            const config = this.configForOpenWorkspace();
+            if (config && deletePrevious) {
+                await config.update(JiraV1WorkingProjectConfigurationKey, undefined);
+            }
+        }
     }
 
-    // Will attempt to update the value for both the WorkspaceFolder and Global. If that fails (no folder is open) it will only set the value globaly.
-    private async updateForWorkspaceFolder(section: string, value: any) {
+    async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
+        await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject);
+    }
+
+    async clearVersion1WorkingProject() {
+        // for now, we keep the global v1 project so we can use it to migrate jql later
+        await this.update(JiraV1WorkingProjectConfigurationKey, undefined, ConfigurationTarget.Workspace);
+    }
+
+    private configForOpenWorkspace(): WorkspaceConfiguration | undefined {
         const f = workspace.workspaceFolders;
         if (f && f.length > 0) {
-            const config = workspace.getConfiguration(extensionId, f[0].uri);
-            return Promise.all([
-                config.update(section, value, ConfigurationTarget.WorkspaceFolder),
+            return workspace.getConfiguration(extensionId, f[0].uri);
+        }
+        return undefined;
+    }
+
+    // Will attempt to update the value for both the Workspace and Global. If that fails (no folder is open) it will only set the value globaly.
+    private async updateForWorkspace(section: string, value: any) {
+        const config = this.configForOpenWorkspace();
+        if (config) {
+            await Promise.all([
+                config.update(section, value, ConfigurationTarget.Workspace),
                 config.update(section, value, ConfigurationTarget.Global)
             ]);
         } else {
-            return this.updateEffective(section, value);
+            await this.updateEffective(section, value);
         }
     }
 
-    async updateEffective(section: string, value: any, resource: Uri | null = null) {
-        const inspect = await this.inspect(section, resource)!;
-        if (inspect.workspaceFolderValue !== undefined) {
-            if (value === inspect.workspaceFolderValue) { return; }
+    // this tries to figure out where the current value is set and update it there
+    async updateEffective(section: string, value: any, resource: Uri | null = null): Promise<void> {
+        const inspect = this.inspect(section, resource);
 
-            return await this.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
+        const isDefault: boolean = deepEqual(value, inspect.defaultValue);
+
+        if (inspect.workspaceFolderValue !== undefined) {
+            if (value === inspect.workspaceFolderValue) { return undefined; }
+
+            return configuration.update(section, value, ConfigurationTarget.WorkspaceFolder, resource);
         }
 
         if (inspect.workspaceValue !== undefined) {
-            if (value === inspect.workspaceValue) { return; }
+            if (value === inspect.workspaceValue) { return undefined; }
 
-            return await this.update(section, value, ConfigurationTarget.Workspace);
+            return configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
-        if (inspect.globalValue === value || (inspect.globalValue === undefined && value === inspect.defaultValue)) {
-            return;
+        if (inspect.globalValue === value || (inspect.globalValue === undefined && isDefault)) {
+            return undefined;
         }
 
-        return await this.update(
+        return configuration.update(
             section,
-            value === inspect.defaultValue ? undefined : value,
+            isDefault ? undefined : value,
             ConfigurationTarget.Global
         );
     }
