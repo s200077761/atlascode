@@ -400,19 +400,21 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 </div>
                                 {this.state.mergeStrategy.value !== 'fast_forward' &&
                                     <div className='ac-vpadding'>
-                                        <EdiText
-                                            type='textarea'
-                                            value={this.state.commitMessage}
-                                            onSave={this.handleCommitMessageChange}
-                                            validation={isValidString}
-                                            validationMessage='Commit message is required'
-                                            inputProps={{ className: 'ac-inputField' }}
-                                            viewProps={{ id: 'commit-message', className: 'ac-inline-input-view-p' }}
-                                            editButtonClassName='ac-inline-edit-button'
-                                            cancelButtonClassName='ac-inline-cancel-button'
-                                            saveButtonClassName='ac-inline-save-button'
-                                            editOnViewClick={true}
-                                        />
+                                        <Tooltip content={this.state.commitMessage}>
+                                            <EdiText
+                                                type='textarea'
+                                                value={this.state.commitMessage}
+                                                onSave={this.handleCommitMessageChange}
+                                                validation={isValidString}
+                                                validationMessage='Commit message is required'
+                                                inputProps={{ className: 'ac-inputField', rows: 4 }}
+                                                viewProps={{ id: 'commit-message', className: 'ac-inline-input-view-p' }}
+                                                editButtonClassName='ac-inline-edit-button'
+                                                cancelButtonClassName='ac-inline-cancel-button'
+                                                saveButtonClassName='ac-inline-save-button'
+                                                editOnViewClick={true}
+                                            />
+                                        </Tooltip>
                                     </div>
                                 }
                                 {issueDetails}
