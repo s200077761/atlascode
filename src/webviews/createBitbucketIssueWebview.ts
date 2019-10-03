@@ -8,7 +8,7 @@ import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc
 import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
 import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 
 export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
@@ -30,6 +30,10 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     public async invalidate() {

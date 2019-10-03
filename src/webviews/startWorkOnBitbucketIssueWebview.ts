@@ -12,7 +12,7 @@ import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { Repo, BitbucketIssue } from '../bitbucket/model';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
     private _state: BitbucketIssue;
@@ -34,6 +34,10 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     async createOrShowIssue(data: BitbucketIssue) {

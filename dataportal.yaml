@@ -95,6 +95,7 @@ track:
       event when a user chooses a default jira site
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 14551
     action: selected
     subject: defaultJiraProject
@@ -103,6 +104,7 @@ track:
       event when a user shooses a default jira project
     attributes:
       - name: instanceType
+      - name: hostProduct
   # Jira issue events
   - id: 15628
     action: created
@@ -112,9 +114,7 @@ track:
       when a user creates an issue
     attributes:
       - name: instanceType
-      - name: source
-        type: string
-        description: "The method used to create the Jira issue.\n* explorer\n* contextMenu\n* todoComment"
+      - name: hostProduct
   - id: 15629
     action: transitioned
     subject: issue
@@ -123,6 +123,7 @@ track:
       when an issue is transitioned
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15630
     action: copied
     subject: issueUrl
@@ -138,6 +139,7 @@ track:
       when an issue is commented on
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15632
     action: workStarted
     subject: issue
@@ -146,6 +148,7 @@ track:
       when work is started on an issue
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 18460
     action: updated
     subject: issue
@@ -154,6 +157,13 @@ track:
       when an issue field is updated
     attributes:
       - name: instanceType
+      - name: hostProduct
+      - name: fieldName
+        type: string
+        description: "the name of the updated field"
+      - name: fieldKey
+        type: string
+        description: "the key of the updated field"
   # Bitbucket issue events
   - id: 16217
     action: created
@@ -163,6 +173,7 @@ track:
       Bitbucket Issue created in VS Code.
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16201
     action: workStarted
     subject: bbIssue
@@ -171,6 +182,7 @@ track:
       when work is started on a Bitbucket issue
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16215
     action: transitioned
     subject: bbIssue
@@ -179,6 +191,7 @@ track:
       Bitbucket Issue transitioned to a new state.
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16216
     action: created
     subject: bbIssueComment
@@ -187,6 +200,7 @@ track:
       Comment added to Bitbucket issue in VS Code.
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16202
     action: bbIssueUrl
     subject: copied
@@ -203,6 +217,7 @@ track:
       when a PR is created
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15635
     action: created
     subject: pullRequestComment
@@ -211,6 +226,7 @@ track:
       when a PR is commented on
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15636
     action: checkedOut
     subject: pullRequestBranch
@@ -219,6 +235,7 @@ track:
       when a PR branch is checked out
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15637
     action: approved
     subject: pullRequest
@@ -227,6 +244,7 @@ track:
       when a PR is approved
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15638
     action: merged
     subject: pullRequest
@@ -235,6 +253,7 @@ track:
       when a PR is merged
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15639
     action: copied
     subject: pullRequestUrl
@@ -251,6 +270,7 @@ track:
       when a custom JQL query is added
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15640
     action: start
     subject: pipeline
@@ -259,6 +279,7 @@ track:
       when a user starts a pipelines build
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 18461
     action: submitted
     subject: atlascodePmf
@@ -303,17 +324,20 @@ screen:
     description: |
       event when user views assigned issues explorer
     attributes:
+      - name: hostProduct
   - id: 14477
     name: atlascode.views.jira.openIssues
     description: |
       event when user views open issues explorer
     attributes:
+      - name: hostProduct
   - id: 14478
     name: atlascode.views.bb.pullrequestsTreeView
     description: |
       event when user views pull requests explorer
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 14447
     name: atlascodeSettings
     description: |
@@ -325,6 +349,7 @@ screen:
       Event when a user views a pull request deatils (summary) screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 14450
     name: feedbackForm
     description: |
@@ -336,58 +361,70 @@ screen:
       Event when a user views an issue view screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 14453
     name: atlascodeWelcomeScreen
     description: |
       Event when a user views the atlascode welcome screen
     attributes:
+      - name: excludeFromActivity
+        type: boolean
+        description: "Flag to exclude from user activity count"
   - id: 14454
     name: pullRequestDiffScreen
     description: |
       Event when a user views a pull request diff screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 14459
     name: issueHover
     description: |
       Event when a user sees an issue popup when hovering
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15622
     name: atlascode.views.jira.customJql
     description: |
       custom JQL tree view
     attributes:
+      - name: hostProduct
   - id: 15623
     name: atlascodeCreateIssueScreen
     description: |
       jira issue create screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15624
     name: pipelineSummaryScreen
     description: |
       pipeline build details screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15625
     name: createPullRequestScreen
     description: |
       create BB PR screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15626
     name: startWorkOnIssueScreen
     description: |
       start work on issue screen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 15627
     name: atlascode.views.bb.pipelinesTreeView
     description: |
       pipelines tree view
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 18462
     name: atlascodePmf
     description: |
@@ -404,18 +441,21 @@ screen:
       viewed createBitbucketIssueScreen
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16144
     name: atlascode.views.bb.issuesTreeView
     description: |
       viewed atlascode.views.bb.issuesTreeView
     attributes:
       - name: instanceType
+      - name: hostProduct
   - id: 16145
     name: bitbucketIssueScreen
     description: |
       viewed bitbucketIssueScreen
     attributes:
       - name: instanceType
+      - name: hostProduct
 ui:
   - id: 14444
     action: clicked
