@@ -78,6 +78,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests`,
             {
                 pagelen: defaultPagelen,
+                fields: '+values.participants',
                 ...queryParams
             }
         );
