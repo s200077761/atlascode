@@ -29,6 +29,10 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         );
     }
 
+    async getMirrorHosts(): Promise<string[]> {
+        return [];
+    }
+
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
 

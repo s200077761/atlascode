@@ -128,7 +128,12 @@ export class SiteManager extends Disposable {
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
-        return this.getSitesAvailable(product).find(site => site.hostname === hostname);
+        let site = this.getSitesAvailable(product).find(site => site.hostname === hostname);
+        if (site) {
+            return site;
+        }
+
+        return this.getSitesAvailable(product).find(site => Container.bitbucketContext.getMirrors(site.hostname).includes(hostname));
     }
 
     public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {

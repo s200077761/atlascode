@@ -201,6 +201,7 @@ export interface PullRequestApi {
 }
 
 export interface RepositoriesApi {
+    getMirrorHosts(): Promise<string[]>;
     get(remote: Remote): Promise<Repo>;
     getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
     getDevelopmentBranch(remote: Remote): Promise<string>;
