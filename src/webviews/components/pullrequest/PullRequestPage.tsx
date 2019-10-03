@@ -213,7 +213,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         isCheckoutButtonLoading: false,
                         isAnyCommentLoading: false,
                         closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.closeSourceBranch : this.state.closeSourceBranch
-                    });
+                    },
+                        () => {
+                            if (this.state.mergeStrategy.value === undefined) {
+                                this.handleMergeStrategyChange(this.state.pr.mergeStrategies.find(strategy => strategy.isDefault === true));
+                            }
+                        }
+                    );
                 }
                 break;
             }
@@ -392,21 +398,23 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         value={this.state.mergeStrategy}
                                         onChange={this.handleMergeStrategyChange} />
                                 </div>
-                                {this.state.mergeStrategy.value !== undefined && this.state.mergeStrategy.value !== 'fast_forward' &&
+                                {this.state.mergeStrategy.value !== 'fast_forward' &&
                                     <div className='ac-vpadding'>
-                                        <EdiText
-                                            type='textarea'
-                                            value={this.state.commitMessage}
-                                            onSave={this.handleCommitMessageChange}
-                                            validation={isValidString}
-                                            validationMessage='Commit message is required'
-                                            inputProps={{ className: 'ac-inputField' }}
-                                            viewProps={{ id: 'commit-message', className: 'ac-inline-input-view-p' }}
-                                            editButtonClassName='ac-inline-edit-button'
-                                            cancelButtonClassName='ac-inline-cancel-button'
-                                            saveButtonClassName='ac-inline-save-button'
-                                            editOnViewClick={true}
-                                        />
+                                        <Tooltip content={this.state.commitMessage}>
+                                            <EdiText
+                                                type='textarea'
+                                                value={this.state.commitMessage}
+                                                onSave={this.handleCommitMessageChange}
+                                                validation={isValidString}
+                                                validationMessage='Commit message is required'
+                                                inputProps={{ className: 'ac-inputField', rows: 4 }}
+                                                viewProps={{ id: 'commit-message', className: 'ac-inline-input-view-p' }}
+                                                editButtonClassName='ac-inline-edit-button'
+                                                cancelButtonClassName='ac-inline-cancel-button'
+                                                saveButtonClassName='ac-inline-save-button'
+                                                editOnViewClick={true}
+                                            />
+                                        </Tooltip>
                                     </div>
                                 }
                                 {issueDetails}
