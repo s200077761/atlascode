@@ -1,10 +1,11 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useContext } from 'react';
 import { useDropzone, FileWithPath } from 'react-dropzone';
 import FileIcon from '@atlaskit/icon/glyph/file';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
 import filesize from 'filesize';
+import { ResourceContext } from '../context';
 
 type ItemData = {
     file: FileWithPreview;
@@ -77,12 +78,12 @@ const filesReducer = (state: FileWithPreview[], action: ActionType) => {
     }
 };
 
-const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, onFilesChanged: (files: FileWithPath[]) => void) => {
+const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, scheme: string) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone' })}>
                 <div className='ac-attachment-instructions'>
-                    <img className='ac-attachment-filesbg' src='vscode-resource:images/files-bg.png' />
+                    <img className='ac-attachment-filesbg' src={`${scheme}images/files-bg.png`} />
                     <div className='ac-attachment-drag-and-button'>
                         <div className='ac-attachment-drag-text'>
                             <span>Drag and drop your files anywhere or</span>
@@ -133,7 +134,7 @@ const dialogEditor = (files: any[], dispatch: any, getRootProps: (props?: any | 
     );
 };
 
-const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any, onFilesChanged: (files: FileWithPath[]) => void) => {
+const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (props?: any | undefined) => any, getInputProps: (props?: any | undefined) => any) => {
     return (
         <div className="ac-attachment-container">
             <div {...getRootProps({ className: 'ac-attachment-dropzone-inline' })}>
@@ -167,6 +168,7 @@ const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (pr
 };
 
 export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ onFilesChanged, isInline }) => {
+    const scheme: string = useContext(ResourceContext);
     const [files, dispatch] = useReducer(filesReducer, initialState);
     const { getRootProps, getInputProps } = useDropzone({
         onDrop: (acceptedFiles: File[]) => {
@@ -191,9 +193,9 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ o
     useEffect(() => { onFilesChanged(files); }, [files]);
 
     if (isInline) {
-        return inlineEditor(files, dispatch, getRootProps, getInputProps, onFilesChanged);
+        return inlineEditor(files, dispatch, getRootProps, getInputProps);
     }
 
-    return dialogEditor(files, dispatch, getRootProps, getInputProps, onFilesChanged);
+    return dialogEditor(files, dispatch, getRootProps, getInputProps, scheme);
 
 };

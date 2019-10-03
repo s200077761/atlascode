@@ -17,6 +17,7 @@ import { Container } from '../container';
 import { OnlineInfoEvent } from '../util/online';
 import { submitPMF } from '../pmf/pmfSubmitter';
 import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
+import { UIWebsocket } from '../ws';
 
 // ReactWebview is an interface that can be used to deal with webview objects when you don't know their generic typings.
 export interface ReactWebview extends Disposable {
@@ -51,6 +52,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
     private _onDidPanelDispose = new EventEmitter<void>();
     protected isRefeshing: boolean = false;
     private _viewEventSent: boolean = false;
+    private ws: UIWebsocket;
 
     constructor(extensionPath: string) {
         this._extensionPath = extensionPath;
@@ -59,6 +61,9 @@ export abstract class AbstractReactWebview implements ReactWebview {
         Container.context.subscriptions.push(
             Container.onlineDetector.onDidOnlineChange(this.onDidOnlineChange, this),
         );
+
+        // Note: this is supe rlightweight and does nothing until you call start()
+        this.ws = new UIWebsocket(13988);
     }
 
     private onDidOnlineChange(e: OnlineInfoEvent) {
@@ -99,11 +104,17 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             );
 
+
+            if (Container.isDebugging && Container.config.enableUIWS) {
+                this.ws.start(this.onMessageReceived.bind(this));
+            }
+
             this._disposablePanel = Disposable.from(
                 this._panel,
                 this._panel.onDidDispose(this.onPanelDisposed, this),
                 this._panel.onDidChangeViewState(this.onViewStateChanged, this),
-                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this)
+                this._panel.webview.onDidReceiveMessage(this.onMessageReceived, this),
+                this.ws,
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
@@ -187,6 +198,10 @@ export abstract class AbstractReactWebview implements ReactWebview {
         if (this._panel === undefined) { return false; }
 
         const result = this._panel!.webview.postMessage(message);
+
+        if (Container.isDebugging && Container.config.enableUIWS) {
+            this.ws.send(message);
+        }
 
         return result;
     }

@@ -34,6 +34,7 @@ export interface IConfig {
     showWelcomeOnInstall: boolean;
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
+    enableUIWS: boolean;
 
 }
 
@@ -297,5 +298,6 @@ export const emptyConfig: IConfig = {
     offlineMode: false,
     showWelcomeOnInstall: true,
     jira: emptyJiraConfig,
-    bitbucket: emptyBitbucketConfig
+    bitbucket: emptyBitbucketConfig,
+    enableUIWS: false,
 };

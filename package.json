@@ -545,6 +545,12 @@
                     "description": "Enables charles *only* when debugging the extension (for internal use)",
                     "scope": "window"
                 },
+                "atlascode.enableUIWS": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables UI websocket for debugging webviews",
+                    "scope": "window"
+                },
                 "atlascode.offlineMode": {
                     "type": "boolean",
                     "default": false,
@@ -936,7 +942,11 @@
         "test": "npm run compile && node ./build/test/runTest.js",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
         "devcompile:react": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.react.dev.ts",
-        "devcompile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.extension.dev.ts"
+        "devcompile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.extension.dev.ts",
+        "webview:atlascodeSettings:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:atlascodeSettings:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts"
     },
     "dependencies": {
         "@atlaskit/avatar": "^17.0.0",
@@ -974,6 +984,7 @@
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
         "@deviniti/jql-autocomplete": "^1.0.2",
+        "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
@@ -1011,7 +1022,8 @@
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
         "turndown": "^5.0.3",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "websocket": "^1.0.30"
     },
     "devDependencies": {
         "@types/analytics-node": "^3.1.1",
@@ -1023,6 +1035,7 @@
         "@types/git-url-parse": "^9.0.0",
         "@types/glob": "^7.1.1",
         "@types/handlebars": "4.0.39",
+        "@types/html-webpack-plugin": "^3.2.1",
         "@types/jquery": "^3.3.23",
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
@@ -1049,6 +1062,7 @@
         "css-loader": "^3.2.0",
         "fork-ts-checker-notifier-webpack-plugin": "^1.0.2",
         "fork-ts-checker-webpack-plugin": "^1.5.0",
+        "html-webpack-plugin": "^3.2.0",
         "mini-css-extract-plugin": "^0.8.0",
         "mocha": "^5.2.0",
         "npm-run-all": "^4.1.5",
@@ -1068,6 +1082,7 @@
         "vscode-test": "^1.2.0",
         "webpack": "^4.40.2",
         "webpack-cli": "^3.3.9",
+        "webpack-dev-server": "^3.8.2",
         "webpack-manifest-plugin": "^2.1.2"
     }
 }
