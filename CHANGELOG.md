@@ -20,7 +20,6 @@
 * Pre-filled mention picker when creating pull requests and Bitbucket issues
 * Editing and deleting comments in pull requests
 * Added support for merge commit messages
-* Added a refresh button on Jira issue view
 * Added diff preview in pull request views
 * Added support for Bitbucket mirrors
 

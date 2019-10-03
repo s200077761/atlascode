@@ -120,7 +120,6 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Pre-filled mention picker when creating pull requests and Bitbucket issues</li>
                                 <li>Editing and deleting comments in pull requests</li>
                                 <li>Added support for merge commit messages</li>
-                                <li>Added a refresh button on Jira issue view</li>
                                 <li>Added diff preview in pull request views</li>
                                 <li>Added support for Bitbucket mirrors</li>
                             </ul>
