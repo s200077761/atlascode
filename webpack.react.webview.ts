@@ -18,10 +18,10 @@ const theme: string = (process.env.THEME) ? process.env.THEME : "dark";
 
 const config: webpack.Configuration = {
     mode: "development",
-    context: path.resolve(__dirname, 'src'),
+    context: path.resolve(__dirname, "src"),
     entry: [
-        resolveApp(`./src/webviews/components/${pageTsx}`),
-        resolveApp("./src/webviews/components/index-dev.tsx"),
+        `./webviews/components/${pageTsx}`,
+        "./webviews/components/index-dev.tsx",
 
     ],
     devtool: 'cheap-module-source-map',
@@ -54,7 +54,7 @@ const config: webpack.Configuration = {
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
         new HtmlWebPackPlugin({
-            template: "./devhtml/devindex.html",
+            template: "../devhtml/devindex.html",
             templateParameters: {
                 view: view,
                 theme: theme
