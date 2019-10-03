@@ -18,6 +18,7 @@ const theme: string = (process.env.THEME) ? process.env.THEME : "dark";
 
 const config: webpack.Configuration = {
     mode: "development",
+    context: path.resolve(__dirname, 'src'),
     entry: [
         resolveApp(`./src/webviews/components/${pageTsx}`),
         resolveApp("./src/webviews/components/index-dev.tsx"),
