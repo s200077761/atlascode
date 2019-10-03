@@ -1,12 +1,12 @@
 # Atlassian for VSCode
 Atlassian for VSCode brings the functionality of Atlassian products to your favorite IDE!
 
-This extension combines the power of Jira Cloud and Bitbucket Cloud to streamline the developer workflow within VSCode.
+This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VSCode.
 
 With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
 ## Getting Started
-* Make sure you have VSCode version 1.34.0 or above
+* Make sure you have VSCode version 1.37.0 or above
 * Download the extension from the marketplace
 * Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 * From the command palette, type 'Atlassian:' to see all of the extensions available commands

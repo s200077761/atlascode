@@ -1,7 +1,7 @@
 {
     "name": "atlascode",
     "displayName": "Jira and Bitbucket (Official)",
-    "description": "Bringing the power of Jira Cloud and Bitbucket Cloud to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
+    "description": "Bringing the power of Jira and Bitbucket to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
         "jira",
@@ -44,8 +44,7 @@
     ],
     "main": "./build/extension/extension",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "atlascode.jira.createIssue",
                 "title": "Create New Jira Issue",
                 "icon": {
@@ -251,17 +250,14 @@
             }
         ],
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "atlascode-drawer",
-                    "title": "Atlassian",
-                    "icon": "resources/atlassian-icon.svg"
-                }
-            ]
+            "activitybar": [{
+                "id": "atlascode-drawer",
+                "title": "Atlassian",
+                "icon": "resources/atlassian-icon.svg"
+            }]
         },
         "views": {
-            "atlascode-drawer": [
-                {
+            "atlascode-drawer": [{
                     "id": "atlascode.views.jira.customJql",
                     "name": "Jira Issues",
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
@@ -284,15 +280,12 @@
             ]
         },
         "menus": {
-            "editor/title": [
-                {
-                    "command": "atlascode.bb.toggleCommentsVisibility",
-                    "when": "resourceScheme == atlascode.bbpr",
-                    "group": "navigation"
-                }
-            ],
-            "editor/context": [
-                {
+            "editor/title": [{
+                "command": "atlascode.bb.toggleCommentsVisibility",
+                "when": "resourceScheme == atlascode.bbpr",
+                "group": "navigation"
+            }],
+            "editor/context": [{
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.jira.enabled"
@@ -328,8 +321,7 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
-            "view/title": [
-                {
+            "view/title": [{
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -385,8 +377,7 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": [
-                {
+            "view/item/context": [{
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -415,14 +406,11 @@
                     "when": "viewItem == pipelineBranch"
                 }
             ],
-            "comments/commentThread/context": [
-                {
-                    "command": "atlascode.bb.addComment",
-                    "group": "inline"
-                }
-            ],
-            "comments/comment/title": [
-                {
+            "comments/commentThread/context": [{
+                "command": "atlascode.bb.addComment",
+                "group": "inline"
+            }],
+            "comments/comment/title": [{
                     "command": "atlascode.bb.editComment",
                     "group": "inline@1",
                     "when": "comment =~ /canEdit/"
@@ -433,8 +421,7 @@
                     "when": "comment =~ /canDelete/"
                 }
             ],
-            "comments/comment/context": [
-                {
+            "comments/comment/context": [{
                     "command": "atlascode.bb.cancelCommentEdit",
                     "group": "inline@2"
                 },
@@ -443,8 +430,7 @@
                     "group": "inline@1"
                 }
             ],
-            "commandPalette": [
-                {
+            "commandPalette": [{
                     "command": "atlascode.showJiraAuth",
                     "when": "false"
                 },
