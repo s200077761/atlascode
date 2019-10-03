@@ -9,12 +9,13 @@ bitbucket-pipelines.yml
 *.pem
 *.vsix
 tsconfig.json
-tsconfig.prod.json
+tsconfig.webpack.json
 tslint.json
 node_modules/**
 yarn.lock
 yarn-error.log
-webpack.config.js
+webpack.*
 build/**/*.map
 .readme/**
 dataportal.yaml
+devhtml/**
