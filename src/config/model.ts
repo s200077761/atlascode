@@ -29,12 +29,14 @@ export interface IConfig {
     outputLevel: OutputLevel;
     enableCharles: boolean;
     charlesCertPath: string;
+    customSSLCertPaths: string;
     charlesDebugOnly: boolean;
     offlineMode: boolean;
     showWelcomeOnInstall: boolean;
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
     enableUIWS: boolean;
+    enableCustomSSLCerts: boolean;
 
 }
 
@@ -300,4 +302,6 @@ export const emptyConfig: IConfig = {
     jira: emptyJiraConfig,
     bitbucket: emptyBitbucketConfig,
     enableUIWS: false,
+    enableCustomSSLCerts: false,
+    customSSLCertPaths: '',
 };
