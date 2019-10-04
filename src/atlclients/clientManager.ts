@@ -46,7 +46,12 @@ export class ClientManager implements Disposable {
 
     const initializing = configuration.initializing(e);
 
-    if (initializing || configuration.changed(e, 'enableCharles') || configuration.changed(e, 'charlesCertPath') || configuration.changed(e, 'charlesDebugOnly')) {
+    if (initializing
+      || configuration.changed(e, 'enableCharles')
+      || configuration.changed(e, 'charlesCertPath')
+      || configuration.changed(e, 'charlesDebugOnly')
+      || configuration.changed(e, 'enableCustomSSLCerts')
+      || configuration.changed(e, 'customSSLCertPaths')) {
       this._agentChanged = true;
 
       this._agent = getAgent();

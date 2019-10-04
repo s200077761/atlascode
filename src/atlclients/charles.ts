@@ -3,11 +3,25 @@ import { configuration } from "../config/configuration";
 import { Resources } from "../resources";
 var tunnel = require("tunnel");
 import * as fs from "fs";
+import * as https from 'https';
+import * as sslRootCas from 'ssl-root-cas';
 
 export function getAgent(): any {
     let agent = undefined;
     try {
-        if (configuration.get<boolean>('enableCharles')) {
+        if (configuration.get<boolean>('enableCustomSSLCerts') && configuration.get<string>('customSSLCertPaths', undefined, '').trim() !== '') {
+            const cas = sslRootCas.create();
+            const certs = configuration.get<string>('customSSLCertPaths', undefined, '').split(',');
+
+            certs.forEach(cert => {
+                cas.addFile(cert.trim());
+            });
+
+            https.globalAgent.options.ca = cas;
+
+            agent = new https.Agent({ rejectUnauthorized: false });
+
+        } else if (configuration.get<boolean>('enableCharles')) {
             const debugOnly = configuration.get<boolean>('charlesDebugOnly');
 
             if (!debugOnly || (debugOnly && Container.isDebugging)) {
