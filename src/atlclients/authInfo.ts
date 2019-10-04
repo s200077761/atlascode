@@ -84,6 +84,7 @@ export interface UserInfo {
 
 export interface SiteInfo {
     hostname: string;
+    protocol?: string;
     product: Product;
 }
 

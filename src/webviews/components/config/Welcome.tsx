@@ -75,12 +75,12 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                             </div>
                         </section>
-                        <h3>🎉 What's New in 2.0.0 🎉</h3>
+
                         <SectionMessage
                             appearance="info"
                             title="Important Note">
                             <div>
-                                <p>In 2.0.0 we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queires.</p>
+                                <p>In 2.x.x we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
                                 <br />
                                 <p>This means you can now see all of your JQL lists in the treeview at once regardless of site or project.</p>
                                 <br />
@@ -93,6 +93,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.1 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for plain http when connecting to server instances</li>
+                                <li>Added experimental support for self-signed certificates see: <a href="https://bitbucket.org/atlassianlabs/atlascode/issues/201">Issue #201</a></li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed Bitbucket authentication not working</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.0.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -173,7 +188,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <h4>✨ Improvements ✨</h4>
                             <ul>
                                 <li>Updated marketplace listing name to feature Jira and Bitbucket</li>
-                                <li>Add ability to modify a subset of fields on jira details screen</li>
+                                <li>Add ability to modify a subset of fields on Jira details screen</li>
                             </ul>
                         </section>
                         <section>
@@ -231,7 +246,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li> Now using port 31415 for auth listener instead of 9090</li>
                                 <li> Added custom prefix for branches when starting work on issue</li>
                                 <li> Added Jira epics in issue details view</li>
-                                <li> Added ability to link to an epic on jira create issue</li>
+                                <li> Added ability to link to an epic on Jira create issue</li>
                                 <li> It's now possible to create an Epic issue</li>
                                 <li> Merge actions similar to Bitbucket webpage (merge type/close source branch etc)</li>
                                 <li> Option to transition Jira/Bitbucket issue when creating/merging pull requests</li>
@@ -239,8 +254,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li> Added related issues and transition option to create pull request screen</li>
                                 <li> Now showing better messaging when no Bitbucket project is open</li>
                                 <li> Show merge conflicts in pull request treeview</li>
-                                <li> Added non-renderable field warnings and report for jira create issue</li>
-                                <li> Added ability to create a JIRA issue from a Bitbucket issue and link them</li>
+                                <li> Added non-renderable field warnings and report for Jira create issue</li>
+                                <li> Added ability to create a Jira issue from a Bitbucket issue and link them</li>
                                 <li> Ensure webview controllers don't refresh multiple times at once</li>
                             </ul>
                         </section>
@@ -369,7 +384,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <ul>
                                 <li>Render markup for description for Jira issues</li>
                                 <li>Group sub-tasks by parent issue in tree view</li>
-                                <li>Show parent issue link for sub-tasks in jira details view</li>
+                                <li>Show parent issue link for sub-tasks in Jira details view</li>
                                 <li>Improve styling on start work success message</li>
                                 <li>Remove/disable start work button on issue screen if you're already on the issue branch</li>
                                 <li>Moved site selector in settings to authorization section</li>
@@ -386,9 +401,9 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>General authentication fixes</li>
                                 <li>Start work on issue hangs with non-Bitbucket repos</li>
                                 <li>Custom JQL tree not refreshing when refresh button clicked</li>
-                                <li>Length check causing View Issue page to dissappear</li>
+                                <li>Length check causing View Issue page to disappear</li>
                                 <li>Pipelines explorer not initializing properly</li>
-                                <li>Open in bitbucket context menu item not working on repository nodes</li>
+                                <li>Open in Bitbucket context menu item not working on repository nodes</li>
                                 <li>Create Pull Request hangs with non-Bitbucket Cloud repos</li>
                             </ul>
                         </section>
