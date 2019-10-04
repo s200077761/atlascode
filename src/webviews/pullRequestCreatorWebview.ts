@@ -167,8 +167,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
                         showIssue(e.issueOrKey);
-                        break;
                     }
+                    break;
                 }
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(e)) {
@@ -178,9 +178,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     break;
                 }
                 case 'updateDiff': {
-                    if(isUpdateDiffAction(e)){
+                    if (isUpdateDiffAction(e)) {
                         let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
-                        this.postMessage({type: 'diffResult', fileDiffs: fileDiffs});
+                        this.postMessage({ type: 'diffResult', fileDiffs: fileDiffs });
                     }
                     break;
                 }
@@ -219,7 +219,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const repos = Container.bitbucketContext.getBitbucketRepositories();
 
         const currentRepo: Repository | undefined = repos.find(r => r.rootUri.toString() === repoData.uri);
-        if(currentRepo) {
+        if (currentRepo) {
             return currentRepo;
         } else {
             return Promise.reject(new Error('Could not match repoData object to local repository'));
@@ -237,14 +237,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
         const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
-        
+
         const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch);
 
         //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
         //We want to seperate each line and extract this data so we can create a file diff
         const diffOutputLines = await shell.lines(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
 
-        if(diffOutputLines.length === 0){
+        if (diffOutputLines.length === 0) {
             return [];
         }
 
@@ -254,13 +254,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
 
         let fileDiffs: FileDiff[] = [];
-        for(let i = 0; i < diffOutputLines.length; i++){
+        for (let i = 0; i < diffOutputLines.length; i++) {
             const wordsInLine = diffOutputLines[i].split(/\s+/);
 
             //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
             const fileName = wordsInLine.slice(2).join(' ');
-            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: fileName, status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
+            fileDiffs.push({ linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: fileName, status: (statusOutputLines[i].slice(0, 1) as FileStatus) });
         }
 
         return fileDiffs;
