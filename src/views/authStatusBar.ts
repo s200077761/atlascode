@@ -75,7 +75,7 @@ export class AuthStatusBar extends Disposable {
   private async updateAuthenticationStatusBar(
     product: Product,
     authInfo?: AuthInfo,
-    
+
   ): Promise<void> {
     const statusBarItem = this.ensureStatusItem(product);
     if ((product.name === 'Jira' && Container.config.jira.enabled && Container.config.jira.statusbar.enabled) ||
@@ -91,7 +91,7 @@ export class AuthStatusBar extends Disposable {
     statusBarItem: StatusBarItem,
     product: Product,
     authInfo?: AuthInfo,
-    
+
   ): Promise<void> {
     let text: string = "$(sign-in)";
     let command: string | undefined;
@@ -111,7 +111,7 @@ export class AuthStatusBar extends Disposable {
 
         } else {
           if (Container.config.jira.statusbar.showLogin) {
-            text = `$(sign-in) Sign in to  ${product.name}`;
+            text = `$(sign-in) Sign in to ${product.name}`;
             command = Commands.ShowJiraAuth;
             product = ProductJira;
           } else {
