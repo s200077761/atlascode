@@ -134,7 +134,6 @@ export class LoginManager {
         let avatarUrl = '';
         let apiUrl = '';
         const protocol = (site.protocol) ? site.protocol : 'https:';
-        //const port = (site.port) ? site.port : 'https';
         switch (site.product.key) {
             case ProductJira.key:
                 siteDetailsUrl = `${protocol}//${site.hostname}/rest/api/2/myself`;
