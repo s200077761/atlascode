@@ -14,6 +14,7 @@ import pTimeout from 'p-timeout';
 import EventEmitter from 'eventemitter3';
 import { v4 } from 'uuid';
 import { getAgent } from './charles';
+import { promisify } from 'util';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
@@ -156,10 +157,10 @@ export class OAuthDancer implements Disposable {
         const state = v4();
         const cancelPromise = new PCancelable<OAuthResponse>((resolve, reject, onCancel) => {
             const myState = state;
-            const responseListener = async (e: ResponseEvent) => {
-                const product = (e.provider.startsWith('jira')) ? ProductJira : ProductBitbucket;
+            const responseListener = async (respEvent: ResponseEvent) => {
+                const product = (respEvent.provider.startsWith('jira')) ? ProductJira : ProductBitbucket;
 
-                if (e.req.query && e.req.query.code && e.req.query.state && e.req.query.state === myState) {
+                if (respEvent.req.query && respEvent.req.query.code && respEvent.req.query.state && respEvent.req.query.state === myState) {
                     try {
                         const agent = getAgent();
                         let tokens: Tokens = { accessToken: "", refreshToken: "" };
@@ -167,22 +168,40 @@ export class OAuthDancer implements Disposable {
                         let user: UserInfo = emptyUserInfo;
 
                         if (product === ProductJira) {
-                            tokens = await this.getJiraTokens(e.strategy, e.req.query.code, agent);
-                            accessibleResources = await this.getJiraResources(e.strategy, tokens.accessToken, agent);
+                            tokens = await this.getJiraTokens(respEvent.strategy, respEvent.req.query.code, agent);
+                            accessibleResources = await this.getJiraResources(respEvent.strategy, tokens.accessToken, agent);
                             if (accessibleResources.length > 0) {
-                                user = await this.getJiraUser(e.provider, tokens.accessToken, accessibleResources[0], agent);
+                                user = await this.getJiraUser(respEvent.provider, tokens.accessToken, accessibleResources[0], agent);
                             } else {
                                 throw new Error(`No accessible resources found for ${provider}`);
                             }
 
                         } else {
-                            tokens = await this.getBitbucketTokens(e.strategy, e.req.query.code, agent);
-                            user = await this.getBitbucketUser(e.strategy, tokens.accessToken, agent);
+                            if (provider === OAuthProvider.BitbucketCloud) {
+                                accessibleResources.push({
+                                    id: OAuthProvider.BitbucketCloud,
+                                    name: ProductBitbucket.name,
+                                    scopes: [],
+                                    avatarUrl: "",
+                                    url: "https://bitbucket.org"
+                                });
+                            } else {
+                                accessibleResources.push({
+                                    id: OAuthProvider.BitbucketCloudStaging,
+                                    name: ProductBitbucket.name,
+                                    scopes: [],
+                                    avatarUrl: "",
+                                    url: "https://bb-inf.net"
+                                });
+                            }
+
+                            tokens = await this.getBitbucketTokens(respEvent.strategy, respEvent.req.query.code, agent);
+                            user = await this.getBitbucketUser(respEvent.strategy, tokens.accessToken, agent);
                         }
 
-                        this._authsInFlight.delete(e.provider);
+                        this._authsInFlight.delete(respEvent.provider);
 
-                        e.res.send(Resources.html.get('authSuccessHtml')!({
+                        respEvent.res.send(Resources.html.get('authSuccessHtml')!({
                             product: product,
                             vscodeurl: vscodeurl
                         }));
@@ -193,19 +212,19 @@ export class OAuthDancer implements Disposable {
                             user: user,
                             accessibleResources: accessibleResources
                         };
-
+                        this.maybeShutdown();
                         resolve(oauthResponse);
 
                     } catch (err) {
-                        this._authsInFlight.delete(e.provider);
+                        this._authsInFlight.delete(respEvent.provider);
 
-                        e.res.send(Resources.html.get('authFailureHtml')!({
-                            errMessage: `Error authenticating with ${provider}: ${e}`,
+                        respEvent.res.send(Resources.html.get('authFailureHtml')!({
+                            errMessage: `Error authenticating with ${provider}: ${err}`,
                             actionMessage: 'Give it a moment and try again.',
                             vscodeurl: vscodeurl
                         }));
 
-                        reject(`Error authenticating with ${provider}: ${e}`);
+                        reject(`Error authenticating with ${provider}: ${err}`);
                     }
                 }
             };
@@ -214,16 +233,20 @@ export class OAuthDancer implements Disposable {
 
             onCancel(() => {
                 this._authsInFlight.delete(provider);
+                this.maybeShutdown();
             });
         });
 
         this._authsInFlight.set(provider, cancelPromise);
 
         if (!this._srv) {
-            this._srv = http.createServer(this._app).listen(31415, () => console.log('server started on port 31415'));
+            this._srv = http.createServer(this._app);
+            const listenPromise = promisify(this._srv.listen.bind(this._srv));
+            await listenPromise(31415, () => { });
+            Logger.debug('auth server started on port 31415');
+
             this.startShutdownChecker();
         }
-
 
         vscode.env.openExternal(vscode.Uri.parse(this.getAuthorizeURL(provider, state)));
 
@@ -231,6 +254,7 @@ export class OAuthDancer implements Disposable {
             vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:31415/timeout?provider=${provider}`));
             return Promise.reject(`'Authorization did not complete in the time alotted for '${provider}'`);
         });
+
     }
 
     private async getJiraTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
@@ -351,7 +375,7 @@ export class OAuthDancer implements Disposable {
 
         return {
             id: userData.account_id,
-            displayName: userData.displayName,
+            displayName: userData.display_ame,
             email: email,
             avatarUrl: userData.links.avatar.href,
         };
@@ -366,7 +390,7 @@ export class OAuthDancer implements Disposable {
             if (this._srv) {
                 this._srv.close();
                 this._srv = undefined;
-                console.log('server on port 31415 has been shutdown');
+                Logger.debug('auth server on port 31415 has been shutdown');
             }
         }
     }
@@ -385,7 +409,7 @@ export class OAuthDancer implements Disposable {
         if (this._srv) {
             this._srv.close();
             this._srv = undefined;
-            console.log('server on port 31415 has been shutdown');
+            Logger.debug('auth server on port 31415 has been shutdown');
         }
     }
 
