@@ -25,8 +25,6 @@ import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
-
-    public static SCHEME = 'atlascode.bbprPreview';
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -248,34 +246,20 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return commonCommit;
     }
 
-    getFilePaths(filePath: string, status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
+    getFilePaths(statusOutputLine: string, status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
+        const wordsInLine = statusOutputLine.split(/\s+/);
         if(status === FileStatus.ADDED){
-            return {lhsFilePath: "", rhsFilePath: filePath};
+            return {lhsFilePath: "", rhsFilePath: wordsInLine[1]};
         } else if (status === FileStatus.DELETED){
-            return {lhsFilePath: filePath, rhsFilePath: ""};
+            return {lhsFilePath: wordsInLine[1], rhsFilePath: ""};
         } else if (status === FileStatus.MODIFIED) {
-            return {lhsFilePath: filePath, rhsFilePath: filePath};
+            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[1]};
         } else if (status === FileStatus.RENAMED) {
-            const foldersAndFile = filePath.split('/');
-            const fileNameChange = foldersAndFile[foldersAndFile.length - 1];
-
-            //When a file name is changed and git detect this, asking for a diff will yield something of the form: `${path}/{${oldFileName} => ${newFileName}}`
-            //This regex will test whether the file name is of this form; if it's not, we can't proceed with parsing the lhsFilePath and rhsFilePath
-            if((new RegExp(/\{.+\s=>\s.+\}/)).test(fileNameChange)){
-                //This should give us something like [oldName, =>, newName]
-                const wordsInFileChange = fileNameChange.split(' ');
-
-                //Get the rest of the path by joining the path string back together
-                const startOfPath = foldersAndFile.slice(0, foldersAndFile.length - 1).join('/') + '/';
-
-                //Remove the { from the first word and append the startOfPath to get the old file path
-                //Remote the } from the last word and append the startOfPath to get the new file path
-                return {lhsFilePath: startOfPath + wordsInFileChange[0].slice(1), rhsFilePath: startOfPath + wordsInFileChange[2].slice(0, wordsInFileChange[2].length - 1)};
-            } else {
-                throw new Error(`Unable to parse ${fileNameChange} into lhsFilePath and rhsFilePath`);
-            }
+            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[2]};
         } else {
-            return {lhsFilePath: filePath, rhsFilePath: filePath}; //I'm actually not totally sure what should happen if Conflict...
+            //I'm actually not totally sure what should happen if the other cases are hit...
+            //Copy, Type changed, unknown, etc.
+            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[1]}; 
         }
     }
 
@@ -304,7 +288,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
             const filePath = wordsInLine.slice(2).join(' ');
             const fileStatus = statusOutputLines[i].slice(0, 1) as FileStatus;
-            const { lhsFilePath, rhsFilePath } = this.getFilePaths(filePath, fileStatus);
+            const { lhsFilePath, rhsFilePath } = this.getFilePaths(statusOutputLines[i], fileStatus);
             fileDiffs.push(
                 {
                     linesAdded: +wordsInLine[0],
