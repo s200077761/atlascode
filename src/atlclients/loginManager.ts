@@ -116,7 +116,8 @@ export class LoginManager {
     public async userInitiatedServerLogin(site: SiteInfo, authInfo: AuthInfo): Promise<void> {
         if (isBasicAuthInfo(authInfo)) {
             try {
-                await this.saveDetailsForServerSite(site, authInfo);
+                const siteDetails = await this.saveDetailsForServerSite(site, authInfo);
+                authenticatedEvent(siteDetails).then(e => { this._analyticsClient.sendTrackEvent(e); });
             } catch (err) {
                 const errorString = `Error authenticating with ${site.product.name}: ${err}`;
                 Logger.error(new Error(errorString));
@@ -125,7 +126,7 @@ export class LoginManager {
         }
     }
 
-    private async saveDetailsForServerSite(site: SiteInfo, credentials: BasicAuthInfo) {
+    private async saveDetailsForServerSite(site: SiteInfo, credentials: BasicAuthInfo): Promise<DetailedSiteInfo> {
         const authHeader = 'Basic ' + new Buffer(credentials.username + ':' + credentials.password).toString('base64');
         // For cloud instances we can use the user ID as the credential ID (they're globally unique). Server instances will
         // have a much smaller pool of user IDs so we use an arbitrary UUID as the credential ID.
@@ -202,7 +203,7 @@ export class LoginManager {
         await this._credentialManager.saveAuthInfo(siteDetails, credentials);
         this._siteManager.addSites([siteDetails]);
 
-        return json;
+        return siteDetails;
     }
 
     private generateCredentialId(siteId: string, userId: string): string {
