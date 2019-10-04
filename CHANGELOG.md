@@ -1,3 +1,11 @@
+## What's New In 2.0.1
+### Improvements
+* Added support for plain http when connecting to server instances
+* Added experimental support for self-signed certificates
+
+### Bugs fixed
+* Fixed Bitbucket authentication not working
+  
 ## What's New In 2.0.0
 ### Improvements
 * Support for Jira Server and Bitbucket Server
