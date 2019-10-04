@@ -375,7 +375,7 @@ export class OAuthDancer implements Disposable {
 
         return {
             id: userData.account_id,
-            displayName: userData.display_ame,
+            displayName: userData.display_name,
             email: email,
             avatarUrl: userData.links.avatar.href,
         };
