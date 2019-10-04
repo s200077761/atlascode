@@ -82,6 +82,7 @@ export default class AuthForm extends PureComponent<{
 
         const siteInfo = {
             hostname: url.host,
+            protocol: url.protocol,
             product: this.props.product
         };
 
