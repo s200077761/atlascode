@@ -75,12 +75,12 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                             </div>
                         </section>
-                        <h3>🎉 What's New in 2.0.0 🎉</h3>
+
                         <SectionMessage
                             appearance="info"
                             title="Important Note">
                             <div>
-                                <p>In 2.0.0 we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
+                                <p>In 2.x.x we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
                                 <br />
                                 <p>This means you can now see all of your JQL lists in the treeview at once regardless of site or project.</p>
                                 <br />
@@ -93,6 +93,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.1 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for plain http when connecting to server instances</li>
+                                <li>Added experimental support for self-signed certificates see: <a href="https://bitbucket.org/atlassianlabs/atlascode/issues/201">Issue #201</a></li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed Bitbucket authentication not working</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.0.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
