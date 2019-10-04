@@ -10,7 +10,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult, FileDiff, FileStatus } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers, OpenDiffPreviewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { Commits } from './Commits';
@@ -36,7 +36,7 @@ import Spinner from '@atlaskit/spinner';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
 type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
@@ -209,21 +209,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         }
 
         this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
-        if (this.state.repo &&
-            this.state.remote &&
-            this.state.sourceBranch &&
-            this.state.destinationBranch &&
-            this.state.sourceBranch.value !== this.state.destinationBranch.value &&
-            this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
-
-            this.postMessage({
-                action: 'fetchDetails',
-                repoUri: this.state.repo!.value.uri,
-                remote: this.state.remote!.value,
-                sourceBranch: this.state.sourceBranch!.value,
-                destinationBranch: this.state.destinationBranch!.value
-            });
-
+        if(this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
             this.postMessage(
                 { 
                     action: 'updateDiff', 
@@ -232,6 +218,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     destinationBranch: this.state.destinationBranch!.value
                 }
             );
+            
+            if (this.state.remote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
+                this.postMessage({
+                    action: 'fetchDetails',
+                    repoUri: this.state.repo!.value.uri,
+                    remote: this.state.remote!.value,
+                    sourceBranch: this.state.sourceBranch!.value,
+                    destinationBranch: this.state.destinationBranch!.value
+                });
+            }
         } else {
             this.setState({ fileDiffsLoading: false, fileDiffs: []});
         }
@@ -396,6 +392,17 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         </h3>;
     }
 
+    openDiffViewForFile = (fileDiff: FileDiff) => {
+        this.postMessage(
+            { 
+                action: 'openDiffPreview', 
+                lhsQuery: fileDiff.lhsQueryParams, 
+                rhsQuery: fileDiff.rhsQueryParams,
+                fileDisplayName: fileDiff.file
+            }
+        );
+    }
+
     generateDiffList = () => {
         return this.state.fileDiffs.map(fileDiff => 
             <li className='iterable-item file-summary file-modified'>
@@ -409,7 +416,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
                         {fileDiff.status}
                     </span>
-                    <a className="commit-files-summary--filename">
+                    <a className="commit-files-summary--filename" onClick={() => this.openDiffViewForFile(fileDiff)}>
                         {fileDiff.file}
                     </a>
                 </div>

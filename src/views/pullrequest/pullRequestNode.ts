@@ -16,15 +16,15 @@ export const PullRequestContextValue = 'pullrequest';
 
 export interface FileDiffQueryParams {
     lhs: boolean;
-    prHref: string;
-    prId: number;
-    participants: User[];
+    prHref?: string;
+    prId?: number;
+    participants?: User[];
     repoUri: string;
-    remote: Remote;
+    remote?: Remote;
     branchName: string;
     commitHash: string;
     path: string;
-    commentThreads: Comment[][];
+    commentThreads?: Comment[][];
 }
 
 export class PullRequestTitlesNode extends AbstractBaseNode {

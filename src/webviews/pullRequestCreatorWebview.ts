@@ -5,7 +5,7 @@ import { Logger } from '../logger';
 import { Container } from '../container';
 import { RefType, Repository, Remote, Branch } from '../typings/git';
 import { RepoData, FileDiff, FileStatus } from '../ipc/prMessaging';
-import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers } from '../ipc/prActions';
+import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers, isOpenDiffPreview } from '../ipc/prActions';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
@@ -21,9 +21,12 @@ import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
 import { Shell } from '../util/shell';
 import * as vscode from 'vscode';
+import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
+import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 
 export class PullRequestCreatorWebview extends AbstractReactWebview {
 
+    public static SCHEME = 'atlascode.bbprPreview';
     constructor(extensionPath: string) {
         super(extensionPath);
     }
@@ -192,6 +195,15 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     }
                     break;
                 }
+                case 'openDiffPreview': {
+                    if(isOpenDiffPreview(e)) {
+                        try {
+                            this.openDiffPreview(e.lhsQuery, e.rhsQuery, e.fileDisplayName);
+                        } catch (e) {
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                }
             }
         }
 
@@ -231,6 +243,37 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return commonCommit;
     }
 
+    getFilePaths(filePath: string, status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
+        if(status === FileStatus.ADDED){
+            return {lhsFilePath: "", rhsFilePath: filePath};
+        } else if (status === FileStatus.DELETED){
+            return {lhsFilePath: filePath, rhsFilePath: ""};
+        } else if (status === FileStatus.MODIFIED) {
+            return {lhsFilePath: filePath, rhsFilePath: filePath};
+        } else if (status === FileStatus.RENAMED) {
+            const foldersAndFile = filePath.split('/');
+            const fileNameChange = foldersAndFile[foldersAndFile.length - 1];
+
+            //When a file name is changed and git detect this, asking for a diff will yield something of the form: `${path}/{${oldFileName} => ${newFileName}}`
+            //This regex will test whether the file name is of this form; if it's not, we can't proceed with parsing the lhsFilePath and rhsFilePath
+            if((new RegExp(/\{.+\s=>\s.+\}/)).test(fileNameChange)){
+                //This should give us something like [oldName, =>, newName]
+                const wordsInFileChange = fileNameChange.split(' ');
+
+                //Get the rest of the path by joining the path string back together
+                const startOfPath = foldersAndFile.slice(0, foldersAndFile.length - 1).join('/') + '/';
+
+                //Remove the { from the first word and append the startOfPath to get the old file path
+                //Remote the } from the last word and append the startOfPath to get the new file path
+                return {lhsFilePath: startOfPath + wordsInFileChange[0].slice(1), rhsFilePath: startOfPath + wordsInFileChange[2].slice(0, wordsInFileChange[2].length - 1)};
+            } else {
+                throw new Error(`Unable to parse ${fileNameChange} into lhsFilePath and rhsFilePath`);
+            }
+        } else {
+            return {lhsFilePath: filePath, rhsFilePath: filePath}; //I'm actually not totally sure what should happen if Conflict...
+        }
+    }
+
     async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
         const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
         
@@ -248,18 +291,71 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
         const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
-
         let fileDiffs: FileDiff[] = [];
         for(let i = 0; i < diffOutputLines.length; i++){
             const wordsInLine = diffOutputLines[i].split(/\s+/);
 
             //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
-            const fileName = wordsInLine.slice(2).join(' ');
-            fileDiffs.push({linesAdded: +wordsInLine[0], linesRemoved: +wordsInLine[1], file: fileName, status: (statusOutputLines[i].slice(0, 1) as FileStatus)});
+            const filePath = wordsInLine.slice(2).join(' ');
+            const fileStatus = statusOutputLines[i].slice(0, 1) as FileStatus;
+            const { lhsFilePath, rhsFilePath } = this.getFilePaths(filePath, fileStatus);
+            fileDiffs.push(
+                {
+                    linesAdded: +wordsInLine[0],
+                    linesRemoved: +wordsInLine[1], 
+                    file: filePath, 
+                    status: fileStatus,
+                    lhsQueryParams: 
+                        {
+                            lhs: true,
+                            repoUri: repo.uri,
+                            branchName: destinationBranch.name,
+                            commitHash: forkPoint,
+                            path: lhsFilePath,
+                        } as FileDiffQueryParams,
+                    rhsQueryParams: 
+                        {
+                            lhs: false,
+                            repoUri: repo.uri,
+                            branchName: sourceBranch.name,
+                            commitHash: sourceBranch.commit,
+                            path: rhsFilePath,
+                        } as FileDiffQueryParams
+                }
+            );
         }
 
         return fileDiffs;
+    }
+
+    async openDiffPreview(lhsQueryParam: FileDiffQueryParams, rhsQueryParam: FileDiffQueryParams, fileDisplayName: string){
+        const lhsQuery = {
+            query: JSON.stringify(lhsQueryParam)
+        };
+        const rhsQuery = {
+            query: JSON.stringify(rhsQueryParam)
+        };
+
+        const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQuery);
+        // const lhsUri = {
+        //     authority: "",
+        //     fragment: "",
+        //     fsPath: lhsQueryParam.path,
+        //     path: lhsQueryParam.path,
+        //     query: "",
+        //     scheme: "file"
+        // } as vscode.Uri;
+        const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQuery);
+        // const rhsUri = {
+        //     authority: "",
+        //     fragment: "",
+        //     fsPath: rhsQueryParam.path,
+        //     path: rhsQueryParam.path,
+        //     query: "",
+        //     scheme: "file"
+        // } as vscode.Uri;
+        vscode.commands.executeCommand('vscode.diff', lhsUri, rhsUri, fileDisplayName);
     }
 
     async fetchIssueForBranch(e: FetchIssue) {

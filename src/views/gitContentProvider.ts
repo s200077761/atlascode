@@ -27,12 +27,12 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             content = await repo.show(commitHash, absolutePath);
         } catch (err) {
             try {
-                await repo.fetch(remote.name, branchName);
+                await repo.fetch(remote!.name, branchName);
                 content = await repo.show(commitHash, absolutePath);
             } catch (err) {
                 try {
-                    await repo.addRemote(remote.name, remote.fetchUrl!);
-                    await repo.fetch(remote.name, branchName);
+                    await repo.addRemote(remote!.name, remote!.fetchUrl!);
+                    await repo.fetch(remote!.name, branchName);
                     content = await repo.show(commitHash, absolutePath);
                 } catch (err) {
                     vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);

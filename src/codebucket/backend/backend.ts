@@ -96,7 +96,7 @@ export class Backend {
     const editor = CommandBase.getOpenEditor();
     if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
       const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
-      return queryParams.prId;
+      return queryParams.prId!;
     }
 
     const repo = this.findRepository();
