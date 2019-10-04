@@ -4,7 +4,7 @@ import { commands, Uri } from 'vscode';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
-import { DetailedSiteInfo } from '../atlclients/authInfo';
+import { DetailedSiteInfo, Product } from '../atlclients/authInfo';
 
 export class WelcomeWebview extends AbstractReactWebview {
 
@@ -20,6 +20,10 @@ export class WelcomeWebview extends AbstractReactWebview {
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
+        return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
         return undefined;
     }
 

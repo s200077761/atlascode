@@ -22,6 +22,36 @@ const routes = {
     'createBitbucketIssueScreen': React.lazy(() => import(/* webpackChunkName: "createBitbucketIssueScreen" */'./bbissue/CreateBitbucketIssuePage')),
 };
 
+class VsCodeApi {
+    private conn: WebSocket;
+    constructor(callback: () => void) {
+        this.conn = new WebSocket('ws://127.0.0.1:13988');
+        this.conn.onopen = function () {
+            callback();
+            console.log('opened dev connection');
+        };
+        this.conn.onerror = function (error) {
+            // just in there were some problems with connection...
+            console.log('websocket error', error);
+        };
+        // most important part - incoming messages
+        this.conn.onmessage = function (message) {
+            try {
+                var json = JSON.parse(message.data);
+                console.log('posting message', json.data);
+                window.postMessage(json.data, "*");
+            } catch (e) {
+                console.log('Invalid JSON: ', message.data);
+                return;
+            }
+        };
+    }
+    public postMessage(msg: {}): void {
+        this.conn.send(JSON.stringify(msg));
+    }
+    public setState(state: {}): void { }
+    public getState(): {} { return {}; }
+}
 
 const view = document.getElementById('reactView') as HTMLElement;
 const root = document.getElementById('root') as HTMLElement;
@@ -30,12 +60,21 @@ const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
         <React.Suspense fallback={<div className="loading-spinner" />}>
-            <ResourceContext.Provider value="vscode-resource:">
+            <ResourceContext.Provider value="http://localhost:8080/">
                 <Page />
             </ResourceContext.Provider>
         </React.Suspense>
     );
 };
 
-ReactDOM.render(<App />, root);
+const _vscapi = new VsCodeApi(() => { ReactDOM.render(<App />, root); });
+
+window['acquireVsCodeApi'] = (): VsCodeApi => {
+    return _vscapi;
+};
+
+
+
+
+
 

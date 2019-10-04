@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-
 import { Backend } from '../backend/backend';
 import { Shell } from '../../util/shell';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
 import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import slash from 'slash';
 
 export abstract class CommandBase {
 
@@ -66,7 +66,7 @@ export abstract class CommandBase {
       const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
       return queryParams.path;
     }
-    return path.relative(root, editor.document.fileName);
+    return slash(path.relative(root, editor.document.fileName));
   }
 
   /**

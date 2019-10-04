@@ -16,7 +16,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
 import { showIssue } from '../commands/jira/showIssue';
 import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
@@ -57,6 +57,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     initialize(data: PullRequest) {

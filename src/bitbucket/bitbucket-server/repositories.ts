@@ -29,6 +29,20 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         );
     }
 
+    async getMirrorHosts(): Promise<string[]> {
+        try {
+            const { data } = await this.client.get(
+                `/rest/mirroring/1.0/mirrorServers?limit=100`
+            );
+
+            return data.values.map((val: any) => new URL(val.baseUrl).hostname);
+        }
+        catch (e) {
+            // ignore
+        }
+        return [];
+    }
+
     async get(remote: Remote): Promise<Repo> {
         let parsed = parseGitUrl(urlForRemote(remote));
 

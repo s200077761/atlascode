@@ -9,6 +9,7 @@ import { Action } from '../../../ipc/messaging';
 import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import { FeedbackUser } from '../../../ipc/configMessaging';
+import SectionMessage from '@atlaskit/section-message';
 
 type ViewState = {
     feedbackUser: FeedbackUser;
@@ -67,42 +68,31 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                     <GridColumn medium={9}>
                         <h3>🎉 First Time Here? 🎉</h3>
                         <section>
-                            <p>To get started, you'll need to authenticate with Jira and/or Bitbucket from the configuration screen</p>
-                            <p>click the <em>Configure Atlassian Settings</em> to access the configuration 👉</p>
-                            <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
-                            <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
+                            <div>
+                                <p>To get started, you'll need to authenticate with Jira and/or Bitbucket from the configuration screen</p>
+                                <p>click the <em>Configure Atlassian Settings</em> to access the configuration 👉</p>
+                                <p>The configuration screen can also be used to completely customize the extension to fit your own workflow.</p>
+                                <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
+                            </div>
                         </section>
-                        <h3>🎉 What's New in 2.0.0-beta3 🎉</h3>
-                        <section>
-                            <h4>✨ Improvements ✨</h4>
-                            <ul>
-                                <li>Added support for merge commit messages</li>
-                            </ul>
-                        </section>
-                        <section>
-                            <h4>🐞 Bugs Fixed 🐞</h4>
-                            <ul>
-                                <li>Username was not slugified when making calls during Bitbucket server auth flow</li>
-                                <li>Sometimes webviews would not load data</li>
-                            </ul>
-                        </section>
-                        <h3>🎉 What's New in 2.0.0-beta2 🎉</h3>
-                        <section>
-                            <h4>✨ Improvements ✨</h4>
-                            <ul>
-                                <li>Added a refresh button on Jira issue view</li>
-                            </ul>
-                        </section>
-                        <section>
-                            <h4>🐞 Bugs Fixed 🐞</h4>
-                            <ul>
-                                <li>Transitions are now reloaded when an issue is transitioned to get any new available options</li>
-                                <li>Fixed bad default JQL in settings.json</li>
-                                <li>Fixed error when checking for an empty user object</li>
-                                <li>Fixed issue with credentials not saving for all sites</li>
-                            </ul>
-                        </section>
-                        <h3>🎉 What's New in 2.0.0-beta1 🎉</h3>
+                        <h3>🎉 What's New in 2.0.0 🎉</h3>
+                        <SectionMessage
+                            appearance="info"
+                            title="Important Note">
+                            <div>
+                                <p>In 2.0.0 we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
+                                <br />
+                                <p>This means you can now see all of your JQL lists in the treeview at once regardless of site or project.</p>
+                                <br />
+                                <p>The extension does it's best to migrate any existing 1.x JQL queries, but you may find some of your queries may be missing a project qualifier in your JQL and loads too many issues.</p>
+                                <br />
+                                <p>To correct this, open the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen and use the 'Issues and JQL' editor to edit your JQL queries and ensure they have `project = SomeProjectKey` in them.</p>
+                                <br />
+                                <p>Finally, we've added a select box at the top of the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen that allows you to choose if you want the settings saved to your Global User settings or the current Workspace settings.</p>
+                                <br />
+                                <p>This enables you to set a different set of JQL trees per workspace/project.</p>
+                            </div>
+                        </SectionMessage>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -129,6 +119,9 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Easily edit the branch name when starting work on an issue</li>
                                 <li>Pre-filled mention picker when creating pull requests and Bitbucket issues</li>
                                 <li>Editing and deleting comments in pull requests</li>
+                                <li>Added support for merge commit messages</li>
+                                <li>Added diff preview in pull request views</li>
+                                <li>Added support for Bitbucket mirrors</li>
                             </ul>
                         </section>
                         <section>
@@ -139,6 +132,12 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li><code>TODO</code> triggers no longer require a trailing space</li>
                                 <li>Subtasks now report the correct status</li>
                                 <li>Pipelines builds triggered manually or by tag creation now show up in the pipelines side bar</li>
+                                <li>Username was not slugified when making calls during Bitbucket server auth flow</li>
+                                <li>Sometimes webviews would not load data</li>
+                                <li>Transitions are now reloaded when an issue is transitioned to get any new available options</li>
+                                <li>Fixed bad default JQL in settings.json</li>
+                                <li>Fixed error when checking for an empty user object</li>
+                                <li>Fixed issue with credentials not saving for all sites</li>
                             </ul>
                         </section>
                         <h3>🎉 What's New in 1.4.3 🎉</h3>
@@ -174,7 +173,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <h4>✨ Improvements ✨</h4>
                             <ul>
                                 <li>Updated marketplace listing name to feature Jira and Bitbucket</li>
-                                <li>Add ability to modify a subset of fields on jira details screen</li>
+                                <li>Add ability to modify a subset of fields on Jira details screen</li>
                             </ul>
                         </section>
                         <section>
@@ -232,7 +231,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li> Now using port 31415 for auth listener instead of 9090</li>
                                 <li> Added custom prefix for branches when starting work on issue</li>
                                 <li> Added Jira epics in issue details view</li>
-                                <li> Added ability to link to an epic on jira create issue</li>
+                                <li> Added ability to link to an epic on Jira create issue</li>
                                 <li> It's now possible to create an Epic issue</li>
                                 <li> Merge actions similar to Bitbucket webpage (merge type/close source branch etc)</li>
                                 <li> Option to transition Jira/Bitbucket issue when creating/merging pull requests</li>
@@ -240,8 +239,8 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li> Added related issues and transition option to create pull request screen</li>
                                 <li> Now showing better messaging when no Bitbucket project is open</li>
                                 <li> Show merge conflicts in pull request treeview</li>
-                                <li> Added non-renderable field warnings and report for jira create issue</li>
-                                <li> Added ability to create a JIRA issue from a Bitbucket issue and link them</li>
+                                <li> Added non-renderable field warnings and report for Jira create issue</li>
+                                <li> Added ability to create a Jira issue from a Bitbucket issue and link them</li>
                                 <li> Ensure webview controllers don't refresh multiple times at once</li>
                             </ul>
                         </section>
@@ -370,7 +369,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <ul>
                                 <li>Render markup for description for Jira issues</li>
                                 <li>Group sub-tasks by parent issue in tree view</li>
-                                <li>Show parent issue link for sub-tasks in jira details view</li>
+                                <li>Show parent issue link for sub-tasks in Jira details view</li>
                                 <li>Improve styling on start work success message</li>
                                 <li>Remove/disable start work button on issue screen if you're already on the issue branch</li>
                                 <li>Moved site selector in settings to authorization section</li>
@@ -387,9 +386,9 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>General authentication fixes</li>
                                 <li>Start work on issue hangs with non-Bitbucket repos</li>
                                 <li>Custom JQL tree not refreshing when refresh button clicked</li>
-                                <li>Length check causing View Issue page to dissappear</li>
+                                <li>Length check causing View Issue page to disappear</li>
                                 <li>Pipelines explorer not initializing properly</li>
-                                <li>Open in bitbucket context menu item not working on repository nodes</li>
+                                <li>Open in Bitbucket context menu item not working on repository nodes</li>
                                 <li>Create Pull Request hangs with non-Bitbucket Cloud repos</li>
                             </ul>
                         </section>

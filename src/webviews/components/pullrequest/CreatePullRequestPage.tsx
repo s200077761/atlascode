@@ -211,10 +211,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
         if(this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
             this.postMessage(
-                { 
-                    action: 'updateDiff', 
-                    repoData: this.state.repo!.value, 
-                    sourceBranch: this.state.sourceBranch!.value, 
+                {
+                    action: 'updateDiff',
+                    repoData: this.state.repo!.value,
+                    sourceBranch: this.state.sourceBranch!.value,
                     destinationBranch: this.state.destinationBranch!.value
                 }
             );
@@ -229,7 +229,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 });
             }
         } else {
-            this.setState({ fileDiffsLoading: false, fileDiffs: []});
+            this.setState({ fileDiffsLoading: false, fileDiffs: [] });
         }
     }
 
@@ -343,6 +343,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         fileDiffsLoading: false
                     });
                 }
+                break;
             }
             case 'fetchIssueResult': {
                 this.setState({ issue: e.issue });
@@ -372,16 +373,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     mapFileStatusToColorScheme = (status: FileStatus) => {
-        if(status === FileStatus.ADDED){
-            return {backgroundColor: '#fff', borderColor: '#60b070', color: '#14892c'};
-        } else if(status === FileStatus.MODIFIED){
-            return {backgroundColor: '#fff', borderColor: '#a5b3c2', color: '#4a6785'};
-        } else if(status === FileStatus.DELETED){
-            return {backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437'};
-        } else if(status === FileStatus.RENAMED){
-            return {backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a'};
+        if (status === FileStatus.ADDED) {
+            return { backgroundColor: '#fff', borderColor: '#60b070', color: '#14892c' };
+        } else if (status === FileStatus.MODIFIED) {
+            return { backgroundColor: '#fff', borderColor: '#a5b3c2', color: '#4a6785' };
+        } else if (status === FileStatus.DELETED) {
+            return { backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437' };
+        } else if (status === FileStatus.RENAMED) {
+            return { backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a' };
         } else {
-            return {backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900'};
+            return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
         }
 
     }
@@ -404,7 +405,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     }
 
     generateDiffList = () => {
-        return this.state.fileDiffs.map(fileDiff => 
+        return this.state.fileDiffs.map(fileDiff =>
             <li className='iterable-item file-summary file-modified'>
                 <div className="commit-file-diff-stats">
                     <span className="lines-added">
@@ -579,7 +580,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
                                         <GridColumn medium={12}>
-                                            <Panel style={{marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                            <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
                                                 {this.state.fileDiffsLoading &&
                                                     <Tooltip content='waiting for data...'>
                                                         <Spinner delay={100} size='large' />
@@ -660,7 +661,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         }}
                     </Form>
                 </Page>
-                
+
             </div>
         );
     }

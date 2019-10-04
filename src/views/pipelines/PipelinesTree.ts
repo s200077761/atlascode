@@ -64,7 +64,7 @@ export class PipelinesTree extends BaseTreeDataProvider {
             return element.getChildren(element);
         }
 
-        const repos = Container.bitbucketContext.getBitbucketRepositories();
+        const repos = Container.bitbucketContext.getBitbucketCloudRepositories();
         const expand = repos.length === 1;
 
         if (this._childrenMap.size === 0) {

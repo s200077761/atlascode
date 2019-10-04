@@ -7,9 +7,7 @@ import { BitbucketApi } from "./model";
 
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
-    if (parsed.owner.startsWith('scm/')) {
-        parsed.owner = parsed.owner.slice(4);
-    }
+    parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
     return parsed;
 }
 

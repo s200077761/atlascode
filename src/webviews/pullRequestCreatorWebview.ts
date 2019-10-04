@@ -10,7 +10,7 @@ import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
 import { prCreatedEvent } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { ProductJira, DetailedSiteInfo } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { isOpenBitbucketIssueAction, isUpdateDiffAction } from '../ipc/bitbucketIssueActions';
@@ -45,6 +45,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     public async invalidate() {
@@ -166,8 +170,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isOpenJiraIssue(e)) {
                         handled = true;
                         showIssue(e.issueOrKey);
-                        break;
                     }
+                    break;
                 }
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(e)) {
@@ -177,9 +181,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     break;
                 }
                 case 'updateDiff': {
-                    if(isUpdateDiffAction(e)){
+                    if (isUpdateDiffAction(e)) {
                         let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
-                        this.postMessage({type: 'diffResult', fileDiffs: fileDiffs});
+                        this.postMessage({ type: 'diffResult', fileDiffs: fileDiffs });
                     }
                     break;
                 }
@@ -203,6 +207,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
+                    break;
                 }
             }
         }
@@ -227,7 +232,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const repos = Container.bitbucketContext.getBitbucketRepositories();
 
         const currentRepo: Repository | undefined = repos.find(r => r.rootUri.toString() === repoData.uri);
-        if(currentRepo) {
+        if (currentRepo) {
             return currentRepo;
         } else {
             return Promise.reject(new Error('Could not match repoData object to local repository'));
@@ -276,14 +281,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
     async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
         const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
-        
+
         const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch);
 
         //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
         //We want to seperate each line and extract this data so we can create a file diff
         const diffOutputLines = await shell.lines(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
 
-        if(diffOutputLines.length === 0){
+        if (diffOutputLines.length === 0) {
             return [];
         }
 
@@ -292,7 +297,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
         const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
         let fileDiffs: FileDiff[] = [];
-        for(let i = 0; i < diffOutputLines.length; i++){
+        for (let i = 0; i < diffOutputLines.length; i++) {
             const wordsInLine = diffOutputLines[i].split(/\s+/);
 
             //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
@@ -338,23 +343,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         };
 
         const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQuery);
-        // const lhsUri = {
-        //     authority: "",
-        //     fragment: "",
-        //     fsPath: lhsQueryParam.path,
-        //     path: lhsQueryParam.path,
-        //     query: "",
-        //     scheme: "file"
-        // } as vscode.Uri;
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQuery);
-        // const rhsUri = {
-        //     authority: "",
-        //     fragment: "",
-        //     fsPath: rhsQueryParam.path,
-        //     path: rhsQueryParam.path,
-        //     query: "",
-        //     scheme: "file"
-        // } as vscode.Uri;
         vscode.commands.executeCommand('vscode.diff', lhsUri, rhsUri, fileDisplayName);
     }
 

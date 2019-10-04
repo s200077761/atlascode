@@ -1,7 +1,7 @@
 {
     "name": "atlascode",
     "displayName": "Jira and Bitbucket (Official)",
-    "description": "Bringing the power of Jira Cloud and Bitbucket Cloud to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
+    "description": "Bringing the power of Jira and Bitbucket to VSCode - With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!",
     "keywords": [
         "bitbucket",
         "jira",
@@ -44,8 +44,7 @@
     ],
     "main": "./build/extension/extension",
     "contributes": {
-        "commands": [
-            {
+        "commands": [{
                 "command": "atlascode.jira.createIssue",
                 "title": "Create New Jira Issue",
                 "icon": {
@@ -251,17 +250,14 @@
             }
         ],
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "atlascode-drawer",
-                    "title": "Atlassian",
-                    "icon": "resources/atlassian-icon.svg"
-                }
-            ]
+            "activitybar": [{
+                "id": "atlascode-drawer",
+                "title": "Atlassian",
+                "icon": "resources/atlassian-icon.svg"
+            }]
         },
         "views": {
-            "atlascode-drawer": [
-                {
+            "atlascode-drawer": [{
                     "id": "atlascode.views.jira.customJql",
                     "name": "Jira Issues",
                     "when": "atlascode:jiraExplorerEnabled && config.atlascode.jira.enabled"
@@ -284,15 +280,12 @@
             ]
         },
         "menus": {
-            "editor/title": [
-                {
-                    "command": "atlascode.bb.toggleCommentsVisibility",
-                    "when": "resourceScheme == atlascode.bbpr",
-                    "group": "navigation"
-                }
-            ],
-            "editor/context": [
-                {
+            "editor/title": [{
+                "command": "atlascode.bb.toggleCommentsVisibility",
+                "when": "resourceScheme == atlascode.bbpr",
+                "group": "navigation"
+            }],
+            "editor/context": [{
                     "command": "atlascode.jira.createIssue",
                     "group": "atlascode",
                     "when": "config.atlascode.bitbucket.contextMenus.enabled && config.atlascode.jira.enabled"
@@ -328,8 +321,7 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }
             ],
-            "view/title": [
-                {
+            "view/title": [{
                     "command": "atlascode.bb.refreshPullRequests",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -385,8 +377,7 @@
                     "group": "navigation"
                 }
             ],
-            "view/item/context": [
-                {
+            "view/item/context": [{
                     "command": "atlascode.jira.assignIssueToMe",
                     "when": "viewItem == jiraIssue && atlascode:isJiraAuthenticated",
                     "group": "jiraContextMenuGroup1"
@@ -415,14 +406,11 @@
                     "when": "viewItem == pipelineBranch"
                 }
             ],
-            "comments/commentThread/context": [
-                {
-                    "command": "atlascode.bb.addComment",
-                    "group": "inline"
-                }
-            ],
-            "comments/comment/title": [
-                {
+            "comments/commentThread/context": [{
+                "command": "atlascode.bb.addComment",
+                "group": "inline"
+            }],
+            "comments/comment/title": [{
                     "command": "atlascode.bb.editComment",
                     "group": "inline@1",
                     "when": "comment =~ /canEdit/"
@@ -433,8 +421,7 @@
                     "when": "comment =~ /canDelete/"
                 }
             ],
-            "comments/comment/context": [
-                {
+            "comments/comment/context": [{
                     "command": "atlascode.bb.cancelCommentEdit",
                     "group": "inline@2"
                 },
@@ -443,8 +430,7 @@
                     "group": "inline@1"
                 }
             ],
-            "commandPalette": [
-                {
+            "commandPalette": [{
                     "command": "atlascode.showJiraAuth",
                     "when": "false"
                 },
@@ -543,6 +529,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables charles *only* when debugging the extension (for internal use)",
+                    "scope": "window"
+                },
+                "atlascode.enableUIWS": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables UI websocket for debugging webviews",
                     "scope": "window"
                 },
                 "atlascode.offlineMode": {
@@ -936,7 +928,11 @@
         "test": "npm run compile && node ./build/test/runTest.js",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
         "devcompile:react": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.react.dev.ts",
-        "devcompile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.extension.dev.ts"
+        "devcompile:extension": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --mode development --config webpack.extension.dev.ts",
+        "webview:atlascodeSettings:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:atlascodeSettings:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"config/ConfigPage.tsx\" VIEW=\"atlascodeSettings\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:dark": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"dark\" webpack-dev-server --open --config webpack.react.webview.ts",
+        "webview:viewJiraIssue:light": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" PAGETSX=\"issue/JiraIssuePage.tsx\" VIEW=\"viewIssueScreen\" THEME=\"light\" webpack-dev-server --open --config webpack.react.webview.ts"
     },
     "dependencies": {
         "@atlaskit/avatar": "^17.0.0",
@@ -974,6 +970,7 @@
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
         "@deviniti/jql-autocomplete": "^1.0.2",
+        "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
         "ajv-keywords": "^3.2.0",
         "analytics-node": "^3.3.0",
@@ -1007,11 +1004,13 @@
         "react-loadable": "^5.5.0",
         "react-tabs": "^3.0.0",
         "semver": "^6.1.1",
+        "slash": "^3.0.0",
         "spawn-sync": "^2.0.0",
         "styled-components": "^3.2.6",
         "tunnel": "^0.0.6",
         "turndown": "^5.0.3",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "websocket": "^1.0.30"
     },
     "devDependencies": {
         "@types/analytics-node": "^3.1.1",
@@ -1023,6 +1022,7 @@
         "@types/git-url-parse": "^9.0.0",
         "@types/glob": "^7.1.1",
         "@types/handlebars": "4.0.39",
+        "@types/html-webpack-plugin": "^3.2.1",
         "@types/jquery": "^3.3.23",
         "@types/keytar": "^4.0.1",
         "@types/lodash.debounce": "^4.0.4",
@@ -1031,8 +1031,6 @@
         "@types/node": "^12.6.9",
         "@types/optimize-css-assets-webpack-plugin": "^5.0.0",
         "@types/p-queue": "^3.2.1",
-        "@types/passport": "^1.0.1",
-        "@types/passport-oauth2": "^1.4.8",
         "@types/react": "^16.8.19",
         "@types/react-dev-utils": "^9.0.1",
         "@types/react-dom": "^16.8.4",
@@ -1051,6 +1049,7 @@
         "css-loader": "^3.2.0",
         "fork-ts-checker-notifier-webpack-plugin": "^1.0.2",
         "fork-ts-checker-webpack-plugin": "^1.5.0",
+        "html-webpack-plugin": "^3.2.0",
         "mini-css-extract-plugin": "^0.8.0",
         "mocha": "^5.2.0",
         "npm-run-all": "^4.1.5",
@@ -1070,6 +1069,7 @@
         "vscode-test": "^1.2.0",
         "webpack": "^4.40.2",
         "webpack-cli": "^3.3.9",
+        "webpack-dev-server": "^3.8.2",
         "webpack-manifest-plugin": "^2.1.2"
     }
 }

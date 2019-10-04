@@ -21,7 +21,7 @@ import { startWorkOnIssue } from "../commands/jira/startWorkOnIssue";
 import { isOpenPullRequest } from "../ipc/prActions";
 import { clientForRemote } from "../bitbucket/bbUtils";
 import { readSearchResults } from "../jira/jira-client/model/responses";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { DetailedSiteInfo, Product, ProductJira } from "../atlclients/authInfo";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;
@@ -44,6 +44,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         return this._issue.siteDetails;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductJira;
     }
 
     async initialize(issue: MinimalIssue) {

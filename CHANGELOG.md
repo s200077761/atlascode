@@ -1,23 +1,4 @@
-## What's New In 2.0.0-beta3
-### Improvements
-* Added support for merge commit messages
-
-
-### Bugs fixed
-* Username was not slugified when making calls during Bitbucket server auth flow
-* Sometimes webviews would not load data
-
-## What's New In 2.0.0-beta2
-### Improvements
-* Added a refresh button on Jira issue view
-
-### Bugs fixed
-* Transitions are now reloaded when an issue is transitioned to get any new available options
-* Fixed bad default JQL in settings.json
-* Fixed error when checking for an empty user object
-* Fixed issue with credentials not saving for all sites
-
-## What's New In 2.0.0-beta1
+## What's New In 2.0.0
 ### Improvements
 * Support for Jira Server and Bitbucket Server
 * Support for a wider range of Jira features and configurations
@@ -38,6 +19,9 @@
 * Easily edit the branch name when starting work on an issue
 * Pre-filled mention picker when creating pull requests and Bitbucket issues
 * Editing and deleting comments in pull requests
+* Added support for merge commit messages
+* Added diff preview in pull request views
+* Added support for Bitbucket mirrors
 
 ### Bugs fixed
 * Build statuses now link to the tool that created them
@@ -45,6 +29,12 @@
 * `TODO` triggers no longer require a trailing space
 * Subtasks now report the correct status
 * Pipelines builds triggered manually or by tag creation now notify correctly and show up in the pipelines side bar
+* Username was not slugified when making calls during Bitbucket server auth flow
+* Sometimes webviews would not load data
+* Transitions are now reloaded when an issue is transitioned to get any new available options
+* Fixed bad default JQL in settings.json
+* Fixed error when checking for an empty user object
+* Fixed issue with credentials not saving for all sites
 
 ## What's New In 1.4.3
 ### Improvements

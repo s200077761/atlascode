@@ -7,7 +7,7 @@ import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction,
 import { commands, Uri, ViewColumn, Position } from 'vscode';
 import { Commands } from '../commands';
 import { issueCreatedEvent } from '../analytics';
-import { ProductJira, DetailedSiteInfo, emptySiteInfo } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, emptySiteInfo, Product } from '../atlclients/authInfo';
 import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
@@ -62,6 +62,10 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         return this._siteDetails;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductJira;
     }
 
     protected onPanelDisposed() {

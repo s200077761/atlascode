@@ -10,7 +10,7 @@ import { bbIssueUrlCopiedEvent, bbIssueCommentEvent, bbIssueTransitionedEvent } 
 import { BitbucketIssue, User } from "../bitbucket/model";
 import { clientForRemote, siteDetailsForRemote } from "../bitbucket/bbUtils";
 import { isFetchUsers } from "../ipc/prActions";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { DetailedSiteInfo, Product, ProductBitbucket } from "../atlclients/authInfo";
 
 
 export class BitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
@@ -36,6 +36,10 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
         }
 
         return undefined;
+    }
+
+    public get productOrUndefined(): Product | undefined {
+        return ProductBitbucket;
     }
 
     initialize(data: BitbucketIssue) {
