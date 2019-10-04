@@ -133,16 +133,18 @@ export class LoginManager {
         let siteDetailsUrl = '';
         let avatarUrl = '';
         let apiUrl = '';
+        const protocol = (site.protocol) ? site.protocol : 'https:';
+        //const port = (site.port) ? site.port : 'https';
         switch (site.product.key) {
             case ProductJira.key:
-                siteDetailsUrl = `https://${site.hostname}/rest/api/2/myself`;
-                avatarUrl = `https://${site.hostname}/images/fav-jcore.png`;
-                apiUrl = `https://${site.hostname}/rest`;
+                siteDetailsUrl = `${protocol}//${site.hostname}/rest/api/2/myself`;
+                avatarUrl = `${protocol}//${site.hostname}/images/fav-jcore.png`;
+                apiUrl = `${protocol}//${site.hostname}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `https://${site.hostname}/rest/api/1.0/users/${credentials.username.replace(slugRegex, "_")}?avatarSize=64`;
+                siteDetailsUrl = `${protocol}//${site.hostname}/rest/api/1.0/users/${credentials.username.replace(slugRegex, "_")}?avatarSize=64`;
                 avatarUrl = '';
-                apiUrl = `https://${site.hostname}`;
+                apiUrl = `${protocol}//${site.hostname}`;
                 break;
         }
 
@@ -175,7 +177,7 @@ export class LoginManager {
             avatarUrl: avatarUrl,
             hostname: site.hostname,
             baseApiUrl: apiUrl,
-            baseLinkUrl: `https://${site.hostname}`,
+            baseLinkUrl: `${protocol}//${site.hostname}`,
             id: site.hostname,
             name: site.hostname,
             userId: userId,
