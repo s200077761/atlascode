@@ -63,7 +63,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={12}>
-                        <PageHeader><p>Welcome To Atlassian for VSCode!</p></PageHeader>
+                        <PageHeader><p>Welcome To Atlassian for VS Code!</p></PageHeader>
                     </GridColumn>
                     <GridColumn medium={9}>
                         <h3>🎉 First Time Here? 🎉</h3>
@@ -213,7 +213,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Make Bitbucket features work with SSH aliases</li>
                                 <li>Bitbucket features work with repositories cloned with https protocol</li>
                                 <li>Better date format on pull request commit list</li>
-                                <li>Update to latest VSCode comments api</li>
+                                <li>Update to latest VS Code comments api</li>
                                 <li>Offline detection is too aggressive</li>
                                 <li>Use Atlassian urls for online checks</li>
                                 <li>Authentication related fixes and improvements</li>

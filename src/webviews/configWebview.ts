@@ -294,7 +294,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 }
                 case 'docsLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+For+VSCode`));
+                    commands.executeCommand('vscode.open', Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
                     break;
                 }
                 case 'submitFeedback': {
