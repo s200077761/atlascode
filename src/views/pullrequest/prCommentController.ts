@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
-import { FileDiffQueryParams } from './pullRequestNode';
+import { PRFileDiffQueryParams } from './pullRequestNode';
 import TurndownService from 'turndown';
 import { Comment } from '../../bitbucket/model';
 import { clientForRemote } from '../../bitbucket/bbUtils';
@@ -68,13 +68,13 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     async toggleCommentsVisibility(uri: vscode.Uri) {
-        const { prHref } = JSON.parse(uri.query) as FileDiffQueryParams;
+        const { prHref } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
-        if (!this._commentsCache.has(prHref!)) {
+        if (!this._commentsCache.has(prHref)) {
             return;
         }
 
-        const prCommentCache = this._commentsCache.get(prHref!)!;
+        const prCommentCache = this._commentsCache.get(prHref)!;
         prCommentCache.forEach(thread =>
             thread.collapsibleState = thread.collapsibleState === vscode.CommentThreadCollapsibleState.Collapsed
                 ? vscode.CommentThreadCollapsibleState.Expanded
@@ -82,19 +82,19 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     async addComment(reply: vscode.CommentReply) {
-        const { remote, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as FileDiffQueryParams;
+        const { remote, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
         const inline = {
             from: lhs ? reply.thread.range.start.line + 1 : undefined,
             to: lhs ? undefined : reply.thread.range.start.line + 1,
             path: path
         };
         const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
-        const bbApi = await clientForRemote(remote!);
-        const data = await bbApi.pullrequests.postComment(remote!, prId!, reply.text, commentThreadId, inline);
+        const bbApi = await clientForRemote(remote);
+        const data = await bbApi.pullrequests.postComment(remote, prId, reply.text, commentThreadId, inline);
 
         const comments = [
             ...reply.thread.comments,
-            await this.createVSCodeComment(data.id!, data, remote!, prId!)
+            await this.createVSCodeComment(data.id!, data, remote, prId)
         ];
 
         this.createOrUpdateThread(commentThreadId!, reply.thread.uri, reply.thread.range, comments);
@@ -162,17 +162,17 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     clearCommentCache(uri: vscode.Uri) {
-        const { prHref } = JSON.parse(uri.query) as FileDiffQueryParams;
+        const { prHref } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
-        if (!this._commentsCache.has(prHref!)) {
-            this._commentsCache.set(prHref!, new Map());
+        if (!this._commentsCache.has(prHref)) {
+            this._commentsCache.set(prHref, new Map());
         }
-        const prCommentCache = this._commentsCache.get(prHref!)!;
+        const prCommentCache = this._commentsCache.get(prHref)!;
         prCommentCache.forEach(thread => thread.dispose());
     }
 
     provideComments(uri: vscode.Uri) {
-        const { commentThreads, remote, prId } = JSON.parse(uri.query) as FileDiffQueryParams;
+        const { commentThreads, remote, prId } = JSON.parse(uri.query) as PRFileDiffQueryParams;
         (commentThreads || [])
             .forEach(async (c: Comment[]) => {
                 let range = new vscode.Range(0, 0, 0, 0);
@@ -182,7 +182,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = await Promise.all(c.map(comment => this.createVSCodeComment(c[0].id!, comment, remote!, prId!)));
+                const comments = await Promise.all(c.map(comment => this.createVSCodeComment(c[0].id!, comment, remote, prId)));
 
                 if (comments.length > 0) {
                     this.createOrUpdateThread(c[0].id!, uri, range, comments);
@@ -191,12 +191,12 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     private async createOrUpdateThread(threadId: number, uri: vscode.Uri, range: vscode.Range, comments: vscode.Comment[]) {
-        const { prHref } = JSON.parse(uri.query) as FileDiffQueryParams;
+        const { prHref } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
-        if (!this._commentsCache.has(prHref!)) {
-            this._commentsCache.set(prHref!, new Map());
+        if (!this._commentsCache.has(prHref)) {
+            this._commentsCache.set(prHref, new Map());
         }
-        const prCommentCache = this._commentsCache.get(prHref!)!;
+        const prCommentCache = this._commentsCache.get(prHref)!;
 
         if (prCommentCache.has(threadId)) {
             prCommentCache.get(threadId)!.dispose();

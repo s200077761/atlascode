@@ -246,20 +246,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return commonCommit;
     }
 
-    getFilePaths(statusOutputLine: string, status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
-        const wordsInLine = statusOutputLine.split(/\s+/);
+    getFilePaths(namestatusWords: string[], status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
         if(status === FileStatus.ADDED){
-            return {lhsFilePath: "", rhsFilePath: wordsInLine[1]};
+            return {lhsFilePath: "", rhsFilePath: namestatusWords[1]};
         } else if (status === FileStatus.DELETED){
-            return {lhsFilePath: wordsInLine[1], rhsFilePath: ""};
+            return {lhsFilePath: namestatusWords[1], rhsFilePath: ""};
         } else if (status === FileStatus.MODIFIED) {
-            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[1]};
+            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1]};
         } else if (status === FileStatus.RENAMED) {
-            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[2]};
+            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[2]};
         } else {
             //I'm actually not totally sure what should happen if the other cases are hit...
             //Copy, Type changed, unknown, etc.
-            return {lhsFilePath: wordsInLine[1], rhsFilePath: wordsInLine[1]}; 
+            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1]}; 
         }
     }
 
@@ -270,31 +269,35 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         //Using git diff --numstat will generate lines in the format '{lines added}      {lines removed}     {name of file}'
         //We want to seperate each line and extract this data so we can create a file diff
-        const diffOutputLines = await shell.lines(`git diff --numstat ${forkPoint} ${sourceBranch.commit}`);
+        //NOTE: the '-M50' flag will cause git to detect any added/deleted file combo as a rename if they're 50% similar
+        const numstatLines = await shell.lines(`git diff --numstat -C -M50 ${forkPoint} ${sourceBranch.commit}`);
 
-        if (diffOutputLines.length === 0) {
+        if (numstatLines.length === 0) {
             return [];
         }
 
         //The bitbucket website also provides a status for each file (modified, added, deleted, etc.), so we need to get this info too.
         //git diff-index --name-status will return lines in the form {status}        {name of file}
         //It's important to note that the order of the files will be identical to git diff --numstat, and we can use that to our advantage
-        const statusOutputLines = await shell.lines(`git diff --name-status ${forkPoint} ${sourceBranch.commit}`);
+        const namestatusLines = await shell.lines(`git diff --name-status -C -M50 ${forkPoint} ${sourceBranch.commit}`);
         let fileDiffs: FileDiff[] = [];
-        for (let i = 0; i < diffOutputLines.length; i++) {
-            const wordsInLine = diffOutputLines[i].split(/\s+/);
+        for (let i = 0; i < numstatLines.length; i++) {
+            const numstatWords = numstatLines[i].split(/\s+/);
+            const namestatusWords = namestatusLines[i].split(/\s+/);
 
             //Most of the time when we split by white space we get 3 elements because we have the format {lines added}   {lines removed}   {name of file}
             //However, in the case of a renamed file, the file name will be '{oldFileName => newFileName}'. To account for this case, we slice and join everything after the file name start.
-            const filePath = wordsInLine.slice(2).join(' ');
-            const fileStatus = statusOutputLines[i].slice(0, 1) as FileStatus;
-            const { lhsFilePath, rhsFilePath } = this.getFilePaths(statusOutputLines[i], fileStatus);
+            const filePath = numstatWords.slice(2).join(' ');
+            const firstLetterOfStatus = namestatusWords[0].slice(0, 1) as FileStatus;
+            const fileStatus = (Object.values(FileStatus).includes(firstLetterOfStatus) ? firstLetterOfStatus : 'X') as FileStatus;
+            const { lhsFilePath, rhsFilePath } = this.getFilePaths(namestatusWords, fileStatus);
             fileDiffs.push(
                 {
-                    linesAdded: +wordsInLine[0],
-                    linesRemoved: +wordsInLine[1], 
+                    linesAdded: +numstatWords[0],
+                    linesRemoved: +numstatWords[1], 
                     file: filePath, 
                     status: fileStatus,
+                    similarity: fileStatus === FileStatus.RENAMED ? +namestatusWords[0].slice(1) : undefined,
                     lhsQueryParams: 
                         {
                             lhs: true,

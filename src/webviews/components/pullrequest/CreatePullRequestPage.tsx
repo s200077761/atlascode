@@ -381,8 +381,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             return { backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437' };
         } else if (status === FileStatus.RENAMED) {
             return { backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a' };
-        } else {
+        } else if (status === FileStatus.COPIED) {
             return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
+        } else {
+            //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
+            return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6'};
         }
 
     }
@@ -404,23 +407,43 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         );
     }
 
+    mapFileStatusToWord = (status: FileStatus) => {
+        if (status === FileStatus.ADDED) {
+            return 'ADDED';
+        } else if (status === FileStatus.MODIFIED) {
+            return 'MODIFIED';
+        } else if (status === FileStatus.DELETED) {
+            return 'DELETED';
+        } else if (status === FileStatus.RENAMED) {
+            return 'RENAMED';
+        } else if (status === FileStatus.COPIED) {
+            return 'COPIED';
+        } else {
+            return 'UNKNOWN';
+        }
+    }
+
     generateDiffList = () => {
         return this.state.fileDiffs.map(fileDiff =>
-            <li className='iterable-item file-summary file-modified'>
-                <div className="commit-file-diff-stats">
-                    <span className="lines-added">
-                        +{fileDiff.linesAdded}
-                    </span>
-                    <span className="lines-removed">
-                        -{fileDiff.linesRemoved}
-                    </span>
-                    <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
-                        {fileDiff.status}
-                    </span>
-                    <a className="commit-files-summary--filename" onClick={() => this.openDiffViewForFile(fileDiff)}>
-                        {fileDiff.file}
-                    </a>
-                </div>
+            <li className='iterable-item file-summary file-modified' onClick={() => this.openDiffViewForFile(fileDiff)}>
+                <Tooltip 
+                    content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
+                >
+                    <div className="commit-file-diff-stats">
+                        <span className="lines-added">
+                            +{fileDiff.linesAdded}
+                        </span>
+                        <span className="lines-removed">
+                            -{fileDiff.linesRemoved}
+                        </span>
+                        <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
+                            {fileDiff.status}
+                        </span>
+                        <a className="commit-files-summary--filename">
+                            {fileDiff.file}
+                        </a>
+                    </div>
+                </Tooltip>
             </li>
         );
     }

@@ -35,6 +35,7 @@ export interface FileDiff {
     status: FileStatus;
     linesAdded: number;
     linesRemoved: number;
+    similarity?: number;
     lhsQueryParams: FileDiffQueryParams;
     rhsQueryParams: FileDiffQueryParams;
 }
@@ -42,9 +43,10 @@ export interface FileDiff {
 export enum FileStatus {
     ADDED = 'A',
     DELETED = 'D',
-    CONFLICT = 'C',
+    COPIED = 'C',
     MODIFIED = 'M',
-    RENAMED = 'R'
+    RENAMED = 'R',
+    UNKNOWN = 'X'
 }
 
 export interface RepoData {
