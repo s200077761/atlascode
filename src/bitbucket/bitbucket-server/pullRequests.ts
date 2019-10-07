@@ -1,4 +1,4 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy } from '../model';
+import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, FileChange, Commit } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -156,7 +156,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
+    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -168,7 +168,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
 
         if (!data.values) {
-            return { data: [], next: undefined };
+            return [];
         }
 
         let accumulatedDiffStats = data.values as any[];
@@ -205,14 +205,12 @@ export class ServerPullRequestApi implements PullRequestApi {
 
             return diffStat;
         });
-        return {
-            data: accumulatedDiffStats.map(diffStat => ({
-                status: diffStat.type,
-                oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
-                newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
-            })),
-            next: undefined
-        };
+
+        return accumulatedDiffStats.map(diffStat => ({
+            status: diffStat.type,
+            oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
+            newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
+        }));
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
@@ -228,7 +226,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toUser(site, data);
     }
 
-    async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
+    async getCommits(pr: PullRequest): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -240,7 +238,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
 
         if (!data.values) {
-            return { data: [], next: undefined };
+            return [];
         }
 
         const accumulatedCommits = data.values as any[];
@@ -257,18 +255,15 @@ export class ServerPullRequestApi implements PullRequestApi {
             accumulatedCommits.push(...(data.values || []));
         }
 
-        return {
-            data: data.values.map((commit: any) => ({
-                author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
-                ts: commit.authorTimestamp,
-                hash: commit.id,
-                message: commit.message,
-                url: undefined,
-                htmlSummary: "",
-                rawSummary: ""
-            })),
-            next: undefined
-        };
+        return accumulatedCommits.map((commit: any) => ({
+            author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
+            ts: commit.authorTimestamp,
+            hash: commit.id,
+            message: commit.message,
+            url: "",
+            htmlSummary: "",
+            rawSummary: ""
+        }));
     }
 
     async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {

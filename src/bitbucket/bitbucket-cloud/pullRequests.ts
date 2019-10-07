@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedCommits, PaginatedComments, PaginatedFileChanges, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, FileChange, Commit } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
@@ -147,7 +147,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
+    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -155,7 +155,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         if (!data.values) {
-            return { data: [], next: undefined };
+            return [];
         }
 
         const accumulatedDiffStats = data.values as any[];
@@ -165,17 +165,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             accumulatedDiffStats.push(...(data.values || []));
         }
 
-        return {
-            data: accumulatedDiffStats.map(diffStat => ({
-                status: diffStat.status!,
-                oldPath: diffStat.old ? diffStat.old.path! : undefined,
-                newPath: diffStat.new ? diffStat.new.path! : undefined
-            })),
-            next: data.next
-        };
+        return accumulatedDiffStats.map(diffStat => ({
+            status: diffStat.status!,
+            oldPath: diffStat.old ? diffStat.old.path! : undefined,
+            newPath: diffStat.new ? diffStat.new.path! : undefined
+        }));
     }
 
-    async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
+    async getCommits(pr: PullRequest): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -186,7 +183,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         if (!data.values) {
-            return { data: [], next: undefined };
+            return [];
         }
 
         const accumulatedCommits = data.values as any[];
@@ -196,18 +193,15 @@ export class CloudPullRequestApi implements PullRequestApi {
             accumulatedCommits.push(...(data.values || []));
         }
 
-        return {
-            data: accumulatedCommits.map(commit => ({
-                hash: commit.hash!,
-                message: commit.message!,
-                ts: commit.date!,
-                url: commit.links!.html!.href!,
-                htmlSummary: commit.summary ? commit.summary.html! : undefined,
-                rawSummary: commit.summary ? commit.summary.raw! : undefined,
-                author: CloudPullRequestApi.toUserModel(commit.author!.user!)
-            })),
-            next: data.next
-        };
+        return accumulatedCommits.map(commit => ({
+            hash: commit.hash!,
+            message: commit.message!,
+            ts: commit.date!,
+            url: commit.links!.html!.href!,
+            htmlSummary: commit.summary ? commit.summary.html! : undefined,
+            rawSummary: commit.summary ? commit.summary.raw! : undefined,
+            author: CloudPullRequestApi.toUserModel(commit.author!.user!)
+        }));
     }
 
     async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {

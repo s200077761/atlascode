@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, PaginatedCommits, BitbucketIssueData, BitbucketIssue, ApprovalStatus } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit } from '../bitbucket/model';
 import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -271,14 +271,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 currentUser: currentUser,
                 currentBranch: this._pr.repository.state.HEAD!.name!,
                 type: 'update',
-                commits: commits.data,
+                commits: commits,
                 comments: comments.data,
                 relatedJiraIssues: relatedJiraIssues,
                 relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
                 mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
-                mergeStrategies: mergeStrategies,
-                errors: (commits.next || comments.next) ? 'You may not be seeing the complete pull request. This PR contains more items (commits/comments) than what this extension supports.' : undefined
+                mergeStrategies: mergeStrategies
             }
         };
         this.postMessage(this._state.prData);
@@ -314,11 +313,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<MinimalIssue[]> {
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue[]> {
         let foundIssues: MinimalIssue[] = [];
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
-                const issueKeys = await extractIssueKeys(pr, commits.data, comments.data);
+                const issueKeys = await extractIssueKeys(pr, commits, comments.data);
 
                 const jqlPromises: Promise<MinimalIssue>[] = [];
                 issueKeys.forEach(key => {
@@ -345,10 +344,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return foundIssues;
     }
 
-    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: PaginatedCommits, comments: PaginatedComments): Promise<BitbucketIssue[]> {
+    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<BitbucketIssue[]> {
         let result: BitbucketIssue[] = [];
         try {
-            const issueKeys = await extractBitbucketIssueKeys(pr, commits.data, comments.data);
+            const issueKeys = await extractBitbucketIssueKeys(pr, commits, comments.data);
             const bbApi = await clientForRemote(pr.remote);
             if (bbApi.issues) {
                 result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);

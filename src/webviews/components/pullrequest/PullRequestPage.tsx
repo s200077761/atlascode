@@ -9,7 +9,6 @@ import Tooltip from '@atlaskit/tooltip';
 import InlineDialog from '@atlaskit/inline-dialog';
 import { Checkbox } from '@atlaskit/checkbox';
 import Select from '@atlaskit/select';
-import WarningIcon from '@atlaskit/icon/glyph/warning';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
 import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
@@ -434,9 +433,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 <Button className='ac-button' style={{ float: "right" }} onClick={() => this.postMessage({ action: 'refreshPR' })}>
                     <RefreshIcon label="refresh" size="small"></RefreshIcon>
                 </Button>
-                {
-                    this.state.pr.errors && <Tooltip content={this.state.pr.errors}><WarningIcon label='pr-warning' /></Tooltip>
-                }
             </div>
         );
         const breadcrumbs = (
