@@ -167,8 +167,25 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        const diffStats: any[] = data.values || [];
-        diffStats.map(diffStat => {
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
+
+        let accumulatedDiffStats = data.values as any[];
+        while (data.isLastPage === false) {
+            const nextPage = await this.client.getURL(this.client.generateUrl(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    start: data.nextPageStart
+                }
+            ));
+            data = nextPage.data;
+            accumulatedDiffStats.push(...(data.values || []));
+        }
+
+        accumulatedDiffStats = accumulatedDiffStats.map(diffStat => {
             switch (diffStat.type) {
                 case 'ADD':
                 case 'COPY':
@@ -185,22 +202,16 @@ export class ServerPullRequestApi implements PullRequestApi {
                     diffStat.type = 'modified';
                     break;
             }
+
+            return diffStat;
         });
         return {
-            data: diffStats.map(diffStat => ({
+            data: accumulatedDiffStats.map(diffStat => ({
                 status: diffStat.type,
                 oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
                 newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
             })),
-            next: data.isLastPage === true
-                ? undefined
-                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
-                    {
-                        markup: true,
-                        avatarSize: 64,
-                        start: data.nextPageStart
-                    }
-                )
+            next: undefined
         };
     }
 
@@ -228,6 +239,24 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
+
+        const accumulatedCommits = data.values as any[];
+        while (data.isLastPage === false) {
+            const nextPage = await this.client.getURL(this.client.generateUrl(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    start: data.nextPageStart
+                }
+            ));
+            data = nextPage.data;
+            accumulatedCommits.push(...(data.values || []));
+        }
+
         return {
             data: data.values.map((commit: any) => ({
                 author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
@@ -238,15 +267,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 htmlSummary: "",
                 rawSummary: ""
             })),
-            next: data.isLastPage === true
-                ? undefined
-                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
-                    {
-                        markup: true,
-                        avatarSize: 64,
-                        start: data.nextPageStart
-                    }
-                )
+            next: undefined
         };
     }
 
@@ -298,6 +319,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 avatarSize: 64
             }
         );
+
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
 
         const accumulatedActivities = data.values as any[];
         while (data.isLastPage === false) {

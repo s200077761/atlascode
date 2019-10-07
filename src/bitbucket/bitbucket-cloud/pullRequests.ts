@@ -150,14 +150,23 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
-        const { data } = await this.client.get(
+        let { data } = await this.client.get(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/diffstat`,
         );
 
-        const diffStats: any[] = data.values || [];
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
+
+        const accumulatedDiffStats = data.values as any[];
+        while (data.next) {
+            const nextPage = await this.client.getURL(data.next);
+            data = nextPage.data;
+            accumulatedDiffStats.push(...(data.values || []));
+        }
 
         return {
-            data: diffStats.map(diffStat => ({
+            data: accumulatedDiffStats.map(diffStat => ({
                 status: diffStat.status!,
                 oldPath: diffStat.old ? diffStat.old.path! : undefined,
                 newPath: diffStat.new ? diffStat.new.path! : undefined
@@ -169,17 +178,26 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
-        const { data } = await this.client.get(
+        let { data } = await this.client.get(
             `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/commits`,
             {
                 pagelen: maxItemsSupported.commits
             }
         );
 
-        const commits = (data.values || []) as any[];
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
+
+        const accumulatedCommits = data.values as any[];
+        while (data.next) {
+            const nextPage = await this.client.getURL(data.next);
+            data = nextPage.data;
+            accumulatedCommits.push(...(data.values || []));
+        }
 
         return {
-            data: commits.map(commit => ({
+            data: accumulatedCommits.map(commit => ({
                 hash: commit.hash!,
                 message: commit.message!,
                 ts: commit.date!,
