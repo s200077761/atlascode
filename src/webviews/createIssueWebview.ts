@@ -138,6 +138,8 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                 this._currentProject = await Container.jiraProjectManager.getFirstProject(this._siteDetails);
             }
         }
+
+        await configuration.setLastCreateSiteAndProject({ siteId: this._siteDetails.id, projectKey: this._currentProject!.key });
     }
 
     public async invalidate() {
@@ -390,6 +392,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                     handled = true;
                     if (isCreateIssue(msg)) {
                         try {
+                            await configuration.setLastCreateSiteAndProject({ siteId: this._siteDetails.id, projectKey: this._currentProject!.key });
                             const [payload, worklog, issuelinks, attachments] = this.formatCreatePayload(msg);
 
                             let client = await Container.clientManager.jiraClient(msg.site);
@@ -413,8 +416,6 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
 
                             commands.executeCommand(Commands.RefreshJiraExplorer);
                             this.fireCallback(resp.key, payload.summary);
-
-                            await configuration.setLastCreateSiteAndProject({ siteId: this._siteDetails.id, projectKey: this._currentProject!.key });
 
                         } catch (e) {
                             Logger.error(new Error(`error creating comment: ${e}`));
