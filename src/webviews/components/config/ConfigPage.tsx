@@ -271,7 +271,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
                         <div className='ac-vpadding'>
-                            <h1>Atlassian for VSCode</h1>
+                            <h1>Atlassian for VS Code</h1>
                         </div>
                     </GridColumn>
                 </Grid>

@@ -69,7 +69,7 @@ export async function activate(context: ExtensionContext) {
     await addPipelinesSchemaToYamlConfig();
     await activateYamlExtension();
 
-    Logger.info(`Atlassian for VSCode (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
+    Logger.info(`Atlassian for VS Code (v${atlascodeVersion}) activated in ${duration[0] * 1000 + Math.floor(duration[1] / 1000000)} ms`);
 }
 
 async function migrateConfig(globalState: Memento): Promise<void> {
@@ -110,7 +110,7 @@ async function sendAnalytics(version: string, globalState: Memento) {
     }
 
     if (semver.gt(version, previousVersion)) {
-        Logger.info(`Atlassian for VSCode upgraded from v${previousVersion} to v${version}`);
+        Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
 }
