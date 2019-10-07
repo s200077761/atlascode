@@ -54,13 +54,19 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     private static toUserModel(input: any): User {
+        const accountId = (input && input.account_id) ? input.account_id : 'unknown';
+        const avatarUrl = (input && input.links && input.links.avatar && input.links.avatar.href) ? input.links!.avatar!.href! : '';
+        const displayName = (input && input.display_name) ? input.display_name : 'Unknown User';
+        const url = (input && input.links && input.links.html && input.links.href) ? input.links.href : '';
+        const mention = `@[${displayName}](account_id:${accountId})`;
+
         return {
-            accountId: input.account_id!,
-            avatarUrl: input.links!.avatar!.href!,
+            accountId: accountId,
+            avatarUrl: avatarUrl,
             emailAddress: undefined,
-            displayName: input.display_name!,
-            url: input.links!.html!.href!,
-            mention: `@[${input.display_name!}](account_id:${input.account_id})`
+            displayName: displayName,
+            url: url,
+            mention: mention
         };
     }
 
@@ -443,7 +449,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
         const site = siteDetailsForRemote(remote);
-        const commentBelongsToUser: boolean = site ? data.user.account_id === site.userId : false;
+        const commentBelongsToUser: boolean = (site && data && data.user && data.user.account_id === site.userId) ? true : false;
+
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,
