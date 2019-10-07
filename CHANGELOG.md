@@ -1,3 +1,15 @@
+## What's New In 2.0.3
+### Improvements
+* Removed the file changes count limit for pull requests
+* Webview tabs now have an Atlassian icon
+
+### Bugs fixed
+* Create Issue page not loading in some instances
+* Webviews didn't allow images to load over http
+* Various undefined values would throw errors due to lack of boundry checking
+* Doc links fixed and various spelling corrections
+  
+
 ## What's New In 2.0.1
 ### Improvements
 * Added support for plain http when connecting to server instances

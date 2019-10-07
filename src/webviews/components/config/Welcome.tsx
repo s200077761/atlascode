@@ -93,6 +93,23 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Removed the file changes count limit for pull requests</li>
+                                <li>Webview tabs now have an Atlassian icon</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Create Issue page not loading in some instances</li>
+                                <li>Webviews didn't allow images to load over http</li>
+                                <li>Various undefined values would throw errors due to lack of boundry checking</li>
+                                <li>Doc links fixed and various spelling corrections</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.0.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
