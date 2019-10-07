@@ -93,19 +93,6 @@ export class IssueCreateScreenTransformer {
             if (renderableIssueTypes.length > 0) {
                 firstIssueType = renderableIssueTypes[0];
             }
-            // } else {
-            //     firstIssueType = emptyIssueType;
-            //     let issueTypeUI: IssueTypeUI = {
-            //         ...emptyIssueTypeUI,
-            //         ...{
-            //             siteDetails: this._site,
-            //             epicFieldInfo: epicFieldInfo,
-            //         }
-            //     };
-
-            //     issueTypeUI.fieldValues['issuetype'] = firstIssueType;
-            //     issueTypeUIList[firstIssueType.id] = issueTypeUI;
-            // }
         }
 
         Object.keys(issueTypeUIList).forEach(key => {
