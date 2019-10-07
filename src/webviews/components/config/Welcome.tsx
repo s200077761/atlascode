@@ -104,7 +104,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
                             <ul>
-                                <li>Webviews didn't allow images to load over http</li>
+                                <li>Create Issue page not loading in some instances</li>
                                 <li>Webviews didn't allow images to load over http</li>
                                 <li>Various undefined values would throw errors due to lack of boundry checking</li>
                                 <li>Doc links fixed and various spelling corrections</li>
