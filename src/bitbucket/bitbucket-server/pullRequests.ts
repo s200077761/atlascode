@@ -1,4 +1,4 @@
-import { PullRequest, PaginatedCommits, User, PaginatedComments, BuildStatus, UnknownUser, PaginatedFileChanges, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy } from '../model';
+import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, FileChange, Commit } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -156,7 +156,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges> {
+    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -167,8 +167,25 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        const diffStats: any[] = data.values || [];
-        diffStats.map(diffStat => {
+        if (!data.values) {
+            return [];
+        }
+
+        let accumulatedDiffStats = data.values as any[];
+        while (data.isLastPage === false) {
+            const nextPage = await this.client.getURL(this.client.generateUrl(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    start: data.nextPageStart
+                }
+            ));
+            data = nextPage.data;
+            accumulatedDiffStats.push(...(data.values || []));
+        }
+
+        accumulatedDiffStats = accumulatedDiffStats.map(diffStat => {
             switch (diffStat.type) {
                 case 'ADD':
                 case 'COPY':
@@ -185,23 +202,15 @@ export class ServerPullRequestApi implements PullRequestApi {
                     diffStat.type = 'modified';
                     break;
             }
+
+            return diffStat;
         });
-        return {
-            data: diffStats.map(diffStat => ({
-                status: diffStat.type,
-                oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
-                newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
-            })),
-            next: data.isLastPage === true
-                ? undefined
-                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/changes`,
-                    {
-                        markup: true,
-                        avatarSize: 64,
-                        start: data.nextPageStart
-                    }
-                )
-        };
+
+        return accumulatedDiffStats.map(diffStat => ({
+            status: diffStat.type,
+            oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
+            newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
+        }));
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
@@ -217,7 +226,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toUser(site, data);
     }
 
-    async getCommits(pr: PullRequest): Promise<PaginatedCommits> {
+    async getCommits(pr: PullRequest): Promise<Commit[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -228,26 +237,33 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         );
 
-        return {
-            data: data.values.map((commit: any) => ({
-                author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
-                ts: commit.authorTimestamp,
-                hash: commit.id,
-                message: commit.message,
-                url: undefined,
-                htmlSummary: "",
-                rawSummary: ""
-            })),
-            next: data.isLastPage === true
-                ? undefined
-                : this.client.generateUrl(`/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
-                    {
-                        markup: true,
-                        avatarSize: 64,
-                        start: data.nextPageStart
-                    }
-                )
-        };
+        if (!data.values) {
+            return [];
+        }
+
+        const accumulatedCommits = data.values as any[];
+        while (data.isLastPage === false) {
+            const nextPage = await this.client.getURL(this.client.generateUrl(
+                `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/pull-requests/${pr.data.id}/commits`,
+                {
+                    markup: true,
+                    avatarSize: 64,
+                    start: data.nextPageStart
+                }
+            ));
+            data = nextPage.data;
+            accumulatedCommits.push(...(data.values || []));
+        }
+
+        return accumulatedCommits.map((commit: any) => ({
+            author: ServerPullRequestApi.toUser(siteDetailsForRemote(pr.remote)!, commit.author),
+            ts: commit.authorTimestamp,
+            hash: commit.id,
+            message: commit.message,
+            url: "",
+            htmlSummary: "",
+            rawSummary: ""
+        }));
     }
 
     async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
@@ -298,6 +314,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 avatarSize: 64
             }
         );
+
+        if (!data.values) {
+            return { data: [], next: undefined };
+        }
 
         const accumulatedActivities = data.values as any[];
         while (data.isLastPage === false) {

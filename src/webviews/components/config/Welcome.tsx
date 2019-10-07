@@ -63,7 +63,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={12}>
-                        <PageHeader><p>Welcome To Atlassian for VSCode!</p></PageHeader>
+                        <PageHeader><p>Welcome To Atlassian for VS Code!</p></PageHeader>
                     </GridColumn>
                     <GridColumn medium={9}>
                         <h3>🎉 First Time Here? 🎉</h3>
@@ -93,6 +93,23 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Removed the file changes count limit for pull requests</li>
+                                <li>Webview tabs now have an Atlassian icon</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Create Issue page not loading in some instances</li>
+                                <li>Webviews didn't allow images to load over http</li>
+                                <li>Various undefined values would throw errors due to lack of boundry checking</li>
+                                <li>Doc links fixed and various spelling corrections</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.0.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
@@ -213,7 +230,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Make Bitbucket features work with SSH aliases</li>
                                 <li>Bitbucket features work with repositories cloned with https protocol</li>
                                 <li>Better date format on pull request commit list</li>
-                                <li>Update to latest VSCode comments api</li>
+                                <li>Update to latest VS Code comments api</li>
                                 <li>Offline detection is too aggressive</li>
                                 <li>Use Atlassian urls for online checks</li>
                                 <li>Authentication related fixes and improvements</li>

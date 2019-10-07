@@ -60,7 +60,6 @@ export class Container {
         });
 
         this._context = context;
-        this._config = config;
         this._version = version;
         context.subscriptions.push((this._uriHandler = new AtlascodeUriHandler()));
         context.subscriptions.push((this._clientManager = new ClientManager(context)));
@@ -133,9 +132,9 @@ export class Container {
         return this._version;
     }
 
-    private static _config: IConfig | undefined;
     static get config() {
-        return this._config || configuration.get<IConfig>();
+        // always return the latest
+        return configuration.get<IConfig>();
     }
 
     private static _context: ExtensionContext;
@@ -263,7 +262,4 @@ export class Container {
         return this._pmfStats;
     }
 
-    static resetConfig() {
-        this._config = undefined;
-    }
 }

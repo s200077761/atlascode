@@ -1,3 +1,15 @@
+## What's New In 2.0.3
+### Improvements
+* Removed the file changes count limit for pull requests
+* Webview tabs now have an Atlassian icon
+
+### Bugs fixed
+* Create Issue page not loading in some instances
+* Webviews didn't allow images to load over http
+* Various undefined values would throw errors due to lack of boundry checking
+* Doc links fixed and various spelling corrections
+  
+
 ## What's New In 2.0.1
 ### Improvements
 * Added support for plain http when connecting to server instances
@@ -63,7 +75,7 @@
 ## What's New In 1.4.1
 ### Improvements
 * Updated marketplace listing name to feature Jira and Bitbucket
-* Add ability to modify a subset of fields on jira details screen
+* Add ability to modify a subset of fields on Jira details screen
 
 ### Bugs fixed
 * Panel text colours appear washed out in Jira webview
@@ -82,7 +94,7 @@
 * Make Bitbucket features work with SSH aliases
 * Bitbucket features work with repositories cloned with https protocol
 * Better date format on pull request commit list
-* Update to latest VSCode comments api
+* Update to latest VS Code comments api
 * Offline detection is too aggressive
 * Use Atlassian urls for online checks
 * Authentication related fixes and improvements
@@ -106,7 +118,7 @@
 * Now using port 31415 for auth listener instead of 9090
 * Added custom prefix for branches when starting work on issue
 * Added Jira epics in issue details view
-* Added ability to link to an epic on jira create issue
+* Added ability to link to an epic on Jira create issue
 * It's now possible to create an Epic issue
 * Merge actions similar to Bitbucket webpage (merge type/close source branch etc)
 * Option to transition Jira/Bitbucket issue when creating/merging pull requests
@@ -114,8 +126,8 @@
 * Added related issues and transition option to create pull request screen
 * Now showing better messaging when no Bitbucket project is open
 * Show merge conflicts in pull request treeview
-* Added non-renderable field warnings and report for jira create issue
-* Added ability to create a JIRA issue from a Bitbucket issue and link them
+* Added non-renderable field warnings and report for Jira create issue
+* Added ability to create a Jira issue from a Bitbucket issue and link them
 * Ensure webview controllers don't refresh multiple times at once
 
 ### Bugs fixed
@@ -139,7 +151,7 @@
 * The configured development branch is now the default source when starting work on an issue
 * Added more default issue code link triggers
 * (experimental) bitbucket-pipelines.yml editing support
-* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+For+VSCode)
+* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code)
 
 ### Bugs fixed
 * Mention names in pull request comments are not shown properly
@@ -205,7 +217,7 @@
 ### Improvements
 * Render markup for description for Jira issues
 * Group sub-tasks by parent issue in tree view
-* Show parent issue link for sub-tasks in jira details view
+* Show parent issue link for sub-tasks in Jira details view
 * Improve styling on start work success message
 * Remove/disable start work button on issue screen if you're already on the issue branch
 * Moved site selector in settings to authorization section
@@ -219,9 +231,9 @@
 * General authentication fixes
 * Start work on issue hangs with non-Bitbucket repos
 * Custom JQL tree not refreshing when refresh button clicked
-* Length check causing View Issue page to dissappear
+* Length check causing View Issue page to disappear
 * Pipelines explorer not initializing properly
-* Open in bitbucket context menu item not working on repository nodes
+* Open in Bitbucket context menu item not working on repository nodes
 * Create Pull Request hangs with non-Bitbucket Cloud repos
 
 ### Improvements

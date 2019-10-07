@@ -236,11 +236,6 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             this.postMessage({ action: 'refresh' });
             return <AtlLoader />;
         }
-
-        if (Object.keys(this.state.fields).length < 1) {
-            this.setState({ isErrorBannerOpen: true, errorDetails: `No fields found for issue type ${this.state.fieldValues['issuetype'].name}` });
-        }
-
         return (
             <Page>
                 <Grid>
@@ -296,9 +291,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                             }
                                         </Field>
                                         {this.getCommonFieldMarkup()}
-                                        <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
-                                            <div>{this.getAdvancedFieldMarkup()}</div>
-                                        </Panel>
+                                        {this.commonFields && this.commonFields.length === 1 &&
+                                            <div className='ac-vpadding'>
+                                                <h3>No fields found for selected project. Please choose another.</h3>
+                                            </div>
+                                        }
+                                        {this.advancedFields && this.advancedFields.length > 0 &&
+                                            <Panel isDefaultExpanded={false} header={<h4>Advanced Options</h4>}>
+                                                <div>{this.getAdvancedFieldMarkup()}</div>
+                                            </Panel>
+                                        }
                                         <FormFooter actions={{}}>
                                             <Button type="submit" className='ac-button' isDisabled={this.state.isSomethingLoading} isLoading={this.state.loadingField === 'submitButton'}>
                                                 Submit

@@ -133,7 +133,7 @@ export class SiteManager extends Disposable {
             return site;
         }
 
-        return this.getSitesAvailable(product).find(site => Container.bitbucketContext.getMirrors(site.hostname).includes(hostname));
+        return this.getSitesAvailable(product).find(site => Container.bitbucketContext && Container.bitbucketContext.getMirrors(site.hostname).includes(hostname));
     }
 
     public getSiteForId(product: Product, id: string): DetailedSiteInfo | undefined {
