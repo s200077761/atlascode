@@ -141,18 +141,8 @@ export interface PaginatedPullRequests {
     next?: string;
 }
 
-export interface PaginatedCommits {
-    data: Commit[];
-    next?: string;
-}
-
 export interface PaginatedComments {
     data: Comment[];
-    next?: string;
-}
-
-export interface PaginatedFileChanges {
-    data: FileChange[];
     next?: string;
 }
 
@@ -186,8 +176,8 @@ export interface PullRequestApi {
     getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
-    getChangedFiles(pr: PullRequest): Promise<PaginatedFileChanges>;
-    getCommits(pr: PullRequest): Promise<PaginatedCommits>;
+    getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
+    getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
     editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
     deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;

@@ -17,7 +17,6 @@ export interface PRData extends Message {
     mainIssue?: MinimalIssue | BitbucketIssueData;
     buildStatuses?: BuildStatus[];
     mergeStrategies: MergeStrategy[];
-    errors?: string;
 }
 
 export function isPRData(a: Message): a is PRData {
