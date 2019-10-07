@@ -125,7 +125,8 @@ export class JiraSettingsManager extends Disposable {
         let allFields = await client.getFields();
         if (allFields) {
             allFields.forEach(field => {
-                fields[field.key] = readField(field);
+                const key = (field.key) ? field.key : field.id;
+                fields[key] = readField(field);
             });
         }
 

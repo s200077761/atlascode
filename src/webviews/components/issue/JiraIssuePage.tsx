@@ -341,6 +341,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             }
         }
 
+        const parentIconUrl = (this.state.fieldValues['parent'] && this.state.fieldValues['parent'].issuetype) ? this.state.fieldValues['parent'].issuetype.iconUrl : undefined;
+        const itIconUrl = (this.state.fieldValues['issuetype']) ? this.state.fieldValues['issuetype'].iconUrl : undefined;
         return (
             <div>
                 {!this.state.isOnline &&
@@ -361,14 +363,14 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             <React.Fragment>
                                 <NavItem
                                     text={this.state.fieldValues['parent'].key}
-                                    iconUrl={this.state.fieldValues['parent'].issuetype.iconUrl}
+                                    iconUrl={parentIconUrl}
                                     onItemClick={() => this.handleOpenIssue({ siteDetails: this.state.siteDetails, key: this.state.fieldValues['parent'] })} />
                                 <span className='ac-breadcrumb-divider'>/</span>
                             </React.Fragment>
                         }
 
                         <Tooltip content={`Created on ${format(this.state.fieldValues['created'], 'YYYY-MM-DD h:mm A')}`}>
-                            <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={this.state.fieldValues['issuetype'].iconUrl} onCopy={this.handleCopyIssueLink} />
+                            <NavItem text={`${this.state.key}`} href={`${this.state.siteDetails.baseLinkUrl}/browse/${this.state.key}`} iconUrl={itIconUrl} onCopy={this.handleCopyIssueLink} />
                         </Tooltip>
                     </div>
                     <h2>
