@@ -24,7 +24,7 @@ export interface Field {
 export function readField(props: any) {
     return {
         id: props.id,
-        key: props.key,
+        key: props.key ? props.key : props.id,
         name: props.name,
         custom: props.custom,
         clauseNames: props.clauseNames,

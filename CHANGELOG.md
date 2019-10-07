@@ -1,3 +1,7 @@
+## What's New In 2.0.4
+### Bugs fixed
+* Some Jira fields not populating due to invalid field keys
+
 ## What's New In 2.0.3
 ### Improvements
 * Removed the file changes count limit for pull requests
