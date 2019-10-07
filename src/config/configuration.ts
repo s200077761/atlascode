@@ -13,7 +13,6 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraCreateSiteAndProjectKey } from '../constants';
-import { Container } from '../container';
 import { SiteIdAndProjectKey } from './model';
 import deepEqual from 'deep-equal';
 
@@ -45,8 +44,6 @@ export class Configuration extends Disposable {
     private onConfigurationChanged(e: ConfigurationChangeEvent): void {
         // only fire if it's a config for our extension
         if (!e.affectsConfiguration(extensionId, null!)) { return; }
-
-        Container.resetConfig();
 
         this._onDidChange.fire(e);
     }

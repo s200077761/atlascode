@@ -2,7 +2,7 @@ import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { MinimalIssue, MinimalORIssueLink } from "./jira-client/model/entities";
 import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
-import { IssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
+import { IssueCreateMetadata, emptyProjectIssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
 import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
 import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-client/model/fieldMetadata";
 import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
@@ -15,6 +15,24 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
   const createIssueTransformer: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
 
   const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
+
+  if (!Array.isArray(meta.projects) || meta.projects.length < 1) {
+    meta.projects = [emptyProjectIssueCreateMetadata];
+    meta.projects[0].issuetypes[0].fields['project'] = {
+      id: 'project',
+      key: 'project',
+      name: 'Project',
+      schema: {
+        type: 'project',
+        system: 'project',
+        custom: undefined,
+        items: undefined,
+      },
+      required: true,
+      autoCompleteUrl: undefined,
+      allowedValues: [],
+    };
+  }
 
   return await createIssueTransformer.transformIssueScreens(meta.projects[0]);
 

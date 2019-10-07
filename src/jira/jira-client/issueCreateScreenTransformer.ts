@@ -5,6 +5,7 @@ import { Container } from "../../container";
 import { FieldTransformer } from "./fieldTransformer";
 import { IssueType } from "./model/entities";
 import { CreateMetaTransformerResult, CreateMetaTransformerProblems, IssueTypeUI, IssueTypeProblem, emptyIssueTypeUI, IssueTypeUIs } from "./model/editIssueUI";
+//import { emptyIssueType } from "./model/emptyEntities";
 
 
 const defaultCommonFields: string[] = [
@@ -38,7 +39,7 @@ export class IssueCreateScreenTransformer {
         let problems: CreateMetaTransformerProblems = {};
         const renderableIssueTypes: IssueType[] = [];
 
-        if (Array.isArray(project.issuetypes) && project.issuetypes.length > 0) {
+        if (project && Array.isArray(project.issuetypes) && project.issuetypes.length > 0) {
             firstIssueType = this.metaIssueTypeToIssueType(project.issuetypes[0]);
 
             for (let i = 0; i < project.issuetypes.length; i++) {
@@ -88,15 +89,30 @@ export class IssueCreateScreenTransformer {
             }
         }
 
-        if (!firstIssueType || (!renderableIssueTypes.find(it => it.id === firstIssueType!.id))) {
-            firstIssueType = renderableIssueTypes[0];
+        if (!firstIssueType || firstIssueType.id === 'atlascodeempty' || (!renderableIssueTypes.find(it => it.id === firstIssueType!.id))) {
+            if (renderableIssueTypes.length > 0) {
+                firstIssueType = renderableIssueTypes[0];
+            }
+            // } else {
+            //     firstIssueType = emptyIssueType;
+            //     let issueTypeUI: IssueTypeUI = {
+            //         ...emptyIssueTypeUI,
+            //         ...{
+            //             siteDetails: this._site,
+            //             epicFieldInfo: epicFieldInfo,
+            //         }
+            //     };
+
+            //     issueTypeUI.fieldValues['issuetype'] = firstIssueType;
+            //     issueTypeUIList[firstIssueType.id] = issueTypeUI;
+            // }
         }
 
         Object.keys(issueTypeUIList).forEach(key => {
             issueTypeUIList[key].selectFieldOptions['issuetype'] = renderableIssueTypes;
         });
 
-        return { issueTypes: renderableIssueTypes, selectedIssueType: firstIssueType, issueTypeUIs: issueTypeUIList, problems: problems };
+        return { issueTypes: renderableIssueTypes, selectedIssueType: firstIssueType!, issueTypeUIs: issueTypeUIList, problems: problems };
     }
 
     private addIssueTypeProblem(problem: IssueTypeProblem, problems: CreateMetaTransformerProblems) {

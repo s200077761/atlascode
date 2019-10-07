@@ -2,7 +2,7 @@ import { FieldMeta, readFieldsMeta } from './fieldMetadata';
 
 //CreateMetaBean
 export interface IssueCreateMetadata {
-    readonly projects: ProjectIssueCreateMetadata[];
+    projects: ProjectIssueCreateMetadata[];
 }
 
 export function readIssueCreateMetadata(params: any): IssueCreateMetadata {
@@ -60,12 +60,20 @@ export function readIssueTypeIssueCreateMetadata(params: any): IssueTypeIssueCre
 
 export const emptyIssueTypeIssueCreateMetadata: IssueTypeIssueCreateMetadata = {
     self: "",
-    id: "",
-    description: "",
-    name: "",
+    id: "atlascodeempty",
+    description: "empty",
+    name: "empty",
     iconUrl: "",
     subtask: false,
     avatarId: 0,
     entityId: "",
     fields: {}
+};
+
+export const emptyProjectIssueCreateMetadata: ProjectIssueCreateMetadata = {
+    id: 'empty',
+    key: 'empty',
+    name: 'empty',
+    avatarUrls: {},
+    issuetypes: [emptyIssueTypeIssueCreateMetadata],
 };

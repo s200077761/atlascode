@@ -16,17 +16,17 @@ export const emptyUser: User = {
 };
 
 export function isEmptyUser(u: any): u is User {
-    return u 
-    && ((<User>u).accountId === undefined
-    || (<User>u).accountId.trim() === '');
+    return u
+        && ((<User>u).accountId === undefined
+            || (<User>u).accountId.trim() === '');
 }
 
 export const emptyIssueType: IssueType = {
     avatarId: -1,
-    description: '',
+    description: 'empty',
     iconUrl: '',
-    id: '',
-    name: '',
+    id: 'empty',
+    name: 'empty',
     self: '',
     subtask: false
 };
