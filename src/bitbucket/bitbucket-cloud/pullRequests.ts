@@ -449,7 +449,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
         const site = siteDetailsForRemote(remote);
-        const commentBelongsToUser: boolean = site ? data.user.account_id === site.userId : false;
+        const commentBelongsToUser: boolean = (site && data && data.user && data.user.account_id === site.userId) ? true : false;
+
         return {
             id: data.id!,
             parentId: data.parent ? data.parent.id! : undefined,
