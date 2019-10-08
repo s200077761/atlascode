@@ -19,10 +19,12 @@ export default class AuthForm extends PureComponent<{
     baseUrl: string;
     readyToSave: boolean;
     useCustomSSL: boolean;
+    useContextPath: boolean;
     customSSLType: string;
     certPaths: string;
     pfxPath: string;
     pfxPassphrase: string;
+    contextPath: string;
 }> {
 
     private sslRadioOptions: any[] = [
@@ -40,10 +42,12 @@ export default class AuthForm extends PureComponent<{
             requiresCredentials: false,
             readyToSave: false,
             useCustomSSL: false,
+            useContextPath: false,
             customSSLType: 'customServerSSL',
             certPaths: '',
             pfxPath: '',
-            pfxPassphrase: ''
+            pfxPassphrase: '',
+            contextPath: '',
         };
     }
 
@@ -101,7 +105,7 @@ export default class AuthForm extends PureComponent<{
         const customSSLCerts = (this.state.useCustomSSL && this.state.customSSLType === 'customServerSSL') ? this.state.certPaths : undefined;
         const pfxCert = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPath : undefined;
         const pfxPassphrase = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPassphrase : undefined;
-
+        const contextPath = this.normailizeContextPath(this.state.contextPath);
         const siteInfo = {
             hostname: url.host,
             protocol: url.protocol,
@@ -109,7 +113,7 @@ export default class AuthForm extends PureComponent<{
             customSSLCertPaths: customSSLCerts,
             pfxPath: pfxCert,
             pfxPassphrase: pfxPassphrase,
-
+            contextPath: contextPath,
         };
 
         if (!this.state.requiresCredentials) {
@@ -123,6 +127,13 @@ export default class AuthForm extends PureComponent<{
 
             this.props.onSave(siteInfo, authInfo);
         }
+    }
+
+    normailizeContextPath(cPath: string): string | undefined {
+        if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
+            return undefined;
+        }
+        return '/' + cPath.replace(/^\/+/g, '').split('/');
     }
 
     onCustomSSLChange = (e: any) => {
@@ -150,6 +161,17 @@ export default class AuthForm extends PureComponent<{
     onPfxPassphraseChange = (e: any) => {
         this.setState(
             { pfxPassphrase: e.target.value },
+            () => this.setReadyToSave(true)
+        );
+    }
+
+    onContextPathEnableChange = (e: any) => {
+        this.setState({ useContextPath: e.target.checked });
+    }
+
+    onContextPathChange = (e: any) => {
+        this.setState(
+            { contextPath: e.target.value },
             () => this.setReadyToSave(true)
         );
     }
@@ -199,6 +221,46 @@ export default class AuthForm extends PureComponent<{
                             }
                         }
                     </Field>
+                    <CheckboxField
+                        name='contextPath-enabled'
+                        id='contextPath-enabled'
+                        value='contextPath.enabled'>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Use context path'
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathEnableChange)}
+                                        isChecked={this.state.useContextPath}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                    {this.state.useContextPath &&
+                        <Field label='Context path'
+                            isRequired={true}
+                            id='contextPath-input'
+                            name='contextPath-input'
+                            defaultValue=''>
+                            {
+                                (fieldArgs: any) => {
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps}
+                                                style={{ width: '100%', display: 'block' }}
+                                                className='ac-inputField'
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
+                                            <HelperMessage>
+                                                The context path your server is mounted at (e.g. /issues)
+                                                    </HelperMessage>
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+
+                    }
                     {
                         this.state.requiresCredentials &&
                         <div>
