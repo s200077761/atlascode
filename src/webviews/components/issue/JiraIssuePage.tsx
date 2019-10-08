@@ -349,7 +349,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <Offline />
                 }
                 {this.state.showPMF &&
-                    <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                    <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 }
                 <div className='ac-page-header'>
                     <div className='ac-breadcrumbs'>

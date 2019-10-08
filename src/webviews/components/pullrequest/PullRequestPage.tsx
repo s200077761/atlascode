@@ -455,7 +455,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                             }
                             {this.state.showPMF &&
-                                <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                             }
                             <PageHeader
                                 actions={actionsContent}
