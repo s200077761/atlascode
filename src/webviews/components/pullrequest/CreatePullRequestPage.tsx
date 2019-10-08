@@ -602,23 +602,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             name="push-local-branch-enabled" />
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
-                                        <GridColumn medium={12}>
-                                            <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                                {this.state.fileDiffsLoading &&
-                                                    <Tooltip content='waiting for data...'>
-                                                        <Spinner delay={100} size='large' />
-                                                    </Tooltip>
-                                                }
-                                                {!this.state.fileDiffsLoading &&
-                                                    <ul className='commit-files-summary' id='commit-files-summary'>
-                                                        {this.generateDiffList()}
-                                                    </ul>
-                                                }
-                                                {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
-                                                    <p>There are no changes to display.</p>
-                                                }
-                                            </Panel>
-                                        </GridColumn>
                                         <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
@@ -672,7 +655,25 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <div className='ac-vpadding'>
                                             <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>
                                         </div>
-
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
+                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                            {this.state.fileDiffsLoading &&
+                                                <Tooltip content='waiting for data...'>
+                                                    <Spinner delay={100} size='large' />
+                                                </Tooltip>
+                                            }
+                                            {!this.state.fileDiffsLoading &&
+                                                <ul className='commit-files-summary' id='commit-files-summary'>
+                                                    {this.generateDiffList()}
+                                                </ul>
+                                            }
+                                            {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
+                                                <p>There are no changes to display.</p>
+                                            }
+                                        </Panel>
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
                                                 <Commits type={''} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />

@@ -8,7 +8,7 @@ import { RepoData, FileDiff, FileStatus } from '../ipc/prMessaging';
 import { isCreatePullRequest, CreatePullRequest, isFetchDetails, FetchDetails, isFetchIssue, FetchIssue, isFetchUsers, isOpenDiffPreview } from '../ipc/prActions';
 import { Commands } from '../commands';
 import { PullRequest, BitbucketIssueData } from '../bitbucket/model';
-import { prCreatedEvent } from '../analytics';
+import { prCreatedEvent, viewScreenEvent, Registry } from '../analytics';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
@@ -331,6 +331,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQuery);
         const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQuery);
+        viewScreenEvent(Registry.screen.pullRequestPreviewDiffScreen, undefined, ProductBitbucket).then(e => { Container.analyticsClient.sendScreenEvent(e); });
         vscode.commands.executeCommand('vscode.diff', lhsUri, rhsUri, fileDisplayName);
     }
 

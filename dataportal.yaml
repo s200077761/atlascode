@@ -377,6 +377,13 @@ screen:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - id: 18768
+    name: pullRequestPreviewDiffScreen
+    description: |
+      Event when a user views a pull request preview diff screen
+    attributes:
+      - name: instanceType
+      - name: hostProduct
   - id: 14459
     name: issueHover
     description: |
