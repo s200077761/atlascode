@@ -191,8 +191,8 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
 
     updateTabIndex = () => {
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
-        const jiraDisabledModifier = this.state.config!.jira.enabled ? 0 : 1;
-        const bitbucketDisabledModifier = this.state.config!.bitbucket.enabled ? 0 : 1;
+        const jiraDisabledModifier = (this.state.config && this.state.config.jira.enabled) ? 0 : 1;
+        const bitbucketDisabledModifier = (this.state.config && this.state.config.bitbucket.enabled) ? 0 : 1;
         if (this.state.openedSettings === SettingSource.Default
             || this.state.openedSettings === SettingSource.JiraIssue
             || this.state.openedSettings === SettingSource.JiraAuth) {
@@ -271,7 +271,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn>
                         <div className='ac-vpadding'>
-                            <h1>Atlassian for VSCode</h1>
+                            <h1>Atlassian for VS Code</h1>
                         </div>
                     </GridColumn>
                 </Grid>

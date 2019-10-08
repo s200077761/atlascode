@@ -104,6 +104,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
                 }
             );
 
+            this._panel.iconPath = Uri.file(Container.context.asAbsolutePath('resources/atlassian-icon.svg'));
 
             if (Container.isDebugging && Container.config.enableUIWS) {
                 this.ws.start(this.onMessageReceived.bind(this));

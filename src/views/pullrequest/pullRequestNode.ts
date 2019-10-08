@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, PaginatedFileChanges, PaginatedCommits, Comment, FileChange, User } from '../../bitbucket/model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, FileChange, User, Commit } from '../../bitbucket/model';
 import { Resources } from '../../resources';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { Commands } from '../../commands';
@@ -87,25 +87,25 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return await bbApi.pullrequests.get(pr);
     }
 
-    private async createRelatedJiraIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedJiraIssueNode(commits: Commit[], allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits.data, allComments.data);
+        const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
         }
         return result;
     }
 
-    private async createRelatedBitbucketIssueNode(commits: PaginatedCommits, allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedBitbucketIssueNode(commits: Commit[], allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
-        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits.data, allComments.data);
+        const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits, allComments.data);
         if (relatedIssuesNode) {
             result.push(relatedIssuesNode);
         }
         return result;
     }
 
-    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: PaginatedFileChanges): Promise<AbstractBaseNode[]> {
+    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const inlineComments = await this.getInlineComments(allComments.data);
 
@@ -120,10 +120,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         catch (e) {
             Logger.debug('error getting merge base: ', e);
         }
-        result.push(...fileChanges.data.map(fileChange => new PullRequestFilesNode(this.pr, mergeBase, fileChange, inlineComments, this.commentController)));
-        if (fileChanges.next) {
-            result.push(new SimpleNode('⚠️ All file changes are not shown. This PR has more file changes than what is supported by this extension.'));
-        }
+        result.push(...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, mergeBase, fileChange, inlineComments, this.commentController)));
         if (allComments.next) {
             result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
         }

@@ -1,17 +1,18 @@
-# Atlassian for VSCode
-Atlassian for VSCode brings the functionality of Atlassian products to your favorite IDE!
+# Atlassian for VS Code
+Atlassian for VS Code brings the functionality of Atlassian products to your favorite IDE!
 
-This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VSCode.
+This extension combines the power of Jira and Bitbucket to streamline the developer workflow within VS Code.
 
-With Atlassian for VSCode you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
+With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
 ## Getting Started
-* Make sure you have VSCode version 1.37.0 or above
+* Make sure you have VS Code version 1.37.0 or above
 * Download the extension from the marketplace
 * Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 * From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
-For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+For+VSCode)
+For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code)
+
 ## Features at a Glance
 
 Here's a quick peek at a developer's workflow:
@@ -37,14 +38,14 @@ Create that issue without breaking your stride:
 ...and lots more
 
 ## Everyone Has Issues...
-Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter and issue yourself.
+Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter an issue yourself.
 
 ### Questions? Comments? Kudos?
 Please use the in-app feedback form to tell us what you think!  It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
 ## Contributors
 
-Pull requests, issues and comments welcome. 
+Pull requests, issues and comments welcome.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 

@@ -63,7 +63,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
             <Page>
                 <Grid spacing='comfortable' layout='fixed'>
                     <GridColumn medium={12}>
-                        <PageHeader><p>Welcome To Atlassian for VSCode!</p></PageHeader>
+                        <PageHeader><p>Welcome To Atlassian for VS Code!</p></PageHeader>
                     </GridColumn>
                     <GridColumn medium={9}>
                         <h3>🎉 First Time Here? 🎉</h3>
@@ -75,12 +75,12 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>You can always get to the configuration screen by opening the command palette and typing 'Atlassian: Open Settings'</p>
                             </div>
                         </section>
-                        <h3>🎉 What's New in 2.0.0 🎉</h3>
+
                         <SectionMessage
                             appearance="info"
                             title="Important Note">
                             <div>
-                                <p>In 2.0.0 we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
+                                <p>In 2.x.x we've removed the <b>Default Site</b> and <b>Default Project</b> options in favor of powering the Jira issues lists completely from custom JQL queries.</p>
                                 <br />
                                 <p>This means you can now see all of your JQL lists in the treeview at once regardless of site or project.</p>
                                 <br />
@@ -93,6 +93,45 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.4 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Some Jira fields not populating due to invalid field keys</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.0.3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Removed the file changes count limit for pull requests</li>
+                                <li>Webview tabs now have an Atlassian icon</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Create Issue page not loading in some instances</li>
+                                <li>Webviews didn't allow images to load over http</li>
+                                <li>Various undefined values would throw errors due to lack of boundry checking</li>
+                                <li>Doc links fixed and various spelling corrections</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.0.1 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for plain http when connecting to server instances</li>
+                                <li>Added experimental support for self-signed certificates see: <a href="https://bitbucket.org/atlassianlabs/atlascode/issues/201">Issue #201</a></li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed Bitbucket authentication not working</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.0.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
@@ -198,7 +237,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <li>Make Bitbucket features work with SSH aliases</li>
                                 <li>Bitbucket features work with repositories cloned with https protocol</li>
                                 <li>Better date format on pull request commit list</li>
-                                <li>Update to latest VSCode comments api</li>
+                                <li>Update to latest VS Code comments api</li>
                                 <li>Offline detection is too aggressive</li>
                                 <li>Use Atlassian urls for online checks</li>
                                 <li>Authentication related fixes and improvements</li>
