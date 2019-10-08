@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import axios from 'axios';
 import { pmfSubmitted } from "../analytics";
 import { Time } from "../util/time";
-import { getAgent } from "../atlclients/charles";
+import { getAgent } from "../atlclients/agent";
 
 const devPMF = {
     collectorId: "235854834",

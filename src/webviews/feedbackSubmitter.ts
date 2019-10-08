@@ -6,7 +6,7 @@ import { ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 import { truncate } from 'lodash';
 import { FeedbackUser } from '../ipc/configMessaging';
 import { Time } from '../util/time';
-import { getAgent } from '../atlclients/charles';
+import { getAgent } from '../atlclients/agent';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',

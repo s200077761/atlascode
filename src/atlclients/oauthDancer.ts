@@ -13,7 +13,7 @@ import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import EventEmitter from 'eventemitter3';
 import { v4 } from 'uuid';
-import { getAgent } from './charles';
+import { getAgent } from './agent';
 import { promisify } from 'util';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';

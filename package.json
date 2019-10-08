@@ -527,18 +527,6 @@
                     ],
                     "description": "Location to which configuration changes are saved"
                 },
-                "atlascode.enableCustomSSLCerts": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables an https agent that can deal with self-signed certificates",
-                    "scope": "window"
-                },
-                "atlascode.customSSLCertPaths": {
-                    "type": "string",
-                    "default": "",
-                    "description": "The absolute path to the custom ssl certificate(s) (pem file) separated by commas",
-                    "scope": "window"
-                },
                 "atlascode.enableCharles": {
                     "type": "boolean",
                     "default": false,

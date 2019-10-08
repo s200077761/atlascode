@@ -7,15 +7,16 @@ import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories"
 import { Client, ClientError } from "../bitbucket/httpClient";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { AxiosResponse } from "axios";
+import { getAgent } from "../atlclients/agent";
 
 export class PipelineApiImpl {
   private client: Client;
 
-  constructor(site: DetailedSiteInfo, token: string, agent: any) {
+  constructor(site: DetailedSiteInfo, token: string) {
     this.client = new Client(
       site.baseApiUrl,
       `Bearer ${token}`,
-      agent,
+      getAgent(site),
       async (response: AxiosResponse): Promise<Error> => {
         let errString = 'Unknown error';
         const errJson = await response.data;

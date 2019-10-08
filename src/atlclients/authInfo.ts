@@ -86,6 +86,9 @@ export interface SiteInfo {
     hostname: string;
     protocol?: string;
     product: Product;
+    customSSLCertPaths?: string;
+    pfxPath?: string;
+    pfxPassphrase?: string;
 }
 
 export interface DetailedSiteInfo extends SiteInfo {

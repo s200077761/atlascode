@@ -8,7 +8,7 @@ import { CredentialManager } from "./authStore";
 import { AnalyticsClient } from "../analytics-node-client/src";
 import axios from 'axios';
 import { Time } from "../util/time";
-import { getAgent } from "./charles";
+import { getAgent } from "./agent";
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -163,7 +163,7 @@ export class LoginManager {
                 "Content-Type": "application/json",
                 Authorization: authHeader
             },
-            httpsAgent: getAgent()
+            httpsAgent: getAgent(site)
 
         });
         const json = res.data;
@@ -182,6 +182,9 @@ export class LoginManager {
             name: site.hostname,
             userId: userId,
             credentialId: credentialId,
+            customSSLCertPaths: site.customSSLCertPaths,
+            pfxPath: site.pfxPath,
+            pfxPassphrase: site.pfxPassphrase,
         };
 
         if (site.product.key === ProductJira.key) {

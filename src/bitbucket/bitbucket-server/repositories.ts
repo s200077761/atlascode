@@ -4,15 +4,16 @@ import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranch
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
+import { getAgent } from "../../atlclients/agent";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
 
-    constructor(site: DetailedSiteInfo, username: string, password: string, agent: any) {
+    constructor(site: DetailedSiteInfo, username: string, password: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            agent,
+            getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
                 const errJson = await response.data;

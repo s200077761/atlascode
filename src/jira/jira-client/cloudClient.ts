@@ -7,8 +7,8 @@ import { readProjects } from './model/responses';
 export class JiraCloudClient extends JiraClient {
     private _token: string | undefined;
 
-    constructor(token: string, site: DetailedSiteInfo, agent?: any) {
-        super(site, agent);
+    constructor(token: string, site: DetailedSiteInfo) {
+        super(site);
         this._token = token;
     }
 

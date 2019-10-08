@@ -5,23 +5,34 @@ var tunnel = require("tunnel");
 import * as fs from "fs";
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
+import { SiteInfo } from "./authInfo";
 
-export function getAgent(): any {
+export function getAgent(site?: SiteInfo): any {
     let agent = undefined;
     try {
-        if (configuration.get<boolean>('enableCustomSSLCerts') && configuration.get<string>('customSSLCertPaths', undefined, '').trim() !== '') {
-            const cas = sslRootCas.create();
-            const certs = configuration.get<string>('customSSLCertPaths', undefined, '').split(',');
+        if (site) {
+            if (site.customSSLCertPaths && site.customSSLCertPaths.trim() !== '') {
+                const cas = sslRootCas.create();
+                const certs = site.customSSLCertPaths.split(',');
 
-            certs.forEach(cert => {
-                cas.addFile(cert.trim());
-            });
+                certs.forEach(cert => {
+                    cas.addFile(cert.trim());
+                });
 
-            https.globalAgent.options.ca = cas;
+                https.globalAgent.options.ca = cas;
 
-            agent = new https.Agent({ rejectUnauthorized: false });
+                agent = new https.Agent({ rejectUnauthorized: false });
+            } else if (site.pfxPath && site.pfxPath.trim() !== '') {
+                const pfxFile = fs.readFileSync(site.pfxPath);
 
-        } else if (configuration.get<boolean>('enableCharles')) {
+                agent = new https.Agent({
+                    pfx: pfxFile,
+                    passphrase: site.pfxPassphrase
+                });
+            }
+        }
+
+        if (!agent && configuration.get<boolean>('enableCharles')) {
             const debugOnly = configuration.get<boolean>('charlesDebugOnly');
 
             if (!debugOnly || (debugOnly && Container.isDebugging)) {
