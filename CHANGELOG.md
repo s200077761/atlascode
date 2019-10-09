@@ -2,6 +2,7 @@
 ### Improvements
 * Added advanced SSL options to custom login screen
 * Added context path option to custom login screen
+* Now showing PR approval status in explorer
 
 ### Bugs fixed
 * Bitbucket pull request filters not working
