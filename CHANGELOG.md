@@ -1,4 +1,4 @@
-## What's New In 2.0.5
+## What's New In 2.1.0
 ### Improvements
 * Clicking on a pull request preview file now opens the file
 * Added advanced SSL options to custom login screen
