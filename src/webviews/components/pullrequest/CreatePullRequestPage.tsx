@@ -489,7 +489,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                     }
                                     {this.state.showPMF &&
-                                        <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                        <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                                     }
                                     <GridColumn medium={12}>
                                         <PageHeader actions={actionsContent}>

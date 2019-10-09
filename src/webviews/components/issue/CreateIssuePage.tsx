@@ -245,7 +245,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                 <Offline />
                             }
                             {this.state.showPMF &&
-                                <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                             }
                             {this.state.isCreateBannerOpen &&
                                 <div className='fade-in'>
