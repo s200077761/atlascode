@@ -16,14 +16,17 @@ export const PullRequestContextValue = 'pullrequest';
 
 export interface FileDiffQueryParams {
     lhs: boolean;
-    prHref: string;
-    prId: number;
-    participants: User[];
     repoUri: string;
-    remote: Remote;
     branchName: string;
     commitHash: string;
     path: string;
+}
+
+export interface PRFileDiffQueryParams extends FileDiffQueryParams {
+    prHref: string;
+    prId: number;
+    remote: Remote;
+    participants: User[];
     commentThreads: Comment[][];
 }
 
@@ -36,8 +39,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
+        const approvalText = this.pr.data.participants
+            .filter(p => p.status === 'APPROVED')
+            .map(approver => `Approved-by: ${approver.displayName}`)
+            .join('\n');
+
         let item = new vscode.TreeItem(`#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}`;
+        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${approvalText.length > 0 ? `\n\n${approvalText}` : ''}`;
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
@@ -207,7 +215,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 commitHash: this.mergeBase,
                 path: lhsFilePath,
                 commentThreads: lhsCommentThreads
-            } as FileDiffQueryParams)
+            } as PRFileDiffQueryParams)
         };
         let rhsQueryParam = {
             query: JSON.stringify({
@@ -221,7 +229,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 commitHash: this.pr.data.source!.commitHash,
                 path: rhsFilePath,
                 commentThreads: rhsCommentThreads
-            } as FileDiffQueryParams)
+            } as PRFileDiffQueryParams)
         };
         switch (this.fileChange.status) {
             case 'added':

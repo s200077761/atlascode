@@ -10,7 +10,7 @@ import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
 import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult, FileDiff, FileStatus } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers, OpenDiffPreviewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { Commits } from './Commits';
@@ -36,7 +36,7 @@ import Spinner from '@atlaskit/spinner';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
 type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
@@ -208,22 +208,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             });
         }
 
-        this.setState({ fileDiffsLoading: true, fileDiffs: [] }); //Activates spinner for file diff panel and resets data
-        if (this.state.repo &&
-            this.state.remote &&
-            this.state.sourceBranch &&
-            this.state.destinationBranch &&
-            this.state.sourceBranch.value !== this.state.destinationBranch.value &&
-            this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
-
-            this.postMessage({
-                action: 'fetchDetails',
-                repoUri: this.state.repo!.value.uri,
-                remote: this.state.remote!.value,
-                sourceBranch: this.state.sourceBranch!.value,
-                destinationBranch: this.state.destinationBranch!.value
-            });
-
+        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
+        if(this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
             this.postMessage(
                 {
                     action: 'updateDiff',
@@ -232,6 +218,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     destinationBranch: this.state.destinationBranch!.value
                 }
             );
+            
+            if (this.state.remote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
+                this.postMessage({
+                    action: 'fetchDetails',
+                    repoUri: this.state.repo!.value.uri,
+                    remote: this.state.remote!.value,
+                    sourceBranch: this.state.sourceBranch!.value,
+                    destinationBranch: this.state.destinationBranch!.value
+                });
+            }
         } else {
             this.setState({ fileDiffsLoading: false, fileDiffs: [] });
         }
@@ -385,8 +381,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             return { backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437' };
         } else if (status === FileStatus.RENAMED) {
             return { backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a' };
-        } else {
+        } else if (status === FileStatus.COPIED) {
             return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
+        } else {
+            //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
+            return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6'};
         }
 
     }
@@ -397,23 +396,54 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         </h3>;
     }
 
+    openDiffViewForFile = (fileDiff: FileDiff) => {
+        this.postMessage(
+            { 
+                action: 'openDiffPreview', 
+                lhsQuery: fileDiff.lhsQueryParams, 
+                rhsQuery: fileDiff.rhsQueryParams,
+                fileDisplayName: fileDiff.file
+            }
+        );
+    }
+
+    mapFileStatusToWord = (status: FileStatus) => {
+        if (status === FileStatus.ADDED) {
+            return 'ADDED';
+        } else if (status === FileStatus.MODIFIED) {
+            return 'MODIFIED';
+        } else if (status === FileStatus.DELETED) {
+            return 'DELETED';
+        } else if (status === FileStatus.RENAMED) {
+            return 'RENAMED';
+        } else if (status === FileStatus.COPIED) {
+            return 'COPIED';
+        } else {
+            return 'UNKNOWN';
+        }
+    }
+
     generateDiffList = () => {
         return this.state.fileDiffs.map(fileDiff =>
-            <li className='iterable-item file-summary file-modified'>
-                <div className="commit-file-diff-stats">
-                    <span className="lines-added">
-                        +{fileDiff.linesAdded}
-                    </span>
-                    <span className="lines-removed">
-                        -{fileDiff.linesRemoved}
-                    </span>
-                    <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
-                        {fileDiff.status}
-                    </span>
-                    <a className="commit-files-summary--filename">
-                        {fileDiff.file}
-                    </a>
-                </div>
+            <li className='iterable-item file-summary file-modified' onClick={() => this.openDiffViewForFile(fileDiff)}>
+                <Tooltip 
+                    content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
+                >
+                    <div className="commit-file-diff-stats">
+                        <span className="lines-added">
+                            +{fileDiff.linesAdded}
+                        </span>
+                        <span className="lines-removed">
+                            -{fileDiff.linesRemoved}
+                        </span>
+                        <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
+                            {fileDiff.status}
+                        </span>
+                        <a className="commit-files-summary--filename">
+                            {fileDiff.file}
+                        </a>
+                    </div>
+                </Tooltip>
             </li>
         );
     }
@@ -489,7 +519,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                     }
                                     {this.state.showPMF &&
-                                        <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                                        <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                                     }
                                     <GridColumn medium={12}>
                                         <PageHeader actions={actionsContent}>
@@ -572,23 +602,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             name="push-local-branch-enabled" />
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
-                                        <GridColumn medium={12}>
-                                            <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                                {this.state.fileDiffsLoading &&
-                                                    <Tooltip content='waiting for data...'>
-                                                        <Spinner delay={100} size='large' />
-                                                    </Tooltip>
-                                                }
-                                                {!this.state.fileDiffsLoading &&
-                                                    <ul className='commit-files-summary' id='commit-files-summary'>
-                                                        {this.generateDiffList()}
-                                                    </ul>
-                                                }
-                                                {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
-                                                    <p>There are no changes to display.</p>
-                                                }
-                                            </Panel>
-                                        </GridColumn>
                                         <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
@@ -642,7 +655,25 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <div className='ac-vpadding'>
                                             <Button className='ac-button' type='submit' isLoading={this.state.isCreateButtonLoading}>Create pull request</Button>
                                         </div>
-
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
+                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                            {this.state.fileDiffsLoading &&
+                                                <Tooltip content='waiting for data...'>
+                                                    <Spinner delay={100} size='large' />
+                                                </Tooltip>
+                                            }
+                                            {!this.state.fileDiffsLoading &&
+                                                <ul className='commit-files-summary' id='commit-files-summary'>
+                                                    {this.generateDiffList()}
+                                                </ul>
+                                            }
+                                            {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
+                                                <p>There are no changes to display.</p>
+                                            }
+                                        </Panel>
+                                    </GridColumn>
+                                    <GridColumn medium={12}>
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
                                                 <Commits type={''} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />

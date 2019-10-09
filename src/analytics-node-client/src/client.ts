@@ -4,7 +4,7 @@ import { TrackEvent, UIEvent, AnalyticsClientInit, ScreenEvent, TrackEventData, 
 
 import Analytics from 'analytics-node';
 import { requireValue, validateTrackEvent, validateUIEvent, validateScreenEvent } from './preconditions';
-import { getAgent } from "../../atlclients/charles";
+import { getAgent } from "../../atlclients/agent";
 import { Container } from "../../container";
 
 const ANALYTICS_WRITE_KEY = 'BLANK';

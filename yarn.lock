@@ -961,6 +961,11 @@
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/relateurl/-/relateurl-0.2.28.tgz#6bda7db8653fa62643f5ee69e9f69c11a392e3a6"
   integrity sha1-a9p9uGU/piZD9e5p6facEaOS46Y=
 
+"@types/retry@^0.12.0":
+  version "0.12.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/retry/-/retry-0.12.0.tgz#2b35eccfcee7d38cd72ad99232fbd58bffb3c84d"
+  integrity sha1-KzXsz87n04zXKtmSMvvVi/+zyE0=
+
 "@types/semver@^5.5.0":
   version "5.5.0"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/semver/-/semver-5.5.0.tgz#146c2a29ee7d3bae4bf2fcb274636e264c813c45"
@@ -6274,6 +6279,14 @@ p-retry@^3.0.1:
   resolved "https://packages.atlassian.com/api/npm/npm-remote/p-retry/-/p-retry-3.0.1.tgz#316b4c8893e2c8dc1cfa891f406c4b422bebf328"
   integrity sha1-MWtMiJPiyNwc+okfQGxLQivr8yg=
   dependencies:
+    retry "^0.12.0"
+
+p-retry@^4.1.0:
+  version "4.1.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/p-retry/-/p-retry-4.1.0.tgz#9ce7cef2069e84bf590df3b8ec18d740109338d6"
+  integrity sha1-nOfO8gaehL9ZDfO47BjXQBCTONY=
+  dependencies:
+    "@types/retry" "^0.12.0"
     retry "^0.12.0"
 
 p-settle@^3.1.0:

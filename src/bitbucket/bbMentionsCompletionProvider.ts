@@ -1,7 +1,7 @@
 import {
     window, CompletionItemProvider, TextDocument, Position, CompletionItem, CompletionItemKind
 } from 'vscode';
-import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
+import { PRFileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
 import { clientForRemote } from './bbUtils';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
 
@@ -17,7 +17,7 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
             return;
         }
 
-        const queryParams = JSON.parse(activePullRequestUri.query) as FileDiffQueryParams;
+        const queryParams = JSON.parse(activePullRequestUri.query) as PRFileDiffQueryParams;
         const bbApi = await clientForRemote(queryParams.remote);
         const triggerWord = doc.getText(doc.getWordRangeAtPosition(pos));
         const users = await bbApi.pullrequests.getReviewers(queryParams.remote, triggerWord);

@@ -349,7 +349,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     <Offline />
                 }
                 {this.state.showPMF &&
-                    <PMFBBanner onPMFOpen={this.onPMFOpen} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
+                    <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 }
                 <div className='ac-page-header'>
                     <div className='ac-breadcrumbs'>
@@ -386,7 +386,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                         {this.getInputMarkup(this.state.fields['description'], true)}
                     </div>
                 }
-                {this.state.fieldValues['attachment'] && this.state.fieldValues['attachment'].length > 0
+                {this.state.fields['attachment'] && this.state.fieldValues['attachment'] && this.state.fieldValues['attachment'].length > 0
                     &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['attachment'].name}</label>
@@ -395,7 +395,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     </div>
                 }
 
-                {this.state.fieldValues['environment']
+                {this.state.fields['environment'] && this.state.fieldValues['environment']
                     && this.state.fieldValues['environment'].trim() !== ''
                     &&
                     <div className='ac-vpadding'>
@@ -583,10 +583,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                     </Button>
                     </Tooltip>
                 </ButtonGroup>
-                <div className='ac-vpadding'>
-                    <label className='ac-field-label'>{this.state.fields['status'].name}</label>
-                    <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
-                </div>
+                {this.state.fields['status'] &&
+                    <div className='ac-vpadding'>
+                        <label className='ac-field-label'>{this.state.fields['status'].name}</label>
+                        <TransitionMenu transitions={this.state.selectFieldOptions['transitions']} currentStatus={this.state.fieldValues['status']} isStatusButtonLoading={this.state.loadingField === 'status'} onStatusChange={this.handleStatusChange} />
+                    </div>
+                }
                 {this.state.fields['assignee'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['assignee'].name}</label>

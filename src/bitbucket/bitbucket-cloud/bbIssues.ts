@@ -4,6 +4,7 @@ import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, Bitb
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from 'axios';
+import { getAgent } from "../../atlclients/agent";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -15,11 +16,11 @@ const dummyRemote = { name: '', isReadOnly: true };
 export class BitbucketIssuesApiImpl {
     private client: Client;
 
-    constructor(site: DetailedSiteInfo, token: string, agent: any) {
+    constructor(site: DetailedSiteInfo, token: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent,
+            getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
                 const errJson = response.data;

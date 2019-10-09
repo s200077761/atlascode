@@ -4,7 +4,7 @@ import { OAuthProvider, ProductJira, ProductBitbucket } from './authInfo';
 import axios, { AxiosInstance } from 'axios';
 import { Time } from '../util/time';
 import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
-import { getAgent } from './charles';
+import { getAgent } from './agent';
 
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance = axios.create({

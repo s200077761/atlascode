@@ -11,7 +11,7 @@ import { v4 } from "uuid";
 import { JiraJQLListKey } from "../constants";
 import { Container } from "../container";
 import { ConfigurationTarget } from "vscode";
-import { getAgent } from "../atlclients/charles";
+import { getAgent } from "../atlclients/agent";
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const WorkingProjectToken = 'currentProject()';

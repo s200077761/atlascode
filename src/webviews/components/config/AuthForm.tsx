@@ -4,6 +4,9 @@ import { Field, ErrorMessage, HelperMessage } from '@atlaskit/form';
 import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
 import { AuthInfo, SiteInfo, Product, ProductBitbucket, emptyUserInfo, emptyAuthInfo, BasicAuthInfo } from "../../../atlclients/authInfo";
+import { Checkbox } from '@atlaskit/checkbox';
+import { CheckboxField } from '@atlaskit/form';
+import { RadioGroup } from '@atlaskit/radio';
 
 export default class AuthForm extends PureComponent<{
     product: Product;
@@ -15,7 +18,19 @@ export default class AuthForm extends PureComponent<{
     password: string;
     baseUrl: string;
     readyToSave: boolean;
+    useCustomSSL: boolean;
+    useContextPath: boolean;
+    customSSLType: string;
+    certPaths: string;
+    pfxPath: string;
+    pfxPassphrase: string;
+    contextPath: string;
 }> {
+
+    private sslRadioOptions: any[] = [
+        { name: 'customSSLType', label: 'Use custom CA certificate(s) (e.g. a self-signed cert)', value: 'customServerSSL' },
+        { name: 'customSSLType', label: 'Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)', value: 'customClientSSL' }
+    ];
 
     constructor(props: any) {
         super(props);
@@ -26,6 +41,13 @@ export default class AuthForm extends PureComponent<{
             password: "",
             requiresCredentials: false,
             readyToSave: false,
+            useCustomSSL: false,
+            useContextPath: false,
+            customSSLType: 'customServerSSL',
+            certPaths: '',
+            pfxPath: '',
+            pfxPassphrase: '',
+            contextPath: '',
         };
     }
 
@@ -80,10 +102,18 @@ export default class AuthForm extends PureComponent<{
     onSave = () => {
         const url = new URL(this.state.baseUrl);
 
+        const customSSLCerts = (this.state.useCustomSSL && this.state.customSSLType === 'customServerSSL') ? this.state.certPaths : undefined;
+        const pfxCert = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPath : undefined;
+        const pfxPassphrase = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPassphrase : undefined;
+        const contextPath = (this.state.useContextPath) ? this.normailizeContextPath(this.state.contextPath) : undefined;
         const siteInfo = {
             hostname: url.host,
             protocol: url.protocol,
-            product: this.props.product
+            product: this.props.product,
+            customSSLCertPaths: customSSLCerts,
+            pfxPath: pfxCert,
+            pfxPassphrase: pfxPassphrase,
+            contextPath: contextPath,
         };
 
         if (!this.state.requiresCredentials) {
@@ -97,6 +127,53 @@ export default class AuthForm extends PureComponent<{
 
             this.props.onSave(siteInfo, authInfo);
         }
+    }
+
+    normailizeContextPath(cPath: string): string | undefined {
+        if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
+            return undefined;
+        }
+        return '/' + cPath.replace(/^\/+/g, '').split('/');
+    }
+
+    onCustomSSLChange = (e: any) => {
+        this.setState({ useCustomSSL: e.target.checked });
+    }
+
+    onCustomSSLTypeChange = (e: any) => {
+        this.setState({ customSSLType: e.target.value, certPaths: '', pfxPath: '', pfxPassphrase: '' });
+    }
+
+    onCertPathsChange = (e: any) => {
+        this.setState(
+            { certPaths: e.target.value },
+            () => this.setReadyToSave(true)
+        );
+    }
+
+    onPfxPathChange = (e: any) => {
+        this.setState(
+            { pfxPath: e.target.value },
+            () => this.setReadyToSave(true)
+        );
+    }
+
+    onPfxPassphraseChange = (e: any) => {
+        this.setState(
+            { pfxPassphrase: e.target.value },
+            () => this.setReadyToSave(true)
+        );
+    }
+
+    onContextPathEnableChange = (e: any) => {
+        this.setState({ useContextPath: e.target.checked });
+    }
+
+    onContextPathChange = (e: any) => {
+        this.setState(
+            { contextPath: e.target.value },
+            () => this.setReadyToSave(true)
+        );
     }
 
     render() {
@@ -144,6 +221,46 @@ export default class AuthForm extends PureComponent<{
                             }
                         }
                     </Field>
+                    <CheckboxField
+                        name='contextPath-enabled'
+                        id='contextPath-enabled'
+                        value='contextPath.enabled'>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Use context path'
+                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathEnableChange)}
+                                        isChecked={this.state.useContextPath}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                    {this.state.useContextPath &&
+                        <Field label='Context path'
+                            isRequired={true}
+                            id='contextPath-input'
+                            name='contextPath-input'
+                            defaultValue=''>
+                            {
+                                (fieldArgs: any) => {
+                                    return (
+                                        <div>
+                                            <input {...fieldArgs.fieldProps}
+                                                style={{ width: '100%', display: 'block' }}
+                                                className='ac-inputField'
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
+                                            <HelperMessage>
+                                                The context path your server is mounted at (e.g. /issues or /jira)
+                                                    </HelperMessage>
+                                        </div>
+                                    );
+                                }
+                            }
+                        </Field>
+
+                    }
                     {
                         this.state.requiresCredentials &&
                         <div>
@@ -201,6 +318,105 @@ export default class AuthForm extends PureComponent<{
                                     }
                                 }
                             </Field>
+                            <CheckboxField
+                                name='custom-ssl-enabled'
+                                id='custom-ssl-enabled'
+                                value='custom.ssl.enabled'>
+                                {
+                                    (fieldArgs: any) => {
+                                        return (
+                                            <Checkbox {...fieldArgs.fieldProps}
+                                                label='Use Custom SSL Settings'
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onCustomSSLChange)}
+                                                isChecked={this.state.useCustomSSL}
+                                            />
+                                        );
+                                    }
+                                }
+                            </CheckboxField>
+                            {this.state.useCustomSSL &&
+                                <Field defaultValue={this.state.customSSLType} label='' id='customSSLType' name='customSSLType'>
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (<RadioGroup {...fieldArgs.fieldProps}
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onCustomSSLTypeChange)}
+                                                options={this.sslRadioOptions} />);
+                                        }
+                                    }
+                                </Field>
+                            }
+
+                            {this.state.useCustomSSL && this.state.customSSLType === 'customServerSSL' &&
+                                <Field label='Custom SSL certificate path(s)'
+                                    isRequired={true}
+                                    id='sslCertPaths-input'
+                                    name='sslCertPaths-input'
+                                    defaultValue="">
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps}
+                                                        style={{ width: '100%', display: 'block' }}
+                                                        className='ac-inputField'
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onCertPathsChange)} />
+                                                    <HelperMessage>
+                                                        The full absolute path to your custom certificates separated by commas
+                                                    </HelperMessage>
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+
+                            }
+
+                            {this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL' &&
+                                <div>
+                                    <Field label='Custom PFX certificate path'
+                                        isRequired={true}
+                                        id='pfxPath-input'
+                                        name='pfxPath-input'
+                                        defaultValue="">
+                                        {
+                                            (fieldArgs: any) => {
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            style={{ width: '100%', display: 'block' }}
+                                                            className='ac-inputField'
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onPfxPathChange)} />
+                                                        <HelperMessage>
+                                                            The full absolute path to your custom pfx file
+                                                        </HelperMessage>
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                    </Field>
+                                    <Field label='PFX passphrase'
+                                        isRequired={false}
+                                        id='pfxPassphrase-input'
+                                        name='pfxPassphrase-input'
+                                        defaultValue="">
+                                        {
+                                            (fieldArgs: any) => {
+                                                return (
+                                                    <div>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            style={{ width: '100%', display: 'block' }}
+                                                            className='ac-inputField'
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onPfxPassphraseChange)} />
+                                                        <HelperMessage>
+                                                            The passphrase used to decrypt the pfx file (if required)
+                                                        </HelperMessage>
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                    </Field>
+                                </div>
+                            }
                         </div>
                     }
                     <div style={{
