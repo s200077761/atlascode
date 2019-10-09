@@ -93,6 +93,22 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.0.5 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added advanced SSL options to custom login screen</li>
+                                <li>Added context path option to custom login screen</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Bitbucket pull request filters not working</li>
+                                <li>Sometimes issue screen would be blank</li>
+                                <li>Online/Offline checker sometimes gave wrong results</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.0.4 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
