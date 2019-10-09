@@ -13,7 +13,7 @@ import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { firstBitbucketRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
-import { descriptionForState, iconUriForPipeline } from "./Helpers";
+import { descriptionForState, iconUriForPipeline, shouldDisplay } from "./Helpers";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -128,7 +128,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 return [new SimpleNode("No pipelines results for this repository")];
             }
 
-            const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
+            const nodes: AbstractBaseNode[] = this._pipelines.filter(pipeline => shouldDisplay(pipeline.target.ref_name)).map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }

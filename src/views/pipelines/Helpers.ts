@@ -8,8 +8,8 @@ import { Uri } from "vscode";
  * preferences of the user.
  * @param branchName The branch name to test.
  */
-export function shouldDisplay(branchName: string): boolean {
-    if (!Container.config.bitbucket.pipelines.hideFiltered) {
+export function shouldDisplay(branchName: string | undefined): boolean {
+    if (!Container.config.bitbucket.pipelines.hideFiltered || branchName === undefined) {
         return true;
     }
 
