@@ -97,6 +97,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                         <section>
                             <h4>✨ Improvements ✨</h4>
                             <ul>
+                                <li>Clicking on a pull request preview file now opens the file</li>
                                 <li>Added advanced SSL options to custom login screen</li>
                                 <li>Added context path option to custom login screen</li>
                                 <li>Now showing PR approval status in explorer tooltip</li>

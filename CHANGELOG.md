@@ -1,5 +1,6 @@
 ## What's New In 2.0.5
 ### Improvements
+* Clicking on a pull request preview file now opens the file
 * Added advanced SSL options to custom login screen
 * Added context path option to custom login screen
 * Now showing PR approval status in explorer tooltip
