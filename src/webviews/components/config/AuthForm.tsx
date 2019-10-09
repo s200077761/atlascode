@@ -28,8 +28,8 @@ export default class AuthForm extends PureComponent<{
 }> {
 
     private sslRadioOptions: any[] = [
-        { name: 'customSSLType', label: 'Use custom server-side SSL certificate(s)', value: 'customServerSSL' },
-        { name: 'customSSLType', label: 'Use custom client-side pfx certificate', value: 'customClientSSL' }
+        { name: 'customSSLType', label: 'Use custom CA certificate(s) (e.g. a self-signed cert)', value: 'customServerSSL' },
+        { name: 'customSSLType', label: 'Use custom client-side certificates (CA certificates bundled in PKCS#12 (pfx)', value: 'customClientSSL' }
     ];
 
     constructor(props: any) {
