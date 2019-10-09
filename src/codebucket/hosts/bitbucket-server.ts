@@ -3,7 +3,7 @@ import { parseGitUrl } from '../../bitbucket/bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Remote } from '../../typings/git';
 
-export class BitbucketServerHost extends BitbucketSite {
+export class BitbucketServerSite extends BitbucketSite {
 
   constructor(site: DetailedSiteInfo, remote: Remote) {
     super(site, remote);

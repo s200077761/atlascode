@@ -1,5 +1,5 @@
-import { BitbucketCloudHost } from '../hosts/bitbucket-cloud';
-import { BitbucketServerHost } from '../hosts/bitbucket-server';
+import { BitbucketCloudSite } from '../hosts/bitbucket-cloud';
+import { BitbucketServerSite } from '../hosts/bitbucket-server';
 import { BitbucketSite } from '../hosts/bitbucket-site-base';
 import { Shell } from '../../util/shell';
 import { CommandBase } from '../command/command-base';
@@ -8,12 +8,6 @@ import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import { Container } from '../../container';
 import { firstBitbucketRemote, clientForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { Repository } from '../../typings/git';
-
-export interface BitbucketRemote {
-  name: string;
-  host: string;
-  repo: string;
-}
 
 export class Backend {
 
@@ -43,13 +37,13 @@ export class Backend {
   }
 
   /**
-   * Get a regex match of the first remote containing a Bitbucket host.
+   * Get the remote Bitbucket site.
    */
-  public async findRemoteHost(): Promise<BitbucketSite> {
+  public async findBitbucketSite(): Promise<BitbucketSite> {
     const repo = this.findRepository();
     const remote = firstBitbucketRemote(repo);
     const site = siteDetailsForRemote(remote)!;
-    return site.isCloud ? new BitbucketCloudHost(site, remote) : new BitbucketServerHost(site, remote);
+    return site.isCloud ? new BitbucketCloudSite(site, remote) : new BitbucketServerSite(site, remote);
   }
 
   /**
@@ -73,20 +67,6 @@ export class Backend {
       return match[1];
     }
     throw new Error('Unable to find the selected revision');
-  }
-
-  /**
-   * Get the default branch for the current repo.
-   */
-  public async getDefaultBranch(): Promise<string> {
-    const remote = firstBitbucketRemote(this.findRepository());
-    try {
-      return await this.shell.output(`git rev-parse --abbrev-ref refs/remotes/${remote.name}/HEAD`);
-    } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`No remote HEAD found, falling back to ${remote.name}/master`);
-      return `${remote.name}/master`;
-    }
   }
 
   /**

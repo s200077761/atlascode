@@ -4,7 +4,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Remote } from '../../typings/git';
 import { parseGitUrl } from '../../bitbucket/bbUtils';
 
-export class BitbucketCloudHost extends BitbucketSite {
+export class BitbucketCloudSite extends BitbucketSite {
 
   constructor(site: DetailedSiteInfo, remote: Remote) {
     super(site, remote);
