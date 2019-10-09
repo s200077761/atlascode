@@ -252,7 +252,7 @@ export default class AuthForm extends PureComponent<{
                                                 className='ac-inputField'
                                                 onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
                                             <HelperMessage>
-                                                The context path your server is mounted at (e.g. /issues)
+                                                The context path your server is mounted at (e.g. /issues or /jira)
                                                     </HelperMessage>
                                         </div>
                                     );
