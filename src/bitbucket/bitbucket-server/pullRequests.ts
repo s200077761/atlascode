@@ -32,7 +32,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async getList(repository: Repository, remote: Remote, queryParams?: { q?: any, limit?: number }): Promise<PaginatedPullRequests> {
+    async getList(repository: Repository, remote: Remote, queryParams?: any): Promise<PaginatedPullRequests> {
         let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
 
         const { data } = await this.client.get(
@@ -68,10 +68,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             repository,
             remote,
             {
-                q: {
-                    'username.1': currentUser,
-                    'role.1': 'AUTHOR'
-                }
+                'username.1': currentUser,
+                'role.1': 'AUTHOR'
             }
         );
     }
@@ -82,10 +80,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             repository,
             remote,
             {
-                q: {
-                    'username.1': currentUser,
-                    'role.1': 'REVIEWER'
-                }
+                'username.1': currentUser,
+                'role.1': 'REVIEWER'
             }
         );
     }
@@ -103,11 +99,9 @@ export class ServerPullRequestApi implements PullRequestApi {
             repository,
             remote,
             {
-                q: {
-                    'username.1': currentUser,
-                    'role.1': 'REVIEWER',
-                    limit: 2
-                }
+                'username.1': currentUser,
+                'role.1': 'REVIEWER',
+                limit: 2
             }
         );
     }
@@ -117,9 +111,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             repository,
             remote,
             {
-                q: {
-                    'state': 'ALL'
-                }
+                'state': 'ALL'
             });
     }
 
