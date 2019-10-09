@@ -1,3 +1,15 @@
+## What's New In 2.1.0
+### Improvements
+* Clicking on a pull request preview file now opens the file
+* Added advanced SSL options to custom login screen
+* Added context path option to custom login screen
+* Now showing PR approval status in explorer tooltip
+
+### Bugs fixed
+* Bitbucket pull request filters not working
+* Sometimes issue screen would be blank
+* Online/Offline checker sometimes gave wrong results
+
 ## What's New In 2.0.4
 ### Bugs fixed
 * Some Jira fields not populating due to invalid field keys
