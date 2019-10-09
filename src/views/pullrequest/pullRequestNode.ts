@@ -39,16 +39,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const approved = this.pr.data.participants.find(p => p.status === 'APPROVED') !== undefined;
-        const approvalText = approved
-            ? '\n\n' + this.pr.data.participants
-                .filter(p => p.status === 'APPROVED')
-                .map(approver => `Approved-by: ${approver.displayName}`)
-                .join('\n')
-            : '';
+        const approvalText = this.pr.data.participants
+            .filter(p => p.status === 'APPROVED')
+            .map(approver => `Approved-by: ${approver.displayName}`)
+            .join('\n');
 
-        let item = new vscode.TreeItem(`${approved ? '✅' : ''}#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${approvalText}`;
+        let item = new vscode.TreeItem(`#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${approvalText.length > 0 ? `\n\n${approvalText}` : ''}`;
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
