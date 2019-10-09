@@ -2,6 +2,7 @@ import { Action } from "./messaging";
 import { Branch, Remote } from "../typings/git";
 import { Reviewer, BitbucketIssueData, ApprovalStatus } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
+import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
 
 export interface DeleteComment extends Action {
     commentId: number;
@@ -134,4 +135,15 @@ export interface OpenBuildStatusAction extends Action {
 
 export function isOpenBuildStatus(a: Action): a is OpenBuildStatusAction {
     return (<OpenBuildStatusAction>a).buildStatusUri !== undefined;
+}
+
+export interface OpenDiffPreviewAction extends Action {
+    action: 'openDiffPreview';
+    lhsQuery: FileDiffQueryParams;
+    rhsQuery: FileDiffQueryParams;
+    fileDisplayName: string;
+}
+
+export function isOpenDiffPreview(a: Action): a is OpenDiffPreviewAction {
+    return (<OpenDiffPreviewAction>a).action === 'openDiffPreview';
 }

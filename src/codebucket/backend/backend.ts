@@ -4,7 +4,7 @@ import { BitbucketSite } from '../hosts/bitbucket-site-base';
 import { Shell } from '../../util/shell';
 import { CommandBase } from '../command/command-base';
 import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { FileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
 import { Container } from '../../container';
 import { firstBitbucketRemote, clientForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
 import { Repository } from '../../typings/git';
@@ -25,7 +25,7 @@ export class Backend {
     const editor = CommandBase.getOpenEditor();
     let editorUri = editor.document.uri.toString();
     if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
-      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      const queryParams = JSON.parse(editor.document.uri.query) as PRFileDiffQueryParams;
       editorUri = queryParams.repoUri;
     }
 
@@ -75,7 +75,7 @@ export class Backend {
   public async getPullRequestId(targetRevision: string): Promise<number> {
     const editor = CommandBase.getOpenEditor();
     if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
-      const queryParams = JSON.parse(editor.document.uri.query) as FileDiffQueryParams;
+      const queryParams = JSON.parse(editor.document.uri.query) as PRFileDiffQueryParams;
       return queryParams.prId;
     }
 

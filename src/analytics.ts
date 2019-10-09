@@ -9,7 +9,8 @@ import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 export const Registry = {
     screen: {
-        pullRequestDiffScreen: 'pullRequestDiffScreen'
+        pullRequestDiffScreen: 'pullRequestDiffScreen',
+        pullRequestPreviewDiffScreen: 'pullRequestPreviewDiffScreen'
     }
 };
 

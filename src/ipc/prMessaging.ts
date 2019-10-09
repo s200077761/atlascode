@@ -2,6 +2,7 @@ import { Message } from "./messaging";
 import { Branch, Remote } from "../typings/git";
 import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData, MergeStrategy } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
+import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
@@ -33,14 +34,18 @@ export interface FileDiff {
     status: FileStatus;
     linesAdded: number;
     linesRemoved: number;
+    similarity?: number;
+    lhsQueryParams: FileDiffQueryParams;
+    rhsQueryParams: FileDiffQueryParams;
 }
 
 export enum FileStatus {
     ADDED = 'A',
     DELETED = 'D',
-    CONFLICT = 'C',
+    COPIED = 'C',
     MODIFIED = 'M',
-    RENAMED = 'R'
+    RENAMED = 'R',
+    UNKNOWN = 'X'
 }
 
 export interface RepoData {

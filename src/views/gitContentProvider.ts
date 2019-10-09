@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as pathlib from 'path';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { FileDiffQueryParams } from './pullrequest/pullRequestNode';
+import { PRFileDiffQueryParams } from './pullrequest/pullRequestNode';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
     private _onDidChange = new vscode.EventEmitter<vscode.Uri>();
@@ -10,7 +10,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
     constructor(private bbContext: BitbucketContext) { }
 
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
-        const { repoUri, remote, branchName, path, commitHash } = JSON.parse(uri.query) as FileDiffQueryParams;
+        const { repoUri, remote, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
         if (!repoUri) {
             return '';
