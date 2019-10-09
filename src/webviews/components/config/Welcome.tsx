@@ -99,7 +99,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                             <ul>
                                 <li>Added advanced SSL options to custom login screen</li>
                                 <li>Added context path option to custom login screen</li>
-                                <li>Now showing PR approval status in explorer</li>
+                                <li>Now showing PR approval status in explorer tooltip</li>
                             </ul>
                         </section>
                         <section>
