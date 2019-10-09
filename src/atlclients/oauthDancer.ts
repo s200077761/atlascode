@@ -38,7 +38,6 @@ export class OAuthDancer implements Disposable {
     private _axios: AxiosInstance = axios.create({
         timeout: 30 * Time.SECONDS,
         headers: {
-            'User-Agent': 'atlascode/2.x',
             "Accept-Encoding": "gzip, deflate"
         }
     });
@@ -264,100 +263,59 @@ export class OAuthDancer implements Disposable {
     }
 
     private async getJiraTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
-        const tokenResponse = await this._axios(strategy.tokenURL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: JSON.stringify({
-                grant_type: 'authorization_code',
-                client_id: strategy.clientID,
-                client_secret: strategy.clientSecret,
-                code: code,
-                redirect_uri: strategy.callbackURL,
-            }),
-            httpsAgent: agent
-        });
+        try {
+            const tokenResponse = await this._axios(strategy.tokenURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify({
+                    grant_type: 'authorization_code',
+                    client_id: strategy.clientID,
+                    client_secret: strategy.clientSecret,
+                    code: code,
+                    redirect_uri: strategy.callbackURL,
+                }),
+                httpsAgent: agent
+            });
 
-        const data = tokenResponse.data;
-        return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            const data = tokenResponse.data;
+            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+        } catch (err) {
+            const newErr = new Error(`Error fetching Jira tokens: ${err}`);
+            Logger.error(newErr);
+            throw newErr;
+        }
     }
 
     private async getBitbucketTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
-        const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
+        try {
+            const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
 
-        const tokenResponse = await this._axios(strategy.tokenURL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                Authorization: `Basic ${basicAuth}`
-            },
-            data: `grant_type=authorization_code&code=${code}`,
-            httpsAgent: agent
-        });
+            const tokenResponse = await this._axios(strategy.tokenURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    Authorization: `Basic ${basicAuth}`
+                },
+                data: `grant_type=authorization_code&code=${code}`,
+                httpsAgent: agent
+            });
 
-        const data = tokenResponse.data;
-        return { accessToken: data.access_token, refreshToken: data.refresh_token };
+            const data = tokenResponse.data;
+            return { accessToken: data.access_token, refreshToken: data.refresh_token };
+        } catch (err) {
+            const newErr = new Error(`Error fetching Bitbucket tokens: ${err}`);
+            Logger.error(newErr);
+            throw newErr;
+        }
     }
 
     private async getJiraResources(strategy: any, accessToken: string, agent?: any): Promise<AccessibleResource[]> {
-        const resources: AccessibleResource[] = [];
-
-        const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: `Bearer ${accessToken}`
-            },
-            httpsAgent: agent
-        });
-
-        resourcesResponse.data.forEach((resource: AccessibleResource) => {
-            resources.push(resource);
-        });
-
-        return resources;
-    }
-
-    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent?: any): Promise<UserInfo> {
-        let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
-        const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
-
-        const userResponse = await this._axios(url, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: `Bearer ${accessToken}`
-            },
-            httpsAgent: agent
-        });
-
-        const data = userResponse.data;
-
-        return {
-            id: data.accountId,
-            displayName: data.displayName,
-            email: data.emailAddress,
-            avatarUrl: data.avatarUrls["48x48"],
-        };
-    }
-
-    private async getBitbucketUser(strategy: any, accessToken: string, agent?: any): Promise<UserInfo> {
-        const userResponse = await this._axios(strategy.profileURL, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: `Bearer ${accessToken}`
-            },
-            httpsAgent: agent
-        });
-
-        let email = 'do-not-reply@atlassian.com';
         try {
-            const emailsResponse = await this._axios(strategy.emailsURL, {
+            const resources: AccessibleResource[] = [];
+
+            const resourcesResponse = await this._axios(strategy.accessibleResourcesURL, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -367,24 +325,95 @@ export class OAuthDancer implements Disposable {
                 httpsAgent: agent
             });
 
-            if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
-                const primary = emailsResponse.data.values.filter((val: any) => val.is_primary);
-                if (primary.length > 0) {
-                    email = primary[0].email;
-                }
-            }
-        } catch (e) {
-            //ignore
+            resourcesResponse.data.forEach((resource: AccessibleResource) => {
+                resources.push(resource);
+            });
+
+            return resources;
+        } catch (err) {
+            const newErr = new Error(`Error fetching Jira resources: ${err}`);
+            Logger.error(newErr);
+            throw newErr;
         }
+    }
 
-        const userData = userResponse.data;
+    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent?: any): Promise<UserInfo> {
+        try {
+            let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
+            const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
 
-        return {
-            id: userData.account_id,
-            displayName: userData.display_name,
-            email: email,
-            avatarUrl: userData.links.avatar.href,
-        };
+            const userResponse = await this._axios(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${accessToken}`
+                },
+                httpsAgent: agent
+            });
+
+            const data = userResponse.data;
+
+            return {
+                id: data.accountId,
+                displayName: data.displayName,
+                email: data.emailAddress,
+                avatarUrl: data.avatarUrls["48x48"],
+            };
+        } catch (err) {
+            const newErr = new Error(`Error fetching Jira user: ${err}`);
+            Logger.error(newErr);
+            throw newErr;
+        }
+    }
+
+    private async getBitbucketUser(strategy: any, accessToken: string, agent?: any): Promise<UserInfo> {
+        try {
+            const userResponse = await this._axios(strategy.profileURL, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    Authorization: `Bearer ${accessToken}`
+                },
+                httpsAgent: agent
+            });
+
+            let email = 'do-not-reply@atlassian.com';
+            try {
+                const emailsResponse = await this._axios(strategy.emailsURL, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    httpsAgent: agent
+                });
+
+                if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {
+                    const primary = emailsResponse.data.values.filter((val: any) => val.is_primary);
+                    if (primary.length > 0) {
+                        email = primary[0].email;
+                    }
+                }
+            } catch (e) {
+                //ignore
+            }
+
+            const userData = userResponse.data;
+
+            return {
+                id: userData.account_id,
+                displayName: userData.display_name,
+                email: email,
+                avatarUrl: userData.links.avatar.href,
+            };
+        } catch (err) {
+            const newErr = new Error(`Error fetching Bitbucket user: ${err}`);
+            Logger.error(newErr);
+            throw newErr;
+        }
     }
 
     private maybeShutdown() {
