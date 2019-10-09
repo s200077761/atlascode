@@ -522,7 +522,7 @@ section button span {
 
 /*-------------------- BEGIN - form field labels --------------------*/
 
-[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], div[role=dialog], [class^=Modal__Dialog], [class^=Radio__Label], [class^=Field__FieldWrapper-]>label>span {
+[type=checkbox]+span, [type=radio]+span, [class^=Checkbox__Label], [class^=Field__Label], [class^=Label__LabelWrapper-], [class^=Label__LabelInner-], div[role=dialog], [class^=Modal__Dialog], [class^=Radio__Label], [class^=Field__FieldWrapper-]>label, [class^=Field__FieldWrapper-]>label>span {
   color: var(--vscode-foreground) !important
 }
 

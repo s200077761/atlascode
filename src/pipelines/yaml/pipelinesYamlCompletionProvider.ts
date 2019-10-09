@@ -5,7 +5,7 @@ import {
 import axios from 'axios';
 import { Logger } from '../../logger';
 import { Time } from '../../util/time';
-import { getAgent } from '../../atlclients/charles';
+import { getAgent } from '../../atlclients/agent';
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
 

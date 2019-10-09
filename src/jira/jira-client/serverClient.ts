@@ -6,8 +6,8 @@ import { Project } from './model/entities';
 export class JiraServerClient extends JiraClient {
     private _basicAuth: string | undefined;
 
-    constructor(username: string, password: string, site: DetailedSiteInfo, agent?: any) {
-        super(site, agent);
+    constructor(username: string, password: string, site: DetailedSiteInfo) {
+        super(site);
         this._basicAuth = Buffer.from(`${username}:${password}`).toString('base64');
     }
 

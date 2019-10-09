@@ -8,6 +8,7 @@ import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreat
 import FormData from 'form-data';
 import * as fs from "fs";
 import { Time } from '../../util/time';
+import { getAgent } from '../../atlclients/agent';
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
@@ -22,10 +23,10 @@ export abstract class JiraClient {
     readonly agent: any | undefined;
     readonly transport: AxiosInstance;
 
-    constructor(site: DetailedSiteInfo, agent?: any) {
+    constructor(site: DetailedSiteInfo) {
         this.site = site;
         this.baseUrl = site.baseApiUrl;
-        this.agent = agent;
+        this.agent = getAgent(site);
 
         // Note: analytics-node-client adds axios-retry to the global axios instance.
         // Unfortunately, there's a bug that causes axios to infinitely retry when it gets

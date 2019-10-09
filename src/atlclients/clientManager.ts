@@ -20,14 +20,12 @@ import { PipelineApiImpl } from "../pipelines/pipelines";
 import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
 import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
-import { getAgent } from "./charles";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
 
 export class ClientManager implements Disposable {
   private _clients: CacheMap = new CacheMap();
-  private _agent: any | undefined;
   private _agentChanged: boolean = false;
 
   constructor(context: ExtensionContext) {
@@ -49,12 +47,8 @@ export class ClientManager implements Disposable {
     if (initializing
       || configuration.changed(e, 'enableCharles')
       || configuration.changed(e, 'charlesCertPath')
-      || configuration.changed(e, 'charlesDebugOnly')
-      || configuration.changed(e, 'enableCustomSSLCerts')
-      || configuration.changed(e, 'customSSLCertPaths')) {
+      || configuration.changed(e, 'charlesDebugOnly')) {
       this._agentChanged = true;
-
-      this._agent = getAgent();
     }
   }
 
@@ -66,25 +60,25 @@ export class ClientManager implements Disposable {
         if (site.isCloud) {
           result = {
             repositories: isOAuthInfo(info)
-              ? new CloudRepositoriesApi(site, info.access, this._agent)
+              ? new CloudRepositoriesApi(site, info.access)
               : undefined!,
             pullrequests: isOAuthInfo(info)
-              ? new CloudPullRequestApi(site, info.access, this._agent)
+              ? new CloudPullRequestApi(site, info.access)
               : undefined!,
             issues: isOAuthInfo(info)
-              ? new BitbucketIssuesApiImpl(site, info.access, this._agent)
+              ? new BitbucketIssuesApiImpl(site, info.access)
               : undefined!,
             pipelines: isOAuthInfo(info)
-              ? new PipelineApiImpl(site, info.access, this._agent)
+              ? new PipelineApiImpl(site, info.access)
               : undefined!
           };
         } else {
           result = {
             repositories: isBasicAuthInfo(info)
-              ? new ServerRepositoriesApi(site, info.username, info.password, this._agent)
+              ? new ServerRepositoriesApi(site, info.username, info.password)
               : undefined!,
             pullrequests: isBasicAuthInfo(info)
-              ? new ServerPullRequestApi(site, info.username, info.password, this._agent)
+              ? new ServerPullRequestApi(site, info.username, info.password)
               : undefined!,
             issues: undefined,
             pipelines: undefined
@@ -104,9 +98,9 @@ export class ClientManager implements Disposable {
         let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          client = new JiraCloudClient(info.access, site, this._agent);
+          client = new JiraCloudClient(info.access, site);
         } else if (isBasicAuthInfo(info)) {
-          client = new JiraServerClient(info.username, info.password, site, this._agent);
+          client = new JiraServerClient(info.username, info.password, site);
         }
 
         return client;

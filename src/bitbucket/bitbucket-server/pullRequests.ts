@@ -5,17 +5,18 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
 import { ServerRepositoriesApi } from './repositories';
+import { getAgent } from '../../atlclients/agent';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
 export class ServerPullRequestApi implements PullRequestApi {
     private client: Client;
 
-    constructor(site: DetailedSiteInfo, username: string, password: string, agent: any) {
+    constructor(site: DetailedSiteInfo, username: string, password: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            agent,
+            getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
                 const errJson = response.data;

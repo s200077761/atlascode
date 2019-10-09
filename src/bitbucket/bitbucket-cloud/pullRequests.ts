@@ -7,6 +7,7 @@ import { CloudRepositoriesApi } from "./repositories";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
 import { AxiosResponse } from "axios";
+import { getAgent } from "../../atlclients/agent";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -25,11 +26,11 @@ const mergeStrategyLabels = {
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
 
-    constructor(site: DetailedSiteInfo, token: string, agent: any) {
+    constructor(site: DetailedSiteInfo, token: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
-            agent,
+            getAgent(site),
             async (response: AxiosResponse): Promise<Error> => {
                 let errString = 'Unknown error';
                 const errJson = response.data;

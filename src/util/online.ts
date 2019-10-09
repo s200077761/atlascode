@@ -4,7 +4,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Time } from "./time";
 import pAny from "p-any";
-import pTimeout from "p-timeout";
+import pRetry from "p-retry";
 import axios, { AxiosInstance } from 'axios';
 
 export type OnlineInfoEvent = {
@@ -13,7 +13,6 @@ export type OnlineInfoEvent = {
 
 const onlinePolling: number = 2 * Time.MINUTES;
 const offlinePolling: number = 5 * Time.SECONDS;
-const statusCheckTimeout: number = 3 * Time.SECONDS;
 
 export class OnlineDetector extends Disposable {
     private _disposable: Disposable;
@@ -22,6 +21,8 @@ export class OnlineDetector extends Disposable {
     private _onlineTimer: any | undefined;
     private _offlineTimer: any | undefined;
     private _transport: AxiosInstance;
+    private _checksInFlight: boolean = false;
+    //private _queue = new PQueue({ concurrency: 1 });
 
     private _onDidOnlineChange = new EventEmitter<OnlineInfoEvent>();
     public get onDidOnlineChange(): Event<OnlineInfoEvent> {
@@ -79,39 +80,61 @@ export class OnlineDetector extends Disposable {
     }
 
     private async runOnlineChecks(): Promise<boolean> {
-        const promise = pAny([
+        const promise = async () => await pAny([
             (async () => {
+                Logger.debug('Online check attempting to connect to http://atlassian.com');
                 await this._transport(`http://atlassian.com`, { method: "HEAD" });
+                Logger.debug('Online check connected to http://atlassian.com');
                 return true;
             })(),
             (async () => {
+                Logger.debug('Online check attempting to connect to https://bitbucket.org');
                 await this._transport(`https://bitbucket.org`, { method: "HEAD" });
+                Logger.debug('Online check connected to https://bitbucket.org');
                 return true;
             })()
         ]);
 
-        return pTimeout(promise, statusCheckTimeout).catch(() => false);
+        return await pRetry<boolean>(promise, {
+            retries: 4,
+            onFailedAttempt: error => {
+                Logger.debug(`Online check attempt ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`);
+            },
+        }).catch(() => false);
+
     }
 
     private async checkOnlineStatus() {
-        let newIsOnline = await this.runOnlineChecks();
+        if (!this._checksInFlight) {
+            this._checksInFlight = true;
 
-        if (newIsOnline !== this._isOnline) {
-            this._isOnline = newIsOnline;
+            let newIsOnline = await this.runOnlineChecks();
 
-            if (!this._isOnline) {
-                this._offlineTimer = setInterval(() => {
-                    this.checkOnlineStatus();
-                }, offlinePolling);
-            } else {
-                clearInterval(this._offlineTimer);
-            }
+            this._checksInFlight = false;
 
-            if (!this._isOfflineMode) {
+            if (newIsOnline !== this._isOnline) {
+                this._isOnline = newIsOnline;
 
-                Logger.debug(newIsOnline ? 'You have gone online!' : 'You have gone offline :(');
-                this._onDidOnlineChange.fire({ isOnline: newIsOnline });
+                if (!this._isOnline) {
+                    if (!this._offlineTimer) {
+                        this._offlineTimer = setInterval(async () => {
+                            await this.checkOnlineStatus();
+                        }, offlinePolling);
+                    }
+                } else {
+                    if (this._offlineTimer) {
+                        clearInterval(this._offlineTimer);
+                        this._offlineTimer = undefined;
+                    }
+                }
+
+                if (!this._isOfflineMode) {
+
+                    Logger.debug(newIsOnline ? 'You have gone online!' : 'You have gone offline :(');
+                    this._onDidOnlineChange.fire({ isOnline: newIsOnline });
+                }
             }
         }
+
     }
 }

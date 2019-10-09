@@ -13,7 +13,7 @@ import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import EventEmitter from 'eventemitter3';
 import { v4 } from 'uuid';
-import { getAgent } from './charles';
+import { getAgent } from './agent';
 import { promisify } from 'util';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
@@ -242,8 +242,14 @@ export class OAuthDancer implements Disposable {
         if (!this._srv) {
             this._srv = http.createServer(this._app);
             const listenPromise = promisify(this._srv.listen.bind(this._srv));
-            await listenPromise(31415, () => { });
-            Logger.debug('auth server started on port 31415');
+            try {
+                await listenPromise(31415, () => { });
+                Logger.debug('auth server started on port 31415');
+            } catch (err) {
+                Logger.error(new Error(`Unable to start auth listener on localhost:31415: ${err}`));
+                return Promise.reject(`Unable to start auth listener on localhost:31415: ${err}`);
+            }
+
 
             this.startShutdownChecker();
         }
