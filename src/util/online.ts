@@ -116,11 +116,16 @@ export class OnlineDetector extends Disposable {
                 this._isOnline = newIsOnline;
 
                 if (!this._isOnline) {
-                    this._offlineTimer = setInterval(async () => {
-                        await this.checkOnlineStatus();
-                    }, offlinePolling);
+                    if (!this._offlineTimer) {
+                        this._offlineTimer = setInterval(async () => {
+                            await this.checkOnlineStatus();
+                        }, offlinePolling);
+                    }
                 } else {
-                    clearInterval(this._offlineTimer);
+                    if (this._offlineTimer) {
+                        clearInterval(this._offlineTimer);
+                        this._offlineTimer = undefined;
+                    }
                 }
 
                 if (!this._isOfflineMode) {
