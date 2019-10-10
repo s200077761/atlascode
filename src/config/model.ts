@@ -35,7 +35,8 @@ export interface IConfig {
     jira: JiraConfig;
     bitbucket: BitbucketConfig;
     enableUIWS: boolean;
-
+    enableCurlLogging: boolean;
+    enableHttpsTunnel: boolean;
 }
 
 export interface JiraConfig {
@@ -300,4 +301,6 @@ export const emptyConfig: IConfig = {
     jira: emptyJiraConfig,
     bitbucket: emptyBitbucketConfig,
     enableUIWS: false,
+    enableCurlLogging: false,
+    enableHttpsTunnel: false,
 };

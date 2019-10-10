@@ -1,6 +1,8 @@
 import axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { Time } from '../util/time';
-
+import { Container } from '../container';
+import { Logger } from '../logger';
+require('request-to-curl');
 export class Client {
     private transport: AxiosInstance;
 
@@ -17,8 +19,34 @@ export class Client {
                 "Content-Type": "application/json",
                 Authorization: this.authHeader
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
+
+        if (Container.config.enableCurlLogging) {
+            this.transport.interceptors.response.use(response => {
+                try {
+                    Logger.debug("-".repeat(70));
+                    
+                    Logger.debug(response.request.toCurl());
+                    Logger.debug("-".repeat(70));
+                } catch (cerr) {
+                    //ignore
+                }
+                return response;
+            },
+                async error => {
+                    try {
+                        Logger.debug("-".repeat(70));
+                        
+                        Logger.debug(error.response.request.toCurl());
+                        Logger.debug("-".repeat(70));
+                    } catch (cerr) {
+                        //ignore
+                    }
+                    return Promise.reject(error);
+                }
+            );
+        }
 
         this.transport.interceptors.response.use(
             response => response,
@@ -28,6 +56,7 @@ export class Client {
                     : Promise.reject(error);
             }
         );
+
     }
 
     async get(urlSlug: string, queryParams?: any) {
@@ -72,7 +101,7 @@ export class Client {
                     Authorization: this.authHeader
                 },
                 data: JSON.stringify(body),
-                httpsAgent: this.agent
+                ...this.agent
             });
 
             return { data: res.data, headers: res.headers };

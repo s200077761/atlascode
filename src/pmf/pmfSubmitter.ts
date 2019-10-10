@@ -144,7 +144,7 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
             'x-atlassian-force-account-id': 'true',
             "Accept-Encoding": "gzip, deflate"
         },
-        httpsAgent: getAgent()
+        ...getAgent()
     });
 
     transport(`https://api.surveymonkey.com/v3/collectors/${pmfIds.collectorId}/responses`, {

@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as http from 'http';
 import { Resources } from '../resources';
 import { Time } from '../util/time';
-import { OAuthProvider, OAuthResponse, ProductJira, ProductBitbucket, AccessibleResource, UserInfo, emptyUserInfo } from './authInfo';
+import { OAuthProvider, OAuthResponse, ProductJira, ProductBitbucket, AccessibleResource, UserInfo, emptyUserInfo, SiteInfo } from './authInfo';
 import { Disposable } from 'vscode';
 import axios, { AxiosInstance } from 'axios';
 import { URL } from 'url';
@@ -13,8 +13,10 @@ import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import EventEmitter from 'eventemitter3';
 import { v4 } from 'uuid';
-import { getAgent } from './agent';
+import { getAgent, getProxyHostAndPort } from './agent';
 import { promisify } from 'util';
+import { Container } from '../container';
+require('request-to-curl');
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
@@ -35,12 +37,7 @@ export class OAuthDancer implements Disposable {
 
     private _srv: http.Server | undefined;
     private _app: any;
-    private _axios: AxiosInstance = axios.create({
-        timeout: 30 * Time.SECONDS,
-        headers: {
-            "Accept-Encoding": "gzip, deflate"
-        }
-    });
+    private _axios: AxiosInstance;
     private _authErrors: Map<OAuthProvider, string> = new Map();
     private _authsInFlight: Map<OAuthProvider, PCancelable<OAuthResponse>> = new Map();
     private _oauthResponseEventEmitter: EventEmitter = new EventEmitter();
@@ -50,6 +47,39 @@ export class OAuthDancer implements Disposable {
 
     private constructor() {
         this._app = this.createApp();
+
+        this._axios = axios.create({
+            timeout: 30 * Time.SECONDS,
+            headers: {
+                "Accept-Encoding": "gzip, deflate"
+            }
+        });
+
+        if (Container.config.enableCurlLogging) {
+            this._axios.interceptors.response.use(response => {
+                try {
+                    Logger.debug("-".repeat(70));
+                    
+                    Logger.debug(response.request.toCurl());
+                    Logger.debug("-".repeat(70));
+                } catch (cerr) {
+                    //ignore
+                }
+                return response;
+            },
+                async error => {
+                    try {
+                        Logger.debug("-".repeat(70));
+                        
+                        Logger.debug(error.response.request.toCurl());
+                        Logger.debug("-".repeat(70));
+                    } catch (cerr) {
+                        //ignore
+                    }
+                    return Promise.reject(error);
+                }
+            );
+        }
     }
 
     public static get Instance(): OAuthDancer {
@@ -146,7 +176,7 @@ export class OAuthDancer implements Disposable {
         return app;
     }
 
-    public async doDance(provider: OAuthProvider): Promise<OAuthResponse> {
+    public async doDance(provider: OAuthProvider, site: SiteInfo): Promise<OAuthResponse> {
         const currentlyInflight = this._authsInFlight.get(provider);
         if (currentlyInflight) {
             currentlyInflight.cancel(`Authentication for ${provider} has been cancelled.`);
@@ -161,7 +191,7 @@ export class OAuthDancer implements Disposable {
 
                 if (respEvent.req.query && respEvent.req.query.code && respEvent.req.query.state && respEvent.req.query.state === myState) {
                     try {
-                        const agent = getAgent();
+                        const agent = getAgent(site);
                         let tokens: Tokens = { accessToken: "", refreshToken: "" };
                         let accessibleResources: AccessibleResource[] = [];
                         let user: UserInfo = emptyUserInfo;
@@ -262,8 +292,15 @@ export class OAuthDancer implements Disposable {
 
     }
 
-    private async getJiraTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
+    private async getJiraTokens(strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
         try {
+            const [proxyHost, proxyPort] = getProxyHostAndPort();
+            if (proxyHost.trim() !== '') {
+                Logger.debug(`using proxy: ${proxyHost}:${proxyPort}`);
+            } else {
+                Logger.debug(`no proxy configured in environment`);
+            }
+
             const tokenResponse = await this._axios(strategy.tokenURL, {
                 method: "POST",
                 headers: {
@@ -276,7 +313,7 @@ export class OAuthDancer implements Disposable {
                     code: code,
                     redirect_uri: strategy.callbackURL,
                 }),
-                httpsAgent: agent
+                ...agent
             });
 
             const data = tokenResponse.data;
@@ -288,7 +325,7 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getBitbucketTokens(strategy: any, code: string, agent?: any): Promise<Tokens> {
+    private async getBitbucketTokens(strategy: any, code: string, agent: { [k: string]: any }): Promise<Tokens> {
         try {
             const basicAuth = Buffer.from(`${strategy.clientID}:${strategy.clientSecret}`).toString('base64');
 
@@ -299,7 +336,7 @@ export class OAuthDancer implements Disposable {
                     Authorization: `Basic ${basicAuth}`
                 },
                 data: `grant_type=authorization_code&code=${code}`,
-                httpsAgent: agent
+                ...agent,
             });
 
             const data = tokenResponse.data;
@@ -311,7 +348,7 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getJiraResources(strategy: any, accessToken: string, agent?: any): Promise<AccessibleResource[]> {
+    private async getJiraResources(strategy: any, accessToken: string, agent: { [k: string]: any }): Promise<AccessibleResource[]> {
         try {
             const resources: AccessibleResource[] = [];
 
@@ -322,7 +359,7 @@ export class OAuthDancer implements Disposable {
                     Accept: "application/json",
                     Authorization: `Bearer ${accessToken}`
                 },
-                httpsAgent: agent
+                ...agent,
             });
 
             resourcesResponse.data.forEach((resource: AccessibleResource) => {
@@ -337,7 +374,7 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent?: any): Promise<UserInfo> {
+    private async getJiraUser(provider: OAuthProvider, accessToken: string, resource: AccessibleResource, agent: { [k: string]: any }): Promise<UserInfo> {
         try {
             let apiUri = provider === OAuthProvider.JiraCloudStaging ? "api.stg.atlassian.com" : "api.atlassian.com";
             const url = `https://${apiUri}/ex/jira/${resource.id}/rest/api/2/myself`;
@@ -349,7 +386,7 @@ export class OAuthDancer implements Disposable {
                     Accept: "application/json",
                     Authorization: `Bearer ${accessToken}`
                 },
-                httpsAgent: agent
+                ...agent,
             });
 
             const data = userResponse.data;
@@ -367,7 +404,7 @@ export class OAuthDancer implements Disposable {
         }
     }
 
-    private async getBitbucketUser(strategy: any, accessToken: string, agent?: any): Promise<UserInfo> {
+    private async getBitbucketUser(strategy: any, accessToken: string, agent: { [k: string]: any }): Promise<UserInfo> {
         try {
             const userResponse = await this._axios(strategy.profileURL, {
                 method: "GET",
@@ -376,7 +413,7 @@ export class OAuthDancer implements Disposable {
                     Accept: "application/json",
                     Authorization: `Bearer ${accessToken}`
                 },
-                httpsAgent: agent
+                ...agent,
             });
 
             let email = 'do-not-reply@atlassian.com';
@@ -388,7 +425,7 @@ export class OAuthDancer implements Disposable {
                         Accept: "application/json",
                         Authorization: `Bearer ${accessToken}`
                     },
-                    httpsAgent: agent
+                    ...agent,
                 });
 
                 if (Array.isArray(emailsResponse.data.values) && emailsResponse.data.values.length > 0) {

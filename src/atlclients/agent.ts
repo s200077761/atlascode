@@ -7,8 +7,8 @@ import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
 import { SiteInfo } from "./authInfo";
 
-export function getAgent(site?: SiteInfo): any {
-    let agent = undefined;
+export function getAgent(site?: SiteInfo): { [k: string]: any } {
+    let agent = {};
     try {
         if (site) {
             if (site.customSSLCertPaths && site.customSSLCertPaths.trim() !== '') {
@@ -21,41 +21,78 @@ export function getAgent(site?: SiteInfo): any {
 
                 https.globalAgent.options.ca = cas;
 
-                agent = new https.Agent({ rejectUnauthorized: false });
+                agent = { httpsAgent: new https.Agent({ rejectUnauthorized: false }) };
             } else if (site.pfxPath && site.pfxPath.trim() !== '') {
                 const pfxFile = fs.readFileSync(site.pfxPath);
 
-                agent = new https.Agent({
-                    pfx: pfxFile,
-                    passphrase: site.pfxPassphrase
-                });
+                agent = {
+                    httpsAgent: new https.Agent({
+                        pfx: pfxFile,
+                        passphrase: site.pfxPassphrase
+                    })
+                };
             }
         }
 
-        if (!agent && configuration.get<boolean>('enableCharles')) {
-            const debugOnly = configuration.get<boolean>('charlesDebugOnly');
+        if (!agent['httpsAgent']) {
+            if (configuration.get<boolean>('enableHttpsTunnel')) {
+                const [host, port] = getProxyHostAndPort();
 
-            if (!debugOnly || (debugOnly && Container.isDebugging)) {
-                let certPath = configuration.get<string>('charlesCertPath');
-                if (!certPath || certPath.trim() === '') {
-                    certPath = Resources.charlesCert;
-                }
-
-                let pemFile = fs.readFileSync(certPath);
-
-                agent = tunnel.httpsOverHttp({
-                    ca: [pemFile],
-                    proxy: {
-                        host: "127.0.0.1",
-                        port: 8888
+                let numPort = undefined;
+                if (host.trim() !== '') {
+                    if (port.trim() !== '') {
+                        numPort = parseInt(port);
                     }
-                });
+                    agent = {
+                        httpsAgent: tunnel.httpsOverHttp({
+                            proxy: {
+                                host: host,
+                                port: numPort
+                            }
+                        }), proxy: false
+                    };
+                }
+            } else {
+                const useCharles = configuration.get<boolean>('enableCharles');
+                if (useCharles) {
+                    const debugOnly = configuration.get<boolean>('charlesDebugOnly');
+
+                    if (!debugOnly || (debugOnly && Container.isDebugging)) {
+                        let certPath = configuration.get<string>('charlesCertPath');
+                        if (!certPath || certPath.trim() === '') {
+                            certPath = Resources.charlesCert;
+                        }
+
+                        let pemFile = fs.readFileSync(certPath);
+
+                        agent = {
+                            httpsAgent: tunnel.httpsOverHttp({
+                                ca: [pemFile],
+                                proxy: {
+                                    host: "127.0.0.1",
+                                    port: 8888
+                                }
+                            })
+                        };
+                    }
+                }
             }
         }
 
     } catch (err) {
-        agent = undefined;
+        agent = {};
     }
 
     return agent;
+}
+
+export function getProxyHostAndPort(): [string, string] {
+    const proxyEnv = 'https_proxy';
+    const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
+    if (proxyUrl) {
+        const parsedProxyUrl = new URL(proxyUrl);
+        return [parsedProxyUrl.hostname, parsedProxyUrl.port];
+    }
+
+    return ['', ''];
 }

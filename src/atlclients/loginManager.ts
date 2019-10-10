@@ -9,6 +9,8 @@ import { AnalyticsClient } from "../analytics-node-client/src";
 import axios from 'axios';
 import { Time } from "../util/time";
 import { getAgent } from "./agent";
+import { Container } from "../container";
+require('request-to-curl');
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -28,7 +30,7 @@ export class LoginManager {
                 throw new Error(`No provider found for ${site.hostname}`);
             }
 
-            const resp = await this._dancer.doDance(provider);
+            const resp = await this._dancer.doDance(provider, site);
 
             const oauthInfo: OAuthInfo = {
                 access: resp.access,
@@ -158,13 +160,40 @@ export class LoginManager {
             }
         });
 
+        if (Container.config.enableCurlLogging) {
+            transport.interceptors.response.use(response => {
+                try {
+                    Logger.debug("-".repeat(70));
+                    
+                    Logger.debug(response.request.toCurl());
+                    Logger.debug("-".repeat(70));
+                } catch (cerr) {
+                    //ignore
+                }
+                return response;
+            },
+                async error => {
+                    try {
+                        Logger.debug("-".repeat(70));
+                        
+                        Logger.debug(error.response.request.toCurl());
+                        Logger.debug("-".repeat(70));
+                    } catch (cerr) {
+                        //ignore
+                    }
+
+                    return Promise.reject(error);
+                }
+            );
+        }
+
         const res = await transport(siteDetailsUrl, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: authHeader
             },
-            httpsAgent: getAgent(site)
+            ...getAgent(site)
 
         });
         const json = res.data;

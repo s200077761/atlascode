@@ -248,7 +248,7 @@ export class V1toV2Migrator {
                     'x-atlassian-force-account-id': 'true',
                     "Accept-Encoding": "gzip, deflate"
                 },
-                httpsAgent: getAgent()
+                ...getAgent()
             });
 
             const userUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;

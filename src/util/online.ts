@@ -6,6 +6,8 @@ import { Time } from "./time";
 import pAny from "p-any";
 import pRetry from "p-retry";
 import axios, { AxiosInstance } from 'axios';
+import { getAgent } from "../atlclients/agent";
+require('request-to-curl');
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -39,6 +41,32 @@ export class OnlineDetector extends Disposable {
         this._transport = axios.create({
             timeout: 10 * Time.SECONDS,
         });
+
+        if (Container.config.enableCurlLogging) {
+            this._transport.interceptors.response.use(response => {
+                try {
+                    Logger.debug("-".repeat(70));
+                    
+                    Logger.debug(response.request.toCurl());
+                    Logger.debug("-".repeat(70));
+                } catch (cerr) {
+                    //ignore
+                }
+                return response;
+            },
+                async error => {
+                    try {
+                        Logger.debug("-".repeat(70));
+                        
+                        Logger.debug(error.response.request.toCurl());
+                        Logger.debug("-".repeat(70));
+                    } catch (cerr) {
+                        //ignore
+                    }
+                    return Promise.reject(error);
+                }
+            );
+        }
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
 
@@ -83,13 +111,13 @@ export class OnlineDetector extends Disposable {
         const promise = async () => await pAny([
             (async () => {
                 Logger.debug('Online check attempting to connect to http://atlassian.com');
-                await this._transport(`http://atlassian.com`, { method: "HEAD" });
+                await this._transport(`http://atlassian.com`, { method: "HEAD", ...getAgent() });
                 Logger.debug('Online check connected to http://atlassian.com');
                 return true;
             })(),
             (async () => {
                 Logger.debug('Online check attempting to connect to https://bitbucket.org');
-                await this._transport(`https://bitbucket.org`, { method: "HEAD" });
+                await this._transport(`https://bitbucket.org`, { method: "HEAD", ...getAgent() });
                 Logger.debug('Online check connected to https://bitbucket.org');
                 return true;
             })()

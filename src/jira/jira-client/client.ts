@@ -9,7 +9,9 @@ import FormData from 'form-data';
 import * as fs from "fs";
 import { Time } from '../../util/time';
 import { getAgent } from '../../atlclients/agent';
-
+import { Container } from '../../container';
+import { Logger } from '../../logger';
+require('request-to-curl');
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
 
@@ -40,6 +42,34 @@ export abstract class JiraClient {
                 "Accept-Encoding": "gzip, deflate"
             }
         });
+
+        if (Container.config.enableCurlLogging) {
+            this.transport.interceptors.response.use(response => {
+                try {
+                    Logger.debug("-".repeat(70));
+
+                    Logger.debug(response.request.toCurl());
+                    Logger.debug("-".repeat(70));
+                } catch (cerr) {
+                    //ignore
+                }
+
+                return response;
+            },
+                async error => {
+                    try {
+                        Logger.debug("-".repeat(70));
+                        
+                        Logger.debug(error.response.request.toCurl());
+                        Logger.debug("-".repeat(70));
+                    } catch (cerr) {
+                        //ignore
+                    }
+
+                    return Promise.reject(error);
+                }
+            );
+        }
     }
 
     // Issue
@@ -96,7 +126,7 @@ export abstract class JiraClient {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;
@@ -111,7 +141,7 @@ export abstract class JiraClient {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;
@@ -125,7 +155,7 @@ export abstract class JiraClient {
                 Authorization: this.authorization()
             },
             data: JSON.stringify(data),
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;
@@ -324,7 +354,7 @@ export abstract class JiraClient {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;
@@ -352,7 +382,7 @@ export abstract class JiraClient {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            httpsAgent: this.agent,
+            ...this.agent,
             ...data
         });
 
@@ -375,7 +405,7 @@ export abstract class JiraClient {
                 Authorization: this.authorization(),
                 'Content-Type': formData.getHeaders()['content-type'],
             },
-            httpsAgent: this.agent,
+            ...this.agent,
         });
 
         return res.data;
@@ -392,7 +422,7 @@ export abstract class JiraClient {
                 Authorization: this.authorization()
             },
             data: JSON.stringify(params),
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;
@@ -413,7 +443,7 @@ export abstract class JiraClient {
                 "Content-Type": "application/json",
                 Authorization: this.authorization()
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
 
         return res.data;

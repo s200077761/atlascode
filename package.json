@@ -10,7 +10,7 @@
         "builds",
         "pull requests"
     ],
-    "version": "0.0.0",
+    "version": "2.1.1-tunnel2",
     "publisher": "atlassian",
     "license": "SEE LICENSE IN LICENSE",
     "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
@@ -527,6 +527,18 @@
                     ],
                     "description": "Location to which configuration changes are saved"
                 },
+                "atlascode.enableCurlLogging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables logging the cUrl commands used by the extension",
+                    "scope": "window"
+                },
+                "atlascode.enableHttpsTunnel": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables tunneling https requests to an http proxy",
+                    "scope": "window"
+                },
                 "atlascode.enableCharles": {
                     "type": "boolean",
                     "default": false,
@@ -1018,6 +1030,7 @@
         "react-intl": "^2.9.0",
         "react-loadable": "^5.5.0",
         "react-tabs": "^3.0.0",
+        "request-to-curl": "^0.1.5",
         "semver": "^6.1.1",
         "slash": "^3.0.0",
         "spawn-sync": "^2.0.0",

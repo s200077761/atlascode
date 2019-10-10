@@ -1,5 +1,5 @@
 diff --git a/node_modules/analytics-node/index.js b/node_modules/analytics-node/index.js
-index 4ee4917..b396039 100644
+index 4ee4917..5fee3cd 100644
 --- a/node_modules/analytics-node/index.js
 +++ b/node_modules/analytics-node/index.js
 @@ -12,7 +12,7 @@ const version = require('./package.json').version
@@ -11,11 +11,11 @@ index 4ee4917..b396039 100644
  
  class Analytics {
    /**
-@@ -25,9 +25,10 @@ class Analytics {
+@@ -25,13 +25,14 @@ class Analytics {
     *   @property {Number} flushInterval (default: 10000)
     *   @property {String} host (default: 'https://api.segment.io')
     *   @property {Boolean} enable (default: true)
-+   *   @property {Object} agent (default: undefined)
++   *   @property {Object} agent (default: {})
     */
  
 -  constructor (writeKey, options) {
@@ -23,7 +23,12 @@ index 4ee4917..b396039 100644
      options = options || {}
  
      assert(writeKey, 'You must pass your Segment project\'s write key.')
-@@ -39,6 +40,7 @@ class Analytics {
+-
++    this.transport = axios.create(null);
+     this.queue = []
+     this.writeKey = writeKey
+     this.host = removeSlash(options.host || 'https://api.segment.io')
+@@ -39,21 +40,16 @@ class Analytics {
      this.flushAt = Math.max(options.flushAt, 1) || 20
      this.flushInterval = options.flushInterval || 10000
      this.flushed = false
@@ -31,8 +36,15 @@ index 4ee4917..b396039 100644
      Object.defineProperty(this, 'enable', {
        configurable: false,
        writable: false,
-@@ -53,7 +55,7 @@ class Analytics {
+       enumerable: true,
+       value: typeof options.enable === 'boolean' ? options.enable : true
      })
+-
+-    axiosRetry(axios, {
+-      retries: options.retryCount || 3,
+-      retryCondition: this._isErrorRetryable,
+-      retryDelay: axiosRetry.exponentialDelay
+-    })
    }
  
 -  _validate (message, type) {
@@ -40,7 +52,7 @@ index 4ee4917..b396039 100644
      try {
        looselyValidate(message, type)
      } catch (e) {
-@@ -73,7 +75,7 @@ class Analytics {
+@@ -73,7 +69,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -49,7 +61,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'identify')
      this.enqueue('identify', message, callback)
      return this
-@@ -87,7 +89,7 @@ class Analytics {
+@@ -87,7 +83,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -58,7 +70,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'group')
      this.enqueue('group', message, callback)
      return this
-@@ -101,7 +103,7 @@ class Analytics {
+@@ -101,7 +97,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -67,7 +79,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'track')
      this.enqueue('track', message, callback)
      return this
-@@ -115,7 +117,7 @@ class Analytics {
+@@ -115,7 +111,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -76,7 +88,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'page')
      this.enqueue('page', message, callback)
      return this
-@@ -129,7 +131,7 @@ class Analytics {
+@@ -129,7 +125,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -85,7 +97,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'screen')
      this.enqueue('screen', message, callback)
      return this
-@@ -143,7 +145,7 @@ class Analytics {
+@@ -143,7 +139,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -94,7 +106,7 @@ index 4ee4917..b396039 100644
      this._validate(message, 'alias')
      this.enqueue('alias', message, callback)
      return this
-@@ -159,7 +161,7 @@ class Analytics {
+@@ -159,7 +155,7 @@ class Analytics {
     * @api private
     */
  
@@ -103,7 +115,7 @@ index 4ee4917..b396039 100644
      callback = callback || noop
  
      if (!this.enable) {
-@@ -225,7 +227,7 @@ class Analytics {
+@@ -225,7 +221,7 @@ class Analytics {
     * @return {Analytics}
     */
  
@@ -112,17 +124,25 @@ index 4ee4917..b396039 100644
      callback = callback || noop
  
      if (!this.enable) {
-@@ -272,7 +274,8 @@ class Analytics {
+@@ -272,14 +268,15 @@ class Analytics {
          username: this.writeKey
        },
        data,
 -      headers
 +      headers,
-+      httpsAgent: this.agent
++      ...this.agent
      }
  
      if (this.timeout) {
-@@ -291,7 +294,7 @@ class Analytics {
+       req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
+     }
+ 
+-    axios(req)
++    this.transport(req)
+       .then(() => done())
+       .catch(err => {
+         if (err.response) {
+@@ -291,7 +288,7 @@ class Analytics {
        })
    }
  
