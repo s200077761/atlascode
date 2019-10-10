@@ -248,6 +248,11 @@
                     "light": "resources/light/comment.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.debug.bitbucketSites",
+                "title": "Show Bitbucket sites info",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {

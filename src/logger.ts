@@ -73,6 +73,12 @@ export class Logger {
         }
     }
 
+    static show(): void {
+        if (this.output !== undefined) {
+            this.output.show();
+        }
+    }
+
     private static get timestamp(): string {
         const now = new Date();
         const time = now
