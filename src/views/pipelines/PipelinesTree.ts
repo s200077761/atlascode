@@ -13,7 +13,7 @@ import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { firstBitbucketRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
-import { descriptionForState, iconUriForPipeline, shouldDisplay } from "./Helpers";
+import { descriptionForState, iconUriForPipeline, shouldDisplay, filtersActive } from "./Helpers";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -125,10 +125,12 @@ export class PipelinesRepoNode extends AbstractBaseNode {
                 this._pipelines = await this.fetchPipelines();
             }
             if (this._pipelines.length === 0) {
-                return [new SimpleNode("No pipelines results for this repository")];
+                return filtersActive() && this._morePages ? 
+                    [new SimpleNode("Press 'Load next page' to search for more pipelines matching your filter settings")] : 
+                    [new SimpleNode("No pipelines results for this repository")];
             }
 
-            const nodes: AbstractBaseNode[] = this._pipelines.filter(pipeline => shouldDisplay(pipeline.target.ref_name)).map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
+            const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
             if (this._morePages) {
                 nodes.push(new NextPageNode(this._repo));
             }
@@ -140,23 +142,29 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     private async fetchPipelines(): Promise<Pipeline[]> {
-        var pipelines: Pipeline[] = [];
-        var morePages = false;
-        //const remotes = getBitbucketRemotes(this._repo); // May need to do something with other remotes
+        let pipelines: Pipeline[] = [];
 
         const remote = firstBitbucketRemote(this._repo);
         if (remote) {
             this._remote = remote;
             const bbApi = await clientForRemote(this._remote);
-            const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
-                page: `${this._page}`,
-                pagelen: defaultPageLength,
-            });
-            pipelines = paginatedPipelines.values;
-            const numPages = paginatedPipelines.size / defaultPageLength;
-            morePages = paginatedPipelines.page < numPages;
+            let numPagesSearched = 0;
+            while(pipelines.length < defaultPageLength && numPagesSearched < 11 && this._morePages){
+                const paginatedPipelines = await bbApi.pipelines!.getPaginatedPipelines(remote, {
+                    page: `${this._page}`,
+                    pagelen: defaultPageLength,
+                });
+                const pipelinesToAdd = paginatedPipelines.values.filter(pipeline => shouldDisplay(pipeline.target.ref_name));
+                pipelines = pipelines.concat(pipelinesToAdd);
+                const numPages = paginatedPipelines.size / defaultPageLength;
+                this._morePages = paginatedPipelines.page < numPages;
+                if(pipelines.length < defaultPageLength){
+                    this._page++;
+                    numPagesSearched++;
+                }
+                numPagesSearched = pipelinesToAdd.length > 0 ? 0 : numPagesSearched; //If a matching result was found, keep searching
+            }
         }
-        this._morePages = morePages;
         return pipelines;
     }
 
@@ -202,7 +210,9 @@ class NextPageNode extends AbstractBaseNode {
     }
 
     getTreeItem() {
-        const treeItem = new TreeItem('Load next page', TreeItemCollapsibleState.None);
+        const treeItem = filtersActive() ? 
+        new TreeItem('Load next page (hiding filtered results)', TreeItemCollapsibleState.None) : 
+        new TreeItem('Load next page', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
             command: Commands.PipelinesNextPage,

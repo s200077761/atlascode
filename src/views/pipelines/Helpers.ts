@@ -19,6 +19,10 @@ export function shouldDisplay(branchName: string | undefined): boolean {
     return regex.test(branchName);
 }
 
+export function filtersActive(): boolean {
+    return Container.config.bitbucket.pipelines.hideFiltered;
+}
+
 export function descriptionForState(result: Pipeline, excludePipelinePrefix?: boolean): string {
     const descriptionForResult = {
         pipeline_state_completed_successful: "was successful",
