@@ -26,6 +26,16 @@ const routes = {
 const view = document.getElementById('reactView') as HTMLElement;
 const root = document.getElementById('root') as HTMLElement;
 
+
+window.addEventListener("error", (ee: ErrorEvent) => {
+    const targetEL = ee.target as HTMLElement;
+    if (ee && targetEL && targetEL.nodeName === 'IMG') {
+        targetEL.setAttribute('src', 'vscode-resource:images/atlassian-icon.svg');
+        targetEL.setAttribute('width', '24');
+        targetEL.setAttribute('height', '24');
+    }
+}, { capture: true });
+
 const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (
