@@ -98,8 +98,12 @@ export function getProxyHostAndPort(): [string, string] {
     const proxyEnv = 'https_proxy';
     const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
     if (proxyUrl) {
-        const parsedProxyUrl = new URL(proxyUrl);
-        return [parsedProxyUrl.hostname, parsedProxyUrl.port];
+        try {
+            const parsedProxyUrl = new URL(proxyUrl);
+            return [parsedProxyUrl.hostname, parsedProxyUrl.port];
+        } catch (parseErr) {
+            //ignore
+        }
     }
 
     return ['', ''];
