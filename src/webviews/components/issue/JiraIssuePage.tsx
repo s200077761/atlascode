@@ -466,7 +466,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return (
             <React.Fragment>
                 <ButtonGroup>
-                    <Tooltip content="Refesh">
+                    <Tooltip content="Refresh">
                         <Button className='ac-button'
                             onClick={this.handleRefresh}
                             iconBefore={<RefreshIcon label="refresh" />}
