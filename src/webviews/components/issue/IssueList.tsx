@@ -16,11 +16,22 @@ const IssueKey = (data: ItemData) =>
         </Button>
     </div>;
 const Summary = (data: ItemData) => <p style={{ display: "inline" }}>{data.issue.summary}</p>;
-const Priority = (data: ItemData) => <div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>;
-const StatusColumn = (data: ItemData) => {
-    const lozColor: string = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName];
 
-    return (<Lozenge appearence={lozColor}>{data.issue.status.name}</Lozenge>);
+const Priority = (data: ItemData) => {
+    if (data.issue.priority && data.issue.priority.name && data.issue.priority.iconUrl) {
+        return (<div style={{ width: '16px', height: '16px' }}><Tooltip content={data.issue.priority.name}><img src={data.issue.priority.iconUrl} /></Tooltip></div>);
+    }
+
+    return <React.Fragment />;
+};
+
+const StatusColumn = (data: ItemData) => {
+    if (data.issue.status && data.issue.status.statusCategory) {
+        const lozColor: string = colorToLozengeAppearanceMap[data.issue.status.statusCategory.colorName];
+        return (<Lozenge appearance={lozColor}>{data.issue.status.name}</Lozenge>);
+    }
+
+    return <React.Fragment />;
 };
 
 export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void }, {}> {
