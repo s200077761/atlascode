@@ -33,6 +33,9 @@ import { Time } from '../../../util/time';
 import Select from '@atlaskit/select';
 import { AtlLoader } from '../AtlLoader';
 import merge from 'merge-anything';
+import { CheckboxField, HelperMessage } from '@atlaskit/form';
+import { Checkbox } from '@atlaskit/checkbox';
+import { chain } from "../fieldValidators";
 
 type changeObject = { [key: string]: any };
 
@@ -234,6 +237,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
+    handleTunnelChange = (e: any) => {
+        const changes = Object.create(null);
+        changes[e.target.value] = e.target.checked;
+
+        this.onConfigChange(changes);
+    }
+
     shouldDefaultExpand = (setting: SettingSource, secondSetting?: SettingSource) => {
         if (setting === this.state.openedSettings || secondSetting === this.state.openedSettings) {
             return { isDefaultExpanded: true };
@@ -309,6 +319,29 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         >
                             {(frmArgs: any) => {
                                 return (<form {...frmArgs.formProps}>
+                                    {this.state.showTunnelOption &&
+                                        <div>
+                                            <CheckboxField
+                                                name='tunnel-enabled'
+                                                id='tunnel-enabled'
+                                                value='enableHttpsTunnel'>
+                                                {
+                                                    (fieldArgs: any) => {
+                                                        return (
+                                                            <Checkbox {...fieldArgs.fieldProps}
+                                                                label='Enable https tunneling for proxies'
+                                                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleTunnelChange)}
+                                                                isChecked={this.state.config!.enableHttpsTunnel}
+                                                            />
+                                                        );
+                                                    }
+                                                }
+                                            </CheckboxField>
+                                            <HelperMessage>
+                                                Looks like you're behind a proxy. You may need to enable https tunneling for the extension to work.
+                                        </HelperMessage>
+                                        </div>
+                                    }
                                     <ProductEnabler
                                         jiraEnabled={this.state.config!.jira.enabled}
                                         bbEnabled={this.state.config!.bitbucket.enabled}

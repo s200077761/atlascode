@@ -14,6 +14,7 @@ import { authenticateCloud, authenticateServer, clearAuth } from '../commands/au
 import * as vscode from 'vscode';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
 import { ConfigWorkspaceFolder, ConfigInspect } from '../ipc/configMessaging';
+import { getProxyHostAndPort } from '../atlclients/agent';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -82,6 +83,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 workspaceFolders: workspaceFolders,
                 target: target,
                 feedbackUser: feedbackUser,
+                showTunnelOption: this.getShowTunnelOption(),
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
@@ -95,6 +97,15 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 
         this.postMessage({ type: 'configUpdate', inspect: this.getInspect() });
+    }
+
+    private getShowTunnelOption(): boolean {
+        const [pHost] = getProxyHostAndPort();
+        if (pHost.trim() !== '') {
+            return true;
+        }
+
+        return false;
     }
 
     private getInspect(): ConfigInspect {
