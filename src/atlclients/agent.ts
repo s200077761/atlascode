@@ -120,6 +120,12 @@ export function getProxyIgnores(): string[] {
 }
 
 function shouldTunnelHost(hostname: string): boolean {
+    /*
+    we follow these rules:
+        - NO_PROXY is a comma-separated list of hostnames and domains.
+        - A hostname (e.g., mail, company.com, www.company.com) matches only that one hostname.
+        - A domain starts with a . (e.g., .company.com) and matches all hostnames in that domain, including the hostname equal to the domain (e.g., .company.com matches company.com, www.company.com, mail.company.com).
+    */
     const ignores = getProxyIgnores();
     for (let ignore of ignores) {
         if (ignore.startsWith('.')) {
