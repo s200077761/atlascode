@@ -7,7 +7,8 @@ import pAny from "p-any";
 import pRetry from "p-retry";
 import axios, { AxiosInstance } from 'axios';
 import { getAgent } from "../atlclients/agent";
-require('request-to-curl');
+import { addCurlLogging } from "../atlclients/interceptors";
+
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -43,29 +44,7 @@ export class OnlineDetector extends Disposable {
         });
 
         if (Container.config.enableCurlLogging) {
-            this._transport.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(this._transport);
         }
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);

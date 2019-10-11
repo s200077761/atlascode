@@ -10,8 +10,8 @@ import * as fs from "fs";
 import { Time } from '../../util/time';
 import { getAgent } from '../../atlclients/agent';
 import { Container } from '../../container';
-import { Logger } from '../../logger';
-require('request-to-curl');
+import { addCurlLogging } from '../../atlclients/interceptors';
+
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
 
@@ -44,31 +44,7 @@ export abstract class JiraClient {
         });
 
         if (Container.config.enableCurlLogging) {
-            this.transport.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(this.transport);
         }
     }
 

@@ -10,7 +10,7 @@ import axios from 'axios';
 import { Time } from "../util/time";
 import { getAgent } from "./agent";
 import { Container } from "../container";
-require('request-to-curl');
+import { addCurlLogging } from "./interceptors";
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -161,30 +161,7 @@ export class LoginManager {
         });
 
         if (Container.config.enableCurlLogging) {
-            transport.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(transport);
         }
 
         const res = await transport(siteDetailsUrl, {

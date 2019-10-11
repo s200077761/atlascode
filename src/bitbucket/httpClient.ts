@@ -1,8 +1,8 @@
 import axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { Time } from '../util/time';
 import { Container } from '../container';
-import { Logger } from '../logger';
-require('request-to-curl');
+import { addCurlLogging } from '../atlclients/interceptors';
+
 export class Client {
     private transport: AxiosInstance;
 
@@ -23,29 +23,7 @@ export class Client {
         });
 
         if (Container.config.enableCurlLogging) {
-            this.transport.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(this.transport);
         }
 
         this.transport.interceptors.response.use(

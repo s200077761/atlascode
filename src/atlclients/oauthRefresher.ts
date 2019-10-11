@@ -6,8 +6,7 @@ import { Time } from '../util/time';
 import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
 import { getAgent } from './agent';
 import { Container } from '../container';
-require('request-to-curl');
-import { Logger } from '../logger';
+import { addCurlLogging } from './interceptors';
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 
@@ -20,29 +19,7 @@ export class OAuthRefesher implements Disposable {
             }
         });
         if (Container.config.enableCurlLogging) {
-            this._axios.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(this._axios);
         }
     }
 

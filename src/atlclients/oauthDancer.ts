@@ -16,7 +16,7 @@ import { v4 } from 'uuid';
 import { getAgent, getProxyHostAndPort } from './agent';
 import { promisify } from 'util';
 import { Container } from '../container';
-require('request-to-curl');
+import { addCurlLogging } from './interceptors';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 
@@ -56,29 +56,7 @@ export class OAuthDancer implements Disposable {
         });
 
         if (Container.config.enableCurlLogging) {
-            this._axios.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(this._axios);
         }
     }
 

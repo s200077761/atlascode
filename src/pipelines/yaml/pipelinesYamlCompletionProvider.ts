@@ -6,8 +6,8 @@ import axios from 'axios';
 import { Logger } from '../../logger';
 import { Time } from '../../util/time';
 import { getAgent } from '../../atlclients/agent';
-require('request-to-curl');
 import { Container } from '../../container';
+import { addCurlLogging } from '../../atlclients/interceptors';
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
 
@@ -110,29 +110,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
         });
 
         if (Container.config.enableCurlLogging) {
-            transport.interceptors.response.use(response => {
-                try {
-                    Logger.debug("-".repeat(70));
-                    
-                    Logger.debug(response.request.toCurl());
-                    Logger.debug("-".repeat(70));
-                } catch (cerr) {
-                    //ignore
-                }
-                return response;
-            },
-                async error => {
-                    try {
-                        Logger.debug("-".repeat(70));
-                        
-                        Logger.debug(error.response.request.toCurl());
-                        Logger.debug("-".repeat(70));
-                    } catch (cerr) {
-                        //ignore
-                    }
-                    return Promise.reject(error);
-                }
-            );
+            addCurlLogging(transport);
         }
 
         transport(BB_PIPES_URL, {
