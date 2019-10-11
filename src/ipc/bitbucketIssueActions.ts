@@ -65,19 +65,16 @@ export function isUpdateDiffAction(a: Action): a is UpdateDiffAction {
 
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
-    issue: BitbucketIssueData;
 }
 
 export function isOpenStartWorkPageAction(a: Action): a is OpenStartWorkPageAction {
-    return (<OpenStartWorkPageAction>a).issue !== undefined;
+    return (<OpenStartWorkPageAction>a).action === 'openStartWorkPage';
 }
 
 export interface CreateJiraIssueAction extends Action {
     action: 'createJiraIssue';
-    issue: BitbucketIssueData;
 }
 
 export function isCreateJiraIssueAction(a: Action): a is CreateJiraIssueAction {
-    return (<CreateJiraIssueAction>a).issue !== undefined
-        && (<CreateJiraIssueAction>a).action === 'createJiraIssue';
+    return (<CreateJiraIssueAction>a).action === 'createJiraIssue';
 }
