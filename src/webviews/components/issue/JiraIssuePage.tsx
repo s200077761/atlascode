@@ -410,6 +410,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
 
                 {this.state.fields['subtasks']
+                    && this.state.fieldValues['subtasks']
                     && !this.state.isEpic
                     && !this.state.fieldValues['issuetype'].subtask
                     &&
