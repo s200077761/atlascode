@@ -295,6 +295,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
 
+                            if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
+                                this._editUIData.fieldValues['subtasks'] = [];
+                            }
+
                             this._editUIData.fieldValues['subtasks'].push(picked);
                             this.postMessage({
                                 type: 'fieldValueUpdate'

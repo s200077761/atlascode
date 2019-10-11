@@ -345,9 +345,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         const itIconUrl = (this.state.fieldValues['issuetype']) ? this.state.fieldValues['issuetype'].iconUrl : undefined;
         return (
             <div>
-                {!this.state.isOnline &&
-                    <Offline />
-                }
                 {this.state.showPMF &&
                     <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 }
@@ -413,6 +410,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
 
                 {this.state.fields['subtasks']
+                    && this.state.fieldValues['subtasks']
                     && !this.state.isEpic
                     && !this.state.fieldValues['issuetype'].subtask
                     &&
@@ -466,7 +464,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return (
             <React.Fragment>
                 <ButtonGroup>
-                    <Tooltip content="Refesh">
+                    <Tooltip content="Refresh">
                         <Button className='ac-button'
                             onClick={this.handleRefresh}
                             iconBefore={<RefreshIcon label="refresh" />}
@@ -679,9 +677,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     public render() {
-        if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if ((Object.keys(this.state.fields).length < 1 || Object.keys(this.state.fieldValues).length < 1) && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;
+        }
+
+        if (!this.state.isOnline) {
+            return <Offline />;
         }
 
         return (

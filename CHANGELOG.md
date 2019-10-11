@@ -1,3 +1,17 @@
+## What's New In 2.1.1
+### Improvements
+* Added support for tunneling https when using a proxy server
+* Now using a reasonable placeholder for broken images
+
+### Bugs fixed
+* Jira issue screen broken due to missing priority field
+* Jira issue screen broken due to missing subtasks field
+* Bitbucket repos not recognized if remote URL includes a port
+* Bitbucket start work on issue not working
+* Code block in comments too dark to see in dark themes
+* Pipelines explorer filters not working properly
+
+
 ## What's New In 2.1.0
 ### Improvements
 * Clicking on a pull request preview file now opens the file

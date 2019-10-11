@@ -138,7 +138,12 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
                     return parent;
                 }));
 
-        subIssues.forEach(i => parentIssues.find(parentIssue => parentIssue.key === i.parentKey)!.subtasks.push(i));
+        subIssues.forEach(i => {
+            const parent = parentIssues.find(parentIssue => parentIssue.key === i.parentKey);
+            if (parent) {
+                parent.subtasks.push(i);
+            }
+        });
 
         return parentIssues;
     }

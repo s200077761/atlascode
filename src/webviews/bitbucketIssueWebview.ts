@@ -182,7 +182,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 case 'openStartWorkPage': {
                     if (isOpenStartWorkPageAction(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, this._issue);
                     }
                     break;
                 }

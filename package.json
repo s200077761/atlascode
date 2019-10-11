@@ -248,6 +248,11 @@
                     "light": "resources/light/comment.svg"
                 },
                 "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.debug.bitbucketSites",
+                "title": "Show Bitbucket sites info",
+                "category": "Atlassian"
             }
         ],
         "viewsContainers": {
@@ -526,6 +531,18 @@
                         "workspace"
                     ],
                     "description": "Location to which configuration changes are saved"
+                },
+                "atlascode.enableCurlLogging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables logging the cUrl commands used by the extension",
+                    "scope": "window"
+                },
+                "atlascode.enableHttpsTunnel": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables tunneling https requests to an http proxy",
+                    "scope": "window"
                 },
                 "atlascode.enableCharles": {
                     "type": "boolean",
@@ -1061,6 +1078,7 @@
         "@types/webpack": "^4.39.1",
         "@types/webpack-manifest-plugin": "^2.0.0",
         "autoprefixer": "^9.6.1",
+        "axios-curlirize": "^1.3.3",
         "cross-env": "^5.2.1",
         "css-loader": "^3.2.0",
         "fork-ts-checker-notifier-webpack-plugin": "^1.0.2",

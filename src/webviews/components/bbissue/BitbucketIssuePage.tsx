@@ -201,7 +201,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        const issue = this.state.data.issueData as BitbucketIssueData;
+        const issue: BitbucketIssueData = this.state.data.issueData;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
@@ -226,9 +226,9 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                 <PageHeader
                                     actions={
                                         <ButtonGroup>
-                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
+                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage' })}>Start work on issue...</Button>
                                             {this.state.data.showJiraButton &&
-                                                <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
+                                                <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue' })}>Create Jira Issue</Button>
                                             }
                                             <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
                                                 <RefreshIcon label="refresh" size="small"></RefreshIcon>

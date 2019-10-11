@@ -26,6 +26,20 @@ const routes = {
 const view = document.getElementById('reactView') as HTMLElement;
 const root = document.getElementById('root') as HTMLElement;
 
+
+window.addEventListener("error", (ee: ErrorEvent) => {
+    const targetEL = ee.target as HTMLElement;
+    if (ee && targetEL && targetEL.nodeName === 'IMG') {
+        const origianlSrc = targetEL.getAttribute('src');
+        targetEL.setAttribute('src', 'vscode-resource:images/no-image.svg');
+        targetEL.setAttribute('alt', `Unable to load image: ${origianlSrc}`);
+        targetEL.setAttribute('title', `Unable to load image: ${origianlSrc}`);
+        targetEL.setAttribute('class', 'ac-broken-img');
+        targetEL.setAttribute('width', '24');
+        targetEL.setAttribute('height', '24');
+    }
+}, { capture: true });
+
 const App = () => {
     const Page = routes[view.getAttribute('content')!];
     return (

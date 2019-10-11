@@ -37,15 +37,14 @@ export default class MultiOptionList extends React.Component<
 
     private htmlForOption(option: string, index: number) {
         return (
-            <div id="multi-option-row" key={option + index}>
+            <div id="multi-option-row" key={index}>
                 <input className='ac-inputField-inline'
                     id="multi-option-input"
                     name="multi-option-option"
                     type="string"
                     value={option}
-                    onChange={(e: any) => this.handleOptionChange(e.target.value, index)}
-                    disabled={!this.props.enabledValue} />
-
+                    onChange={(e: any) => this.handleOptionChange(e.target.value, index)} 
+                />
                 <ButtonGroup>
                     <Tooltip content="Delete">
                         <Button
@@ -61,19 +60,15 @@ export default class MultiOptionList extends React.Component<
         );
     }
 
-    copyOptions = () => {
-        return this.state.options.slice();
-    }
-
     handleOptionChange = (option: string, index: number) => {
-        const options = this.copyOptions();
+        const options = [...this.state.options];
         options[index] = option;
         this.setState({ options: options });
         this.publishChanges();
     }
 
     deleteOption = (index: number) => {
-        const options = this.copyOptions();
+        const options = [...this.state.options];
         options.splice(index, 1);
         this.setState({ options: options });
         this.publishChanges();
@@ -89,7 +84,7 @@ export default class MultiOptionList extends React.Component<
     }, 400);
 
     onNewOption = () => {
-        const options = this.copyOptions();
+        const options = [...this.state.options];
         options.push('');
         this.setState({ options: options });
         this.publishChanges();

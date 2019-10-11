@@ -1,9 +1,13 @@
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { EpicFieldInfo } from "../jiraCommon";
 import { MinimalIssue, MinimalIssueLink, Transition, isStatus, isPriority, isIssueType, isTransition, isIssueLinkType, IssueLinkIssue, readIssueLinkIssue } from "./model/entities";
-import { emptyStatus, emptyPriority, emptyIssueType, emptyTransition } from "./model/emptyEntities";
+import { emptyStatus, emptyPriority, emptyIssueType, emptyTransition, emptyMinimalIssue } from "./model/emptyEntities";
 
 export function minimalIssueFromJsonObject(issueJson: any, siteDetails: DetailedSiteInfo, epicFields: EpicFieldInfo): MinimalIssue {
+
+    if (!issueJson || !issueJson.fields) {
+        return emptyMinimalIssue;
+    }
 
     const subtasks: IssueLinkIssue[] = getSubtasks(issueJson, siteDetails, epicFields);
     const issuelinks: MinimalIssueLink[] = getIssueLinks(issueJson, siteDetails, epicFields);
@@ -13,12 +17,15 @@ export function minimalIssueFromJsonObject(issueJson: any, siteDetails: Detailed
         descriptionHtml = issueJson.renderedFields.description;
     }
 
+    const created = (issueJson.fields.created) ? new Date(Date.parse(issueJson.fields.created)) : new Date();
+    const updated = (issueJson.fields.updated) ? new Date(Date.parse(issueJson.fields.updated)) : new Date();
+
     const thisIssue = {
         key: issueJson.key,
         id: issueJson.id,
         self: issueJson.self,
-        created: new Date(Date.parse(issueJson.fields.created)),
-        updated: new Date(Date.parse(issueJson.fields.updated)),
+        created: created,
+        updated: updated,
         summary: issueJson.fields.summary,
         description: issueJson.fields.description,
         descriptionHtml: descriptionHtml,
