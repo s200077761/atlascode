@@ -20,6 +20,7 @@ import { PipelineApiImpl } from "../pipelines/pipelines";
 import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
 import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
+import { getProxyHostAndPort } from "./agent";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -47,8 +48,17 @@ export class ClientManager implements Disposable {
     if (initializing
       || configuration.changed(e, 'enableCharles')
       || configuration.changed(e, 'charlesCertPath')
-      || configuration.changed(e, 'charlesDebugOnly')) {
+      || configuration.changed(e, 'charlesDebugOnly')
+      || configuration.changed(e, 'enableCurlLogging')
+      || configuration.changed(e, 'enableHttpsTunnel')) {
       this._agentChanged = true;
+    }
+
+    if ((initializing && Container.config.enableHttpsTunnel) || configuration.changed(e, 'enableHttpsTunnel')) {
+      const [proxyHost, proxyPort] = getProxyHostAndPort();
+      if (Container.config.enableHttpsTunnel) {
+        Logger.debug(`setting up https tunnel to ${proxyHost}:${proxyPort}`);
+      }
     }
   }
 

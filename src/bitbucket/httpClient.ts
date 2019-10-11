@@ -1,5 +1,7 @@
 import axios, { AxiosResponse, AxiosInstance } from 'axios';
 import { Time } from '../util/time';
+import { Container } from '../container';
+import { addCurlLogging } from '../atlclients/interceptors';
 
 export class Client {
     private transport: AxiosInstance;
@@ -17,8 +19,12 @@ export class Client {
                 "Content-Type": "application/json",
                 Authorization: this.authHeader
             },
-            httpsAgent: this.agent
+            ...this.agent
         });
+
+        if (Container.config.enableCurlLogging) {
+            addCurlLogging(this.transport);
+        }
 
         this.transport.interceptors.response.use(
             response => response,
@@ -28,6 +34,7 @@ export class Client {
                     : Promise.reject(error);
             }
         );
+
     }
 
     async get(urlSlug: string, queryParams?: any) {
@@ -72,7 +79,7 @@ export class Client {
                     Authorization: this.authHeader
                 },
                 data: JSON.stringify(body),
-                httpsAgent: this.agent
+                ...this.agent
             });
 
             return { data: res.data, headers: res.headers };

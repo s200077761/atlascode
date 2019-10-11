@@ -6,6 +6,9 @@ import { Time } from "./time";
 import pAny from "p-any";
 import pRetry from "p-retry";
 import axios, { AxiosInstance } from 'axios';
+import { getAgent } from "../atlclients/agent";
+import { addCurlLogging } from "../atlclients/interceptors";
+
 
 export type OnlineInfoEvent = {
     isOnline: boolean;
@@ -39,6 +42,10 @@ export class OnlineDetector extends Disposable {
         this._transport = axios.create({
             timeout: 10 * Time.SECONDS,
         });
+
+        if (Container.config.enableCurlLogging) {
+            addCurlLogging(this._transport);
+        }
 
         void this.onConfigurationChanged(configuration.initializingChangeEvent);
 
@@ -83,13 +90,13 @@ export class OnlineDetector extends Disposable {
         const promise = async () => await pAny([
             (async () => {
                 Logger.debug('Online check attempting to connect to http://atlassian.com');
-                await this._transport(`http://atlassian.com`, { method: "HEAD" });
+                await this._transport(`http://atlassian.com`, { method: "HEAD", ...getAgent() });
                 Logger.debug('Online check connected to http://atlassian.com');
                 return true;
             })(),
             (async () => {
                 Logger.debug('Online check attempting to connect to https://bitbucket.org');
-                await this._transport(`https://bitbucket.org`, { method: "HEAD" });
+                await this._transport(`https://bitbucket.org`, { method: "HEAD", ...getAgent() });
                 Logger.debug('Online check connected to https://bitbucket.org');
                 return true;
             })()
