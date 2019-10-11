@@ -10,7 +10,7 @@
         "builds",
         "pull requests"
     ],
-    "version": "2.1.1-tunnel2",
+    "version": "0.0.0",
     "publisher": "atlassian",
     "license": "SEE LICENSE IN LICENSE",
     "homepage": "https://bitbucket.org/atlassianlabs/atlascode/src/master/README.md",
