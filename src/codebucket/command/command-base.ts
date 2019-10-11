@@ -93,7 +93,7 @@ export abstract class CommandBase {
    */
   protected openUrl(url: string): void {
     const uri = vscode.Uri.parse(url);
-    vscode.commands.executeCommand('vscode.open', uri);
+    vscode.env.openExternal(uri);
   }
 
   public static getOpenEditor(): vscode.TextEditor {
