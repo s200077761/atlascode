@@ -362,6 +362,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.jiraSites}
                                                         product={ProductJira}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
@@ -401,6 +402,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.bitbucketSites}
                                                         product={ProductBitbucket}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin}
                                                     />

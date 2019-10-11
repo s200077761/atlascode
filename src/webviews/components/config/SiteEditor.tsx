@@ -9,6 +9,7 @@ import Tooltip from '@atlaskit/tooltip';
 interface AuthProps {
     sites: DetailedSiteInfo[];
     product: Product;
+    isRemote: boolean;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
 }
@@ -32,7 +33,7 @@ const Delete = (data: ItemData) => {
     );
 };
 
-export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, handleDeleteSite, handleSaveSite }) => {
+export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, isRemote, handleDeleteSite, handleSaveSite }) => {
     const [addingSite, setAddingSite] = useState(false);
     const loginText = `Login to ${product.name} Cloud`;
     const addSiteText = `Add Custom ${product.name} Site`;
@@ -57,9 +58,15 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                     product={product} />
             }
             <div className='ac-vpadding'>
+                {isRemote &&
+                    <div className='ac-vpadding'>
+                        <p>Authentication cannot be done while running remotely.</p>
+                        <p>To authenticate with a new site open this (or another) workspace locally. Accounts added when running locally <em>will</em> be accessible during remote development.</p>
+                    </div>
+                }
                 <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
-                    <Button className="ac-button" style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
-                    <Button className="ac-button" onClick={() => setAddingSite(true)}>{addSiteText}</Button>
+                    <Button className="ac-button" isDisabled={isRemote} style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
+                    <Button className="ac-button" isDisabled={isRemote} onClick={() => setAddingSite(true)}>{addSiteText}</Button>
                 </div>
             </div>
             <TableTree
