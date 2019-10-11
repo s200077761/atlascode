@@ -28,11 +28,11 @@ export class IssueNode extends AbstractBaseNode {
         if (element) {
             return element.getChildren();
         }
-        if (isMinimalIssue(this.issue) && this.issue.subtasks.length > 0) {
+        if (isMinimalIssue(this.issue) && Array.isArray(this.issue.subtasks) && this.issue.subtasks.length > 0) {
             return this.issue.subtasks.map(subtask => new IssueNode(subtask));
         }
 
-        if (isMinimalIssue(this.issue) && this.issue.epicChildren.length > 0) {
+        if (isMinimalIssue(this.issue) && Array.isArray(this.issue.epicChildren) && this.issue.epicChildren.length > 0) {
             return this.issue.epicChildren.map(epicChild => new IssueNode(epicChild));
         }
         return [];
