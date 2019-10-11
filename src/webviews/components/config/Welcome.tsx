@@ -93,6 +93,25 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.1.1 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for tunneling https when using a proxy server</li>
+                                <li>Now using a reasonable placeholder for broken images</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Jira issue screen broken due to missing priority field</li>
+                                <li>Jira issue screen broken due to missing subtasks field</li>
+                                <li>Bitbucket repos not recognized if remote URL includes a port</li>
+                                <li>Bitbucket start work on issue not working</li>
+                                <li>Code block in comments too dark to see in dark themes</li>
+                                <li>Pipelines explorer filters not working properly</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.1.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
