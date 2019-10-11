@@ -36,22 +36,30 @@ export function getAgent(site?: SiteInfo): { [k: string]: any } {
 
         if (!agent['httpsAgent']) {
             if (configuration.get<boolean>('enableHttpsTunnel')) {
-                const [host, port] = getProxyHostAndPort();
-
-                let numPort = undefined;
-                if (host.trim() !== '') {
-                    if (port.trim() !== '') {
-                        numPort = parseInt(port);
-                    }
-                    agent = {
-                        httpsAgent: tunnel.httpsOverHttp({
-                            proxy: {
-                                host: host,
-                                port: numPort
-                            }
-                        }), proxy: false
-                    };
+                let shouldTunnel: boolean = true;
+                if (site) {
+                    shouldTunnel = shouldTunnelHost(site.hostname);
                 }
+
+                if (shouldTunnel) {
+                    const [host, port] = getProxyHostAndPort();
+
+                    let numPort = undefined;
+                    if (host.trim() !== '') {
+                        if (port.trim() !== '') {
+                            numPort = parseInt(port);
+                        }
+                        agent = {
+                            httpsAgent: tunnel.httpsOverHttp({
+                                proxy: {
+                                    host: host,
+                                    port: numPort
+                                }
+                            }), proxy: false
+                        };
+                    }
+                }
+
             } else {
                 const useCharles = configuration.get<boolean>('enableCharles');
                 if (useCharles) {
@@ -95,4 +103,34 @@ export function getProxyHostAndPort(): [string, string] {
     }
 
     return ['', ''];
+}
+
+export function getProxyIgnores(): string[] {
+    const proxyEnv = 'no_proxy';
+    const proxyUrls = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
+    if (proxyUrls) {
+        return proxyUrls.split(',');
+    }
+
+    return [];
+}
+
+function shouldTunnelHost(hostname: string): boolean {
+    const ignores = getProxyIgnores();
+    for (let ignore of ignores) {
+        if (ignore.startsWith('.')) {
+            const domain = ignore.substr(1);
+            if (hostname.includes(domain)) {
+                return false;
+            }
+        } else {
+            if (hostname.split(':')[0] === ignore) {
+                return false;
+            }
+
+
+        }
+    }
+
+    return true;
 }
