@@ -9,8 +9,10 @@ import { Uri } from "vscode";
  * @param branchName The branch name to test.
  */
 export function shouldDisplay(branchName: string | undefined): boolean {
-    if (!Container.config.bitbucket.pipelines.hideFiltered || branchName === undefined) {
+    if (!Container.config.bitbucket.pipelines.hideFiltered) {
         return true;
+    } else if (!branchName) {
+        return false;
     }
 
     const filters = Container.config.bitbucket.pipelines.branchFilters.filter(f => f.length > 0);
