@@ -41,6 +41,7 @@ import { AtlLoader } from '../AtlLoader';
 import { format, distanceInWordsToNow } from 'date-fns';
 import EdiText from 'react-editext';
 import { isValidString } from '../fieldValidators';
+import uuid from 'uuid';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -90,6 +91,7 @@ const emptyState: ViewState = {
 };
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, ViewState> {
+    private nonce: string;
     private userSuggestions: any;
 
     constructor(props: any) {
@@ -167,12 +169,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
-            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.pr.remote });
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.pr.remote });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
                     if (this.userSuggestions === undefined) {
                         this.userSuggestions = [];
                     }
@@ -181,6 +184,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     resolve(this.userSuggestions);
                 }
             }, 100);
+
         });
     }
 
