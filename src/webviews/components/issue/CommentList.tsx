@@ -6,6 +6,7 @@ import { distanceInWordsToNow } from "date-fns";
 
 type Props = {
   comments: JiraComment[];
+  isServiceDeskProject: boolean;
 };
 
 type State = { comments: JiraComment[] };
@@ -30,6 +31,11 @@ export class CommentList extends React.Component<Props, State> {
       const prettyCreated = `${distanceInWordsToNow(comment.created)} ago`;
       //const created = (isNaN(Date.parse(comment.created))) ? comment.created : new Date(comment.created).toLocaleString();
       const body = (comment.renderedBody) ? comment.renderedBody : comment.body;
+      const type = this.props.isServiceDeskProject
+        ? comment.jsdPublic
+          ? 'external'
+          : 'internal'
+        : undefined;
       const commentMarkup =
         <Comment
           avatar={
@@ -41,6 +47,7 @@ export class CommentList extends React.Component<Props, State> {
           }
           author={<CommentAuthor><div className="jira-comment-author">{comment.author.displayName}</div></CommentAuthor>}
           time={<CommentTime>{prettyCreated}</CommentTime>}
+          type={type}
           content={<div className="jira-comment"><p dangerouslySetInnerHTML={{ __html: body }} /></div>}
         />;
 
