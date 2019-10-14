@@ -2,6 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
 import { PipelineApiImpl } from "../pipelines/pipelines";
+import { DetailedFileChange } from "src/ipc/prMessaging";
 
 export type User = {
     accountId: string;
@@ -176,7 +177,7 @@ export interface PullRequestApi {
     getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
-    getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
+    getChangedFiles(pr: PullRequest): Promise<DetailedFileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
     editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;

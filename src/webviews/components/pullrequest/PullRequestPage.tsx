@@ -17,7 +17,7 @@ import Reviewers from './Reviewers';
 import { Commits } from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
+import { PRData, CheckoutResult, isPRData, FileDiff } from '../../../ipc/prMessaging';
 import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
@@ -41,12 +41,14 @@ import { AtlLoader } from '../AtlLoader';
 import { format, distanceInWordsToNow } from 'date-fns';
 import EdiText from 'react-editext';
 import { isValidString } from '../fieldValidators';
+import DiffList from './DiffList';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
     pr: PRData;
+    isFileDiffsLoading: boolean;
     isApproveButtonLoading: boolean;
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
@@ -66,6 +68,7 @@ const emptyPR = {
     type: '',
     remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
+    fileDiffs: [],
     mergeStrategies: [],
     relatedJiraIssues: [],
     relatedBitbucketIssues: []
@@ -73,6 +76,7 @@ const emptyPR = {
 
 const emptyState: ViewState = {
     pr: emptyPR,
+    isFileDiffsLoading: true,
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
@@ -207,6 +211,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isPRData(e)) {
                     this.setState({
                         pr: e,
+                        isFileDiffsLoading: false,
                         isApproveButtonLoading: false,
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
@@ -258,6 +263,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             // there must be a better way to update the transition dropdown!!
             pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssueData }
         });
+    }
+
+    diffPanelHeader = () => {
+        return <h3>
+            Files Changed {this.state.isFileDiffsLoading ? '' : `(${this.state.pr.fileDiffs!.length})`}
+        </h3>;
     }
 
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
@@ -498,6 +509,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
                                             <Commits {...this.state.pr} />
+                                        </Panel>
+                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                            <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={(f: FileDiff)=>{console.log(f);}} ></DiffList>
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
                                             <Comments

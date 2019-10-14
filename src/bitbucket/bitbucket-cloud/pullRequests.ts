@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, FileChange, Commit } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, Commit } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
@@ -8,6 +8,7 @@ import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Client, ClientError } from "../httpClient";
 import { AxiosResponse } from "axios";
 import { getAgent } from "../../atlclients/agent";
+import { DetailedFileChange } from "src/ipc/prMessaging";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -155,7 +156,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
+    async getChangedFiles(pr: PullRequest): Promise<DetailedFileChange[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(
@@ -174,6 +175,8 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map(diffStat => ({
+            linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
+            linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: diffStat.status!,
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
             newPath: diffStat.new ? diffStat.new.path! : undefined

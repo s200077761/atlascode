@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit } from '../bitbucket/model';
-import { PRData } from '../ipc/prMessaging';
+import { PRData, convertDetailedFileChangeToFileDiff } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
@@ -31,7 +31,19 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
+const emptyState: PRState = { 
+    prData: { 
+        type: '', 
+        fileDiffs: [],
+        remote: { 
+            name: 'dummy_remote', 
+            isReadOnly: true 
+        }, 
+        currentBranch: '', 
+        relatedJiraIssues: [], 
+        mergeStrategies: [] 
+    } 
+};
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
@@ -249,9 +261,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr)
+            bbApi.pullrequests.getMergeStrategies(this._pr),
+            bbApi.pullrequests.getChangedFiles(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const fileDiffs = fileChanges.map(fileChange => convertDetailedFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -267,6 +281,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             repository: this._pr.repository,
             prData: {
                 pr: this._pr.data,
+                fileDiffs: fileDiffs,
                 remote: this._pr.remote,
                 currentUser: currentUser,
                 currentBranch: this._pr.repository.state.HEAD!.name!,

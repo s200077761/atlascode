@@ -1,6 +1,6 @@
 import { Message } from "./messaging";
 import { Branch, Remote } from "../typings/git";
-import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData, MergeStrategy } from "../bitbucket/model";
+import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData, MergeStrategy, FileChange } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 
@@ -8,6 +8,7 @@ import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
     pr?: PullRequestData;
+    fileDiffs?: FileDiff[];
     remote: Remote;
     currentUser?: User;
     currentBranch: string;
@@ -29,14 +30,56 @@ export interface BranchType {
     prefix: string;
 }
 
+export interface DetailedFileChange extends FileChange {
+    linesAdded?: number;
+    linesRemoved?: number;
+}
+
 export interface FileDiff {
     file: string;
     status: FileStatus;
     linesAdded: number;
     linesRemoved: number;
     similarity?: number;
-    lhsQueryParams: FileDiffQueryParams;
-    rhsQueryParams: FileDiffQueryParams;
+    lhsQueryParams?: FileDiffQueryParams;
+    rhsQueryParams?: FileDiffQueryParams;
+}
+
+export function convertDetailedFileChangeToFileDiff(fileChange: DetailedFileChange): FileDiff {
+    return {
+        file: getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
+        status: mapStatusWordsToFileStatus(fileChange.status),
+        linesAdded: !(fileChange.linesAdded === undefined) ? fileChange.linesAdded : -1,
+        linesRemoved: !(fileChange.linesRemoved === undefined) ? fileChange.linesRemoved : -1
+    };
+}
+
+function mapStatusWordsToFileStatus(status: string): FileStatus {
+    if(status === 'added') {
+        return FileStatus.ADDED;
+    } else if(status === 'removed') {
+        return FileStatus.DELETED;
+    } else if(status === 'modified') {
+        return FileStatus.MODIFIED;
+    } else if(status === 'renamed') {
+        return FileStatus.RENAMED;
+    } else if(status === 'merge conflict') {
+        return FileStatus.CONFLICT;
+    } else {
+        return FileStatus.UNKNOWN;
+    }
+}
+
+function getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
+    let fileDisplayName: string = '';
+    if (newPath && oldPath && newPath !== oldPath) {
+        fileDisplayName = `${oldPath} → ${newPath}`; //This is actually not what we want, but it'll have to be dealt with later...
+    } else if (newPath) {
+        fileDisplayName = newPath;
+    } else if (oldPath) {
+        fileDisplayName = oldPath;
+    }
+    return fileDisplayName;
 }
 
 export enum FileStatus {
@@ -45,6 +88,7 @@ export enum FileStatus {
     COPIED = 'C',
     MODIFIED = 'M',
     RENAMED = 'R',
+    CONFLICT = 'CONFLICT',
     UNKNOWN = 'X'
 }
 

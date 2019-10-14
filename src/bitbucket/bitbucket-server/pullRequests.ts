@@ -1,4 +1,4 @@
-import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, FileChange, Commit } from '../model';
+import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, Commit } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -6,6 +6,7 @@ import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
 import { ServerRepositoriesApi } from './repositories';
 import { getAgent } from '../../atlclients/agent';
+import { DetailedFileChange } from 'src/ipc/prMessaging';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -149,7 +150,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
+    async getChangedFiles(pr: PullRequest): Promise<DetailedFileChange[]> {
         let parsed = parseGitUrl(urlForRemote(pr.remote));
 
         let { data } = await this.client.get(

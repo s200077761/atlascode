@@ -182,8 +182,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.postMessage(
             { 
                 action: 'openDiffPreview', 
-                lhsQuery: fileDiff.lhsQueryParams, 
-                rhsQuery: fileDiff.rhsQueryParams,
+                lhsQuery: fileDiff.lhsQueryParams!, 
+                rhsQuery: fileDiff.rhsQueryParams!,
                 fileDisplayName: fileDiff.file
             }
         );

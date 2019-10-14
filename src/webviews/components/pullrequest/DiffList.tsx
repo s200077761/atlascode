@@ -45,12 +45,16 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
                     content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
                 >
                     <div className="commit-file-diff-stats">
-                        <span className="lines-added">
-                            +{fileDiff.linesAdded}
-                        </span>
-                        <span className="lines-removed">
-                            -{fileDiff.linesRemoved}
-                        </span>
+                        {fileDiff.linesAdded !== -1 &&
+                            <React.Fragment>
+                                <span className="lines-added">
+                                    +{fileDiff.linesAdded}
+                                </span>
+                                <span className="lines-removed">
+                                    -{fileDiff.linesRemoved}
+                                </span>
+                            </React.Fragment>
+                        }
                         <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
                             {fileDiff.status}
                         </span>
