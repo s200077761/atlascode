@@ -79,7 +79,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
-    protected handleCommentSave = (newValue: string) => { };
+    protected handleCommentSave = (newValue: string, internal: boolean) => { };
 
     // react-select has issues and doesn't stop propagation on click events when you provide
     // a custom option component.  e.g. it calls this twice, so we have to debounce.
@@ -160,8 +160,13 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.setState({ commentInputValue: val });
     }
 
-    private handleCommentSaveClick = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue);
+    private handleExternalCommentSave = (e: any) => {
+        this.handleCommentSave(this.state.commentInputValue, false);
+        this.setState({ commentInputValue: "" });
+    }
+
+    private handleInternalCommentSave = (e: any) => {
+        this.handleCommentSave(this.state.commentInputValue, true);
         this.setState({ commentInputValue: "" });
     }
 
@@ -580,6 +585,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 return markup;
             }
             case UIType.Comments: {
+                const isServiceDeskProject = this.state.fieldValues['project'] && this.state.fieldValues['project'].projectTypeKey === 'service_desk';
+
                 return (<div style={{ width: '100%', padding: '10px', boxSizing: 'border-box' }}>
                     {this.state.loadingField === field.key && <Spinner size='large' />}
                     <textarea
@@ -590,7 +597,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                         onChange={this.handleCommentInput}
                     />
                     <ButtonGroup>
-                        <Button className='ac-button' onClick={this.handleCommentSaveClick} isDisabled={this.state.commentInputValue === '' || this.state.isSomethingLoading}>Save</Button>
+                        <Button className='ac-button' onClick={this.handleExternalCommentSave} isDisabled={this.state.commentInputValue === '' || this.state.isSomethingLoading}>{isServiceDeskProject ? 'Reply to customer' : 'Save'}</Button>
+                        {isServiceDeskProject && <Button className='ac-button' onClick={this.handleInternalCommentSave} isDisabled={this.state.commentInputValue === '' || this.state.isSomethingLoading}>Add internal note</Button>}
                         <Button appearance="default" onClick={this.handleCommentCancelClick}>Cancel</Button>
                     </ButtonGroup>
                 </div>);

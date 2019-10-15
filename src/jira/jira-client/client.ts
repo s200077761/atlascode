@@ -68,8 +68,15 @@ export abstract class JiraClient {
         return res;
     }
 
-    public async addComment(issueIdOrKey: string, comment: string): Promise<any> {
-        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment }, { expand: 'renderedBody' });
+    public async addComment(issueIdOrKey: string, comment: string, internal?: boolean): Promise<any> {
+        let postBody: any = { body: comment };
+        if (internal === true) {
+            postBody = {
+                ...postBody,
+                properties: [{ key: "sd.public.comment", value: { internal: true } }]
+            };
+        }
+        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, postBody, { expand: 'renderedBody' });
 
         return res;
     }
