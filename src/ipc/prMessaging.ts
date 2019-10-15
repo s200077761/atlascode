@@ -8,6 +8,7 @@ import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
     pr?: PullRequestData;
+    repoUri: string;
     remote: Remote;
     currentUser?: User;
     currentBranch: string;
