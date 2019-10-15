@@ -174,7 +174,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(e)) {
                         handled = true;
-                        commands.executeCommand(Commands.ShowBitbucketIssue, e.issue);
+                        commands.executeCommand(Commands.ShowBitbucketIssue, { repository: Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri)), remote: e.remote, data: e.issue });
                     }
                     break;
                 }
@@ -198,7 +198,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     break;
                 }
                 case 'openDiffPreview': {
-                    if(isOpenDiffPreview(e)) {
+                    if (isOpenDiffPreview(e)) {
                         try {
                             this.openDiffPreview(e.lhsQuery, e.rhsQuery, e.fileDisplayName);
                         } catch (e) {
@@ -246,19 +246,19 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return commonCommit;
     }
 
-    getFilePaths(namestatusWords: string[], status: FileStatus): {lhsFilePath: string, rhsFilePath: string} {
-        if(status === FileStatus.ADDED){
-            return {lhsFilePath: "", rhsFilePath: namestatusWords[1]};
-        } else if (status === FileStatus.DELETED){
-            return {lhsFilePath: namestatusWords[1], rhsFilePath: ""};
+    getFilePaths(namestatusWords: string[], status: FileStatus): { lhsFilePath: string, rhsFilePath: string } {
+        if (status === FileStatus.ADDED) {
+            return { lhsFilePath: "", rhsFilePath: namestatusWords[1] };
+        } else if (status === FileStatus.DELETED) {
+            return { lhsFilePath: namestatusWords[1], rhsFilePath: "" };
         } else if (status === FileStatus.MODIFIED) {
-            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1]};
+            return { lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1] };
         } else if (status === FileStatus.RENAMED) {
-            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[2]};
+            return { lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[2] };
         } else {
             //I'm actually not totally sure what should happen if the other cases are hit...
             //Copy, Type changed, unknown, etc.
-            return {lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1]}; 
+            return { lhsFilePath: namestatusWords[1], rhsFilePath: namestatusWords[1] };
         }
     }
 
@@ -294,11 +294,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             fileDiffs.push(
                 {
                     linesAdded: +numstatWords[0],
-                    linesRemoved: +numstatWords[1], 
-                    file: filePath, 
+                    linesRemoved: +numstatWords[1],
+                    file: filePath,
                     status: fileStatus,
                     similarity: fileStatus === FileStatus.RENAMED ? +namestatusWords[0].slice(1) : undefined,
-                    lhsQueryParams: 
+                    lhsQueryParams:
                         {
                             lhs: true,
                             repoUri: repo.uri,
@@ -306,7 +306,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                             commitHash: forkPoint,
                             path: lhsFilePath,
                         } as FileDiffQueryParams,
-                    rhsQueryParams: 
+                    rhsQueryParams:
                         {
                             lhs: false,
                             repoUri: repo.uri,
@@ -321,7 +321,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         return fileDiffs;
     }
 
-    async openDiffPreview(lhsQueryParam: FileDiffQueryParams, rhsQueryParam: FileDiffQueryParams, fileDisplayName: string){
+    async openDiffPreview(lhsQueryParam: FileDiffQueryParams, rhsQueryParam: FileDiffQueryParams, fileDisplayName: string) {
         const lhsQuery = {
             query: JSON.stringify(lhsQueryParam)
         };
