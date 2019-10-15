@@ -348,7 +348,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             reviewers = data.values || [];
         } else {
             const { data } = await this.client.get(
-                `/teams/${parsed.owner}/members?q=nickname~"${query}"`
+                `/teams/${parsed.owner}/members?q=nickname="${query}"`
             );
             reviewers = data.values || [];
         }

@@ -36,6 +36,7 @@ import { FetchUsersResult } from "../../../ipc/prMessaging";
 import { FetchUsers } from "../../../ipc/prActions";
 import { distanceInWordsToNow, format } from "date-fns";
 import { AtlLoader } from "../AtlLoader";
+import uuid from "uuid";
 
 type SizeMetrics = {
     width: number;
@@ -97,6 +98,7 @@ const emptyState = {
 };
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private nonce: string;
     private userSuggestions: any;
 
     constructor(props: any) {
@@ -151,12 +153,13 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
-            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.data.remote });
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.data.remote });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
                     if (this.userSuggestions === undefined) {
                         this.userSuggestions = [];
                     }
