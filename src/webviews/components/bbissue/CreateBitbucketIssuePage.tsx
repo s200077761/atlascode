@@ -107,7 +107,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     }
                                     <PageHeader
                                         actions={<ButtonGroup>
-                                            <Button className='ac-button' href={`${this.state.repoData[0].href}/issues`}>Create on bitbucket.org...</Button>
+                                            <Button className='ac-button' href={`${this.state.repoData[0].href}/issues`}>Create in browser...</Button>
                                         </ButtonGroup>}
                                     >
                                         <p>Create Issue</p>

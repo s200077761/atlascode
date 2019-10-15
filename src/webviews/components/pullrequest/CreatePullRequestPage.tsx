@@ -466,7 +466,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     repo && repo.value.href
                         ? `${repo.value.href}/pull-requests/new`
                         : `https://bitbucket.org/dashboard/overview`
-                }>Create on bitbucket.org...</Button>
+                }>Create in browser...</Button>
             </ButtonGroup>
         );
 
