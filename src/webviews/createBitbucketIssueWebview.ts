@@ -9,6 +9,7 @@ import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
 import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
+import { BitbucketIssueData } from '../bitbucket/model';
 
 export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
@@ -121,14 +122,14 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
 
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
-        const { href, title, description, kind, priority } = createIssueAction;
+        const { repoUri: uri, href, title, description, kind, priority } = createIssueAction;
 
         // TODO [VSCODE-568] Add remote to create bitbucket issue action
-        const repo = Container.bitbucketContext.getRepository(Uri.parse(href));
+        const repo = Container.bitbucketContext.getRepository(Uri.parse(uri));
         const remote = firstBitbucketRemote(repo!);
         const bbApi = await clientForRemote(remote);
-        let issue = await bbApi.issues!.create(href, title, description, kind, priority);
-        commands.executeCommand(Commands.ShowBitbucketIssue, issue);
+        let issue: BitbucketIssueData = await bbApi.issues!.create(href, title, description, kind, priority);
+        commands.executeCommand(Commands.ShowBitbucketIssue, { repository: repo, remote: remote, data: issue });
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
 
         const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);

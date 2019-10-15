@@ -31,7 +31,7 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
+const emptyState: PRState = { prData: { type: '', repoUri: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
@@ -175,7 +175,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, { repository: this._pr!.repository, remote: this._pr!.remote, data: msg.issue });
                     }
                     break;
                 }
@@ -267,6 +267,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             repository: this._pr.repository,
             prData: {
                 pr: this._pr.data,
+                repoUri: this._pr.repository.rootUri.toString(),
                 remote: this._pr.remote,
                 currentUser: currentUser,
                 currentBranch: this._pr.repository.state.HEAD!.name!,
