@@ -1,31 +1,32 @@
-import { ExtensionContext, Disposable, env, UriHandler, window, Uri } from 'vscode';
-import { configuration, IConfig } from './config/configuration';
-import { ConfigWebview } from './webviews/configWebview';
-import { PullRequestViewManager } from './webviews/pullRequestViewManager';
-import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
-import { ClientManager } from './atlclients/clientManager';
-import { CredentialManager as CredentialManager } from './atlclients/authStore';
-import { JiraContext } from './views/jira/jiraContext';
-import { AuthStatusBar } from './views/authStatusBar';
-import { WelcomeWebview } from './webviews/welcomeWebview';
+import { Disposable, env, ExtensionContext, Uri, UriHandler, window } from 'vscode';
 import { AnalyticsClient } from './analytics-node-client/src/index';
-import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
-import { CreateIssueWebview } from './webviews/createIssueWebview';
-import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
+import { CredentialManager as CredentialManager } from './atlclients/authStore';
+import { ClientManager } from './atlclients/clientManager';
+import { LoginManager } from './atlclients/loginManager';
 import { BitbucketContext } from './bitbucket/bbContext';
-import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
-import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
-import { PipelineViewManager } from './webviews/pipelineViewManager';
-import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
-import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
-import { OnlineDetector } from './util/online';
-import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
+import { configuration, IConfig } from './config/configuration';
+import { JQLManager } from './jira/jqlManager';
+import { JiraProjectManager } from './jira/projectManager';
 import { JiraSettingsManager } from './jira/settingsManager';
 import { PmfStats } from './pmf/stats';
 import { SiteManager } from './siteManager';
-import { JiraProjectManager } from './jira/projectManager';
-import { LoginManager } from './atlclients/loginManager';
+import { OnlineDetector } from './util/online';
+import { AuthStatusBar } from './views/authStatusBar';
+import { IssueHoverProviderManager } from './views/jira/issueHoverProviderManager';
+import { JiraContext } from './views/jira/jiraContext';
+import { PipelinesExplorer } from './views/pipelines/PipelinesExplorer';
+import { BitbucketIssueViewManager } from './webviews/bitbucketIssueViewManager';
+import { ConfigWebview } from './webviews/configWebview';
+import { CreateBitbucketIssueWebview } from './webviews/createBitbucketIssueWebview';
+import { CreateIssueWebview } from './webviews/createIssueWebview';
+import { JiraIssueViewManager } from './webviews/jiraIssueViewManager';
 import { OnboardingWebview } from './webviews/Onboarding';
+import { PipelineViewManager } from './webviews/pipelineViewManager';
+import { PullRequestCreatorWebview } from './webviews/pullRequestCreatorWebview';
+import { PullRequestViewManager } from './webviews/pullRequestViewManager';
+import { StartWorkOnBitbucketIssueWebview } from './webviews/startWorkOnBitbucketIssueWebview';
+import { StartWorkOnIssueWebview } from './webviews/startWorkOnIssueWebview';
+import { WelcomeWebview } from './webviews/welcomeWebview';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -81,6 +82,7 @@ export class Container {
         context.subscriptions.push(this._startWorkOnBitbucketIssueWebview = new StartWorkOnBitbucketIssueWebview(context.extensionPath));
         context.subscriptions.push(new IssueHoverProviderManager());
         context.subscriptions.push((this._authStatusBar = new AuthStatusBar()));
+        context.subscriptions.push(this._jqlManager = new JQLManager());
 
         this._pmfStats = new PmfStats(context);
 
@@ -136,6 +138,11 @@ export class Container {
     static get config() {
         // always return the latest
         return configuration.get<IConfig>();
+    }
+
+    private static _jqlManager: JQLManager;
+    static get jqlManager() {
+        return this._jqlManager;
     }
 
     private static _context: ExtensionContext;

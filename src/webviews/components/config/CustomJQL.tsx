@@ -1,28 +1,34 @@
-import React from "react";
-import { emptyJQLEntry, JQLEntry } from "../../../config/model";
-import Button from "@atlaskit/button";
+import Button, { ButtonGroup } from "@atlaskit/button";
 import { Checkbox } from "@atlaskit/checkbox";
-import Tooltip from '@atlaskit/tooltip';
 import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import EditJQL from "./EditJQL";
+import Tooltip from '@atlaskit/tooltip';
+import { Filter } from "jira-pi-client";
+import React from "react";
 import { v4 } from "uuid";
-import { ButtonGroup } from "@atlaskit/button";
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
+import { emptyJQLEntry, JQLEntry } from "../../../config/model";
+import EditJQL from "./EditJQL";
+import ImportFilter from "./ImportFilter";
 
 type changeObject = { [key: string]: any };
 
 export default class CustomJQL extends React.Component<
   {
     sites: DetailedSiteInfo[];
+    jiraFilters: { [k: string]: Filter[] };
+    jiraFilterSearches: { [k: string]: Filter[] };
     JqlList: JQLEntry[];
     onConfigChange: (changes: changeObject, removes?: string[]) => void;
     jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>;
+    jiraFilterFetcher: (site: DetailedSiteInfo) => void;
+    jiraFilterSearcher: (site: DetailedSiteInfo, query: string) => Promise<Filter[]>;
   },
   {
     inputValue: string;
     editingEntry: JQLEntry | undefined;
     editingId: string | undefined;
+    importing: boolean;
     dragTargetIndex: number | undefined;
     dragSourceIndex: number | undefined;
   }
@@ -34,6 +40,7 @@ export default class CustomJQL extends React.Component<
       inputValue: "",
       editingEntry: undefined,
       editingId: undefined,
+      importing: false,
       dragTargetIndex: undefined,
       dragSourceIndex: undefined
     };
@@ -55,6 +62,10 @@ export default class CustomJQL extends React.Component<
       editingId: id,
       editingEntry: { siteId: "", id: id, name: "", query: "", enabled: true, monitor: true }
     });
+  };
+
+  onImportFilter = () => {
+    this.setState({ importing: true });
   };
 
   onEditQuery = (id: string) => {
@@ -142,6 +153,14 @@ export default class CustomJQL extends React.Component<
       editingEntry: undefined
     });
     this.publishChanges(jqlList);
+  };
+
+  addFilter = (filterEntry: JQLEntry) => {
+    const filterList = this.readJqlListFromProps();
+    filterList.push(filterEntry);
+
+    this.setState({ importing: false });
+    this.publishChanges(filterList);
   };
 
   handleDragStart = (e: any) => {
@@ -292,15 +311,28 @@ export default class CustomJQL extends React.Component<
             onSave={this.handleSaveEdit}
           />
         )}
+        {this.state.importing && (
+          <ImportFilter
+            sites={this.props.sites}
+            filters={this.props.jiraFilters}
+            filterSearches={this.props.jiraFilterSearches}
+            jiraFilterFetcher={this.props.jiraFilterFetcher}
+            jiraFilterSearcher={this.props.jiraFilterSearcher}
+            onSave={this.addFilter}
+            onCancel={() => { this.setState({ importing: false }); }} />
+        )}
         {noJql}
         {dragTip}
         {jql.map((_, index) => {
           return this.htmlElementAtIndex(jql, index);
         })}
         <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
-          <Button className="ac-button" onClick={this.onNewQuery}>
+          <Button className="ac-button" style={{ marginRight: '4px' }} onClick={this.onNewQuery}>
             Add Query
-        </Button>
+          </Button>
+          <Button className="ac-button" onClick={this.onImportFilter}>
+            Import Filter
+          </Button>
         </div>
       </React.Fragment>
     );
