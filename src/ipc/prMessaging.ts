@@ -9,6 +9,7 @@ import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 export interface PRData extends Message {
     pr?: PullRequestData;
     fileDiffs?: FileDiff[];
+    repoUri: string;
     remote: Remote;
     currentUser?: User;
     currentBranch: string;

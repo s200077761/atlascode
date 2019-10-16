@@ -1,7 +1,7 @@
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 import { SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
-import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget } from 'vscode';
+import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget, env } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
 import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
 import { Logger } from '../logger';
@@ -14,6 +14,7 @@ import { authenticateCloud, authenticateServer, clearAuth } from '../commands/au
 import * as vscode from 'vscode';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
 import { ConfigWorkspaceFolder, ConfigInspect } from '../ipc/configMessaging';
+import { getProxyHostAndPort } from '../atlclients/agent';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 
@@ -66,6 +67,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             const feedbackUser = await getFeedbackUser();
 
+            const isRemote = env.remoteName !== undefined;
+
             let workspaceFolders: ConfigWorkspaceFolder[] = [];
 
             if (vscode.workspace.workspaceFolders) {
@@ -82,6 +85,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 workspaceFolders: workspaceFolders,
                 target: target,
                 feedbackUser: feedbackUser,
+                isRemote: isRemote,
+                showTunnelOption: this.getShowTunnelOption(),
             });
         } catch (e) {
             let err = new Error(`error updating configuration: ${e}`);
@@ -95,6 +100,15 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
     private async onConfigurationChanged(e: ConfigurationChangeEvent) {
 
         this.postMessage({ type: 'configUpdate', inspect: this.getInspect() });
+    }
+
+    private getShowTunnelOption(): boolean {
+        const [pHost] = getProxyHostAndPort();
+        if (pHost.trim() !== '') {
+            return true;
+        }
+
+        return false;
     }
 
     private getInspect(): ConfigInspect {
@@ -284,17 +298,17 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 }
                 case 'sourceLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    env.openExternal(Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
                     break;
                 }
                 case 'issueLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
+                    env.openExternal(Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
                     break;
                 }
                 case 'docsLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
+                    env.openExternal(Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
                     break;
                 }
                 case 'submitFeedback': {

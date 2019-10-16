@@ -1207,6 +1207,20 @@ img::after is triggered only if img loading fails */
   color: var(--vscode-textLink-activeForeground);
 }
 
+/* code blocks */
+
+pre {
+  display: block;
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  border: 1px dashed var(--vscode-editorRuler-foreground);
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  border-radius: 3px
+}
+
 /* the borders on TableTrees */
 
 [class^=styled__TreeRowContainer] {

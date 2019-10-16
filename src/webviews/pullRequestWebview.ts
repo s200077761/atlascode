@@ -36,6 +36,7 @@ const emptyState: PRState = {
     prData: { 
         type: '', 
         fileDiffs: [],
+        repoUri: '',
         remote: { 
             name: 'dummy_remote', 
             isReadOnly: true 
@@ -193,7 +194,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, { repository: this._pr!.repository, remote: this._pr!.remote, data: msg.issue });
                     }
                     break;
                 }
@@ -288,6 +289,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             prData: {
                 pr: this._pr.data,
                 fileDiffs: fileDiffs,
+                repoUri: this._pr.repository.rootUri.toString(),
                 remote: this._pr.remote,
                 currentUser: currentUser,
                 currentBranch: this._pr.repository.state.HEAD!.name!,

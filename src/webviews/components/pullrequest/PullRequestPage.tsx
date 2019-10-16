@@ -42,6 +42,7 @@ import { format, distanceInWordsToNow } from 'date-fns';
 import EdiText from 'react-editext';
 import { isValidString } from '../fieldValidators';
 import DiffList from './DiffList';
+import uuid from 'uuid';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -66,6 +67,7 @@ interface ViewState {
 
 const emptyPR = {
     type: '',
+    repoUri: '',
     remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
     fileDiffs: [],
@@ -94,6 +96,7 @@ const emptyState: ViewState = {
 };
 
 export default class PullRequestPage extends WebviewComponent<Emit, Receive, {}, ViewState> {
+    private nonce: string;
     private userSuggestions: any;
 
     constructor(props: any) {
@@ -171,12 +174,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
-            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.pr.remote });
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.pr.remote });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
                     if (this.userSuggestions === undefined) {
                         this.userSuggestions = [];
                     }
@@ -185,6 +189,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     resolve(this.userSuggestions);
                 }
             }, 100);
+
         });
     }
 
@@ -365,7 +370,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     : <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
-                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue as BitbucketIssueData })} />
+                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.pr.repoUri, remote: this.state.pr.remote, issue: issue as BitbucketIssueData })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
@@ -508,7 +513,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         {
                                             this.state.pr.relatedBitbucketIssues && this.state.pr.relatedBitbucketIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Bitbucket Issues</h3>}>
-                                                <BitbucketIssueList issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
+                                                <BitbucketIssueList repoUri={this.state.pr.repoUri} remote={this.state.pr.remote} issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>

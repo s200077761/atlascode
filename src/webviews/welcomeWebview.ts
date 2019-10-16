@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { commands, Uri } from 'vscode';
+import { commands, Uri, env } from 'vscode';
 import { Commands } from '../commands';
 import { isSubmitFeedbackAction } from '../ipc/configActions';
 import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
@@ -48,17 +48,17 @@ export class WelcomeWebview extends AbstractReactWebview {
                 }
                 case 'sourceLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
+                    env.openExternal(Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode`));
                     break;
                 }
                 case 'issueLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
+                    env.openExternal(Uri.parse(`https://bitbucket.org/atlassianlabs/atlascode/issues`));
                     break;
                 }
                 case 'docsLink': {
                     handled = true;
-                    commands.executeCommand('vscode.open', Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
+                    env.openExternal(Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
                     break;
                 }
                 case 'submitFeedback': {

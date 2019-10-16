@@ -33,6 +33,9 @@ import { Time } from '../../../util/time';
 import Select from '@atlaskit/select';
 import { AtlLoader } from '../AtlLoader';
 import merge from 'merge-anything';
+import { CheckboxField, HelperMessage } from '@atlaskit/form';
+import { Checkbox } from '@atlaskit/checkbox';
+import { chain } from "../fieldValidators";
 
 type changeObject = { [key: string]: any };
 
@@ -234,6 +237,13 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     }
 
+    handleTunnelChange = (e: any) => {
+        const changes = Object.create(null);
+        changes[e.target.value] = e.target.checked;
+
+        this.onConfigChange(changes);
+    }
+
     shouldDefaultExpand = (setting: SettingSource, secondSetting?: SettingSource) => {
         if (setting === this.state.openedSettings || secondSetting === this.state.openedSettings) {
             return { isDefaultExpanded: true };
@@ -245,7 +255,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
-        const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/atlassian/workspace/snippets/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
+        const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/snippets/atlassian/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
         // Note: we will figure out what can be put on the resource level in the near future
         let targetOptions = [];
         // if (this.state.workspaceFolders.length > 1) {
@@ -309,6 +319,29 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                         >
                             {(frmArgs: any) => {
                                 return (<form {...frmArgs.formProps}>
+                                    {this.state.showTunnelOption &&
+                                        <div>
+                                            <CheckboxField
+                                                name='tunnel-enabled'
+                                                id='tunnel-enabled'
+                                                value='enableHttpsTunnel'>
+                                                {
+                                                    (fieldArgs: any) => {
+                                                        return (
+                                                            <Checkbox {...fieldArgs.fieldProps}
+                                                                label='Enable https tunneling for proxies'
+                                                                onChange={chain(fieldArgs.fieldProps.onChange, this.handleTunnelChange)}
+                                                                isChecked={this.state.config!.enableHttpsTunnel}
+                                                            />
+                                                        );
+                                                    }
+                                                }
+                                            </CheckboxField>
+                                            <HelperMessage>
+                                                Looks like you're behind a proxy. You may need to enable https tunneling for the extension to work.
+                                        </HelperMessage>
+                                        </div>
+                                    }
                                     <ProductEnabler
                                         jiraEnabled={this.state.config!.jira.enabled}
                                         bbEnabled={this.state.config!.bitbucket.enabled}
@@ -329,6 +362,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.jiraSites}
                                                         product={ProductJira}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
@@ -368,6 +402,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.bitbucketSites}
                                                         product={ProductBitbucket}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin}
                                                     />

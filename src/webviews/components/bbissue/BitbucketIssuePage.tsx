@@ -6,7 +6,6 @@ import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import Tooltip from '@atlaskit/tooltip';
 import Panel from '@atlaskit/panel';
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
-import Tag from "@atlaskit/tag";
 import PriorityTrivialIcon from '@atlaskit/icon-priority/glyph/priority-trivial';
 import PriorityBlockerIcon from '@atlaskit/icon-priority/glyph/priority-blocker';
 import PriorityMajorIcon from '@atlaskit/icon-priority/glyph/priority-major';
@@ -17,6 +16,9 @@ import TaskIcon from '@atlaskit/icon/glyph/task';
 import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
 import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import StarIcon from '@atlaskit/icon/glyph/star';
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
 import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
 import { WebviewComponent } from "../WebviewComponent";
 import NavItem from "../issue/NavItem";
@@ -36,6 +38,7 @@ import { FetchUsersResult } from "../../../ipc/prMessaging";
 import { FetchUsers } from "../../../ipc/prActions";
 import { distanceInWordsToNow, format } from "date-fns";
 import { AtlLoader } from "../AtlLoader";
+import uuid from "uuid";
 
 type SizeMetrics = {
     width: number;
@@ -97,6 +100,7 @@ const emptyState = {
 };
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
+    private nonce: string;
     private userSuggestions: any;
 
     constructor(props: any) {
@@ -151,12 +155,13 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
-            this.postMessage({ action: 'fetchUsers', query: input, remote: this.state.data.remote });
+            const nonce = uuid.v4();
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.data.remote });
 
             const start = Date.now();
             let timer = setInterval(() => {
                 const end = Date.now();
-                if (this.userSuggestions !== undefined || (end - start) > 2000) {
+                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
                     if (this.userSuggestions === undefined) {
                         this.userSuggestions = [];
                     }
@@ -171,37 +176,64 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
 
     renderDetails(issue: BitbucketIssueData) {
         return <div style={{ padding: '2em' }}>
-            <h3>Status</h3>
-            <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
-            <h3>Type</h3>
-            <div className='ac-inline-flex-hpad'>{typeIcon[issue.kind!]}<span style={{ paddingLeft: '1em' }}>{issue.kind}</span></div>
-            <h3>Priority</h3>
-            <div className='ac-inline-flex-hpad'>{priorityIcon[issue.priority!]}<span style={{ paddingLeft: '1em' }}>{issue.priority}</span></div>
-            <h3>Assignee</h3>
-            <Tooltip content={issue.assignee ? issue.assignee.display_name : 'Unassigned'}>
-                <AvatarItem
-                    avatar={<Avatar size='small' src={issue.assignee ? issue.assignee.links!.avatar!.href! : null} />}
-                    primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
-                />
-            </Tooltip>
-            {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.accountId) &&
-                <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
-            <h3>Reporter</h3>
-            <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>
-                <AvatarItem
-                    avatar={<Avatar size='small' src={issue.reporter ? issue.reporter.links!.avatar!.href! : null} />}
-                    primaryText={issue.reporter ? issue.reporter.display_name : 'Unknown'}
-                />
-            </Tooltip>
-            <h3>Votes</h3>
-            <Tag text={issue.votes} />
-            <h3>Watchers</h3>
-            <Tag text={issue.watches} />
+            <ButtonGroup>
+                <Tooltip content='Watches'>
+                    <Button className='ac-button' iconBefore={<WatchIcon label="Watches" />}>
+                        {issue.watches}
+                    </Button>
+                </Tooltip>
+                <Tooltip content='Votes'>
+                    <Button className='ac-button' iconBefore={<StarIcon label="Votes" />}>
+                        {issue.votes}
+                    </Button>
+                </Tooltip>
+                <Button className='ac-button' iconBefore={<VidPlayIcon label="Start work" />} onClick={() => this.postMessage({ action: 'openStartWorkPage' })}>Start work</Button>
+                <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
+                    <RefreshIcon label="refresh" size="small"></RefreshIcon>
+                </Button>
+            </ButtonGroup>
+            {this.state.data.showJiraButton &&
+                <div className='ac-vpadding'>
+                    <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue' })}>Create Jira Issue</Button>
+                </div>
+            }
+            <div className='ac-vpadding'>
+                <label className='ac-field-label'>Status</label>
+                <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
+            </div>
+            <div className='ac-vpadding'>
+                <label className='ac-field-label'>Type</label>
+                <div className='ac-icon-with-text'>{typeIcon[issue.kind!]}<span style={{ paddingLeft: '1em' }}>{issue.kind}</span></div>
+            </div>
+            <div className='ac-vpadding'>
+                <label className='ac-field-label'>Priority</label>
+                <div className='ac-icon-with-text'>{priorityIcon[issue.priority!]}<span style={{ paddingLeft: '1em' }}>{issue.priority}</span></div>
+            </div>
+            <div className='ac-vpadding'>
+                <label className='ac-field-label'>Assignee</label>
+                <Tooltip content={issue.assignee ? issue.assignee.display_name : 'Unassigned'}>
+                    <AvatarItem
+                        avatar={<Avatar size='small' src={issue.assignee ? issue.assignee.links!.avatar!.href! : null} />}
+                        primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
+                    />
+                </Tooltip>
+                {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.accountId) &&
+                    <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
+            </div>
+            <div className='ac-vpadding'>
+                <label className='ac-field-label'>Reporter</label>
+                <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>
+                    <AvatarItem
+                        avatar={<Avatar size='small' src={issue.reporter ? issue.reporter.links!.avatar!.href! : null} />}
+                        primaryText={issue.reporter ? issue.reporter.display_name : 'Unknown'}
+                    />
+                </Tooltip>
+            </div>
         </div >;
     }
 
     render() {
-        const issue = this.state.data.issueData as BitbucketIssueData;
+        const issue: BitbucketIssueData = this.state.data.issueData;
 
         if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
@@ -219,21 +251,11 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 <SizeDetector>
                     {({ width }: SizeMetrics) => {
                         return <Grid>
-                            <GridColumn medium={width > 800 ? 9 : 12}>
+                            <GridColumn medium={width > 800 ? 8 : 12}>
                                 {this.state.isErrorBannerOpen &&
                                     <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
                                 }
                                 <PageHeader
-                                    actions={
-                                        <ButtonGroup>
-                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'openStartWorkPage', issue: issue })}>Start work on issue...</Button>
-                                            {this.state.data.showJiraButton &&
-                                                <Button className='ac-button' onClick={() => this.postMessage({ action: 'createJiraIssue', issue: issue })}>Create Jira Issue</Button>
-                                            }
-                                            <Button className='ac-button' onClick={() => this.postMessage({ action: 'refreshIssue' })}>
-                                                <RefreshIcon label="refresh" size="small"></RefreshIcon>
-                                            </Button>
-                                        </ButtonGroup>}
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
                                         <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />
                                         <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issue.repository!.links!.html!.href}/issues`} />} />
@@ -268,7 +290,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                             </GridColumn>
 
                             {width > 800 &&
-                                <GridColumn medium={3}>
+                                <GridColumn medium={4}>
                                     {this.renderDetails(issue)}
                                 </GridColumn>
                             }

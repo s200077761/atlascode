@@ -11,6 +11,7 @@ import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSite } from './jira/j
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { SettingSource } from './config/model';
 import { ProductBitbucket } from './atlclients/authInfo';
+import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -55,6 +56,7 @@ export enum Commands {
     BBPRCancelCommentEdit = 'atlascode.bb.cancelCommentEdit',
     BBPRSubmitCommentEdit = 'atlascode.bb.saveCommentEdit',
     ViewDiff = 'atlascode.viewDiff',
+    DebugBitbucketSites = 'atlascode.debug.bitbucketSites'
 }
 
 export function registerCommands(vscodeContext: vscode.ExtensionContext) {
@@ -67,7 +69,12 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
-        vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => vscode.commands.executeCommand('vscode.open', (await prNode.getTreeItem()).resourceUri)),
+        vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
+            const uri = (await prNode.getTreeItem()).resourceUri;
+            if (uri) {
+                vscode.env.openExternal(uri);
+            }
+        }),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
         vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite) => await showIssue(issueOrKeyAndSite)),
         vscode.commands.registerCommand(Commands.ShowIssueForKey, async (issueKey?: string) => await showIssueForKey(issueKey)),
@@ -84,5 +91,6 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) => Container.bitbucketIssueViewManager.createOrShow(issue)),
+        vscode.commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
     );
 }

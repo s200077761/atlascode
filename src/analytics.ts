@@ -5,6 +5,11 @@ import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
+// Add your event to dataportal.yaml
+// Go to https://bitbucket.org/atlassianlabs/dataportal-cli/src/master/ and follow the instructions there.
+
+// Performing the above allows us to keep the analytics metatdata in source control. Therefore editing metadata directly
+// in the data-portal is discourage. However, the cannonical place for the metadata is 
 // https://data-portal.us-east-1.prod.public.atl-paas.net/analytics/registry?filter=externalProductIntegrations
 
 export const Registry = {
@@ -40,6 +45,10 @@ export async function installedEvent(version: string): Promise<TrackEvent> {
 
 export async function upgradedEvent(version: string, previousVersion: string): Promise<TrackEvent> {
     return trackEvent('upgraded', 'atlascode', { attributes: { machineId: Container.machineId, version: version, previousVersion: previousVersion } });
+}
+
+export async function launchedEvent(location: string): Promise<TrackEvent> {
+    return trackEvent('launched', 'atlascode', { attributes: { machineId: Container.machineId, extensionLocation: location } });
 }
 
 export async function featureChangeEvent(featureId: string, enabled: boolean): Promise<TrackEvent> {

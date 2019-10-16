@@ -5,15 +5,24 @@ import axios, { AxiosInstance } from 'axios';
 import { Time } from '../util/time';
 import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
 import { getAgent } from './agent';
-
+import { Container } from '../container';
+import { addCurlLogging } from './interceptors';
 export class OAuthRefesher implements Disposable {
-    private _axios: AxiosInstance = axios.create({
-        timeout: 30 * Time.SECONDS,
-        headers: {
-            'User-Agent': 'atlascode/2.x',
-            "Accept-Encoding": "gzip, deflate"
+    private _axios: AxiosInstance;
+
+    constructor() {
+        this._axios = axios.create({
+            timeout: 30 * Time.SECONDS,
+            headers: {
+                'User-Agent': 'atlascode/2.x',
+                "Accept-Encoding": "gzip, deflate"
+            }
+        });
+        if (Container.config.enableCurlLogging) {
+            addCurlLogging(this._axios);
         }
-    });
+    }
+
 
     dispose() {
 
@@ -37,7 +46,7 @@ export class OAuthRefesher implements Disposable {
                     refresh_token: refreshToken,
                     redirect_uri: strategy.callbackURL,
                 }),
-                httpsAgent: getAgent()
+                ...getAgent()
             });
 
             const data = tokenResponse.data;
@@ -54,7 +63,7 @@ export class OAuthRefesher implements Disposable {
                     Authorization: `Basic ${basicAuth}`
                 },
                 data: `grant_type=refresh_token&refresh_token=${refreshToken}`,
-                httpsAgent: getAgent()
+                ...getAgent()
             });
 
             const data = tokenResponse.data;

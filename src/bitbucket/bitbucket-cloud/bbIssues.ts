@@ -1,6 +1,6 @@
 import { Repository, Remote } from "../../typings/git";
 import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "../bbUtils";
-import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue } from "../model";
+import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue, BitbucketIssueData } from "../model";
 import { Client, ClientError } from "../httpClient";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from 'axios';
@@ -318,7 +318,7 @@ export class BitbucketIssuesApiImpl {
         );
     }
 
-    async create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
+    async create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssueData> {
         let parsed = parseGitUrl(href);
 
         const { data } = await this.client.post(

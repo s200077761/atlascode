@@ -22,6 +22,7 @@ export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite;
     comment: string;
+    internal?: boolean;
 }
 
 export interface IssueAssignAction extends Action {

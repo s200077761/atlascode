@@ -12,8 +12,8 @@ import { setCommandContext, CommandContext, GlobalStateVersionKey, AuthInfoVersi
 import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
-import { installedEvent, upgradedEvent } from './analytics';
-import { window, Memento } from "vscode";
+import { installedEvent, upgradedEvent, launchedEvent } from './analytics';
+import { window, Memento, env } from "vscode";
 import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
@@ -113,6 +113,8 @@ async function sendAnalytics(version: string, globalState: Memento) {
         Logger.info(`Atlassian for VS Code upgraded from v${previousVersion} to v${version}`);
         upgradedEvent(version, previousVersion).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
+
+    launchedEvent(env.remoteName ? env.remoteName : "local").then(e => { Container.analyticsClient.sendTrackEvent(e); });
 }
 
 // this method is called when your extension is deactivated

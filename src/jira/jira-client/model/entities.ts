@@ -169,6 +169,7 @@ export interface Comment {
     created: string;
     id: string;
     self: string;
+    jsdPublic: boolean;
 }
 
 export interface WorklogContainer {

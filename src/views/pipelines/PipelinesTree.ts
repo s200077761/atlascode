@@ -3,7 +3,7 @@ import { TreeItem, TreeItemCollapsibleState, EventEmitter, Event, Uri, Disposabl
 import { Pipeline } from "../../pipelines/model";
 import { Repository, Remote } from "../../typings/git";
 import { Container } from "../../container";
-import { distanceInWordsToNow } from "date-fns";
+import { distanceInWordsToNow, format } from "date-fns";
 import { Resources } from "../../resources";
 import { Commands } from "../../commands";
 import { AbstractBaseNode } from "../nodes/abstractBaseNode";
@@ -13,7 +13,7 @@ import { SimpleNode } from "../nodes/simpleNode";
 import { configuration } from "../../config/configuration";
 import { firstBitbucketRemote, siteDetailsForRemote, clientForRemote } from '../../bitbucket/bbUtils';
 import { ProductBitbucket } from '../../atlclients/authInfo';
-import { descriptionForState, iconUriForPipeline } from "./Helpers";
+import { descriptionForState, iconUriForPipeline, shouldDisplay, filtersActive } from "./Helpers";
 
 const defaultPageLength = 25;
 export interface PipelineInfo {
@@ -124,12 +124,25 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             if (!this._pipelines) {
                 this._pipelines = await this.fetchPipelines();
             }
-            if (this._pipelines.length === 0) {
+            if (this._pipelines.length === 0 && !filtersActive()) {
                 return [new SimpleNode("No pipelines results for this repository")];
             }
 
-            const nodes: AbstractBaseNode[] = this._pipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
-            if (this._morePages) {
+            const filteredPipelines = this._pipelines.filter(pipeline => shouldDisplay(pipeline.target.ref_name));
+            let nodes: AbstractBaseNode[] = [];
+            if(filtersActive && filteredPipelines.length === 0 && !this._morePages){
+                nodes = [new SimpleNode(`No pipelines matching your filters`)];
+            } else if (filtersActive() && filteredPipelines.length === 0) {
+                const firstPipeTime: string = this._pipelines[0].created_on;
+                const lastPipeTime: string = this._pipelines[this._pipelines.length - 1].created_on;
+                nodes = [new SimpleNode(`No pipelines matching your filters from ${format(firstPipeTime, 'YYYY-MM-DD h:mm A')} to ${format(lastPipeTime, 'YYYY-MM-DD h:mm A')}`)];
+            } else {
+                nodes = filteredPipelines.map(pipeline => new PipelineNode(this, pipeline, this._repo, this._remote));
+            }
+           
+            if (this._morePages && filtersActive()) {
+                nodes.push(new NextPageNode(this._repo, this._pipelines[this._pipelines.length - 1].created_on)); //Pass the last-retrieved pipeline date
+            } else if (this._morePages){
                 nodes.push(new NextPageNode(this._repo));
             }
             return nodes;
@@ -140,9 +153,7 @@ export class PipelinesRepoNode extends AbstractBaseNode {
     }
 
     private async fetchPipelines(): Promise<Pipeline[]> {
-        var pipelines: Pipeline[] = [];
-        var morePages = false;
-        //const remotes = getBitbucketRemotes(this._repo); // May need to do something with other remotes
+        let pipelines: Pipeline[] = [];
 
         const remote = firstBitbucketRemote(this._repo);
         if (remote) {
@@ -154,9 +165,8 @@ export class PipelinesRepoNode extends AbstractBaseNode {
             });
             pipelines = paginatedPipelines.values;
             const numPages = paginatedPipelines.size / defaultPageLength;
-            morePages = paginatedPipelines.page < numPages;
+            this._morePages = paginatedPipelines.page < numPages;
         }
-        this._morePages = morePages;
         return pipelines;
     }
 
@@ -197,12 +207,16 @@ export class PipelineNode extends AbstractBaseNode {
 }
 
 class NextPageNode extends AbstractBaseNode {
-    constructor(private _repo: Repository) {
+    private _resultsSince: string | undefined;
+    constructor(private _repo: Repository, resultsSince?: string) {
         super();
+        this._resultsSince = resultsSince;
     }
 
     getTreeItem() {
-        const treeItem = new TreeItem('Load next page', TreeItemCollapsibleState.None);
+        const treeItem = this._resultsSince 
+            ? new TreeItem(`Load more (showing filtered results since ${format(this._resultsSince, 'YYYY-MM-DD h:mm A')})`)
+            : new TreeItem('Load more', TreeItemCollapsibleState.None);
         treeItem.iconPath = Resources.icons.get('more');
         treeItem.command = {
             command: Commands.PipelinesNextPage,

@@ -8,15 +8,21 @@ import { Uri } from "vscode";
  * preferences of the user.
  * @param branchName The branch name to test.
  */
-export function shouldDisplay(branchName: string): boolean {
+export function shouldDisplay(branchName: string | undefined): boolean {
     if (!Container.config.bitbucket.pipelines.hideFiltered) {
         return true;
+    } else if (!branchName) {
+        return false;
     }
 
     const filters = Container.config.bitbucket.pipelines.branchFilters.filter(f => f.length > 0);
     const reString = filters.map(t => t.replace(/(\W)/g, '\\$1')).join("|");
     const regex = new RegExp(reString);
     return regex.test(branchName);
+}
+
+export function filtersActive(): boolean {
+    return Container.config.bitbucket.pipelines.hideFiltered;
 }
 
 export function descriptionForState(result: Pipeline, excludePipelinePrefix?: boolean): string {

@@ -8,7 +8,7 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
-import { EditIssueAction } from '../../../ipc/issueActions';
+import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
@@ -40,7 +40,7 @@ import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 
-type Emit = CommonEditorPageEmit | EditIssueAction;
+type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
 type SizeMetrics = {
@@ -215,13 +215,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
-    protected handleCommentSave = (comment: string) => {
+    protected handleCommentSave = (comment: string, internal: boolean) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
-        this.postMessage({
+        let commentAction: IssueCommentAction = {
             action: "comment",
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-            comment: comment
-        });
+            comment: comment,
+            internal: internal === true ? true : undefined
+        };
+
+        this.postMessage(commentAction);
     }
 
     handleStatusChange = (transition: Transition) => {
@@ -345,9 +348,6 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         const itIconUrl = (this.state.fieldValues['issuetype']) ? this.state.fieldValues['issuetype'].iconUrl : undefined;
         return (
             <div>
-                {!this.state.isOnline &&
-                    <Offline />
-                }
                 {this.state.showPMF &&
                     <PMFBBanner onPMFOpen={() => this.onPMFOpen()} onPMFVisiblity={(visible: boolean) => this.setState({ showPMF: visible })} onPMFLater={() => this.onPMFLater()} onPMFNever={() => this.onPMFNever()} onPMFSubmit={(data: PMFData) => this.onPMFSubmit(data)} />
                 }
@@ -413,6 +413,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
 
                 {this.state.fields['subtasks']
+                    && this.state.fieldValues['subtasks']
                     && !this.state.isEpic
                     && !this.state.fieldValues['issuetype'].subtask
                     &&
@@ -439,7 +440,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['comment'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['comment'].name}</label>
-                        <CommentList comments={this.state.fieldValues['comment'].comments} />
+                        <CommentList
+                            comments={this.state.fieldValues['comment'].comments}
+                            isServiceDeskProject={this.state.fieldValues['project'] && this.state.fieldValues['project'].projectTypeKey === 'service_desk'} />
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>
                 }
@@ -466,7 +469,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         return (
             <React.Fragment>
                 <ButtonGroup>
-                    <Tooltip content="Refesh">
+                    <Tooltip content="Refresh">
                         <Button className='ac-button'
                             onClick={this.handleRefresh}
                             iconBefore={<RefreshIcon label="refresh" />}
@@ -679,9 +682,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     }
 
     public render() {
-        if (Object.keys(this.state.fields).length < 1 && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if ((Object.keys(this.state.fields).length < 1 || Object.keys(this.state.fieldValues).length < 1) && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;
+        }
+
+        if (!this.state.isOnline) {
+            return <Offline />;
         }
 
         return (

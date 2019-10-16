@@ -270,7 +270,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isIssueComment(msg)) {
                         handled = true;
                         try {
-                            const res = await postComment(msg.issue, msg.comment);
+                            const res = await postComment(msg.issue, msg.comment, msg.internal);
                             this._editUIData.fieldValues['comment'].comments.push(res);
 
                             this.postMessage({
@@ -294,6 +294,10 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
                             const createdIssue = await client.getIssue(resp.key, IssueLinkIssueKeys, '');
                             const picked = readIssueLinkIssue(createdIssue, msg.site);
+
+                            if (!Array.isArray(this._editUIData.fieldValues['subtasks'])) {
+                                this._editUIData.fieldValues['subtasks'] = [];
+                            }
 
                             this._editUIData.fieldValues['subtasks'].push(picked);
                             this.postMessage({

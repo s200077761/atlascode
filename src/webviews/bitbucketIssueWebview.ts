@@ -64,7 +64,6 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
             return;
         }
 
-        this.isRefeshing = true;
 
         if (this._panel) { this._panel.title = `Bitbucket issue #${issue.data.id}`; }
 
@@ -74,6 +73,8 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
         }
 
         try {
+            this.isRefeshing = true;
+
             const bbApi = await clientForRemote(this._issue!.remote);
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
                 Container.bitbucketContext.currentUser(issue.remote),
@@ -182,7 +183,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
                 case 'openStartWorkPage': {
                     if (isOpenStartWorkPageAction(e)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, e.issue);
+                        vscode.commands.executeCommand(Commands.StartWorkOnBitbucketIssue, this._issue);
                     }
                     break;
                 }

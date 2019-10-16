@@ -221,49 +221,49 @@ export default class AuthForm extends PureComponent<{
                             }
                         }
                     </Field>
-                    <CheckboxField
-                        name='contextPath-enabled'
-                        id='contextPath-enabled'
-                        value='contextPath.enabled'>
-                        {
-                            (fieldArgs: any) => {
-                                return (
-                                    <Checkbox {...fieldArgs.fieldProps}
-                                        label='Use context path'
-                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathEnableChange)}
-                                        isChecked={this.state.useContextPath}
-                                    />
-                                );
-                            }
-                        }
-                    </CheckboxField>
-                    {this.state.useContextPath &&
-                        <Field label='Context path'
-                            isRequired={true}
-                            id='contextPath-input'
-                            name='contextPath-input'
-                            defaultValue=''>
-                            {
-                                (fieldArgs: any) => {
-                                    return (
-                                        <div>
-                                            <input {...fieldArgs.fieldProps}
-                                                style={{ width: '100%', display: 'block' }}
-                                                className='ac-inputField'
-                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
-                                            <HelperMessage>
-                                                The context path your server is mounted at (e.g. /issues or /jira)
-                                                    </HelperMessage>
-                                        </div>
-                                    );
-                                }
-                            }
-                        </Field>
-
-                    }
                     {
                         this.state.requiresCredentials &&
                         <div>
+                            <CheckboxField
+                                name='contextPath-enabled'
+                                id='contextPath-enabled'
+                                value='contextPath.enabled'>
+                                {
+                                    (fieldArgs: any) => {
+                                        return (
+                                            <Checkbox {...fieldArgs.fieldProps}
+                                                label='Use context path'
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathEnableChange)}
+                                                isChecked={this.state.useContextPath}
+                                            />
+                                        );
+                                    }
+                                }
+                            </CheckboxField>
+                            {this.state.useContextPath &&
+                                <Field label='Context path'
+                                    isRequired={true}
+                                    id='contextPath-input'
+                                    name='contextPath-input'
+                                    defaultValue=''>
+                                    {
+                                        (fieldArgs: any) => {
+                                            return (
+                                                <div>
+                                                    <input {...fieldArgs.fieldProps}
+                                                        style={{ width: '100%', display: 'block' }}
+                                                        className='ac-inputField'
+                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onContextPathChange)} />
+                                                    <HelperMessage>
+                                                        The context path your server is mounted at (e.g. /issues or /jira)
+                                                    </HelperMessage>
+                                                </div>
+                                            );
+                                        }
+                                    }
+                                </Field>
+
+                            }
                             <Field label='Username'
                                 isRequired={true}
                                 id='username-input'
