@@ -183,13 +183,14 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
                         showIssue(msg.issueOrKey);
-                        break;
                     }
+                    break;
                 }
                 case 'openDiffView': {
                     if(isOpenDiffView(msg)){
-                        this.openDiffViewForFile(msg.fileChange);
+                        await this.openDiffViewForFile(msg.fileChange);
                     }
+                    break;
                 }
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
@@ -207,8 +208,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
-                        break;
                     }
+                    break;
                 }
                 case 'copyPullRequestLink': {
                     handled = true;
@@ -490,9 +491,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             data: this._state.prData.pr!
         };
         const prTitleNode: PullRequestTitlesNode = new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
-         
-        const bbApi = await clientForRemote(pr.remote);
-        const diffArgs = await prTitleNode.getArgsForDiffView(await bbApi.pullrequests.getComments(pr), fileChange);
+        const diffArgs = await prTitleNode.getArgsForDiffView({data: this._state.prData.comments} as PaginatedComments, fileChange);
 
         vscode.commands.executeCommand(Commands.ViewDiff, ...diffArgs);
     }
