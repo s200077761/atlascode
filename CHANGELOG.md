@@ -1,3 +1,18 @@
+## What's New In 2.1.2
+### Improvements
+* Allow extension to be used when working in remote workspaces
+* Support for adding internal comments on Jira Service Desk issues
+
+### Bugs fixed
+* Jira issue status was empty in some cases
+* Jira issues showed duplicate transition states in some cases
+* Adding reviewers on Bitbucket Cloud pull requests would show an error
+* Code blocks in inline comments were not formatted correctly
+* Bitbucket issue creation was failing
+* Bitbucket issue sidebar styling was inconsistent
+* Fixed copy for creating pull request externally
+* Fixed link to prepare-commit-message snippet
+
 ## What's New In 2.1.1
 ### Improvements
 * Added support for tunneling https when using a proxy server
