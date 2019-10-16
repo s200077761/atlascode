@@ -43,6 +43,7 @@ export interface FileDiff {
     similarity?: number;
     lhsQueryParams?: FileDiffQueryParams;
     rhsQueryParams?: FileDiffQueryParams;
+    fileChange?: FileChange;
 }
 
 export function convertDetailedFileChangeToFileDiff(fileChange: DetailedFileChange): FileDiff {
@@ -50,7 +51,8 @@ export function convertDetailedFileChangeToFileDiff(fileChange: DetailedFileChan
         file: getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
         status: mapStatusWordsToFileStatus(fileChange.status),
         linesAdded: !(fileChange.linesAdded === undefined) ? fileChange.linesAdded : -1,
-        linesRemoved: !(fileChange.linesRemoved === undefined) ? fileChange.linesRemoved : -1
+        linesRemoved: !(fileChange.linesRemoved === undefined) ? fileChange.linesRemoved : -1,
+        fileChange: fileChange
     };
 }
 

@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit, FileChange } from '../bitbucket/model';
 import { PRData, convertDetailedFileChangeToFileDiff } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers, isOpenDiffView } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -23,6 +23,7 @@ import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
 import pSettle from "p-settle";
+import { PullRequestTitlesNode } from '../views/pullrequest/pullRequestNode';
 
 interface PRState {
     prData: PRData;
@@ -182,6 +183,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         showIssue(msg.issueOrKey);
                         break;
+                    }
+                }
+                case 'openDiffView': {
+                    if(isOpenDiffView(msg)){
+                        this.openDiffViewForFile(msg.fileChange);
                     }
                 }
                 case 'openBitbucketIssue': {
@@ -474,6 +480,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.updatePullRequest();
     }
 
+    private async openDiffViewForFile(fileChange: FileChange) {
+        const pr: PullRequest = {
+            repository: this._state.repository!,
+            remote: this._state.remote!,
+            sourceRemote: this._state.sourceRemote,
+            data: this._state.prData.pr!
+        };
+        const prTitleNode: PullRequestTitlesNode = new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
+         
+        const bbApi = await clientForRemote(pr.remote);
+        const diffArgs = await prTitleNode.getArgsForDiffView(await bbApi.pullrequests.getComments(pr), fileChange);
 
+        vscode.commands.executeCommand(Commands.ViewDiff, ...diffArgs);
+    }
 
 }

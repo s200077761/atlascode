@@ -18,7 +18,7 @@ import { Commits } from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
 import { PRData, CheckoutResult, isPRData, FileDiff } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers } from '../../../ipc/prActions';
+import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers, OpenDiffViewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
 import BranchInfo from './BranchInfo';
@@ -43,7 +43,7 @@ import EdiText from 'react-editext';
 import { isValidString } from '../fieldValidators';
 import DiffList from './DiffList';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -282,6 +282,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item }, this.resetCommitMessage);
 
+    handleOpenDiffView = (fileDiff: FileDiff) => {
+        this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange!});
+    }
+
     resetCommitMessage = () => {
         const mergeStrategy = this.state.mergeStrategy.value;
         if (mergeStrategy === 'fast_forward') {
@@ -511,7 +515,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             <Commits {...this.state.pr} />
                                         </Panel>
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                            <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={(f: FileDiff)=>{console.log(f);}} ></DiffList>
+                                            <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={this.handleOpenDiffView} ></DiffList>
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
                                             <Comments

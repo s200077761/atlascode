@@ -110,22 +110,128 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
-    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        const inlineComments = await this.getInlineComments(allComments.data);
-
+    public async getArgsForDiffView(allComments: PaginatedComments, fileChange: FileChange, includeDataForNode?: boolean): Promise<any> {
+        const commentsMap = await this.getInlineComments(allComments.data);
+        const pr = this.pr;
+        const commentController = this.commentController;
+    
         // Use merge base to diff from common ancestor of source and destination.
         // This will help ignore any unrelated changes in destination branch.
-        const destination = `${this.pr.remote.name}/${this.pr.data.destination!.branchName}`;
-        const source = `${this.pr.sourceRemote ? this.pr.sourceRemote.name : this.pr.remote.name}/${this.pr.data.source!.branchName}`;
-        let mergeBase = this.pr.data.destination!.commitHash;
+        const destination = `${pr.remote.name}/${pr.data.destination!.branchName}`;
+        const source = `${pr.sourceRemote ? pr.sourceRemote.name : pr.remote.name}/${pr.data.source!.branchName}`;
+        let mergeBase = pr.data.destination!.commitHash;
         try {
             mergeBase = await this.pr.repository.getMergeBase(destination, source);
         }
         catch (e) {
             Logger.debug('error getting merge base: ', e);
         }
-        result.push(...fileChanges.map(fileChange => new PullRequestFilesNode(this.pr, mergeBase, fileChange, inlineComments, this.commentController)));
+
+        const lhsFilePath = fileChange.oldPath;
+        const rhsFilePath = fileChange.newPath;
+
+        let fileDisplayName = '';
+        const comments: Comment[][] = [];
+
+        if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
+            fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
+            comments.push(...(commentsMap.get(lhsFilePath) || []));
+            comments.push(...(commentsMap.get(rhsFilePath) || []));
+        } else if (rhsFilePath) {
+            fileDisplayName = rhsFilePath;
+            comments.push(...(commentsMap.get(rhsFilePath) || []));
+        } else if (lhsFilePath) {
+            fileDisplayName = lhsFilePath;
+            comments.push(...(commentsMap.get(lhsFilePath) || []));
+        }
+
+        //@ts-ignore
+        if (fileChange.status === 'merge conflict') {
+            fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
+        }
+
+        let lhsCommentThreads: Comment[][] = [];
+        let rhsCommentThreads: Comment[][] = [];
+
+        comments.forEach((c: Comment[]) => {
+            const parentComment = c[0];
+            if (parentComment.inline!.from) {
+                lhsCommentThreads.push(c);
+            } else {
+                rhsCommentThreads.push(c);
+            }
+        });
+
+        let lhsQueryParam = {
+            query: JSON.stringify({
+                lhs: true,
+                prHref: pr.data.url,
+                prId: pr.data.id,
+                participants: pr.data.participants,
+                repoUri: pr.repository.rootUri.toString(),
+                remote: pr.remote,
+                branchName: pr.data.destination!.branchName,
+                commitHash: mergeBase,
+                path: lhsFilePath,
+                commentThreads: lhsCommentThreads
+            } as PRFileDiffQueryParams)
+        };
+        let rhsQueryParam = {
+            query: JSON.stringify({
+                lhs: false,
+                prHref: pr.data.url,
+                prId: pr.data.id,
+                participants: pr.data.participants,
+                repoUri: pr.repository.rootUri.toString(),
+                remote: pr.sourceRemote || pr.remote,
+                branchName: pr.data.source!.branchName,
+                commitHash: pr.data.source!.commitHash,
+                path: rhsFilePath,
+                commentThreads: rhsCommentThreads
+            } as PRFileDiffQueryParams)
+        };
+
+        const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam);
+        const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam);
+
+        const diffArgs = [
+            async () => {
+                commentController.provideComments(lhsUri);
+                commentController.provideComments(rhsUri);
+            },
+            lhsUri,
+            rhsUri,
+            fileDisplayName
+        ];
+        if (includeDataForNode){
+            return {
+                diffArgs: diffArgs, 
+                dataOnlyForItem: {
+                    prUrl: pr.data.url, 
+                    fileDisplayName: fileDisplayName,
+                    lhsQueryParam: lhsQueryParam,
+                    rhsQueryParam: rhsQueryParam,
+                    fileChangeStatus: fileChange.status,
+                    numberOfComments: comments.length
+                }
+            };
+        } else {
+            return diffArgs;
+        }
+    }
+
+    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
+        const result: AbstractBaseNode[] = [];
+        result.push(
+            ...await Promise.all(
+                fileChanges.map(async (fileChange) => 
+                    {
+                        const diffViewData = await this.getArgsForDiffView(allComments, fileChange, true);
+                        return new PullRequestFilesNode(diffViewData);
+                    }
+                )
+            )
+        );
         if (allComments.next) {
             result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
         }
@@ -160,85 +266,29 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 class PullRequestFilesNode extends AbstractBaseNode {
 
-    constructor(private pr: PullRequest, private mergeBase: string, private fileChange: FileChange, private commentsMap: Map<string, Comment[][]>, private commentController: PullRequestCommentController) {
+    constructor(private diffViewData: any) {
         super();
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
-        const lhsFilePath = this.fileChange.oldPath;
-        const rhsFilePath = this.fileChange.newPath;
-
-        let fileDisplayName = '';
-        const comments: Comment[][] = [];
-
-        if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
-            fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
-            comments.push(...(this.commentsMap.get(lhsFilePath) || []));
-            comments.push(...(this.commentsMap.get(rhsFilePath) || []));
-        } else if (rhsFilePath) {
-            fileDisplayName = rhsFilePath;
-            comments.push(...(this.commentsMap.get(rhsFilePath) || []));
-        } else if (lhsFilePath) {
-            fileDisplayName = lhsFilePath;
-            comments.push(...(this.commentsMap.get(lhsFilePath) || []));
-        }
-
-        //@ts-ignore
-        if (this.fileChange.status === 'merge conflict') {
-            fileDisplayName = `⚠️ CONFLICTED: ${fileDisplayName}`;
-        }
-
-        let item = new vscode.TreeItem(`${comments.length > 0 ? '💬 ' : ''}${fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
-        item.tooltip = fileDisplayName;
-
-        let lhsCommentThreads: Comment[][] = [];
-        let rhsCommentThreads: Comment[][] = [];
-
-        comments.forEach((c: Comment[]) => {
-            const parentComment = c[0];
-            if (parentComment.inline!.from) {
-                lhsCommentThreads.push(c);
-            } else {
-                rhsCommentThreads.push(c);
-            }
-        });
-
-        let lhsQueryParam = {
-            query: JSON.stringify({
-                lhs: true,
-                prHref: this.pr.data.url,
-                prId: this.pr.data.id,
-                participants: this.pr.data.participants,
-                repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.remote,
-                branchName: this.pr.data.destination!.branchName,
-                commitHash: this.mergeBase,
-                path: lhsFilePath,
-                commentThreads: lhsCommentThreads
-            } as PRFileDiffQueryParams)
+        let item = new vscode.TreeItem(`${this.diffViewData.dataOnlyForItem.numberOfComments.length > 0 ? '💬 ' : ''}${this.diffViewData.dataOnlyForItem.fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
+        item.tooltip = this.diffViewData.dataOnlyForItem.fileDisplayName;
+        item.command = {
+            command: Commands.ViewDiff,
+            title: 'Diff file',
+            arguments: this.diffViewData.diffArgs
         };
-        let rhsQueryParam = {
-            query: JSON.stringify({
-                lhs: false,
-                prHref: this.pr.data.url,
-                prId: this.pr.data.id,
-                participants: this.pr.data.participants,
-                repoUri: this.pr.repository.rootUri.toString(),
-                remote: this.pr.sourceRemote || this.pr.remote,
-                branchName: this.pr.data.source!.branchName,
-                commitHash: this.pr.data.source!.commitHash,
-                path: rhsFilePath,
-                commentThreads: rhsCommentThreads
-            } as PRFileDiffQueryParams)
-        };
-        switch (this.fileChange.status) {
+
+        item.contextValue = PullRequestContextValue;
+        item.resourceUri = vscode.Uri.parse(`file:///${this.diffViewData.dataOnlyForItem.prUrl}#chg-${this.diffViewData.dataOnlyForItem.fileDisplayName}`);
+        switch (this.diffViewData.dataOnlyForItem.fileChangeStatus) {
             case 'added':
                 item.iconPath = Resources.icons.get('add');
-                lhsQueryParam = { query: JSON.stringify({}) };
+                this.diffViewData.dataOnlyForItem.lhsQueryParam = { query: JSON.stringify({}) };
                 break;
             case 'removed':
                 item.iconPath = Resources.icons.get('delete');
-                rhsQueryParam = { query: JSON.stringify({}) };
+                this.diffViewData.dataOnlyForItem.rhsQueryParam = { query: JSON.stringify({}) };
                 break;
             //@ts-ignore
             case 'merge conflict':
@@ -248,27 +298,6 @@ class PullRequestFilesNode extends AbstractBaseNode {
                 item.iconPath = Resources.icons.get('edit');
                 break;
         }
-
-        const lhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(lhsQueryParam);
-        const rhsUri = vscode.Uri.parse(`${PullRequestNodeDataProvider.SCHEME}://${fileDisplayName}`).with(rhsQueryParam);
-
-        const diffArgs = [
-            async () => {
-                this.commentController.provideComments(lhsUri);
-                this.commentController.provideComments(rhsUri);
-            },
-            lhsUri,
-            rhsUri,
-            fileDisplayName
-        ];
-        item.command = {
-            command: Commands.ViewDiff,
-            title: 'Diff file',
-            arguments: diffArgs
-        };
-
-        item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(`${this.pr.data.url}#chg-${fileDisplayName}`);
 
         return item;
     }
