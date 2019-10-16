@@ -23,8 +23,7 @@ export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite, tran
     try {
         await performTranstion(issueKey, transition, site);
         return;
-    }
-    catch (e) {
+    } catch (e) {
         Logger.error(e);
         throw e;
     }
@@ -38,8 +37,7 @@ async function performTranstion(issueKey: string, transition: Transition, site: 
         vscode.commands.executeCommand(Commands.RefreshJiraExplorer);
 
         issueTransitionedEvent(site, issueKey).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-    }
-    catch (err) {
+    } catch (err) {
         Logger.error(err);
         throw err;
     }

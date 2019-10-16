@@ -69,7 +69,7 @@ export default class EditJQL extends PureComponent<{
     return this.fetchEndpoint(
       `jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=${fieldValue}`
     );
-  }
+  };
 
   validationRequest = async (jql: string) => {
     this.fetchEndpoint(
@@ -83,52 +83,52 @@ export default class EditJQL extends PureComponent<{
         this.setState({ jqlError: null });
       }
     });
-  }
+  };
 
   getAutocompleteDataRequest = () => {
     return this.fetchEndpoint("jql/autocompletedata");
-  }
+  };
 
   handleSiteChange = (e: DetailedSiteInfo) => {
     this.setState({
       selectedSite: e
     });
-  }
+  };
 
   onJQLChange = (e: any) => {
     this.setState({
       inputValue: e.target.value
     });
-  }
+  };
 
   onJQLOpenChange = (isOpen: boolean) => {
     this.setState({
       isEditing: isOpen
     });
-  }
+  };
 
   onNameChange = (e: any) => {
     this.setState({
       nameValue: e.target.value
     });
-  }
+  };
 
   onSave = () => {
     var entry = this.props.jqlEntry;
 
     this.props.onSave(Object.assign({}, entry, { siteId: this.state.selectedSite.id, name: this.state.nameValue, query: this.state.inputValue }));
-  }
+  };
 
   onRestoreDefault = () => {
     var entry = this.props.jqlEntry;
     if (this.props.onRestoreDefault) {
       this.props.onRestoreDefault(entry);
     }
-  }
+  };
 
   onOpenComplete = () => {
     this.setState({ openComplete: true });
-  }
+  };
 
   render() {
     return (

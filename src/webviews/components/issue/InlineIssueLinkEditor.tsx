@@ -69,23 +69,23 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
 
     handleOpenInlineEditor = (e: any) => {
         this.setState({ isEditing: true, editorContainerClassname: 'ac-flex-space-between' });
-    }
+    };
 
     handleCancelInlineEdit = (value: string) => {
         this.setState({ isEditing: false, editorContainerClassname: 'ac-hidden' });
-    }
+    };
 
     handleIssueLinkTypeChange = (newType: IssueLinkTypeSelectOption) => {
         if (this.state.selectedLinkType === undefined || newType.id !== this.state.selectedLinkType.id) {
             this.setState({ selectedLinkType: newType });
         }
-    }
+    };
 
     handleIssueChange = (newType: IssuePickerIssue) => {
         if (this.state.selectedIssue === undefined || newType.key !== this.state.selectedIssue.key) {
             this.setState({ selectedIssue: newType });
         }
-    }
+    };
 
     handleCancel = () => {
         this.setState({
@@ -94,7 +94,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             selectedIssue: undefined,
             selectedLinkType: (this.props.linkTypes.length > 0) ? this.props.linkTypes[0] : undefined,
         });
-    }
+    };
 
     handleSave = (e: any) => {
         this.setState({
@@ -109,7 +109,7 @@ export default class InlineIssueLinksEditor extends React.Component<Props, State
             issueKey: this.state.selectedIssue!.key,
         });
 
-    }
+    };
 
     render() {
         return (

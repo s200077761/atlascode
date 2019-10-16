@@ -106,7 +106,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             action: 'updateApproval',
             status: status
         });
-    }
+    };
 
     handleMerge = () => {
         this.setState({ isMergeButtonLoading: true });
@@ -117,7 +117,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.pr.mainIssue : undefined
         });
-    }
+    };
 
     handleDeleteComment = (commentId: number) => {
         this.setState({ isAnyCommentLoading: true });
@@ -125,7 +125,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             action: 'deleteComment',
             commentId: commentId
         });
-    }
+    };
 
     handleEditComment = (content: string, commentId: number) => {
         this.setState({ isAnyCommentLoading: true });
@@ -134,7 +134,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             content: content,
             commentId: commentId
         });
-    }
+    };
 
     handlePostComment = (content: string, parentCommentId?: number) => {
         this.setState({ isAnyCommentLoading: true });
@@ -143,14 +143,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             content: content,
             parentCommentId: parentCommentId
         });
-    }
+    };
 
     handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite) => {
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueOrKey
         });
-    }
+    };
 
     handleCheckout = (branchName: string) => {
         this.setState({ isCheckoutButtonLoading: true });
@@ -159,13 +159,13 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             branch: branchName,
             isSourceBranch: true
         });
-    }
+    };
 
     handleCopyLink = () => {
         this.postMessage({
             action: 'copyPullRequestLink'
         });
-    }
+    };
 
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
@@ -187,7 +187,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }, 100);
 
         });
-    }
+    };
 
     onMessageReceived(e: any): boolean {
         switch (e.type) {
@@ -247,7 +247,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     handleJiraIssueStatusChange = (item: Transition) => {
         this.setState({
@@ -255,7 +255,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             // there must be a better way to update the transition dropdown!!
             pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue, status: { ...(this.state.pr.mainIssue as MinimalIssue).status, id: item.to.id, name: item.to.name } } }
         });
-    }
+    };
 
     handleBitbucketIssueStatusChange = (item: string) => {
         this.setState({
@@ -263,7 +263,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             // there must be a better way to update the transition dropdown!!
             pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssueData }
         });
-    }
+    };
 
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
@@ -312,7 +312,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         }
 
         this.setState({ commitMessage: defaultCommitMessage });
-    }
+    };
 
     render() {
         const pr = this.state.pr.pr!;

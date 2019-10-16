@@ -22,7 +22,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = async (repo: Repository, remote: Remote) => {
         const bbApi = await clientForRemote(remote);
         return await bbApi.pullrequests.getList(repo, remote);
-    }
+    };
 
     public static SCHEME = 'atlascode.bbpr';
     private _disposable: Disposable;

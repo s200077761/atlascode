@@ -1,18 +1,17 @@
-import path from 'path';
-import webpack from 'webpack';
-import fs from 'fs';
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+const path = require('path');
+const fs = require('fs');
+const webpack = require('webpack');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath);
-delete process.env.TS_NODE_PROJECT;
+const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
-const main: webpack.Configuration = {
+module.exports = [{
     bail: true,
     name: 'extension',
-    mode: 'development',
+    mode: 'production',
     target: 'node',
-    devtool: 'cheap-module-source-map',
     entry: {
         extension: './src/extension.ts'
     },
@@ -39,8 +38,33 @@ const main: webpack.Configuration = {
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'build', 'extension'),
-        libraryTarget: "commonjs",
-        devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
+        libraryTarget: "commonjs"
+    },
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                extractComments: false,
+                terserOptions: {
+                    compress: {
+                        comparisons: false,
+                    },
+                    output: {
+                        comments: false,
+                        ascii_only: true
+                    }
+                }
+            })
+        ],
+        splitChunks: {
+            cacheGroups: {
+                styles: {
+                    name: 'main',
+                    test: /\.css$/,
+                    chunks: 'all',
+                    enforce: true,
+                },
+            },
+        }
     },
     externals: ['vscode'],
     plugins: [
@@ -48,10 +72,10 @@ const main: webpack.Configuration = {
         new webpack.WatchIgnorePlugin([
             /\.js$/,
             /\.d\.ts$/
-        ])
+        ]),
     ]
-};
-const uninstall: webpack.Configuration = {
+}, {
+    bail: true,
     name: 'uninstall',
     mode: 'production',
     target: 'node',
@@ -81,6 +105,4 @@ const uninstall: webpack.Configuration = {
         devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
     },
     externals: ['vscode']
-};
-
-export default [main, uninstall];
+}];

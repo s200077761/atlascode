@@ -55,7 +55,7 @@ export default class CustomJQL extends React.Component<
       editingId: id,
       editingEntry: { siteId: "", id: id, name: "", query: "", enabled: true, monitor: true }
     });
-  }
+  };
 
   onEditQuery = (id: string) => {
     const entry = this.readJqlListFromProps().find((entry: JQLEntry) => {
@@ -70,7 +70,7 @@ export default class CustomJQL extends React.Component<
       // This entry has disappered from under us.
       this.onNewQuery();
     }
-  }
+  };
 
   deleteQuery = (id: string) => {
     var jqlList = this.readJqlListFromProps().map((entry: JQLEntry) => {
@@ -81,7 +81,7 @@ export default class CustomJQL extends React.Component<
       jqlList.splice(index, 1);
       this.publishChanges(jqlList);
     }
-  }
+  };
 
   toggleEnable = (e: any) => {
     const id = e.target.value;
@@ -93,7 +93,7 @@ export default class CustomJQL extends React.Component<
       entry.enabled = e.target.checked;
       this.publishChanges(jqlList);
     }
-  }
+  };
 
   toggleMonitor = (e: any) => {
     const id = e.target.value;
@@ -105,7 +105,7 @@ export default class CustomJQL extends React.Component<
       entry.monitor = e.target.checked;
       this.publishChanges(jqlList);
     }
-  }
+  };
 
   private readJqlListFromProps(): JQLEntry[] {
     let customJqlList = this.props.JqlList;
@@ -119,7 +119,7 @@ export default class CustomJQL extends React.Component<
 
   handleCancelEdit = () => {
     this.setState({ editingId: undefined, editingEntry: undefined });
-  }
+  };
 
   indexForId(jqlList: JQLEntry[], id: string | undefined) {
     return jqlList.findIndex((entry: JQLEntry) => {
@@ -142,7 +142,7 @@ export default class CustomJQL extends React.Component<
       editingEntry: undefined
     });
     this.publishChanges(jqlList);
-  }
+  };
 
   handleDragStart = (e: any) => {
     const objIndex = e.target.getAttribute("data-index");
@@ -152,11 +152,11 @@ export default class CustomJQL extends React.Component<
     const index = Number(objIndex);
     e.dataTransfer.dropEffect = "copy";
     this.setState({ dragSourceIndex: index });
-  }
+  };
 
   handleDragEnd = (e: any) => {
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
-  }
+  };
 
   handleDragEnter = (e: any) => {
     const objIndex = e.currentTarget.getAttribute("data-index");
@@ -166,11 +166,11 @@ export default class CustomJQL extends React.Component<
         this.setState({ dragTargetIndex: index });
       }
     }
-  }
+  };
 
   handleDragOver = (e: any) => {
     e.preventDefault();
-  }
+  };
 
   handleDrop = (e: any) => {
     e.preventDefault();
@@ -185,7 +185,7 @@ export default class CustomJQL extends React.Component<
       this.publishChanges(jql);
     }
     this.setState({ dragSourceIndex: undefined, dragTargetIndex: undefined });
-  }
+  };
 
   htmlForJQLEntry = (element: JQLEntry, displayIndex: number) => {
     return (
@@ -237,7 +237,7 @@ export default class CustomJQL extends React.Component<
         </ButtonGroup>
       </div>
     );
-  }
+  };
 
   htmlElementAtIndex = (jql: JQLEntry[], index: number) => {
     var element = undefined;
@@ -273,7 +273,7 @@ export default class CustomJQL extends React.Component<
         </div>
       </div>
     );
-  }
+  };
 
   render() {
 

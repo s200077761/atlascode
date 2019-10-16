@@ -59,7 +59,7 @@ export default class AuthForm extends PureComponent<{
             || url.hostname.endsWith("bitbucket.org")
             || url.hostname.endsWith("bb-inf.net")
         );
-    }
+    };
 
     setReadyToSave = (needsCreds: boolean) => {
         let credsAreGood = true;
@@ -71,7 +71,7 @@ export default class AuthForm extends PureComponent<{
         const readyToSave = FieldValidators.validateRequiredUrl(this.state.baseUrl, undefined) === undefined && credsAreGood;
 
         this.setState({ readyToSave: readyToSave });
-    }
+    };
 
     onBaseUrlChange = (e: any) => {
         if (FieldValidators.validateRequiredUrl(e.target.value, undefined) === undefined) {
@@ -83,21 +83,21 @@ export default class AuthForm extends PureComponent<{
             );
         }
 
-    }
+    };
 
     onUsernameChange = (e: any) => {
         this.setState(
             { username: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     onPasswordChange = (e: any) => {
         this.setState(
             { password: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     onSave = () => {
         const url = new URL(this.state.baseUrl);
@@ -127,7 +127,7 @@ export default class AuthForm extends PureComponent<{
 
             this.props.onSave(siteInfo, authInfo);
         }
-    }
+    };
 
     normailizeContextPath(cPath: string): string | undefined {
         if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
@@ -138,43 +138,43 @@ export default class AuthForm extends PureComponent<{
 
     onCustomSSLChange = (e: any) => {
         this.setState({ useCustomSSL: e.target.checked });
-    }
+    };
 
     onCustomSSLTypeChange = (e: any) => {
         this.setState({ customSSLType: e.target.value, certPaths: '', pfxPath: '', pfxPassphrase: '' });
-    }
+    };
 
     onCertPathsChange = (e: any) => {
         this.setState(
             { certPaths: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     onPfxPathChange = (e: any) => {
         this.setState(
             { pfxPath: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     onPfxPassphraseChange = (e: any) => {
         this.setState(
             { pfxPassphrase: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     onContextPathEnableChange = (e: any) => {
         this.setState({ useContextPath: e.target.checked });
-    }
+    };
 
     onContextPathChange = (e: any) => {
         this.setState(
             { contextPath: e.target.value },
             () => this.setReadyToSave(true)
         );
-    }
+    };
 
     render() {
         const heading = `Add ${this.props.product.name} Site`;

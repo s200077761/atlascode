@@ -1,7 +1,0 @@
-{
-    "rules": {
-    },
-    "extends": [
-        "jbunton/jasmine-globals"
-    ]
-}

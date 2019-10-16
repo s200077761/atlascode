@@ -115,8 +115,7 @@ export class Container {
                 const args = process.execArgv;
 
                 this._isDebugging = args ? args.some(arg => isDebuggingRegex.test(arg)) : false;
-            }
-            catch { }
+            } catch { }
         }
 
         return this._isDebugging;

@@ -36,7 +36,7 @@ export default class DisplayFeedback extends React.Component<{ userDetails: Feed
     }
 
     this.handleClose();
-  }
+  };
 
   render() {
     const { isOpen } = this.state;

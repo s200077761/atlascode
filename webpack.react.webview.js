@@ -1,22 +1,22 @@
-import path from 'path';
-import fs from 'fs';
-import webpack from 'webpack';
-import ForkTsCheckerNotifierWebpackPlugin from 'fork-ts-checker-notifier-webpack-plugin';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
-import HtmlWebPackPlugin from "html-webpack-plugin";
+const path = require('path');
+const fs = require('fs');
+const webpack = require('webpack');
+const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const HtmlWebPackPlugin = require("html-webpack-plugin");
 
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath);
-delete process.env.TS_NODE_PROJECT;
+const resolveApp = (relativePath) => path.resolve(appDirectory, relativePath);
 
-const pageTsx: string = (process.env.PAGETSX) ? process.env.PAGETSX : "config/ConfigPage.tsx";
-const view: string = (process.env.VIEW) ? process.env.VIEW : "atlascodeSettings";
-const theme: string = (process.env.THEME) ? process.env.THEME : "dark";
 
-const config: webpack.Configuration = {
+const pageTsx = (process.env.PAGETSX) ? process.env.PAGETSX : "ConfigPage.tsx";
+const view = (process.env.VIEW) ? process.env.VIEW : "atlascodeSettings";
+const theme = (process.env.THEME) ? process.env.THEME : "dark";
+
+module.exports = {
     mode: "development",
     context: path.resolve(__dirname, "src"),
     entry: [
@@ -50,7 +50,7 @@ const config: webpack.Configuration = {
         new ForkTsCheckerWebpackPlugin({
             watch: resolveApp('src'),
             tsconfig: resolveApp('tsconfig.json'),
-            tslint: resolveApp('tslint.json'),
+            eslint: true,
         }),
         new ForkTsCheckerNotifierWebpackPlugin({ title: 'TypeScript', excludeWarnings: false }),
         new HtmlWebPackPlugin({
@@ -90,5 +90,3 @@ const config: webpack.Configuration = {
         ]
     },
 };
-
-export default config;

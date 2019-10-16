@@ -18,7 +18,7 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     handleNumberChange = (e: any, configKey: string) => {
         const changes = Object.create(null);
@@ -27,7 +27,7 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     getIsExplorerIndeterminate = (): boolean => {
         if (!this.props.config.bitbucket.explorer.enabled) {
@@ -46,7 +46,7 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
         }
 
         return (count < 3);
-    }
+    };
 
     render() {
         return (

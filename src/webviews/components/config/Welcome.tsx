@@ -37,23 +37,23 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
 
     handleConfigure = () => {
         this.postMessage({ action: 'showConfigPage' });
-    }
+    };
 
     handleSourceLink = () => {
         this.postMessage({ action: 'sourceLink' });
-    }
+    };
 
     handleIssueLink = () => {
         this.postMessage({ action: 'issueLink' });
-    }
+    };
 
     handleDocsLink = () => {
         this.postMessage({ action: 'docsLink' });
-    }
+    };
 
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
-    }
+    };
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
