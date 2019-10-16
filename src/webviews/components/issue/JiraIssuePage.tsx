@@ -13,7 +13,7 @@ import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
-import { Transition } from '../../../jira/jira-client/model/entities';
+import { Transition, CommentVisibility } from '../../../jira/jira-client/model/entities';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import Tooltip from '@atlaskit/tooltip';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
@@ -215,13 +215,13 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
-    protected handleCommentSave = (comment: string, internal: boolean) => {
+    protected handleCommentSave = (comment: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
         let commentAction: IssueCommentAction = {
             action: "comment",
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
             comment: comment,
-            internal: internal === true ? true : undefined
+            restriction: restriction
         };
 
         this.postMessage(commentAction);

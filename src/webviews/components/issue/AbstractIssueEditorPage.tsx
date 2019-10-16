@@ -5,7 +5,7 @@ import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditEr
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import * as FieldValidators from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
-import { MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSite, CommentVisibility, JsdInternalCommentVisibility } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
@@ -79,7 +79,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
-    protected handleCommentSave = (newValue: string, internal: boolean) => { };
+    protected handleCommentSave = (newValue: string, restriction?: CommentVisibility) => { };
 
     // react-select has issues and doesn't stop propagation on click events when you provide
     // a custom option component.  e.g. it calls this twice, so we have to debounce.
@@ -161,12 +161,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     }
 
     private handleExternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, false);
+        this.handleCommentSave(this.state.commentInputValue, undefined);
         this.setState({ commentInputValue: "" });
     }
 
     private handleInternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, true);
+        this.handleCommentSave(this.state.commentInputValue, JsdInternalCommentVisibility);
         this.setState({ commentInputValue: "" });
     }
 
