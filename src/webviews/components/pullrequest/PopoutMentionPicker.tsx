@@ -34,12 +34,12 @@ export default class PopoutMentionPicker extends React.Component<
 
     toggleOpen = () => {
         this.setState(state => ({ isOpen: !state.isOpen }));
-    }
+    };
 
     onSelectChange = (value: any) => {
         this.setState({ value, isOpen: false });
         this.props.onUserMentioned(value);
-    }
+    };
 
     render() {
         const { isOpen } = this.state;

@@ -22,7 +22,7 @@ export default class ProductEnabler extends React.Component<{
 
     componentWillReceiveProps = (nextProps: any) => {
         this.setState({ jiraEnabled: nextProps.jiraEnabled, bbEnabled: nextProps.bbEnabled, });
-    }
+    };
 
     onCheckboxChange = (e: any) => {
         const changes = Object.create(null);
@@ -31,7 +31,7 @@ export default class ProductEnabler extends React.Component<{
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         return (

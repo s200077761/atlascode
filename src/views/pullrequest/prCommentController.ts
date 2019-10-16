@@ -211,7 +211,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             prCommentCache.get(threadId)!.dispose();
         }
 
-        const newThread = await this._commentController.createCommentThread(uri, range, comments);
+        const newThread = this._commentController.createCommentThread(uri, range, comments);
         newThread.label = '';
         newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
         for (let comment of newThread.comments) {

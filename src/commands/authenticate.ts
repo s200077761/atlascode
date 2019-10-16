@@ -12,5 +12,5 @@ export async function authenticateServer(site: SiteInfo, authInfo: AuthInfo) {
 
 export async function clearAuth(site: SiteInfo) {
     await Container.clientManager.removeClient(site);
-    await Container.siteManager.removeSite(site);
+    Container.siteManager.removeSite(site);
 }

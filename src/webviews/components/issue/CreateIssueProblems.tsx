@@ -46,7 +46,7 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     public render() {
         let issueTypeProblems: any[] = [];

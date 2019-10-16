@@ -75,7 +75,7 @@ export class TransitionMenu extends React.Component<Props, State> {
 
   handleStatusChange = (item: Transition) => {
     this.props.onStatusChange(item);
-  }
+  };
 
   render() {
     if (!Array.isArray(this.props.transitions) || this.props.transitions.length < 1) {

@@ -105,8 +105,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                             if (site) {
                                 bbIssueWorkStartedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                             }
-                        }
-                        catch (e) {
+                        } catch (e) {
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
@@ -122,8 +121,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
 
         try {
             await repo.getBranch(destBranch);
-        }
-        catch (reason) {
+        } catch (reason) {
             await repo.createBranch(destBranch, true, sourceBranch);
             await repo.push(remote, destBranch, true);
             return;
@@ -189,8 +187,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
             const bbApi = await clientForRemote(this._state.remote);
             const updatedIssue = await bbApi.issues!.refetch(this._state);
             this.updateIssue(updatedIssue);
-        }
-        catch (e) {
+        } catch (e) {
             Logger.error(e);
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
         } finally {

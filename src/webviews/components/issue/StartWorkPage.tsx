@@ -96,8 +96,7 @@ export default class StartWorkPage extends WebviewComponent<
           const issueId = e.issue.key;
           const issueTitle = e.issue.summary;
           this.updateState(e, issueType, repo, issueId, issueTitle, transition);
-        }
-        else { // empty issue
+        } else { // empty issue
           this.setState(emptyState);
         }
         break;
@@ -115,8 +114,7 @@ export default class StartWorkPage extends WebviewComponent<
           const issueId = `issue-#${e.issue.id!.toString()}`;
           const issueTitle = e.issue.title!;
           this.updateState(e, issueType, repo, issueId, issueTitle, emptyTransition);
-        }
-        else { // empty issue
+        } else { // empty issue
           this.setState(emptyState);
         }
         break;
@@ -151,7 +149,7 @@ export default class StartWorkPage extends WebviewComponent<
         transition: item
       });
     }
-  }
+  };
 
   handleRepoChange = (repo: RepoData) => {
     const sourceBranchValue = repo.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
@@ -160,15 +158,15 @@ export default class StartWorkPage extends WebviewComponent<
       sourceBranch: sourceBranchValue,
       branchType: repo.branchTypes.length > 0 ? repo.branchTypes[0] : undefined
     });
-  }
+  };
 
   handleSourceBranchChange = (newValue: Branch) => {
     this.setState({ sourceBranch: newValue });
-  }
+  };
 
   handleBranchNameChange = (e: string) => {
     this.setState({ localBranch: e });
-  }
+  };
 
   handleSelectExistingBranch = (branchName: string) => {
     const branchType = this.state.repo.branchTypes.find(b => branchName.startsWith(b.prefix));
@@ -176,23 +174,23 @@ export default class StartWorkPage extends WebviewComponent<
       branchType: branchType,
       localBranch: branchType ? branchName.substring(branchType.prefix.length) : branchName
     });
-  }
+  };
 
   toggleJiraSetupEnabled = (e: any) => {
     this.setState({
       jiraSetupEnabled: e.target.checked
     });
-  }
+  };
 
   toggleBitbucketSetupEnabled = (e: any) => {
     this.setState({
       bitbucketSetupEnabled: e.target.checked
     });
-  }
+  };
 
   handleRemoteChange = (newValue: Remote) => {
     this.setState({ remote: newValue });
-  }
+  };
 
   handleStart = () => {
     this.setState({ isStartButtonLoading: true });
@@ -213,11 +211,11 @@ export default class StartWorkPage extends WebviewComponent<
       setupJira: this.state.jiraSetupEnabled,
       setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled
     });
-  }
+  };
 
   handleDismissError = () => {
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-  }
+  };
 
   private updateState(data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData, issueType: 'jiraIssue' | 'bitbucketIssue', repo: RepoData, issueId: string, issueTitle: string, transition: Transition) {
     const branchOptions = this.state.existingBranchOptions.length > 0
@@ -281,8 +279,7 @@ export default class StartWorkPage extends WebviewComponent<
         </PageHeader>
         <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
       </GridColumn>;
-    }
-    else if (this.state.issueType === 'bitbucketIssue') {
+    } else if (this.state.issueType === 'bitbucketIssue') {
       const bbIssue = issue as BitbucketIssueData;
       pageHeader = <GridColumn medium={8}>
         <em><p>Start work on:</p></em>

@@ -18,7 +18,7 @@ export default class BitbucketContextMenus extends React.Component<{ config: ICo
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
 
     render() {

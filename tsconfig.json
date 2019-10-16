@@ -8,6 +8,7 @@
             "esnext",
             "dom"
         ],
+        "skipLibCheck": true,
         "sourceMap": true,
         "allowJs": true,
         "jsx": "react",
@@ -27,6 +28,10 @@
             "src/typings/"
         ]
     },
+    "include": [
+        "**/src/**/*",
+        "webpack.*.js"
+    ],
     "exclude": [
         "out",
         "node_modules",
@@ -37,6 +42,5 @@
         "jest",
         "src/setupTests.ts",
         ".vscode-test",
-        "webpack.config.js"
     ]
 }

@@ -71,7 +71,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
 
     getProjectKey = (): string => {
         return this.state.key.substring(0, this.state.key.indexOf('-'));
-    }
+    };
 
     onMessageReceived(e: any): boolean {
         let handled = super.onMessageReceived(e);
@@ -125,18 +125,18 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         this.postMessage({
             action: 'copyJiraIssueLink'
         });
-    }
+    };
 
     handleStartWorkOnIssue = () => {
         this.postMessage({
             action: 'openStartWorkPage'
             , issue: { key: this.state.key, siteDetails: this.state.siteDetails }
         });
-    }
+    };
 
     fetchUsers = (input: string) => {
         return this.loadSelectOptions(input, `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`);
-    }
+    };
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
         switch (field.uiType) {
@@ -203,7 +203,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 break;
             }
         }
-    }
+    };
 
     handleEditIssue = (fieldKey: string, newValue: any) => {
         this.setState({ isSomethingLoading: true, loadingField: fieldKey });
@@ -213,7 +213,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 [fieldKey]: newValue
             }
         });
-    }
+    };
 
     protected handleCommentSave = (comment: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
@@ -225,7 +225,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         };
 
         this.postMessage(commentAction);
-    }
+    };
 
     handleStatusChange = (transition: Transition) => {
         this.setState({ isSomethingLoading: true, loadingField: 'status' });
@@ -234,7 +234,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             transition: transition,
             issue: { key: this.state.key, siteDetails: this.state.siteDetails }
         });
-    }
+    };
 
     handleOpenWorklogEditor = () => {
         // Note: we set isSomethingLoading: true to disable all fields while the form is open
@@ -243,7 +243,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         } else {
             this.setState({ currentInlineDialog: '', isSomethingLoading: false });
         }
-    }
+    };
 
     handleOpenWatchesEditor = () => {
         // Note: we set isSomethingLoading: true to disable all fields while the form is open
@@ -253,7 +253,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             this.setState({ currentInlineDialog: '', isSomethingLoading: false });
         }
 
-    }
+    };
 
     handleOpenVotesEditor = () => {
         // Note: we set isSomethingLoading: true to disable all fields while the form is open
@@ -262,7 +262,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         } else {
             this.setState({ currentInlineDialog: '', isSomethingLoading: false });
         }
-    }
+    };
 
     handleOpenAttachmentEditor = () => {
         // Note: we set isSomethingLoading: true to disable all fields while the form is open
@@ -271,36 +271,36 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         } else {
             this.setState({ currentInlineDialog: '', isSomethingLoading: false });
         }
-    }
+    };
 
     handleInlineDialogClose = () => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: false });
-    }
+    };
 
     handleInlineDialogSave = (field: FieldUI, value: any) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: false });
         this.handleInlineEdit(field, value);
-    }
+    };
 
     handleAddWatcher = (user: any) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
         this.postMessage({ action: 'addWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
-    }
+    };
 
     handleRemoveWatcher = (user: any) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'watches' });
         this.postMessage({ action: 'removeWatcher', site: this.state.siteDetails, issueKey: this.state.key, watcher: user });
-    }
+    };
 
     handleAddVote = (user: any) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
         this.postMessage({ action: 'addVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
-    }
+    };
 
     handleRemoveVote = (user: any) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: true, loadingField: 'votes' });
         this.postMessage({ action: 'removeVote', site: this.state.siteDetails, issueKey: this.state.key, voter: user });
-    }
+    };
 
     handleAddAttachments = (files: any[]) => {
         this.setState({ currentInlineDialog: '', isSomethingLoading: false, loadingField: 'attachment' });
@@ -315,22 +315,22 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             };
         });
         this.postMessage({ action: 'addAttachments', site: this.state.siteDetails, issueKey: this.state.key, files: serFiles });
-    }
+    };
 
     handleDeleteAttachment = (file: any) => {
         this.setState({ isSomethingLoading: true, loadingField: 'attachment' });
         this.postMessage({ action: 'deleteAttachment', site: this.state.siteDetails, objectWithId: file });
-    }
+    };
 
     handleRefresh = () => {
         this.setState({ isSomethingLoading: true, loadingField: 'refresh' });
         this.postMessage({ action: 'refreshIssue' });
-    }
+    };
 
     handleDeleteIssuelink = (issuelink: any) => {
         this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
         this.postMessage({ action: 'deleteIssuelink', site: this.state.siteDetails, objectWithId: issuelink });
-    }
+    };
 
     getMainPanelMarkup(): any {
         const epicLinkValue = this.state.fieldValues[this.state.epicFieldInfo.epicLink.id];

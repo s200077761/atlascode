@@ -150,7 +150,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
         this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: this.state.fieldValues });
 
         return undefined;
-    }
+    };
 
     handleSiteChange = (site: DetailedSiteInfo) => {
         this.setState({ siteDetails: site, loadingField: 'site', isSomethingLoading: true });
@@ -158,7 +158,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             action: 'getScreensForSite'
             , site: site
         });
-    }
+    };
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {
         let typedVal = newValue;
@@ -221,7 +221,7 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 , fieldValues: this.state.fieldValues
             });
         }
-    }
+    };
 
     getCommonFieldMarkup(): any {
         return this.commonFields.map(field => this.getInputMarkup(field));

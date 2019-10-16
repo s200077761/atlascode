@@ -37,8 +37,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             );
 
             return data.values.map((val: any) => new URL(val.baseUrl).hostname);
-        }
-        catch (e) {
+        } catch (e) {
             // ignore
         }
         return [];

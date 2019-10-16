@@ -307,8 +307,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     return bbIssues[0].data;
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             Logger.debug('error fetching main jira issue: ', e);
         }
         return undefined;
@@ -337,8 +336,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                 });
             }
-        }
-        catch (e) {
+        } catch (e) {
             foundIssues = [];
             Logger.debug('error fetching related jira issues: ', e);
         }
@@ -353,8 +351,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             if (bbApi.issues) {
                 result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);
             }
-        }
-        catch (e) {
+        } catch (e) {
             result = [];
             Logger.debug('error fetching related bitbucket issues: ', e);
         }

@@ -35,7 +35,7 @@ export class StatusMenu extends React.Component<{
 
   handleStatusChange = (item: any) => {
     this.props.onHandleStatusChange(item);
-  }
+  };
 
   render() {
     const issue = this.props.issue;

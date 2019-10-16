@@ -119,8 +119,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
-        }
-        else {
+        } else {
             this._panel.webview.html = this._getHtmlForWebview(this.id);
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }

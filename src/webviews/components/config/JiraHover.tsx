@@ -17,7 +17,7 @@ export default class JiraHover extends React.Component<{ config: IConfig, onConf
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         return (

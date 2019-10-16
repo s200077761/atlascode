@@ -39,13 +39,13 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             this.setState({ ...emptyForm });
             this.props.onClose();
         }
-    }
+    };
 
     handleAddVote = (user: any) => {
         this.props.onAddVote(user);
         this.setState({ ...emptyForm });
         this.props.onClose();
-    }
+    };
 
     getEmptyVoters = () => {
         const data = [
@@ -63,7 +63,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             />
             <span>No voters yet</span>
         </div>);
-    }
+    };
 
     getStartStop = (): JSX.Element => {
         if (this.props.votes.hasVoted) {
@@ -82,7 +82,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
             </div>
         );
 
-    }
+    };
 
     getVoters = (): JSX.Element => {
         if (this.props.votes.votes < 1) {
@@ -105,7 +105,7 @@ export default class VotesForm extends React.Component<MyProps, MyState> {
                 {voterList}
             </div>
         );
-    }
+    };
     render() {
         return (
             <div className='ac-inline-items-container'>
