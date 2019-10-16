@@ -271,8 +271,9 @@ class PullRequestFilesNode extends AbstractBaseNode {
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
-        let item = new vscode.TreeItem(`${this.diffViewData.dataOnlyForItem.numberOfComments.length > 0 ? '💬 ' : ''}${this.diffViewData.dataOnlyForItem.fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
-        item.tooltip = this.diffViewData.dataOnlyForItem.fileDisplayName;
+        let itemData = this.diffViewData.dataOnlyForItem;
+        let item = new vscode.TreeItem(`${itemData.numberOfComments > 0 ? '💬 ' : ''}${itemData.fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
+        item.tooltip = itemData.fileDisplayName;
         item.command = {
             command: Commands.ViewDiff,
             title: 'Diff file',
@@ -280,15 +281,15 @@ class PullRequestFilesNode extends AbstractBaseNode {
         };
 
         item.contextValue = PullRequestContextValue;
-        item.resourceUri = vscode.Uri.parse(`file:///${this.diffViewData.dataOnlyForItem.prUrl}#chg-${this.diffViewData.dataOnlyForItem.fileDisplayName}`);
-        switch (this.diffViewData.dataOnlyForItem.fileChangeStatus) {
+        item.resourceUri = vscode.Uri.parse(`file:///${itemData.prUrl}#chg-${itemData.fileDisplayName}`);
+        switch (itemData.fileChangeStatus) {
             case 'added':
                 item.iconPath = Resources.icons.get('add');
-                this.diffViewData.dataOnlyForItem.lhsQueryParam = { query: JSON.stringify({}) };
+                itemData.lhsQueryParam = { query: JSON.stringify({}) };
                 break;
             case 'removed':
                 item.iconPath = Resources.icons.get('delete');
-                this.diffViewData.dataOnlyForItem.rhsQueryParam = { query: JSON.stringify({}) };
+                itemData.rhsQueryParam = { query: JSON.stringify({}) };
                 break;
             //@ts-ignore
             case 'merge conflict':
