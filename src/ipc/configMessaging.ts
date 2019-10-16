@@ -19,6 +19,7 @@ export interface ConfigData extends Message {
     bitbucketSites: DetailedSiteInfo[];
     workspaceFolders: ConfigWorkspaceFolder[];
     feedbackUser: FeedbackUser;
+    isRemote: boolean;
     showTunnelOption: boolean;
 }
 
@@ -32,6 +33,7 @@ export const emptyConfigData: ConfigData = {
         userName: '',
         emailAddress: ''
     },
+    isRemote: false,
     showTunnelOption: false,
 };
 

@@ -134,7 +134,9 @@ export const emptyComment: Comment = {
     body: '',
     created: '',
     id: '',
-    self: ''
+    self: '',
+    visibility: undefined,
+    jsdPublic: false
 };
 
 export const emptyEpicFieldInfo: EpicFieldInfo = {

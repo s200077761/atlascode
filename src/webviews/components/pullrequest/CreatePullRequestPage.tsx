@@ -208,8 +208,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             });
         }
 
-        this.setState({fileDiffsLoading: true, fileDiffs: []}); //Activates spinner for file diff panel and resets data
-        if(this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
+        this.setState({ fileDiffsLoading: true, fileDiffs: [] }); //Activates spinner for file diff panel and resets data
+        if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
             this.postMessage(
                 {
                     action: 'updateDiff',
@@ -218,7 +218,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     destinationBranch: this.state.destinationBranch!.value
                 }
             );
-            
+
             if (this.state.remote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
                 this.postMessage({
                     action: 'fetchDetails',
@@ -385,7 +385,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
         } else {
             //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
-            return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6'};
+            return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6' };
         }
 
     }
@@ -398,9 +398,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     openDiffViewForFile = (fileDiff: FileDiff) => {
         this.postMessage(
-            { 
-                action: 'openDiffPreview', 
-                lhsQuery: fileDiff.lhsQueryParams, 
+            {
+                action: 'openDiffPreview',
+                lhsQuery: fileDiff.lhsQueryParams,
                 rhsQuery: fileDiff.rhsQueryParams,
                 fileDisplayName: fileDiff.file
             }
@@ -426,7 +426,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     generateDiffList = () => {
         return this.state.fileDiffs.map(fileDiff =>
             <li className='iterable-item file-summary file-modified' onClick={() => this.openDiffViewForFile(fileDiff)}>
-                <Tooltip 
+                <Tooltip
                     content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
                 >
                     <div className="commit-file-diff-stats">
@@ -466,7 +466,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     repo && repo.value.href
                         ? `${repo.value.href}/pull-requests/new`
                         : `https://bitbucket.org/dashboard/overview`
-                }>Create on bitbucket.org...</Button>
+                }>Create in browser...</Button>
             </ButtonGroup>
         );
 
@@ -482,7 +482,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
-                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: this.state.issue as BitbucketIssueData })} />
+                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.repo!.value.uri, remote: this.state.remote!.value, issue: this.state.issue as BitbucketIssueData })} />
                         </div>
                     }
                 </div>
@@ -676,7 +676,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     <GridColumn medium={12}>
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
-                                                <Commits type={''} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />
+                                                <Commits type={''} repoUri={this.state.repo!.value.uri} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />
                                             </Panel>
                                         }
                                     </GridColumn>

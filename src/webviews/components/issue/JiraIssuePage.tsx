@@ -8,12 +8,12 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
 import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
-import { EditIssueAction } from '../../../ipc/issueActions';
+import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
 import { LinkedIssues } from './LinkedIssues';
 import { TransitionMenu } from './TransitionMenu';
-import { Transition } from '../../../jira/jira-client/model/entities';
+import { Transition, CommentVisibility } from '../../../jira/jira-client/model/entities';
 import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import Tooltip from '@atlaskit/tooltip';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
@@ -40,7 +40,7 @@ import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 
-type Emit = CommonEditorPageEmit | EditIssueAction;
+type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;
 
 type SizeMetrics = {
@@ -215,13 +215,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
         });
     }
 
-    protected handleCommentSave = (comment: string) => {
+    protected handleCommentSave = (comment: string, restriction?: CommentVisibility) => {
         this.setState({ isSomethingLoading: true, loadingField: 'comment' });
-        this.postMessage({
+        let commentAction: IssueCommentAction = {
             action: "comment",
             issue: { key: this.state.key, siteDetails: this.state.siteDetails },
-            comment: comment
-        });
+            comment: comment,
+            restriction: restriction
+        };
+
+        this.postMessage(commentAction);
     }
 
     handleStatusChange = (transition: Transition) => {
@@ -437,7 +440,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 {this.state.fields['comment'] &&
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{this.state.fields['comment'].name}</label>
-                        <CommentList comments={this.state.fieldValues['comment'].comments} />
+                        <CommentList
+                            comments={this.state.fieldValues['comment'].comments}
+                            isServiceDeskProject={this.state.fieldValues['project'] && this.state.fieldValues['project'].projectTypeKey === 'service_desk'} />
                         {this.getInputMarkup(this.state.fields['comment'], true)}
                     </div>
                 }

@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
 import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
-import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink, readProject } from './model/entities';
+import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink, readProject, CommentVisibility, JsdInternalCommentVisibility } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import FormData from 'form-data';
@@ -68,8 +68,15 @@ export abstract class JiraClient {
         return res;
     }
 
-    public async addComment(issueIdOrKey: string, comment: string): Promise<any> {
-        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, { body: comment }, { expand: 'renderedBody' });
+    public async addComment(issueIdOrKey: string, comment: string, restriction?: CommentVisibility): Promise<any> {
+        let postBody: any = { body: comment };
+        if (restriction && restriction.type === JsdInternalCommentVisibility.type && restriction.value === JsdInternalCommentVisibility.value) {
+            postBody = {
+                ...postBody,
+                properties: [{ key: "sd.public.comment", value: { internal: true } }]
+            };
+        }
+        const res = await this.postToJira(`issue/${issueIdOrKey}/comment`, postBody, { expand: 'renderedBody' });
 
         return res;
     }

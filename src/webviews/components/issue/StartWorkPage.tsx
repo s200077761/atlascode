@@ -256,7 +256,7 @@ export default class StartWorkPage extends WebviewComponent<
 
     const issue = this.state.data.issue;
     const repo = this.state.repo;
-    const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/atlassian/workspace/snippets/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
+    const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/snippets/atlassian/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
 
     let pageHeader =
       <GridColumn medium={8}>
@@ -292,7 +292,7 @@ export default class StartWorkPage extends WebviewComponent<
             <BreadcrumbsStateless onExpand={() => { }}>
               <BreadcrumbsItem component={() => <NavItem text={bbIssue.repository!.name!} href={bbIssue.repository!.links!.html!.href} />} />
               <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${bbIssue.repository!.links!.html!.href}/issues`} />} />
-              <BreadcrumbsItem component={() => <NavItem text={`Issue #${bbIssue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: bbIssue })} onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`Issue #${bbIssue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.repo.uri, remote: this.state.remote!, issue: bbIssue })} onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })} />} />
             </BreadcrumbsStateless>
           }
         >

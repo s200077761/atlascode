@@ -270,7 +270,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isIssueComment(msg)) {
                         handled = true;
                         try {
-                            const res = await postComment(msg.issue, msg.comment);
+                            const res = await postComment(msg.issue, msg.comment, msg.restriction);
                             this._editUIData.fieldValues['comment'].comments.push(res);
 
                             this.postMessage({

@@ -255,7 +255,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
         const connyicon = <ConfluenceIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;
-        const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/atlassian/workspace/snippets/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
+        const snippetTip = <div className='ac-vpadding'><p><strong>Tip:</strong> You can have issue keys auto-added to your commit messages using <a type='button' className='ac-link-button' href="https://bitbucket.org/snippets/atlassian/qedp7d"><span>our prepare-commit-msg hook</span></a></p></div>;
         // Note: we will figure out what can be put on the resource level in the near future
         let targetOptions = [];
         // if (this.state.workspaceFolders.length > 1) {
@@ -362,6 +362,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.jiraSites}
                                                         product={ProductJira}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
@@ -401,6 +402,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <SiteEditor
                                                         sites={this.state.bitbucketSites}
                                                         product={ProductBitbucket}
+                                                        isRemote={this.state.isRemote}
                                                         handleDeleteSite={this.handleLogout}
                                                         handleSaveSite={this.handleLogin}
                                                     />

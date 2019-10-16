@@ -1,5 +1,5 @@
 import { Action } from "./messaging";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSite, User, IssueType, isIssueType, Project } from "../jira/jira-client/model/entities";
+import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSite, User, IssueType, isIssueType, Project, CommentVisibility } from "../jira/jira-client/model/entities";
 import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 
@@ -22,6 +22,7 @@ export interface IssueCommentAction extends Action {
     action: 'comment';
     issue: IssueKeyAndSite;
     comment: string;
+    restriction?: CommentVisibility;
 }
 
 export interface IssueAssignAction extends Action {

@@ -105,6 +105,18 @@ track:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - id: 18825
+    action: launched
+    subject: atlascode
+    library: server
+    description: |
+      event when a user launches the extension
+    attributes:
+      - name: machineId
+      - name: extensionLocation
+        type: string
+        description: "The location in which the extension is running (local, docker, etc.)"
+        required: true
   # Jira issue events
   - id: 15628
     action: created

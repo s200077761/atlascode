@@ -162,6 +162,13 @@ export interface IssueLinkType {
     outward: string;
 }
 
+export interface CommentVisibility {
+    type: string;
+    value: string;
+}
+
+export const JsdInternalCommentVisibility = { type: 'jsdPublic', value: 'internal' };
+
 export interface Comment {
     author: User;
     body: string;
@@ -169,6 +176,8 @@ export interface Comment {
     created: string;
     id: string;
     self: string;
+    visibility: CommentVisibility | undefined;
+    jsdPublic: boolean;
 }
 
 export interface WorklogContainer {
