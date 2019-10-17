@@ -652,8 +652,8 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(`Error opening pullrequest: ${msg.prHref}`), nonce: msg.nonce });
                         }
-                        break;
                     }
+                    break;
                 }
             }
         }

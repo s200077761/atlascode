@@ -1352,8 +1352,8 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             default: {
                 if (field.required) {
                     valfunc = (editmode) ? FieldValidators.isValidString : FieldValidators.validateString;
-                    break;
                 }
+                break;
             }
         }
 

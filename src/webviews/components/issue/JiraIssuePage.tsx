@@ -90,9 +90,11 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 }
                 case 'pullRequestUpdate': {
                     this.setState({ recentPullRequests: e.recentPullRequests });
+                    break;
                 }
                 case 'currentUserUpdate': {
                     this.setState({ currentUser: e.currentUser });
+                    break;
                 }
                 case 'issueCreated': {
                     if (isIssueCreated(e)) {
@@ -153,16 +155,16 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                 this.setState({ isSomethingLoading: true, loadingField: 'issuelinks' });
 
                 this.postMessage({
-                    action: 'createIssueLink'
-                    , site: this.state.siteDetails
-                    , issueLinkData: {
+                    action: 'createIssueLink',
+                    site: this.state.siteDetails,
+                    issueLinkData: {
                         type: {
                             id: newValue.type.id
                         },
                         inwardIssue: newValue.type.type === 'inward' ? { key: newValue.issueKey } : { key: this.state.key },
                         outwardIssue: newValue.type.type === 'outward' ? { key: newValue.issueKey } : { key: this.state.key }
-                    }
-                    , issueLinkType: newValue.type
+                    },
+                    issueLinkType: newValue.type
                 });
                 break;
             }

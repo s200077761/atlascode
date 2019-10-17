@@ -83,8 +83,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     if (isOpenJiraIssue(e)) {
                         handled = true;
                         showIssue(e.issueOrKey);
-                        break;
                     }
+                    break;
                 }
                 case 'copyJiraIssueLink': {
                     handled = true;

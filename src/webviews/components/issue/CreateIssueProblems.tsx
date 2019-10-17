@@ -32,7 +32,6 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
         switch (e.type) {
             case 'error': {
                 this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
-
                 break;
             }
             case 'screenRefresh': {
