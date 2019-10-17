@@ -64,6 +64,19 @@ export class SiteManager extends Disposable {
         }
     }
 
+    public updateSite(oldSite: DetailedSiteInfo, newSite: DetailedSiteInfo) {
+        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${newSite.product.key}${SitesSuffix}`);
+        if (allSites) {
+            const oldSiteIndex = allSites.findIndex(site => site.id === oldSite.id && site.userId === oldSite.userId);
+            if (oldSiteIndex !== -1) {
+                allSites.splice(oldSiteIndex, 1, newSite);
+
+                this._globalStore.update(`${newSite.product.key}${SitesSuffix}`, allSites);
+                this._sitesAvailable.set(newSite.product.key, allSites);
+            }
+        }
+    }
+
     onDidAuthChange(e: AuthInfoEvent) {
         if (isRemoveAuthEvent(e)) {
             const deadSites = this.getSitesAvailable(e.product).filter(site => site.credentialId === e.credentialId);
