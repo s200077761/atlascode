@@ -1,7 +1,7 @@
 import React from "react";
-import { FileDiff, FileStatus } from "src/ipc/prMessaging";
 import Tooltip from '@atlaskit/tooltip';
 import Spinner from '@atlaskit/spinner';
+import { FileStatus, FileDiff } from "src/bitbucket/model";
 
 export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], openDiffHandler: (filediff: FileDiff) => void, fileDiffsLoading: boolean}, {}>{
 
@@ -20,7 +20,7 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
             //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
             return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6'};
         }
-    }
+    };
 
     mapFileStatusToWord = (status: FileStatus) => {
         if (status === FileStatus.ADDED) {
@@ -36,7 +36,7 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
         } else {
             return 'UNKNOWN';
         }
-    }
+    };
 
     generateDiffList = () => {
         return this.props.fileDiffs.map(fileDiff =>
@@ -65,7 +65,7 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
                 </Tooltip>
             </li>
         );
-    }
+    };
 
     render() {
         return <React.Fragment>

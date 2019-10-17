@@ -2,7 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
 import { PipelineApiImpl } from "../pipelines/pipelines";
-import { DetailedFileChange } from "src/ipc/prMessaging";
+import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
 
 export type User = {
     accountId: string;
@@ -81,9 +81,32 @@ export type MergeStrategy = {
 };
 
 export type FileChange = {
-    status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
+    status: FileStatus;
     oldPath?: string;
     newPath?: string;
+    linesAdded: number;
+    linesRemoved: number;
+};
+
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    COPIED = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R',
+    CONFLICT = 'CONFLICT',
+    UNKNOWN = 'X'
+};
+
+export interface FileDiff {
+    file: string;
+    status: FileStatus;
+    linesAdded: number;
+    linesRemoved: number;
+    similarity?: number;
+    lhsQueryParams?: FileDiffQueryParams;
+    rhsQueryParams?: FileDiffQueryParams;
+    fileChange?: FileChange;
 };
 
 export type CreatePullRequestData = {
@@ -177,7 +200,7 @@ export interface PullRequestApi {
     getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
-    getChangedFiles(pr: PullRequest): Promise<DetailedFileChange[]>;
+    getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
     editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;

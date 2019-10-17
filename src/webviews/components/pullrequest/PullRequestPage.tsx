@@ -17,7 +17,7 @@ import Reviewers from './Reviewers';
 import { Commits } from './Commits';
 import Comments from './Comments';
 import { WebviewComponent } from '../WebviewComponent';
-import { PRData, CheckoutResult, isPRData, FileDiff } from '../../../ipc/prMessaging';
+import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
 import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers, OpenDiffViewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import CommentForm from './CommentForm';
@@ -35,7 +35,7 @@ import { TransitionMenu } from '../issue/TransitionMenu';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import MergeChecks from './MergeChecks';
 import PMFBBanner from '../pmfBanner';
-import { BitbucketIssueData, ApprovalStatus, MergeStrategy } from '../../../bitbucket/model';
+import { BitbucketIssueData, ApprovalStatus, MergeStrategy, FileDiff } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 import { format, distanceInWordsToNow } from 'date-fns';
@@ -274,7 +274,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         return <h3>
             Files Changed {this.state.isFileDiffsLoading ? '' : `(${this.state.pr.fileDiffs!.length})`}
         </h3>;
-    }
+    };
 
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
@@ -289,7 +289,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     handleOpenDiffView = (fileDiff: FileDiff) => {
         this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange!});
-    }
+    };
 
     resetCommitMessage = () => {
         const mergeStrategy = this.state.mergeStrategy.value;

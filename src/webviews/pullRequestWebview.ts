@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit, FileChange } from '../bitbucket/model';
-import { PRData, convertDetailedFileChangeToFileDiff } from '../ipc/prMessaging';
+import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit, FileChange, FileDiff } from '../bitbucket/model';
+import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
@@ -23,7 +23,7 @@ import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
 import pSettle from "p-settle";
-import { PullRequestTitlesNode } from '../views/pullrequest/pullRequestNode';
+import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 
 interface PRState {
     prData: PRData;
@@ -273,7 +273,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getChangedFiles(this._pr)
         ]);
         const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
-        const fileDiffs = fileChanges.map(fileChange => convertDetailedFileChangeToFileDiff(fileChange));
+        const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -487,10 +487,31 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             sourceRemote: this._state.sourceRemote,
             data: this._state.prData.pr!
         };
-        const prTitleNode: PullRequestTitlesNode = new PullRequestTitlesNode(pr, Container.bitbucketContext.prCommentController);
-        const diffArgs = await prTitleNode.getArgsForDiffView({data: this._state.prData.comments} as PaginatedComments, fileChange);
 
-        vscode.commands.executeCommand(Commands.ViewDiff, ...diffArgs);
+        const diffViewArgs = await getArgsForDiffView(({ data: this._state.prData.comments } as PaginatedComments), fileChange, pr, Container.bitbucketContext.prCommentController);
+        vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
+    }
+
+    private convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
+        return {
+            file: this.getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
+            status: fileChange.status,
+            linesAdded: fileChange.linesAdded,
+            linesRemoved: fileChange.linesRemoved,
+            fileChange: fileChange
+        };
+    }
+    
+    private getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
+        let fileDisplayName: string = '';
+        if (newPath && oldPath && newPath !== oldPath) {
+            fileDisplayName = `${oldPath} → ${newPath}`; //This is actually not what we want, but it'll have to be dealt with later...
+        } else if (newPath) {
+            fileDisplayName = newPath;
+        } else if (oldPath) {
+            fileDisplayName = oldPath;
+        }
+        return fileDisplayName;
     }
 
 }

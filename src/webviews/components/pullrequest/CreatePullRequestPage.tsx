@@ -8,7 +8,7 @@ import Panel from '@atlaskit/panel';
 import { Field } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
-import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult, FileDiff } from '../../../ipc/prMessaging';
+import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers, OpenDiffPreviewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -28,7 +28,7 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
-import { Commit, BitbucketIssueData, User } from '../../../bitbucket/model';
+import { Commit, BitbucketIssueData, User, FileDiff } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 import DiffList from './DiffList';
@@ -187,7 +187,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 fileDisplayName: fileDiff.file
             }
         );
-    }
+    };
 
     handleBranchChange = () => {
         const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch
