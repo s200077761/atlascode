@@ -168,7 +168,7 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
 
   handleDismissError = () => {
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-  }
+  };
 
   iconForState(state?: PipelineState): any {
     if (!state) {

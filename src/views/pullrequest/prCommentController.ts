@@ -9,12 +9,21 @@ import { Remote } from '../../typings/git';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 
 const turndownService = new TurndownService();
+
 turndownService.addRule('mention', {
     filter: function (node) {
         return node.classList.contains('ap-mention') || node.classList.contains('user-mention');
     },
     replacement: function (content, _, options) {
         return `${options.emDelimiter}${content}${options.emDelimiter}`;
+    }
+});
+turndownService.addRule('codeblock', {
+    filter: function (node) {
+        return node.classList.contains('codehilite');
+    },
+    replacement: function (content, _, options) {
+        return `${options.fence}${content}${options.fence}`;
     }
 });
 
@@ -202,7 +211,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             prCommentCache.get(threadId)!.dispose();
         }
 
-        const newThread = await this._commentController.createCommentThread(uri, range, comments);
+        const newThread = this._commentController.createCommentThread(uri, range, comments);
         newThread.label = '';
         newThread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
         for (let comment of newThread.comments) {

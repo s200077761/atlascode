@@ -21,29 +21,29 @@ export default class PMFBBanner extends React.Component<{ onPMFVisiblity: (visib
     handleOpen = () => {
         this.props.onPMFOpen();
         this.setState({ isOpen: true });
-    }
+    };
     handleLater = () => {
         this.props.onPMFLater();
         this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
-    }
+    };
     handleNever = () => {
         this.props.onPMFNever();
         this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
-    }
+    };
 
     handleFeedback = (formData: PMFData) => {
         this.props.onPMFSubmit(formData);
         this.props.onPMFVisiblity(false);
         this.setState({ isOpen: false });
         return undefined;
-    }
+    };
 
     updateQ1 = (val: string): string => {
         this.setState({ q1Value: val });
         return val;
-    }
+    };
 
     render() {
         const { isOpen } = this.state;

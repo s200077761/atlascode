@@ -52,7 +52,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
     handleClose = () => {
         this.setState({ ...emptyForm });
         this.props.onCancel();
-    }
+    };
 
     disableSaving = (): boolean => {
         return (
@@ -61,7 +61,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
             || this.state.timeSpent.trim() === ''
             || (!this.state.autoAdjust && this.state.newEstimate.trim() === '')
         );
-    }
+    };
 
     handleSave = (formData: any) => {
 
@@ -81,7 +81,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
         }
 
         this.handleClose();
-    }
+    };
 
     render() {
         const defaultDate = (this.state.started.trim() !== '') ? this.state.started : format(Date.now(), 'YYYY-MM-DD');

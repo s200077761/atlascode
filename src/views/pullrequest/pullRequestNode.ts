@@ -122,8 +122,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         let mergeBase = pr.data.destination!.commitHash;
         try {
             mergeBase = await this.pr.repository.getMergeBase(destination, source);
-        }
-        catch (e) {
+        } catch (e) {
             Logger.debug('error getting merge base: ', e);
         }
 

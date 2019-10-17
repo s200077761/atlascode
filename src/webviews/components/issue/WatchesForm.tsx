@@ -43,13 +43,13 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             this.setState({ ...emptyForm });
             this.props.onClose();
         }
-    }
+    };
 
     handleAddWatcher = (user: any) => {
         this.props.onAddWatcher(user);
         this.setState({ ...emptyForm });
         this.props.onClose();
-    }
+    };
 
     getEmptyWatchers = () => {
         const data = [
@@ -67,7 +67,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             />
             <span>No watchers yet</span>
         </div>);
-    }
+    };
 
     getStartStop = (): JSX.Element => {
         if (this.props.watches.isWatching) {
@@ -86,7 +86,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
             </div>
         );
 
-    }
+    };
 
     getWatchers = (): JSX.Element => {
         if (this.props.watches.watchCount < 1) {
@@ -111,7 +111,7 @@ export default class WatchesForm extends React.Component<MyProps, MyState> {
                 {watcherList}
             </div>
         );
-    }
+    };
     render() {
         const commonSelectProps: any = {
             isMulti: false,

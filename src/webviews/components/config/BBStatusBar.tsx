@@ -18,7 +18,7 @@ export default class BBStatusBar extends React.Component<{ config: IConfig, onCo
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         return (

@@ -30,7 +30,7 @@ export default class JiraExplorer extends React.Component<{
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     handleNumberChange = (e: any, configKey: string) => {
         const changes = Object.create(null);
@@ -39,7 +39,7 @@ export default class JiraExplorer extends React.Component<{
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     getIsExplorerIndeterminate = (): boolean => {
         if (!this.props.config.jira.explorer.enabled) {
@@ -55,7 +55,7 @@ export default class JiraExplorer extends React.Component<{
         }
 
         return (count < 2);
-    }
+    };
 
     render() {
         const config = this.props.config;

@@ -259,8 +259,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         });
 
                         commands.executeCommand(Commands.RefreshJiraExplorer);
-                    }
-                    catch (e) {
+                    } catch (e) {
                         Logger.error(new Error(`error updating issue: ${e}`));
                         this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error updating issue'), fieldValues: this.getFieldValuesForKeys(Object.keys(newFieldValues)), nonce: msg.nonce });
                     }
@@ -270,15 +269,14 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                     if (isIssueComment(msg)) {
                         handled = true;
                         try {
-                            const res = await postComment(msg.issue, msg.comment, msg.internal);
+                            const res = await postComment(msg.issue, msg.comment, msg.restriction);
                             this._editUIData.fieldValues['comment'].comments.push(res);
 
                             this.postMessage({
                                 type: 'fieldValueUpdate'
                                 , fieldValues: { 'comment': this._editUIData.fieldValues['comment'], nonce: msg.nonce }
                             });
-                        }
-                        catch (e) {
+                        } catch (e) {
                             Logger.error(new Error(`error posting comment: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error adding comment'), nonce: msg.nonce });
                         }
@@ -668,7 +666,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
 
         const prs = await Container.bitbucketContext.recentPullrequestsForAllRepos();
         const relatedPrs = await Promise.all(prs.map(async pr => {
-            const issueKeys = [...await parseJiraIssueKeys(pr.data.title), ...await parseJiraIssueKeys(pr.data.rawSummary)];
+            const issueKeys = [...parseJiraIssueKeys(pr.data.title), ...parseJiraIssueKeys(pr.data.rawSummary)];
             return issueKeys.find(key => key.toLowerCase() === this._issue.key.toLowerCase()) !== undefined
                 ? pr
                 : undefined;

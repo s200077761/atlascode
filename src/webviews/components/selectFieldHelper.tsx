@@ -150,10 +150,7 @@ const LabelValue = (props: any) => {
     if (typeof props.data === 'string') { value = props.data; }
 
     if (typeof props.data === 'object') {
-        if (props.data.name) { value = props.data.name; }
-        else if (props.data.displayName) { value = props.data.displayName; }
-        else if (props.data.label) { value = props.data.label; }
-        else if (props.data.value) { value = props.data.value; }
+        if (props.data.name) { value = props.data.name; } else if (props.data.displayName) { value = props.data.displayName; } else if (props.data.label) { value = props.data.label; } else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else if (typeof props.data === 'number') {
@@ -173,10 +170,7 @@ const LabelValue = (props: any) => {
 const MultiLabelValue = (props: any) => {
     let value: string = '';
     if (typeof props.data === 'object') {
-        if (props.data.name) { value = props.data.name; }
-        else if (props.data.displayName) { value = props.data.displayName; }
-        else if (props.data.label) { value = props.data.label; }
-        else if (props.data.value) { value = props.data.value; }
+        if (props.data.name) { value = props.data.name; } else if (props.data.displayName) { value = props.data.displayName; } else if (props.data.label) { value = props.data.label; } else if (props.data.value) { value = props.data.value; }
     } else if (typeof props.data === 'string') {
         value = props.data;
     } else if (typeof props.data === 'number') {

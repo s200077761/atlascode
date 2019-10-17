@@ -112,8 +112,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                                 successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
                             });
                             issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                        }
-                        catch (e) {
+                        } catch (e) {
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
@@ -129,8 +128,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
 
         try {
             await repo.getBranch(destBranch);
-        }
-        catch (reason) {
+        } catch (reason) {
             await repo.createBranch(destBranch, true, sourceBranch);
             await repo.push(remote, destBranch, true);
             return;
@@ -235,8 +233,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
             try {
                 let issue = await fetchMinimalIssue(key, this._state.siteDetails);
                 this.updateIssue(issue);
-            }
-            catch (e) {
+            } catch (e) {
                 Logger.error(e);
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
             }

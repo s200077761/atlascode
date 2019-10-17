@@ -18,7 +18,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ config: ICo
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     handleNumberChange = (e: any, configKey: string) => {
         const changes = Object.create(null);
@@ -27,7 +27,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ config: ICo
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         return (

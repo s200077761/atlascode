@@ -5,7 +5,7 @@ import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditEr
 import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import * as FieldValidators from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
-import { MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
+import { MinimalIssueOrKeyAndSite, CommentVisibility, JsdInternalCommentVisibility } from '../../../jira/jira-client/model/entities';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import EdiText, { EdiTextType } from 'react-editext';
 import Spinner from '@atlaskit/spinner';
@@ -79,7 +79,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
     abstract getProjectKey(): string;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => { };
-    protected handleCommentSave = (newValue: string, internal: boolean) => { };
+    protected handleCommentSave = (newValue: string, restriction?: CommentVisibility) => { };
 
     // react-select has issues and doesn't stop propagation on click events when you provide
     // a custom option component.  e.g. it calls this twice, so we have to debounce.
@@ -153,26 +153,26 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         }
 
         return false;
-    }
+    };
 
     private handleCommentInput = (e: any) => {
         const val: string = e.target.value;
         this.setState({ commentInputValue: val });
-    }
+    };
 
     private handleExternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, false);
+        this.handleCommentSave(this.state.commentInputValue, undefined);
         this.setState({ commentInputValue: "" });
-    }
+    };
 
     private handleInternalCommentSave = (e: any) => {
-        this.handleCommentSave(this.state.commentInputValue, true);
+        this.handleCommentSave(this.state.commentInputValue, JsdInternalCommentVisibility);
         this.setState({ commentInputValue: "" });
-    }
+    };
 
     private handleCommentCancelClick = (e: any) => {
         this.setState({ commentInputValue: "" });
-    }
+    };
 
     protected sortFieldValues(fields: FieldUIs): FieldUI[] {
         return Object.values(fields).sort((left: FieldUI, right: FieldUI) => {
@@ -184,7 +184,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
     protected handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite) => {
         let issueObj = issueOrKey;
@@ -199,12 +199,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
             issueOrKey: issueObj,
             nonce: nonce
         });
-    }
+    };
 
     private handleInlineInputEdit = (field: FieldUI, e: any) => {
         const val: string = e.target.value;
         this.handleInlineEdit(field, val);
-    }
+    };
 
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
@@ -222,12 +222,12 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 }
             })();
         });
-    }
+    };
 
     protected loadSelectOptionsForField = (field: SelectFieldUI, input: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true, loadingField: field.key });
         return this.loadSelectOptions(input, field.autoCompleteUrl);
-    }
+    };
 
     protected loadSelectOptions = (input: string, url: string): Promise<any[]> => {
         this.setState({ isSomethingLoading: true });
@@ -248,7 +248,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
 
             })();
         });
-    }
+    };
 
     // react-select has issues and doesn't stop propagation on click events when you provide
     // a custom option component.  e.g. it calls this twice, so we have to debounce.

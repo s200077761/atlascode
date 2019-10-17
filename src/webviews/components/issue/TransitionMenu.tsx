@@ -15,6 +15,15 @@ const StatusOption = (props: any) => (
   </Option>
 );
 
+const StatusOptionWithTransitionName = (props: any) => (
+  <Option {...props}>
+    {`${props.data.name} → `}
+    <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
+      {props.data.to.name}
+    </Lozenge>
+  </Option>
+);
+
 const StatusValue = (props: any) => (
   <components.SingleValue {...props}>
     <Lozenge appearance={colorToLozengeAppearanceMap[props.data.to.statusCategory.colorName]}>
@@ -33,6 +42,7 @@ type Props = {
 
 type State = {
   selectedTransition: Transition | undefined;
+  showTransitionName: boolean;
 };
 
 export class TransitionMenu extends React.Component<Props, State> {
@@ -40,12 +50,12 @@ export class TransitionMenu extends React.Component<Props, State> {
   constructor(props: any) {
     super(props);
     const selectedTransition = this.getCurrentTransition(props.currentStatus, props.transitions);
-    this.state = { selectedTransition: selectedTransition };
+    this.state = { selectedTransition: selectedTransition, showTransitionName: this.shouldShowTransitionName(props.transitions) };
   }
 
   componentWillReceiveProps(nextProps: any) {
     const selectedTransition = this.getCurrentTransition(nextProps.currentStatus, nextProps.transitions);
-    this.setState({ selectedTransition: selectedTransition });
+    this.setState({ selectedTransition: selectedTransition, showTransitionName: this.shouldShowTransitionName(nextProps.transitions) });
   }
 
   // The transition list may not include the transition corresponding to current status.
@@ -59,9 +69,13 @@ export class TransitionMenu extends React.Component<Props, State> {
     return { ...emptyTransition, to: currentStatus };
   }
 
+  private shouldShowTransitionName(transitions: Transition[]) {
+    return transitions.some(t => t.name !== t.to.name);
+  }
+
   handleStatusChange = (item: Transition) => {
     this.props.onStatusChange(item);
-  }
+  };
 
   render() {
     if (!Array.isArray(this.props.transitions) || this.props.transitions.length < 1) {
@@ -76,7 +90,10 @@ export class TransitionMenu extends React.Component<Props, State> {
         classNamePrefix="ac-select"
         options={this.props.transitions}
         value={this.state.selectedTransition}
-        components={{ Option: StatusOption, SingleValue: StatusValue }}
+        components={{
+          Option: this.state.showTransitionName ? StatusOptionWithTransitionName : StatusOption,
+          SingleValue: StatusValue
+        }}
         getOptionLabel={(option: Transition) => option.to.name}
         getOptionValue={(option: Transition) => option.id}
         isDisabled={this.props.isStatusButtonLoading}

@@ -190,7 +190,7 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ o
         files.forEach(file => URL.revokeObjectURL(file.preview));
     }, [files]);
 
-    useEffect(() => { onFilesChanged(files); }, [files]);
+    useEffect(() => { onFilesChanged(files); }, [files, onFilesChanged]);
 
     if (isInline) {
         return inlineEditor(files, dispatch, getRootProps, getInputProps);

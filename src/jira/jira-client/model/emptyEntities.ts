@@ -135,6 +135,7 @@ export const emptyComment: Comment = {
     created: '',
     id: '',
     self: '',
+    visibility: undefined,
     jsdPublic: false
 };
 

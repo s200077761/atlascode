@@ -134,22 +134,22 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     handleTitleChange = (e: any) => {
         this.setState({ titleManuallyEdited: true });
-    }
+    };
 
     handleSummaryChange = (e: any) => {
         this.setState({ summaryManuallyEdited: true });
-    }
+    };
 
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
         this.resetRepoAndRemoteState(
             newValue.value,
             newValue.value.remotes.find(r => r.name === 'origin') || newValue.value.remotes[0]
         );
-    }
+    };
 
     handleRemoteChange = (newValue: { label: string, value: Remote }) => {
         this.resetRepoAndRemoteState(this.state.repo!.value, newValue.value);
-    }
+    };
 
     resetRepoAndRemoteState = (repo: RepoData, remote: Remote) => {
         const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === remote.name);
@@ -168,15 +168,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             sourceBranch: { label: sourceBranch.name!, value: sourceBranch },
             destinationBranch: { label: destinationBranch.name!, value: destinationBranch }
         }, this.handleBranchChange);
-    }
+    };
 
     handleSourceBranchChange = (newValue: any) => {
         this.setState({ sourceBranch: newValue }, this.handleBranchChange);
-    }
+    };
 
     handleDestinationBranchChange = (newValue: any) => {
         this.setState({ destinationBranch: newValue }, this.handleBranchChange);
-    }
+    };
 
     openDiffViewForFile = (fileDiff: FileDiff) => {
         this.postMessage(
@@ -241,19 +241,19 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         } else {
             this.setState({ fileDiffsLoading: false, fileDiffs: [] });
         }
-    }
+    };
 
     handlePushLocalChangesChange = (e: any) => {
         this.setState({ pushLocalChanges: e.target.checked });
-    }
+    };
 
     handleCloseSourceBranchChange = (e: any) => {
         this.setState({ closeSourceBranch: e.target.checked });
-    }
+    };
 
     toggleIssueSetupEnabled = (e: any) => {
         this.setState({ issueSetupEnabled: e.target.checked });
-    }
+    };
 
     handleJiraIssueStatusChange = (item: Transition) => {
         this.setState({
@@ -261,13 +261,13 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             // there must be a better way to update the transition dropdown!!
             issue: { ...this.state.issue as MinimalIssue, status: { ...(this.state.issue as MinimalIssue).status, id: item.to.id, name: item.to.name } }
         });
-    }
+    };
 
     handleBitbucketIssueStatusChange = (item: string) => {
         this.setState({
             issue: { ...this.state.issue, state: item } as BitbucketIssueData
         });
-    }
+    };
 
     loadUserOptions = (input: string): Promise<any> => {
         if (!this.state.remote || !this.state.repo) {
@@ -292,7 +292,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 }
             }, 100);
         });
-    }
+    };
 
     handleCreatePR = (e: any) => {
         this.setState({ isCreateButtonLoading: true });
@@ -309,7 +309,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             closeSourceBranch: this.state.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.issue : undefined
         });
-    }
+    };
 
     onMessageReceived(e: any): boolean {
         switch (e.type) {
@@ -386,11 +386,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         return <h3>
             Files Changed {this.state.fileDiffsLoading ? '' : `(${this.state.fileDiffs.length})`}
         </h3>;
-    }
+    };
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     render() {
         if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {

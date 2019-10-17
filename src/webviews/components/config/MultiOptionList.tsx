@@ -65,14 +65,14 @@ export default class MultiOptionList extends React.Component<
         options[index] = option;
         this.setState({ options: options });
         this.publishChanges();
-    }
+    };
 
     deleteOption = (index: number) => {
         const options = [...this.state.options];
         options.splice(index, 1);
         this.setState({ options: options });
         this.publishChanges();
-    }
+    };
 
     publishChanges = debounce(() => {
         const options = this.state.options;
@@ -88,7 +88,7 @@ export default class MultiOptionList extends React.Component<
         options.push('');
         this.setState({ options: options });
         this.publishChanges();
-    }
+    };
 
     onCheckboxChange = (e: any) => {
         const changes = Object.create(null);
@@ -96,7 +96,7 @@ export default class MultiOptionList extends React.Component<
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         const options = this.state.options;

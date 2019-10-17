@@ -40,8 +40,8 @@ export async function activate(context: ExtensionContext) {
 
         await migrateConfig(context.globalState);
 
-        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
-        setCommandContext(CommandContext.IsBBAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
+        setCommandContext(CommandContext.IsJiraAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductJira));
+        setCommandContext(CommandContext.IsBBAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
 
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (gitExtension) {
@@ -96,7 +96,11 @@ async function showWelcomePage(version: string, previousVersion: string | undefi
     if ((previousVersion === undefined || semver.gt(version, previousVersion)) &&
         Container.config.showWelcomeOnInstall &&
         window.state.focused) {
-        await commands.executeCommand(Commands.ShowWelcomePage);
+        window.showInformationMessage(`Jira and Bitbucket (Official) has been updated to v${version}`, 'Release notes').then(userChoice => {
+            if (userChoice === 'Release notes') {
+                commands.executeCommand(Commands.ShowWelcomePage);
+            }
+        });
     }
 }
 

@@ -79,17 +79,17 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
 
     handleOpenInlineEditor = (e: any) => {
         this.setState({ isEditing: true, editorContainerClassname: 'ac-flex-space-between' });
-    }
+    };
 
     handleCancelInlineEdit = (value: string) => {
         this.setState({ isEditing: false, editorContainerClassname: 'ac-hidden' });
-    }
+    };
 
     handleIssueTypeChange = (newType: IssueType) => {
         if (newType.id !== this.state.selectedIssueType.id) {
             this.setState({ selectedIssueType: newType });
         }
-    }
+    };
 
     handleSave = (val: string) => {
         this.setState({ inputValue: "", isEditing: false, editorContainerClassname: 'ac-hidden' });
@@ -101,7 +101,7 @@ export default class InlineSubtaskEditor extends React.Component<Props, State> {
             }
         );
 
-    }
+    };
 
     render() {
         return (
