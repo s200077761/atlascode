@@ -80,10 +80,9 @@ export class CredentialManager implements Disposable {
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
         const oldInfo = await this.getAuthInfo(site);
-        if (!oldInfo) {
-            return;
-        }
-        const hasNewInfo = (getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)) && (oldInfo.user.id !== info.user.id);
+        const hasNewInfo = !oldInfo ||
+            getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info) ||
+            oldInfo.user.id !== info.user.id;
 
         if (hasNewInfo) {
             const cmdctx = this.commandContextFor(site.product);

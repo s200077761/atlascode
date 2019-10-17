@@ -2,6 +2,10 @@ import { ProductJira, isBasicAuthInfo } from "../atlclients/authInfo";
 import { SiteManager } from "../siteManager";
 import { CredentialManager } from "../atlclients/authStore";
 
+// Versions <= 2.1.2 had a bug that resulted in user id not being stored in
+// DetailedSiteInfo in global store and in the user object of the AuthInfo in
+// keychain for *Jira Server* sites.
+// V2JiraServerUserIdFixer backfills the user id in existing data by using the `username` from AuthInfo.
 export class V2JiraServerUserIdFixer {
 
     constructor(
