@@ -621,12 +621,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                                     getOptionLabel={(option: any) => option.display_name}
                                                                     getOptionValue={(option: any) => option.accountId}
                                                                     placeholder={repo.value.isCloud
-                                                                        ? "Start typing bitbucket username to search for reviewers"
+                                                                        ? "Enter the user's full name (partial matches are not supported)"
                                                                         : "Start typing to search for reviewers"
                                                                     }
                                                                     noOptionsMessage={() => repo.value.isCloud
-                                                                        ? "No options (Start typing bitbucket username to search for reviewers)"
-                                                                        : "No options"
+                                                                        ? "No results (enter the user's full name; partial matches are not supported)"
+                                                                        : "No results"
                                                                     }
                                                                     defaultOptions={repo.value.defaultReviewers}
                                                                     isMulti
