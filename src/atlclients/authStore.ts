@@ -71,8 +71,6 @@ export class CredentialManager implements Disposable {
     }
 
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
-        const oldInfo = await this.getAuthInfo(site);
-
         let productAuths = this._memStore.get(site.product.key);
 
         if (!productAuths) {
@@ -81,7 +79,10 @@ export class CredentialManager implements Disposable {
 
         this._memStore.set(site.product.key, productAuths.set(site.credentialId, info));
 
-        const hasNewInfo = (!oldInfo || (oldInfo && getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info)));
+        const oldInfo = await this.getAuthInfo(site);
+        const hasNewInfo = !oldInfo ||
+            getSecretForAuthInfo(oldInfo) !== getSecretForAuthInfo(info) ||
+            oldInfo.user.id !== info.user.id;
 
         if (hasNewInfo) {
             const cmdctx = this.commandContextFor(site.product);
