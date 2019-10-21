@@ -198,7 +198,7 @@ export class OAuthDancer implements Disposable {
                                     name: ProductBitbucket.name,
                                     scopes: [],
                                     avatarUrl: "",
-                                    url: "https://bb-inf.net"
+                                    url: "https://staging.bb-inf.net"
                                 });
                             }
 
