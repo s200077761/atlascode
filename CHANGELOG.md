@@ -1,3 +1,14 @@
+## What's New In 2.1.3
+### Improvements
+* Added tooltip text clarifying that only exact matches are allowed on Bitbucket Server when adding reviewers to a pull request
+* When available, specific error messages for git operations are now presented instead of more general error messages
+
+### Bugs Fixed
+* Jira issues are now correctly assigned when using start work on Jira Server
+* Selecting an item from the mention picker when editing a Bitbucket issue now works correctly
+* "Create in browser..." button on "Create pull request" screen now links to correct location on Bitbucket Server
+* Fixed bug that could prevent Jira issues from presenting up-to-date information
+
 ## What's New In 2.1.2
 ### Improvements
 * Allow extension to be used when working in remote workspaces
