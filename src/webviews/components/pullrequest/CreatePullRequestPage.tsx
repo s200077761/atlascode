@@ -460,13 +460,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
         const repo = this.state.repo || { label: '', value: emptyRepoData };
 
+        let externalUrl = 'https://bitbucket.org/dashboard/overview';
+        if (repo.value.href) {
+            externalUrl = repo.value.isCloud
+                ? `${repo.value.href}/pull-requests/new`
+                : `${repo.value.href}/pull-requests?create`;
+        }
         const actionsContent = (
             <ButtonGroup>
-                <Button className='ac-button' href={
-                    repo && repo.value.href
-                        ? `${repo.value.href}/pull-requests/new`
-                        : `https://bitbucket.org/dashboard/overview`
-                }>Create in browser...</Button>
+                <Button className='ac-button' href={externalUrl}>Create in browser...</Button>
             </ButtonGroup>
         );
 
