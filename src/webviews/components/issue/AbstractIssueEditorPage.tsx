@@ -206,6 +206,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.handleInlineEdit(field, val);
     };
 
+    private handleCreateModeAttachments = (files: any[], field?: FieldUI) => {
+        if (field) {
+            this.handleInlineEdit(field, files);
+        }
+    };
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
@@ -1219,7 +1224,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 return (
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
-                        <AttachmentForm isInline={true} onFilesChanged={(files: any) => this.handleInlineEdit(field, files)} />
+                        <AttachmentForm isInline={true} field={field} onFilesChanged={this.handleCreateModeAttachments} />
                     </div>
                 );
             }

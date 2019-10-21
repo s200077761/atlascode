@@ -6,6 +6,7 @@ import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
 import filesize from 'filesize';
 import { ResourceContext } from '../context';
+import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
 
 type ItemData = {
     file: FileWithPreview;
@@ -54,7 +55,9 @@ type ActionType = {
 
 interface AttachmentFormProps {
     isInline?: boolean;
-    onFilesChanged(files: FileWithPath[]): void;
+    // TODO: remove field param when we clean up ui
+    field?: FieldUI;
+    onFilesChanged(files: FileWithPath[], field?: FieldUI): void;
 }
 
 const initialState: FileWithPreview[] = [];
@@ -167,7 +170,7 @@ const inlineEditor = (files: FileWithPreview[], dispatch: any, getRootProps: (pr
     );
 };
 
-export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ onFilesChanged, isInline }) => {
+export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ field, onFilesChanged, isInline }) => {
     const scheme: string = useContext(ResourceContext);
     const [files, dispatch] = useReducer(filesReducer, initialState);
     const { getRootProps, getInputProps } = useDropzone({
@@ -190,7 +193,7 @@ export const AttachmentForm: React.FunctionComponent<AttachmentFormProps> = ({ o
         files.forEach(file => URL.revokeObjectURL(file.preview));
     }, [files]);
 
-    useEffect(() => { onFilesChanged(files); }, [files, onFilesChanged]);
+    useEffect(() => { onFilesChanged(files, field); }, [field, files, onFilesChanged]);
 
     if (isInline) {
         return inlineEditor(files, dispatch, getRootProps, getInputProps);
