@@ -1,3 +1,7 @@
+## What's New In 2.1.4
+### Bugs Fixed
+* Fixed issue that resulted in failure to save credentials when logging in
+
 ## What's New In 2.1.3
 ### Improvements
 * Added tooltip text clarifying that only exact matches are allowed on Bitbucket Server when adding reviewers to a pull request
