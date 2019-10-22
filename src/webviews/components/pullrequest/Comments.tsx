@@ -35,37 +35,37 @@ class NestedComment extends React.Component<
             this.props.onDelete(this.props.node.id);
             this.setState({showCommentForm: false});
         }
-    }
+    };
 
     handleEdit = (content: string) => {
         if(this.props.onEdit) {
             this.props.onEdit(content, this.props.node.id);
             this.setState({commentEditMode: false});
         }
-    }
+    };
 
     handleEditClick = () => {
         this.setState({commentEditMode: true});
-    }
+    };
 
     handleReplyClick = () => {
         this.setState({ showCommentForm: true });
-    }
+    };
 
     handleSave = (content: string, parentCommentId?: number) => {
         if (this.props.onSave) {
             this.props.onSave(content, parentCommentId);
             this.setState({ showCommentForm: false });
         }
-    }
+    };
 
     handleCancel = () => {
         this.setState({ showCommentForm: false });
-    }
+    };
 
     handleCancelEdit = () => {
         this.setState({ commentEditMode: false });
-    }
+    };
 
     generateActionsList = () => {
         let actionList = [];
@@ -79,7 +79,7 @@ class NestedComment extends React.Component<
             actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
         }
         return actionList;
-    }
+    };
 
     editedOrDeleted = () => {
         if(this.props.node.deleted){
@@ -87,7 +87,7 @@ class NestedComment extends React.Component<
         } else {
             return 'Edited';
         }
-    }
+    };
 
     render(): any {
         const { node, currentUser } = this.props;
@@ -206,11 +206,11 @@ class EditForm extends React.Component<
         if(this.props.onSaveChanges && this.state.editInput !== ''){
             this.props.onSaveChanges(this.state.editInput);
         }
-    }
+    };
 
     handleChange = (e: any) => {
         this.setState({ editInput: e.target.value });
-    }
+    };
 
     render(): any{
         return <div style={{ width: '100%', marginLeft: 8, marginTop: 10 }}>

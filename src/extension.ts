@@ -18,6 +18,7 @@ import { provideCodeLenses } from "./jira/todoObserver";
 import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
 import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
+import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
 
 const AnalyticDelay = 5000;
 
@@ -40,8 +41,8 @@ export async function activate(context: ExtensionContext) {
 
         await migrateConfig(context.globalState);
 
-        setCommandContext(CommandContext.IsJiraAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductJira));
-        setCommandContext(CommandContext.IsBBAuthenticated, await Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
+        setCommandContext(CommandContext.IsJiraAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductJira));
+        setCommandContext(CommandContext.IsBBAuthenticated, Container.siteManager.productHasAtLeastOneSite(ProductBitbucket));
 
         const gitExtension = extensions.getExtension<GitExtension>('vscode.git');
         if (gitExtension) {
@@ -89,6 +90,9 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         // we've already migrated to 2.x but we might need to migrate workspace JQL
         migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
         await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
+
+        const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
+        await v2JiraServerUserIdFixer.fix();
     }
 }
 

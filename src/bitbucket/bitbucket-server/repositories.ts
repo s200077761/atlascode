@@ -37,8 +37,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             );
 
             return data.values.map((val: any) => new URL(val.baseUrl).hostname);
-        }
-        catch (e) {
+        } catch (e) {
             // ignore
         }
         return [];
@@ -168,12 +167,15 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             };
         }
 
+        let url: string = Array.isArray(bbRepo.links.self) ? (bbRepo.links.self[0].href || '') : '';
+        url = url.endsWith('/browse') ? url.slice(0, url.lastIndexOf('/browse')) : url;
+
         return {
             id: bbRepo.id,
             name: bbRepo.slug,
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
-            url: bbRepo.links.self[0].href,
+            url: url,
             avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
             issueTrackerEnabled: false

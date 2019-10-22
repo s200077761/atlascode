@@ -37,16 +37,16 @@ export default class CommentForm extends React.Component<{
     handleSave = (e: any) => {
         if (this.props.onSave) { this.props.onSave(this.state.commentInput); }
         this.setState({ commentInput: '', isThisCommentLoading: true });
-    }
+    };
 
     handleCancel = (e: any) => {
         if (this.props.onCancel) { this.props.onCancel(); }
         this.setState({ commentInput: '' });
-    }
+    };
 
     handleChange = (e: any) => {
         this.setState({ commentInput: e.target.value });
-    }
+    };
 
     handleUserMentioned = (item: any) => {
         const { selectionStart, selectionEnd, value } = this.textAreaElement;
@@ -56,7 +56,7 @@ export default class CommentForm extends React.Component<{
             this.textAreaElement.selectionStart = this.textAreaElement.selectionEnd = selectionStart + mentionText.length;
             this.textAreaElement.focus();
         });
-    }
+    };
 
     render() {
         return <React.Fragment>

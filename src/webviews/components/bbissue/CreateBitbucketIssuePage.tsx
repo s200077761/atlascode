@@ -66,7 +66,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     handleSubmit(e: any) {
         this.setState({ isSubmitButtonLoading: true });

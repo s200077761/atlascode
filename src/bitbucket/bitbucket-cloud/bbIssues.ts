@@ -174,7 +174,8 @@ export class BitbucketIssuesApiImpl {
                         accountId: comment.user.account_id!,
                         displayName: comment.user.display_name!,
                         url: comment.user.links!.html!.href!,
-                        avatarUrl: comment.user.links!.avatar!.href!
+                        avatarUrl: comment.user.links!.avatar!.href!,
+                        mention: `@[${comment.user.display_name!}](account_id:${comment.user.account_id!})`
                     }
                     : UnknownUser,
                 children: []

@@ -101,7 +101,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 return merge(inspect['default'], inspect['workspacefolder']) as IConfig;
             }
         }
-    }
+    };
 
     public onMessageReceived(e: any): boolean {
         console.log('got config event', e);
@@ -148,15 +148,15 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         change['configurationTarget'] = selected.value;
 
         this.postMessage({ action: 'saveSettings', changes: change, removes: undefined, target: ConfigTarget.User, targetUri: "" });
-    }
+    };
 
     handleOpenJson = () => {
         this.postMessage({ action: 'openJson', target: this.state.target });
-    }
+    };
 
     public onConfigChange = (change: changeObject, removes?: string[]) => {
         this.postMessage({ action: 'saveSettings', changes: change, removes: removes, target: this.state.target, targetUri: this.state.targetUri });
-    }
+    };
 
     handleFetchJqlOptions = (site: DetailedSiteInfo, path: string): Promise<any> => {
         return new Promise(resolve => {
@@ -179,7 +179,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 }
             }, 100);
         });
-    }
+    };
 
     //HACK: since panels only support the isDefaultExpanded prop, the tabs need to be cycled to force a refresh of the panels
     refreshBySwitchingTabs = () => {
@@ -190,7 +190,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             this.setState({ tabIndex: currentTab - 1 });
         }
         this.setState({ tabIndex: currentTab });
-    }
+    };
 
     updateTabIndex = () => {
         //If bitbucket or Jira are disabled, the tab we go to has to change since there is a missing tab
@@ -208,41 +208,41 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         } else {
             this.setState({ tabIndex: 2 - jiraDisabledModifier - bitbucketDisabledModifier });
         }
-    }
+    };
 
     handleLogin = (site: SiteInfo, auth: AuthInfo) => {
         this.postMessage({ action: 'login', siteInfo: site, authInfo: auth });
-    }
+    };
 
     handleLogout = (site: DetailedSiteInfo) => {
         this.postMessage({ action: 'logout', siteInfo: site });
-    }
+    };
 
     handleSourceLink = () => {
         this.postMessage({ action: 'sourceLink' });
-    }
+    };
 
     handleIssueLink = () => {
         this.postMessage({ action: 'issueLink' });
-    }
+    };
 
     handleDocsLink = () => {
         this.postMessage({ action: 'docsLink' });
-    }
+    };
 
     handleFeedback = (feedback: FeedbackData) => {
         this.postMessage({ action: 'submitFeedback', feedback: feedback });
-    }
+    };
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     handleTunnelChange = (e: any) => {
         const changes = Object.create(null);
         changes[e.target.value] = e.target.checked;
 
         this.onConfigChange(changes);
-    }
+    };
 
     shouldDefaultExpand = (setting: SettingSource, secondSetting?: SettingSource) => {
         if (setting === this.state.openedSettings || secondSetting === this.state.openedSettings) {
@@ -250,7 +250,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
         } else {
             return;
         }
-    }
+    };
 
     public render() {
         const bbicon = <BitbucketIcon size="small" iconColor={colors.B200} iconGradientStart={colors.B400} iconGradientStop={colors.B200} />;

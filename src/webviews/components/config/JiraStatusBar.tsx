@@ -18,7 +18,7 @@ export default class JiraStatusBar extends React.Component<{ config: IConfig, on
         if (this.props.onConfigChange) {
             this.props.onConfigChange(changes);
         }
-    }
+    };
 
     render() {
         return (

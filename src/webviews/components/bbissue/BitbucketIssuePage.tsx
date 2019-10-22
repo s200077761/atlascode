@@ -142,15 +142,15 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     handleStatusChange = (newStatus: string, content?: string) => {
         this.setState({ isStatusButtonLoading: true });
         this.postMessage({ action: 'change', newStatus: newStatus, content: content });
-    }
+    };
     handlePostComment = (content: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({ action: 'comment', content: content });
-    }
+    };
 
     handleDismissError = () => {
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
-    }
+    };
 
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
@@ -171,7 +171,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 }
             }, 100);
         });
-    }
+    };
 
 
     renderDetails(issue: BitbucketIssueData) {

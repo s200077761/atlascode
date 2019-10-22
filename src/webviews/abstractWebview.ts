@@ -119,8 +119,7 @@ export abstract class AbstractReactWebview implements ReactWebview {
             );
 
             this._panel.webview.html = this._getHtmlForWebview(this.id);
-        }
-        else {
+        } else {
             this._panel.webview.html = this._getHtmlForWebview(this.id);
             this._panel.reveal(column ? column : ViewColumn.Active); // , false);
         }
@@ -188,6 +187,8 @@ export abstract class AbstractReactWebview implements ReactWebview {
             if (e.response.data && e.response.data !== "") {
                 return (title) ? { ...e.response.data, ...{ title: title } } : e.response.data;
             }
+        } else if (e.message && e.stderr) { // git errors
+            return (title) ? { title: title, errorMessages: [e.message, e.stderr] } : { title: e.message, errorMessages: [e.stderr] };
         } else if (e.message) {
             return (title) ? { title: title, errorMessages: [e.message] } : e.message;
         }

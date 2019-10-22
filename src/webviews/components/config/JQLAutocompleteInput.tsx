@@ -93,7 +93,7 @@ export class JQLAutocompleteInput extends PureComponent<
 
     setSuggestions = (suggestions: string[]) => {
         this.setState({ suggestions: [...suggestions] });
-    }
+    };
 
     render() {
         const { isOpen, suggestions } = this.state;
@@ -160,7 +160,7 @@ export class JQLAutocompleteInput extends PureComponent<
                 </Item>
             );
         });
-    }
+    };
 
     handleKeyboardInteractions = (event: any) => {
         const isSelectOpen = this.state.isOpen;
@@ -200,7 +200,7 @@ export class JQLAutocompleteInput extends PureComponent<
             default:
                 return false;
         }
-    }
+    };
 
     onOpenChange = (attrs: any) => {
         this.setState({
@@ -208,7 +208,7 @@ export class JQLAutocompleteInput extends PureComponent<
             isOpen: attrs.isOpen
         });
         this.props.onEditorOpenChange(attrs.isOpen);
-    }
+    };
 
     focusNextItem = () => {
         const { focusedItemIndex, suggestions } = this.state;
@@ -220,7 +220,7 @@ export class JQLAutocompleteInput extends PureComponent<
             focusedItemIndex: nextItemIndex
         });
         this.scrollToFocused(nextItemIndex);
-    }
+    };
 
     focusPreviousItem = () => {
         const { focusedItemIndex, suggestions } = this.state;
@@ -232,14 +232,14 @@ export class JQLAutocompleteInput extends PureComponent<
             focusedItemIndex: nextItemIndex
         });
         this.scrollToFocused(nextItemIndex);
-    }
+    };
 
     getNextFocusable = (indexItem: number, length: number) => {
         if (indexItem === undefined) {
             return 0;
         }
         return (indexItem + 1) % length;
-    }
+    };
 
     handleItemSelect = (item: any) => {
         this.setState({
@@ -249,14 +249,14 @@ export class JQLAutocompleteInput extends PureComponent<
         if (item) {
             item.onClick();
         }
-    }
+    };
 
     getPrevFocusable = (indexItem: number, length: number) => {
         if (indexItem === undefined) {
             return length - 1;
         }
         return (length + indexItem - 1) % length;
-    }
+    };
 
     scrollToFocused = (index: number) => {
         const scrollable = this.containerNode.querySelector(
@@ -272,7 +272,7 @@ export class JQLAutocompleteInput extends PureComponent<
             scrollable.scrollTop =
                 item.offsetTop - scrollable.clientHeight + item.clientHeight;
         }
-    }
+    };
 
     handleInputChange = (event: any) => {
         const { value } = event.target;
@@ -282,7 +282,7 @@ export class JQLAutocompleteInput extends PureComponent<
             this.onOpenChange({ event, isOpen: true });
             this.props.onChange(event);
         }
-    }
+    };
 
     validateInput = (event: any) => {
         if (this.jqlTimer) {
@@ -290,9 +290,9 @@ export class JQLAutocompleteInput extends PureComponent<
         }
         const jql = event.currentTarget.value;
         this.props.validationRequest(jql);
-    }
+    };
 
     validateWhenComponentDidMount = (value: any) => {
         this.props.validationRequest(value);
-    }
+    };
 }
