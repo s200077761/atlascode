@@ -460,13 +460,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
         const repo = this.state.repo || { label: '', value: emptyRepoData };
 
+        let externalUrl = 'https://bitbucket.org/dashboard/overview';
+        if (repo.value.href) {
+            externalUrl = repo.value.isCloud
+                ? `${repo.value.href}/pull-requests/new`
+                : `${repo.value.href}/pull-requests?create`;
+        }
         const actionsContent = (
             <ButtonGroup>
-                <Button className='ac-button' href={
-                    repo && repo.value.href
-                        ? `${repo.value.href}/pull-requests/new`
-                        : `https://bitbucket.org/dashboard/overview`
-                }>Create in browser...</Button>
+                <Button className='ac-button' href={externalUrl}>Create in browser...</Button>
             </ButtonGroup>
         );
 
@@ -621,12 +623,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                                     getOptionLabel={(option: any) => option.display_name}
                                                                     getOptionValue={(option: any) => option.accountId}
                                                                     placeholder={repo.value.isCloud
-                                                                        ? "Start typing bitbucket username to search for reviewers"
+                                                                        ? "Enter the user's full name (partial matches are not supported)"
                                                                         : "Start typing to search for reviewers"
                                                                     }
                                                                     noOptionsMessage={() => repo.value.isCloud
-                                                                        ? "No options (Start typing bitbucket username to search for reviewers)"
-                                                                        : "No options"
+                                                                        ? "No results (enter the user's full name; partial matches are not supported)"
+                                                                        : "No results"
                                                                     }
                                                                     defaultOptions={repo.value.defaultReviewers}
                                                                     isMulti

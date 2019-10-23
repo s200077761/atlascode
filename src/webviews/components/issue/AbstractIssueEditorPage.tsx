@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import * as FieldValidators from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSite, CommentVisibility, JsdInternalCommentVisibility } from '../../../jira/jira-client/model/entities';
@@ -29,6 +28,7 @@ import { colorToLozengeAppearanceMap } from '../colors';
 import Lozenge from "@atlaskit/lozenge";
 import { Time } from '../../../util/time';
 import uuid from 'uuid';
+import { FieldValues, FieldUI, ValueType, SelectFieldUI, FieldUIs, UIType, InputFieldUI, OptionableFieldUI } from 'jira-metaui-transformer';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -206,6 +206,11 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.handleInlineEdit(field, val);
     };
 
+    private handleCreateModeAttachments = (files: any[], field?: FieldUI) => {
+        if (field) {
+            this.handleInlineEdit(field, files);
+        }
+    };
 
     protected loadIssueOptions = (field: SelectFieldUI, input: string): Promise<IssuePickerIssue[]> => {
         return new Promise(resolve => {
@@ -631,7 +636,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     commonProps.label = field.name;
                     commonProps.id = field.key;
                     commonProps.name = field.key;
-                    commonProps.defaultValue = defVal;
+                    commonProps.value = defVal;
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {
@@ -1219,7 +1224,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 return (
                     <div className='ac-vpadding'>
                         <label className='ac-field-label'>{field.name}</label>
-                        <AttachmentForm isInline={true} onFilesChanged={(files: any) => this.handleInlineEdit(field, files)} />
+                        <AttachmentForm isInline={true} field={field} onFilesChanged={this.handleCreateModeAttachments} />
                     </div>
                 );
             }

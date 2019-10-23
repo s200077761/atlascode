@@ -4,9 +4,9 @@ import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import ErrorBanner from '../ErrorBanner';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
-import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/editIssueUI';
 import { Project } from '../../../jira/jira-client/model/entities';
 import { emptyProject } from '../../../jira/jira-client/model/emptyEntities';
+import { CreateMetaTransformerProblems } from 'jira-metaui-transformer';
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 

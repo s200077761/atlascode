@@ -175,7 +175,7 @@ export class LoginManager {
         });
         const json = res.data;
 
-        const userId = site.product.key === ProductJira.key ? json.id : json.slug;
+        const userId = site.product.key === ProductJira.key ? json.name : json.slug;
         const credentialId = this.generateCredentialId(site.hostname, credentials.username);
 
         const siteDetails = {
@@ -197,14 +197,14 @@ export class LoginManager {
         if (site.product.key === ProductJira.key) {
             credentials.user = {
                 displayName: json.displayName,
-                id: json.id,
+                id: userId,
                 email: json.emailAddress,
                 avatarUrl: json.avatarUrls["48x48"],
             };
         } else {
             credentials.user = {
                 displayName: json.displayName,
-                id: json.slug,
+                id: userId,
                 email: json.emailAddress,
                 avatarUrl: json.avatarUrl,
             };

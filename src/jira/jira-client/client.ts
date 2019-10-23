@@ -1,16 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
 import { URLSearchParams } from 'url';
-import { Field, readField } from './model/fieldMetadata';
 import { CreatedIssue, readCreatedIssue, IssuePickerResult, IssuePickerIssue } from './model/responses';
 import { Project, Version, readVersion, Component, readComponent, IssueLinkType, User, readWatches, Watches, readVotes, Votes, readMinimalIssueLinks, MinimalIssueLink, readProject, CommentVisibility, JsdInternalCommentVisibility } from './model/entities';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { IssueCreateMetadata, readIssueCreateMetadata } from './model/issueCreateMetadata';
 import FormData from 'form-data';
 import * as fs from "fs";
 import { Time } from '../../util/time';
 import { getAgent } from '../../atlclients/agent';
 import { Container } from '../../container';
 import { addCurlLogging } from '../../atlclients/interceptors';
+import { IssueCreateMetadata, readIssueCreateMetadata, Field, readField } from 'jira-metaui-transformer';
 
 const issueExpand = "transitions,renderedFields,transitions.fields";
 export const API_VERSION = 2;
