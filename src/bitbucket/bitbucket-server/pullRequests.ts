@@ -1,4 +1,4 @@
-import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, FileChange, Commit } from '../model';
+import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, Commit, FileChange, FileStatus } from '../model';
 import { Remote, Repository } from '../../typings/git';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
@@ -181,18 +181,22 @@ export class ServerPullRequestApi implements PullRequestApi {
         accumulatedDiffStats = accumulatedDiffStats.map(diffStat => {
             switch (diffStat.type) {
                 case 'ADD':
+                    diffStat.type = FileStatus.ADDED;
+                    break;
                 case 'COPY':
-                    diffStat.type = 'added';
+                    diffStat.type = FileStatus.COPIED;
                     break;
                 case 'DELETE':
-                    diffStat.type = 'removed';
+                    diffStat.type = FileStatus.DELETED;
                     break;
                 case 'MOVE':
-                    diffStat.type = 'renamed';
+                    diffStat.type = FileStatus.RENAMED;
                     break;
                 case 'MODIFY':
+                    diffStat.type = FileStatus.MODIFIED;
+                    break;
                 default:
-                    diffStat.type = 'modified';
+                    diffStat.type = FileStatus.UNKNOWN;
                     break;
             }
 
@@ -201,8 +205,10 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return accumulatedDiffStats.map(diffStat => ({
             status: diffStat.type,
-            oldPath: diffStat.type === 'added' ? undefined : diffStat.path.toString,
-            newPath: diffStat.type === 'removed' ? undefined : diffStat.path.toString
+            linesAdded: -1,
+            linesRemoved: -1,
+            oldPath: diffStat.type === FileStatus.ADDED ? undefined : diffStat.path.toString,
+            newPath: diffStat.type === FileStatus.DELETED ? undefined : diffStat.path.toString
         }));
     }
 

@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit } from '../bitbucket/model';
+import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit, FileChange, FileDiff } from '../bitbucket/model';
 import { PRData } from '../ipc/prMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { Logger } from '../logger';
 import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
+import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers, isOpenDiffView } from '../ipc/prActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Commands } from '../commands';
 import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
@@ -23,6 +23,7 @@ import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { transitionIssue } from '../jira/transitionIssue';
 import { issueForKey } from '../jira/issueForKey';
 import pSettle from "p-settle";
+import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
 
 interface PRState {
     prData: PRData;
@@ -31,7 +32,20 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { prData: { type: '', repoUri: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
+const emptyState: PRState = { 
+    prData: { 
+        type: '', 
+        fileDiffs: [],
+        repoUri: '',
+        remote: { 
+            name: 'dummy_remote', 
+            isReadOnly: true 
+        }, 
+        currentBranch: '', 
+        relatedJiraIssues: [], 
+        mergeStrategies: [] 
+    } 
+};
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
@@ -169,8 +183,14 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
                         showIssue(msg.issueOrKey);
-                        break;
                     }
+                    break;
+                }
+                case 'openDiffView': {
+                    if(isOpenDiffView(msg)){
+                        await this.openDiffViewForFile(msg.fileChange);
+                    }
+                    break;
                 }
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
@@ -188,8 +208,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
-                        break;
                     }
+                    break;
                 }
                 case 'copyPullRequestLink': {
                     handled = true;
@@ -249,9 +269,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr)
+            bbApi.pullrequests.getMergeStrategies(this._pr),
+            bbApi.pullrequests.getChangedFiles(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -267,6 +289,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             repository: this._pr.repository,
             prData: {
                 pr: this._pr.data,
+                fileDiffs: fileDiffs,
                 repoUri: this._pr.repository.rootUri.toString(),
                 remote: this._pr.remote,
                 currentUser: currentUser,
@@ -457,6 +480,38 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.updatePullRequest();
     }
 
+    private async openDiffViewForFile(fileChange: FileChange) {
+        const pr: PullRequest = {
+            repository: this._state.repository!,
+            remote: this._state.remote!,
+            sourceRemote: this._state.sourceRemote,
+            data: this._state.prData.pr!
+        };
 
+        const diffViewArgs = await getArgsForDiffView(({ data: this._state.prData.comments } as PaginatedComments), fileChange, pr, Container.bitbucketContext.prCommentController);
+        vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
+    }
+
+    private convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
+        return {
+            file: this.getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
+            status: fileChange.status,
+            linesAdded: fileChange.linesAdded,
+            linesRemoved: fileChange.linesRemoved,
+            fileChange: fileChange
+        };
+    }
+    
+    private getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
+        let fileDisplayName: string = '';
+        if (newPath && oldPath && newPath !== oldPath) {
+            fileDisplayName = `${oldPath} → ${newPath}`; //This is actually not what we want, but it'll have to be dealt with later...
+        } else if (newPath) {
+            fileDisplayName = newPath;
+        } else if (oldPath) {
+            fileDisplayName = oldPath;
+        }
+        return fileDisplayName;
+    }
 
 }

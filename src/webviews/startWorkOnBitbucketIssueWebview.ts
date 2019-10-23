@@ -73,8 +73,8 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                     if (isOpenBitbucketIssueAction(e)) {
                         handled = true;
                         vscode.commands.executeCommand(Commands.ShowBitbucketIssue, this._state);
-                        break;
                     }
+                    break;
                 }
                 case 'copyBitbucketIssueLink': {
                     handled = true;

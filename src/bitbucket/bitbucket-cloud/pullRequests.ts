@@ -1,5 +1,5 @@
 import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, FileChange, Commit } from '../model';
+import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, Commit, FileChange, FileStatus } from '../model';
 import { Container } from "../../container";
 import { prCommentEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
@@ -174,10 +174,28 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map(diffStat => ({
-            status: diffStat.status!,
+            linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
+            linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
+            status: this.mapStatusWordsToFileStatus(diffStat.status!),
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
             newPath: diffStat.new ? diffStat.new.path! : undefined
         }));
+    }
+
+    private mapStatusWordsToFileStatus(status: string): FileStatus {
+        if(status === 'added') {
+            return FileStatus.ADDED;
+        } else if(status === 'removed') {
+            return FileStatus.DELETED;
+        } else if(status === 'modified') {
+            return FileStatus.MODIFIED;
+        } else if(status === 'renamed') {
+            return FileStatus.RENAMED;
+        } else if(status === 'merge conflict') {
+            return FileStatus.CONFLICT;
+        } else {
+            return FileStatus.UNKNOWN;
+        }
     }
 
     async getCommits(pr: PullRequest): Promise<Commit[]> {

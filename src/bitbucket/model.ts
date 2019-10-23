@@ -2,6 +2,7 @@ import { Repository, Remote } from "../typings/git";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
 import { PipelineApiImpl } from "../pipelines/pipelines";
+import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
 
 export type User = {
     accountId: string;
@@ -80,9 +81,32 @@ export type MergeStrategy = {
 };
 
 export type FileChange = {
-    status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
+    status: FileStatus;
     oldPath?: string;
     newPath?: string;
+    linesAdded: number;
+    linesRemoved: number;
+};
+
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    COPIED = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R',
+    CONFLICT = 'CONFLICT',
+    UNKNOWN = 'X'
+};
+
+export interface FileDiff {
+    file: string;
+    status: FileStatus;
+    linesAdded: number;
+    linesRemoved: number;
+    similarity?: number;
+    lhsQueryParams?: FileDiffQueryParams;
+    rhsQueryParams?: FileDiffQueryParams;
+    fileChange?: FileChange;
 };
 
 export type CreatePullRequestData = {

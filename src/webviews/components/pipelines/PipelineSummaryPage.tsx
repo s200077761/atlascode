@@ -142,7 +142,6 @@ export default class PipelineSummaryPage extends WebviewComponent<Emit, Pipeline
     switch (e.type) {
       case 'error': {
         this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
-
         break;
       }
       case 'updatePipeline': {

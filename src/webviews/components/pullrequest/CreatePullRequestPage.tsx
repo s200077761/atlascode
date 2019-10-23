@@ -8,7 +8,7 @@ import Panel from '@atlaskit/panel';
 import { Field } from '@atlaskit/form';
 import { Checkbox } from '@atlaskit/checkbox';
 import { WebviewComponent } from '../WebviewComponent';
-import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult, FileDiff, FileStatus } from '../../../ipc/prMessaging';
+import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers, OpenDiffPreviewAction } from '../../../ipc/prActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
@@ -28,11 +28,10 @@ import { StatusMenu } from '../bbissue/StatusMenu';
 import NavItem from '../issue/NavItem';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
-import { Commit, BitbucketIssueData, User } from '../../../bitbucket/model';
+import { Commit, BitbucketIssueData, User, FileDiff } from '../../../bitbucket/model';
 import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
-import Tooltip from '@atlaskit/tooltip';
-import Spinner from '@atlaskit/spinner';
+import DiffList from './DiffList';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -177,6 +176,17 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     handleDestinationBranchChange = (newValue: any) => {
         this.setState({ destinationBranch: newValue }, this.handleBranchChange);
+    };
+
+    openDiffViewForFile = (fileDiff: FileDiff) => {
+        this.postMessage(
+            { 
+                action: 'openDiffPreview', 
+                lhsQuery: fileDiff.lhsQueryParams!, 
+                rhsQuery: fileDiff.rhsQueryParams!,
+                fileDisplayName: fileDiff.file
+            }
+        );
     };
 
     handleBranchChange = () => {
@@ -372,80 +382,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         return true;
     }
 
-    mapFileStatusToColorScheme = (status: FileStatus) => {
-        if (status === FileStatus.ADDED) {
-            return { backgroundColor: '#fff', borderColor: '#60b070', color: '#14892c' };
-        } else if (status === FileStatus.MODIFIED) {
-            return { backgroundColor: '#fff', borderColor: '#a5b3c2', color: '#4a6785' };
-        } else if (status === FileStatus.DELETED) {
-            return { backgroundColor: '#fff', borderColor: '#e8a29b', color: '#d04437' };
-        } else if (status === FileStatus.RENAMED) {
-            return { backgroundColor: '#fff', borderColor: '#c0ad9d', color: '#815b3a' };
-        } else if (status === FileStatus.COPIED) {
-            return { backgroundColor: '#fff', borderColor: '#f2ae00', color: '#f29900' };
-        } else {
-            //I'm not sure how Bitbucket handles 'unknown' statuses so I settled on purple
-            return { backgroundColor: '#fff', borderCOlor: '#881be0', color: '#7a44a6' };
-        }
-
-    };
-
     diffPanelHeader = () => {
         return <h3>
             Files Changed {this.state.fileDiffsLoading ? '' : `(${this.state.fileDiffs.length})`}
         </h3>;
-    };
-
-    openDiffViewForFile = (fileDiff: FileDiff) => {
-        this.postMessage(
-            {
-                action: 'openDiffPreview',
-                lhsQuery: fileDiff.lhsQueryParams,
-                rhsQuery: fileDiff.rhsQueryParams,
-                fileDisplayName: fileDiff.file
-            }
-        );
-    };
-
-    mapFileStatusToWord = (status: FileStatus) => {
-        if (status === FileStatus.ADDED) {
-            return 'ADDED';
-        } else if (status === FileStatus.MODIFIED) {
-            return 'MODIFIED';
-        } else if (status === FileStatus.DELETED) {
-            return 'DELETED';
-        } else if (status === FileStatus.RENAMED) {
-            return 'RENAMED';
-        } else if (status === FileStatus.COPIED) {
-            return 'COPIED';
-        } else {
-            return 'UNKNOWN';
-        }
-    };
-
-    generateDiffList = () => {
-        return this.state.fileDiffs.map(fileDiff =>
-            <li className='iterable-item file-summary file-modified' onClick={() => this.openDiffViewForFile(fileDiff)}>
-                <Tooltip
-                    content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
-                >
-                    <div className="commit-file-diff-stats">
-                        <span className="lines-added">
-                            +{fileDiff.linesAdded}
-                        </span>
-                        <span className="lines-removed">
-                            -{fileDiff.linesRemoved}
-                        </span>
-                        <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
-                            {fileDiff.status}
-                        </span>
-                        <a className="commit-files-summary--filename">
-                            {fileDiff.file}
-                        </a>
-                    </div>
-                </Tooltip>
-            </li>
-        );
     };
 
     handleDismissError = () => {
@@ -660,19 +600,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     </GridColumn>
                                     <GridColumn medium={12}>
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                            {this.state.fileDiffsLoading &&
-                                                <Tooltip content='waiting for data...'>
-                                                    <Spinner delay={100} size='large' />
-                                                </Tooltip>
-                                            }
-                                            {!this.state.fileDiffsLoading &&
-                                                <ul className='commit-files-summary' id='commit-files-summary'>
-                                                    {this.generateDiffList()}
-                                                </ul>
-                                            }
-                                            {!this.state.fileDiffsLoading && this.state.fileDiffs.length === 0 &&
-                                                <p>There are no changes to display.</p>
-                                            }
+                                            <DiffList 
+                                                fileDiffsLoading={this.state.fileDiffsLoading} 
+                                                fileDiffs={this.state.fileDiffs}
+                                                openDiffHandler={this.openDiffViewForFile}
+                                            />
                                         </Panel>
                                     </GridColumn>
                                     <GridColumn medium={12}>
