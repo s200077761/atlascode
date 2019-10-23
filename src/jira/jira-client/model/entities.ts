@@ -153,6 +153,7 @@ export interface IssueType {
     name: string;
     self: string;
     subtask: boolean;
+    epic: boolean;
 }
 
 export interface IssueLinkType {

@@ -6,7 +6,7 @@ import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
 import filesize from 'filesize';
 import { ResourceContext } from '../context';
-import { FieldUI } from '../../../jira/jira-client/model/fieldUI';
+import { FieldUI } from 'jira-metaui-transformer';
 
 type ItemData = {
     file: FileWithPreview;

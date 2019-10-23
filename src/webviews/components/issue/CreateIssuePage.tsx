@@ -8,7 +8,6 @@ import ErrorBanner from '../ErrorBanner';
 import Button from '@atlaskit/button';
 import Panel from '@atlaskit/panel';
 import Form, { FormFooter } from '@atlaskit/form';
-import { FieldUI, ValueType, UIType } from '../../../jira/jira-client/model/fieldUI';
 import { AtlLoader } from '../AtlLoader';
 import { IssueKeyAndSite } from '../../../jira/jira-client/model/entities';
 import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -18,6 +17,7 @@ import Select, { components } from '@atlaskit/select';
 import { Field } from '@atlaskit/form';
 import { chain } from '../fieldValidators';
 import Spinner from '@atlaskit/spinner';
+import { FieldUI, UIType, ValueType } from 'jira-metaui-transformer';
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;

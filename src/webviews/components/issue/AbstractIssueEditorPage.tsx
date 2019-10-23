@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
 import { WebviewComponent } from "../WebviewComponent";
 import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
-import { FieldUI, UIType, ValueType, FieldValues, InputFieldUI, FieldUIs, SelectFieldUI, OptionableFieldUI } from "../../../jira/jira-client/model/fieldUI";
 import * as FieldValidators from "../fieldValidators";
 import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
 import { MinimalIssueOrKeyAndSite, CommentVisibility, JsdInternalCommentVisibility } from '../../../jira/jira-client/model/entities';
@@ -29,6 +28,7 @@ import { colorToLozengeAppearanceMap } from '../colors';
 import Lozenge from "@atlaskit/lozenge";
 import { Time } from '../../../util/time';
 import uuid from 'uuid';
+import { FieldValues, FieldUI, ValueType, SelectFieldUI, FieldUIs, UIType, InputFieldUI, OptionableFieldUI } from 'jira-metaui-transformer';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;

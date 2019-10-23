@@ -12,10 +12,10 @@ import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
 import { fetchCreateIssueUI } from '../jira/fetchIssue';
 import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { ValueType, FieldValues } from '../jira/jira-client/model/fieldUI';
-import { CreateMetaTransformerResult, emptyCreateMetaResult, IssueTypeUI } from '../jira/jira-client/model/editIssueUI';
 import { IssueType, Project } from '../jira/jira-client/model/entities';
 import { configuration } from '../config/configuration';
+import { CreateMetaTransformerResult, IssueTypeUI, ValueType, FieldValues } from 'jira-metaui-transformer';
+import { emptyIssueType } from '../jira/jira-client/model/emptyEntities';
 export interface PartialIssue {
     uri?: Uri;
     position?: Position;
@@ -39,10 +39,17 @@ export interface BBData {
 
 const createdFromAtlascodeFooter = `\n\n_~Created from~_ [_~Atlassian for VS Code~_|https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode]`;
 
+export const emptyCreateMetaResult: CreateMetaTransformerResult<DetailedSiteInfo> = {
+    selectedIssueType: emptyIssueType,
+    issueTypeUIs: {},
+    problems: {},
+    issueTypes: [],
+};
+
 export class CreateIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<PartialIssue | undefined> {
     private _partialIssue: PartialIssue | undefined;
     private _currentProject: Project | undefined;
-    private _screenData: CreateMetaTransformerResult;
+    private _screenData: CreateMetaTransformerResult<DetailedSiteInfo>;
     private _selectedIssueTypeId: string;
     private _relatedBBIssue: BitbucketIssue | undefined;
     private _siteDetails: DetailedSiteInfo;
@@ -153,7 +160,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
 
     async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void> {
-        const issueTypeUI: IssueTypeUI = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
+        const issueTypeUI: IssueTypeUI<DetailedSiteInfo> = this._screenData.issueTypeUIs[this._selectedIssueTypeId];
 
         if (!Array.isArray(issueTypeUI.fieldValues[fieldKey])) {
             issueTypeUI.fieldValues[fieldKey] = [];
@@ -268,7 +275,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
         this.postMessage(createData);
     }
 
-    getValuesForExisitngKeys(issueTypeUI: IssueTypeUI, values: FieldValues, keep?: string[]): any {
+    getValuesForExisitngKeys(issueTypeUI: IssueTypeUI<DetailedSiteInfo>, values: FieldValues, keep?: string[]): any {
         const foundVals: FieldValues = {};
 
         Object.keys(issueTypeUI.fields).forEach(key => {
