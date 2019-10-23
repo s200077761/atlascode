@@ -1,9 +1,9 @@
 import * as React from "react";
 import { components } from '@atlaskit/select';
-import { SelectFieldUI, ValueType } from "../../jira/jira-client/model/fieldUI";
 import Avatar from '@atlaskit/avatar';
 import Lozenge from "@atlaskit/lozenge";
 import { colorToLozengeAppearanceMap } from "./colors";
+import { SelectFieldUI, ValueType } from "jira-metaui-transformer";
 
 type OptionFunc = (option: any) => string;
 type ComponentFunc = (props: any) => JSX.Element;

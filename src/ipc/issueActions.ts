@@ -1,7 +1,7 @@
 import { Action } from "./messaging";
 import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSite, User, IssueType, isIssueType, Project, CommentVisibility } from "../jira/jira-client/model/entities";
-import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "../jira/jira-client/model/fieldUI";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { FieldValues, ValueType, IssueLinkTypeSelectOption } from "jira-metaui-transformer";
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';

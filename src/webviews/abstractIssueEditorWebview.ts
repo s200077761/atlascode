@@ -5,7 +5,7 @@ import { Container } from "../container";
 import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult, isGroupPickerResult, isProjectsResult } from "../jira/jira-client/model/responses";
 import { Logger } from "../logger";
 import { showIssue } from "../commands/jira/showIssue";
-import { ValueType } from "../jira/jira-client/model/fieldUI";
+import { ValueType } from "jira-metaui-transformer";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 

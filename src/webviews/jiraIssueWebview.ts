@@ -9,7 +9,6 @@ import { Logger } from "../logger";
 import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
 import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction, isDeleteByIDAction, isOpenStartWorkPageAction } from "../ipc/issueActions";
 import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
-import { FieldValues, ValueType } from "../jira/jira-client/model/fieldUI";
 import { postComment } from "../commands/jira/postComment";
 import { commands, env, window } from "vscode";
 import { Commands } from "../commands";
@@ -22,6 +21,7 @@ import { isOpenPullRequest } from "../ipc/prActions";
 import { clientForRemote } from "../bitbucket/bbUtils";
 import { readSearchResults } from "../jira/jira-client/model/responses";
 import { DetailedSiteInfo, Product, ProductJira } from "../atlclients/authInfo";
+import { FieldValues, ValueType } from "jira-metaui-transformer";
 
 export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
     private _issue: MinimalIssue;

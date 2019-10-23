@@ -5,7 +5,7 @@ import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Logger } from "../logger";
 import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
 import { IssueLinkType } from "./jira-client/model/entities";
-import { readField, Fields } from "./jira-client/model/fieldMetadata";
+import { Fields, readField } from "jira-metaui-transformer";
 
 
 export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];

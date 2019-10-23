@@ -2,9 +2,10 @@ import { Message, HostErrorMessage } from "./messaging";
 import { RepoData } from "./prMessaging";
 import { PullRequestData } from "../bitbucket/model";
 import { MinimalIssue, Project, User } from "../jira/jira-client/model/entities";
-import { EditIssueUI, emptyEditIssueUI, CreateMetaTransformerProblems, IssueTypeUI, emptyIssueTypeUI } from "../jira/jira-client/model/editIssueUI";
-import { FieldValues, SelectFieldOptions } from "../jira/jira-client/model/fieldUI";
-import { emptyUser } from "../jira/jira-client/model/emptyEntities";
+import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { emptyUser, emptyIssueTypeUI } from "../jira/jira-client/model/emptyEntities";
+import { CreateMetaTransformerProblems, IssueTypeUI, FieldValues, SelectFieldOptions } from "jira-metaui-transformer";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -30,7 +31,7 @@ export interface IssueProblemsData extends Message {
 }
 
 export interface CreateIssueData extends Message { }
-export interface CreateIssueData extends IssueTypeUI {
+export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
 }

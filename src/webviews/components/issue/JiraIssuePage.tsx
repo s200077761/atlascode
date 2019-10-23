@@ -7,7 +7,6 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import NavItem from './NavItem';
 import SizeDetector from "@atlaskit/size-detector";
-import { FieldUI, UIType, InputFieldUI, ValueType } from '../../../jira/jira-client/model/fieldUI';
 import { EditIssueAction, IssueCommentAction } from '../../../ipc/issueActions';
 import { CommentList } from './CommentList';
 import IssueList from './IssueList';
@@ -39,6 +38,7 @@ import { AttachmentList } from './AttachmentList';
 import PMFBBanner from '../pmfBanner';
 import { PMFData } from '../../../ipc/messaging';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import { FieldUI, UIType, InputFieldUI, ValueType } from 'jira-metaui-transformer';
 
 type Emit = CommonEditorPageEmit | EditIssueAction | IssueCommentAction;
 type Accept = CommonEditorPageAccept | EditIssueData;

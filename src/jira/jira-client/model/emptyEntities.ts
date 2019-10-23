@@ -1,6 +1,7 @@
 import { Avatars, IssueType, StatusCategory, Priority, User, Status, Transition, MinimalIssue, Project, Comment, IssueLinkIssue, IssueLinkType } from "./entities";
-import { emptySiteInfo } from "../../../atlclients/authInfo";
+import { emptySiteInfo, DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { EpicFieldInfo } from "../../jiraCommon";
+import { IssueTypeUI, IssueTypeIssueCreateMetadata, ProjectIssueCreateMetadata } from "jira-metaui-transformer";
 
 export const emptyAvatars: Avatars = { '48x48': '', '24x24': '', '16x16': '', '32x32': '' };
 
@@ -28,7 +29,8 @@ export const emptyIssueType: IssueType = {
     id: 'empty',
     name: 'empty',
     self: '',
-    subtask: false
+    subtask: false,
+    epic: false,
 };
 
 export const emptyIssueLinkType: IssueLinkType = {
@@ -144,4 +146,35 @@ export const emptyEpicFieldInfo: EpicFieldInfo = {
     epicName: { id: "", name: "", cfid: -1 },
     epicsEnabled: false,
 
+};
+
+export const emptyIssueTypeUI: IssueTypeUI<DetailedSiteInfo> = {
+    siteDetails: emptySiteInfo,
+    epicFieldInfo: emptyEpicFieldInfo,
+    apiVersion: 2,
+    fields: {},
+    fieldValues: {},
+    selectFieldOptions: {},
+    nonRenderableFields: [],
+    hasRequiredNonRenderables: false,
+};
+
+export const emptyIssueTypeIssueCreateMetadata: IssueTypeIssueCreateMetadata = {
+    self: "",
+    id: "atlascodeempty",
+    description: "empty",
+    name: "empty",
+    iconUrl: "",
+    subtask: false,
+    avatarId: 0,
+    entityId: "",
+    fields: {}
+};
+
+export const emptyProjectIssueCreateMetadata: ProjectIssueCreateMetadata = {
+    id: 'empty',
+    key: 'empty',
+    name: 'empty',
+    avatarUrls: {},
+    issuetypes: [emptyIssueTypeIssueCreateMetadata],
 };
