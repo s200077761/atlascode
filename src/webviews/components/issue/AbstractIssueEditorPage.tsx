@@ -636,7 +636,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                     commonProps.label = field.name;
                     commonProps.id = field.key;
                     commonProps.name = field.key;
-                    commonProps.defaultValue = defVal;
+                    commonProps.value = defVal;
                 }
 
                 switch (SelectFieldHelper.selectComponentType(selectField)) {

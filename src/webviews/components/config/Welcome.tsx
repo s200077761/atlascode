@@ -94,6 +94,30 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.1.4 🎉</h3>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed issue that resulted in failure to save credentials when logging in</li>
+                            </ul>
+                        </section>
+                        <h3>🎉 What's New in 2.1.3 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added tooltip text clarifying that only exact matches are allowed on Bitbucket Server when adding reviewers to a pull request</li>
+                                <li>When available, specific error messages for git operations are now presented instead of more general error messages</li>
+                            </ul>
+                        </section>
+                        <section>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Jira issues are now correctly assigned when using start work on Jira Server</li>
+                                <li>Selecting an item from the mention picker when editing a Bitbucket issue now works correctly</li>
+                                <li>"Create in browser..." button on "Create pull request" screen now links to correct location on Bitbucket Server</li>
+                                <li>Fixed bug that could prevent Jira issues from presenting up-to-date information</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.1.2 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
