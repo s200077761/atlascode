@@ -41,6 +41,7 @@ export enum Commands {
     ShowJiraAuth = 'atlascode.showJiraAuth',
     ShowBitbucketAuth = 'atlascode.showBitbucketAuth',
     ShowWelcomePage = 'atlascode.showWelcomePage',
+    ShowOnboardingPage = 'atlascode.showOnboardingPage',
     AssignIssueToMe = 'atlascode.jira.assignIssueToMe',
     StartWorkOnIssue = 'atlascode.jira.startWorkOnIssue',
     CreatePullRequest = 'atlascode.bb.createPullRequest',
@@ -69,6 +70,7 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue), Container.configWebview),
         vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
+        vscode.commands.registerCommand(Commands.ShowOnboardingPage, Container.onboardingWebview.createOrShow, Container.onboardingWebview),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
             const uri = (await prNode.getTreeItem()).resourceUri;
             if (uri) {

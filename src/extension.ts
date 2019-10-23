@@ -56,7 +56,12 @@ export async function activate(context: ExtensionContext) {
         Logger.error(e, 'Error initializing atlascode!');
     }
 
-    showWelcomePage(atlascodeVersion, previousVersion);
+    const currentVersion = context.globalState.get<string>(GlobalStateVersionKey);
+    if(currentVersion === undefined || currentVersion === "0.0.0"){
+        commands.executeCommand(Commands.ShowOnboardingPage);
+    } else {
+        showWelcomePage(atlascodeVersion, previousVersion);
+    }
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
     setTimeout(() => {
         sendAnalytics(atlascodeVersion, context.globalState);

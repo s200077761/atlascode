@@ -158,6 +158,11 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.showOnboardingPage",
+                "title": "Open Onboarding",
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.openInBitbucket",
                 "title": "Open in Bitbucket",
                 "category": "Atlassian"

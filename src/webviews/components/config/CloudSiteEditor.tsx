@@ -12,6 +12,7 @@ interface AuthProps {
     isRemote: boolean;
     handleDeleteSite: (site: DetailedSiteInfo) => void;
     handleSaveSite: (site: SiteInfo, auth: AuthInfo) => void;
+    siteExample: string;
 }
 
 type ItemData = {
@@ -33,10 +34,9 @@ const Delete = (data: ItemData) => {
     );
 };
 
-export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, isRemote, handleDeleteSite, handleSaveSite }) => {
+export const CloudSiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, isRemote, handleDeleteSite, handleSaveSite, siteExample }) => {
     const [addingSite, setAddingSite] = useState(false);
-    const loginText = `Login to ${product.name} Cloud`;
-    const addSiteText = `Add Custom ${product.name} Site`;
+    const loginText = `Log in to ${product.name} Cloud`;
 
     const handleCloudProd = () => {
         const hostname = (product.key === ProductJira.key) ? 'atlassian.net' : 'bitbucket.org';
@@ -64,24 +64,33 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                         <p>To authenticate with a new site open this (or another) workspace locally. Accounts added when running locally <em>will</em> be accessible during remote development.</p>
                     </div>
                 }
-                <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
-                    <Button className="ac-button" isDisabled={isRemote} style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
-                    <Button className="ac-button" isDisabled={isRemote} onClick={() => setAddingSite(true)}>{addSiteText}</Button>
-                </div>
+                <Button className="ac-button" isDisabled={isRemote} style={{ marginRight: '4px', display: 'block', width: '100%' }} onClick={handleCloudProd}>{loginText}</Button>
+                <p style={{float: 'right'}}>{siteExample}</p>
             </div>
-            <TableTree
-                columns={[Name, Delete]}
-                columnWidths={['100%', '20px']}
-                items={sites.map(site => {
-                    return {
-                        id: site.id,
-                        content: {
-                            site: site,
-                            delfunc: handleDeleteSite,
-                        }
-                    };
-                })}
-            />
+            <div style={{marginTop: '8px'}}>
+                {sites.length > 0 &&
+                    <TableTree
+                        columns={[Name, Delete]}
+                        columnWidths={['100%', '20px']}
+                        items={sites.map(site => {
+                            return {
+                                id: site.id,
+                                content: {
+                                    site: site,
+                                    delfunc: handleDeleteSite,
+                                }
+                            };
+                        })}
+                    />
+                }
+                {sites.length === 0 && 
+                    <TableTree
+                        columns={[Name]}
+                        columnWidths={['100%', '20px']}
+                        items={[{id: 1, content: { site: `No sites currently authenticated` }}]}
+                    />
+                }
+            </div>
         </React.Fragment>
     );
 };
