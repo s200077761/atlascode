@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import Button from "@atlaskit/button";
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, Product, ProductJira } from "../../../atlclients/authInfo";
-import AuthForm from "./AuthForm";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 
@@ -35,7 +34,6 @@ const Delete = (data: ItemData) => {
 };
 
 export const CloudSiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, isRemote, handleDeleteSite, handleSaveSite, siteExample }) => {
-    const [addingSite, setAddingSite] = useState(false);
     const loginText = `Log in to ${product.name} Cloud`;
 
     const handleCloudProd = () => {
@@ -44,19 +42,8 @@ export const CloudSiteEditor: React.FunctionComponent<AuthProps> = ({ sites, pro
             { user: emptyUserInfo });
     };
 
-    const handleSave = (site: SiteInfo, auth: AuthInfo) => {
-        handleSaveSite(site, auth);
-        setAddingSite(false);
-    };
-
     return (
         <React.Fragment>
-            {addingSite &&
-                <AuthForm
-                    onCancel={() => setAddingSite(false)}
-                    onSave={handleSave}
-                    product={product} />
-            }
             <div className='ac-vpadding'>
                 {isRemote &&
                     <div className='ac-vpadding'>
