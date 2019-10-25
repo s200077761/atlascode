@@ -11,6 +11,7 @@ import { Time } from "../util/time";
 import { getAgent } from "./agent";
 import { Container } from "../container";
 import { addCurlLogging } from "./interceptors";
+import crypto from 'crypto';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -217,6 +218,6 @@ export class LoginManager {
     }
 
     private generateCredentialId(siteId: string, userId: string): string {
-        return Buffer.from(siteId + '::' + userId).toString('base64');
+        return crypto.createHash('md5').update(siteId + '::' + userId).digest('hex');
     }
 }

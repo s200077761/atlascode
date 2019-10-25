@@ -8,9 +8,7 @@ import { OAuthRefesher } from './oauthRefresher';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import PQueue from 'p-queue';
 
-const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
-
-interface CredentialIdToAuthInfo { [k: string]: AuthInfo; }
+const keychainServiceNameV3 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV3" : "atlascode-authinfoV3";
 
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
@@ -32,44 +30,12 @@ export class CredentialManager implements Disposable {
         this._onDidAuthChange.dispose();
     }
 
-    public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
-        let foundInfo: AuthInfo | undefined = undefined;
-
-        let productAuths = this._memStore.get(product.key);
-
-        if (productAuths) {
-            foundInfo = productAuths.values().next().value;
-        }
-
-
-        if (!foundInfo && keychain) {
-            try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(product.key) || undefined;
-                if (infoEntry) {
-                    let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
-                    if (infos) {
-                        let entry = Object.entries(infos).values().next().value;
-
-                        if (entry) {
-                            foundInfo = entry[1];
-                            if (foundInfo && productAuths) {
-                                this._memStore.set(product.key, productAuths.set(entry[0], foundInfo));
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                Logger.info(`keychain error ${e}`);
-            }
-        }
-
-        return foundInfo;
-    }
-
+    /* */
     public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
         return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId);
     }
 
+    /* */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
         let productAuths = this._memStore.get(site.product.key);
 
@@ -112,11 +78,9 @@ export class CredentialManager implements Disposable {
 
         if (!foundInfo && keychain) {
             try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey, credentialId) || undefined;
                 if (infoEntry) {
-                    let infoForProduct: CredentialIdToAuthInfo = JSON.parse(infoEntry);
-
-                    let info = infoForProduct[credentialId];
+                    let info: AuthInfo = JSON.parse(infoEntry);
 
                     if (info && productAuths) {
                         this._memStore.set(productKey, productAuths.set(credentialId, info));
@@ -137,13 +101,7 @@ export class CredentialManager implements Disposable {
     private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
         await this._queue.add(async () => {
             if (keychain) {
-                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
-                let infoDict: CredentialIdToAuthInfo = {};
-                if (infoEntry) {
-                    infoDict = JSON.parse(infoEntry);
-                }
-                infoDict[credentialId] = info;
-                await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
+                await keychain.setPassword(keychainServiceNameV3, `${productKey}-${credentialId}`, JSON.stringify(info));
             }
         }, { priority: 1 });
     }
@@ -152,23 +110,14 @@ export class CredentialManager implements Disposable {
         let wasKeyDeleted = false;
         await this._queue.add(async () => {
             if (keychain) {
-                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
-                let infoDict: CredentialIdToAuthInfo = {};
-                if (infoEntry) {
-                    infoDict = JSON.parse(infoEntry);
-                    wasKeyDeleted = Object.keys(infoDict).includes(credentialId);
-                    if (wasKeyDeleted) {
-                        delete infoDict[credentialId];
-                        await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
-                    }
-                }
+                wasKeyDeleted = await keychain.deletePassword(keychainServiceNameV3, `${productKey}-${credentialId}`);
             }
         }, { priority: 1 });
         return wasKeyDeleted;
     }
 
-    private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
-        let svcName = keychainServiceNameV2;
+    private async getJsonAuthInfoFromKeychain(productKey: string, credentialId: string, serviceName?: string): Promise<string | null> {
+        let svcName = keychainServiceNameV3;
 
         if (serviceName) {
             svcName = serviceName;
@@ -177,12 +126,13 @@ export class CredentialManager implements Disposable {
         let authInfo: string | null = null;
         await this._queue.add(async () => {
             if (keychain) {
-                authInfo = await keychain.getPassword(svcName, productKey);
+                authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
             }
         }, { priority: 0 });
         return authInfo;
     }
 
+    /* */
     public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
         const credentials = await this.getAuthInfo(site);
         if (!isOAuthInfo(credentials)) {
@@ -201,6 +151,7 @@ export class CredentialManager implements Disposable {
         return newAccessToken;
     }
 
+    /* */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
         let productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
