@@ -181,4 +181,21 @@ export class SiteManager extends Disposable {
 
         return false;
     }
+
+    public getAllSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
+        const isJiraConfigured = this.productHasAtLeastOneSite(ProductJira);
+        const isBBConfigured = this.productHasAtLeastOneSite(ProductBitbucket);
+        let jiraSitesAvailable: DetailedSiteInfo[] = [];
+        let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
+
+        if (isJiraConfigured) {
+            jiraSitesAvailable = this.getSitesAvailable(ProductJira);
+        }
+
+        if (isBBConfigured) {
+            bitbucketSitesAvailable = this.getSitesAvailable(ProductBitbucket);
+        }
+
+        return [jiraSitesAvailable, bitbucketSitesAvailable];
+    }
 }

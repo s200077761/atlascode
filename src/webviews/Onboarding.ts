@@ -1,6 +1,6 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { Product, DetailedSiteInfo, ProductJira, ProductBitbucket, isBasicAuthInfo } from '../atlclients/authInfo';
+import { Product, DetailedSiteInfo, isBasicAuthInfo } from '../atlclients/authInfo';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { Container } from '../container';
 import { isLoginAuthAction, isAuthAction } from '../ipc/configActions';
@@ -36,7 +36,7 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     public async invalidate() {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
         const [cloudJira, serverJira] = this.separateCloudFromServer(jiraSitesAvailable);
         const [cloudBitbucket, serverBitbucket] = this.separateCloudFromServer(bitbucketSitesAvailable);
         const isRemote = env.remoteName !== undefined;
@@ -51,7 +51,7 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
         const [cloudJira, serverJira] = this.separateCloudFromServer(jiraSitesAvailable);
         const [cloudBitbucket, serverBitbucket] = this.separateCloudFromServer(bitbucketSitesAvailable);
         this.postMessage({
@@ -61,23 +61,6 @@ export class OnboardingWebview extends AbstractReactWebview {
             bitbucketCloudSites: cloudBitbucket,
             bitbucketServerSites: serverBitbucket
         });
-    }
-
-    private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
-        const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
-        const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
-        let jiraSitesAvailable: DetailedSiteInfo[] = [];
-        let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
-
-        if (isJiraConfigured) {
-            jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-        }
-
-        if (isBBConfigured) {
-            bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
-        }
-
-        return [jiraSitesAvailable, bitbucketSitesAvailable];
     }
 
     private separateCloudFromServer(siteList: DetailedSiteInfo[]): [DetailedSiteInfo[], DetailedSiteInfo[]] {

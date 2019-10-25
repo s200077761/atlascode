@@ -6,11 +6,11 @@ import { Action } from '../../../ipc/messaging';
 import { ProductJira, DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket } from '../../../atlclients/authInfo';
 import { LoginAuthAction, SaveSettingsAction } from '../../../ipc/configActions';
 import { ConfigData } from 'src/ipc/configMessaging';
-import { CloudSiteEditor } from './CloudSiteEditor';
-import { ServerSiteEditor } from './ServerSiteEditor';
 import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
 import Form from '@atlaskit/form';
+import { SiteEditor } from './SiteEditor';
+import ErrorBanner from '../ErrorBanner';
 
 type ViewState = {
     isRemote: boolean;
@@ -18,6 +18,8 @@ type ViewState = {
     jiraServerSites: DetailedSiteInfo[];
     bitbucketCloudSites: DetailedSiteInfo[];
     bitbucketServerSites: DetailedSiteInfo[];
+    isErrorBannerOpen: boolean;
+    errorDetails: any;
 };
 
 const emptyViewState = {
@@ -25,7 +27,9 @@ const emptyViewState = {
     jiraCloudSites: [],
     jiraServerSites: [],
     bitbucketCloudSites: [],
-    bitbucketServerSites: []
+    bitbucketServerSites: [],
+    isErrorBannerOpen: false,
+    errorDetails: undefined
 };
 
 type Emit = LoginAuthAction | SaveSettingsAction | Action;
@@ -38,6 +42,10 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
 
     public onMessageReceived(e: any): boolean {
         switch (e.type) {
+            case 'error': {
+                this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
+                break;
+            }
             case 'update': {
                 this.setState({
                     isRemote: e.isRemote,
@@ -53,7 +61,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                     jiraCloudSites: e.jiraCloudSites,
                     jiraServerSites: e.jiraServerSites,
                     bitbucketCloudSites: e.bitbucketCloudSites,
-                    bitbucketServerSites: e.bitbucketServerSites
+                    bitbucketServerSites: e.bitbucketServerSites,
+                    isErrorBannerOpen: false,
+                    errorDetails: undefined
                 });
                 break;
             }
@@ -70,6 +80,10 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
         this.postMessage({ action: 'logout', siteInfo: site });
     };
 
+    handleDismissError = () => {
+        this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
+    };
+
     anythingAuthenticated = () => {
         return this.state.jiraCloudSites.length > 0 || this.state.jiraServerSites.length > 0 || this.state.bitbucketCloudSites.length > 0 || this.state.bitbucketServerSites.length > 0;
     };
@@ -77,6 +91,9 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
     public render() {
         return (
             <Page>
+                {this.state.isErrorBannerOpen &&
+                    <ErrorBanner onDismissError={this.handleDismissError} errorDetails={this.state.errorDetails} />
+                }
                 <Form
                     name="create-bitbucket-issue-form"
                     onSubmit={(e:any) => {}}
@@ -99,23 +116,25 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <h2>Jira</h2>
                                         <Grid>
                                             <GridColumn medium={5}>
-                                                <CloudSiteEditor
+                                                <SiteEditor
                                                     sites={this.state.jiraCloudSites}
                                                     product={ProductJira}
                                                     isRemote={this.state.isRemote}
                                                     handleDeleteSite={this.handleLogout}
                                                     handleSaveSite={this.handleLogin}
                                                     siteExample={'e.g. <company>.atlassian.net'}
+                                                    cloudOrServer={'cloud'}
                                                 />
                                             </GridColumn>
                                             <GridColumn medium={5}>
-                                                <ServerSiteEditor
+                                                <SiteEditor
                                                     sites={this.state.jiraServerSites}
                                                     product={ProductJira}
                                                     isRemote={this.state.isRemote}
                                                     handleDeleteSite={this.handleLogout}
                                                     handleSaveSite={this.handleLogin}
                                                     siteExample={'e.g. jira.<company>.com'}
+                                                    cloudOrServer={'server'}
                                                 />
                                             </GridColumn>
                                         </Grid>
@@ -126,23 +145,25 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <h2>Bitbucket</h2>
                                         <Grid>
                                             <GridColumn medium={5}>
-                                                <CloudSiteEditor
+                                                <SiteEditor
                                                     sites={this.state.bitbucketCloudSites}
                                                     product={ProductBitbucket}
                                                     isRemote={this.state.isRemote}
                                                     handleDeleteSite={this.handleLogout}
                                                     handleSaveSite={this.handleLogin}
                                                     siteExample={'e.g. bitbucket.org/<company>'}
+                                                    cloudOrServer={'cloud'}
                                                 />
                                             </GridColumn>
                                             <GridColumn medium={5}>
-                                                <ServerSiteEditor
+                                                <SiteEditor
                                                     sites={this.state.bitbucketServerSites}
                                                     product={ProductBitbucket}
                                                     isRemote={this.state.isRemote}
                                                     handleDeleteSite={this.handleLogout}
                                                     handleSaveSite={this.handleLogin}
                                                     siteExample={'e.g. bitbucket.<company>.com'}
+                                                    cloudOrServer={'server'}
                                                 />
                                             </GridColumn>
                                         </Grid>
@@ -151,7 +172,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                 <GridColumn medium={12}>
                                     <div style={{ display: 'inline-block', float: 'right', marginLeft: '10px', marginTop: '150px' }}>
                                         <div style={{ marginRight: '5px', display: 'inline-block' }}>
-                                            <Tooltip content={!this.anythingAuthenticated() ? "Please authenticate with at least one site" : "Click to close this page"}>
+                                            <Tooltip content={!this.anythingAuthenticated() ? "Please authenticate with a site" : "Click to close this page"}>
                                                 <Button className='ac-button' onClick={() => { this.postMessage({ action: 'closePage' }); }} isDisabled={!this.anythingAuthenticated()}>Done</Button>
                                             </Tooltip>
                                         </div>

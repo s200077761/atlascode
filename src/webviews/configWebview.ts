@@ -3,7 +3,7 @@ import { SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget, env } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
-import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -63,7 +63,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             this.isRefeshing = true;
 
-            const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+            const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
 
             const feedbackUser = await getFeedbackUser();
 
@@ -123,30 +123,13 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = this.getSitesAvailable();
+        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
 
         this.postMessage({
             type: 'sitesAvailableUpdate'
             , jiraSites: jiraSitesAvailable
             , bitbucketSites: bitbucketSitesAvailable
         });
-    }
-
-    private getSitesAvailable(): [DetailedSiteInfo[], DetailedSiteInfo[]] {
-        const isJiraConfigured = Container.siteManager.productHasAtLeastOneSite(ProductJira);
-        const isBBConfigured = Container.siteManager.productHasAtLeastOneSite(ProductBitbucket);
-        let jiraSitesAvailable: DetailedSiteInfo[] = [];
-        let bitbucketSitesAvailable: DetailedSiteInfo[] = [];
-
-        if (isJiraConfigured) {
-            jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
-        }
-
-        if (isBBConfigured) {
-            bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
-        }
-
-        return [jiraSitesAvailable, bitbucketSitesAvailable];
     }
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
