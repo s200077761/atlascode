@@ -11,7 +11,6 @@ import { Time } from "../util/time";
 import { getAgent } from "./agent";
 import { Container } from "../container";
 import { addCurlLogging } from "./interceptors";
-import crypto from 'crypto';
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {
@@ -70,7 +69,7 @@ export class LoginManager {
                     const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
                     const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
 
-                    const credentialId = this.generateCredentialId(resource.id, userId);
+                    const credentialId = CredentialManager.generateCredentialId(resource.id, userId);
 
                     // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
                     newSites = [{
@@ -95,7 +94,7 @@ export class LoginManager {
 
 
                 newSites = resources.map(r => {
-                    const credentialId = this.generateCredentialId(r.id, userId);
+                    const credentialId = CredentialManager.generateCredentialId(r.id, userId);
 
                     return {
                         avatarUrl: r.avatarUrl,
@@ -177,7 +176,7 @@ export class LoginManager {
         const json = res.data;
 
         const userId = site.product.key === ProductJira.key ? json.name : json.slug;
-        const credentialId = this.generateCredentialId(site.hostname, credentials.username);
+        const credentialId = CredentialManager.generateCredentialId(site.hostname, credentials.username);
 
         const siteDetails = {
             product: site.product,
@@ -215,9 +214,5 @@ export class LoginManager {
         this._siteManager.addSites([siteDetails]);
 
         return siteDetails;
-    }
-
-    private generateCredentialId(siteId: string, userId: string): string {
-        return crypto.createHash('md5').update(siteId + '::' + userId).digest('hex');
     }
 }

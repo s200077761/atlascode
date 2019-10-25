@@ -19,6 +19,7 @@ import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlC
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
 import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
 import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
+import { V2toV3Migrator } from './migrations/v2tov3';
 
 const AnalyticDelay = 5000;
 
@@ -93,6 +94,14 @@ async function migrateConfig(globalState: Memento): Promise<void> {
 
         const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
         await v2JiraServerUserIdFixer.fix();
+    }
+
+    if (authModelVersion === 2) {
+        const migrator = new V2toV3Migrator(Container.siteManager,
+            Container.credentialManager,
+            !Container.isDebugging);
+        await migrator.convertLegacyAuthInfo();
+        await globalState.update(AuthInfoVersionKey, 3);
     }
 }
 

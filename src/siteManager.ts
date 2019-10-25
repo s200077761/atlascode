@@ -1,7 +1,7 @@
-import { Disposable, EventEmitter, Event, Memento } from "vscode";
-import { ProductJira, ProductBitbucket, AuthInfoEvent, Product, DetailedSiteInfo, emptySiteInfo, SiteInfo, isRemoveAuthEvent } from "./atlclients/authInfo";
-import { Container } from "./container";
+import { Disposable, Event, EventEmitter, Memento } from "vscode";
+import { AuthInfoEvent, DetailedSiteInfo, emptySiteInfo, isRemoveAuthEvent, Product, ProductBitbucket, ProductJira, SiteInfo } from "./atlclients/authInfo";
 import { configuration } from "./config/configuration";
+import { Container } from "./container";
 
 
 export type SitesAvailableUpdateEvent = {
@@ -73,6 +73,7 @@ export class SiteManager extends Disposable {
 
                 this._globalStore.update(`${newSite.product.key}${SitesSuffix}`, allSites);
                 this._sitesAvailable.set(newSite.product.key, allSites);
+                this._onDidSitesAvailableChange.fire({ sites: [newSite], product: newSite.product });
             }
         }
     }
