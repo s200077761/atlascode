@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { Logger } from '../logger';
-import { isStartWork } from '../ipc/issueActions';
-import { Container } from '../container';
-import { Commands } from '../commands';
-import { Repository, RefType } from '../typings/git';
-import { RepoData } from '../ipc/prMessaging';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
-import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
-import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
-import { Repo, BitbucketIssue } from '../bitbucket/model';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
+import { clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { BitbucketIssue, Repo } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { Container } from '../container';
+import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { StartWorkOnBitbucketIssueData } from '../ipc/bitbucketIssueMessaging';
+import { isStartWork } from '../ipc/issueActions';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { RepoData } from '../ipc/prMessaging';
+import { Logger } from '../logger';
+import { RefType, Repository } from '../typings/git';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview implements InitializingWebview<BitbucketIssue> {
     private _state: BitbucketIssue;
@@ -30,7 +30,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         if (this._state) {
-            return siteDetailsForRemote(this._state.remote);
+            return this._state.site.details;
         }
 
         return undefined;
@@ -171,7 +171,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
 
         const msg: StartWorkOnBitbucketIssueData = {
             type: 'startWorkOnBitbucketIssueData',
-            issue: issue.data,
+            issue: issue,
             repoData: repoData
         };
         this.postMessage(msg);
@@ -184,7 +184,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
 
         this.isRefeshing = true;
         try {
-            const bbApi = await clientForRemote(this._state.remote);
+            const bbApi = await clientForSite(this._state.site);
             const updatedIssue = await bbApi.issues!.refetch(this._state);
             this.updateIssue(updatedIssue);
         } catch (e) {

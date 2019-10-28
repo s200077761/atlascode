@@ -1,33 +1,30 @@
-import * as React from "react";
-import * as path from 'path';
+import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
+import Button from "@atlaskit/button";
+import { Checkbox } from '@atlaskit/checkbox';
 import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
 import SectionMessage from '@atlaskit/section-message';
-import { Checkbox } from '@atlaskit/checkbox';
-import { CreatableSelect } from '@atlaskit/select';
-import { WebviewComponent } from "../WebviewComponent";
-import { isStartWorkOnIssueData, StartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
-import {
-  StartWorkAction, OpenJiraIssueAction, CopyJiraIssueLinkAction, RefreshIssueAction
-} from "../../../ipc/issueActions";
-import { TransitionMenu } from "./TransitionMenu";
-import Button from "@atlaskit/button";
-import Select from '@atlaskit/select';
-import { RepoData, BranchType } from "../../../ipc/prMessaging";
-import { Branch, Remote } from "../../../typings/git";
-import NavItem from "./NavItem";
-import { HostErrorMessage } from "../../../ipc/messaging";
-import ErrorBanner from "../ErrorBanner";
-import Offline from "../Offline";
-import { StartWorkOnBitbucketIssueData, isStartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
-import { OpenBitbucketIssueAction, CopyBitbucketIssueLink } from "../../../ipc/bitbucketIssueActions";
-import { BitbucketIssueData } from "../../../bitbucket/model";
-import { Transition, isMinimalIssue, MinimalIssue } from "../../../jira/jira-client/model/entities";
-import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
+import Select, { CreatableSelect } from '@atlaskit/select';
+import * as path from 'path';
+import * as React from "react";
 import EdiText from 'react-editext';
-import * as FieldValidators from "../fieldValidators";
+import { BitbucketIssue } from '../../../bitbucket/model';
+import { CopyBitbucketIssueLink, OpenBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
+import { isStartWorkOnBitbucketIssueData, StartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
+import { CopyJiraIssueLinkAction, OpenJiraIssueAction, RefreshIssueAction, StartWorkAction } from "../../../ipc/issueActions";
+import { isStartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueData, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
+import { HostErrorMessage } from "../../../ipc/messaging";
+import { BranchType, RepoData } from "../../../ipc/prMessaging";
+import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
+import { isMinimalIssue, MinimalIssue, Transition } from "../../../jira/jira-client/model/entities";
+import { Branch, Remote } from "../../../typings/git";
 import { AtlLoader } from "../AtlLoader";
+import ErrorBanner from "../ErrorBanner";
+import * as FieldValidators from "../fieldValidators";
+import Offline from "../Offline";
+import { WebviewComponent } from "../WebviewComponent";
+import NavItem from "./NavItem";
+import { TransitionMenu } from "./TransitionMenu";
 
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
@@ -106,13 +103,13 @@ export default class StartWorkPage extends WebviewComponent<
         if (isStartWorkOnBitbucketIssueData(e)) {
           let repo = this.state.repo;
           if (this.isEmptyRepo(this.state.repo) && e.repoData.length > 0) {
-            const issueRepo = e.repoData.find(r => r.href === e.issue.repository!.links!.html!.href) || e.repoData[0];
+            const issueRepo = e.repoData.find(r => r.href === e.issue.data.repository!.links!.html!.href) || e.repoData[0];
             repo = issueRepo;
           }
 
           const issueType = 'bitbucketIssue';
-          const issueId = `issue-#${e.issue.id!.toString()}`;
-          const issueTitle = e.issue.title!;
+          const issueId = `issue-#${e.issue.data.id!.toString()}`;
+          const issueTitle = e.issue.data.title!;
           this.updateState(e, issueType, repo, issueId, issueTitle, emptyTransition);
         } else { // empty issue
           this.setState(emptyState);
@@ -280,22 +277,22 @@ export default class StartWorkPage extends WebviewComponent<
         <p dangerouslySetInnerHTML={{ __html: issue.descriptionHtml }} />
       </GridColumn>;
     } else if (this.state.issueType === 'bitbucketIssue') {
-      const bbIssue = issue as BitbucketIssueData;
+      const bbIssue = issue as BitbucketIssue;
       pageHeader = <GridColumn medium={8}>
         <em><p>Start work on:</p></em>
         <PageHeader
           actions={undefined}
           breadcrumbs={
             <BreadcrumbsStateless onExpand={() => { }}>
-              <BreadcrumbsItem component={() => <NavItem text={bbIssue.repository!.name!} href={bbIssue.repository!.links!.html!.href} />} />
-              <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${bbIssue.repository!.links!.html!.href}/issues`} />} />
-              <BreadcrumbsItem component={() => <NavItem text={`Issue #${bbIssue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.repo.uri, remote: this.state.remote!, issue: bbIssue })} onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })} />} />
+              <BreadcrumbsItem component={() => <NavItem text={bbIssue.data.repository!.name!} href={bbIssue.data.repository!.links!.html!.href} />} />
+              <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${bbIssue.data.repository!.links!.html!.href}/issues`} />} />
+              <BreadcrumbsItem component={() => <NavItem text={`Issue #${bbIssue.data.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: bbIssue })} onCopy={() => this.postMessage({ action: 'copyBitbucketIssueLink' })} />} />
             </BreadcrumbsStateless>
           }
         >
-          <p>{bbIssue.title}</p>
+          <p>{bbIssue.data.title}</p>
         </PageHeader>
-        <p dangerouslySetInnerHTML={{ __html: bbIssue.content!.html! }} />
+        <p dangerouslySetInnerHTML={{ __html: bbIssue.data.content!.html! }} />
       </GridColumn>;
     }
 

@@ -1,44 +1,44 @@
-import * as React from "react";
-import Page, { Grid, GridColumn } from '@atlaskit/page';
-import PageHeader from '@atlaskit/page-header';
-import SizeDetector from "@atlaskit/size-detector";
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Tooltip from '@atlaskit/tooltip';
-import Panel from '@atlaskit/panel';
 import Avatar, { AvatarItem } from "@atlaskit/avatar";
-import PriorityTrivialIcon from '@atlaskit/icon-priority/glyph/priority-trivial';
-import PriorityBlockerIcon from '@atlaskit/icon-priority/glyph/priority-blocker';
-import PriorityMajorIcon from '@atlaskit/icon-priority/glyph/priority-major';
-import PriorityMinorIcon from '@atlaskit/icon-priority/glyph/priority-minor';
-import PriorityCriticalIcon from '@atlaskit/icon-priority/glyph/priority-critical';
-import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
-import TaskIcon from '@atlaskit/icon/glyph/task';
+import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
+import Button, { ButtonGroup } from "@atlaskit/button";
 import Bug16Icon from '@atlaskit/icon-object/glyph/bug/16';
 import Improvement16Icon from '@atlaskit/icon-object/glyph/improvement/16';
-import RefreshIcon from '@atlaskit/icon/glyph/refresh';
-import WatchIcon from '@atlaskit/icon/glyph/watch';
-import StarIcon from '@atlaskit/icon/glyph/star';
-import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
-import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
-import { WebviewComponent } from "../WebviewComponent";
-import NavItem from "../issue/NavItem";
-import Comments from "../pullrequest/Comments";
-import CommentForm from "../pullrequest/CommentForm";
-import { PostComment, CopyBitbucketIssueLink, PostChange, AssignToMe, OpenStartWorkPageAction, CreateJiraIssueAction } from "../../../ipc/bitbucketIssueActions";
-import { StatusMenu } from "./StatusMenu";
-import Button, { ButtonGroup } from "@atlaskit/button";
-import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import PriorityBlockerIcon from '@atlaskit/icon-priority/glyph/priority-blocker';
+import PriorityCriticalIcon from '@atlaskit/icon-priority/glyph/priority-critical';
+import PriorityMajorIcon from '@atlaskit/icon-priority/glyph/priority-major';
+import PriorityMinorIcon from '@atlaskit/icon-priority/glyph/priority-minor';
+import PriorityTrivialIcon from '@atlaskit/icon-priority/glyph/priority-trivial';
+import LightbulbFilledIcon from '@atlaskit/icon/glyph/lightbulb-filled';
 import OpenIcon from '@atlaskit/icon/glyph/open';
-import { HostErrorMessage } from "../../../ipc/messaging";
-import { RefreshIssueAction } from "../../../ipc/issueActions";
-import Offline from "../Offline";
-import ErrorBanner from "../ErrorBanner";
-import { BitbucketIssueData, UnknownUser } from "../../../bitbucket/model";
-import { FetchUsersResult } from "../../../ipc/prMessaging";
-import { FetchUsers } from "../../../ipc/prActions";
+import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import StarIcon from '@atlaskit/icon/glyph/star';
+import TaskIcon from '@atlaskit/icon/glyph/task';
+import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
+import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import PageHeader from '@atlaskit/page-header';
+import Panel from '@atlaskit/panel';
+import SizeDetector from "@atlaskit/size-detector";
+import Tooltip from '@atlaskit/tooltip';
 import { distanceInWordsToNow, format } from "date-fns";
-import { AtlLoader } from "../AtlLoader";
+import React from "react";
 import uuid from "uuid";
+import { BitbucketIssue, BitbucketIssueData, emptyBitbucketSite, UnknownUser } from "../../../bitbucket/model";
+import { AssignToMe, CopyBitbucketIssueLink, CreateJiraIssueAction, OpenStartWorkPageAction, PostChange, PostComment } from "../../../ipc/bitbucketIssueActions";
+import { BitbucketIssueMessageData } from "../../../ipc/bitbucketIssueMessaging";
+import { RefreshIssueAction } from "../../../ipc/issueActions";
+import { HostErrorMessage } from "../../../ipc/messaging";
+import { FetchUsers } from "../../../ipc/prActions";
+import { FetchUsersResult } from "../../../ipc/prMessaging";
+import { AtlLoader } from "../AtlLoader";
+import ErrorBanner from "../ErrorBanner";
+import NavItem from "../issue/NavItem";
+import Offline from "../Offline";
+import CommentForm from "../pullrequest/CommentForm";
+import Comments from "../pullrequest/Comments";
+import { WebviewComponent } from "../WebviewComponent";
+import { StatusMenu } from "./StatusMenu";
 
 type SizeMetrics = {
     width: number;
@@ -80,10 +80,9 @@ type MyState = {
     errorDetails: any;
 };
 
-const emptyIssueData = {
+const emptyIssueData: BitbucketIssueMessageData = {
     type: "updateBitbucketIssue",
-    issueData: { type: "" },
-    remote: { name: 'dummy_remote', isReadOnly: true },
+    issue: { site: emptyBitbucketSite, data: {} },
     currentUser: UnknownUser,
     comments: [],
     hasMore: false,
@@ -156,7 +155,8 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         return new Promise(resolve => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.data.remote });
+            // TODO: Fix this after pullrequests api uses site instead of remote
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: undefined! });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -173,18 +173,17 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         });
     };
 
-
-    renderDetails(issue: BitbucketIssueData) {
+    renderDetails(issueData: BitbucketIssueData) {
         return <div style={{ padding: '2em' }}>
             <ButtonGroup>
                 <Tooltip content='Watches'>
                     <Button className='ac-button' iconBefore={<WatchIcon label="Watches" />}>
-                        {issue.watches}
+                        {issueData.watches}
                     </Button>
                 </Tooltip>
                 <Tooltip content='Votes'>
                     <Button className='ac-button' iconBefore={<StarIcon label="Votes" />}>
-                        {issue.votes}
+                        {issueData.votes}
                     </Button>
                 </Tooltip>
                 <Button className='ac-button' iconBefore={<VidPlayIcon label="Start work" />} onClick={() => this.postMessage({ action: 'openStartWorkPage' })}>Start work</Button>
@@ -199,33 +198,33 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
             }
             <div className='ac-vpadding'>
                 <label className='ac-field-label'>Status</label>
-                <StatusMenu issue={issue} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
+                <StatusMenu issueData={issueData} isStatusButtonLoading={this.state.isStatusButtonLoading} onHandleStatusChange={(newStatus: string) => this.handleStatusChange(newStatus)} />
             </div>
             <div className='ac-vpadding'>
                 <label className='ac-field-label'>Type</label>
-                <div className='ac-icon-with-text'>{typeIcon[issue.kind!]}<span style={{ paddingLeft: '1em' }}>{issue.kind}</span></div>
+                <div className='ac-icon-with-text'>{typeIcon[issueData.kind!]}<span style={{ paddingLeft: '1em' }}>{issueData.kind}</span></div>
             </div>
             <div className='ac-vpadding'>
                 <label className='ac-field-label'>Priority</label>
-                <div className='ac-icon-with-text'>{priorityIcon[issue.priority!]}<span style={{ paddingLeft: '1em' }}>{issue.priority}</span></div>
+                <div className='ac-icon-with-text'>{priorityIcon[issueData.priority!]}<span style={{ paddingLeft: '1em' }}>{issueData.priority}</span></div>
             </div>
             <div className='ac-vpadding'>
                 <label className='ac-field-label'>Assignee</label>
-                <Tooltip content={issue.assignee ? issue.assignee.display_name : 'Unassigned'}>
+                <Tooltip content={issueData.assignee ? issueData.assignee.display_name : 'Unassigned'}>
                     <AvatarItem
-                        avatar={<Avatar size='small' src={issue.assignee ? issue.assignee.links!.avatar!.href! : null} />}
-                        primaryText={issue.assignee ? issue.assignee.display_name : 'Unassigned'}
+                        avatar={<Avatar size='small' src={issueData.assignee ? issueData.assignee.links!.avatar!.href! : null} />}
+                        primaryText={issueData.assignee ? issueData.assignee.display_name : 'Unassigned'}
                     />
                 </Tooltip>
-                {!(issue.assignee && issue.assignee!.account_id === this.state.data!.currentUser.accountId) &&
+                {!(issueData.assignee && issueData.assignee!.account_id === this.state.data!.currentUser.accountId) &&
                     <Button appearance='subtle' onClick={this.handleAssign} iconBefore={<VidRaisedHandIcon label='assign-to-me' />}>Assign to me</Button>}
             </div>
             <div className='ac-vpadding'>
                 <label className='ac-field-label'>Reporter</label>
-                <Tooltip content={issue.reporter ? issue.reporter.display_name : 'Unknown'}>
+                <Tooltip content={issueData.reporter ? issueData.reporter.display_name : 'Unknown'}>
                     <AvatarItem
-                        avatar={<Avatar size='small' src={issue.reporter ? issue.reporter.links!.avatar!.href! : null} />}
-                        primaryText={issue.reporter ? issue.reporter.display_name : 'Unknown'}
+                        avatar={<Avatar size='small' src={issueData.reporter ? issueData.reporter.links!.avatar!.href! : null} />}
+                        primaryText={issueData.reporter ? issueData.reporter.display_name : 'Unknown'}
                     />
                 </Tooltip>
             </div>
@@ -233,14 +232,16 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
     }
 
     render() {
-        const issue: BitbucketIssueData = this.state.data.issueData;
+        const issue: BitbucketIssue = this.state.data.issue;
 
-        if (!issue.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (!issue.data.repository && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshIssue' });
             return <AtlLoader />;
-        } else if (!issue.repository && !this.state.isOnline) {
+        } else if (!issue.data.repository && !this.state.isOnline) {
             return <div><Offline /></div>;
         }
+
+        const issueData = issue.data;
 
 
         return (
@@ -257,26 +258,26 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                                 }
                                 <PageHeader
                                     breadcrumbs={<BreadcrumbsStateless onExpand={() => { }}>
-                                        <BreadcrumbsItem component={() => <NavItem text={issue.repository!.name!} href={issue.repository!.links!.html!.href} />} />
-                                        <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issue.repository!.links!.html!.href}/issues`} />} />
-                                        <BreadcrumbsItem component={() => <NavItem text={`Issue #${issue.id}`} href={issue.links!.html!.href} onCopy={this.handleCopyLink} />} />
+                                        <BreadcrumbsItem component={() => <NavItem text={issueData.repository!.name!} href={issueData.repository!.links!.html!.href} />} />
+                                        <BreadcrumbsItem component={() => <NavItem text='Issues' href={`${issueData.repository!.links!.html!.href}/issues`} />} />
+                                        <BreadcrumbsItem component={() => <NavItem text={`Issue #${issueData.id}`} href={issueData.links!.html!.href} onCopy={this.handleCopyLink} />} />
                                     </BreadcrumbsStateless>}
                                 >
-                                    <Tooltip content={`Created on ${format(issue.created_on, 'YYYY-MM-DD h:mm A')}`}>
+                                    <Tooltip content={`Created on ${format(issueData.created_on, 'YYYY-MM-DD h:mm A')}`}>
                                         <React.Fragment>
-                                            <p>{issue.title}</p>
-                                            <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(issue.created_on)} ago`}</p>
+                                            <p>{issueData.title}</p>
+                                            <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(issueData.created_on)} ago`}</p>
                                         </React.Fragment>
                                     </Tooltip>
                                 </PageHeader>
-                                <p dangerouslySetInnerHTML={{ __html: issue.content!.html! }} />
+                                <p dangerouslySetInnerHTML={{ __html: issueData.content!.html! }} />
 
-                                {width <= 800 && this.renderDetails(issue)}
+                                {width <= 800 && this.renderDetails(issueData)}
 
                                 <Panel isDefaultExpanded header={<h3>Comments</h3>} >
                                     {this.state.data!.hasMore &&
                                         <div className='ac-vpadding' style={{ textAlign: 'center' }}>
-                                            <Button appearance='subtle' href={issue.links!.html!.href} iconAfter={<OpenIcon label='open-previous' />}>See previous comments</Button>
+                                            <Button appearance='subtle' href={issueData.links!.html!.href} iconAfter={<OpenIcon label='open-previous' />}>See previous comments</Button>
                                         </div>
                                     }
                                     <Comments comments={this.state.data!.comments} currentUser={this.state.data!.currentUser} isAnyCommentLoading={this.state.isAnyCommentLoading} onComment={undefined} />
@@ -291,7 +292,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
 
                             {width > 800 &&
                                 <GridColumn medium={4}>
-                                    {this.renderDetails(issue)}
+                                    {this.renderDetails(issueData)}
                                 </GridColumn>
                             }
                         </Grid>;

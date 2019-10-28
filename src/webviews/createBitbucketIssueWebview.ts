@@ -1,15 +1,15 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { Action, onlineStatus } from '../ipc/messaging';
 import { commands, Uri } from 'vscode';
-import { Logger } from '../logger';
-import { Container } from '../container';
-import { Commands } from '../commands';
-import { isCreateBitbucketIssueAction, CreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { RepoData } from '../ipc/prMessaging';
 import { bbIssueCreatedEvent } from '../analytics';
-import { getBitbucketRemotes, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { BitbucketIssueData } from '../bitbucket/model';
+import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketRemotes, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { BitbucketIssue } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { Container } from '../container';
+import { CreateBitbucketIssueAction, isCreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { RepoData } from '../ipc/prMessaging';
+import { Logger } from '../logger';
+import { AbstractReactWebview } from './abstractWebview';
 
 export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
@@ -122,21 +122,21 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
 
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
-        const { repoUri: uri, href, title, description, kind, priority } = createIssueAction;
+        const { repoUri: uri, title, description, kind, priority } = createIssueAction;
 
         // TODO [VSCODE-568] Add remote to create bitbucket issue action
         const repo = Container.bitbucketContext.getRepository(Uri.parse(uri));
-        const remote = firstBitbucketRemote(repo!);
-        const bbApi = await clientForRemote(remote);
-        let issue: BitbucketIssueData = await bbApi.issues!.create(href, title, description, kind, priority);
-        commands.executeCommand(Commands.ShowBitbucketIssue, { repository: repo, remote: remote, data: issue });
+        const wsRepo = workspaceRepoFor(repo!);
+        const site = wsRepo.mainSiteRemote.site;
+        if (!site) {
+            throw new Error('Error creating issue: not authenticated');
+        }
+        const bbApi = await clientForSite(site);
+        let issue: BitbucketIssue = await bbApi.issues!.create(site, title, description, kind, priority);
+        commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
 
-        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
-
-        if (site) {
-            bbIssueCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        }
+        bbIssueCreatedEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         this.hide();
     }

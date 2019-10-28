@@ -1,8 +1,31 @@
-import { Repository, Remote } from "../typings/git";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
-import { PipelineApiImpl } from "../pipelines/pipelines";
 import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
+import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+import { Remote, Repository } from "../typings/git";
+import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
+
+export type BitbucketSite = {
+    details: DetailedSiteInfo;
+    ownerSlug: string;
+    repoSlug: string;
+};
+
+export type SiteRemote = {
+    site?: BitbucketSite;
+    remote: Remote;
+};
+
+export type WorkspaceRepo = {
+    rootUri: string;
+    mainSiteRemote: SiteRemote;
+    siteRemotes: SiteRemote[];
+};
+
+export const emptyBitbucketSite = {
+    details: emptySiteInfo,
+    ownerSlug: '',
+    repoSlug: ''
+};
 
 export type User = {
     accountId: string;
@@ -171,8 +194,8 @@ export interface PaginatedComments {
 }
 
 export interface PaginatedBitbucketIssues {
-    repository: Repository;
-    remote: Remote;
+    workspaceRepo: WorkspaceRepo;
+    site: BitbucketSite;
     data: BitbucketIssue[];
     next?: string;
 }
@@ -183,10 +206,14 @@ export interface PaginatedBranchNames {
 }
 
 export type BitbucketIssue = {
-    repository: Repository;
-    remote: Remote;
+    site: BitbucketSite;
     data: BitbucketIssueData;
 };
+
+export function isBitbucketIssue(a: any): a is BitbucketIssue {
+    return a && (<BitbucketIssue>a).site !== undefined
+        && (<BitbucketIssue>a).data !== undefined;
+}
 
 export type BitbucketIssueData = any;
 export type BitbucketBranchingModel = any;

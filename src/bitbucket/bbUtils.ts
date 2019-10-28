@@ -1,9 +1,9 @@
-import { Repository, Remote } from "../typings/git";
-import { ProductBitbucket, DetailedSiteInfo } from "../atlclients/authInfo";
 import * as gup from 'git-url-parse';
-import { Container } from "../container";
+import { DetailedSiteInfo, ProductBitbucket } from "../atlclients/authInfo";
 import { bbAPIConnectivityError } from "../constants";
-import { BitbucketApi } from "./model";
+import { Container } from "../container";
+import { Remote, Repository } from "../typings/git";
+import { BitbucketApi, BitbucketSite, WorkspaceRepo } from "./model";
 
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
@@ -42,8 +42,37 @@ export function siteDetailsForRemote(remote: Remote): DetailedSiteInfo | undefin
     return undefined;
 }
 
+
+export function bitbucketSiteForRemote(remote: Remote): BitbucketSite | undefined {
+    const parsed = parseGitUrl(urlForRemote(remote));
+    const site = Container.siteManager.getSiteForHostname(ProductBitbucket, parsed.resource);
+    if (site) {
+        return {
+            details: site,
+            ownerSlug: parsed.owner,
+            repoSlug: parsed.name
+        };
+    }
+
+    const hostname = parsed.source;
+    if (hostname.includes('bitbucket.org') || hostname.includes('bitbucket_org') || hostname.includes('bitbucket-org')) {
+        const site = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org');
+        if (site) {
+            return {
+                details: site,
+                ownerSlug: parsed.owner,
+                repoSlug: parsed.name
+            };
+        }
+    }
+
+    return undefined;
+}
+
 export function urlForRemote(remote: Remote): string {
-    return remote.fetchUrl! || remote.pushUrl!;
+    return remote
+        ? remote.fetchUrl! || remote.pushUrl!
+        : '';
 }
 
 export async function clientForRemote(remote: Remote): Promise<BitbucketApi> {
@@ -66,6 +95,10 @@ export async function clientForHostname(hostname: string): Promise<BitbucketApi>
     return Promise.reject(bbAPIConnectivityError);
 }
 
+export async function clientForSite(site: BitbucketSite): Promise<BitbucketApi> {
+    return clientForHostname(site.details.hostname);
+}
+
 // Use only for bitbucket repositories
 export function firstBitbucketRemote(repo: Repository): Remote {
     const remotes = getBitbucketRemotes(repo);
@@ -78,4 +111,23 @@ export function firstBitbucketRemote(repo: Repository): Remote {
         return remote;
     }
     return remotes[0];
+}
+
+export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
+    const siteRemotes = repository.state.remotes.map(r => ({
+        site: bitbucketSiteForRemote(r),
+        remote: r
+    }));
+
+    const firstRemote = firstBitbucketRemote(repository);
+    const mainSiteRemote = {
+        site: bitbucketSiteForRemote(firstRemote),
+        remote: firstRemote
+    };
+
+    return {
+        rootUri: repository.rootUri.toString(),
+        mainSiteRemote: mainSiteRemote,
+        siteRemotes: siteRemotes
+    };
 }
