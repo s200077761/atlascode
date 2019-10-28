@@ -3,8 +3,8 @@ import { commands, Uri } from 'vscode';
 import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
-import { BitbucketIssue, FileDiff, FileStatus, isBitbucketIssue, PullRequest } from '../bitbucket/model';
+import { bitbucketSiteForRemote, clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { BitbucketIssue, FileDiff, FileStatus, isBitbucketIssue, PullRequest, User } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
@@ -69,18 +69,20 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
             const state: RepoData[] = await Promise.all(repos.map(async r => {
 
-                // TODO [VSCODE-567] Capture remote in PullRequestCreatorWebview state
-                const remote = firstBitbucketRemote(r);
+                const wsRepo = workspaceRepoFor(r);
+                const site = wsRepo.mainSiteRemote.site!;
+                const bbApi = await clientForSite(site);
 
-                const bbApi = await clientForRemote(remote);
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
                     r.fetch(),
-                    bbApi.repositories.get(remote),
-                    bbApi.repositories.getDevelopmentBranch(remote),
-                    bbApi.pullrequests.getReviewers(remote)
+                    bbApi.repositories.get(site),
+                    bbApi.repositories.getDevelopmentBranch(site),
+                    []
+                    // TODO fix after pullrequests api uses bitbucket site
+                    //bbApi.pullrequests.getReviewers(site)
                 ]);
 
-                const currentUser = { accountId: (siteDetailsForRemote(remote)!).userId };
+                const currentUser = { accountId: site.details.userId };
 
                 return {
                     uri: r.rootUri.toString(),
@@ -89,7 +91,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     name: repo.displayName,
                     owner: repo.name,
                     remotes: r.state.remotes,
-                    defaultReviewers: defaultReviewers.filter(reviewer => reviewer.accountId !== currentUser.accountId),
+                    defaultReviewers: (defaultReviewers as User[]).filter(reviewer => reviewer.accountId !== currentUser.accountId),
                     localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                     remoteBranches: r.state.refs
                         .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
@@ -97,7 +99,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     branchTypes: [],
                     developmentBranch: developmentBranch,
                     hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
-                    isCloud: siteDetailsForRemote(remote)!.isCloud
+                    isCloud: site.details.isCloud
                 };
             }));
 
@@ -218,8 +220,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         const sourceBranchName = sourceBranch.name!;
         const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
 
-        const bbApi = await clientForRemote(remote);
-        const result = await bbApi.repositories.getCommitsForRefs(remote, sourceBranchName, destinationBranchName);
+        const site = bitbucketSiteForRemote(remote);
+        if (!site) {
+            return;
+        }
+        const bbApi = await clientForSite(site);
+        const result = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
         this.postMessage({
             type: 'commitsResult',
             commits: result

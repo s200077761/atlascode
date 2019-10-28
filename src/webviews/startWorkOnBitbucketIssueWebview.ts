@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
 import { BitbucketIssue, Repo } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -148,10 +148,12 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                 let developmentBranch = undefined;
                 let href = undefined;
                 let isCloud = false;
-                if (Container.bitbucketContext.isBitbucketRepo(r)) {
+                const wsRepo = workspaceRepoFor(r);
+                const site = wsRepo.mainSiteRemote.site;
+                if (site) {
                     const remote = firstBitbucketRemote(r);
                     const bbApi = await clientForRemote(remote);
-                    [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(remote), bbApi.repositories.getDevelopmentBranch(remote)]);
+                    [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(site), bbApi.repositories.getDevelopmentBranch(site)]);
                     href = repo.url;
                     isCloud = siteDetailsForRemote(remote)!.isCloud;
                 }

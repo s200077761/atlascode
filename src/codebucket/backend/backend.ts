@@ -1,13 +1,13 @@
+import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../../bitbucket/bbUtils';
+import { Container } from '../../container';
+import { Repository } from '../../typings/git';
+import { Shell } from '../../util/shell';
+import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { CommandBase } from '../command/command-base';
 import { BitbucketCloudSite } from '../hosts/bitbucket-cloud';
 import { BitbucketServerSite } from '../hosts/bitbucket-server';
 import { BitbucketSite } from '../hosts/bitbucket-site-base';
-import { Shell } from '../../util/shell';
-import { CommandBase } from '../command/command-base';
-import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
-import { Container } from '../../container';
-import { firstBitbucketRemote, clientForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
-import { Repository } from '../../typings/git';
 
 export class Backend {
 
@@ -61,7 +61,7 @@ export class Backend {
    * Get the hash of the revision associated with the current line.
    */
   public async findSelectedRevision(file: string, line: number): Promise<string> {
-    const output = await this.shell.output(`git blame --root -L ${line},${line} ${file}`);
+    const output = await this.shell.output(`git blame --root -l -L ${line},${line} ${file}`);
     const match = output.match(/^(\w+)/);
     if (match) {
       return match[1];
@@ -80,11 +80,14 @@ export class Backend {
     }
 
     const repo = this.findRepository();
-    const remote = firstBitbucketRemote(repo);
-    const bbApi = await clientForRemote(remote);
-    const prs = await bbApi.repositories.getPullRequestIdsForCommit(repo, remote, targetRevision);
-    if (prs.length > 0) {
-      return prs[prs.length - 1];
+    const wsRepo = workspaceRepoFor(repo);
+    const site = wsRepo.mainSiteRemote.site;
+    if (site) {
+      const bbApi = await clientForSite(site);
+      const prs = await bbApi.repositories.getPullRequestIdsForCommit(site, targetRevision);
+      if (prs.length > 0) {
+        return prs[prs.length - 1];
+      }
     }
 
     throw new Error('Unable to determine the pull request');

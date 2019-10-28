@@ -1,7 +1,7 @@
 import { commands, Uri } from 'vscode';
 import { bbIssueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketRemotes, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
 import { BitbucketIssue } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -56,11 +56,11 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
             const repos = Container.bitbucketContext.getBitbucketRepositories();
             for (let i = 0; i < repos.length; i++) {
                 const r = repos[i];
-                const remotes = getBitbucketRemotes(r);
-                const remote = firstBitbucketRemote(r);
+                const wsRepo = workspaceRepoFor(r);
+                const site = wsRepo.mainSiteRemote.site!;
 
-                const bbApi = await clientForRemote(remote);
-                const repo = await bbApi.repositories.get(remote);
+                const bbApi = await clientForSite(site);
+                const repo = await bbApi.repositories.get(site);
                 if (!repo.issueTrackerEnabled) {
                     continue;
                 }
@@ -69,7 +69,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                     uri: r.rootUri.toString(),
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
-                    remotes: remotes,
+                    remotes: wsRepo.siteRemotes.map(r => r.remote),
                     defaultReviewers: [],
                     localBranches: [],
                     remoteBranches: [],

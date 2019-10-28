@@ -243,12 +243,11 @@ export interface PullRequestApi {
 
 export interface RepositoriesApi {
     getMirrorHosts(): Promise<string[]>;
-    get(remote: Remote): Promise<Repo>;
-    getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
-    getDevelopmentBranch(remote: Remote): Promise<string>;
-    getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
-    getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]>;
+    get(site: BitbucketSite): Promise<Repo>;
+    getDevelopmentBranch(site: BitbucketSite): Promise<string>;
+    getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel>;
+    getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
+    getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]>;
 }
 
 export interface BitbucketApi {

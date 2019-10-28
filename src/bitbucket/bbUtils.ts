@@ -119,7 +119,10 @@ export function workspaceRepoFor(repository: Repository): WorkspaceRepo {
         remote: r
     }));
 
-    const firstRemote = firstBitbucketRemote(repository);
+    const firstRemote = getBitbucketRemotes(repository).length > 0
+        ? firstBitbucketRemote(repository)
+        : repository.state.remotes[0];
+
     const mainSiteRemote = {
         site: bitbucketSiteForRemote(firstRemote),
         remote: firstRemote
