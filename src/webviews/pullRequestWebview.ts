@@ -262,7 +262,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         ]);
 
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
-        const currentUser = await Container.bitbucketContext.currentUserForSite(this._pr.site);
+        const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
 
         const scm = Container.bitbucketContext.getRepository(vscode.Uri.parse(this._pr.workspaceRepo!.rootUri))!;
         const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';

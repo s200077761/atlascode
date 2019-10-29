@@ -3,12 +3,12 @@ import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
 import { Logger } from '../logger';
-import { API as GitApi, Remote, Repository } from "../typings/git";
+import { API as GitApi, Repository } from "../typings/git";
 import { CacheMap, Interval } from '../util/cachemap';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketCloudRemotes, getBitbucketRemotes, siteDetailsForRemote } from './bbUtils';
+import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketCloudRemotes, getBitbucketRemotes } from './bbUtils';
 import { BitbucketSite, PullRequest, User } from './model';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
@@ -55,26 +55,7 @@ export class BitbucketContext extends Disposable {
         this.refreshRepos();
     }
 
-    public async currentUser(remote: Remote): Promise<User> {
-        const site = siteDetailsForRemote(remote);
-
-        if (site) {
-            let foundUser = this._currentUsers.getItem<User>(site.hostname);
-            if (!foundUser) {
-                const bbClient = await clientForRemote(remote);
-                foundUser = await bbClient.pullrequests.getCurrentUser(site)!;
-                this._currentUsers.setItem(site.hostname, foundUser, 10 * Interval.MINUTE);
-            }
-
-            if (foundUser) {
-                return foundUser;
-            }
-        }
-
-        return Promise.reject(bbAPIConnectivityError);
-    }
-
-    public async currentUserForSite(site: BitbucketSite): Promise<User> {
+    public async currentUser(site: BitbucketSite): Promise<User> {
         let foundUser = this._currentUsers.getItem<User>(site.details.hostname);
         if (!foundUser) {
             const bbClient = await clientForSite(site);

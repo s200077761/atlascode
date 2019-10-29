@@ -1,4 +1,4 @@
-import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../../bitbucket/bbUtils';
+import { clientForSite, workspaceRepoFor } from '../../bitbucket/bbUtils';
 import { Container } from '../../container';
 import { Repository } from '../../typings/git';
 import { Shell } from '../../util/shell';
@@ -7,7 +7,7 @@ import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProv
 import { CommandBase } from '../command/command-base';
 import { BitbucketCloudSite } from '../hosts/bitbucket-cloud';
 import { BitbucketServerSite } from '../hosts/bitbucket-server';
-import { BitbucketSite } from '../hosts/bitbucket-site-base';
+import { BitbucketSiteBase } from '../hosts/bitbucket-site-base';
 
 export class Backend {
 
@@ -39,11 +39,14 @@ export class Backend {
   /**
    * Get the remote Bitbucket site.
    */
-  public async findBitbucketSite(): Promise<BitbucketSite> {
+  public async findBitbucketSite(): Promise<BitbucketSiteBase> {
     const repo = this.findRepository();
-    const remote = firstBitbucketRemote(repo);
-    const site = siteDetailsForRemote(remote)!;
-    return site.isCloud ? new BitbucketCloudSite(site, remote) : new BitbucketServerSite(site, remote);
+    const wsRepo = workspaceRepoFor(repo);
+    const site = wsRepo.mainSiteRemote.site;
+    if (!site) {
+      throw new Error('Unable to find bitbucket site');
+    }
+    return site.details.isCloud ? new BitbucketCloudSite(site) : new BitbucketServerSite(site);
   }
 
   /**
