@@ -1,17 +1,17 @@
-import { workspace, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
-import { AbstractBaseNode } from './nodes/abstractBaseNode';
+import { commands, Disposable, Event, EventEmitter, TreeItem, window, workspace } from 'vscode';
+import { prPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { GitContentProvider } from './gitContentProvider';
+import { clientForRemote, clientForSite, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { PaginatedPullRequests } from '../bitbucket/model';
-import { RepositoriesNode } from './pullrequest/repositoriesNode';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { Repository, Remote } from '../typings/git';
-import { prPaginationEvent } from '../analytics';
-import { PullRequestHeaderNode } from './pullrequest/headerNode';
+import { Remote, Repository } from '../typings/git';
 import { BaseTreeDataProvider } from './Explorer';
+import { GitContentProvider } from './gitContentProvider';
+import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { PullRequestHeaderNode } from './pullrequest/headerNode';
+import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -32,7 +32,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
-                const bbApi = await clientForRemote(prs.remote);
+                const bbApi = await clientForSite(prs.site);
                 const result = await bbApi.pullrequests.nextPage(prs);
                 this.addItems(result);
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
@@ -117,11 +117,11 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     }
 
     addItems(prs: PaginatedPullRequests): void {
-        if (!this._childrenMap || !this._childrenMap.get(prs.repository.rootUri.toString())) {
+        if (!prs.workspaceRepo || !this._childrenMap || !this._childrenMap.get(prs.workspaceRepo.rootUri)) {
             return;
         }
 
-        this._childrenMap.get(prs.repository.rootUri.toString())!.addItems(prs);
+        this._childrenMap.get(prs.workspaceRepo.rootUri)!.addItems(prs);
         this._onDidChangeTreeData.fire();
     }
 

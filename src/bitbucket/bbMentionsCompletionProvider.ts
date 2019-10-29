@@ -1,9 +1,7 @@
-import {
-    window, CompletionItemProvider, TextDocument, Position, CompletionItem, CompletionItemKind
-} from 'vscode';
+import { CompletionItem, CompletionItemKind, CompletionItemProvider, Position, TextDocument, window } from 'vscode';
 import { PRFileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
-import { clientForRemote } from './bbUtils';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
+import { clientForSite } from './bbUtils';
 
 
 export class BitbucketMentionsCompletionProvider implements CompletionItemProvider {
@@ -17,12 +15,12 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
             return;
         }
 
-        const queryParams = JSON.parse(activePullRequestUri.query) as PRFileDiffQueryParams;
-        const bbApi = await clientForRemote(queryParams.remote);
+        const { site, participants } = JSON.parse(activePullRequestUri.query) as PRFileDiffQueryParams;
+        const bbApi = await clientForSite(site);
         const triggerWord = doc.getText(doc.getWordRangeAtPosition(pos));
-        const users = await bbApi.pullrequests.getReviewers(queryParams.remote, triggerWord);
+        const users = await bbApi.pullrequests.getReviewers(site, triggerWord);
         if (users.length === 0) {
-            users.push(...queryParams.participants);
+            users.push(...participants);
         }
 
         return users.map(user => {

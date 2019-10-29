@@ -156,9 +156,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isFetchUsers(e)) {
                         handled = true;
                         try {
-                            const bbApi = await clientForRemote(e.remote);
-                            const reviewers = await bbApi.pullrequests.getReviewers(e.remote, e.query);
-                            this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
+                            const site = bitbucketSiteForRemote(e.remote);
+                            if (!site) {
+                                this.postMessage({ type: 'fetchUsersResult', users: [], nonce: e.nonce });
+                            } else {
+                                const bbApi = await clientForSite(site);
+                                const reviewers = await bbApi.pullrequests.getReviewers(site, e.query);
+                                this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
+                            }
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -402,12 +407,17 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             await repo.push(remote.name, sourceBranchName);
         }
 
-        const bbApi = await clientForRemote(remote);
+        const workspaceRepo = workspaceRepoFor(repo);
+        const site = bitbucketSiteForRemote(remote);
+        if (!site) {
+            throw new Error('error creating pull request: no authenticated site');
+        }
+        const bbApi = await clientForSite(site);
 
         await bbApi.pullrequests
             .create(
-                repo,
-                remote,
+                site,
+                workspaceRepo,
                 {
                     title: title,
                     summary: summary,

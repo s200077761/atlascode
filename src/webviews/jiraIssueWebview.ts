@@ -5,7 +5,7 @@ import { createEmptyMinimalIssue, emptyUser, isEmptyUser, IssueLinkIssueKeys, Mi
 import { commands, env, window } from "vscode";
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from "../atlclients/authInfo";
-import { clientForRemote } from "../bitbucket/bbUtils";
+import { clientForSite } from "../bitbucket/bbUtils";
 import { PullRequestData } from "../bitbucket/model";
 import { Commands } from "../commands";
 import { postComment } from "../commands/jira/postComment";
@@ -656,7 +656,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         // TODO: [VSCODE-606] abstract madness for calling Commands.BitbucketShowPullRequestDetails into a reusable function
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
-                            const bbApi = await clientForRemote(pr.remote);
+                            const bbApi = await clientForSite(pr.site);
                             commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));

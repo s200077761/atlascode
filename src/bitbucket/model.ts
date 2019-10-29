@@ -173,19 +173,18 @@ export type PullRequestData = {
 };
 
 export interface PullRequest {
-    repository: Repository;
-    remote: Remote;
-    sourceRemote?: Remote;
+    site: BitbucketSite;
     data: PullRequestData;
+    workspaceRepo?: WorkspaceRepo;
+    // TODO figure out what to do when source remote is different from destination remote
+    // sourceRemote: sourceRemote,
 }
 
 export interface PaginatedPullRequests {
-    // Repeating repository and remote fields although they are available from
-    // individual pull requests for 1) convenience and 2) handle case when `data` is empty.
-    repository: Repository;
-    remote: Remote;
+    site: BitbucketSite;
     data: PullRequest[];
     next?: string;
+    workspaceRepo?: WorkspaceRepo;
 }
 
 export interface PaginatedComments {
@@ -223,22 +222,22 @@ export interface PullRequestApi {
     getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
     getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
+    nextPage(prs: PaginatedPullRequests): Promise<PaginatedPullRequests>;
     getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
-    editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
-    deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
+    editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment>;
+    deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
-    getReviewers(remote: Remote, query?: string): Promise<User[]>;
-    create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
+    getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
+    create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
-    postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+    postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
 }
 
 export interface RepositoriesApi {

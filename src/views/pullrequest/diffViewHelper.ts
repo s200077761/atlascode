@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
-import { Comment, PaginatedComments, FileChange, PullRequest, FileStatus } from '../../bitbucket/model';
+import { Comment, FileChange, FileStatus, PaginatedComments, PullRequest } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { Logger } from '../../logger';
+import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PullRequestCommentController } from './prCommentController';
 import { PRFileDiffQueryParams } from './pullRequestNode';
-import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
-import { Logger } from '../../logger';
 
 export interface DiffViewArgs {
-    diffArgs: any[]; 
+    diffArgs: any[];
     fileDisplayData: {
         prUrl: string;
         fileDisplayName: string;
@@ -37,15 +38,25 @@ function traverse(n: Comment): Comment[] {
 };
 
 export async function getArgsForDiffView(allComments: PaginatedComments, fileChange: FileChange, pr: PullRequest, commentController: PullRequestCommentController): Promise<DiffViewArgs> {
+    if (!pr.workspaceRepo) {
+        throw new Error('Diffs are only supported for workspace repos');
+    }
+    const remoteName = pr.workspaceRepo.mainSiteRemote.remote.name;
+
     const commentsMap = await getInlineComments(allComments.data);
 
     // Use merge base to diff from common ancestor of source and destination.
     // This will help ignore any unrelated changes in destination branch.
-    const destination = `${pr.remote.name}/${pr.data.destination!.branchName}`;
-    const source = `${pr.sourceRemote ? pr.sourceRemote.name : pr.remote.name}/${pr.data.source!.branchName}`;
+    const destination = `${remoteName}/${pr.data.destination!.branchName}`;
+    // TODO Handle case when source and destination remotes are not the same
+    //const source = `${pr.sourceRemote ? pr.sourceRemote.name : pr.remote.name}/${pr.data.source!.branchName}`;
+    const source = `${remoteName}/${pr.data.source!.branchName}`;
     let mergeBase = pr.data.destination!.commitHash;
     try {
-        mergeBase = await pr.repository.getMergeBase(destination, source);
+        const scm = Container.bitbucketContext.getRepository(vscode.Uri.parse(pr.workspaceRepo.rootUri));
+        if (scm) {
+            mergeBase = await scm.getMergeBase(destination, source);
+        }
     } catch (e) {
         Logger.debug('error getting merge base: ', e);
     }
@@ -87,12 +98,12 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
 
     const lhsQueryParam = {
         query: JSON.stringify({
+            site: pr.site,
             lhs: true,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
-            repoUri: pr.repository.rootUri.toString(),
-            remote: pr.remote,
+            repoUri: pr.workspaceRepo.rootUri,
             branchName: pr.data.destination!.branchName,
             commitHash: mergeBase,
             path: lhsFilePath,
@@ -101,12 +112,12 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
     };
     const rhsQueryParam = {
         query: JSON.stringify({
+            site: pr.site,
             lhs: false,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
-            repoUri: pr.repository.rootUri.toString(),
-            remote: pr.sourceRemote || pr.remote,
+            repoUri: pr.workspaceRepo.rootUri,
             branchName: pr.data.source!.branchName,
             commitHash: pr.data.source!.commitHash,
             path: rhsFilePath,
@@ -128,9 +139,9 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
     ];
 
     return {
-        diffArgs: diffArgs, 
+        diffArgs: diffArgs,
         fileDisplayData: {
-            prUrl: pr.data.url, 
+            prUrl: pr.data.url,
             fileDisplayName: fileDisplayName,
             fileChangeStatus: fileChange.status,
             numberOfComments: comments.length ? comments.length : 0

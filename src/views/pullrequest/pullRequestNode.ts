@@ -1,16 +1,15 @@
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, FileChange, User, Commit, FileStatus } from '../../bitbucket/model';
-import { Resources } from '../../resources';
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketSite, Comment, Commit, FileChange, FileStatus, PaginatedComments, PaginatedPullRequests, PullRequest, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
-import { Remote } from '../../typings/git';
-import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { Logger } from '../../logger';
+import { Resources } from '../../resources';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { RelatedBitbucketIssuesNode } from '../nodes/relatedBitbucketIssuesNode';
-import { PullRequestCommentController } from './prCommentController';
+import { RelatedIssuesNode } from '../nodes/relatedIssuesNode';
 import { SimpleNode } from '../nodes/simpleNode';
-import { clientForRemote } from '../../bitbucket/bbUtils';
-import { getArgsForDiffView, DiffViewArgs } from './diffViewHelper';
+import { DiffViewArgs, getArgsForDiffView } from './diffViewHelper';
+import { PullRequestCommentController } from './prCommentController';
 
 export const PullRequestContextValue = 'pullrequest';
 
@@ -23,9 +22,9 @@ export interface FileDiffQueryParams {
 }
 
 export interface PRFileDiffQueryParams extends FileDiffQueryParams {
+    site: BitbucketSite;
     prHref: string;
     prId: number;
-    remote: Remote;
     participants: User[];
     commentThreads: Comment[][];
 }
@@ -59,7 +58,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
             this.pr = await this.hydratePullRequest(this.pr);
 
-            const bbApi = await clientForRemote(this.pr.remote);
+            const bbApi = await clientForSite(this.pr.site);
             let promises = Promise.all([
                 bbApi.pullrequests.getChangedFiles(this.pr),
                 bbApi.pullrequests.getCommits(this.pr),
@@ -88,7 +87,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     // hydratePullRequest fetches the specific pullrequest by id to fill in the missing details.
     // This is needed because when a repo's pullrequests list is fetched, the response may not have all fields populated.
     private async hydratePullRequest(pr: PullRequest): Promise<PullRequest> {
-        const bbApi = await clientForRemote(this.pr.remote);
+        const bbApi = await clientForSite(this.pr.site);
         return await bbApi.pullrequests.get(pr);
     }
 
@@ -114,10 +113,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         const result: AbstractBaseNode[] = [];
         result.push(
             ...await Promise.all(
-                fileChanges.map(async (fileChange) => { 
-                        const diffViewData = await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
-                        return new PullRequestFilesNode(diffViewData);
-                    }
+                fileChanges.map(async (fileChange) => {
+                    const diffViewData = await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
+                    return new PullRequestFilesNode(diffViewData);
+                }
                 )
             )
         );
