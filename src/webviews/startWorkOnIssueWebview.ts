@@ -1,22 +1,22 @@
 import * as vscode from 'vscode';
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { StartWorkOnIssueData } from '../ipc/issueMessaging';
-import { Logger } from '../logger';
-import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
-import { Container } from '../container';
-import { Repository, RefType } from '../typings/git';
-import { RepoData, BranchType } from '../ipc/prMessaging';
-import { assignIssue } from '../commands/jira/assignIssue';
-import { issueWorkStartedEvent, issueUrlCopiedEvent } from '../analytics';
-import { siteDetailsForRemote, clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
-import { Repo, BitbucketBranchingModel } from '../bitbucket/model';
-import { fetchMinimalIssue } from '../jira/fetchIssue';
-import { MinimalIssue } from '../jira/jira-client/model/entities';
-import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
-import { showIssue } from '../commands/jira/showIssue';
-import { transitionIssue } from '../jira/transitionIssue';
+import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { clientForSite, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { BitbucketBranchingModel, Repo } from '../bitbucket/model';
+import { assignIssue } from '../commands/jira/assignIssue';
+import { showIssue } from '../commands/jira/showIssue';
+import { Container } from '../container';
+import { isOpenJiraIssue, isStartWork } from '../ipc/issueActions';
+import { StartWorkOnIssueData } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { BranchType, RepoData } from '../ipc/prMessaging';
+import { fetchMinimalIssue } from '../jira/fetchIssue';
+import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
+import { MinimalIssue } from '../jira/jira-client/model/entities';
+import { transitionIssue } from '../jira/transitionIssue';
+import { Logger } from '../logger';
+import { RefType, Repository } from '../typings/git';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 const customBranchType: BranchType = { kind: "Custom", prefix: "" };
 
@@ -162,20 +162,21 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     let href = undefined;
                     let isCloud = false;
                     let branchTypes: BranchType[] = [];
-                    if (Container.bitbucketContext.isBitbucketRepo(r)) {
-                        const remote = firstBitbucketRemote(r);
 
+                    const wsRepo = workspaceRepoFor(r);
+                    const site = wsRepo.mainSiteRemote.site;
+                    if (site) {
                         let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
-                        const bbApi = await clientForRemote(remote);
+                        const bbApi = await clientForSite(site);
                         [, repo, developmentBranch, branchingModel] = await Promise.all(
                             [r.fetch(),
-                            bbApi.repositories.get(remote),
-                            bbApi.repositories.getDevelopmentBranch(remote),
-                            bbApi.repositories.getBranchingModel(remote)
+                            bbApi.repositories.get(site),
+                            bbApi.repositories.getDevelopmentBranch(site),
+                            bbApi.repositories.getBranchingModel(site)
                             ]);
                         href = repo.url;
-                        isCloud = siteDetailsForRemote(remote)!.isCloud;
+                        isCloud = site.details.isCloud;
 
                         if (branchingModel && branchingModel.branch_types) {
                             branchTypes = [...branchingModel.branch_types]

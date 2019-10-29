@@ -1,14 +1,15 @@
-import { Disposable, EventEmitter, Event, Uri } from 'vscode';
-import { Repository, API as GitApi, Remote } from "../typings/git";
-import { Container } from '../container';
-import { ProductBitbucket, DetailedSiteInfo } from '../atlclients/authInfo';
-import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
-import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { CacheMap, Interval } from '../util/cachemap';
-import { PullRequest, User } from './model';
-import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
-import { getBitbucketRemotes, siteDetailsForRemote, clientForRemote, firstBitbucketRemote, getBitbucketCloudRemotes } from './bbUtils';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
+import { Container } from '../container';
+import { Logger } from '../logger';
+import { API as GitApi, Remote, Repository } from "../typings/git";
+import { CacheMap, Interval } from '../util/cachemap';
+import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
+import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
+import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
+import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketCloudRemotes, getBitbucketRemotes, siteDetailsForRemote } from './bbUtils';
+import { BitbucketSite, PullRequest, User } from './model';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -73,6 +74,21 @@ export class BitbucketContext extends Disposable {
         return Promise.reject(bbAPIConnectivityError);
     }
 
+    public async currentUserForSite(site: BitbucketSite): Promise<User> {
+        let foundUser = this._currentUsers.getItem<User>(site.details.hostname);
+        if (!foundUser) {
+            const bbClient = await clientForSite(site);
+            foundUser = await bbClient.pullrequests.getCurrentUser(site.details)!;
+            this._currentUsers.setItem(site.details.hostname, foundUser, 10 * Interval.MINUTE);
+        }
+
+        if (foundUser) {
+            return foundUser;
+        }
+
+        return Promise.reject(bbAPIConnectivityError);
+    }
+
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
             const prs = await Promise.all(this.getBitbucketRepositories().map(async repo => {
@@ -99,9 +115,14 @@ export class BitbucketContext extends Disposable {
             this._repoMap.set(repo.rootUri.toString(), repo);
         }));
 
-        for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
-            const bbApi = await Container.clientManager.bbClient(site);
-            this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
+        try {
+            for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
+                const bbApi = await Container.clientManager.bbClient(site);
+                this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
+            }
+        } catch {
+            // log and ignore error
+            Logger.debug('Failed to fetch mirror sites');
         }
 
         this._onDidChangeBitbucketContext.fire();

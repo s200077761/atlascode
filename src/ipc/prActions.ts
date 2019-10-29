@@ -1,8 +1,8 @@
-import { Action } from "./messaging";
-import { Branch, Remote } from "../typings/git";
-import { Reviewer, BitbucketIssueData, ApprovalStatus, FileChange } from "../bitbucket/model";
+import { ApprovalStatus, BitbucketIssue, FileChange, Reviewer } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
+import { Branch, Remote } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
+import { Action } from "./messaging";
 
 export interface DeleteComment extends Action {
     commentId: number;
@@ -48,7 +48,7 @@ export interface Merge extends Action {
     mergeStrategy?: string;
     commitMessage: string;
     closeSourceBranch?: boolean;
-    issue?: MinimalIssue | BitbucketIssueData;
+    issue?: MinimalIssue | BitbucketIssue;
 }
 
 export function isMerge(a: Action): a is Merge {
@@ -85,7 +85,7 @@ export interface CreatePullRequest extends Action {
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
-    issue?: MinimalIssue | BitbucketIssueData;
+    issue?: MinimalIssue | BitbucketIssue;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
@@ -154,5 +154,5 @@ export interface OpenDiffViewAction extends Action {
 }
 
 export function isOpenDiffView(a: Action): a is OpenDiffViewAction {
-    return(<OpenDiffViewAction>a).action === 'openDiffView';
+    return (<OpenDiffViewAction>a).action === 'openDiffView';
 }

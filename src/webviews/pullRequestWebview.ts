@@ -1,29 +1,28 @@
-import * as vscode from 'vscode';
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit, FileChange, FileDiff } from '../bitbucket/model';
-import { PRData } from '../ipc/prMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { Logger } from '../logger';
-import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers, isOpenDiffView } from '../ipc/prActions';
-import { isOpenJiraIssue } from '../ipc/issueActions';
-import { Commands } from '../commands';
-import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
-import { Container } from '../container';
-import { isOpenBuildStatus } from '../ipc/prActions';
-import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { PipelineInfo } from '../views/pipelines/PipelinesTree';
-import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
-import { showIssue } from '../commands/jira/showIssue';
-import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { transitionIssue } from '../jira/transitionIssue';
-import { issueForKey } from '../jira/issueForKey';
 import pSettle from "p-settle";
+import * as vscode from 'vscode';
+import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
+import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
+import { bitbucketSiteForRemote, clientForRemote, clientForSite, siteDetailsForRemote } from '../bitbucket/bbUtils';
+import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
+import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { showIssue } from '../commands/jira/showIssue';
+import { Container } from '../container';
+import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { isOpenJiraIssue } from '../ipc/issueActions';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge } from '../ipc/prActions';
+import { PRData } from '../ipc/prMessaging';
+import { issueForKey } from '../jira/issueForKey';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { isMinimalIssue, MinimalIssue } from '../jira/jira-client/model/entities';
+import { transitionIssue } from '../jira/transitionIssue';
+import { Logger } from '../logger';
+import { Remote, Repository } from "../typings/git";
+import { PipelineInfo } from '../views/pipelines/PipelinesTree';
 import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 interface PRState {
     prData: PRData;
@@ -32,19 +31,19 @@ interface PRState {
     repository?: Repository;
 }
 
-const emptyState: PRState = { 
-    prData: { 
-        type: '', 
+const emptyState: PRState = {
+    prData: {
+        type: '',
         fileDiffs: [],
         repoUri: '',
-        remote: { 
-            name: 'dummy_remote', 
-            isReadOnly: true 
-        }, 
-        currentBranch: '', 
-        relatedJiraIssues: [], 
-        mergeStrategies: [] 
-    } 
+        remote: {
+            name: 'dummy_remote',
+            isReadOnly: true
+        },
+        currentBranch: '',
+        relatedJiraIssues: [],
+        mergeStrategies: []
+    }
 };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _state: PRState = emptyState;
@@ -187,7 +186,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'openDiffView': {
-                    if(isOpenDiffView(msg)){
+                    if (isOpenDiffView(msg)) {
                         await this.openDiffViewForFile(msg.fileChange);
                     }
                     break;
@@ -195,7 +194,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, { repository: this._pr!.repository, remote: this._pr!.remote, data: msg.issue });
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
                     }
                     break;
                 }
@@ -204,7 +203,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, { site: bitbucketSiteForRemote(this._state.remote!), pipelineUuid: pipelineUUID } as PipelineInfo);
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
@@ -298,7 +297,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 commits: commits,
                 comments: comments.data,
                 relatedJiraIssues: relatedJiraIssues,
-                relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
+                relatedBitbucketIssues: relatedBitbucketIssues,
                 mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
                 mergeStrategies: mergeStrategies
@@ -307,7 +306,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssueData | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssue | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -323,11 +322,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             }
 
             const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
-            const bbApi = await clientForRemote(pr.remote);
+            const site = bitbucketSiteForRemote(pr.remote)!;
+            const bbApi = await clientForSite(site);
             if (bbApi.issues) {
-                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.repository, bbIssueKeys);
+                const bbIssues = await bbApi.issues.getIssuesForKeys(site, bbIssueKeys);
                 if (bbIssues.length > 0) {
-                    return bbIssues[0].data;
+                    return bbIssues[0];
                 }
             }
         } catch (e) {
@@ -370,9 +370,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits, comments.data);
-            const bbApi = await clientForRemote(pr.remote);
+            const site = bitbucketSiteForRemote(pr.remote)!;
+            const bbApi = await clientForSite(site);
             if (bbApi.issues) {
-                result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);
+                result = await bbApi.issues.getIssuesForKeys(site, issueKeys);
             }
         } catch (e) {
             result = [];
@@ -413,7 +414,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         await this.updatePullRequest();
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssueData) {
+    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
         if (!issue) {
             return;
         }
@@ -422,9 +423,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             if (transition) {
                 await transitionIssue(issue, transition);
             }
-        } else {
-            const bbApi = await clientForRemote(this._state.remote!);
-            await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);
+        } else if (isBitbucketIssue(issue)) {
+            const bbApi = await clientForSite(issue.site);
+            await bbApi.issues!.postChange(issue, issue.data.state!);
         }
     }
 
@@ -501,7 +502,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             fileChange: fileChange
         };
     }
-    
+
     private getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
         let fileDisplayName: string = '';
         if (newPath && oldPath && newPath !== oldPath) {

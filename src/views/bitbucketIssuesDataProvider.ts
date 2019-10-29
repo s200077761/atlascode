@@ -1,14 +1,14 @@
-import { Disposable, EventEmitter, Event, TreeItem, commands } from 'vscode';
-import { AbstractBaseNode } from './nodes/abstractBaseNode';
+import { commands, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
+import { bbIssuesPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
+import { clientForSite, firstBitbucketRemote } from '../bitbucket/bbUtils';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
-import { bbIssuesPaginationEvent } from '../analytics';
 import { BaseTreeDataProvider } from './Explorer';
+import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -21,7 +21,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
         super();
         this._disposable = Disposable.from(
             commands.registerCommand(Commands.BitbucketIssuesNextPage, async (issues: PaginatedBitbucketIssues) => {
-                const bbApi = await clientForRemote(issues.remote);
+                const bbApi = await clientForSite(issues.site);
                 const result = await bbApi.issues!.nextPage(issues);
                 this.addItems(result);
                 bbIssuesPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
@@ -51,11 +51,11 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     }
 
     addItems(issues: PaginatedBitbucketIssues): void {
-        if (!this._childrenMap || !this._childrenMap.get(issues.repository.rootUri.toString())) {
+        if (!this._childrenMap || !this._childrenMap.get(issues.workspaceRepo.rootUri)) {
             return;
         }
 
-        this._childrenMap.get(issues.repository.rootUri.toString())!.addItems(issues);
+        this._childrenMap.get(issues.workspaceRepo.rootUri)!.addItems(issues);
         this._onDidChangeTreeData.fire();
     }
 

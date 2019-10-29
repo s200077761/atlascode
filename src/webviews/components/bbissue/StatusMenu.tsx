@@ -1,6 +1,6 @@
-import * as React from "react";
-import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
+import Select, { components } from '@atlaskit/select';
+import React from "react";
 import { BitbucketIssueData } from "../../../bitbucket/model";
 
 export const StateRenderer = {
@@ -28,7 +28,7 @@ const StatusValue = (props: any) => (
 );
 
 export class StatusMenu extends React.Component<{
-  issue: BitbucketIssueData;
+  issueData: BitbucketIssueData;
   isStatusButtonLoading: boolean;
   onHandleStatusChange: (item: any) => void;
 }> {
@@ -38,8 +38,8 @@ export class StatusMenu extends React.Component<{
   };
 
   render() {
-    const issue = this.props.issue;
-    if (!issue) {
+    const issueData = this.props.issueData;
+    if (!issueData) {
       return <div />;
     }
 
@@ -50,7 +50,7 @@ export class StatusMenu extends React.Component<{
         className="ac-select-container"
         classNamePrefix="ac-select"
         options={["new", "open", "resolved", "on hold", "invalid", "duplicate", "wontfix", "closed"]}
-        value={{ label: issue.state, value: issue.state }}
+        value={{ label: issueData.state, value: issueData.state }}
         components={{ Option: StatusOption, SingleValue: StatusValue }}
         isDisabled={this.props.isStatusButtonLoading}
         isLoading={this.props.isStatusButtonLoading}

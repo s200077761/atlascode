@@ -1,10 +1,10 @@
-import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn, Range } from 'vscode';
-import { Repository } from "../../typings/git";
-import { Container } from '../../container';
+import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 import { startIssueCreationEvent } from '../../analytics';
-import { CommentData, BBData } from '../../webviews/createIssueWebview';
-import { parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
+import { clientForSite, firstBitbucketRemote, parseGitUrl, siteDetailsForRemote, urlForRemote } from '../../bitbucket/bbUtils';
 import { BitbucketIssue } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { Repository } from "../../typings/git";
+import { BBData, CommentData } from '../../webviews/createIssueWebview';
 
 export interface TodoIssueData {
     summary: string;
@@ -65,10 +65,10 @@ function annotateComment(data: CommentData) {
 }
 
 async function updateBBIssue(data: BBData) {
-    const bbApi = await clientForRemote(data.bbIssue.remote);
+    const bbApi = await clientForSite(data.bbIssue.site);
     await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
 
-    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
+    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.site);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
         if (injiraComp && data.bbIssue.data.component !== injiraComp) {

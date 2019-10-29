@@ -1,35 +1,27 @@
-import * as React from "react";
-import { WebviewComponent } from "../WebviewComponent";
-import { Action } from "../../../ipc/messaging";
-import {
-  Pipeline,
-  PipelineState,
-  PipelineStep,
-  PipelineStage,
-  PipelineResult,
-  statusForState,
-  Status,
-  PipelineCommand
-} from "../../../pipelines/model";
-import Page, { Grid, GridColumn } from "@atlaskit/page";
-import Panel from '@atlaskit/panel';
-import { PipelineData, StepData } from "../../../ipc/pipelinesMessaging";
-import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
-import RecentIcon from "@atlaskit/icon/glyph/recent";
-import ErrorIcon from "@atlaskit/icon/glyph/error";
-import CalendarIcon from "@atlaskit/icon/glyph/calendar";
 import Avatar from "@atlaskit/avatar";
+import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
+import Button from "@atlaskit/button";
+import CalendarIcon from "@atlaskit/icon/glyph/calendar";
+import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
+import ErrorIcon from "@atlaskit/icon/glyph/error";
+import RecentIcon from "@atlaskit/icon/glyph/recent";
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
+import Page, { Grid, GridColumn } from "@atlaskit/page";
+import PageHeader from '@atlaskit/page-header';
+import Panel from '@atlaskit/panel';
 import { colors } from "@atlaskit/theme";
 import { distanceInWordsToNow } from "date-fns";
-import Offline from "../Offline";
-import ErrorBanner from "../ErrorBanner";
-import PageHeader from '@atlaskit/page-header';
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import NavItem from "../issue/NavItem";
+import * as React from "react";
+import { emptyBitbucketSite } from "../../../bitbucket/model";
+import { Action } from "../../../ipc/messaging";
 import { CopyPipelineLinkAction } from "../../../ipc/pipelinesActions";
-import Button from "@atlaskit/button";
+import { PipelineData, StepData } from "../../../ipc/pipelinesMessaging";
+import { Pipeline, PipelineCommand, PipelineResult, PipelineStage, PipelineState, PipelineStep, Status, statusForState } from "../../../pipelines/model";
 import { AtlLoader } from "../AtlLoader";
+import ErrorBanner from "../ErrorBanner";
+import NavItem from "../issue/NavItem";
+import Offline from "../Offline";
+import { WebviewComponent } from "../WebviewComponent";
 
 const successIcon = (
   <CheckCircleIcon primaryColor={colors.G400} label="build successful" />
@@ -99,6 +91,7 @@ type State = {
 };
 
 const emptyPipeline: PipelineData = {
+  site: emptyBitbucketSite,
   repository: {
     id: '',
     name: '',
@@ -108,7 +101,6 @@ const emptyPipeline: PipelineData = {
     avatarUrl: '',
     issueTrackerEnabled: false
   },
-  remote: { name: 'dummy_remote', isReadOnly: true },
   type: "",
   build_number: 0,
   uuid: "",

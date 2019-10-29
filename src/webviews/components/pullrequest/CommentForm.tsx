@@ -1,7 +1,7 @@
-import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import Spinner from '@atlaskit/spinner';
+import * as React from 'react';
 import { User } from '../../../bitbucket/model';
 import PopoutMentionPicker from './PopoutMentionPicker';
 
@@ -14,17 +14,17 @@ export default class CommentForm extends React.Component<{
     onEdit?: (content: string, commentId: number) => void,
     onCancel?: () => void
     loadUserOptions?: any
-    }, 
+},
     { commentInput: string, isThisCommentLoading: boolean }
     > {
-        
+
     private textAreaElement: HTMLTextAreaElement;
 
     constructor(props: any) {
         super(props);
-        this.state = { 
-            commentInput: '', 
-            isThisCommentLoading: false 
+        this.state = {
+            commentInput: '',
+            isThisCommentLoading: false
         };
     }
 
@@ -67,7 +67,7 @@ export default class CommentForm extends React.Component<{
                     <Avatar
                         appearance="circle"
                         name={this.props.currentUser.displayName}
-                        src={this.props.currentUser.url}
+                        src={this.props.currentUser.avatarUrl}
                         size="medium"
                     />
                     <div style={{ width: '100%', marginLeft: 8 }}>

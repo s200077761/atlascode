@@ -1,36 +1,35 @@
-import * as React from 'react';
-import * as path from 'path';
-import uuid from 'uuid';
+import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from '@atlaskit/button';
+import { Checkbox } from '@atlaskit/checkbox';
+import Form, { Field } from '@atlaskit/form';
+import Arrow from '@atlaskit/icon/glyph/arrow-right';
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
-import { Field } from '@atlaskit/form';
-import { Checkbox } from '@atlaskit/checkbox';
-import { WebviewComponent } from '../WebviewComponent';
-import { CreatePRData, isCreatePRData, CommitsResult, isCommitsResult, RepoData, isDiffResult, DiffResult } from '../../../ipc/prMessaging';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { CreatePullRequest, FetchDetails, RefreshPullRequest, FetchIssue, FetchUsers, OpenDiffPreviewAction } from '../../../ipc/prActions';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import * as path from 'path';
+import * as React from 'react';
+import uuid from 'uuid';
+import { BitbucketIssue, BitbucketIssueData, Commit, FileDiff, User } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
-import { Commits } from './Commits';
-import Arrow from '@atlaskit/icon/glyph/arrow-right';
-import { Remote, Branch, Ref } from '../../../typings/git';
-import { BranchWarning } from './BranchWarning';
-import CreatePRTitleSummary from './CreatePRTitleSummary';
-import Avatar from "@atlaskit/avatar";
-import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-import Form from '@atlaskit/form';
-import ErrorBanner from '../ErrorBanner';
-import Offline from '../Offline';
-import { TransitionMenu } from '../issue/TransitionMenu';
-import { StatusMenu } from '../bbissue/StatusMenu';
-import NavItem from '../issue/NavItem';
-import PMFBBanner from '../pmfBanner';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { PMFData } from '../../../ipc/messaging';
-import { Commit, BitbucketIssueData, User, FileDiff } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue } from '../../../jira/jira-client/model/entities';
+import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
+import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
+import { isMinimalIssue, MinimalIssue, Transition } from '../../../jira/jira-client/model/entities';
+import { Branch, Ref, Remote } from '../../../typings/git';
 import { AtlLoader } from '../AtlLoader';
+import { StatusMenu } from '../bbissue/StatusMenu';
+import ErrorBanner from '../ErrorBanner';
+import NavItem from '../issue/NavItem';
+import { TransitionMenu } from '../issue/TransitionMenu';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
+import { WebviewComponent } from '../WebviewComponent';
+import { BranchWarning } from './BranchWarning';
+import { Commits } from './Commits';
+import CreatePRTitleSummary from './CreatePRTitleSummary';
 import DiffList from './DiffList';
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
@@ -53,7 +52,7 @@ interface MyState {
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
-    issue?: MinimalIssue | BitbucketIssueData;
+    issue?: MinimalIssue | BitbucketIssue;
     commits: Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -180,9 +179,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
     openDiffViewForFile = (fileDiff: FileDiff) => {
         this.postMessage(
-            { 
-                action: 'openDiffPreview', 
-                lhsQuery: fileDiff.lhsQueryParams!, 
+            {
+                action: 'openDiffPreview',
+                lhsQuery: fileDiff.lhsQueryParams!,
                 rhsQuery: fileDiff.rhsQueryParams!,
                 fileDisplayName: fileDiff.file
             }
@@ -264,8 +263,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     handleBitbucketIssueStatusChange = (item: string) => {
+        const issue = this.state.issue as BitbucketIssue;
+        const newIssueData = { ...issue.data, state: item };
         this.setState({
-            issue: { ...this.state.issue, state: item } as BitbucketIssueData
+            issue: { ...issue, data: newIssueData }
         });
     };
 
@@ -424,7 +425,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
-                            <NavItem text={`#${this.state.issue.id} ${this.state.issue.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.repo!.value.uri, remote: this.state.remote!.value, issue: this.state.issue as BitbucketIssueData })} />
+                            <NavItem text={`#${this.state.issue.data.id} ${this.state.issue.data.title}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: this.state.issue as BitbucketIssueData })} />
                         </div>
                     }
                 </div>
@@ -436,7 +437,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                             <label>Select new status</label>
                             {isMinimalIssue(this.state.issue)
                                 ? <TransitionMenu transitions={(this.state.issue as MinimalIssue).transitions} currentStatus={(this.state.issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
-                                : <StatusMenu issue={this.state.issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                : <StatusMenu issueData={this.state.issue.data} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>
                     </div>
@@ -600,8 +601,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     </GridColumn>
                                     <GridColumn medium={12}>
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                            <DiffList 
-                                                fileDiffsLoading={this.state.fileDiffsLoading} 
+                                            <DiffList
+                                                fileDiffsLoading={this.state.fileDiffsLoading}
                                                 fileDiffs={this.state.fileDiffs}
                                                 openDiffHandler={this.openDiffViewForFile}
                                             />

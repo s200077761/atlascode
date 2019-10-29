@@ -1,48 +1,47 @@
-import * as React from 'react';
+import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
 import Button from '@atlaskit/button';
-import Page, { Grid, GridColumn } from '@atlaskit/page';
-import PageHeader from '@atlaskit/page-header';
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Panel from '@atlaskit/panel';
-import Spinner from '@atlaskit/spinner';
-import Tooltip from '@atlaskit/tooltip';
-import InlineDialog from '@atlaskit/inline-dialog';
 import { Checkbox } from '@atlaskit/checkbox';
-import Select from '@atlaskit/select';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
-import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
-import Reviewers from './Reviewers';
-import { Commits } from './Commits';
-import Comments from './Comments';
-import { WebviewComponent } from '../WebviewComponent';
-import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers, OpenDiffViewAction } from '../../../ipc/prActions';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import CommentForm from './CommentForm';
-import BranchInfo from './BranchInfo';
-import IssueList from '../issue/IssueList';
-import BuildStatus from './BuildStatus';
-import NavItem from '../issue/NavItem';
-import { OpenBuildStatusAction } from '../../../ipc/prActions';
-import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import ErrorBanner from '../ErrorBanner';
-import Offline from '../Offline';
-import BitbucketIssueList from '../bbissue/BitbucketIssueList';
-import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
-import { TransitionMenu } from '../issue/TransitionMenu';
-import { StatusMenu } from '../bbissue/StatusMenu';
-import MergeChecks from './MergeChecks';
-import PMFBBanner from '../pmfBanner';
-import { BitbucketIssueData, ApprovalStatus, MergeStrategy, FileDiff } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
-import { AtlLoader } from '../AtlLoader';
-import { format, distanceInWordsToNow } from 'date-fns';
+import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
+import InlineDialog from '@atlaskit/inline-dialog';
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import PageHeader from '@atlaskit/page-header';
+import Panel from '@atlaskit/panel';
+import Select from '@atlaskit/select';
+import Spinner from '@atlaskit/spinner';
+import Tooltip from '@atlaskit/tooltip';
+import { distanceInWordsToNow, format } from 'date-fns';
+import * as React from 'react';
 import EdiText from 'react-editext';
-import { isValidString } from '../fieldValidators';
-import DiffList from './DiffList';
 import uuid from 'uuid';
+import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy } from '../../../bitbucket/model';
+import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
+import { Checkout, CopyPullRequestLink, DeleteComment, EditComment, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval } from '../../../ipc/prActions';
+import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite, Transition } from '../../../jira/jira-client/model/entities';
+import { AtlLoader } from '../AtlLoader';
+import BitbucketIssueList from '../bbissue/BitbucketIssueList';
+import { StatusMenu } from '../bbissue/StatusMenu';
+import ErrorBanner from '../ErrorBanner';
+import { isValidString } from '../fieldValidators';
+import IssueList from '../issue/IssueList';
+import NavItem from '../issue/NavItem';
+import { TransitionMenu } from '../issue/TransitionMenu';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
+import { WebviewComponent } from '../WebviewComponent';
+import BranchInfo from './BranchInfo';
+import BuildStatus from './BuildStatus';
+import CommentForm from './CommentForm';
+import Comments from './Comments';
+import { Commits } from './Commits';
+import DiffList from './DiffList';
+import MergeChecks from './MergeChecks';
+import Reviewers from './Reviewers';
 
 type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
@@ -263,10 +262,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleBitbucketIssueStatusChange = (item: string) => {
+        const issue = this.state.pr.mainIssue as BitbucketIssue;
+        const newIssueData = { ...issue.data, state: item };
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssueData }
+            pr: { ...this.state.pr, mainIssue: { ...issue, data: newIssueData } }
         });
     };
 
@@ -288,7 +289,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item }, this.resetCommitMessage);
 
     handleOpenDiffView = (fileDiff: FileDiff) => {
-        this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange!});
+        this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange! });
     };
 
     resetCommitMessage = () => {
@@ -370,11 +371,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                     : <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
-                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.pr.repoUri, remote: this.state.pr.remote, issue: issue as BitbucketIssueData })} />
+                            <NavItem text={`#${issue.data.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                <StatusMenu issueData={issue.data} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -513,7 +514,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         {
                                             this.state.pr.relatedBitbucketIssues && this.state.pr.relatedBitbucketIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Bitbucket Issues</h3>}>
-                                                <BitbucketIssueList repoUri={this.state.pr.repoUri} remote={this.state.pr.remote} issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
+                                                <BitbucketIssueList issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
