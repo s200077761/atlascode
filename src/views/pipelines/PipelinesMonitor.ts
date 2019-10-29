@@ -1,10 +1,11 @@
-import { window, commands } from "vscode";
+import { commands, window } from "vscode";
+import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
+import { Commands } from "../../commands";
+import { Container } from "../../container";
 import { Pipeline, PipelineTarget } from "../../pipelines/model";
 import { Repository } from "../../typings/git";
-import { Container } from "../../container";
-import { shouldDisplay, descriptionForState, generatePipelineTitle } from "./Helpers";
-import { Commands } from "../../commands";
-import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
+import { descriptionForState, generatePipelineTitle, shouldDisplay } from "./Helpers";
+import { PipelineInfo } from "./PipelinesTree";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
@@ -23,7 +24,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       const remote = firstBitbucketRemote(repo);
       const bbApi = await clientForRemote(remote);
 
-      if(!bbApi.pipelines){
+      if (!bbApi.pipelines) {
         return; //Bitbucket Server instances will not have pipelines
       }
       bbApi.pipelines.getRecentActivity(repo).then(newResults => {
@@ -37,7 +38,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
           ).then((selection) => {
             if (selection) {
               if (diffs.length === 1) {
-                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo, remote: remote });
+                commands.executeCommand(Commands.ShowPipeline, { site: diffs[0].site, pipelineUuid: diffs[0].uuid } as PipelineInfo);
               } else {
                 commands.executeCommand("workbench.view.extension.atlascode-drawer");
               }
@@ -93,11 +94,11 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     } else if (newResults.length === 3) {
       return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
         generatePipelineTitle(newResults[1])
-      }, and 1 other build.`;
+        }, and 1 other build.`;
     } else if (newResults.length > 3) {
       return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
         generatePipelineTitle(newResults[1])
-      }, and ${newResults.length - 2} other builds.`;
+        }, and ${newResults.length - 2} other builds.`;
     }
     return "";
   }

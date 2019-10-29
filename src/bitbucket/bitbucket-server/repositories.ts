@@ -1,10 +1,8 @@
-import { Remote, Repository } from "../../typings/git";
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranchNames } from "../model";
-import { Client, ClientError } from "../httpClient";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
 import { getAgent } from "../../atlclients/agent";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Client, ClientError } from "../httpClient";
+import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -43,36 +41,25 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return [];
     }
 
-    async get(remote: Remote): Promise<Repo> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async get(site: BitbucketSite): Promise<Repo> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`
         );
 
         const { data: defaultBranch } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches/default`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`
         );
 
-        return ServerRepositoriesApi.toRepo(remote, data, defaultBranch.id);
+        return ServerRepositoriesApi.toRepo(site, data, defaultBranch.id);
     }
 
-    async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getDevelopmentBranch(site: BitbucketSite): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/branches`,
-            queryParams
-        );
-
-        return { data: (data.values || []).map((v: any) => v.name), next: data.next };
-    }
-
-    async getDevelopmentBranch(remote: Remote): Promise<string> {
-        let parsed = parseGitUrl(urlForRemote(remote));
-
-        const { data } = await this.client.get(
-            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`
         );
 
         return data.development
@@ -80,11 +67,11 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             : undefined;
     }
 
-    async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/branch-utils/1.0/projects/${parsed.owner}/repos/${parsed.name}/branchmodel`
+            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`
         );
 
         return {
@@ -96,11 +83,11 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         };
     }
 
-    async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${parsed.owner}/repos/${parsed.name}/commits`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits`,
             {
                 until: includeRef,
                 since: excludeRef
@@ -120,7 +107,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
                 accountId: commit.author.slug,
                 displayName: commit.author.displayName,
                 url: undefined!,
-                avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, commit.author.avatarUrl),
+                avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, commit.author.avatarUrl),
                 mention: `@${commit.author.slug}`
             }
         }));
@@ -134,16 +121,14 @@ export class ServerRepositoriesApi implements RepositoriesApi {
      * This won't work if the author of the PR wrote a custom commit message
      * without mentioning the PR.
      */
-    async getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]> {
-        const mergeBase = await repository.getMergeBase(commitHash, 'master');
-        const { message } = await repository.getCommit(mergeBase);
+    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]> {
+        const { ownerSlug, repoSlug } = site;
 
-        const match = message.match(/pull request #(\d+)/);
-        if (match) {
-            return [parseInt(match[1], 10)];
-        }
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/commits/${commitHash}/pull-requests`
+        );
 
-        return [];
+        return data.values!.map((pr: any) => pr.id) || [];
     }
 
     static patchAvatarUrl(baseUrl: string, avatarUrl: string): string {
@@ -153,7 +138,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return avatarUrl;
     }
 
-    static toRepo(remote: Remote, bbRepo: any, defaultBranch: string): Repo {
+    static toRepo(site: BitbucketSite, bbRepo: any, defaultBranch: string): Repo {
         if (!bbRepo) {
             return {
                 id: 'REPO_NOT_FOUND',
@@ -176,7 +161,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
             url: url,
-            avatarUrl: ServerRepositoriesApi.patchAvatarUrl(siteDetailsForRemote(remote)!.baseLinkUrl, bbRepo.avatarUrl),
+            avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
             issueTrackerEnabled: false
         };

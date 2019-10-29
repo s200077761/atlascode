@@ -203,7 +203,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, { site: bitbucketSiteForRemote(this._state.remote!), pipelineUuid: pipelineUUID } as PipelineInfo);
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }

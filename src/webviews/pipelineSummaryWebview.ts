@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
+import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
+import { clientForSite } from '../bitbucket/bbUtils';
+import { Container } from "../container";
 import { Action, onlineStatus } from '../ipc/messaging';
+import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
 import { PipelineData, StepMessageData } from "../ipc/pipelinesMessaging";
+import { Logger } from "../logger";
 import { Pipeline, PipelineStep } from "../pipelines/model";
 import { PipelineInfo } from "../views/pipelines/PipelinesTree";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { isCopyPipelineLinkAction } from '../ipc/pipelinesActions';
-import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
+import { AbstractReactWebview, InitializingWebview } from "./abstractWebview";
 
 export class PipelineSummaryWebview extends AbstractReactWebview implements InitializingWebview<PipelineInfo> {
     private _pipelineInfo: PipelineInfo | undefined = undefined;
@@ -27,7 +27,7 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         if (this._pipelineInfo) {
-            return siteDetailsForRemote(this._pipelineInfo.remote);
+            return this._pipelineInfo.site.details;
         }
 
         return undefined;
@@ -58,9 +58,9 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
 
         this.isRefeshing = true;
 
-        const bbApi = await clientForRemote(this._pipelineInfo.remote);
+        const bbApi = await clientForSite(this._pipelineInfo.site);
         try {
-            let pipeline = await bbApi.pipelines!.getPipeline(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let pipeline = await bbApi.pipelines!.getPipeline(this._pipelineInfo.site, this._pipelineInfo.pipelineUuid);
             this.updatePipeline(pipeline);
         } catch (e) {
             Logger.error(e);
@@ -70,11 +70,11 @@ export class PipelineSummaryWebview extends AbstractReactWebview implements Init
         }
 
         try {
-            let steps = await bbApi.pipelines!.getSteps(this._pipelineInfo.repo, this._pipelineInfo.pipelineUuid);
+            let steps = await bbApi.pipelines!.getSteps(this._pipelineInfo.site, this._pipelineInfo.pipelineUuid);
             this.updateSteps(steps);
 
             steps.map(step => {
-                bbApi.pipelines!.getStepLog(this._pipelineInfo!.repo, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
+                bbApi.pipelines!.getStepLog(this._pipelineInfo!.site, this._pipelineInfo!.pipelineUuid, step.uuid).then((logs) => {
                     const commands = [...step.setup_commands, ...step.script_commands, ...step.teardown_commands];
                     logs.map((log, ix) => {
                         if (ix < commands.length) {

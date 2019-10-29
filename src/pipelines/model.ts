@@ -1,5 +1,4 @@
-import { Repo } from "../bitbucket/model";
-import { Remote } from "../typings/git";
+import { BitbucketSite, Repo } from "../bitbucket/model";
 
 export interface PaginatedPipelines {
     values: Pipeline[];
@@ -9,8 +8,8 @@ export interface PaginatedPipelines {
 }
 
 export interface Pipeline {
+    site: BitbucketSite;
     repository: Repo;
-    remote: Remote;
     build_number: number;
     created_on: string;
     creator_name?: string;
@@ -50,7 +49,7 @@ export interface PipelineStage {
     type: string;
 }
 
-export interface PipelineSelector{
+export interface PipelineSelector {
     pattern?: string;
     type: string;
 }
@@ -58,7 +57,7 @@ export interface PipelineSelector{
 export interface PipelineTarget {
     ref_name?: string;
     selector?: PipelineSelector;
-    triggerName: string; 
+    triggerName: string;
 }
 
 export interface PipelineStep {
