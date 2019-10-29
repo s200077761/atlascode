@@ -66,10 +66,9 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                 }
 
                 repoData.push({
-                    uri: r.rootUri.toString(),
+                    workspaceRepo: wsRepo,
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
-                    remotes: wsRepo.siteRemotes.map(r => r.remote),
                     defaultReviewers: [],
                     localBranches: [],
                     remoteBranches: [],

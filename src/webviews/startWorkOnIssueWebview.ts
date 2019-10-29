@@ -187,9 +187,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     }
 
                     return {
-                        uri: r.rootUri.toString(),
+                        workspaceRepo: wsRepo,
                         href: href,
-                        remotes: r.state.remotes,
                         defaultReviewers: [],
                         localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                         remoteBranches: [],

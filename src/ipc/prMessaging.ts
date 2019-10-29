@@ -1,16 +1,14 @@
 import { MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequestData, Reviewer, User } from "../bitbucket/model";
-import { Branch, Remote } from "../typings/git";
+import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequest, Reviewer, User, WorkspaceRepo } from "../bitbucket/model";
+import { Branch } from "../typings/git";
 import { Message } from "./messaging";
 
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
-    pr?: PullRequestData;
+    pr?: PullRequest;
     fileDiffs?: FileDiff[];
-    repoUri: string;
-    remote: Remote;
     currentUser?: User;
     currentBranch: string;
     commits?: Commit[];
@@ -32,12 +30,9 @@ export interface BranchType {
 }
 
 export interface RepoData {
-    uri: string;
+    workspaceRepo: WorkspaceRepo;
     href?: string;
     avatarUrl?: string;
-    name?: string;
-    owner?: string;
-    remotes: Remote[];
     defaultReviewers: User[];
     localBranches: Branch[];
     remoteBranches: Branch[];

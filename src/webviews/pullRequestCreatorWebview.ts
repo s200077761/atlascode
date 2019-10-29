@@ -4,8 +4,8 @@ import { commands, Uri } from 'vscode';
 import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { bitbucketSiteForRemote, clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
-import { BitbucketIssue, FileDiff, FileStatus, isBitbucketIssue, PullRequest, User } from '../bitbucket/model';
+import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { BitbucketIssue, BitbucketSite, FileDiff, FileStatus, isBitbucketIssue, PullRequest, User } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
@@ -18,7 +18,7 @@ import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
-import { Branch, RefType, Remote, Repository } from '../typings/git';
+import { Branch, RefType, Repository } from '../typings/git';
 import { Shell } from '../util/shell';
 import { FileDiffQueryParams } from '../views/pullrequest/pullRequestNode';
 import { PullRequestNodeDataProvider } from '../views/pullRequestNodeDataProvider';
@@ -85,12 +85,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 const currentUser = { accountId: site.details.userId };
 
                 return {
-                    uri: r.rootUri.toString(),
+                    workspaceRepo: wsRepo,
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
-                    name: repo.displayName,
-                    owner: repo.name,
-                    remotes: r.state.remotes,
                     defaultReviewers: (defaultReviewers as User[]).filter(reviewer => reviewer.accountId !== currentUser.accountId),
                     localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                     remoteBranches: r.state.refs
@@ -156,14 +153,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isFetchUsers(e)) {
                         handled = true;
                         try {
-                            const site = bitbucketSiteForRemote(e.remote);
-                            if (!site) {
-                                this.postMessage({ type: 'fetchUsersResult', users: [], nonce: e.nonce });
-                            } else {
-                                const bbApi = await clientForSite(site);
-                                const reviewers = await bbApi.pullrequests.getReviewers(site, e.query);
-                                this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
-                            }
+                            const bbApi = await clientForSite(e.site);
+                            const reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
+                            this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -221,14 +213,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     private async fetchDetails(fetchDetailsAction: FetchDetails) {
-        const { remote, sourceBranch, destinationBranch } = fetchDetailsAction;
+        const { site, sourceBranch, destinationBranch } = fetchDetailsAction;
         const sourceBranchName = sourceBranch.name!;
-        const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
+        const destinationBranchName = destinationBranch.name!.replace(`${destinationBranch.remote}/`, '');
 
-        const site = bitbucketSiteForRemote(remote);
-        if (!site) {
-            return;
-        }
         const bbApi = await clientForSite(site);
         const result = await bbApi.repositories.getCommitsForRefs(site, sourceBranchName, destinationBranchName);
         this.postMessage({
@@ -238,14 +226,11 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     async getCurrentRepo(repoData: RepoData): Promise<Repository> {
-        const repos = Container.bitbucketContext.getBitbucketRepositories();
-
-        const currentRepo: Repository | undefined = repos.find(r => r.rootUri.toString() === repoData.uri);
+        const currentRepo: Repository | undefined = Container.bitbucketContext.getRepository(vscode.Uri.parse(repoData.workspaceRepo.rootUri));
         if (currentRepo) {
             return currentRepo;
-        } else {
-            return Promise.reject(new Error('Could not match repoData object to local repository'));
         }
+        return Promise.reject(new Error('Could not match repoData object to local repository'));
     }
 
     async findForkPoint(repoData: RepoData, sourceBranch: Branch, destinationBranch: Branch): Promise<string> {
@@ -274,7 +259,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     async generateDiff(repo: RepoData, destinationBranch: Branch, sourceBranch: Branch): Promise<FileDiff[]> {
-        const shell = new Shell(vscode.Uri.parse(repo.uri).fsPath);
+        const shell = new Shell(vscode.Uri.parse(repo.workspaceRepo.rootUri).fsPath);
 
         const forkPoint = await this.findForkPoint(repo, sourceBranch, destinationBranch);
 
@@ -312,7 +297,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     lhsQueryParams:
                         {
                             lhs: true,
-                            repoUri: repo.uri,
+                            repoUri: repo.workspaceRepo.rootUri,
                             branchName: destinationBranch.name,
                             commitHash: forkPoint,
                             path: lhsFilePath,
@@ -320,7 +305,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     rhsQueryParams:
                         {
                             lhs: false,
-                            repoUri: repo.uri,
+                            repoUri: repo.workspaceRepo.rootUri,
                             branchName: sourceBranch.name,
                             commitHash: sourceBranch.commit,
                             path: rhsFilePath,
@@ -381,7 +366,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
     }
 
-    private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue) {
+    private async updateIssue(site: BitbucketSite, issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue) {
         if (!issue) {
             return;
         }
@@ -391,27 +376,22 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 await transitionIssue(issue, transition);
             }
         } else if (isBitbucketIssue(issue)) {
-            const bbApi = await clientForRemote(remote);
+            const bbApi = await clientForSite(site);
             await bbApi.issues!.postChange(issue, issue.data.state!);
         }
     }
 
     private async createPullRequest(createPullRequestAction: CreatePullRequest) {
-        const { repoUri, remote, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch, issue } = createPullRequestAction;
-        const repo = Container.bitbucketContext.getRepository(Uri.parse(repoUri))!;
+        const { workspaceRepo, site, reviewers, title, summary, sourceBranch, destinationBranch, pushLocalChanges, closeSourceBranch, issue } = createPullRequestAction;
         const sourceBranchName = sourceBranch.name!;
-        const destinationBranchName = destinationBranch.name!.replace(remote.name + '/', '');
+        const destinationBranchName = destinationBranch.name!.replace(`${destinationBranch.remote}/`, '');
 
         if (pushLocalChanges) {
-            Logger.info(`pushing local changes for branch: ${sourceBranchName} to remote: ${remote.name} `);
-            await repo.push(remote.name, sourceBranchName);
+            Logger.info(`pushing local changes for branch: ${sourceBranchName} to remote: ${destinationBranch.remote} `);
+            const repo = Container.bitbucketContext.getRepository(Uri.parse(workspaceRepo.rootUri))!;
+            await repo.push(destinationBranch.remote, sourceBranchName);
         }
 
-        const workspaceRepo = workspaceRepoFor(repo);
-        const site = bitbucketSiteForRemote(remote);
-        if (!site) {
-            throw new Error('error creating pull request: no authenticated site');
-        }
         const bbApi = await clientForSite(site);
 
         await bbApi.pullrequests
@@ -430,13 +410,10 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             .then(async (pr: PullRequest) => {
                 commands.executeCommand(Commands.BitbucketShowPullRequestDetails, pr);
                 commands.executeCommand(Commands.BitbucketRefreshPullRequests);
-                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
-                if (site) {
-                    prCreatedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                }
+                prCreatedEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
             });
 
-        await this.updateIssue(repo, remote, issue);
+        await this.updateIssue(site, issue);
         this.hide();
     }
 }

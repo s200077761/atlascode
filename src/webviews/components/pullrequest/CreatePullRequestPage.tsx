@@ -14,13 +14,13 @@ import * as path from 'path';
 import * as React from 'react';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
-import { BitbucketIssue, BitbucketIssueData, Commit, FileDiff, User } from '../../../bitbucket/model';
+import { BitbucketIssue, BitbucketIssueData, Commit, emptyBitbucketSite, FileDiff, SiteRemote, User } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { PMFData } from '../../../ipc/messaging';
 import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
 import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
-import { Branch, Ref, Remote } from '../../../typings/git';
+import { Branch, Ref } from '../../../typings/git';
 import { AtlLoader } from '../AtlLoader';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import ErrorBanner from '../ErrorBanner';
@@ -46,7 +46,7 @@ interface MyState {
     summary: string;
     summaryManuallyEdited: boolean;
     repo?: { label: string; value: RepoData; };
-    remote?: { label: string; value: Remote; };
+    siteRemote?: { label: string; value: SiteRemote; };
     reviewers: User[];
     sourceBranch?: { label: string; value: Branch };
     sourceRemoteBranchName?: string;
@@ -91,7 +91,7 @@ const emptyState = {
     fileDiffsLoading: true
 };
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 const formatOptionLabel = (option: any, { context }: any) => {
     if (context === 'menu') {
         return (
@@ -144,27 +144,27 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
         this.resetRepoAndRemoteState(
             newValue.value,
-            newValue.value.remotes.find(r => r.name === 'origin') || newValue.value.remotes[0]
+            newValue.value.workspaceRepo.mainSiteRemote
         );
     };
 
-    handleRemoteChange = (newValue: { label: string, value: Remote }) => {
+    handleRemoteChange = (newValue: { label: string, value: SiteRemote }) => {
         this.resetRepoAndRemoteState(this.state.repo!.value, newValue.value);
     };
 
-    resetRepoAndRemoteState = (repo: RepoData, remote: Remote) => {
-        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === remote.name);
+    resetRepoAndRemoteState = (repo: RepoData, siteRemote: SiteRemote) => {
+        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === siteRemote.remote.name);
 
         const sourceBranch = repo.localBranches[0];
         let destinationBranch = remoteBranches[0];
         if (repo.developmentBranch) {
-            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
+            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === siteRemote.remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
             destinationBranch = mainRemoteBranch ? mainRemoteBranch : destinationBranch;
         }
 
         this.setState({
-            repo: { label: path.basename(repo.uri), value: repo },
-            remote: { label: remote.name, value: remote },
+            repo: { label: path.basename(repo.workspaceRepo.rootUri), value: repo },
+            siteRemote: { label: siteRemote.remote.name, value: siteRemote },
             reviewers: repo.defaultReviewers,
             sourceBranch: { label: sourceBranch.name!, value: sourceBranch },
             destinationBranch: { label: destinationBranch.name!, value: destinationBranch }
@@ -191,10 +191,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     handleBranchChange = () => {
-        const sourceRemoteBranchName = this.state.remote && this.state.sourceBranch
-            ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.remote.value.name
-                ? `${this.state.remote.value.name}/${this.state.sourceBranch.value.upstream.name}`
-                : `${this.state.remote.value.name}/${this.state.sourceBranch.value.name}`
+        const sourceRemoteBranchName = this.state.siteRemote && this.state.sourceBranch
+            ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.siteRemote.value.remote.name
+                ? `${this.state.siteRemote.value.remote.name}/${this.state.sourceBranch.value.upstream.name}`
+                : `${this.state.siteRemote.value.remote.name}/${this.state.sourceBranch.value.name}`
             : undefined;
 
         let newState: Partial<MyState> = {
@@ -214,7 +214,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         if (this.state.sourceBranch) {
             this.postMessage({
                 action: 'fetchIssue',
-                repoUri: this.state.repo!.value.uri,
+                repoUri: this.state.repo!.value.workspaceRepo.rootUri,
                 sourceBranch: this.state.sourceBranch.value
             });
         }
@@ -230,11 +230,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 }
             );
 
-            if (this.state.remote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
+            if (this.state.siteRemote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
                 this.postMessage({
                     action: 'fetchDetails',
-                    repoUri: this.state.repo!.value.uri,
-                    remote: this.state.remote!.value,
+                    site: this.state.siteRemote!.value.site!,
                     sourceBranch: this.state.sourceBranch!.value,
                     destinationBranch: this.state.destinationBranch!.value
                 });
@@ -273,13 +272,13 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     loadUserOptions = (input: string): Promise<any> => {
-        if (!this.state.remote || !this.state.repo) {
+        if (!this.state.siteRemote || !this.state.repo) {
             return Promise.resolve([]);
         }
         return new Promise(resolve => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.remote!.value });
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.siteRemote!.value.site! });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -301,8 +300,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
             action: 'createPullRequest',
-            repoUri: this.state.repo!.value.uri,
-            remote: this.state.remote!.value,
+            workspaceRepo: this.state.repo!.value.workspaceRepo,
+            site: this.state.siteRemote!.value.site!,
             reviewers: e.reviewers || [],
             title: e.title,
             summary: e.summary,
@@ -326,8 +325,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                     if (this.state.repo === undefined && e.repositories.length > 0) {
                         const firstRepo = e.repositories[0];
-                        const firstRemote = firstRepo.remotes.find(r => r.name === 'origin') || firstRepo.remotes[0];
-                        this.resetRepoAndRemoteState(firstRepo, firstRemote);
+                        this.resetRepoAndRemoteState(firstRepo, firstRepo.workspaceRepo.mainSiteRemote);
                     }
                 }
                 break;
@@ -475,20 +473,20 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <div style={{ marginBottom: '20px' }}>
                                             <label>Repository</label>
                                             <Select
-                                                options={this.state.data.repositories.map(repo => { return { label: path.basename(repo.uri), value: repo }; })}
+                                                options={this.state.data.repositories.map(repo => { return { label: path.basename(repo.workspaceRepo.rootUri), value: repo }; })}
                                                 onChange={this.handleRepoChange}
                                                 placeholder='Loading...'
                                                 value={repo}
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select" />
 
-                                            {repo.value.remotes.length > 1 &&
+                                            {repo.value.workspaceRepo.siteRemotes.length > 1 &&
                                                 <React.Fragment>
                                                     <label>Remote</label>
                                                     <Select
-                                                        options={repo.value.remotes.map(remote => { return { label: remote.name, value: remote }; })}
+                                                        options={repo.value.workspaceRepo.siteRemotes.map(r => { return { label: r.remote.name, value: r }; })}
                                                         onChange={this.handleRemoteChange}
-                                                        value={this.state.remote}
+                                                        value={this.state.siteRemote}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select" />
                                                 </React.Fragment>
@@ -521,14 +519,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 <div className='ac-compare-widget-item'>
                                                     <div className='ac-flex'>
                                                         <Avatar src={repo.value.avatarUrl} />
-                                                        <p style={{ marginLeft: '8px' }}>{repo.value.owner} / {repo.value.name}</p>
+                                                        <p style={{ marginLeft: '8px' }}>{this.state.siteRemote ? `${this.state.siteRemote.value.site!.ownerSlug} / ${this.state.siteRemote.value.site!.repoSlug}` : 'No bitbucket remotes found'}</p>
                                                     </div>
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
                                                         <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
-                                                            options={this.state.remote
-                                                                ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.remote!.value.name)
+                                                            options={this.state.siteRemote
+                                                                ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.siteRemote!.value.remote.name)
                                                                     .map(branch => ({ label: branch.name, value: branch }))
                                                                 : []}
                                                             onChange={this.handleDestinationBranchChange}
@@ -611,9 +609,9 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </Panel>
                                     </GridColumn>
                                     <GridColumn medium={12}>
-                                        {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
-                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
-                                                <Commits type={''} repoUri={this.state.repo!.value.uri} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />
+                                        {this.state.siteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
+                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.siteRemote!.value.remote.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
+                                                <Commits commits={this.state.commits} />
                                             </Panel>
                                         }
                                     </GridColumn>
