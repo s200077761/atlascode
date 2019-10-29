@@ -57,7 +57,7 @@ export async function activate(context: ExtensionContext) {
         Logger.error(e, 'Error initializing atlascode!');
     }
 
-    if((previousVersion === undefined || previousVersion === "0.0.0") && window.state.focused){
+    if(previousVersion === undefined && window.state.focused){
         commands.executeCommand(Commands.ShowOnboardingPage);
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);

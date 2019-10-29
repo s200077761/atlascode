@@ -1,12 +1,12 @@
 import { AbstractReactWebview } from './abstractWebview';
 import { Action } from '../ipc/messaging';
-import { Product, DetailedSiteInfo, isBasicAuthInfo } from '../atlclients/authInfo';
+import { Product, DetailedSiteInfo, isBasicAuthInfo, ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 import { SitesAvailableUpdateEvent } from '../siteManager';
 import { Container } from '../container';
 import { isLoginAuthAction, isAuthAction } from '../ipc/configActions';
 import { authenticateServer, authenticateCloud, clearAuth } from '../commands/authenticate';
 import { Logger } from '../logger';
-import { authenticateButtonEvent, logoutButtonEvent } from '../analytics';
+import { authenticateButtonEvent, logoutButtonEvent, doneButtonEvent, moreSettingsButtonEvent } from '../analytics';
 import { env, commands } from 'vscode';
 import { Commands } from '../commands';
 
@@ -23,6 +23,7 @@ export class OnboardingWebview extends AbstractReactWebview {
     public get title(): string {
         return "Getting Started";
     }
+
     public get id(): string {
         return "atlascodeOnboardingScreen";
     }
@@ -36,7 +37,8 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     public async invalidate() {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
+        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
         const [cloudJira, serverJira] = this.separateCloudFromServer(jiraSitesAvailable);
         const [cloudBitbucket, serverBitbucket] = this.separateCloudFromServer(bitbucketSitesAvailable);
         const isRemote = env.remoteName !== undefined;
@@ -51,7 +53,8 @@ export class OnboardingWebview extends AbstractReactWebview {
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
+        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
         const [cloudJira, serverJira] = this.separateCloudFromServer(jiraSitesAvailable);
         const [cloudBitbucket, serverBitbucket] = this.separateCloudFromServer(bitbucketSitesAvailable);
         this.postMessage({
@@ -81,10 +84,12 @@ export class OnboardingWebview extends AbstractReactWebview {
         if(!handled){
             switch (msg.action) {
                 case 'openSettings': {
+                    moreSettingsButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     commands.executeCommand(Commands.ShowConfigPage);
                     break;
                 }
                 case 'closePage': {
+                    doneButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     this.hide();
                     break;
                 }

@@ -3,7 +3,7 @@ import { SettingSource, JQLEntry } from '../config/model';
 import { Action } from '../ipc/messaging';
 import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget, env } from 'vscode';
 import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
-import { ProductJira, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
+import { ProductJira, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { Logger } from '../logger';
 import { configuration } from '../config/configuration';
 import { Container } from '../container';
@@ -63,7 +63,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
 
             this.isRefeshing = true;
 
-            const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
+            const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+            const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
 
             const feedbackUser = await getFeedbackUser();
 
@@ -123,7 +124,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
     }
 
     private onSitesAvailableChange(e: SitesAvailableUpdateEvent) {
-        const [jiraSitesAvailable, bitbucketSitesAvailable] = Container.siteManager.getAllSitesAvailable();
+        const jiraSitesAvailable = Container.siteManager.getSitesAvailable(ProductJira);
+        const bitbucketSitesAvailable = Container.siteManager.getSitesAvailable(ProductBitbucket);
 
         this.postMessage({
             type: 'sitesAvailableUpdate'

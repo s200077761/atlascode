@@ -15,7 +15,8 @@ import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 export const Registry = {
     screen: {
         pullRequestDiffScreen: 'pullRequestDiffScreen',
-        pullRequestPreviewDiffScreen: 'pullRequestPreviewDiffScreen'
+        pullRequestPreviewDiffScreen: 'pullRequestPreviewDiffScreen',
+        onboardingScreen: 'onboardingScreen'
     }
 };
 
@@ -222,6 +223,38 @@ export async function prPaginationEvent(): Promise<UIEvent> {
             containerId: PullRequestTreeViewId,
             objectType: 'treenode',
             objectId: 'paginationNode'
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'moreSettingsButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function doneButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'doneButton',
+            source: source
         }
     };
 

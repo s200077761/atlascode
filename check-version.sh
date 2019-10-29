@@ -1,1 +1,0 @@
-sqlite3 ~/Library/Application\ Support/Code/User/globalStorage/state.vscdb 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'
