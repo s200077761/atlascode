@@ -1,11 +1,11 @@
-import { PullRequest, User, PaginatedComments, BuildStatus, UnknownUser, Comment, PaginatedPullRequests, PullRequestApi, CreatePullRequestData, MergeStrategy, Commit, FileChange, FileStatus } from '../model';
-import { Remote, Repository } from '../../typings/git';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote, clientForRemote } from '../bbUtils';
-import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { Client, ClientError } from '../httpClient';
 import { AxiosResponse } from 'axios';
-import { ServerRepositoriesApi } from './repositories';
 import { getAgent } from '../../atlclients/agent';
+import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { Remote, Repository } from '../../typings/git';
+import { bitbucketSiteForRemote, clientForRemote, parseGitUrl, siteDetailsForRemote, urlForRemote } from '../bbUtils';
+import { Client, ClientError } from '../httpClient';
+import { BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User } from '../model';
+import { ServerRepositoriesApi } from './repositories';
 
 const dummyRemote = { name: '', isReadOnly: true };
 
@@ -415,7 +415,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         if (!query) {
             const bbApi = await clientForRemote(remote);
-            const repo = await bbApi.repositories.get(remote);
+            const repo = await bbApi.repositories.get(bitbucketSiteForRemote(remote)!);
 
             let { data } = await this.client.get(
                 `/rest/default-reviewers/1.0/projects/${parsed.owner}/repos/${parsed.name}/reviewers`,
@@ -613,7 +613,8 @@ export class ServerPullRequestApi implements PullRequestApi {
     }
 
     static toPullRequestRepo(remote: Remote, prRepo: any, defaultBranch: string) {
-        const repo = ServerRepositoriesApi.toRepo(remote, prRepo.repository, defaultBranch);
+        const site = bitbucketSiteForRemote(remote)!;
+        const repo = ServerRepositoriesApi.toRepo(site, prRepo.repository, defaultBranch);
         const branchName = prRepo && prRepo.displayId
             ? prRepo.displayId
             : 'BRANCH_NOT_FOUND';

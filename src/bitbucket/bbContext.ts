@@ -2,6 +2,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { DetailedSiteInfo, ProductBitbucket } from '../atlclients/authInfo';
 import { bbAPIConnectivityError } from '../constants';
 import { Container } from '../container';
+import { Logger } from '../logger';
 import { API as GitApi, Remote, Repository } from "../typings/git";
 import { CacheMap, Interval } from '../util/cachemap';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
@@ -114,9 +115,14 @@ export class BitbucketContext extends Disposable {
             this._repoMap.set(repo.rootUri.toString(), repo);
         }));
 
-        for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
-            const bbApi = await Container.clientManager.bbClient(site);
-            this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
+        try {
+            for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
+                const bbApi = await Container.clientManager.bbClient(site);
+                this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
+            }
+        } catch {
+            // log and ignore error
+            Logger.debug('Failed to fetch mirror sites');
         }
 
         this._onDidChangeBitbucketContext.fire();
