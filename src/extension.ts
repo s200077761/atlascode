@@ -91,12 +91,13 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         // we've already migrated to 2.x but we might need to migrate workspace JQL
         migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
         await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
-
-        const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
-        await v2JiraServerUserIdFixer.fix();
     }
 
     if (authModelVersion === 2) {
+        const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
+        await v2JiraServerUserIdFixer.fix();
+
+        // Migrate from V2 to V3
         const migrator = new V2toV3Migrator(Container.siteManager,
             Container.credentialManager,
             !Container.isDebugging);
