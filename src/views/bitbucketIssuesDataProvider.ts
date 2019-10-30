@@ -1,7 +1,7 @@
 import { commands, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { bbIssuesPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { clientForSite, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -37,11 +37,10 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             this._childrenMap = new Map();
         }
         this._childrenMap.clear();
-        const repos = this.ctx.getBitbucketCloudRepositories();
-        const expand = repos.length === 1;
-        repos.forEach(repo => {
-            const remote = firstBitbucketRemote(repo);
-            this._childrenMap!.set(repo.rootUri.toString(), new BitbucketIssuesRepositoryNode(repo, remote, expand));
+        const workspaceRepos = this.ctx.getBitbucketCloudRepositories();
+        const expand = workspaceRepos.length === 1;
+        workspaceRepos.forEach(wsRepo => {
+            this._childrenMap!.set(wsRepo.rootUri, new BitbucketIssuesRepositoryNode(wsRepo, expand));
         });
     }
 

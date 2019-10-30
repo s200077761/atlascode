@@ -1,32 +1,34 @@
 import * as path from 'path';
 import * as vscode from "vscode";
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from "../../commands";
-import { Repository } from "../../typings/git";
-import { BitbucketIssue } from '../../bitbucket/model';
-import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesMonitor implements BitbucketActivityMonitor {
   private _lastCheckedTime = new Map<String, Date>();
 
-  constructor(private _repos: Repository[]) {
-    this._repos.forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
+  constructor(private _repos: WorkspaceRepo[]) {
+    this._repos.forEach(repo => this._lastCheckedTime.set(repo.rootUri, new Date()));
   }
 
   async checkForNewActivity() {
-    const promises = this._repos.map(async repo => {
-      const remote = firstBitbucketRemote(repo);
-      const bbApi = await clientForRemote(remote);
+    const promises = this._repos.map(async wsRepo => {
+      const site = wsRepo.mainSiteRemote.site;
+      if (!site) {
+        return [];
+      }
+      const bbApi = await clientForSite(site);
 
-      return bbApi.issues!.getLatest(repo).then(issuesList => {
-        const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
-          ? this._lastCheckedTime.get(repo.rootUri.toString())!
+      return bbApi.issues!.getLatest(wsRepo).then(issuesList => {
+        const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
+          ? this._lastCheckedTime.get(wsRepo.rootUri)!
           : new Date();
-        this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
+        this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
         let newIssues = issuesList.data.filter(i => Date.parse(i.data.created_on!) > lastChecked.getTime());
 
         if (newIssues.length > 0) {
-          let repoName = path.basename(repo.rootUri.fsPath);
+          let repoName = path.basename(wsRepo.rootUri);
           return [{ repo: repoName, issues: newIssues }];
         }
         return [];

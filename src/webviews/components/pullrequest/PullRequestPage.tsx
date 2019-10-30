@@ -66,10 +66,8 @@ interface ViewState {
     showPMF: boolean;
 }
 
-const emptyPR = {
+const emptyPR: PRData = {
     type: '',
-    repoUri: '',
-    remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
     fileDiffs: [],
     mergeStrategies: [],
@@ -333,12 +331,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     render() {
-        const pr = this.state.pr.pr!.data;
-
-        if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (!this.state.pr.pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
-        } else if (!pr && !this.state.isOnline) {
+        } else if (!this.state.pr.pr && !this.state.isOnline) {
             return (
                 <div className='bitbucket-page'>
                     <Offline />
@@ -346,6 +342,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             );
         }
 
+        const pr = this.state.pr.pr!.data;
         const isPrOpen = pr.state === "OPEN";
 
         let currentUserApprovalStatus: ApprovalStatus = 'UNAPPROVED';
@@ -492,7 +489,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 </Tooltip>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
-                                <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
+                                {this.state.pr.currentBranch.length > 0 && <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />}
                                 <div className='ac-flex'>
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branchName === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branchName)}>
                                         {pr.source!.branchName === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}

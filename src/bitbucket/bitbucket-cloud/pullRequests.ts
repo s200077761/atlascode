@@ -3,8 +3,6 @@ import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
-import { Remote, Repository } from "../../typings/git";
-import { siteDetailsForRemote, workspaceRepoFor } from "../bbUtils";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
 import { CloudRepositoriesApi } from "./repositories";
@@ -26,7 +24,7 @@ const mergeStrategyLabels = {
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
 
-    constructor(site: DetailedSiteInfo, token: string) {
+    constructor(private site: DetailedSiteInfo, token: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
@@ -71,8 +69,29 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
-        const workspaceRepo = workspaceRepoFor(repository);
+    async getCurrentUserPullRequests(): Promise<PaginatedPullRequests> {
+        const { data } = await this.client.get(
+            `/pullrequests/${this.site.userId}`,
+            {
+                pagelen: defaultPagelen,
+                fields: '+values.participants,+values.source.repository.slug,+values.destination.repository.slug'
+            }
+        );
+
+        const prs: PullRequest[] = data.values!.map((pr: any) => {
+            const ownerSlug = pr.destination.repository.full_name.slice(0, pr.destination.repository.full_name.lastIndexOf(pr.destination.repository.slug) - 1);
+            const repoSlug = pr.destination.repository.slug;
+            return CloudPullRequestApi.toPullRequestData(pr, { details: this.site, ownerSlug: ownerSlug, repoSlug: repoSlug });
+        });
+        const next = data.next;
+
+        if (prs.length > 0) {
+            return { site: prs[0].site, data: prs, next: next };
+        }
+        return { site: undefined!, data: [], next: undefined };
+    }
+
+    async getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
             return { workspaceRepo, site: site!, data: [] };
@@ -98,18 +117,16 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { workspaceRepo, site, data: [], next: undefined };
     }
 
-    async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { q: `state="OPEN" and author.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
-    async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
     async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
@@ -122,17 +139,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         return { ...paginatedPullRequests, data: prs, next: data.next };
     }
 
-    async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
-    async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 

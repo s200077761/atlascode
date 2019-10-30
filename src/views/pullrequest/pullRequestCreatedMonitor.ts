@@ -1,28 +1,27 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { BitbucketContext } from "../../bitbucket/bbContext";
-import { clientForSite, workspaceRepoFor } from '../../bitbucket/bbUtils';
+import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from "../../commands";
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
 
     constructor(private _bbCtx: BitbucketContext) {
-        this._bbCtx.getBitbucketRepositories().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
+        this._bbCtx.getBitbucketRepositories().forEach(repo => this._lastCheckedTime.set(repo.rootUri, new Date()));
     }
 
     checkForNewActivity() {
-        const promises = this._bbCtx.getBitbucketRepositories().map(async repo => {
-            const wsRepo = workspaceRepoFor(repo);
+        const promises = this._bbCtx.getBitbucketRepositories().map(async wsRepo => {
             const site = wsRepo.mainSiteRemote.site;
             if (!site) {
                 return [];
             }
             const bbApi = await clientForSite(site);
 
-            return bbApi.pullrequests.getLatest(repo, wsRepo.mainSiteRemote.remote).then(prList => {
-                const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
-                    ? this._lastCheckedTime.get(repo.rootUri.toString())!
+            return bbApi.pullrequests.getLatest(wsRepo).then(prList => {
+                const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
+                    ? this._lastCheckedTime.get(wsRepo.rootUri)!
                     : new Date();
                 this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 

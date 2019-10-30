@@ -38,24 +38,20 @@ function traverse(n: Comment): Comment[] {
 };
 
 export async function getArgsForDiffView(allComments: PaginatedComments, fileChange: FileChange, pr: PullRequest, commentController: PullRequestCommentController): Promise<DiffViewArgs> {
-    if (!pr.workspaceRepo) {
-        throw new Error('Diffs are only supported for workspace repos');
-    }
-    const remoteName = pr.workspaceRepo.mainSiteRemote.remote.name;
-
-    const commentsMap = await getInlineComments(allComments.data);
-
+    const remotePrefix = pr.workspaceRepo ? `${pr.workspaceRepo.mainSiteRemote.remote.name}/` : '';
     // Use merge base to diff from common ancestor of source and destination.
     // This will help ignore any unrelated changes in destination branch.
-    const destination = `${remoteName}/${pr.data.destination!.branchName}`;
+    const destination = `${remotePrefix}${pr.data.destination!.branchName}`;
     // TODO Handle case when source and destination remotes are not the same
     //const source = `${pr.sourceRemote ? pr.sourceRemote.name : pr.remote.name}/${pr.data.source!.branchName}`;
-    const source = `${remoteName}/${pr.data.source!.branchName}`;
+    const source = `${remotePrefix}${pr.data.source!.branchName}`;
     let mergeBase = pr.data.destination!.commitHash;
     try {
-        const scm = Container.bitbucketContext.getRepository(vscode.Uri.parse(pr.workspaceRepo.rootUri));
-        if (scm) {
-            mergeBase = await scm.getMergeBase(destination, source);
+        if (pr.workspaceRepo) {
+            const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri);
+            if (scm) {
+                mergeBase = await scm.getMergeBase(destination, source);
+            }
         }
     } catch (e) {
         Logger.debug('error getting merge base: ', e);
@@ -66,6 +62,8 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
 
     let fileDisplayName = '';
     const comments: Comment[][] = [];
+
+    const commentsMap = await getInlineComments(allComments.data);
 
     if (rhsFilePath && lhsFilePath && rhsFilePath !== lhsFilePath) {
         fileDisplayName = `${lhsFilePath} → ${rhsFilePath}`;
@@ -96,6 +94,8 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
         }
     });
 
+    const repoUri = pr.workspaceRepo ? pr.workspaceRepo.rootUri : '';
+
     const lhsQueryParam = {
         query: JSON.stringify({
             site: pr.site,
@@ -103,7 +103,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
-            repoUri: pr.workspaceRepo.rootUri,
+            repoUri: repoUri,
             branchName: pr.data.destination!.branchName,
             commitHash: mergeBase,
             path: lhsFilePath,
@@ -117,7 +117,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
-            repoUri: pr.workspaceRepo.rootUri,
+            repoUri: repoUri,
             branchName: pr.data.source!.branchName,
             commitHash: pr.data.source!.commitHash,
             path: rhsFilePath,

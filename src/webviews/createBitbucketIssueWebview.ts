@@ -1,7 +1,7 @@
 import { commands, Uri } from 'vscode';
 import { bbIssueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { BitbucketIssue } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -27,7 +27,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         const repos = Container.bitbucketContext.getBitbucketRepositories();
         if (repos.length > 0) {
-            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+            return repos[0].mainSiteRemote.site!.details;
         }
 
         return undefined;
@@ -55,8 +55,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
             const repoData: RepoData[] = [];
             const repos = Container.bitbucketContext.getBitbucketRepositories();
             for (let i = 0; i < repos.length; i++) {
-                const r = repos[i];
-                const wsRepo = workspaceRepoFor(r);
+                const wsRepo = repos[i];
                 const site = wsRepo.mainSiteRemote.site!;
 
                 const bbApi = await clientForSite(site);
@@ -124,8 +123,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         const { repoUri: uri, title, description, kind, priority } = createIssueAction;
 
         // TODO [VSCODE-568] Add remote to create bitbucket issue action
-        const repo = Container.bitbucketContext.getRepository(Uri.parse(uri));
-        const wsRepo = workspaceRepoFor(repo!);
+        const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(uri))!;
         const site = wsRepo.mainSiteRemote.site;
         if (!site) {
             throw new Error('Error creating issue: not authenticated');

@@ -1,8 +1,7 @@
 import { AxiosResponse } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { getAgent } from '../../jira/jira-client/providers';
-import { Remote, Repository } from '../../typings/git';
-import { clientForSite, siteDetailsForRemote, workspaceRepoFor } from '../bbUtils';
+import { clientForSite } from '../bbUtils';
 import { Client, ClientError } from '../httpClient';
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
 import { ServerRepositoriesApi } from './repositories';
@@ -31,8 +30,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async getList(repository: Repository, remote: Remote, queryParams?: any): Promise<PaginatedPullRequests> {
-        const workspaceRepo = workspaceRepoFor(repository);
+    async getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests> {
+        throw new Error('This api is not not available for bitbucket server');
+    }
+
+    async getList(workspaceRepo: WorkspaceRepo, queryParams?: any): Promise<PaginatedPullRequests> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
             return { workspaceRepo, site: site!, data: [] };
@@ -66,11 +68,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { workspaceRepo, site, data: [], next: undefined };
     }
 
-    async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (siteDetailsForRemote(remote)!).userId;
+    async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             {
                 'username.1': currentUser,
                 'role.1': 'AUTHOR'
@@ -78,11 +79,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (siteDetailsForRemote(remote)!).userId;
+    async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             {
                 'username.1': currentUser,
                 'role.1': 'REVIEWER'
@@ -100,11 +100,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         return { ...paginatedPullRequests, data: prs, next: undefined };
     }
 
-    async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
-        const currentUser = (siteDetailsForRemote(remote)!).userId;
+    async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
+        const currentUser = workspaceRepo.mainSiteRemote.site!.details.userId;
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             {
                 'username.1': currentUser,
                 'role.1': 'REVIEWER',
@@ -113,10 +112,9 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             {
                 'state': 'ALL'
             });

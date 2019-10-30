@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { bbIssueUrlCopiedEvent, bbIssueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { clientForRemote, clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { BitbucketIssue, Repo } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
@@ -88,23 +88,19 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                     if (isStartWork(e)) {
                         try {
                             const issue = this._state;
-                            const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
                             if (e.setupBitbucket) {
-                                await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
+                                const scm = Container.bitbucketContext.getRepositoryScm(e.repoUri)!;
+                                await this.createOrCheckoutBranch(scm, e.branchName, e.sourceBranchName, e.remoteName);
                             }
-                            const remote = repo.state.remotes.find(r => r.name === e.remote);
 
-                            const bbApi = await clientForRemote(remote!);
-                            await bbApi.issues!.assign(issue, siteDetailsForRemote(remote!)!.userId);
+                            const bbApi = await clientForSite(issue.site);
+                            await bbApi.issues!.assign(issue, issue.site.details.userId);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remote}/${e.branchName}"</li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remoteName}/${e.branchName}"</li>` : ''}</ul>`
                             });
 
-                            const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote!);
-                            if (site) {
-                                bbIssueWorkStartedEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                            }
+                            bbIssueWorkStartedEvent(issue.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         } catch (e) {
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
@@ -142,27 +138,26 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
             : [];
 
         const repoData: RepoData[] = await Promise.all(repos
-            .filter(r => r.state.remotes.length > 0)
-            .map(async r => {
+            .filter(r => r.siteRemotes.length > 0)
+            .map(async wsRepo => {
                 let repo: Repo | undefined = undefined;
                 let developmentBranch = undefined;
                 let href = undefined;
                 let isCloud = false;
-                const wsRepo = workspaceRepoFor(r);
                 const site = wsRepo.mainSiteRemote.site;
+                const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
                 if (site) {
-                    const remote = firstBitbucketRemote(r);
-                    const bbApi = await clientForRemote(remote);
-                    [, repo, developmentBranch] = await Promise.all([r.fetch(), bbApi.repositories.get(site), bbApi.repositories.getDevelopmentBranch(site)]);
+                    const bbApi = await clientForSite(site);
+                    [, repo, developmentBranch] = await Promise.all([scm.fetch(), bbApi.repositories.get(site), bbApi.repositories.getDevelopmentBranch(site)]);
                     href = repo.url;
-                    isCloud = siteDetailsForRemote(remote)!.isCloud;
+                    isCloud = site.details.isCloud;
                 }
 
                 return {
                     workspaceRepo: wsRepo,
                     href: href,
                     defaultReviewers: [],
-                    localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                    localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                     remoteBranches: [],
                     branchTypes: [],
                     developmentBranch: developmentBranch,

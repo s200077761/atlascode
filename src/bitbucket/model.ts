@@ -219,12 +219,13 @@ export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
-    getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
-    getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests>;
+    getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     nextPage(prs: PaginatedPullRequests): Promise<PaginatedPullRequests>;
-    getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;

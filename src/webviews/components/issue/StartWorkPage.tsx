@@ -204,7 +204,7 @@ export default class StartWorkPage extends WebviewComponent<
       repoUri: this.state.repo.workspaceRepo.rootUri,
       branchName: branchName,
       sourceBranchName: this.state.sourceBranch ? this.state.sourceBranch.name! : '',
-      remote: this.state.siteRemote ? this.state.siteRemote.remote.name : '',
+      remoteName: this.state.siteRemote ? this.state.siteRemote.remote.name : '',
       transition: this.state.transition,
       setupJira: this.state.jiraSetupEnabled,
       setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled

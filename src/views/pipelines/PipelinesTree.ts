@@ -2,7 +2,7 @@ import { distanceInWordsToNow, format } from "date-fns";
 import path from 'path';
 import { commands, ConfigurationChangeEvent, Disposable, Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import { ProductBitbucket } from '../../atlclients/authInfo';
-import { clientForSite, workspaceRepoFor } from '../../bitbucket/bbUtils';
+import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from "../../commands";
 import { configuration } from "../../config/configuration";
@@ -65,12 +65,11 @@ export class PipelinesTree extends BaseTreeDataProvider {
             return element.getChildren(element);
         }
 
-        const repos = Container.bitbucketContext.getBitbucketCloudRepositories();
-        const expand = repos.length === 1;
+        const workspaceRepos = Container.bitbucketContext.getBitbucketCloudRepositories();
+        const expand = workspaceRepos.length === 1;
 
         if (this._childrenMap.size === 0) {
-            repos.forEach(repo => {
-                const wsRepo = workspaceRepoFor(repo);
+            workspaceRepos.forEach(wsRepo => {
                 this._childrenMap.set(wsRepo.rootUri, new PipelinesRepoNode(wsRepo, expand));
             });
         }

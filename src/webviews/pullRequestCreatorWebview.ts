@@ -4,7 +4,7 @@ import { commands, Uri } from 'vscode';
 import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { clientForSite, firstBitbucketRemote, siteDetailsForRemote, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { BitbucketIssue, BitbucketSite, FileDiff, FileStatus, isBitbucketIssue, PullRequest, User } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
@@ -39,7 +39,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         const repos = Container.bitbucketContext.getBitbucketRepositories();
         if (repos.length > 0) {
-            return siteDetailsForRemote(firstBitbucketRemote(repos[0]));
+            return repos[0].mainSiteRemote.site!.details;
         }
 
         return undefined;
@@ -67,14 +67,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         try {
             const repos = Container.bitbucketContext.getBitbucketRepositories();
 
-            const state: RepoData[] = await Promise.all(repos.map(async r => {
-
-                const wsRepo = workspaceRepoFor(r);
+            const state: RepoData[] = await Promise.all(repos.map(async wsRepo => {
                 const site = wsRepo.mainSiteRemote.site!;
                 const bbApi = await clientForSite(site);
+                const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
                 const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
-                    r.fetch(),
+                    scm.fetch(),
                     bbApi.repositories.get(site),
                     bbApi.repositories.getDevelopmentBranch(site),
                     []
@@ -89,13 +88,13 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
                     defaultReviewers: (defaultReviewers as User[]).filter(reviewer => reviewer.accountId !== currentUser.accountId),
-                    localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                    remoteBranches: r.state.refs
-                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && r.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
-                        .map(ref => ({ ...ref, remote: r.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name })),
+                    localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                    remoteBranches: scm.state.refs
+                        .filter(ref => ref.type === RefType.RemoteHead && ref.name && scm.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
+                        .map(ref => ({ ...ref, remote: scm.state.remotes.find(rem => ref.name!.startsWith(rem.name))!.name })),
                     branchTypes: [],
                     developmentBranch: developmentBranch,
-                    hasLocalChanges: r.state.workingTreeChanges.length + r.state.indexChanges.length + r.state.mergeChanges.length > 0,
+                    hasLocalChanges: scm.state.workingTreeChanges.length + scm.state.indexChanges.length + scm.state.mergeChanges.length > 0,
                     isCloud: site.details.isCloud
                 };
             }));
@@ -226,9 +225,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     async getCurrentRepo(repoData: RepoData): Promise<Repository> {
-        const currentRepo: Repository | undefined = Container.bitbucketContext.getRepository(vscode.Uri.parse(repoData.workspaceRepo.rootUri));
-        if (currentRepo) {
-            return currentRepo;
+        const scm: Repository | undefined = Container.bitbucketContext.getRepositoryScm(repoData.workspaceRepo.rootUri);
+        if (scm) {
+            return scm;
         }
         return Promise.reject(new Error('Could not match repoData object to local repository'));
     }
@@ -347,8 +346,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             if (!issue) {
                 const bbIssueKeys = parseBitbucketIssueKeys(e.sourceBranch.name);
                 if (bbIssueKeys.length > 0) {
-                    const repo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
-                    const wsRepo = workspaceRepoFor(repo);
+                    const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(e.repoUri))!;
                     if (wsRepo.mainSiteRemote.site) {
                         const bbApi = await clientForSite(wsRepo.mainSiteRemote.site);
                         const bbIssues = await bbApi.issues!.getIssuesForKeys(wsRepo.mainSiteRemote.site, [bbIssueKeys[0]]);
@@ -388,8 +386,8 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
 
         if (pushLocalChanges) {
             Logger.info(`pushing local changes for branch: ${sourceBranchName} to remote: ${destinationBranch.remote} `);
-            const repo = Container.bitbucketContext.getRepository(Uri.parse(workspaceRepo.rootUri))!;
-            await repo.push(destinationBranch.remote, sourceBranchName);
+            const scm = Container.bitbucketContext.getRepositoryScm(workspaceRepo.rootUri)!;
+            await scm.push(destinationBranch.remote, sourceBranchName);
         }
 
         const bbApi = await clientForSite(site);

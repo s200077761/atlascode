@@ -99,7 +99,7 @@ export interface StartWorkAction extends Action {
     repoUri: string;
     sourceBranchName: string;
     branchName: string;
-    remote: string;
+    remoteName: string;
     setupJira: boolean;
     setupBitbucket: boolean;
 }

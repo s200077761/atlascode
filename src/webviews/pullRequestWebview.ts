@@ -14,6 +14,7 @@ import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge } from '../ipc/prActions';
+import { PRData } from "../ipc/prMessaging";
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -264,14 +265,15 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
         const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
 
-        const scm = Container.bitbucketContext.getRepository(vscode.Uri.parse(this._pr.workspaceRepo!.rootUri))!;
-        const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
+        let currentBranch = '';
+        if (this._pr.workspaceRepo) {
+            const scm = Container.bitbucketContext.getRepositoryScm(this._pr.workspaceRepo!.rootUri)!;
+            currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
+        }
 
-        const prData = {
-            pr: this._pr.data,
+        const prData: PRData = {
+            pr: this._pr,
             fileDiffs: fileDiffs,
-            repoUri: this._pr.workspaceRepo ? this._pr.workspaceRepo.rootUri : '',
-            remote: this._pr.workspaceRepo ? this._pr.workspaceRepo.mainSiteRemote.remote : { name: 'DUMMY', isReadOnly: true },
             currentUser: currentUser,
             currentBranch: currentBranch,
             type: 'update',
@@ -422,7 +424,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return;
         }
 
-        const scm = Container.bitbucketContext.getRepository(vscode.Uri.parse(pr.workspaceRepo.rootUri))!;
+        const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
 
         scm.checkout(branch || pr.data.source.branchName)
             .then(() => {

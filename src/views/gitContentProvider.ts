@@ -1,7 +1,7 @@
 import * as pathlib from 'path';
 import * as vscode from 'vscode';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { workspaceRepoFor } from '../bitbucket/bbUtils';
+import { Container } from '../container';
 import { PRFileDiffQueryParams } from './pullrequest/pullRequestNode';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
@@ -17,20 +17,25 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             return '';
         }
         const u: vscode.Uri = vscode.Uri.parse(repoUri);
-        const repo = this.bbContext.getRepository(u);
-        if (!repo || !path || !commitHash) {
+        const wsRepo = this.bbContext.getRepository(u);
+        if (!wsRepo || !path || !commitHash) {
             return '';
         }
 
-        const absolutePath = pathlib.join(repo.rootUri.fsPath, path);
         let content = '';
+        const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri);
+        if (!scm) {
+            return '';
+        }
+
+        const absolutePath = pathlib.join(scm.rootUri.path, path);
+
         try {
-            content = await repo.show(commitHash, absolutePath);
+            content = await scm.show(commitHash, absolutePath);
         } catch (err) {
             try {
-                const wsRepo = workspaceRepoFor(repo);
-                await repo.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
-                content = await repo.show(commitHash, absolutePath);
+                await scm.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
+                content = await scm.show(commitHash, absolutePath);
             } catch (err) {
                 // try {
                 //     await repo.addRemote(remote.name, remote.fetchUrl!);

@@ -2,7 +2,7 @@ import { createEmptyMinimalIssue, MinimalIssue } from 'jira-pi-client';
 import * as vscode from 'vscode';
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
-import { clientForSite, workspaceRepoFor } from '../bitbucket/bbUtils';
+import { clientForSite } from '../bitbucket/bbUtils';
 import { BitbucketBranchingModel, Repo } from '../bitbucket/model';
 import { assignIssue } from '../commands/jira/assignIssue';
 import { showIssue } from '../commands/jira/showIssue';
@@ -98,8 +98,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                         try {
                             const issue = this._state;
                             if (e.setupBitbucket) {
-                                const repo = Container.bitbucketContext.getRepository(vscode.Uri.parse(e.repoUri))!;
-                                await this.createOrCheckoutBranch(repo, e.branchName, e.sourceBranchName, e.remote);
+                                const scm = Container.bitbucketContext.getRepositoryScm(e.repoUri)!;
+                                await this.createOrCheckoutBranch(scm, e.branchName, e.sourceBranchName, e.remoteName);
                             }
                             const currentUserId = issue.siteDetails.userId;
                             await assignIssue(issue, currentUserId);
@@ -108,7 +108,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                             }
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remote}/${e.branchName}</code></li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupJira ? `<li>Transitioned status to <code>${e.transition.to.name}</code></li>` : ''}  ${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remoteName}/${e.branchName}</code></li>` : ''}</ul>`
                             });
                             issueWorkStartedEvent(issue.siteDetails).then(e => { Container.analyticsClient.sendTrackEvent(e); });
                         } catch (e) {
@@ -149,27 +149,27 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                 this._panel.title = `Start work on Jira issue ${issue.key}`;
             }
 
-            const repos = Container.bitbucketContext
+            const workspaceRepos = Container.bitbucketContext
                 ? Container.bitbucketContext.getAllRepositories()
                 : [];
 
-            const repoData: RepoData[] = await Promise.all(repos
-                .filter(r => r.state.remotes.length > 0)
-                .map(async r => {
+            const repoData: RepoData[] = await Promise.all(workspaceRepos
+                .filter(r => r.siteRemotes.length > 0)
+                .map(async wsRepo => {
                     let repo: Repo | undefined = undefined;
                     let developmentBranch = undefined;
                     let href = undefined;
                     let isCloud = false;
                     let branchTypes: BranchType[] = [];
 
-                    const wsRepo = workspaceRepoFor(r);
                     const site = wsRepo.mainSiteRemote.site;
+                    const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
                     if (site) {
                         let branchingModel: BitbucketBranchingModel | undefined = undefined;
 
                         const bbApi = await clientForSite(site);
                         [, repo, developmentBranch, branchingModel] = await Promise.all(
-                            [r.fetch(),
+                            [scm.fetch(),
                             bbApi.repositories.get(site),
                             bbApi.repositories.getDevelopmentBranch(site),
                             bbApi.repositories.getBranchingModel(site)
@@ -190,7 +190,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                         workspaceRepo: wsRepo,
                         href: href,
                         defaultReviewers: [],
-                        localBranches: r.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
+                        localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                         remoteBranches: [],
                         branchTypes: branchTypes,
                         developmentBranch: developmentBranch,

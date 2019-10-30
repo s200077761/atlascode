@@ -8,8 +8,8 @@ import { CacheMap, Interval } from '../util/cachemap';
 import { BitbucketIssuesExplorer } from '../views/bbissues/bbIssuesExplorer';
 import { PullRequestCommentController } from '../views/pullrequest/prCommentController';
 import { PullRequestsExplorer } from '../views/pullrequest/pullRequestsExplorer';
-import { clientForRemote, clientForSite, firstBitbucketRemote, getBitbucketCloudRemotes, getBitbucketRemotes } from './bbUtils';
-import { BitbucketSite, PullRequest, User } from './model';
+import { clientForSite, getBitbucketCloudRemotes, getBitbucketRemotes, workspaceRepoFor } from './bbUtils';
+import { BitbucketSite, PullRequest, User, WorkspaceRepo } from './model';
 
 // BitbucketContext stores the context (hosts, auth, current repo etc.)
 // for all Bitbucket related actions.
@@ -18,7 +18,7 @@ export class BitbucketContext extends Disposable {
     readonly onDidChangeBitbucketContext: Event<void> = this._onDidChangeBitbucketContext.event;
 
     private _gitApi: GitApi;
-    private _repoMap: Map<string, Repository> = new Map();
+    private _repoMap: Map<string, WorkspaceRepo> = new Map();
     private _pullRequestsExplorer: PullRequestsExplorer;
     private _bitbucketIssuesExplorer: BitbucketIssuesExplorer;
     private _disposable: Disposable;
@@ -73,9 +73,8 @@ export class BitbucketContext extends Disposable {
     public async recentPullrequestsForAllRepos(): Promise<PullRequest[]> {
         if (!this._pullRequestCache.getItem<PullRequest[]>('pullrequests')) {
             const prs = await Promise.all(this.getBitbucketRepositories().map(async repo => {
-                const remote = firstBitbucketRemote(repo);
-                const bbClient = await clientForRemote(remote);
-                return (await bbClient.pullrequests.getRecentAllStatus(repo, remote)).data;
+                const bbClient = await clientForSite(repo.mainSiteRemote.site!);
+                return (await bbClient.pullrequests.getRecentAllStatus(repo)).data;
             }));
             const flatPrs = prs.reduce((prev, curr) => prev.concat(curr), []);
             this._pullRequestCache.setItem('pullrequests', flatPrs, 5 * Interval.MINUTE);
@@ -87,13 +86,15 @@ export class BitbucketContext extends Disposable {
     private async refreshRepos() {
         this._pullRequestCache.clear();
         this._repoMap.clear();
-        await Promise.all(this.getAllRepositories().map(async repo => {
+        await Promise.all(this.getAllRepositoriesRaw().map(async repo => {
             // sometimes the remote info is not populated during initialization
             // this is a workaround to wait for that information to be available
             if (repo.state.remotes.length === 0) {
                 await repo.status();
             }
-            this._repoMap.set(repo.rootUri.toString(), repo);
+            if (repo.state.remotes.length > 0) {
+                this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
+            }
         }));
 
         try {
@@ -122,8 +123,12 @@ export class BitbucketContext extends Disposable {
         }
     }
 
-    public getAllRepositories(): Repository[] {
+    private getAllRepositoriesRaw(): Repository[] {
         return this._gitApi.repositories;
+    }
+
+    public getAllRepositories(): WorkspaceRepo[] {
+        return Array.from(this._repoMap.values());
     }
 
     public isBitbucketRepo(repo: Repository): boolean {
@@ -134,16 +139,20 @@ export class BitbucketContext extends Disposable {
         return getBitbucketCloudRemotes(repo).length > 0;
     }
 
-    public getBitbucketRepositories(): Repository[] {
-        return this.getAllRepositories().filter(this.isBitbucketRepo);
+    public getBitbucketRepositories(): WorkspaceRepo[] {
+        return this.getAllRepositories().filter(wsRepo => wsRepo.mainSiteRemote.site !== undefined);
     }
 
-    public getBitbucketCloudRepositories(): Repository[] {
-        return this.getAllRepositories().filter(this.isBitbucketCloudRepo);
+    public getBitbucketCloudRepositories(): WorkspaceRepo[] {
+        return this.getAllRepositories().filter(wsRepo => wsRepo.mainSiteRemote.site !== undefined && wsRepo.mainSiteRemote.site.details.isCloud === true);
     }
 
-    public getRepository(repoUri: Uri): Repository | undefined {
+    public getRepository(repoUri: Uri): WorkspaceRepo | undefined {
         return this._repoMap.get(repoUri.toString());
+    }
+
+    public getRepositoryScm(repoUri: string): Repository | undefined {
+        return this.getAllRepositoriesRaw().find(r => r.rootUri.toString() === repoUri);
     }
 
     public getMirrors(hostname: string): string[] {
