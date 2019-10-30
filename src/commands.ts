@@ -69,11 +69,8 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
         vscode.commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)),
         vscode.commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline)),
         vscode.commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue)),
-        vscode.commands.registerCommand(Commands.ShowWelcomePage, Container.welcomeWebview.createOrShow, Container.welcomeWebview),
-        vscode.commands.registerCommand(Commands.ShowOnboardingPage, async () => {
-            viewScreenEvent(Registry.screen.onboardingScreen).then(e => { Container.analyticsClient.sendScreenEvent(e); });
-            Container.onboardingWebview.createOrShow();
-        }),
+        vscode.commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
+        vscode.commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebview.createOrShow()),
         vscode.commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
             const uri = (await prNode.getTreeItem()).resourceUri;
             if (uri) {

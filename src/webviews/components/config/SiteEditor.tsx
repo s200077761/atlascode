@@ -38,7 +38,7 @@ const Delete = (data: ItemData) => {
 export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product, isRemote, handleDeleteSite, handleSaveSite, siteExample, cloudOrServer }) => {
     const [addingSite, setAddingSite] = useState(false);
     const loginText = `Login to ${product.name} Cloud`;
-    const addSiteText = `Log in to self-hosted ${product.name}`;
+    const addSiteText = `Add Custom ${product.name} Site`;
 
     const handleCloudProd = () => {
         const hostname = (product.key === ProductJira.key) ? 'atlassian.net' : 'bitbucket.org';

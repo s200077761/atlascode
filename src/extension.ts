@@ -58,7 +58,12 @@ export async function activate(context: ExtensionContext) {
     }
 
     if(previousVersion === undefined && window.state.focused){
-        commands.executeCommand(Commands.ShowOnboardingPage);
+        //This gets hit when the user has opened our extension for the first time. Now we run an A/B test
+        if(Math.random() < 0.5){
+            commands.executeCommand(Commands.ShowOnboardingPage);
+        } else {
+            commands.executeCommand(Commands.ShowWelcomePage);
+        }
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }

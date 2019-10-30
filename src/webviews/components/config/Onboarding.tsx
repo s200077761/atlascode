@@ -172,7 +172,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                                 <GridColumn medium={12}>
                                     <div style={{ display: 'inline-block', float: 'right', marginLeft: '10px', marginTop: '150px' }}>
                                         <div style={{ marginRight: '5px', display: 'inline-block' }}>
-                                            <Tooltip content={!this.anythingAuthenticated() ? "Please authenticate with a site" : "Click to close this page"}>
+                                            <Tooltip content={!this.anythingAuthenticated() ? "Authenticate with Jira or Bitbucket to continue" : "Click to close this page"}>
                                                 <Button className='ac-button' onClick={() => { this.postMessage({ action: 'closePage' }); }} isDisabled={!this.anythingAuthenticated()}>Done</Button>
                                             </Tooltip>
                                         </div>
