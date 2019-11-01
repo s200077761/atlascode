@@ -45,8 +45,9 @@ export class BitbucketContext extends Disposable {
 
         this.prCommentController = new PullRequestCommentController(Container.context);
         this._disposable = Disposable.from(
-            this._gitApi.onDidOpenRepository(this.refreshRepos, this),
-            this._gitApi.onDidCloseRepository(this.refreshRepos, this),
+            this._gitApi.onDidChangeState(() => this.refreshRepos()),
+            this._gitApi.onDidOpenRepository(() => this.refreshRepos()),
+            this._gitApi.onDidCloseRepository(() => this.refreshRepos()),
             this._pullRequestsExplorer,
             this._bitbucketIssuesExplorer,
             this.prCommentController
@@ -84,18 +85,17 @@ export class BitbucketContext extends Disposable {
     }
 
     private async refreshRepos() {
+        if (this._gitApi.state === 'uninitialized') {
+            return;
+        }
+
         this._pullRequestCache.clear();
         this._repoMap.clear();
-        await Promise.all(this.getAllRepositoriesRaw().map(async repo => {
-            // sometimes the remote info is not populated during initialization
-            // this is a workaround to wait for that information to be available
-            if (repo.state.remotes.length === 0) {
-                await repo.status();
-            }
+        this.getAllRepositoriesRaw().forEach(repo => {
             if (repo.state.remotes.length > 0) {
                 this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
             }
-        }));
+        });
 
         try {
             for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
