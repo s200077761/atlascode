@@ -91,21 +91,23 @@ export class BitbucketContext extends Disposable {
 
         this._pullRequestCache.clear();
         this._repoMap.clear();
+
+        await Promise.all(Container.siteManager.getSitesAvailable(ProductBitbucket).map(async site => {
+            try {
+                const bbApi = await Container.clientManager.bbClient(site);
+                const mirrorHosts = await bbApi.repositories.getMirrorHosts();
+                this._mirrorsCache.setItem(site.hostname, mirrorHosts);
+            } catch {
+                // log and ignore error
+                Logger.debug('Failed to fetch mirror sites');
+            }
+        }));
+
         this.getAllRepositoriesRaw().forEach(repo => {
             if (repo.state.remotes.length > 0) {
                 this._repoMap.set(repo.rootUri.toString(), workspaceRepoFor(repo));
             }
         });
-
-        try {
-            for (const site of Container.siteManager.getSitesAvailable(ProductBitbucket)) {
-                const bbApi = await Container.clientManager.bbClient(site);
-                this._mirrorsCache.setItem(site.hostname, await bbApi.repositories.getMirrorHosts());
-            }
-        } catch {
-            // log and ignore error
-            Logger.debug('Failed to fetch mirror sites');
-        }
 
         this._onDidChangeBitbucketContext.fire();
     }
