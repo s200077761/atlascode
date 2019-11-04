@@ -1,10 +1,10 @@
-import * as React from 'react';
-import { IssueType } from "../../../jira/jira-client/model/entities";
-import EdiText from 'react-editext';
-import * as FieldValidators from '../fieldValidators';
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { emptyIssueType } from '../../../jira/jira-client/model/emptyEntities';
+import { IssueType } from 'jira-metaui-transformer';
+import { emptyIssueType } from 'jira-pi-client';
+import * as React from 'react';
+import EdiText from 'react-editext';
+import * as FieldValidators from '../fieldValidators';
 
 export type SummaryAndIssueType = {
     summary: string;

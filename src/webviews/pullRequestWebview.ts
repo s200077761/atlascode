@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
 import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
@@ -16,7 +17,6 @@ import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOp
 import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { isMinimalIssue, MinimalIssue } from '../jira/jira-client/model/entities';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { Remote, Repository } from "../typings/git";
@@ -306,7 +306,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.postMessage(this._state.prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssue | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -336,13 +336,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue[]> {
-        let foundIssues: MinimalIssue[] = [];
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        let foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits, comments.data);
 
-                const jqlPromises: Promise<MinimalIssue>[] = [];
+                const jqlPromises: Promise<MinimalIssue<DetailedSiteInfo>>[] = [];
                 issueKeys.forEach(key => {
                     jqlPromises.push(
                         (async () => {
@@ -351,7 +351,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     );
                 });
 
-                let issueResults = await pSettle<MinimalIssue>(jqlPromises);
+                let issueResults = await pSettle<MinimalIssue<DetailedSiteInfo>>(jqlPromises);
 
                 issueResults.forEach(result => {
                     if (result.isFulfilled) {
@@ -414,7 +414,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         await this.updatePullRequest();
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssue) {
+    private async updateIssue(issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue) {
         if (!issue) {
             return;
         }

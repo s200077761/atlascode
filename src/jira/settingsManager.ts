@@ -1,11 +1,11 @@
+import { Fields, readField } from "jira-metaui-transformer";
+import { IssueLinkType } from "jira-pi-client";
 import { Disposable } from "vscode";
-
-import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { Container } from "../container";
 import { Logger } from "../logger";
 import { EpicFieldInfo, epicsDisabled } from "./jiraCommon";
-import { IssueLinkType } from "./jira-client/model/entities";
-import { Fields, readField } from "jira-metaui-transformer";
+
 
 
 export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];

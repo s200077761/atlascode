@@ -1,9 +1,9 @@
-import * as React from 'react';
 import Select, { AsyncSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
-import * as SelectFieldHelper from '../selectFieldHelper';
 import { IssueLinkTypeSelectOption, ValueType } from 'jira-metaui-transformer';
+import { IssuePickerIssue } from 'jira-pi-client';
+import * as React from 'react';
+import * as SelectFieldHelper from '../selectFieldHelper';
 
 export type LinkTypeAndIssue = {
     issueKey: string;

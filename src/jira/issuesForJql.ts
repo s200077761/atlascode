@@ -1,10 +1,9 @@
-import { Container } from "../container";
+import { MinimalIssue, readSearchResults } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { MinimalIssue } from "./jira-client/model/entities";
-import { readSearchResults } from "./jira-client/model/responses";
+import { Container } from "../container";
 
 
-export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue[]> {
+export async function issuesForJQL(jql: string, site: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>[]> {
   const client = await Container.clientManager.jiraClient(site);
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(site);
   const epicFieldInfo = await Container.jiraSettingsManager.getEpicFieldsForSite(site);

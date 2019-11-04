@@ -1,5 +1,6 @@
+import { MinimalIssue } from "jira-pi-client";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { ApprovalStatus, BitbucketIssue, FileChange, Reviewer } from "../bitbucket/model";
-import { MinimalIssue } from "../jira/jira-client/model/entities";
 import { Branch, Remote } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
@@ -48,7 +49,7 @@ export interface Merge extends Action {
     mergeStrategy?: string;
     commitMessage: string;
     closeSourceBranch?: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export function isMerge(a: Action): a is Merge {
@@ -85,7 +86,7 @@ export interface CreatePullRequest extends Action {
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {

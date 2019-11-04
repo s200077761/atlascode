@@ -1,20 +1,20 @@
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { SettingSource, JQLEntry } from '../config/model';
-import { Action } from '../ipc/messaging';
-import { commands, ConfigurationChangeEvent, Uri, ConfigurationTarget, env } from 'vscode';
-import { isAuthAction, isSaveSettingsAction, isSubmitFeedbackAction, isLoginAuthAction, isFetchJqlDataAction, ConfigTarget, isOpenJsonAction } from '../ipc/configActions';
-import { ProductJira, ProductBitbucket, DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product } from '../atlclients/authInfo';
-import { Logger } from '../logger';
-import { configuration } from '../config/configuration';
-import { Container } from '../container';
-import { submitFeedback, getFeedbackUser } from './feedbackSubmitter';
-import { authenticateButtonEvent, logoutButtonEvent, featureChangeEvent, customJQLCreatedEvent } from '../analytics';
-import { SitesAvailableUpdateEvent } from '../siteManager';
-import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { getProxyHostAndPort } from 'jira-pi-client';
 import * as vscode from 'vscode';
+import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
+import { authenticateButtonEvent, customJQLCreatedEvent, featureChangeEvent, logoutButtonEvent } from '../analytics';
+import { DetailedSiteInfo, isBasicAuthInfo, isEmptySiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
 import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson';
-import { ConfigWorkspaceFolder, ConfigInspect } from '../ipc/configMessaging';
-import { getProxyHostAndPort } from '../atlclients/agent';
+import { configuration } from '../config/configuration';
+import { JQLEntry, SettingSource } from '../config/model';
+import { Container } from '../container';
+import { ConfigTarget, isAuthAction, isFetchJqlDataAction, isLoginAuthAction, isOpenJsonAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
+import { ConfigInspect, ConfigWorkspaceFolder } from '../ipc/configMessaging';
+import { Action } from '../ipc/messaging';
+import { Logger } from '../logger';
+import { SitesAvailableUpdateEvent } from '../siteManager';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
+import { getFeedbackUser, submitFeedback } from './feedbackSubmitter';
 
 export class ConfigWebview extends AbstractReactWebview implements InitializingWebview<SettingSource>{
 

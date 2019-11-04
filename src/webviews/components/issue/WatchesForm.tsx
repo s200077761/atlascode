@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { Watches, User } from '../../../jira/jira-client/model/entities';
-import WatchIcon from '@atlaskit/icon/glyph/watch';
-import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
+import WatchIcon from '@atlaskit/icon/glyph/watch';
+import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import { AsyncSelect } from '@atlaskit/select';
-import * as SelectFieldHelper from '../selectFieldHelper';
-import debounce from "lodash.debounce";
 import { ValueType } from 'jira-metaui-transformer';
+import { User, Watches } from 'jira-pi-client';
+import debounce from "lodash.debounce";
+import * as React from 'react';
+import * as SelectFieldHelper from '../selectFieldHelper';
 
 type MyState = {
     isLoading: boolean;

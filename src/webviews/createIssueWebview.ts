@@ -1,21 +1,22 @@
-import { InitializingWebview } from './abstractWebview';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { Logger } from '../logger';
-import { Container } from '../container';
-import { CreateIssueData } from '../ipc/issueMessaging';
-import { isScreensForProjects, isCreateIssue, isSetIssueType, CreateIssueAction, isScreensForSite } from '../ipc/issueActions';
-import { commands, Uri, ViewColumn, Position } from 'vscode';
-import { Commands } from '../commands';
-import { issueCreatedEvent } from '../analytics';
-import { ProductJira, DetailedSiteInfo, emptySiteInfo, Product } from '../atlclients/authInfo';
-import { BitbucketIssue } from '../bitbucket/model';
 import { format } from 'date-fns';
-import { fetchCreateIssueUI } from '../jira/fetchIssue';
-import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
-import { IssueType, Project } from '../jira/jira-client/model/entities';
+import FormData from 'form-data';
+import * as fs from "fs";
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from 'jira-metaui-transformer';
+import { emptyIssueType, IssueType, Project } from 'jira-pi-client';
+import { commands, Position, Uri, ViewColumn } from 'vscode';
+import { issueCreatedEvent } from '../analytics';
+import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { BitbucketIssue } from '../bitbucket/model';
+import { Commands } from '../commands';
 import { configuration } from '../config/configuration';
-import { CreateMetaTransformerResult, IssueTypeUI, ValueType, FieldValues } from 'jira-metaui-transformer';
-import { emptyIssueType } from '../jira/jira-client/model/emptyEntities';
+import { Container } from '../container';
+import { CreateIssueAction, isCreateIssue, isScreensForProjects, isScreensForSite, isSetIssueType } from '../ipc/issueActions';
+import { CreateIssueData } from '../ipc/issueMessaging';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { fetchCreateIssueUI } from '../jira/fetchIssue';
+import { Logger } from '../logger';
+import { AbstractIssueEditorWebview } from './abstractIssueEditorWebview';
+import { InitializingWebview } from './abstractWebview';
 export interface PartialIssue {
     uri?: Uri;
     position?: Position;
@@ -414,7 +415,17 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
                             }
 
                             if (attachments) {
-                                await client.addAttachments(resp.key, attachments);
+                                let formData = new FormData();
+                                attachments.forEach((file: any) => {
+                                    formData.append('file'
+                                        , fs.createReadStream(file.path)
+                                        , {
+                                            filename: file.name,
+                                            contentType: file.type,
+                                        }
+                                    );
+                                });
+                                await client.addAttachments(resp.key, formData);
                             }
                             // TODO: [VSCODE-601] add a new analytic event for issue updates
                             commands.executeCommand(Commands.RefreshJiraExplorer);

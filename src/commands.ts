@@ -1,17 +1,17 @@
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
 import * as vscode from 'vscode';
-import { Container } from './container';
-import { assignIssue } from './commands/jira/assignIssue';
-import { IssueNode } from './views/nodes/issueNode';
-import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
-import { viewScreenEvent, Registry } from './analytics';
-import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
-import { createIssue } from './commands/jira/createIssue';
+import { Registry, viewScreenEvent } from './analytics';
+import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
+import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { BitbucketIssue } from './bitbucket/model';
-import { MinimalIssue, isMinimalIssue, MinimalIssueOrKeyAndSite } from './jira/jira-client/model/entities';
+import { assignIssue } from './commands/jira/assignIssue';
+import { createIssue } from './commands/jira/createIssue';
+import { showIssue, showIssueForKey, showIssueForSiteIdAndKey } from './commands/jira/showIssue';
 import { startWorkOnIssue } from './commands/jira/startWorkOnIssue';
 import { SettingSource } from './config/model';
-import { ProductBitbucket } from './atlclients/authInfo';
-import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
+import { Container } from './container';
+import { AbstractBaseNode } from './views/nodes/abstractBaseNode';
+import { IssueNode } from './views/nodes/issueNode';
 
 export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
@@ -76,11 +76,11 @@ export function registerCommands(vscodeContext: vscode.ExtensionContext) {
             }
         }),
         vscode.commands.registerCommand(Commands.CreateIssue, (data: any) => createIssue(data)),
-        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite) => await showIssue(issueOrKeyAndSite)),
+        vscode.commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite)),
         vscode.commands.registerCommand(Commands.ShowIssueForKey, async (issueKey?: string) => await showIssueForKey(issueKey)),
         vscode.commands.registerCommand(Commands.ShowIssueForSiteIdAndKey, async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)),
         vscode.commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
-        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
+        vscode.commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
         vscode.commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
         vscode.commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, vscode.Uri, vscode.Uri, string]) => {
             viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then(e => { Container.analyticsClient.sendScreenEvent(e); });

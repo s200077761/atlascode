@@ -1,14 +1,15 @@
+import { isMinimalIssue, MinimalORIssueLink } from "jira-pi-client";
 import * as vscode from "vscode";
-import { AbstractBaseNode } from "./abstractBaseNode";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Commands } from "../../commands";
-import { isMinimalIssue, MinimalORIssueLink } from "../../jira/jira-client/model/entities";
+import { AbstractBaseNode } from "./abstractBaseNode";
 
 const IssueNodeContextValue = 'jiraIssue';
 
 export class IssueNode extends AbstractBaseNode {
-    public issue: MinimalORIssueLink;
+    public issue: MinimalORIssueLink<DetailedSiteInfo>;
 
-    constructor(_issue: MinimalORIssueLink) {
+    constructor(_issue: MinimalORIssueLink<DetailedSiteInfo>) {
         super();
         this.issue = _issue;
     }

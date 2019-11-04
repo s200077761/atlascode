@@ -1,8 +1,8 @@
-import * as React from 'react';
-import TableTree from '@atlaskit/table-tree';
-import { Worklog, WorklogContainer } from '../../../jira/jira-client/model/entities';
 import Avatar from '@atlaskit/avatar';
+import TableTree from '@atlaskit/table-tree';
 import { distanceInWordsToNow } from "date-fns";
+import { Worklog, WorklogContainer } from 'jira-pi-client';
+import * as React from 'react';
 
 type ItemData = { worklog: Worklog };
 

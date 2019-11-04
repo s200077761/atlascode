@@ -1,13 +1,13 @@
-import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, Commit, FileChange, FileStatus } from '../model';
-import { Container } from "../../container";
-import { prCommentEvent } from '../../analytics';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
-import { CloudRepositoriesApi } from "./repositories";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Client, ClientError } from "../httpClient";
 import { AxiosResponse } from "axios";
-import { getAgent } from "../../atlclients/agent";
+import { prCommentEvent } from '../../analytics';
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Container } from "../../container";
+import { getAgent } from "../../jira/jira-client/providers";
+import { Remote, Repository } from "../../typings/git";
+import { parseGitUrl, siteDetailsForRemote, urlForRemote } from "../bbUtils";
+import { Client, ClientError } from "../httpClient";
+import { BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User } from '../model';
+import { CloudRepositoriesApi } from "./repositories";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -174,8 +174,8 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map(diffStat => ({
-            linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
-            linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
+            linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
+            linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
             newPath: diffStat.new ? diffStat.new.path! : undefined
@@ -183,15 +183,15 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     private mapStatusWordsToFileStatus(status: string): FileStatus {
-        if(status === 'added') {
+        if (status === 'added') {
             return FileStatus.ADDED;
-        } else if(status === 'removed') {
+        } else if (status === 'removed') {
             return FileStatus.DELETED;
-        } else if(status === 'modified') {
+        } else if (status === 'modified') {
             return FileStatus.MODIFIED;
-        } else if(status === 'renamed') {
+        } else if (status === 'renamed') {
             return FileStatus.RENAMED;
-        } else if(status === 'merge conflict') {
+        } else if (status === 'merge conflict') {
             return FileStatus.CONFLICT;
         } else {
             return FileStatus.UNKNOWN;

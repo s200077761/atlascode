@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
-import { getAgent } from '../../atlclients/agent';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
+import { getAgent } from '../../jira/jira-client/providers';
 import { Remote, Repository } from '../../typings/git';
 import { bitbucketSiteForRemote, clientForRemote, parseGitUrl, siteDetailsForRemote, urlForRemote } from '../bbUtils';
 import { Client, ClientError } from '../httpClient';

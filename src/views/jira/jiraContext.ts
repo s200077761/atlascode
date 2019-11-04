@@ -1,16 +1,16 @@
-import { Disposable, commands, ConfigurationChangeEvent, ConfigurationTarget } from "vscode";
-import { Commands } from "../../commands";
-import { JiraExplorer } from "./jiraExplorer";
-import { Container } from "../../container";
-import { configuration } from "../../config/configuration";
-import { setCommandContext, CommandContext, CustomJQLTreeId } from "../../constants";
-import { ProductJira } from "../../atlclients/authInfo";
-import { CustomJQLRoot } from "./customJqlRoot";
-import { RefreshTimer } from "../RefreshTimer";
-import { NewIssueMonitor } from "../../jira/newIssueMonitor";
-import { MinimalORIssueLink } from "../../jira/jira-client/model/entities";
-import { SitesAvailableUpdateEvent } from "../../siteManager";
+import { MinimalORIssueLink } from "jira-pi-client";
 import { v4 } from "uuid";
+import { commands, ConfigurationChangeEvent, ConfigurationTarget, Disposable } from "vscode";
+import { DetailedSiteInfo, ProductJira } from "../../atlclients/authInfo";
+import { Commands } from "../../commands";
+import { configuration } from "../../config/configuration";
+import { CommandContext, CustomJQLTreeId, setCommandContext } from "../../constants";
+import { Container } from "../../container";
+import { NewIssueMonitor } from "../../jira/newIssueMonitor";
+import { SitesAvailableUpdateEvent } from "../../siteManager";
+import { RefreshTimer } from "../RefreshTimer";
+import { CustomJQLRoot } from "./customJqlRoot";
+import { JiraExplorer } from "./jiraExplorer";
 
 export class JiraContext extends Disposable {
 
@@ -106,8 +106,8 @@ export class JiraContext extends Disposable {
         }
     }
 
-    async findIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
-        let issue: MinimalORIssueLink | undefined = undefined;
+    async findIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
+        let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         if (this._explorer) {
             issue = await this._explorer.findIssue(issueKey);
         }

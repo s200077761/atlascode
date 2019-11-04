@@ -1,16 +1,16 @@
-import { window } from "vscode";
-import { OAuthProvider, SiteInfo, oauthProviderForSite, OAuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, AccessibleResource, Product, isBasicAuthInfo, AuthInfo, BasicAuthInfo } from "./authInfo";
-import { authenticatedEvent } from "../analytics";
-import { Logger } from "../logger";
-import { OAuthDancer } from "./oauthDancer";
-import { SiteManager } from "../siteManager";
-import { CredentialManager } from "./authStore";
-import { AnalyticsClient } from "../analytics-node-client/src";
 import axios from 'axios';
-import { Time } from "../util/time";
-import { getAgent } from "./agent";
+import { window } from "vscode";
+import { authenticatedEvent } from "../analytics";
+import { AnalyticsClient } from "../analytics-node-client/src";
 import { Container } from "../container";
+import { getAgent } from "../jira/jira-client/providers";
+import { Logger } from "../logger";
+import { SiteManager } from "../siteManager";
+import { Time } from "../util/time";
+import { AccessibleResource, AuthInfo, BasicAuthInfo, DetailedSiteInfo, isBasicAuthInfo, OAuthInfo, OAuthProvider, oauthProviderForSite, Product, ProductBitbucket, ProductJira, SiteInfo } from "./authInfo";
+import { CredentialManager } from "./authStore";
 import { addCurlLogging } from "./interceptors";
+import { OAuthDancer } from "./oauthDancer";
 
 const slugRegex = /[\[\:\/\?#@\!\$&'\(\)\*\+,;\=%\\\[\]]/gi;
 export class LoginManager {

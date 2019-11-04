@@ -1,17 +1,17 @@
-import { keychain } from "../util/keychain";
-import { Logger } from "../logger";
-import { DetailedSiteInfo, OAuthProvider, AuthInfoV1, OAuthInfo, ProductJira, ProductBitbucket, AccessibleResourceV1, Product, UserInfo } from "../atlclients/authInfo";
+import axios from 'axios';
 import debounce from 'lodash.debounce';
-import { SiteManager } from "../siteManager";
+import { v4 } from "uuid";
+import { ConfigurationTarget } from "vscode";
+import { AccessibleResourceV1, AuthInfoV1, DetailedSiteInfo, OAuthInfo, OAuthProvider, Product, ProductBitbucket, ProductJira, UserInfo } from "../atlclients/authInfo";
 import { CredentialManager } from "../atlclients/authStore";
 import { OAuthRefesher } from "../atlclients/oauthRefresher";
 import { configuration, JQLEntry, SiteJQLV1 } from "../config/configuration";
-import axios from 'axios';
-import { v4 } from "uuid";
 import { JiraJQLListKey } from "../constants";
 import { Container } from "../container";
-import { ConfigurationTarget } from "vscode";
-import { getAgent } from "../atlclients/agent";
+import { getAgent } from "../jira/jira-client/providers";
+import { Logger } from "../logger";
+import { SiteManager } from "../siteManager";
+import { keychain } from "../util/keychain";
 
 const keychainServiceNameV1 = "atlascode-authinfo";
 const WorkingProjectToken = 'currentProject()';

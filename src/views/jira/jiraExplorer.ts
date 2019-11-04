@@ -1,9 +1,9 @@
+import { MinimalORIssueLink } from 'jira-pi-client';
 import { Disposable } from 'vscode';
-import { ProductJira } from '../../atlclients/authInfo';
-import { Explorer, BaseTreeDataProvider } from '../Explorer';
-import { CustomJQLRoot } from './customJqlRoot';
+import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
+import { BaseTreeDataProvider, Explorer } from '../Explorer';
 import { IssueNode } from '../nodes/issueNode';
-import { MinimalORIssueLink } from '../../jira/jira-client/model/entities';
+import { CustomJQLRoot } from './customJqlRoot';
 import { CustomJQLTree } from './customJqlTree';
 
 export interface Refreshable {
@@ -37,13 +37,13 @@ export class JiraExplorer extends Explorer implements Refreshable {
         this._disposables.forEach(d => d.dispose());
     }
 
-    public async findIssue(issueKey: string, jqlRoot?: BaseTreeDataProvider): Promise<MinimalORIssueLink | undefined> {
+    public async findIssue(issueKey: string, jqlRoot?: BaseTreeDataProvider): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
         let dp = jqlRoot;
         if (dp === undefined) {
             dp = this.treeDataProvder as CustomJQLRoot;
         }
 
-        let issue: MinimalORIssueLink | undefined = undefined;
+        let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         if (this.treeDataProvder) {
             let dpchildren = [];
 
@@ -75,8 +75,8 @@ export class JiraExplorer extends Explorer implements Refreshable {
         return issue;
     }
 
-    async findIssueInChildren(issueKey: string, parent: IssueNode): Promise<MinimalORIssueLink | undefined> {
-        let issue: MinimalORIssueLink | undefined = undefined;
+    async findIssueInChildren(issueKey: string, parent: IssueNode): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
+        let issue: MinimalORIssueLink<DetailedSiteInfo> | undefined = undefined;
         const children = await parent.getChildren();
 
         for (let child of children) {

@@ -13,16 +13,18 @@ import Select from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
 import { distanceInWordsToNow, format } from 'date-fns';
+import { Transition } from 'jira-metaui-transformer';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
 import * as React from 'react';
 import EdiText from 'react-editext';
 import uuid from 'uuid';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
 import { Checkout, CopyPullRequestLink, DeleteComment, EditComment, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval } from '../../../ipc/prActions';
 import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite, Transition } from '../../../jira/jira-client/model/entities';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
 import { StatusMenu } from '../bbissue/StatusMenu';
@@ -148,7 +150,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite) => {
+    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueOrKey
@@ -257,7 +259,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue, status: { ...(this.state.pr.mainIssue as MinimalIssue).status, id: item.to.id, name: item.to.name } } }
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue<DetailedSiteInfo>, status: { ...(this.state.pr.mainIssue as MinimalIssue<DetailedSiteInfo>).status, id: item.to.id, name: item.to.name } } }
         });
     };
 
@@ -364,7 +366,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
+                                <TransitionMenu transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions} currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                             </div>
                         </div>
                     </div>
