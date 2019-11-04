@@ -30,6 +30,7 @@ interface PullRequestComment extends vscode.Comment {
     site: BitbucketSite;
     prCommentThreadId: number | undefined;
     parent?: vscode.CommentThread;
+    prHref: string;
     prId: number;
     commentId: number;
 }
@@ -44,17 +45,21 @@ export class PullRequestCommentController implements vscode.Disposable {
     constructor(ctx: vscode.ExtensionContext) {
         ctx.subscriptions.push(
             vscode.languages.registerCompletionItemProvider({ scheme: 'comment' }, new BitbucketMentionsCompletionProvider(), '@'),
-            vscode.commands.registerCommand(Commands.BitbucketAddComment, (reply: vscode.CommentReply) => {
-                this.addComment(reply);
+            vscode.commands.registerCommand(Commands.BitbucketAddComment, async (reply: vscode.CommentReply) => {
+                await this.addComment(reply);
+                const { prHref } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
+                vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(prHref));
             }),
-            vscode.commands.registerCommand(Commands.BitbucketDeleteComment, (comment: PullRequestComment) => {
-                this.deleteComment(comment);
+            vscode.commands.registerCommand(Commands.BitbucketDeleteComment, async (comment: PullRequestComment) => {
+                await this.deleteComment(comment);
+                vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(comment.prHref));
             }),
             vscode.commands.registerCommand(Commands.BBPRCancelCommentEdit, (comment: PullRequestComment) => {
                 this.cancelEditComment(comment);
             }),
-            vscode.commands.registerCommand(Commands.BBPRSubmitCommentEdit, (comment: PullRequestComment) => {
-                this.submitCommentEdit(comment);
+            vscode.commands.registerCommand(Commands.BBPRSubmitCommentEdit, async (comment: PullRequestComment) => {
+                await this.submitCommentEdit(comment);
+                vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(comment.prHref));
             }),
             vscode.commands.registerCommand(Commands.BitbucketEditComment, (comment: PullRequestComment) => {
                 this.editCommentClicked(comment);
@@ -90,7 +95,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     async addComment(reply: vscode.CommentReply) {
-        const { site, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
+        const { site, prHref, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
         const inline = {
             from: lhs ? reply.thread.range.start.line + 1 : undefined,
             to: lhs ? undefined : reply.thread.range.start.line + 1,
@@ -102,7 +107,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
         const comments = [
             ...reply.thread.comments,
-            await this.createVSCodeComment(site, data.id!, data, prId)
+            await this.createVSCodeComment(site, data.id!, data, prHref, prId)
         ];
 
         this.createOrUpdateThread(commentThreadId!, reply.thread.uri, reply.thread.range, comments);
@@ -145,7 +150,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
             const comments = await Promise.all(commentData.parent.comments.map(async (comment: PullRequestComment) => {
                 if (comment.commentId === commentData.commentId) {
-                    return await this.createVSCodeComment(commentData.site, data.id!, data, commentData.prId);
+                    return await this.createVSCodeComment(commentData.site, data.id!, data, commentData.prHref, commentData.prId);
                 } else {
                     return comment;
                 }
@@ -180,7 +185,7 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     provideComments(uri: vscode.Uri) {
-        const { site, commentThreads, prId } = JSON.parse(uri.query) as PRFileDiffQueryParams;
+        const { site, commentThreads, prHref, prId } = JSON.parse(uri.query) as PRFileDiffQueryParams;
         (commentThreads || [])
             .forEach(async (c: Comment[]) => {
                 let range = new vscode.Range(0, 0, 0, 0);
@@ -190,7 +195,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                     range = new vscode.Range(c[0].inline!.to! - 1, 0, c[0].inline!.to! - 1, 0);
                 }
 
-                const comments = await Promise.all(c.map(comment => this.createVSCodeComment(site, c[0].id!, comment, prId)));
+                const comments = await Promise.all(c.map(comment => this.createVSCodeComment(site, c[0].id!, comment, prHref, prId)));
 
                 if (comments.length > 0) {
                     this.createOrUpdateThread(c[0].id!, uri, range, comments);
@@ -220,7 +225,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         prCommentCache.set(threadId, newThread);
     }
 
-    private async createVSCodeComment(site: BitbucketSite, parentCommentThreadId: number, comment: Comment, prId: number): Promise<PullRequestComment> {
+    private async createVSCodeComment(site: BitbucketSite, parentCommentThreadId: number, comment: Comment, prHref: string, prId: number): Promise<PullRequestComment> {
         let contextValueString = "";
         if (comment.deletable && comment.editable) {
             contextValueString = "canEdit,canDelete";
@@ -240,6 +245,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             },
             contextValue: contextValueString,
             mode: vscode.CommentMode.Preview,
+            prHref: prHref,
             prId: prId,
             commentId: comment.id
         };

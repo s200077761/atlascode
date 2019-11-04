@@ -23,6 +23,7 @@ export enum Commands {
     BitbucketPullRequestFilters = 'atlascode.bb.showPullRequestFilters',
     BitbucketShowPullRequestDetails = 'atlascode.bb.showPullRequestDetails',
     BitbucketPullRequestsNextPage = 'atlascode.bb.pullReqeustsNextPage',
+    RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
     BitbucketDeleteComment = 'atlascode.bb.deleteComment',

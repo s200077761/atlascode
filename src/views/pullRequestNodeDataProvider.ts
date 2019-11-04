@@ -1,4 +1,4 @@
-import { commands, Disposable, Event, EventEmitter, TreeItem, window, workspace } from 'vscode';
+import { commands, Disposable, Event, EventEmitter, TreeItem, Uri, window, workspace } from 'vscode';
 import { prPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -79,6 +79,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                         }
                     });
             }),
+            commands.registerCommand(Commands.RefreshPullRequestExplorerNode, (uri: Uri) => this.refreshResource(uri)),
             ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
     }
@@ -112,6 +113,18 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     async refresh() {
         await this.updateChildren();
         this._onDidChangeTreeData.fire();
+    }
+
+    async refreshResource(uri: Uri) {
+        if (!this._childrenMap) {
+            return;
+        }
+        this._childrenMap.forEach(child => {
+            const foundItem = child.findResource(uri);
+            if (foundItem) {
+                this._onDidChangeTreeData.fire(foundItem);
+            }
+        });
     }
 
     addItems(prs: PaginatedPullRequests): void {

@@ -7,6 +7,7 @@ import { SimpleNode } from '../nodes/simpleNode';
 import { NextPageNode, PullRequestContextValue, PullRequestTitlesNode } from './pullRequestNode';
 
 export class RepositoriesNode extends AbstractBaseNode {
+    private treeItem: vscode.TreeItem;
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
 
     constructor(
@@ -15,6 +16,7 @@ export class RepositoriesNode extends AbstractBaseNode {
         private expand?: boolean
     ) {
         super();
+        this.treeItem = this.createTreeItem();
         this.disposables.push(({
             dispose: () => {
                 if (this._children) {
@@ -27,6 +29,20 @@ export class RepositoriesNode extends AbstractBaseNode {
                 }
             }
         }));
+    }
+
+    private createTreeItem(): vscode.TreeItem {
+        const directory = path.basename(this.workspaceRepo.rootUri);
+        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = this.workspaceRepo.rootUri;
+        item.contextValue = PullRequestContextValue;
+
+        const site = this.workspaceRepo.mainSiteRemote.site!;
+        item.resourceUri = vscode.Uri.parse(site.details.isCloud
+            ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
+            : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`);
+
+        return item;
     }
 
     async refresh() {
@@ -46,6 +62,18 @@ export class RepositoriesNode extends AbstractBaseNode {
         });
     }
 
+    findResource(uri: vscode.Uri): AbstractBaseNode | undefined {
+        if (this.getTreeItem().resourceUri && this.getTreeItem().resourceUri!.toString() === uri.toString()) {
+            return this;
+        }
+        for (const child of this._children || []) {
+            if (child.getTreeItem().resourceUri && child.getTreeItem().resourceUri!.toString() === uri.toString()) {
+                return child;
+            }
+        }
+        return undefined;
+    }
+
     addItems(prs: PaginatedPullRequests): void {
         if (!this._children) {
             this._children = [];
@@ -62,17 +90,7 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const directory = path.basename(this.workspaceRepo.rootUri);
-        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this.workspaceRepo.rootUri;
-        item.contextValue = PullRequestContextValue;
-
-        const site = this.workspaceRepo.mainSiteRemote.site!;
-        item.resourceUri = vscode.Uri.parse(site.details.isCloud
-            ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
-            : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`);
-
-        return item;
+        return this.treeItem;
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {

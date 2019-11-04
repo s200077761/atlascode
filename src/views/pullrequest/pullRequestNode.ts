@@ -30,14 +30,16 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
 }
 
 export class PullRequestTitlesNode extends AbstractBaseNode {
+    private treeItem: vscode.TreeItem;
     public prHref: string;
 
     constructor(private pr: PullRequest, private commentController: PullRequestCommentController) {
         super();
+        this.treeItem = this.createTreeItem();
         this.prHref = pr.data!.url;
     }
 
-    getTreeItem(): vscode.TreeItem {
+    private createTreeItem(): vscode.TreeItem {
         const approvalText = this.pr.data.participants
             .filter(p => p.status === 'APPROVED')
             .map(approver => `Approved-by: ${approver.displayName}`)
@@ -50,6 +52,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
 
         return item;
+    }
+
+
+    getTreeItem(): vscode.TreeItem {
+        return this.treeItem;
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
