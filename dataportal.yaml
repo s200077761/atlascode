@@ -475,6 +475,13 @@ screen:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - id: 19122
+    name: atlascodeOnboardingScreen
+    description: |
+      Event when a user views a the onboarding screen
+    attributes:
+      - name: instanceType
+      - name: hostProduct
 ui:
   - id: 14444
     action: clicked
@@ -528,4 +535,18 @@ ui:
     subject: button
     description: |
       Event when a user clicks a button
+    attributes:
+  - id: 19073
+    action: clicked
+    subject: button
+    subjectId: doneButton
+    description: |
+      Event when a user clicks the done button on the Onboarding page
+    attributes:
+  - id: 19074
+    action: clicked
+    subject: button
+    subjectId: moreSettingsButton
+    description: |
+      Event when a user clicks on the more settings button on the Onboarding page
     attributes:

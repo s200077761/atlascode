@@ -25,6 +25,7 @@ import { PmfStats } from './pmf/stats';
 import { SiteManager } from './siteManager';
 import { JiraProjectManager } from './jira/projectManager';
 import { LoginManager } from './atlclients/loginManager';
+import { OnboardingWebview } from './webviews/Onboarding';
 
 const isDebuggingRegex = /^--(debug|inspect)\b(-brk\b|(?!-))=?/;
 
@@ -70,6 +71,7 @@ export class Container {
         context.subscriptions.push((this._jiraSettingsManager = new JiraSettingsManager()));
         context.subscriptions.push((this._configWebview = new ConfigWebview(context.extensionPath)));
         context.subscriptions.push((this._welcomeWebview = new WelcomeWebview(context.extensionPath)));
+        context.subscriptions.push((this._onboardingWebview = new OnboardingWebview(context.extensionPath)));
         context.subscriptions.push(this._pullRequestViewManager = new PullRequestViewManager(this._context.extensionPath));
         context.subscriptions.push(this._pullRequestCreatorView = new PullRequestCreatorWebview(this._context.extensionPath));
         context.subscriptions.push((this._createBitbucketIssueWebview = new CreateBitbucketIssueWebview(context.extensionPath)));
@@ -154,6 +156,11 @@ export class Container {
     private static _welcomeWebview: WelcomeWebview;
     static get welcomeWebview() {
         return this._welcomeWebview;
+    }
+
+    private static _onboardingWebview: OnboardingWebview;
+    static get onboardingWebview() {
+        return this._onboardingWebview;
     }
 
     private static _createIssueWebview: CreateIssueWebview;

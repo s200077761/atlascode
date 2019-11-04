@@ -57,7 +57,16 @@ export async function activate(context: ExtensionContext) {
         Logger.error(e, 'Error initializing atlascode!');
     }
 
-    showWelcomePage(atlascodeVersion, previousVersion);
+    if(previousVersion === undefined && window.state.focused){
+        //This gets hit when the user has opened our extension for the first time. Now we run an A/B test
+        if(Math.random() < 0.5){
+            commands.executeCommand(Commands.ShowOnboardingPage);
+        } else {
+            commands.executeCommand(Commands.ShowWelcomePage);
+        }
+    } else {
+        showWelcomePage(atlascodeVersion, previousVersion);
+    }
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
     setTimeout(() => {
         sendAnalytics(atlascodeVersion, context.globalState);
