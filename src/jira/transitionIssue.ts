@@ -1,12 +1,12 @@
+import { isIssueKeyAndSite, isMinimalIssue, MinimalIssueOrKeyAndSite, Transition } from "jira-pi-client";
 import * as vscode from "vscode";
-import { MinimalIssueOrKeyAndSite, isIssueKeyAndSite, Transition, isMinimalIssue } from "./jira-client/model/entities";
+import { issueTransitionedEvent } from "../analytics";
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
+import { Commands } from "../commands";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Commands } from "../commands";
-import { issueTransitionedEvent } from "../analytics";
 
-export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite, transition: Transition) {
+export async function transitionIssue(issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>, transition: Transition) {
     let issueKey: string = "";
     let site: DetailedSiteInfo = emptySiteInfo;
 

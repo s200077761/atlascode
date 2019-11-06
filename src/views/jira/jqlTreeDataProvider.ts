@@ -1,20 +1,20 @@
-import { Disposable, TreeItem, Command, EventEmitter, Event } from 'vscode';
-import { IssueNode } from '../nodes/issueNode';
-import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
-import { Container } from '../../container';
-import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
+import { MinimalIssue } from 'jira-pi-client';
+import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
+import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';
-import { issuesForJQL } from '../../jira/issuesForJql';
+import { JQLEntry } from '../../config/model';
+import { Container } from '../../container';
 import { fetchMinimalIssue } from '../../jira/fetchIssue';
+import { issuesForJQL } from '../../jira/issuesForJql';
 import { BaseTreeDataProvider } from '../Explorer';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
-import { MinimalIssue } from '../../jira/jira-client/model/entities';
-import { JQLEntry } from '../../config/model';
+import { IssueNode } from '../nodes/issueNode';
+import { SimpleJiraIssueNode } from '../nodes/simpleJiraIssueNode';
 
 export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     protected _disposables: Disposable[] = [];
 
-    protected _issues: MinimalIssue[] | undefined;
+    protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     private _jqlEntry: JQLEntry | undefined;
     private _jqlSite: DetailedSiteInfo | undefined;
 
@@ -100,8 +100,8 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         // we need to fill in the children and fetch the parents of any orphans
         const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues);
 
-        const issuesMissingParents: MinimalIssue[] = [];
-        const standAloneIssues: MinimalIssue[] = [];
+        const issuesMissingParents: MinimalIssue<DetailedSiteInfo>[] = [];
+        const standAloneIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
         newIssues.forEach(i => {
             if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
@@ -122,7 +122,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return this.nodesForIssues();
     }
 
-    private async fetchParentIssues(subIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
+    private async fetchParentIssues(subIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (subIssues.length < 1) {
             return [];
         }
@@ -148,7 +148,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return parentIssues;
     }
 
-    private async resolveEpics(allIssues: MinimalIssue[]): Promise<[MinimalIssue[], string[]]> {
+    private async resolveEpics(allIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<[MinimalIssue<DetailedSiteInfo>[], string[]]> {
         const allIssueKeys = allIssues.map(i => i.key);
         const localEpics = allIssues.filter(iss => iss.epicName && iss.epicName !== '');
         const epicChildrenWithoutParents = allIssues.filter(i => i.epicLink && !allIssueKeys.includes(i.epicLink));
@@ -161,7 +161,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [[], []];
         }
 
-        let finalEpics: MinimalIssue[] = await Promise.all(
+        let finalEpics: MinimalIssue<DetailedSiteInfo>[] = await Promise.all(
             epics
                 .map(async epic => {
                     if (epic.epicChildren.length < 1) {
@@ -175,7 +175,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         return [finalEpics, epicChildKeys];
     }
 
-    private async fetchEpicIssues(childIssues: MinimalIssue[]): Promise<MinimalIssue[]> {
+    private async fetchEpicIssues(childIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         if (childIssues.length < 1) {
             return [];
         }

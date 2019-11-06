@@ -1,6 +1,7 @@
+import { createEmptyMinimalIssue, MinimalIssue } from 'jira-pi-client';
 import * as vscode from 'vscode';
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
-import { DetailedSiteInfo, Product, ProductJira } from '../atlclients/authInfo';
+import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
 import { clientForSite, workspaceRepoFor } from '../bitbucket/bbUtils';
 import { BitbucketBranchingModel, Repo } from '../bitbucket/model';
 import { assignIssue } from '../commands/jira/assignIssue';
@@ -11,8 +12,6 @@ import { StartWorkOnIssueData } from '../ipc/issueMessaging';
 import { Action, onlineStatus } from '../ipc/messaging';
 import { BranchType, RepoData } from '../ipc/prMessaging';
 import { fetchMinimalIssue } from '../jira/fetchIssue';
-import { emptyMinimalIssue } from '../jira/jira-client/model/emptyEntities';
-import { MinimalIssue } from '../jira/jira-client/model/entities';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { RefType, Repository } from '../typings/git';
@@ -20,8 +19,8 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 const customBranchType: BranchType = { kind: "Custom", prefix: "" };
 
-export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue> {
-    private _state: MinimalIssue = emptyMinimalIssue;
+export class StartWorkOnIssueWebview extends AbstractReactWebview implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+    private _state: MinimalIssue<DetailedSiteInfo> = createEmptyMinimalIssue(emptySiteInfo);
     private _issueKey: string = "";
 
     constructor(extensionPath: string) {
@@ -43,12 +42,12 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         return ProductJira;
     }
 
-    async createOrShowIssue(data: MinimalIssue) {
+    async createOrShowIssue(data: MinimalIssue<DetailedSiteInfo>) {
         await super.createOrShow();
         this.initialize(data);
     }
 
-    async initialize(data: MinimalIssue) {
+    async initialize(data: MinimalIssue<DetailedSiteInfo>) {
         if (!Container.onlineDetector.isOnline()) {
             this.postMessage(onlineStatus(false));
             return;
@@ -57,7 +56,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         if (this._state.key !== data.key) {
             this.postMessage({
                 type: 'update',
-                issue: emptyMinimalIssue,
+                issue: createEmptyMinimalIssue(emptySiteInfo),
                 repoData: []
             });
         }
@@ -137,7 +136,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
         await repo.checkout(destBranch);
     }
 
-    public async updateIssue(issue: MinimalIssue) {
+    public async updateIssue(issue: MinimalIssue<DetailedSiteInfo>) {
         if (this.isRefeshing) {
             return;
         }
@@ -200,7 +199,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     };
                 }));
 
-            let issueClone: MinimalIssue = JSON.parse(JSON.stringify(issue));
+            let issueClone: MinimalIssue<DetailedSiteInfo> = JSON.parse(JSON.stringify(issue));
             // best effort to set issue to in-progress
             if (!issueClone.status.name.toLowerCase().includes('progress')) {
                 const inProgressTransition = issueClone.transitions.find(t => !t.isInitial && t.to.name.toLocaleLowerCase().includes('progress'));

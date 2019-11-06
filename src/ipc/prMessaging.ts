@@ -1,5 +1,6 @@
+import { MinimalIssue } from "jira-pi-client";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequestData, Reviewer, User } from "../bitbucket/model";
-import { MinimalIssue } from "../jira/jira-client/model/entities";
 import { Branch, Remote } from "../typings/git";
 import { Message } from "./messaging";
 
@@ -14,9 +15,9 @@ export interface PRData extends Message {
     currentBranch: string;
     commits?: Commit[];
     comments?: Comment[];
-    relatedJiraIssues?: MinimalIssue[];
+    relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues?: BitbucketIssue[];
-    mainIssue?: MinimalIssue | BitbucketIssue;
+    mainIssue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     buildStatuses?: BuildStatus[];
     mergeStrategies: MergeStrategy[];
 }
@@ -67,7 +68,7 @@ export interface CommitsResult extends Message {
 
 export interface FetchIssueResult extends Message {
     type: 'fetchIssueResult';
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export interface FetchUsersResult extends Message {

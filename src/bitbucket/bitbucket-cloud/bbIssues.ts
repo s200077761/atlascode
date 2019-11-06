@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
-import { getAgent } from "../../atlclients/agent";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { getAgent } from '../../jira/jira-client/providers';
 import { Repository } from "../../typings/git";
 import { workspaceRepoFor } from "../bbUtils";
 import { Client, ClientError } from "../httpClient";

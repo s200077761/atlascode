@@ -1,12 +1,12 @@
 
-import { Disposable } from 'vscode';
-import { OAuthProvider, ProductJira, ProductBitbucket } from './authInfo';
 import axios, { AxiosInstance } from 'axios';
-import { Time } from '../util/time';
-import { BitbucketStagingStrategy, BitbucketProdStrategy, JiraStagingStrategy, JiraProdStrategy } from './strategy';
-import { getAgent } from './agent';
+import { Disposable } from 'vscode';
 import { Container } from '../container';
+import { getAgent } from '../jira/jira-client/providers';
+import { Time } from '../util/time';
+import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
+import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
 export class OAuthRefesher implements Disposable {
     private _axios: AxiosInstance;
 

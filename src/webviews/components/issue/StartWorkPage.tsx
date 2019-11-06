@@ -5,9 +5,12 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { CreatableSelect } from '@atlaskit/select';
+import { Transition } from 'jira-metaui-transformer';
+import { createEmptyMinimalIssue, emptyTransition, isMinimalIssue, MinimalIssue } from 'jira-pi-client';
 import * as path from 'path';
 import * as React from "react";
 import EdiText from 'react-editext';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { BitbucketIssue } from '../../../bitbucket/model';
 import { CopyBitbucketIssueLink, OpenBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
 import { isStartWorkOnBitbucketIssueData, StartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
@@ -15,8 +18,6 @@ import { CopyJiraIssueLinkAction, OpenJiraIssueAction, RefreshIssueAction, Start
 import { isStartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueData, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import { BranchType, RepoData } from "../../../ipc/prMessaging";
-import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
-import { isMinimalIssue, MinimalIssue, Transition } from "../../../jira/jira-client/model/entities";
 import { Branch, Remote } from "../../../typings/git";
 import { AtlLoader } from "../AtlLoader";
 import ErrorBanner from "../ErrorBanner";
@@ -51,7 +52,7 @@ type State = {
 };
 
 const emptyState: State = {
-  data: { type: 'update', issue: emptyMinimalIssue, repoData: [] },
+  data: { type: 'update', issue: createEmptyMinimalIssue(emptySiteInfo), repoData: [] },
   issueType: 'jiraIssue',
   jiraSetupEnabled: true,
   bitbucketSetupEnabled: true,
@@ -326,7 +327,7 @@ export default class StartWorkPage extends WebviewComponent<
                 <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                   <div style={{ margin: 10 }}>
                     <label>Select new status</label>
-                    <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
+                    <TransitionMenu transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions} currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
                   </div>
                 </div>
               }

@@ -1,12 +1,12 @@
-import { window, version } from 'vscode';
 import axios from 'axios';
-import { FeedbackData, FeedbackType } from "../ipc/configActions";
-import { Container } from "../container";
-import { ProductJira, ProductBitbucket } from '../atlclients/authInfo';
 import { truncate } from 'lodash';
+import { version, window } from 'vscode';
+import { ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { Container } from "../container";
+import { FeedbackData, FeedbackType } from "../ipc/configActions";
 import { FeedbackUser } from '../ipc/configMessaging';
+import { getAgent } from '../jira/jira-client/providers';
 import { Time } from '../util/time';
-import { getAgent } from '../atlclients/agent';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',

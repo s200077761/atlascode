@@ -1,10 +1,10 @@
 import { AxiosResponse } from "axios";
-import { getAgent } from "../atlclients/agent";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { workspaceRepoFor } from "../bitbucket/bbUtils";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { Client, ClientError } from "../bitbucket/httpClient";
 import { BitbucketSite } from "../bitbucket/model";
+import { getAgent } from "../jira/jira-client/providers";
 import { Repository } from "../typings/git";
 import { PaginatedPipelines, Pipeline, PipelineCommand, PipelineResult, PipelineStep, PipelineTarget } from "./model";
 

@@ -1,10 +1,10 @@
-import { PMFData } from "../ipc/messaging";
-import { Container } from "../container";
-import { format } from 'date-fns';
 import axios from 'axios';
+import { format } from 'date-fns';
 import { pmfSubmitted } from "../analytics";
+import { Container } from "../container";
+import { PMFData } from "../ipc/messaging";
+import { getAgent } from "../jira/jira-client/providers";
 import { Time } from "../util/time";
-import { getAgent } from "../atlclients/agent";
 
 const devPMF = {
     collectorId: "235854834",

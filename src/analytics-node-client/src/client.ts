@@ -1,11 +1,10 @@
 'use strict';
 
-import { TrackEvent, UIEvent, AnalyticsClientInit, ScreenEvent, TrackEventData, UIEventData, ScreenEventData } from "./types";
-
 import Analytics from 'analytics-node';
-import { requireValue, validateTrackEvent, validateUIEvent, validateScreenEvent } from './preconditions';
-import { getAgent } from "../../atlclients/agent";
 import { Container } from "../../container";
+import { getAgent } from "../../jira/jira-client/providers";
+import { requireValue, validateScreenEvent, validateTrackEvent, validateUIEvent } from './preconditions';
+import { AnalyticsClientInit, ScreenEvent, ScreenEventData, TrackEvent, TrackEventData, UIEvent, UIEventData } from "./types";
 
 const ANALYTICS_WRITE_KEY = 'BLANK';
 const TRACK_EVENT_TYPE = 'track';
@@ -98,11 +97,12 @@ class AnalyticsClient {
             version
         };
 
+        const agent: any | undefined = (Container.isDebugging) ? getAgent() : undefined;
         this.analyticsClient = new Analytics(ANALYTICS_WRITE_KEY, {
             flushAt: flushAt || DEFAULT_QUEUE_FLUSH_SIZE,
             flushInterval: flushInterval || DEFAULT_QUEUE_FLUSH_INTERVAL,
             host: baseUrl || getUrlFromEnvironment(env),
-            agent: (Container.isDebugging) ? getAgent() : undefined,
+            agent: agent,
         });
 
         this.deviceId = deviceId;
@@ -226,6 +226,5 @@ class AnalyticsClient {
     }
 }
 
-export {
-    AnalyticsClient
-};
+export { AnalyticsClient };
+

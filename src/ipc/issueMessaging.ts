@@ -1,11 +1,10 @@
-import { Message, HostErrorMessage } from "./messaging";
-import { RepoData } from "./prMessaging";
+import { CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions, User } from "jira-metaui-transformer";
+import { createEmptyIssueTypeUI, emptyUser, MinimalIssue, Project } from "jira-pi-client";
+import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PullRequestData } from "../bitbucket/model";
-import { MinimalIssue, Project, User } from "../jira/jira-client/model/entities";
 import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
-import { emptyUser, emptyIssueTypeUI } from "../jira/jira-client/model/emptyEntities";
-import { CreateMetaTransformerProblems, IssueTypeUI, FieldValues, SelectFieldOptions } from "jira-metaui-transformer";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { HostErrorMessage, Message } from "./messaging";
+import { RepoData } from "./prMessaging";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -38,7 +37,7 @@ export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
 
 export const emptyCreateIssueData: CreateIssueData = {
     type: "",
-    ...emptyIssueTypeUI,
+    ...createEmptyIssueTypeUI(emptySiteInfo),
     currentUser: emptyUser,
     transformerProblems: {},
 };
@@ -57,7 +56,7 @@ export interface FieldValueUpdate extends Message {
 
 export interface EpicChildrenUpdate extends Message {
     type: 'epicChildrenUpdate';
-    epicChildren: MinimalIssue[];
+    epicChildren: MinimalIssue<DetailedSiteInfo>[];
 }
 
 export interface PullRequestUpdate extends Message {
@@ -107,7 +106,7 @@ export interface IssueCreated extends Message {
 }
 
 export interface StartWorkOnIssueData extends Message {
-    issue: MinimalIssue;
+    issue: MinimalIssue<DetailedSiteInfo>;
     repoData: RepoData[];
 }
 

@@ -1,21 +1,22 @@
-import * as React from 'react';
 import Button from '@atlaskit/button';
+import Lozenge from "@atlaskit/lozenge";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import Lozenge from "@atlaskit/lozenge";
-import { MinimalIssueLink, MinimalIssueOrKeyAndSite, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { IssueLinkIssue, MinimalIssueLink, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
+import * as React from 'react';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../colors';
 
 interface LinkedIssuesProps {
-    issuelinks: MinimalIssueLink[];
-    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void;
+    issuelinks: MinimalIssueLink<DetailedSiteInfo>[];
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void;
     onDelete: (issueLink: any) => void;
 }
 
 type ItemData = {
     linkDescription: string,
-    issue: IssueLinkIssue,
-    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void,
+    issue: IssueLinkIssue<DetailedSiteInfo>,
+    onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void,
     onDelete: (issueLink: any) => void;
 };
 

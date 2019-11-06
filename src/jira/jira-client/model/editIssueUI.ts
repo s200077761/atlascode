@@ -1,8 +1,7 @@
 import { FieldTransformerResult } from "jira-metaui-transformer";
+import { emptyEpicFieldInfo, MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
 import { EpicFieldInfo } from "../../jiraCommon";
-import { emptyEpicFieldInfo } from "./emptyEntities";
-import { MinimalIssue } from "./entities";
 
 export interface EditIssueUI extends FieldTransformerResult {
     key: string;
@@ -11,8 +10,8 @@ export interface EditIssueUI extends FieldTransformerResult {
     siteDetails: DetailedSiteInfo;
     epicFieldInfo: EpicFieldInfo;
     isEpic: boolean;
-    epicChildren: MinimalIssue[];
-    apiVersion: number;
+    epicChildren: MinimalIssue<DetailedSiteInfo>[];
+    apiVersion: string;
 }
 
 export const emptyEditIssueUI: EditIssueUI = {
@@ -28,5 +27,5 @@ export const emptyEditIssueUI: EditIssueUI = {
     hasRequiredNonRenderables: false,
     isEpic: false,
     epicChildren: [],
-    apiVersion: 2,
+    apiVersion: "2",
 };

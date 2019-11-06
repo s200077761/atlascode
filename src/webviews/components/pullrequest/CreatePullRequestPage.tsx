@@ -8,16 +8,18 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
+import { Transition } from "jira-metaui-transformer";
+import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
 import * as path from 'path';
 import * as React from 'react';
 import uuid from 'uuid';
+import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { BitbucketIssue, BitbucketIssueData, Commit, FileDiff, User } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { PMFData } from '../../../ipc/messaging';
 import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
 import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
-import { isMinimalIssue, MinimalIssue, Transition } from '../../../jira/jira-client/model/entities';
 import { Branch, Ref, Remote } from '../../../typings/git';
 import { AtlLoader } from '../AtlLoader';
 import { StatusMenu } from '../bbissue/StatusMenu';
@@ -52,7 +54,7 @@ interface MyState {
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     commits: Commit[];
     isCreateButtonLoading: boolean;
     result?: string;
@@ -258,7 +260,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            issue: { ...this.state.issue as MinimalIssue, status: { ...(this.state.issue as MinimalIssue).status, id: item.to.id, name: item.to.name } }
+            issue: { ...this.state.issue as MinimalIssue<DetailedSiteInfo>, status: { ...(this.state.issue as MinimalIssue<DetailedSiteInfo>).status, id: item.to.id, name: item.to.name } }
         });
     };
 
@@ -421,7 +423,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                     {isMinimalIssue(this.state.issue)
                         ? <div className='ac-flex'>
                             <h4>Transition Jira issue - </h4>
-                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: (this.state.issue as MinimalIssue) })} />
+                            <NavItem text={`${this.state.issue.key} ${this.state.issue.summary}`} iconUrl={this.state.issue.issuetype.iconUrl} onItemClick={() => this.postMessage({ action: 'openJiraIssue', issueOrKey: (this.state.issue as MinimalIssue<DetailedSiteInfo>) })} />
                         </div>
                         : <div className='ac-flex'>
                             <h4>Transition Bitbucket issue - </h4>
@@ -436,7 +438,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         <div style={{ margin: 10 }}>
                             <label>Select new status</label>
                             {isMinimalIssue(this.state.issue)
-                                ? <TransitionMenu transitions={(this.state.issue as MinimalIssue).transitions} currentStatus={(this.state.issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
+                                ? <TransitionMenu transitions={(this.state.issue as MinimalIssue<DetailedSiteInfo>).transitions} currentStatus={(this.state.issue as MinimalIssue<DetailedSiteInfo>).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                                 : <StatusMenu issueData={this.state.issue.data} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             }
                         </div>

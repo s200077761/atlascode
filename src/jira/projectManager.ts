@@ -1,9 +1,8 @@
+import { emptyProject, Project } from "jira-pi-client";
 import { Disposable } from "vscode";
-import { Container } from "../container";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { Project } from "./jira-client/model/entities";
+import { Container } from "../container";
 import { Logger } from "../logger";
-import { emptyProject } from "./jira-client/model/emptyEntities";
 
 type OrderBy = "category" | "-category" | "+category" | "key" | "-key" | "+key" | "name" | "-name" | "+name" | "owner" | "-owner" | "+owner";
 export class JiraProjectManager extends Disposable {

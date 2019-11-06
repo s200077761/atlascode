@@ -1,3 +1,4 @@
+import { isMinimalIssue, MinimalIssue } from 'jira-pi-client';
 import * as vscode from 'vscode';
 import { commands, Uri } from 'vscode';
 import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
@@ -15,7 +16,6 @@ import { CreatePullRequest, FetchDetails, FetchIssue, isCreatePullRequest, isFet
 import { RepoData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { isMinimalIssue, MinimalIssue } from '../jira/jira-client/model/entities';
 import { transitionIssue } from '../jira/transitionIssue';
 import { Logger } from '../logger';
 import { Branch, RefType, Remote, Repository } from '../typings/git';
@@ -342,7 +342,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
     }
 
     async fetchIssueForBranch(e: FetchIssue) {
-        let issue: MinimalIssue | BitbucketIssue | undefined = undefined;
+        let issue: MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined = undefined;
         if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
             const jiraIssueKeys = parseJiraIssueKeys(e.sourceBranch.name!);
 
@@ -376,7 +376,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
         }
     }
 
-    private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue | BitbucketIssue) {
+    private async updateIssue(repo: Repository, remote: Remote, issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue) {
         if (!issue) {
             return;
         }

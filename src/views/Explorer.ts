@@ -1,9 +1,9 @@
-import { Disposable, TreeViewVisibilityChangeEvent, TreeView, TreeDataProvider, window, TreeItem } from "vscode";
+import { Project } from "jira-pi-client";
+import { Disposable, TreeDataProvider, TreeItem, TreeView, TreeViewVisibilityChangeEvent, window } from "vscode";
 import { viewScreenEvent } from "../analytics";
-import { Container } from "../container";
 import { Product } from "../atlclients/authInfo";
+import { Container } from "../container";
 import { AbstractBaseNode } from "./nodes/abstractBaseNode";
-import { Project } from "../jira/jira-client/model/entities";
 
 export abstract class Explorer extends Disposable {
     protected treeDataProvder: BaseTreeDataProvider | undefined;

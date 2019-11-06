@@ -1,8 +1,8 @@
-import * as React from "react";
 import Avatar from "@atlaskit/avatar";
 import Comment, { CommentAuthor, CommentTime } from "@atlaskit/comment";
-import { Comment as JiraComment } from "../../../jira/jira-client/model/entities";
 import { distanceInWordsToNow } from "date-fns";
+import { Comment as JiraComment } from "jira-pi-client";
+import * as React from "react";
 
 type Props = {
   comments: JiraComment[];
