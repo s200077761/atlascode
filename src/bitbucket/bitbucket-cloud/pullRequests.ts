@@ -489,6 +489,16 @@ export class CloudPullRequestApi implements PullRequestApi {
         return await this.convertDataToComment(data, site);
     }
 
+    async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.getRaw(
+            `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`
+        );
+
+        return data;
+    }
+
     private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {
         const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 

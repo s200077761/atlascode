@@ -239,6 +239,7 @@ export interface PullRequestApi {
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
     postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+    getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
 export interface RepositoriesApi {

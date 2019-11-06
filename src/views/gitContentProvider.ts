@@ -1,6 +1,7 @@
-import * as pathlib from 'path';
-import * as vscode from 'vscode';
+import pathlib from 'path';
+import vscode from 'vscode';
 import { BitbucketContext } from '../bitbucket/bbContext';
+import { bitbucketSiteForRemote, clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { Container } from '../container';
 import { PRFileDiffQueryParams } from './pullrequest/pullRequestNode';
 
@@ -11,7 +12,7 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
     constructor(private bbContext: BitbucketContext) { }
 
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
-        const { repoUri, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
+        const { repoUri, repoHref, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
         if (!repoUri) {
             return '';
@@ -37,13 +38,16 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                 await scm.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
                 content = await scm.show(commitHash, absolutePath);
             } catch (err) {
-                // try {
-                //     await repo.addRemote(remote.name, remote.fetchUrl!);
-                //     await repo.fetch(remote.name, branchName);
-                //     content = await repo.show(commitHash, absolutePath);
-                // } catch (err) {
+                const parsedRepo = parseGitUrl(urlForRemote(wsRepo.mainSiteRemote.remote));
+                const parsedSourceRepo = parseGitUrl(repoHref).toString(parsedRepo.protocol);
+                const site = bitbucketSiteForRemote({ name: 'DUMMY', fetchUrl: parsedSourceRepo, isReadOnly: true });
+                if (site) {
+                    const bbApi = await clientForSite(site);
+                    const fileContent = await bbApi.pullrequests.getFileContent(site, commitHash, path);
+                    return fileContent;
+                }
+
                 vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
-                //}
             }
         }
 

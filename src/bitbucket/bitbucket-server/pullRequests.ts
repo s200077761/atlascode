@@ -539,6 +539,21 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.convertDataToComment(site, data);
     }
 
+    async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.getRaw(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`,
+            {
+                markup: true,
+                avatarSize: 64,
+                at: commitHash
+            }
+        );
+
+        return data;
+    }
+
     private async getTaskCount(pr: PullRequest): Promise<number> {
         const { ownerSlug, repoSlug } = pr.site;
 
