@@ -5,14 +5,14 @@ import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atl
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { bitbucketSiteForRemote, clientForRemote, clientForSite, siteDetailsForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest } from '../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest, Task, Comment } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge } from '../ipc/prActions';
+import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge, isCreateTask, isEditTask, isDeleteTask } from '../ipc/prActions';
 import { PRData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -42,7 +42,8 @@ const emptyState: PRState = {
         },
         currentBranch: '',
         relatedJiraIssues: [],
-        mergeStrategies: []
+        mergeStrategies: [],
+        tasks: []
     }
 };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
@@ -161,6 +162,39 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                     break;
                 }
+                case 'createTask': {
+                    if(isCreateTask(msg)){
+                        try {
+                            this.createTask(msg.task, msg.comment);
+                        } catch (e) {
+                            Logger.error(new Error(`error creating task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'editTask': {
+                    if(isEditTask(msg)){
+                        try {
+                            this.editTask(msg.task);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteTask': {
+                    if(isDeleteTask(msg)){
+                        try {
+                            this.deleteTask(msg.task);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
                 case 'checkout': {
                     if (isCheckout(msg)) {
                         handled = true;
@@ -269,9 +303,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr),
-            bbApi.pullrequests.getChangedFiles(this._pr)
+            bbApi.pullrequests.getChangedFiles(this._pr),
+            bbApi.pullrequests.getTasks(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
@@ -300,7 +335,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 relatedBitbucketIssues: relatedBitbucketIssues,
                 mainIssue: mainIssue,
                 buildStatuses: buildStatuses,
-                mergeStrategies: mergeStrategies
+                mergeStrategies: mergeStrategies,
+                tasks: tasks
             }
         };
         this.postMessage(this._state.prData);
@@ -478,6 +514,24 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async editComment(content: string, commentId: number) {
         const bbApi = await clientForRemote(this._state.remote!);
         await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
+        this.updatePullRequest();
+    }
+
+    private async createTask(task: Task, comment: Comment) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.postTask(this._pr!, comment, task.content.raw);
+        this.updatePullRequest();
+    }
+
+    private async editTask(task: Task) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.editTask(this._pr!, task);
+        this.updatePullRequest();
+    }
+
+    private async deleteTask(task: Task) {
+        const bbApi = await clientForRemote(this._state.remote!);
+        await bbApi.pullrequests.deleteTask(this._pr!, task);
         this.updatePullRequest();
     }
 

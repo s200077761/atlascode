@@ -61,6 +61,31 @@ export type Repo = {
     issueTrackerEnabled: boolean;
 };
 
+export type PaginatedTasks = {
+    pagelen: number;
+    values: Task[];
+    page: number;
+    size: number;
+    next?: boolean;
+};
+
+export type Task = {
+    commentId: number;
+    creator: User;
+    created: string;
+    updated: string;
+    isComplete: boolean;
+    id: number;
+    editable: boolean;
+    deletable: boolean;
+    content: {
+        raw: string;
+        markup: string;
+        html: string;
+        type: string;
+    }
+};
+
 export type Comment = {
     id: number;
     parentId?: number;
@@ -78,6 +103,7 @@ export type Comment = {
         to?: number;
     };
     children: Comment[];
+    tasks: Task[];
 };
 
 export type Commit = {
@@ -235,6 +261,10 @@ export interface PullRequestApi {
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getReviewers(remote: Remote, query?: string): Promise<User[]>;
+    getTasks(pr: PullRequest): Promise<Task[]>;
+    postTask(pr: PullRequest, comment: Comment, content: string): Promise<Task>;
+    editTask(pr: PullRequest, task: Task): Promise<Task>;
+    deleteTask(pr: PullRequest, task: Task): Promise<void>;
     create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;

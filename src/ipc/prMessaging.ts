@@ -1,4 +1,4 @@
-import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequestData, Reviewer, User } from "../bitbucket/model";
+import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequestData, Reviewer, User, Task } from "../bitbucket/model";
 import { MinimalIssue } from "../jira/jira-client/model/entities";
 import { Branch, Remote } from "../typings/git";
 import { Message } from "./messaging";
@@ -19,6 +19,7 @@ export interface PRData extends Message {
     mainIssue?: MinimalIssue | BitbucketIssue;
     buildStatuses?: BuildStatus[];
     mergeStrategies: MergeStrategy[];
+    tasks: Task[];
 }
 
 export function isPRData(a: Message): a is PRData {

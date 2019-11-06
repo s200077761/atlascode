@@ -250,7 +250,8 @@ export class BitbucketIssuesApiImpl {
                     mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
                 }
                 : UnknownUser,
-            children: []
+            children: [],
+            tasks: []
         }));
 
         return { data: updatedChangesAsComments, next: data.next };

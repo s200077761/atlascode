@@ -611,7 +611,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                     <GridColumn medium={12}>
                                         {this.state.remote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
                                             <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.remote!.value.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
-                                                <Commits type={''} repoUri={this.state.repo!.value.uri} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} />
+                                                <Commits type={''} repoUri={this.state.repo!.value.uri} remote={this.state.remote!.value} currentBranch={''} commits={this.state.commits} mergeStrategies={[]} tasks={[]}/>
                                             </Panel>
                                         }
                                     </GridColumn>

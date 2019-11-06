@@ -4,7 +4,7 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Remote, Repository } from '../../typings/git';
 import { bitbucketSiteForRemote, clientForRemote, parseGitUrl, siteDetailsForRemote, urlForRemote } from '../bbUtils';
 import { Client, ClientError } from '../httpClient';
-import { BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User } from '../model';
+import { BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, Task } from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
 const dummyRemote = { name: '', isReadOnly: true };
@@ -147,6 +147,20 @@ export class ServerPullRequestApi implements PullRequestApi {
             value: strategy.id,
             isDefault: strategy.id === data.mergeConfig.defaultStrategy.id
         }));
+    }
+
+    async getTasks(pr: PullRequest): Promise<Task[]> {
+        return Promise.reject(); //TODO: Fill this in!
+    }
+
+    async postTask(pr: PullRequest, comment: Comment, content: string): Promise<Task> {
+        return Promise.reject();
+    }
+    async editTask(pr: PullRequest, task: Task): Promise<Task> {
+        return Promise.reject();
+    }
+    async deleteTask(pr: PullRequest, task: Task): Promise<void> {
+        return Promise.reject();
     }
 
     async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
@@ -400,7 +414,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
                 : undefined,
             user: user,
-            children: []
+            children: [],
+            tasks: []
         };
     }
 
