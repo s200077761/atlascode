@@ -1,6 +1,8 @@
 import { AxiosResponse } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
 import { getAgent } from '../../jira/jira-client/providers';
+import { CacheMap } from '../../util/cachemap';
+import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
 import { Client, ClientError } from '../httpClient';
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
@@ -8,6 +10,7 @@ import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
     private client: Client;
+    private fileContentCache: CacheMap = new CacheMap();
 
     constructor(site: DetailedSiteInfo, username: string, password: string) {
         this.client = new Client(
@@ -542,14 +545,20 @@ export class ServerPullRequestApi implements PullRequestApi {
     async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
         const { ownerSlug, repoSlug } = site;
 
+        const cacheKey = `${site.ownerSlug}::${site.repoSlug}::${commitHash}::${path}`;
+        const cachedValue = this.fileContentCache.getItem<string>(cacheKey);
+        if (cachedValue) {
+            return cachedValue;
+        }
+
         const { data } = await this.client.getRaw(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/raw/${path}`,
             {
-                markup: true,
-                avatarSize: 64,
                 at: commitHash
             }
         );
+
+        this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
 
         return data;
     }
