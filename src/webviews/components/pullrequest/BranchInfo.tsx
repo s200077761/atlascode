@@ -1,9 +1,9 @@
-import * as React from 'react';
+import Avatar from '@atlaskit/avatar';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
-import Avatar from '@atlaskit/avatar';
-import { PRData } from '../../../ipc/prMessaging';
+import * as React from 'react';
 import { Checkout } from '../../../ipc/prActions';
+import { PRData } from '../../../ipc/prMessaging';
 
 
 export default class BranchInfo extends React.Component<{ prData: PRData, postMessage: (e: Checkout) => void }> {
@@ -12,7 +12,7 @@ export default class BranchInfo extends React.Component<{ prData: PRData, postMe
     }
 
     render() {
-        const pr = this.props.prData.pr!;
+        const pr = this.props.prData.pr!.data;
         let sourcePrefix = '';
         let destinationPrefix = '';
         if (pr.source!.repo.url !== pr.destination!.repo.url) {

@@ -1,9 +1,9 @@
 import vscode from 'vscode';
-import { Container } from "../container";
-import { OutputLevel } from "../config/model";
 import { ProductBitbucket } from "../atlclients/authInfo";
-import { urlForRemote, siteDetailsForRemote, parseGitUrl } from "./bbUtils";
+import { OutputLevel } from "../config/model";
+import { Container } from "../container";
 import { Logger } from "../logger";
+import { parseGitUrl, urlForRemote } from "./bbUtils";
 
 export function showBitbucketDebugInfo() {
 
@@ -26,21 +26,21 @@ export function showBitbucketDebugInfo() {
             mirrors: Container.bitbucketContext.getMirrors(site.hostname)
         }));
 
-    const repos = Container.bitbucketContext.getAllRepositories()
-        .map(repo => ({
-            uri: repo.rootUri.toString(),
-            remotes: repo.state.remotes
-                .map(remote => ({
-                    name: remote.name,
-                    url: urlForRemote(remote),
-                    host: parseGitUrl(urlForRemote(remote)).resource,
-                    matchingBitbucketSite: siteDetailsForRemote(remote) ? siteDetailsForRemote(remote)!.name : 'Not found'
+    const wsRepos = Container.bitbucketContext.getAllRepositories()
+        .map(wsRepo => ({
+            uri: wsRepo.rootUri,
+            remotes: wsRepo.siteRemotes
+                .map(siteRemote => ({
+                    name: siteRemote.remote.name,
+                    url: urlForRemote(siteRemote.remote),
+                    host: parseGitUrl(urlForRemote(siteRemote.remote)).resource,
+                    matchingBitbucketSite: siteRemote.site ? siteRemote.site.details.name : 'Not found'
                 })),
         }));
 
     Logger.show();
     Logger.debug(JSON.stringify(
-        { bitbucketSites: sites, vscodeWorkspaceRepositories: repos },
+        { bitbucketSites: sites, vscodeWorkspaceRepositories: wsRepos },
         undefined,
         4
     ));

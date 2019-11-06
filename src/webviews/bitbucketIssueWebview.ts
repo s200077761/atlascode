@@ -77,7 +77,7 @@ export class BitbucketIssueWebview extends AbstractReactWebview implements Initi
 
             const bbApi = await clientForSite(issue.site);
             const [currentUser, issueLatest, comments, changes] = await Promise.all([
-                Container.bitbucketContext.currentUserForSite(issue.site),
+                Container.bitbucketContext.currentUser(issue.site),
                 bbApi.issues!.refetch(issue),
                 bbApi.issues!.getComments(issue),
                 bbApi.issues!.getChanges(issue)]

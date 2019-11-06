@@ -1,8 +1,8 @@
-import * as React from 'react';
 import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import { PRData } from '../../../ipc/prMessaging';
+import * as React from 'react';
+import { Commit } from '../../../bitbucket/model';
 
 const style = { fontFamily: "monospace" };
 const Hash = (props: any) =>
@@ -15,7 +15,7 @@ const Timestamp = (props: any) => {
     return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
 };
 
-export const Commits: React.FunctionComponent<PRData> = (props: PRData) => {
+export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props: { commits: Commit[] }) => {
     const commitsData = props.commits!.map((commit) => {
         return {
             hash: commit.hash,

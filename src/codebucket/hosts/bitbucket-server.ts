@@ -1,34 +1,25 @@
-import { BitbucketSite } from './bitbucket-site-base';
-import { parseGitUrl } from '../../bitbucket/bbUtils';
-import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { Remote } from '../../typings/git';
+import { BitbucketSite } from '../../bitbucket/model';
+import { BitbucketSiteBase } from './bitbucket-site-base';
 
-export class BitbucketServerSite extends BitbucketSite {
+export class BitbucketServerSite extends BitbucketSiteBase {
 
-  constructor(site: DetailedSiteInfo, remote: Remote) {
-    super(site, remote);
+  constructor(site: BitbucketSite) {
+    super(site);
   }
 
   public getChangeSetUrl(revision: string, filePath: string): string {
-    const { project, repo } = this.parseRepo();
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/commits/${revision}#${encodeURIComponent(filePath)}`;
+    const { ownerSlug, repoSlug } = this.site;
+    return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/commits/${revision}#${encodeURIComponent(filePath)}`;
   }
 
   public getSourceUrl(revision: string, filePath: string, lineRanges: string[]): string {
-    const { project, repo } = this.parseRepo();
+    const { ownerSlug, repoSlug } = this.site;
     const hash = lineRanges.map(range => range.replace(':', '-')).join(',');
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/browse/${encodeURIComponent(filePath)}?at=${revision}#${hash}`;
+    return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/browse/${encodeURIComponent(filePath)}?at=${revision}#${hash}`;
   }
 
   public getPullRequestUrl(id: number, filePath: string): string {
-    const { project, repo } = this.parseRepo();
-    return `${this.site.baseLinkUrl}/projects/${project}/repos/${repo}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
+    const { ownerSlug, repoSlug } = this.site;
+    return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
   }
-
-  private parseRepo(): { project: string; repo: string } {
-    const parsed = parseGitUrl(this.remote.fetchUrl! || this.remote.pushUrl!);
-
-    return { project: parsed.owner, repo: parsed.name };
-  }
-
 }

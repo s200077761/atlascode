@@ -66,10 +66,8 @@ interface ViewState {
     showPMF: boolean;
 }
 
-const emptyPR = {
+const emptyPR: PRData = {
     type: '',
-    repoUri: '',
-    remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
     fileDiffs: [],
     mergeStrategies: [],
@@ -176,7 +174,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         return new Promise(resolve => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.pr.remote });
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.pr.pr!.site });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -222,7 +220,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
                         isAnyCommentLoading: false,
-                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.closeSourceBranch : this.state.closeSourceBranch
+                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.data.closeSourceBranch : this.state.closeSourceBranch
                     },
                         () => {
                             if (this.state.mergeStrategy.value === undefined) {
@@ -300,7 +298,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             this.setState({ commitMessage: '' });
         }
 
-        const { id, source, title } = this.state.pr.pr!;
+        const { id, source, title, participants } = this.state.pr.pr!.data;
 
         const branchInfo = `Merged in ${source && source.branchName}`;
         const pullRequestInfo = `(pull request #${id})`;
@@ -321,7 +319,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
         }
 
-        const approvers = this.state.pr.pr!.participants.filter(p => p.status === 'APPROVED');
+        const approvers = participants.filter(p => p.status === 'APPROVED');
         if (approvers.length > 0) {
             const approverInfo = approvers
                 .map(approver => `Approved-by: ${approver.displayName}`)
@@ -333,12 +331,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     render() {
-        const pr = this.state.pr.pr!;
-
-        if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (!this.state.pr.pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
-        } else if (!pr && !this.state.isOnline) {
+        } else if (!this.state.pr.pr && !this.state.isOnline) {
             return (
                 <div className='bitbucket-page'>
                     <Offline />
@@ -346,6 +342,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             );
         }
 
+        const pr = this.state.pr.pr!.data;
         const isPrOpen = pr.state === "OPEN";
 
         let currentUserApprovalStatus: ApprovalStatus = 'UNAPPROVED';
@@ -410,7 +407,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
-                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/admin/merge-strategies`} /></label>
                                     <Select
                                         options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"
@@ -460,8 +457,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
-                <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repo.displayName} href={this.state.pr.pr!.destination!.repo.url} />} />
-                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repo.url}/pull-requests`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={pr.destination!.repo.displayName} href={pr.destination!.repo.url} />} />
+                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${pr.destination!.repo.url}/pull-requests`} />} />
                 <BreadcrumbsItem component={() => <NavItem text={`Pull request #${pr.id}`} href={pr.url} onCopy={this.handleCopyLink} />} />
             </BreadcrumbsStateless>
         );
@@ -492,7 +489,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 </Tooltip>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
-                                <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
+                                {this.state.pr.currentBranch.length > 0 && <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />}
                                 <div className='ac-flex'>
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branchName === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branchName)}>
                                         {pr.source!.branchName === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
@@ -520,7 +517,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
-                                            <Commits {...this.state.pr} />
+                                            <Commits commits={this.state.pr.commits || []} />
                                         </Panel>
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
                                             <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={this.handleOpenDiffView} ></DiffList>
