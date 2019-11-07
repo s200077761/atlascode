@@ -28,6 +28,9 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
     prId: number;
     participants: User[];
     commentThreads: Comment[][];
+    addedLines: number[];
+    deletedLines: number[];
+    lineContextMap: Object;
 }
 
 export class PullRequestTitlesNode extends AbstractBaseNode {

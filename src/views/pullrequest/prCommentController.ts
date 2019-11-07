@@ -95,15 +95,33 @@ export class PullRequestCommentController implements vscode.Disposable {
     }
 
     async addComment(reply: vscode.CommentReply) {
-        const { site, prHref, prId, path, lhs } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
+        const { site, prHref, prId, path, lhs, addedLines, deletedLines, lineContextMap } = JSON.parse(reply.thread.uri.query) as PRFileDiffQueryParams;
+
+        const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
+
+        const lineNumber = reply.thread.range.start.line + 1;
         const inline = {
-            from: lhs ? reply.thread.range.start.line + 1 : undefined,
-            to: lhs ? undefined : reply.thread.range.start.line + 1,
+            from: lhs ? lineNumber : undefined,
+            to: lhs ? undefined : lineNumber,
             path: path
         };
-        const commentThreadId = reply.thread.comments.length === 0 ? undefined : (reply.thread.comments[0] as PullRequestComment).prCommentThreadId;
+
+        // For Bitbucket Server, the line number on which the comment is added is not always the line on the file.
+        // For added and removed lines, it matches the line number on the file.
+        // But when contents of LHS and RHS match for a line, the line number of the LHS file must be sent.
+        // (Effectively it is the leftmost line number appearing on the unified-diff in the browser)
+        let lineType: 'ADDED' | 'REMOVED' | undefined = undefined;
+        if (inline.to && lineContextMap.hasOwnProperty(lineNumber)) {
+            inline.to = lineContextMap[lineNumber];
+        } else if (addedLines.includes(lineNumber)) {
+            lineType = 'ADDED';
+        } else if (deletedLines.includes(lineNumber)) {
+            lineType = 'REMOVED';
+        }
+
+
         const bbApi = await clientForSite(site);
-        const data = await bbApi.pullrequests.postComment(site, prId, reply.text, commentThreadId, inline);
+        const data = await bbApi.pullrequests.postComment(site, prId, reply.text, commentThreadId, inline, lineType);
 
         const comments = [
             ...reply.thread.comments,

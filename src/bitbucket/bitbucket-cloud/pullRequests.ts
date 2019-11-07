@@ -204,7 +204,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
-            newPath: diffStat.new ? diffStat.new.path! : undefined
+            newPath: diffStat.new ? diffStat.new.path! : undefined,
+            hunkMeta: {
+                oldPathAdditions: [],
+                oldPathDeletions: [],
+                newPathAdditions: [],
+                newPathDeletions: [],
+                newPathContextMap: {}
+            }
         }));
     }
 
