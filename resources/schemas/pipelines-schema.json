@@ -173,10 +173,23 @@
                     }
                 },
                 "caches": {
-                    "$ref": "#/definitions/caches"
+                    "type": "array",
+                    "description": "Caches enabled for the step",
+                    "items": {
+                        "type": "string",
+                        "description": "Name of the cache"
+                    },
+                    "minItems": 1
                 },
                 "services": {
-                    "$ref": "#/definitions/services"
+                    "type": "array",
+                    "description": "Services enabled for the step",
+                    "items": {
+                        "type": "string",
+                        "description": "Name of the service"
+                    },
+                    "minItems": 1,
+                    "maxItems": 5
                 },
                 "trigger": {
                     "type": "string",
@@ -192,64 +205,26 @@
                 },
                 "deployment": {
                     "type": "string",
-                    "description": "Sets the type of environment for your deployment step, used in the Deployments dashboard.\n\nValid values are test, staging, or production.",
-                    "enum": [
-                        "test",
-                        "TEST",
-                        "Test",
-                        "staging",
-                        "STAGING",
-                        "Staging",
-                        "production",
-                        "PRODUCTION",
-                        "Production"
-                    ]
+                    "title": "Type of environment for the deployment step",
+                    "description": "Sets the type of environment for your deployment step, used in the Deployments dashboard."
                 }
             },
             "additionalProperties": false
         },
         "parallel": {
-            "type": "object",
+            "type": "array",
+            "title": "Set of steps to run concurrently",
             "description": "Parallel steps enable you to build and test faster, by running a set of steps at the same time.\n\nThe total number of build minutes used by a pipeline will not change if you make the steps parallel, but you'll be able to see the results sooner.\n\nThere is a limit of 10 for the total number of steps you can run in a pipeline, regardless of whether they are running in parallel or serial.",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "You can add a name to a step to make displays and reports easier to read and understand."
-                },
-                "image": {
-                    "$ref": "#/definitions/image"
-                },
-                "max-time": {
-                    "description": "You can define the maximum time a step can execute for (in minutes) at the global level or step level. Use a whole number greater than 0 and less than 120.\n\nIf you don't specify a max-time, it defaults to 120.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 120
-                },
-                "size": {
-                    "$ref": "#/definitions/size"
-                },
-                "script": {
-                    "$ref": "#/definitions/script"
-                },
-                "after-script": {
-                    "description": "Commands inside an after-script section will run when the step succeeds or fails. This could be useful for clean up commands, test coverage, notifications, or rollbacks you might want to run, especially if your after-script uses the value of BITBUCKET_EXIT_CODE.\n\nNote: If any commands in the after-script section fail:\n\n* we won't run any more commands in that section\n\n* it will not effect the reported status of the step.",
-                    "$ref": "#/definitions/script"
-                },
-                "artifacts": {
-                    "description": "Defines files to be shared from one step to a later step in your pipeline. Artifacts can be defined using glob patterns.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+            "items": {
+                "type": "object",
+                "properties": {
+                    "step": {
+                        "$ref": "#/definitions/step"
                     }
                 },
-                "caches": {
-                    "$ref": "#/definitions/caches"
-                },
-                "services": {
-                    "$ref": "#/definitions/services"
-                }
+                "additionalProperties": false
             },
-            "additionalProperties": false
+            "minItems": 2
         },
         "script": {
             "description": "Contains a list of commands that are executed in sequence. \n\nScripts are executed in the order in which they appear in a step. \n\nWe recommend that you move large scripts to a separate script file and call it from the bitbucket-pipelines.yml.",
@@ -270,38 +245,22 @@
             "description": "Pipes make complex tasks easier, by doing a lot of the work behind the scenes.\nThis means you can just select which pipe you want to use, and supply the necessary variables.\nYou can look at the repository for the pipe to see what commands it is running.\n\nLearn more about pipes: https://confluence.atlassian.com/bitbucket/pipes-958765631.html",
             "properties": {
                 "pipe": {
-                    "description": "Pipes make complex tasks easier, by doing a lot of the work behind the scenes.\nThis means you can just select which pipe you want to use, and supply the necessary variables.\nYou can look at the repository for the pipe to see what commands it is running.\n\nLearn more about pipes: https://confluence.atlassian.com/bitbucket/pipes-958765631.html",
-                    "type": "string"
-                },
-                "task": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "environment": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                    "type": "string",
+                    "title": "Pipe identifier",
+                    "description": "Pipes make complex tasks easier, by doing a lot of the work behind the scenes.\nThis means you can just select which pipe you want to use, and supply the necessary variables.\nYou can look at the repository for the pipe to see what commands it is running.\n\nLearn more about pipes: https://confluence.atlassian.com/bitbucket/pipes-958765631.html"
                 },
                 "variables": {
                     "type": "object",
+                    "description": "Environment variables passed to the pipe",
                     "additionalProperties": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            }
-                        ]
-                    }
+                        "type": "string"
+                    },
+                    "minProperties": 1
                 }
             },
+            "required": [
+                "pipe"
+            ],
             "additionalProperties": false
         },
         "definitions": {
@@ -314,8 +273,7 @@
                 "caches": {
                     "$ref": "#/definitions/caches"
                 }
-            },
-            "additionalProperties": false
+            }
         },
         "services": {
             "type": "object",
@@ -326,13 +284,13 @@
                     "image": {
                         "$ref": "#/definitions/image"
                     },
-                    "environment": {
-                        "type": "object",
-                        "additionalProperties": true
-                    },
                     "variables": {
                         "type": "object",
-                        "additionalProperties": true
+                        "description": "Environment variables passed to the service container",
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "minProperties": 1
                     },
                     "memory": {
                         "type": "integer",
@@ -383,14 +341,17 @@
             "description": "Contains settings for when we clone your repository into a container. Settings here include:\n\n* lfs - Support for Git lfs\n\n* depth - the depth of the Git clone.",
             "properties": {
                 "depth": {
-                    "type": [
-                        "string",
-                        "integer"
+                    "description": "Depth of Git clones for all pipelines (supported only for Git repositories)",
+                    "oneOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        {
+                            "const": "full"
+                        }
                     ],
-                    "enum": [
-                        "full"
-                    ],
-                    "minimum": 1
+                    "default": 50
                 },
                 "lfs": {
                     "type": "boolean"
