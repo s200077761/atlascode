@@ -1,6 +1,6 @@
-import { Container } from "../../container";
+import { User } from "jira-pi-client";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { User } from "../../jira/jira-client/model/entities";
+import { Container } from "../../container";
 
 
 export async function currentUserJira(site: DetailedSiteInfo): Promise<User> {

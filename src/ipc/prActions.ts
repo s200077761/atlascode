@@ -1,6 +1,7 @@
-import { ApprovalStatus, BitbucketIssue, FileChange, Reviewer, Task, Comment } from "../bitbucket/model";
-import { MinimalIssue } from "../jira/jira-client/model/entities";
-import { Branch, Remote } from "../typings/git";
+import { MinimalIssue } from "jira-pi-client";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, Comment, FileChange, Reviewer, Task, WorkspaceRepo } from "../bitbucket/model";
+import { Branch } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
 
@@ -76,7 +77,7 @@ export interface Merge extends Action {
     mergeStrategy?: string;
     commitMessage: string;
     closeSourceBranch?: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export function isMerge(a: Action): a is Merge {
@@ -104,8 +105,8 @@ export function isCheckout(a: Action): a is Checkout {
 
 export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
-    repoUri: string;
-    remote: Remote;
+    workspaceRepo: WorkspaceRepo;
+    site: BitbucketSite;
     reviewers: Reviewer[];
     title: string;
     summary: string;
@@ -113,7 +114,7 @@ export interface CreatePullRequest extends Action {
     destinationBranch: Branch;
     pushLocalChanges: boolean;
     closeSourceBranch: boolean;
-    issue?: MinimalIssue | BitbucketIssue;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export function isCreatePullRequest(a: Action): a is CreatePullRequest {
@@ -122,8 +123,7 @@ export function isCreatePullRequest(a: Action): a is CreatePullRequest {
 
 export interface FetchDetails extends Action {
     action: 'fetchDetails';
-    repoUri: string;
-    remote: Remote;
+    site: BitbucketSite;
     sourceBranch: Branch;
     destinationBranch: Branch;
 }
@@ -148,8 +148,8 @@ export function isOpenPullRequest(a: Action): a is OpenPullRequest {
 
 export interface FetchUsers extends Action {
     action: 'fetchUsers';
+    site: BitbucketSite;
     query: string;
-    remote: Remote;
 }
 
 export function isFetchUsers(a: Action): a is FetchUsers {

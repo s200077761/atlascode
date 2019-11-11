@@ -1,14 +1,14 @@
-import { window, commands } from "vscode";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { issuesForJQL } from "../jira/issuesForJql";
 import { format } from "date-fns";
-import { ProductJira } from "../atlclients/authInfo";
-import { showIssue } from "../commands/jira/showIssue";
-import { MinimalIssue } from "./jira-client/model/entities";
+import { MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
+import { commands, window } from "vscode";
+import { DetailedSiteInfo, ProductJira } from "../atlclients/authInfo";
+import { showIssue } from "../commands/jira/showIssue";
+import { Container } from "../container";
+import { issuesForJQL } from "../jira/issuesForJql";
+import { Logger } from "../logger";
 
-type JQLSettleResult = { jqlName: string, issues: MinimalIssue[] };
+type JQLSettleResult = { jqlName: string, issues: MinimalIssue<DetailedSiteInfo>[] };
 export class NewIssueMonitor {
   private _timestamp = new Date();
 
@@ -53,7 +53,7 @@ export class NewIssueMonitor {
         );
       });
 
-      const foundIssues: MinimalIssue[] = [];
+      const foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
       let jqlResults = await pSettle<JQLSettleResult>(jqlPromises);
       jqlResults.forEach(result => {
@@ -70,7 +70,7 @@ export class NewIssueMonitor {
         }
       });
 
-      const notifyIssues = foundIssues.reduce((result: MinimalIssue[], item: MinimalIssue) => {
+      const notifyIssues = foundIssues.reduce((result: MinimalIssue<DetailedSiteInfo>[], item: MinimalIssue<DetailedSiteInfo>) => {
         if (!result.find(iss => iss.key === item.key && iss.siteDetails.id === item.siteDetails.id)) {
           return result.concat(item);
         } else {
@@ -84,7 +84,7 @@ export class NewIssueMonitor {
     }
   }
 
-  private showNotification(newIssues: MinimalIssue[]) {
+  private showNotification(newIssues: MinimalIssue<DetailedSiteInfo>[]) {
     if (newIssues.length === 0) {
       return;
     }

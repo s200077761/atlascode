@@ -1,11 +1,9 @@
 import { AxiosResponse } from "axios";
-import { getAgent } from "../atlclients/agent";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { workspaceRepoFor } from "../bitbucket/bbUtils";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { Client, ClientError } from "../bitbucket/httpClient";
 import { BitbucketSite } from "../bitbucket/model";
-import { Repository } from "../typings/git";
+import { getAgent } from "../jira/jira-client/providers";
 import { PaginatedPipelines, Pipeline, PipelineCommand, PipelineResult, PipelineStep, PipelineTarget } from "./model";
 
 export class PipelineApiImpl {
@@ -31,13 +29,7 @@ export class PipelineApiImpl {
     );
   }
 
-  async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
-    const wsRepo = workspaceRepoFor(repository);
-    const site = wsRepo.mainSiteRemote.site;
-    if (!site) {
-      return [];
-    }
-
+  async getRecentActivity(site: BitbucketSite): Promise<Pipeline[]> {
     return this.getSinglepagePipelines(site);
   }
 

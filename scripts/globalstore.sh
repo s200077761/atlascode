@@ -31,6 +31,8 @@ then
 	echo "  Display current state of the global store."
 	echo "--delete k"
 	echo "  Removes the given key from the global store."
+	echo "--update k v"
+	echo "  Replaces the key k with the value v"
 	exit 0
 fi
 
@@ -59,3 +61,14 @@ then
 	echo "New contents of global store $ACTUALNEWSTATE"
 fi
 
+if [ $1 = "--update" ]
+then
+	echo "Previous contents of global store $OLDSTATE"
+
+	NEWSTATE=`echo $OLDSTATE | jq -c ".$2 = $3"`
+	sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb "UPDATE ItemTable SET value = '$NEWSTATE' WHERE key = \"atlassian.atlascode\";"
+
+	ACTUALNEWSTATE=`sqlite3 ${CODEPATH}/User/globalStorage/state.vscdb 'select value from ItemTable where key = "atlassian.atlascode";' | jq '.'`
+
+	echo "New contents of global store $ACTUALNEWSTATE"
+fi

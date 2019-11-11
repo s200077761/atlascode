@@ -1,6 +1,6 @@
 import { AxiosResponse } from "axios";
-import { getAgent } from "../../atlclients/agent";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { getAgent } from "../../jira/jira-client/providers";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
 

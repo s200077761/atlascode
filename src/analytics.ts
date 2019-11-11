@@ -228,6 +228,38 @@ export async function prPaginationEvent(): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+export async function moreSettingsButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'moreSettingsButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function doneButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'doneButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
 export async function authenticateButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,

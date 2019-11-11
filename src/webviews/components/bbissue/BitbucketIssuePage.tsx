@@ -155,8 +155,7 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
         return new Promise(resolve => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            // TODO: Fix this after pullrequests api uses site instead of remote
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: undefined! });
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.data.issue.site });
 
             const start = Date.now();
             let timer = setInterval(() => {

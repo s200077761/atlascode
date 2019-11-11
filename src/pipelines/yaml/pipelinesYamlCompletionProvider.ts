@@ -1,13 +1,11 @@
-import {
-    CompletionItemProvider, TextDocument, Position, CompletionItem, CompletionItemKind, SnippetString
-} from 'vscode';
-
 import axios from 'axios';
+import { CompletionItem, CompletionItemKind, CompletionItemProvider, Position, SnippetString, TextDocument } from 'vscode';
+import { addCurlLogging } from '../../atlclients/interceptors';
+import { Container } from '../../container';
+import { getAgent } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
 import { Time } from '../../util/time';
-import { getAgent } from '../../atlclients/agent';
-import { Container } from '../../container';
-import { addCurlLogging } from '../../atlclients/interceptors';
+
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
 

@@ -1,15 +1,14 @@
+import { createEmptyMinimalIssue, createIssueNotFoundIssue, isIssueKeyAndSite, isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from "jira-pi-client";
 import * as vscode from "vscode";
-import { Container } from "../../container";
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite, isIssueKeyAndSite } from "../../jira/jira-client/model/entities";
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from "../../atlclients/authInfo";
+import { Container } from "../../container";
 import { fetchMinimalIssue, getCachedOrFetchMinimalIssue } from "../../jira/fetchIssue";
-import { issueNotFoundIssue } from "../../jira/jira-client/model/emptyEntities";
 import { issueForKey } from "../../jira/issueForKey";
 
-export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite) {
+export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) {
   let issueKey: string = "";
   let site: DetailedSiteInfo = emptySiteInfo;
-  let issue: MinimalIssue = issueNotFoundIssue;
+  let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(site));
 
   if (isMinimalIssue(issueOrKeyAndSite)) {
     issue = issueOrKeyAndSite;
@@ -18,7 +17,7 @@ export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite) {
       issueKey = issueOrKeyAndSite.key;
       site = issueOrKeyAndSite.siteDetails;
     } else {
-      Container.jiraIssueViewManager.createOrShow(issueNotFoundIssue);
+      Container.jiraIssueViewManager.createOrShow(createIssueNotFoundIssue(createEmptyMinimalIssue(site)));
       return;
     }
 
@@ -35,8 +34,8 @@ export async function showIssue(issueOrKeyAndSite: MinimalIssueOrKeyAndSite) {
 
 }
 export async function showIssueForSiteIdAndKey(siteId: string, issueKey: string) {
-  let issue: MinimalIssue = issueNotFoundIssue;
   const site: DetailedSiteInfo | undefined = Container.siteManager.getSiteForId(ProductJira, siteId);
+  let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(emptySiteInfo));
 
   if (site) {
     const cachedOrFetched = await getCachedOrFetchMinimalIssue(issueKey, site);
@@ -51,7 +50,7 @@ export async function showIssueForSiteIdAndKey(siteId: string, issueKey: string)
 }
 
 export async function showIssueForKey(issueKey?: string) {
-  let issue: MinimalIssue = issueNotFoundIssue;
+  let issue: MinimalIssue<DetailedSiteInfo> = createIssueNotFoundIssue(createEmptyMinimalIssue(emptySiteInfo));
 
   if (issueKey === undefined) {
     const input = await vscode.window.showInputBox({ prompt: 'Enter issue key' });

@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from './abstractBaseNode';
-import { PullRequest, Comment, Commit } from '../../bitbucket/model';
-import { Container } from '../../container';
-import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
-import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
 import { ProductBitbucket } from '../../atlclients/authInfo';
+import { extractBitbucketIssueKeys } from '../../bitbucket/issueKeysExtractor';
+import { Comment, Commit, PullRequest } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { StaticBitbucketIssuesNode } from '../bbissues/staticBbIssuesNode';
+import { AbstractBaseNode } from './abstractBaseNode';
 
 export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
     private _delegate: StaticBitbucketIssuesNode;
@@ -21,7 +21,7 @@ export class RelatedBitbucketIssuesNode extends AbstractBaseNode {
         const issueKeys = await extractBitbucketIssueKeys(pr, commits, allComments);
         if (issueKeys.length > 0) {
             const node = new RelatedBitbucketIssuesNode();
-            node._delegate = new StaticBitbucketIssuesNode(pr.repository, issueKeys);
+            node._delegate = new StaticBitbucketIssuesNode(pr.site, issueKeys);
             return node;
         }
         return undefined;

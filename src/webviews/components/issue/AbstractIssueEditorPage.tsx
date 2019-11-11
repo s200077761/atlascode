@@ -1,34 +1,32 @@
-import * as React from 'react';
-import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
-import { WebviewComponent } from "../WebviewComponent";
-import { CreatedSelectOption, LabelList, UserList, IssueEditError, isIssueEditError, IssueSuggestionsList } from "../../../ipc/issueMessaging";
-import * as FieldValidators from "../fieldValidators";
-import { Field, ErrorMessage, CheckboxField, Fieldset, HelperMessage } from '@atlaskit/form';
-import { MinimalIssueOrKeyAndSite, CommentVisibility, JsdInternalCommentVisibility } from '../../../jira/jira-client/model/entities';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import EdiText, { EdiTextType } from 'react-editext';
-import Spinner from '@atlaskit/spinner';
-import { ButtonGroup } from '@atlaskit/button';
-import Button from '@atlaskit/button';
-import InlineSubtaskEditor from './InlineSubtaskEditor';
-import InlineIssueLinksEditor from './InlineIssueLinkEditor';
-import { IssuePickerIssue } from '../../../jira/jira-client/model/responses';
-import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
-import * as SelectFieldHelper from '../selectFieldHelper';
-import Select, { CreatableSelect, AsyncSelect, AsyncCreatableSelect } from '@atlaskit/select';
-import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
-import { ParticipantList } from './ParticipantList';
-import { Checkbox } from '@atlaskit/checkbox';
-import { RadioGroup } from '@atlaskit/radio';
-import debounce from "lodash.debounce";
-import { AttachmentForm } from './AttachmentForm';
-import { distanceInWordsToNow } from 'date-fns';
 import Avatar from '@atlaskit/avatar';
-import { colorToLozengeAppearanceMap } from '../colors';
+import Button, { ButtonGroup } from '@atlaskit/button';
+import { Checkbox } from '@atlaskit/checkbox';
+import { DatePicker, DateTimePicker } from '@atlaskit/datetime-picker';
+import { CheckboxField, ErrorMessage, Field, Fieldset, HelperMessage } from '@atlaskit/form';
 import Lozenge from "@atlaskit/lozenge";
-import { Time } from '../../../util/time';
+import { RadioGroup } from '@atlaskit/radio';
+import Select, { AsyncCreatableSelect, AsyncSelect, CreatableSelect } from '@atlaskit/select';
+import Spinner from '@atlaskit/spinner';
+import { distanceInWordsToNow } from 'date-fns';
+import { FieldUI, FieldUIs, FieldValues, InputFieldUI, OptionableFieldUI, SelectFieldUI, UIType, ValueType } from 'jira-metaui-transformer';
+import { CommentVisibility, IssuePickerIssue, JsdInternalCommentVisibility, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
+import debounce from "lodash.debounce";
+import * as React from 'react';
+import EdiText, { EdiTextType } from 'react-editext';
 import uuid from 'uuid';
-import { FieldValues, FieldUI, ValueType, SelectFieldUI, FieldUIs, UIType, InputFieldUI, OptionableFieldUI } from 'jira-metaui-transformer';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { CreatedSelectOption, isIssueEditError, IssueEditError, IssueSuggestionsList, LabelList, UserList } from "../../../ipc/issueMessaging";
+import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
+import { Time } from '../../../util/time';
+import { colorToLozengeAppearanceMap } from '../colors';
+import * as FieldValidators from "../fieldValidators";
+import * as SelectFieldHelper from '../selectFieldHelper';
+import { WebviewComponent } from "../WebviewComponent";
+import { AttachmentForm } from './AttachmentForm';
+import InlineIssueLinksEditor from './InlineIssueLinkEditor';
+import InlineSubtaskEditor from './InlineSubtaskEditor';
+import { ParticipantList } from './ParticipantList';
 
 type Func = (...args: any[]) => any;
 type FuncOrUndefined = Func | undefined;
@@ -186,7 +184,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
         this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
     };
 
-    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite) => {
+    protected handleOpenIssue = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {
         let issueObj = issueOrKey;
 
         if (typeof issueOrKey === 'string') {

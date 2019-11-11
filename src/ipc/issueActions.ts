@@ -1,7 +1,7 @@
-import { Action } from "./messaging";
-import { MinimalIssue, Transition, IssueKeyAndSite, MinimalIssueOrKeyAndSite, User, IssueType, isIssueType, Project, CommentVisibility } from "../jira/jira-client/model/entities";
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "jira-metaui-transformer";
+import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { FieldValues, ValueType, IssueLinkTypeSelectOption } from "jira-metaui-transformer";
+import { Action } from "./messaging";
 
 export interface RefreshIssueAction extends Action {
     action: 'refreshIssue';
@@ -14,20 +14,20 @@ export interface EditIssueAction extends Action {
 
 export interface TransitionIssueAction extends Action {
     action: 'transitionIssue';
-    issue: MinimalIssueOrKeyAndSite;
+    issue: MinimalIssueOrKeyAndSite<DetailedSiteInfo>;
     transition: Transition;
 }
 
 export interface IssueCommentAction extends Action {
     action: 'comment';
-    issue: IssueKeyAndSite;
+    issue: IssueKeyAndSite<DetailedSiteInfo>;
     comment: string;
     restriction?: CommentVisibility;
 }
 
 export interface IssueAssignAction extends Action {
     action: 'assign';
-    issue: MinimalIssue;
+    issue: MinimalIssue<DetailedSiteInfo>;
     userId?: string;
 }
 
@@ -39,7 +39,7 @@ export interface SetIssueTypeAction extends Action {
 
 export interface OpenJiraIssueAction extends Action {
     action: 'openJiraIssue';
-    issueOrKey: MinimalIssueOrKeyAndSite;
+    issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>;
 }
 
 export interface CopyJiraIssueLinkAction extends Action {
@@ -99,14 +99,14 @@ export interface StartWorkAction extends Action {
     repoUri: string;
     sourceBranchName: string;
     branchName: string;
-    remote: string;
+    remoteName: string;
     setupJira: boolean;
     setupBitbucket: boolean;
 }
 
 export interface OpenStartWorkPageAction extends Action {
     action: 'openStartWorkPage';
-    issue: MinimalIssue;
+    issue: MinimalIssue<DetailedSiteInfo>;
 }
 
 export interface CreateWorklogAction extends Action {

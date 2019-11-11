@@ -1,10 +1,8 @@
 import { AxiosResponse } from 'axios';
-import { getAgent } from "../../atlclients/agent";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Repository } from "../../typings/git";
-import { workspaceRepoFor } from "../bbUtils";
+import { getAgent } from '../../jira/jira-client/providers';
 import { Client, ClientError } from "../httpClient";
-import { BitbucketIssue, BitbucketSite, Comment, emptyBitbucketSite, PaginatedBitbucketIssues, PaginatedComments, UnknownUser } from "../model";
+import { BitbucketIssue, BitbucketSite, Comment, emptyBitbucketSite, PaginatedBitbucketIssues, PaginatedComments, UnknownUser, WorkspaceRepo } from "../model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
@@ -38,9 +36,7 @@ export class BitbucketIssuesApiImpl {
     // ---- BEGIN - Actions NOT on a specific issue ----
     // ---- => ensure Bitbucket issues are enabled for the repo
 
-    async getList(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        const workspaceRepo = workspaceRepoFor(repository);
-
+    async getList(workspaceRepo: WorkspaceRepo): Promise<PaginatedBitbucketIssues> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
             return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };
@@ -94,9 +90,7 @@ export class BitbucketIssuesApiImpl {
         return results.filter(result => !!result).map(result => ({ site, data: result.data }));
     }
 
-    async getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        const workspaceRepo = workspaceRepoFor(repository);
-
+    async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedBitbucketIssues> {
         const site = workspaceRepo.mainSiteRemote.site;
         if (!site) {
             return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };

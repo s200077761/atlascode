@@ -1,16 +1,16 @@
 import { commands, window } from "vscode";
-import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
+import { clientForSite } from "../../bitbucket/bbUtils";
+import { WorkspaceRepo } from "../../bitbucket/model";
 import { Commands } from "../../commands";
 import { Container } from "../../container";
 import { Pipeline, PipelineTarget } from "../../pipelines/model";
-import { Repository } from "../../typings/git";
 import { descriptionForState, generatePipelineTitle, shouldDisplay } from "./Helpers";
 import { PipelineInfo } from "./PipelinesTree";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
 
-  constructor(private _repositories: Repository[]) {
+  constructor(private _repositories: WorkspaceRepo[]) {
   }
 
   async checkForNewActivity() {
@@ -18,16 +18,19 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       return;
     }
     for (var i = 0; i < this._repositories.length; i++) {
-      const repo = this._repositories[i];
-      const previousResults = this._previousResults[repo.rootUri.path];
+      const wsRepo = this._repositories[i];
+      const previousResults = this._previousResults[wsRepo.rootUri];
 
-      const remote = firstBitbucketRemote(repo);
-      const bbApi = await clientForRemote(remote);
+      const site = wsRepo.mainSiteRemote.site;
+      if (!site) {
+        return;
+      }
+      const bbApi = await clientForSite(site);
 
       if (!bbApi.pipelines) {
         return; //Bitbucket Server instances will not have pipelines
       }
-      bbApi.pipelines.getRecentActivity(repo).then(newResults => {
+      bbApi.pipelines.getRecentActivity(site).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
         diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
         const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
@@ -45,7 +48,7 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
             }
           });
         }
-        this._previousResults[repo.rootUri.path] = newResults;
+        this._previousResults[wsRepo.rootUri] = newResults;
       });
     }
   }

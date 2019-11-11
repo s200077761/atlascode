@@ -1,22 +1,23 @@
-import * as vscode from 'vscode';
-import { Logger } from '../logger';
+import axios, { AxiosInstance } from 'axios';
+import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
-import { Resources } from '../resources';
-import { Time } from '../util/time';
-import { OAuthProvider, OAuthResponse, ProductJira, ProductBitbucket, AccessibleResource, UserInfo, emptyUserInfo, SiteInfo } from './authInfo';
-import { Disposable } from 'vscode';
-import axios, { AxiosInstance } from 'axios';
-import { URL } from 'url';
-import { JiraProdStrategy, JiraStagingStrategy, BitbucketProdStrategy, BitbucketStagingStrategy } from './strategy';
+import { getProxyHostAndPort } from 'jira-pi-client';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
-import EventEmitter from 'eventemitter3';
-import { v4 } from 'uuid';
-import { getAgent, getProxyHostAndPort } from './agent';
+import { URL } from 'url';
 import { promisify } from 'util';
+import { v4 } from 'uuid';
+import * as vscode from 'vscode';
+import { Disposable } from 'vscode';
 import { Container } from '../container';
+import { getAgent } from '../jira/jira-client/providers';
+import { Logger } from '../logger';
+import { Resources } from '../resources';
+import { Time } from '../util/time';
+import { AccessibleResource, emptyUserInfo, OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo, UserInfo } from './authInfo';
 import { addCurlLogging } from './interceptors';
+import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
 
 const vscodeurl = vscode.version.endsWith('-insider') ? 'vscode-insiders://atlassian.atlascode/openSettings' : 'vscode://atlassian.atlascode/openSettings';
 

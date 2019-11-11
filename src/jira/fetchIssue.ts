@@ -1,13 +1,8 @@
-import { Container } from "../container";
+import { CreateIssueScreenTransformer, CreateMetaTransformerResult, EditIssueScreenTransformer, Fields, FieldTransformerResult, IssueCreateMetadata, IssueLinkType } from 'jira-metaui-transformer';
+import { DEFAULT_API_VERSION, emptyProjectIssueCreateMetadata, isMinimalIssue, MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { MinimalIssue, MinimalORIssueLink, IssueLinkType, isMinimalIssue } from "./jira-client/model/entities";
-import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
-import { CreateIssueScreenTransformer, Fields, EditIssueScreenTransformer, FieldTransformerResult } from 'jira-metaui-transformer';
-import { API_VERSION } from "./jira-client/client";
-import { CreateMetaTransformerResult } from "jira-metaui-transformer";
-import { IssueCreateMetadata } from "jira-metaui-transformer";
+import { Container } from "../container";
 import { EditIssueUI } from "./jira-client/model/editIssueUI";
-import { emptyProjectIssueCreateMetadata } from "./jira-client/model/emptyEntities";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
   const client = await Container.clientManager.jiraClient(siteDetails);
@@ -39,7 +34,7 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
 
 }
 
-export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink> {
+export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink<DetailedSiteInfo>> {
   let foundIssue = await getCachedIssue(issueKey);
 
   if (!foundIssue) {
@@ -49,11 +44,11 @@ export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails
   return foundIssue;
 }
 
-export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
+export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
   return await Container.jiraExplorer.findIssue(issueKey);
 }
 
-export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {
+export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>> {
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
   const client = await Container.clientManager.jiraClient(siteDetails);
 
@@ -61,7 +56,7 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
   return minimalIssueFromJsonObject(res, siteDetails, await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails));
 }
 
-export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI> {
+export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI> {
   const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails);
   const issueLinkTypes: IssueLinkType[] = await Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails);
 
@@ -91,7 +86,7 @@ export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI
     isEpic: issue.isEpic,
     epicChildren: issue.epicChildren,
     epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails),
-    apiVersion: API_VERSION,
+    apiVersion: DEFAULT_API_VERSION,
 
   };
 

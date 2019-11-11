@@ -1,13 +1,13 @@
-import { Disposable, EventEmitter, Event, ConfigurationChangeEvent } from "vscode";
-import { configuration } from "../config/configuration";
-import { Container } from "../container";
-import { Logger } from "../logger";
-import { Time } from "./time";
+import axios, { AxiosInstance } from 'axios';
 import pAny from "p-any";
 import pRetry from "p-retry";
-import axios, { AxiosInstance } from 'axios';
-import { getAgent } from "../atlclients/agent";
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from "vscode";
 import { addCurlLogging } from "../atlclients/interceptors";
+import { configuration } from "../config/configuration";
+import { Container } from "../container";
+import { getAgent } from "../jira/jira-client/providers";
+import { Logger } from "../logger";
+import { Time } from "./time";
 
 
 export type OnlineInfoEvent = {

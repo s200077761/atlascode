@@ -1,36 +1,36 @@
+import FormData from 'form-data';
+import * as fs from "fs";
+import { FieldValues, readIssueLinkIssue, User, ValueType } from "jira-metaui-transformer";
+import { createEmptyMinimalIssue, emptyUser, isEmptyUser, IssueLinkIssueKeys, MinimalIssue, readSearchResults } from "jira-pi-client";
+import { commands, env, window } from "vscode";
+import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
+import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from "../atlclients/authInfo";
+import { clientForSite } from "../bitbucket/bbUtils";
+import { PullRequestData } from "../bitbucket/model";
+import { Commands } from "../commands";
+import { postComment } from "../commands/jira/postComment";
+import { startWorkOnIssue } from "../commands/jira/startWorkOnIssue";
+import { Container } from "../container";
+import { EditIssueAction, isAddAttachmentsAction, isCreateIssue, isCreateIssueLink, isCreateWorklog, isDeleteByIDAction, isIssueComment, isOpenStartWorkPageAction, isTransitionIssue, isUpdateVoteAction, isUpdateWatcherAction } from "../ipc/issueActions";
+import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
+import { Action, onlineStatus } from "../ipc/messaging";
+import { isOpenPullRequest } from "../ipc/prActions";
+import { fetchEditIssueUI, fetchMinimalIssue } from "../jira/fetchIssue";
+import { parseJiraIssueKeys } from "../jira/issueKeyParser";
+import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { transitionIssue } from "../jira/transitionIssue";
+import { Logger } from "../logger";
 import { AbstractIssueEditorWebview } from "./abstractIssueEditorWebview";
 import { InitializingWebview } from "./abstractWebview";
-import { MinimalIssue, IssueLinkIssueKeys, readIssueLinkIssue, User } from "../jira/jira-client/model/entities";
-import { Action, onlineStatus } from "../ipc/messaging";
-import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
-import { Container } from "../container";
-import { fetchEditIssueUI, fetchMinimalIssue } from "../jira/fetchIssue";
-import { Logger } from "../logger";
-import { EditIssueData, emptyEditIssueData } from "../ipc/issueMessaging";
-import { EditIssueAction, isIssueComment, isCreateIssue, isCreateIssueLink, isTransitionIssue, isCreateWorklog, isUpdateWatcherAction, isUpdateVoteAction, isAddAttachmentsAction, isDeleteByIDAction, isOpenStartWorkPageAction } from "../ipc/issueActions";
-import { emptyMinimalIssue, emptyUser, isEmptyUser } from "../jira/jira-client/model/emptyEntities";
-import { postComment } from "../commands/jira/postComment";
-import { commands, env, window } from "vscode";
-import { Commands } from "../commands";
-import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
-import { transitionIssue } from "../jira/transitionIssue";
-import { parseJiraIssueKeys } from "../jira/issueKeyParser";
-import { PullRequestData } from "../bitbucket/model";
-import { startWorkOnIssue } from "../commands/jira/startWorkOnIssue";
-import { isOpenPullRequest } from "../ipc/prActions";
-import { clientForRemote } from "../bitbucket/bbUtils";
-import { readSearchResults } from "../jira/jira-client/model/responses";
-import { DetailedSiteInfo, Product, ProductJira } from "../atlclients/authInfo";
-import { FieldValues, ValueType } from "jira-metaui-transformer";
 
-export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue> {
-    private _issue: MinimalIssue;
+export class JiraIssueWebview extends AbstractIssueEditorWebview implements InitializingWebview<MinimalIssue<DetailedSiteInfo>> {
+    private _issue: MinimalIssue<DetailedSiteInfo>;
     private _editUIData: EditIssueData;
     private _currentUser: User;
 
     constructor(extensionPath: string) {
         super(extensionPath);
-        this._issue = emptyMinimalIssue;
+        this._issue = createEmptyMinimalIssue(emptySiteInfo);
         this._editUIData = emptyEditIssueData;
         this._currentUser = emptyUser;
     }
@@ -50,7 +50,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
         return ProductJira;
     }
 
-    async initialize(issue: MinimalIssue) {
+    async initialize(issue: MinimalIssue<DetailedSiteInfo>) {
         this._issue = issue;
 
         if (!Container.onlineDetector.isOnline()) {
@@ -546,7 +546,19 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         handled = true;
                         try {
                             let client = await Container.clientManager.jiraClient(msg.site);
-                            const resp = await client.addAttachments(msg.issueKey, msg.files);
+
+                            let formData = new FormData();
+                            msg.files.forEach((file: any) => {
+                                formData.append('file'
+                                    , fs.createReadStream(file.path)
+                                    , {
+                                        filename: file.name,
+                                        contentType: file.type,
+                                    }
+                                );
+                            });
+
+                            const resp = await client.addAttachments(msg.issueKey, formData);
 
                             if (!this._editUIData.fieldValues['attachment']
                                 || !Array.isArray(this._editUIData.fieldValues['attachment'])
@@ -644,7 +656,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         // TODO: [VSCODE-606] abstract madness for calling Commands.BitbucketShowPullRequestDetails into a reusable function
                         const pr = (await Container.bitbucketContext.recentPullrequestsForAllRepos()).find(p => p.data.url === msg.prHref);
                         if (pr) {
-                            const bbApi = await clientForRemote(pr.remote);
+                            const bbApi = await clientForSite(pr.site);
                             commands.executeCommand(Commands.BitbucketShowPullRequestDetails, await bbApi.pullrequests.get(pr));
                         } else {
                             Logger.error(new Error(`error opening pullrequest: ${msg.prHref}`));

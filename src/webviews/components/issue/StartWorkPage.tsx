@@ -5,19 +5,20 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { CreatableSelect } from '@atlaskit/select';
+import { Transition } from 'jira-metaui-transformer';
+import { createEmptyMinimalIssue, emptyTransition, isMinimalIssue, MinimalIssue } from 'jira-pi-client';
 import * as path from 'path';
 import * as React from "react";
 import EdiText from 'react-editext';
-import { BitbucketIssue } from '../../../bitbucket/model';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { BitbucketIssue, emptyBitbucketSite, SiteRemote } from '../../../bitbucket/model';
 import { CopyBitbucketIssueLink, OpenBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
 import { isStartWorkOnBitbucketIssueData, StartWorkOnBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { CopyJiraIssueLinkAction, OpenJiraIssueAction, RefreshIssueAction, StartWorkAction } from "../../../ipc/issueActions";
 import { isStartWorkOnIssueData, isStartWorkOnIssueResult, StartWorkOnIssueData, StartWorkOnIssueResult } from "../../../ipc/issueMessaging";
 import { HostErrorMessage } from "../../../ipc/messaging";
 import { BranchType, RepoData } from "../../../ipc/prMessaging";
-import { emptyMinimalIssue, emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
-import { isMinimalIssue, MinimalIssue, Transition } from "../../../jira/jira-client/model/entities";
-import { Branch, Remote } from "../../../typings/git";
+import { Branch } from "../../../typings/git";
 import { AtlLoader } from "../AtlLoader";
 import ErrorBanner from "../ErrorBanner";
 import * as FieldValidators from "../fieldValidators";
@@ -29,7 +30,7 @@ import { TransitionMenu } from "./TransitionMenu";
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
 
-const emptyRepoData: RepoData = { uri: '', remotes: [], defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 
 type State = {
   data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData;
@@ -42,7 +43,7 @@ type State = {
   localBranch?: string;
   existingBranchOptions: string[],
   repo: RepoData;
-  remote?: Remote;
+  siteRemote?: SiteRemote;
   isStartButtonLoading: boolean;
   result: StartWorkOnIssueResult;
   isErrorBannerOpen: boolean;
@@ -51,7 +52,7 @@ type State = {
 };
 
 const emptyState: State = {
-  data: { type: 'update', issue: emptyMinimalIssue, repoData: [] },
+  data: { type: 'update', issue: createEmptyMinimalIssue(emptySiteInfo), repoData: [] },
   issueType: 'jiraIssue',
   jiraSetupEnabled: true,
   bitbucketSetupEnabled: true,
@@ -185,8 +186,8 @@ export default class StartWorkPage extends WebviewComponent<
     });
   };
 
-  handleRemoteChange = (newValue: Remote) => {
-    this.setState({ remote: newValue });
+  handleSiteRemoteChange = (newValue: SiteRemote) => {
+    this.setState({ siteRemote: newValue });
   };
 
   handleStart = () => {
@@ -200,10 +201,10 @@ export default class StartWorkPage extends WebviewComponent<
 
     this.postMessage({
       action: 'startWork',
-      repoUri: this.state.repo.uri,
+      repoUri: this.state.repo.workspaceRepo.rootUri,
       branchName: branchName,
       sourceBranchName: this.state.sourceBranch ? this.state.sourceBranch.name! : '',
-      remote: this.state.remote ? this.state.remote.name : '',
+      remoteName: this.state.siteRemote ? this.state.siteRemote.remote.name : '',
       transition: this.state.transition,
       setupJira: this.state.jiraSetupEnabled,
       setupBitbucket: this.isEmptyRepo(this.state.repo) ? false : this.state.bitbucketSetupEnabled
@@ -222,10 +223,9 @@ export default class StartWorkPage extends WebviewComponent<
     const localBranch = this.state.localBranch || `${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`;
     const sourceBranch = this.state.sourceBranch || repo.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1) || repo.localBranches[0];
 
-    let remote = this.state.remote;
-    if (!this.state.remote && repo.remotes.length >= 0) {
-      const firstRemote = repo.remotes.find(r => r.name === 'origin') || repo.remotes[0];
-      remote = firstRemote;
+    let siteRemote = this.state.siteRemote;
+    if (!this.state.siteRemote) {
+      siteRemote = repo.workspaceRepo.mainSiteRemote;
     }
 
     this.setState({
@@ -237,7 +237,7 @@ export default class StartWorkPage extends WebviewComponent<
       existingBranchOptions: branchOptions,
       localBranch: localBranch,
       branchType: repo.branchTypes.length > 0 ? repo.branchTypes[0] : undefined,
-      remote: remote,
+      siteRemote: siteRemote,
       bitbucketSetupEnabled: this.isEmptyRepo(repo) ? false : this.state.bitbucketSetupEnabled,
       isErrorBannerOpen: false, errorDetails: undefined
     });
@@ -326,7 +326,7 @@ export default class StartWorkPage extends WebviewComponent<
                 <div style={{ margin: 10, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                   <div style={{ margin: 10 }}>
                     <label>Select new status</label>
-                    <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
+                    <TransitionMenu transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions} currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status} isStatusButtonLoading={false} onStatusChange={this.handleStatusChange} />
                   </div>
                 </div>
               }
@@ -362,7 +362,7 @@ export default class StartWorkPage extends WebviewComponent<
                         className="ac-select-container"
                         classNamePrefix="ac-select"
                         options={this.state.data.repoData}
-                        getOptionLabel={(option: RepoData) => this.isEmptyRepo(option) ? 'No repositories found...' : path.basename(option.uri)}
+                        getOptionLabel={(option: RepoData) => this.isEmptyRepo(option) ? 'No repositories found...' : path.basename(option.workspaceRepo.rootUri)}
                         getOptionValue={(option: RepoData) => option}
                         onChange={this.handleRepoChange}
                         placeholder='Loading...'
@@ -433,17 +433,17 @@ export default class StartWorkPage extends WebviewComponent<
                       </SectionMessage>
                     }
                   </div>
-                  {repo.remotes.length > 1 &&
+                  {repo.workspaceRepo.siteRemotes.length > 1 &&
                     <div>
                       <label>Set upstream to</label>
                       <Select
                         className="ac-select-container"
                         classNamePrefix="ac-select"
-                        options={repo.remotes}
-                        getOptionLabel={(option: Remote) => option.name}
-                        getOptionValue={(option: Remote) => option}
-                        onChange={this.handleRemoteChange}
-                        value={this.state.remote} />
+                        options={repo.workspaceRepo.siteRemotes}
+                        getOptionLabel={(option: SiteRemote) => option.remote.name}
+                        getOptionValue={(option: SiteRemote) => option}
+                        onChange={this.handleSiteRemoteChange}
+                        value={this.state.siteRemote} />
                     </div>
                   }
                 </div>

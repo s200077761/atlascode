@@ -1,23 +1,22 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Repository, Remote } from '../../typings/git';
-import { PullRequestTitlesNode, NextPageNode, PullRequestContextValue } from './pullRequestNode';
-import { PaginatedPullRequests, PullRequest } from '../../bitbucket/model';
-import { SimpleNode } from '../nodes/simpleNode';
+import { PaginatedPullRequests, PullRequest, WorkspaceRepo } from '../../bitbucket/model';
 import { Container } from '../../container';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
+import { SimpleNode } from '../nodes/simpleNode';
+import { NextPageNode, PullRequestContextValue, PullRequestTitlesNode } from './pullRequestNode';
 
 export class RepositoriesNode extends AbstractBaseNode {
+    private treeItem: vscode.TreeItem;
     private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
 
     constructor(
-        public fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests>,
-        private repository: Repository,
-        private remote: Remote,
+        public fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests>,
+        private workspaceRepo: WorkspaceRepo,
         private expand?: boolean
     ) {
         super();
+        this.treeItem = this.createTreeItem();
         this.disposables.push(({
             dispose: () => {
                 if (this._children) {
@@ -32,12 +31,26 @@ export class RepositoriesNode extends AbstractBaseNode {
         }));
     }
 
+    private createTreeItem(): vscode.TreeItem {
+        const directory = path.basename(this.workspaceRepo.rootUri);
+        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = this.workspaceRepo.rootUri;
+        item.contextValue = PullRequestContextValue;
+
+        const site = this.workspaceRepo.mainSiteRemote.site!;
+        item.resourceUri = vscode.Uri.parse(site.details.isCloud
+            ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/pull-requests`
+            : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/pull-requests`);
+
+        return item;
+    }
+
     async refresh() {
         const previousChildrenHrefs = (this._children || [])
             .filter(child => child instanceof PullRequestTitlesNode)
             .map(child => (child as PullRequestTitlesNode).prHref);
 
-        let prs = await this.fetcher(this.repository, this.remote);
+        let prs = await this.fetcher(this.workspaceRepo);
         this._children = prs.data.map(pr => this.createChildNode(pr));
         if (prs.next) { this._children!.push(new NextPageNode(prs)); }
 
@@ -47,6 +60,18 @@ export class RepositoriesNode extends AbstractBaseNode {
                 Container.bitbucketContext.prCommentController.disposePR(prHref);
             }
         });
+    }
+
+    findResource(uri: vscode.Uri): AbstractBaseNode | undefined {
+        if (this.getTreeItem().resourceUri && this.getTreeItem().resourceUri!.toString() === uri.toString()) {
+            return this;
+        }
+        for (const child of this._children || []) {
+            if (child.getTreeItem().resourceUri && child.getTreeItem().resourceUri!.toString() === uri.toString()) {
+                return child;
+            }
+        }
+        return undefined;
     }
 
     addItems(prs: PaginatedPullRequests): void {
@@ -65,18 +90,7 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const directory = path.basename(this.repository.rootUri.fsPath);
-        const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this.repository.rootUri.fsPath;
-        item.contextValue = PullRequestContextValue;
-        const repoName = parseGitUrl(urlForRemote(this.remote)).full_name;
-        const site = siteDetailsForRemote(this.remote);
-
-        if (site) {
-            item.resourceUri = vscode.Uri.parse(`${site.baseLinkUrl}/${repoName}/pull-requests`);
-        }
-
-        return item;
+        return this.treeItem;
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {

@@ -1,12 +1,13 @@
-import * as React from 'react';
 import Button from '@atlaskit/button';
+import Lozenge from "@atlaskit/lozenge";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
-import Lozenge from "@atlaskit/lozenge";
-import { MinimalIssueOrKeyAndSite, IssueLinkIssue } from '../../../jira/jira-client/model/entities';
+import { IssueLinkIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
+import * as React from 'react';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { colorToLozengeAppearanceMap } from '../colors';
 
-type ItemData = { issue: IssueLinkIssue, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void };
+type ItemData = { issue: IssueLinkIssue<DetailedSiteInfo>, onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void };
 
 const IssueKey = (data: ItemData) =>
     <div className='ac-flex-space-between'>
@@ -34,7 +35,7 @@ const StatusColumn = (data: ItemData) => {
     return <React.Fragment />;
 };
 
-export default class IssueList extends React.Component<{ issues: IssueLinkIssue[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite) => void }, {}> {
+export default class IssueList extends React.Component<{ issues: IssueLinkIssue<DetailedSiteInfo>[], onIssueClick: (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => void }, {}> {
     constructor(props: any) {
         super(props);
     }

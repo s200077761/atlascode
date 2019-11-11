@@ -1,26 +1,20 @@
-import {
-  ConfigurationChangeEvent,
-  ExtensionContext,
-  Disposable,
-} from "vscode";
-import { JiraClient } from "../jira/jira-client/client";
-import { SiteInfo, DetailedSiteInfo, AuthInfo, isOAuthInfo, isBasicAuthInfo } from "./authInfo";
-import { Container } from "../container";
-import { CacheMap, Interval } from "../util/cachemap";
-import { configuration } from "../config/configuration";
-import { Logger } from "../logger";
-//import { getJiraCloudBaseUrl } from "./serverInfo";
-import { cannotGetClientFor } from "../constants";
-import { JiraCloudClient } from "../jira/jira-client/cloudClient";
-import { JiraServerClient } from "../jira/jira-client/serverClient";
-import { BitbucketApi } from "../bitbucket/model";
+import { getProxyHostAndPort, JiraClient, JiraCloudClient, JiraServerClient } from "jira-pi-client";
+import { ConfigurationChangeEvent, Disposable, ExtensionContext } from "vscode";
+import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
-import { PipelineApiImpl } from "../pipelines/pipelines";
-import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
 import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
-import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
-import { getProxyHostAndPort } from "./agent";
+import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
+import { BitbucketApi } from "../bitbucket/model";
+import { configuration } from "../config/configuration";
+//import { getJiraCloudBaseUrl } from "./serverInfo";
+import { cannotGetClientFor } from "../constants";
+import { Container } from "../container";
+import { getAgent, jiraCloudAuthProvider, jiraServerAuthProvider, jiraTransportFactory } from "../jira/jira-client/providers";
+import { Logger } from "../logger";
+import { PipelineApiImpl } from "../pipelines/pipelines";
+import { CacheMap, Interval } from "../util/cachemap";
+import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, SiteInfo } from "./authInfo";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -101,16 +95,17 @@ export class ClientManager implements Disposable {
 
   }
 
-  public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient> {
-    return this.getClient<JiraClient>(
+  public async jiraClient(site: DetailedSiteInfo): Promise<JiraClient<DetailedSiteInfo>> {
+    return this.getClient<JiraClient<DetailedSiteInfo>>(
       site,
       info => {
         let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          client = new JiraCloudClient(info.access, site);
+          //client = new JiraCloudClient(info.access, site);
+          client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access), getAgent);
         } else if (isBasicAuthInfo(info)) {
-          client = new JiraServerClient(info.username, info.password, site);
+          client = new JiraServerClient(site, jiraTransportFactory, jiraServerAuthProvider(info.username, info.password), getAgent);
         }
 
         return client;

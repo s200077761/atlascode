@@ -1,6 +1,6 @@
+import AvatarGroup from '@atlaskit/avatar-group';
 import * as React from "react";
 import { PRData } from '../../../ipc/prMessaging';
-import AvatarGroup from '@atlaskit/avatar-group';
 
 const avatarStatus = {
     'APPROVED': 'approved',
@@ -18,8 +18,8 @@ export default class Reviewers extends React.Component<PRData, {}> {
     }
 
     render() {
-        if (!this.props.pr!.participants || this.props.pr!.participants.length === 0) { return <p>No reviewers!</p>; }
-        const participants = this.props.pr!.participants!
+        if (!this.props.pr!.data.participants || this.props.pr!.data.participants.length === 0) { return <p>No reviewers!</p>; }
+        const participants = this.props.pr!.data.participants!
             // always show reviewers & show non-reviewers if they have approved or marked needs work
             .filter(p => p.status !== 'UNAPPROVED' || p.role === 'REVIEWER')
             .sort((a, b) => a.status < b.status ? 0 : 1)
