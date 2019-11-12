@@ -111,7 +111,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
             commentThreads: lhsCommentThreads,
             addedLines: fileChange.hunkMeta.oldPathAdditions,
             deletedLines: fileChange.hunkMeta.oldPathDeletions,
-            lineContextMap: {}
+            lineContextMap: fileChange.hunkMeta.newPathContextMap
         } as PRFileDiffQueryParams)
     };
     const rhsQueryParam = {

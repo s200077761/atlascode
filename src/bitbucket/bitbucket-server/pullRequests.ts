@@ -199,7 +199,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             const sourceDeletions = new Set<number>();
             const destinationAdditions = new Set<number>();
             const destinationDeletions = new Set<number>();
-            const contextMap = {};
+            const contextMap: { [k: number]: number } = {};
 
             if (Array.isArray(diffStat.hunks)) {
                 diffStat.hunks.forEach((hunk: any) => {
@@ -231,10 +231,19 @@ export class ServerPullRequestApi implements PullRequestApi {
                 });
             }
 
+            Object.entries(contextMap).forEach(([key, val]) => {
+                const destKey = parseInt(key);
+                destinationAdditions.delete(destKey);
+                destinationDeletions.delete(destKey);
+
+                sourceAdditions.delete(val);
+                sourceDeletions.delete(val);
+            });
+
             return {
                 status: status,
-                linesAdded: -1,
-                linesRemoved: -1,
+                linesAdded: sourceAdditions.size + destinationAdditions.size,
+                linesRemoved: sourceDeletions.size + destinationDeletions.size,
                 oldPath: diffStat.source ? diffStat.source.toString : undefined,
                 newPath: diffStat.destination ? diffStat.destination.toString : undefined,
                 hunkMeta: {

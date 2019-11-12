@@ -73,9 +73,26 @@ export class PullRequestCommentController implements vscode.Disposable {
                 if (document.uri.scheme !== PullRequestNodeDataProvider.SCHEME) {
                     return undefined;
                 }
+                const { site, lhs, addedLines, deletedLines, lineContextMap } = JSON.parse(document.uri.query) as PRFileDiffQueryParams;
+                if (site.details.isCloud) {
+                    return [new vscode.Range(0, 0, document.lineCount - 1, 0)];
+                }
 
-                let lineCount = document.lineCount;
-                return [new vscode.Range(0, 0, lineCount - 1, 0)];
+                let result: vscode.Range[] = [];
+
+                const contextLines = lhs
+                    ? Object.values(lineContextMap)
+                    : Object.keys(lineContextMap).map(parseInt);
+
+                new Set([
+                    ...addedLines,
+                    ...deletedLines,
+                    ...contextLines
+                ]).forEach(line => {
+                    result.push(new vscode.Range(line - 1, 0, line - 1, 0));
+                });
+
+                return result;
             }
         };
     }
