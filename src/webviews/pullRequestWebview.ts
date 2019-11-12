@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { clientForSite } from '../bitbucket/bbUtils';
+import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
 import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest } from '../bitbucket/model';
 import { Commands } from '../commands';
@@ -403,21 +403,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     }
 
     private async checkout(pr: PullRequest, branch: string, isSourceBranch: boolean) {
-        // if (isSourceBranch && this._state.sourceRemote && this._state.sourceRemote !== this._state.remote) {
-        //     // pull request is from a fork repository
-        //     await this._state.repository!.getConfig(`remote.${this._state.sourceRemote!.name}.url`)
-        //         .then(async url => {
-        //             if (!url) {
-        //                 await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
-        //             }
-        //         })
-        //         .catch(async _ => {
-        //             await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
-        //         });
-
-        //     await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
-        // }
-
         if (!pr.workspaceRepo) {
             Logger.error(new Error('error checking out the pull request branch: no workspace repo'));
             this.postMessage({ type: 'error', reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo') });
@@ -425,6 +410,28 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
 
         const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
+
+        // Add source remote (if necessary) if pull request is from a fork repository
+        if (pr.data.source.repo.url !== '' && pr.data.source.repo.url !== pr.data.destination.repo.url) {
+            const parsed = parseGitUrl(urlForRemote(pr.workspaceRepo.mainSiteRemote.remote));
+            const sourceRemote = {
+                fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
+                name: pr.data.source.repo.fullName,
+                isReadOnly: true
+            };
+
+            await scm.getConfig(`remote.${sourceRemote.name}.url`)
+                .then(async url => {
+                    if (!url) {
+                        await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
+                    }
+                })
+                .catch(async _ => {
+                    await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
+                });
+
+            await scm.fetch(sourceRemote.name, pr.data.source.branchName);
+        }
 
         scm.checkout(branch || pr.data.source.branchName)
             .then(() => {

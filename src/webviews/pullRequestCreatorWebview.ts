@@ -76,9 +76,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     scm.fetch(),
                     bbApi.repositories.get(site),
                     bbApi.repositories.getDevelopmentBranch(site),
-                    []
-                    // TODO fix after pullrequests api uses bitbucket site
-                    //bbApi.pullrequests.getReviewers(site)
+                    bbApi.pullrequests.getReviewers(site)
                 ]);
 
                 const currentUser = { accountId: site.details.userId };

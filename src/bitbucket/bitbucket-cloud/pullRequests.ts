@@ -513,16 +513,6 @@ export class CloudPullRequestApi implements PullRequestApi {
     static toPullRequestData(pr: any, site: BitbucketSite, workspaceRepo?: WorkspaceRepo): PullRequest {
         const source = CloudPullRequestApi.toPullRequestRepo(pr.source);
         const destination = CloudPullRequestApi.toPullRequestRepo(pr.destination);
-        // TODO Handle case when source and destination remotes are not the same
-        // let sourceRemote = undefined;
-        // if (source.repo.url !== '' && source.repo.url !== destination.repo.url) {
-        //     const parsed = parseGitUrl(urlForRemote(remote));
-        //     sourceRemote = {
-        //         fetchUrl: parseGitUrl(source.repo.url).toString(parsed.protocol),
-        //         name: source.repo.fullName,
-        //         isReadOnly: true
-        //     };
-        // }
 
         return {
             site: site,
