@@ -157,13 +157,13 @@ export class ServerPullRequestApi implements PullRequestApi {
         return Promise.reject(); //TODO: Fill this in!
     }
 
-    async postTask(pr: PullRequest, comment: Comment, content: string): Promise<Task> {
+    async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
         return Promise.reject();
     }
-    async editTask(pr: PullRequest, task: Task): Promise<Task> {
+    async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
         return Promise.reject();
     }
-    async deleteTask(pr: PullRequest, task: Task): Promise<void> {
+    async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
         return Promise.reject();
     }
 

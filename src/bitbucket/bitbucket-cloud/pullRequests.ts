@@ -299,11 +299,11 @@ export class CloudPullRequestApi implements PullRequestApi {
         return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
     }
 
-    async postTask(pr: PullRequest, comment: Comment, content: string): Promise<Task> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.postURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks/`,
+            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
             {
                 comment: {
                     id: comment.id
@@ -318,14 +318,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.convertDataToTask(data, pr.site);
+        return this.convertDataToTask(data, site);
     }
 
-    async editTask(pr: PullRequest, task: Task): Promise<Task> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.putURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks/${task.id}`,
+            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
             {
                 comment: {
                     comment: task.commentId
@@ -351,14 +351,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.convertDataToTask(data, pr.site);
+        return this.convertDataToTask(data, site);
     }
 
-    async deleteTask(pr: PullRequest, task: Task): Promise<void> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
+        const { ownerSlug, repoSlug } = site;
 
         await this.client.deleteURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks/${task.id}`,
+            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
             {}  
         );
     }

@@ -1,7 +1,7 @@
-import React from "react";
 import { Checkbox } from '@atlaskit/checkbox';
-import { Task, User } from "../../../bitbucket/model";
 import Comment, { CommentAction } from '@atlaskit/comment';
+import React from "react";
+import { Task, User } from "../../../bitbucket/model";
 
 
 export class TaskComponent extends React.Component<
@@ -100,7 +100,8 @@ export class TaskComponent extends React.Component<
                         name="controlled-checkbox"
                     />
                     {!this.state.editMode &&
-                        <div dangerouslySetInnerHTML={{ __html: this.props.task.content.html }} />
+                        //Tasks which are complete appear striked through on the site, but for some reason the task's internal html does not handle this...
+                        <div dangerouslySetInnerHTML={{ __html: this.props.task.isComplete ? `<p><del>${this.props.task.content.raw}</del></p>` : `<p>${this.props.task.content.raw}</p>` }} />
                     }
                     {this.state.editMode && 
                         <textarea

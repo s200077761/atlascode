@@ -261,9 +261,9 @@ export interface PullRequestApi {
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getTasks(pr: PullRequest): Promise<Task[]>;
-    postTask(pr: PullRequest, comment: Comment, content: string): Promise<Task>;
-    editTask(pr: PullRequest, task: Task): Promise<Task>;
-    deleteTask(pr: PullRequest, task: Task): Promise<void>;
+    postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task>;
+    editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task>;
+    deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
     create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
