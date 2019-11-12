@@ -3,6 +3,8 @@ import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
+import { CacheMap } from "../../util/cachemap";
+import { Time } from "../../util/time";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
 import { CloudRepositoriesApi } from "./repositories";
@@ -23,6 +25,7 @@ const mergeStrategyLabels = {
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
+    private fileContentCache: CacheMap = new CacheMap();
 
     constructor(private site: DetailedSiteInfo, token: string) {
         this.client = new Client(
@@ -487,6 +490,24 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         return await this.convertDataToComment(data, site);
+    }
+
+    async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
+
+        const cacheKey = `${site.ownerSlug}::${site.repoSlug}::${commitHash}::${path}`;
+        const cachedValue = this.fileContentCache.getItem<string>(cacheKey);
+        if (cachedValue) {
+            return cachedValue;
+        }
+
+        const { data } = await this.client.getRaw(
+            `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`
+        );
+
+        this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
+
+        return data;
     }
 
     private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {

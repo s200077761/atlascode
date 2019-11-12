@@ -100,6 +100,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
         query: JSON.stringify({
             site: pr.site,
             lhs: true,
+            repoHref: pr.data.destination.repo.url,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
@@ -114,6 +115,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
         query: JSON.stringify({
             site: pr.site,
             lhs: false,
+            repoHref: pr.data.source.repo.url,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
