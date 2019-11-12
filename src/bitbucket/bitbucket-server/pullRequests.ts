@@ -160,21 +160,21 @@ export class ServerPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/changes`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
             {
                 markup: true,
                 avatarSize: 64
             }
         );
 
-        if (!data.values) {
+        if (!data.diffs) {
             return [];
         }
 
-        let accumulatedDiffStats = data.values as any[];
+        let accumulatedDiffStats = data.diffs as any[];
         while (data.isLastPage === false) {
             const nextPage = await this.client.getURL(this.client.generateUrl(
-                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/changes`,
+                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
                 {
                     markup: true,
                     avatarSize: 64,
@@ -182,41 +182,81 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
             ));
             data = nextPage.data;
-            accumulatedDiffStats.push(...(data.values || []));
+            accumulatedDiffStats.push(...(data.diffs || []));
         }
 
-        accumulatedDiffStats = accumulatedDiffStats.map(diffStat => {
-            switch (diffStat.type) {
-                case 'ADD':
-                    diffStat.type = FileStatus.ADDED;
-                    break;
-                case 'COPY':
-                    diffStat.type = FileStatus.COPIED;
-                    break;
-                case 'DELETE':
-                    diffStat.type = FileStatus.DELETED;
-                    break;
-                case 'MOVE':
-                    diffStat.type = FileStatus.RENAMED;
-                    break;
-                case 'MODIFY':
-                    diffStat.type = FileStatus.MODIFIED;
-                    break;
-                default:
-                    diffStat.type = FileStatus.UNKNOWN;
-                    break;
+        const result: FileChange[] = accumulatedDiffStats.map(diffStat => {
+            let status: FileStatus = FileStatus.MODIFIED;
+            if (!diffStat.source) {
+                status = FileStatus.ADDED;
+            } else if (!diffStat.destination) {
+                status = FileStatus.DELETED;
+            } else if (diffStat.source.toString !== diffStat.destination.toString) {
+                status = FileStatus.RENAMED;
             }
 
-            return diffStat;
+            const sourceAdditions = new Set<number>();
+            const sourceDeletions = new Set<number>();
+            const destinationAdditions = new Set<number>();
+            const destinationDeletions = new Set<number>();
+            const contextMap: { [k: number]: number } = {};
+
+            if (Array.isArray(diffStat.hunks)) {
+                diffStat.hunks.forEach((hunk: any) => {
+                    if (Array.isArray(hunk.segments)) {
+                        hunk.segments.forEach((segment: any) => {
+                            if (Array.isArray(segment.lines)) {
+                                segment.lines.forEach((line: any) => {
+                                    if (segment.type === 'REMOVED') {
+                                        if (hunk.sourceSpan > 0) {
+                                            sourceDeletions.add(line.source);
+                                        }
+                                        if (hunk.destinationSpan > 0) {
+                                            destinationDeletions.add(line.destination);
+                                        }
+                                    } else if (segment.type === 'ADDED') {
+                                        if (hunk.sourceSpan > 0) {
+                                            sourceAdditions.add(line.source);
+                                        }
+                                        if (hunk.destinationSpan > 0) {
+                                            destinationAdditions.add(line.destination);
+                                        }
+                                    } else if (segment.type === 'CONTEXT') {
+                                        contextMap[line.destination] = line.source;
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            Object.entries(contextMap).forEach(([key, val]) => {
+                const destKey = parseInt(key);
+                destinationAdditions.delete(destKey);
+                destinationDeletions.delete(destKey);
+
+                sourceAdditions.delete(val);
+                sourceDeletions.delete(val);
+            });
+
+            return {
+                status: status,
+                linesAdded: sourceAdditions.size + destinationAdditions.size,
+                linesRemoved: sourceDeletions.size + destinationDeletions.size,
+                oldPath: diffStat.source ? diffStat.source.toString : undefined,
+                newPath: diffStat.destination ? diffStat.destination.toString : undefined,
+                hunkMeta: {
+                    oldPathAdditions: Array.from(sourceAdditions),
+                    oldPathDeletions: Array.from(sourceDeletions),
+                    newPathAdditions: Array.from(destinationAdditions),
+                    newPathDeletions: Array.from(destinationDeletions),
+                    newPathContextMap: contextMap
+                }
+            };
         });
 
-        return accumulatedDiffStats.map(diffStat => ({
-            status: diffStat.type,
-            linesAdded: -1,
-            linesRemoved: -1,
-            oldPath: diffStat.type === FileStatus.ADDED ? undefined : diffStat.path.toString,
-            newPath: diffStat.type === FileStatus.DELETED ? undefined : diffStat.path.toString
-        }));
+        return result;
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
@@ -516,7 +556,8 @@ export class ServerPullRequestApi implements PullRequestApi {
         site: BitbucketSite,
         prId: number, text: string,
         parentCommentId?: number,
-        inline?: { from?: number, to?: number, path: string }
+        inline?: { from?: number, to?: number, path: string },
+        lineMeta?: "ADDED" | "REMOVED"
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
@@ -528,7 +569,7 @@ export class ServerPullRequestApi implements PullRequestApi {
                 anchor: inline
                     ? {
                         line: inline!.to || inline!.from,
-                        lineType: "CONTEXT",
+                        lineType: lineMeta || "CONTEXT",
                         fileType: inline!.to ? "TO" : "FROM",
                         path: inline!.path
                     }
