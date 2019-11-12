@@ -1,19 +1,18 @@
-import * as React from "react";
-import * as path from 'path';
+import Button, { ButtonGroup } from "@atlaskit/button";
+import Form, { ErrorMessage, Field, FormFooter } from '@atlaskit/form';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import { CreateBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
-import { HostErrorMessage, Action } from "../../../ipc/messaging";
-import { WebviewComponent } from "../WebviewComponent";
-import { CreateBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
-import { ButtonGroup } from "@atlaskit/button";
-import Button from "@atlaskit/button";
-import Form, { FormFooter, Field, ErrorMessage } from '@atlaskit/form';
 import Select from '@atlaskit/select';
+import * as path from 'path';
+import * as React from "react";
+import { CreateBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
+import { CreateBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
+import { Action, HostErrorMessage } from "../../../ipc/messaging";
+import { AtlLoader } from "../AtlLoader";
 import ErrorBanner from "../ErrorBanner";
 import * as FieldValidators from "../fieldValidators";
 import Offline from "../Offline";
-import { AtlLoader } from "../AtlLoader";
+import { WebviewComponent } from "../WebviewComponent";
 
 const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
@@ -154,7 +153,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     </Field>
                                 </GridColumn>
                                 <GridColumn medium={6}>
-                                    <Field defaultValue={{ label: path.basename(this.state.repoData[0].uri), value: this.state.repoData[0] }}
+                                    <Field defaultValue={{ label: path.basename(this.state.repoData[0].workspaceRepo.rootUri), value: this.state.repoData[0] }}
                                         label='Repository'
                                         isRequired
                                         id='repo'
@@ -166,7 +165,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                                         {...fieldArgs.fieldProps}
                                                         className="ac-select-container"
                                                         classNamePrefix="ac-select"
-                                                        options={this.state.repoData.map(repo => { return { label: path.basename(repo.uri), value: repo }; })}
+                                                        options={this.state.repoData.map(repo => { return { label: path.basename(repo.workspaceRepo.rootUri), value: repo }; })}
                                                     />
                                                     {fieldArgs.error && <ErrorMessage>Issue type is required</ErrorMessage>}
                                                 </React.Fragment>

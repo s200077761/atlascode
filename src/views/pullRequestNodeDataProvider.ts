@@ -1,17 +1,16 @@
-import { workspace, Disposable, EventEmitter, Event, TreeItem, commands, window } from 'vscode';
-import { AbstractBaseNode } from './nodes/abstractBaseNode';
+import { commands, Disposable, Event, EventEmitter, TreeItem, Uri, window, workspace } from 'vscode';
+import { prPaginationEvent } from '../analytics';
 import { BitbucketContext } from '../bitbucket/bbContext';
-import { GitContentProvider } from './gitContentProvider';
-import { PaginatedPullRequests } from '../bitbucket/model';
-import { RepositoriesNode } from './pullrequest/repositoriesNode';
+import { clientForSite } from '../bitbucket/bbUtils';
+import { PaginatedPullRequests, WorkspaceRepo } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
-import { Repository, Remote } from '../typings/git';
-import { prPaginationEvent } from '../analytics';
-import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
+import { GitContentProvider } from './gitContentProvider';
+import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { clientForRemote, firstBitbucketRemote } from '../bitbucket/bbUtils';
+import { PullRequestHeaderNode } from './pullrequest/headerNode';
+import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
 const headerNode = new PullRequestHeaderNode('showing open pull requests');
 
@@ -19,9 +18,9 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
     readonly onDidChangeTreeData: Event<AbstractBaseNode | undefined> = this._onDidChangeTreeData.event;
     private _childrenMap: Map<string, RepositoriesNode> | undefined = undefined;
-    private _fetcher: (repo: Repository, remote: Remote) => Promise<PaginatedPullRequests> = async (repo: Repository, remote: Remote) => {
-        const bbApi = await clientForRemote(remote);
-        return await bbApi.pullrequests.getList(repo, remote);
+    private _fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests> = async (wsRepo: WorkspaceRepo) => {
+        const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+        return await bbApi.pullrequests.getList(wsRepo);
     };
 
     public static SCHEME = 'atlascode.bbpr';
@@ -32,31 +31,31 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._disposable = Disposable.from(
             workspace.registerTextDocumentContentProvider(PullRequestNodeDataProvider.SCHEME, new GitContentProvider(ctx)),
             commands.registerCommand(Commands.BitbucketPullRequestsNextPage, async (prs: PaginatedPullRequests) => {
-                const bbApi = await clientForRemote(prs.remote);
+                const bbApi = await clientForSite(prs.site);
                 const result = await bbApi.pullrequests.nextPage(prs);
                 this.addItems(result);
                 prPaginationEvent().then(e => Container.analyticsClient.sendUIEvent(e));
             }),
             commands.registerCommand(Commands.BitbucketShowOpenPullRequests, () => {
-                this._fetcher = async (repo: Repository, remote: Remote) => {
-                    const bbApi = await clientForRemote(remote);
-                    return await bbApi.pullrequests.getList(repo, remote);
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getList(wsRepo);
                 };
                 headerNode.description = 'showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
-                this._fetcher = async (repo: Repository, remote: Remote) => {
-                    const bbApi = await clientForRemote(remote);
-                    return await bbApi.pullrequests.getListCreatedByMe(repo, remote);
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListCreatedByMe(wsRepo);
                 };
                 headerNode.description = 'showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
-                this._fetcher = async (repo: Repository, remote: Remote) => {
-                    const bbApi = await clientForRemote(remote);
-                    return await bbApi.pullrequests.getListToReview(repo, remote);
+                this._fetcher = async (wsRepo: WorkspaceRepo) => {
+                    const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
+                    return await bbApi.pullrequests.getListToReview(wsRepo);
                 };
                 headerNode.description = 'showing pull requests to review';
                 this.refresh();
@@ -80,6 +79,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                         }
                     });
             }),
+            commands.registerCommand(Commands.RefreshPullRequestExplorerNode, (uri: Uri) => this.refreshResource(uri)),
             ctx.onDidChangeBitbucketContext(() => this.refresh()),
         );
     }
@@ -88,12 +88,12 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         if (!this._childrenMap) {
             this._childrenMap = new Map();
         }
-        const repos = this.ctx.getBitbucketRepositories();
-        const expand = repos.length === 1;
+        const workspaceRepos = this.ctx.getBitbucketRepositories();
+        const expand = workspaceRepos.length === 1;
 
         // dispose any removed repos
         this._childrenMap.forEach((val, key) => {
-            if (!repos.find(repo => repo.rootUri.toString() === key)) {
+            if (!workspaceRepos.find(repo => repo.rootUri === key)) {
                 val.dispose();
                 this._childrenMap!.delete(key);
             } else {
@@ -102,12 +102,11 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         });
 
         // add nodes for newly added repos
-        for (const repo of repos) {
-            const repoUri = repo.rootUri.toString();
-            const remote = firstBitbucketRemote(repo);
+        for (const wsRepo of workspaceRepos) {
+            const repoUri = wsRepo.rootUri;
             this._childrenMap!.has(repoUri)
                 ? await this._childrenMap!.get(repoUri)!.refresh()
-                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, repo, remote, expand));
+                : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, wsRepo, expand));
         }
     }
 
@@ -116,12 +115,24 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         this._onDidChangeTreeData.fire();
     }
 
+    async refreshResource(uri: Uri) {
+        if (!this._childrenMap) {
+            return;
+        }
+        this._childrenMap.forEach(child => {
+            const foundItem = child.findResource(uri);
+            if (foundItem) {
+                this._onDidChangeTreeData.fire(foundItem);
+            }
+        });
+    }
+
     addItems(prs: PaginatedPullRequests): void {
-        if (!this._childrenMap || !this._childrenMap.get(prs.repository.rootUri.toString())) {
+        if (!prs.workspaceRepo || !this._childrenMap || !this._childrenMap.get(prs.workspaceRepo.rootUri)) {
             return;
         }
 
-        this._childrenMap.get(prs.repository.rootUri.toString())!.addItems(prs);
+        this._childrenMap.get(prs.workspaceRepo.rootUri)!.addItems(prs);
         this._onDidChangeTreeData.fire();
     }
 

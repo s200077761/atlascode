@@ -1,11 +1,9 @@
-import { Remote, Repository } from "../../typings/git";
-import { maxItemsSupported } from "./pullRequests";
-import { parseGitUrl, urlForRemote } from "../bbUtils";
-import { Repo, Commit, BitbucketBranchingModel, RepositoriesApi, PaginatedBranchNames } from "../model";
-import { Client, ClientError } from "../httpClient";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from "axios";
-import { getAgent } from "../../atlclients/agent";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { getAgent } from "../../jira/jira-client/providers";
+import { Client, ClientError } from "../httpClient";
+import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
+import { maxItemsSupported } from "./pullRequests";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -34,32 +32,21 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         return [];
     }
 
-    async get(remote: Remote): Promise<Repo> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async get(site: BitbucketSite): Promise<Repo> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}`
+            `/repositories/${ownerSlug}/${repoSlug}`
         );
 
         return CloudRepositoriesApi.toRepo(data);
     }
 
-    async getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames> {
-        let parsed = parseGitUrl(urlForRemote(remote));
-
-        const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/refs/branches`,
-            queryParams
-        );
-
-        return { data: (data.values || []).map((v: any) => v.name), next: data.next };
-    }
-
-    async getDevelopmentBranch(remote: Remote): Promise<string> {
+    async getDevelopmentBranch(site: BitbucketSite): Promise<string> {
 
         const [repo, branchingModel] = await Promise.all([
-            this.get(remote),
-            this.getBranchingModel(remote)
+            this.get(site),
+            this.getBranchingModel(site)
         ]);
 
         return branchingModel.development && branchingModel.development.branch
@@ -67,21 +54,21 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             : repo.mainbranch!;
     }
 
-    async getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/branching-model`
+            `/repositories/${ownerSlug}/${repoSlug}/branching-model`
         );
 
         return data;
     }
 
-    async getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/commits`,
+            `/repositories/${ownerSlug}/${repoSlug}/commits`,
             {
                 include: includeRef,
                 exclude: excludeRef,
@@ -108,11 +95,11 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/commit/${commitHash}/pullrequests`
+            `/repositories/${ownerSlug}/${repoSlug}/commit/${commitHash}/pullrequests`
         );
 
         return data.values!.map((pr: any) => pr.id) || [];

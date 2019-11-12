@@ -1,39 +1,29 @@
-import * as vscode from 'vscode';
-import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
-import { PullRequest, PaginatedComments, BitbucketIssueData, BitbucketIssue, ApprovalStatus, Commit } from '../bitbucket/model';
-import { PRData } from '../ipc/prMessaging';
-import { Action, onlineStatus } from '../ipc/messaging';
-import { Logger } from '../logger';
-import { Repository, Remote } from "../typings/git";
-import { isPostComment, isCheckout, isMerge, Merge, isUpdateApproval, isDeleteComment, isEditComment, isFetchUsers } from '../ipc/prActions';
-import { isOpenJiraIssue } from '../ipc/issueActions';
-import { Commands } from '../commands';
-import { extractIssueKeys, extractBitbucketIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { prCheckoutEvent, prApproveEvent, prMergeEvent } from '../analytics';
-import { Container } from '../container';
-import { isOpenBuildStatus } from '../ipc/prActions';
-import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
-import { PipelineInfo } from '../views/pipelines/PipelinesTree';
-import { parseJiraIssueKeys } from '../jira/issueKeyParser';
-import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
-import { ProductJira, DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
-import { MinimalIssue, isMinimalIssue } from '../jira/jira-client/model/entities';
-import { showIssue } from '../commands/jira/showIssue';
-import { clientForRemote, siteDetailsForRemote } from '../bitbucket/bbUtils';
-import { transitionIssue } from '../jira/transitionIssue';
-import { issueForKey } from '../jira/issueForKey';
+import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
+import * as vscode from 'vscode';
+import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
+import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
+import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
+import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
+import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
+import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest } from '../bitbucket/model';
+import { Commands } from '../commands';
+import { showIssue } from '../commands/jira/showIssue';
+import { Container } from '../container';
+import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
+import { isOpenJiraIssue } from '../ipc/issueActions';
+import { Action, onlineStatus } from '../ipc/messaging';
+import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge } from '../ipc/prActions';
+import { PRData } from "../ipc/prMessaging";
+import { issueForKey } from '../jira/issueForKey';
+import { parseJiraIssueKeys } from '../jira/issueKeyParser';
+import { transitionIssue } from '../jira/transitionIssue';
+import { Logger } from '../logger';
+import { PipelineInfo } from '../views/pipelines/PipelinesTree';
+import { getArgsForDiffView } from '../views/pullrequest/diffViewHelper';
+import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
-interface PRState {
-    prData: PRData;
-    remote?: Remote;
-    sourceRemote?: Remote;
-    repository?: Repository;
-}
-
-const emptyState: PRState = { prData: { type: '', repoUri: '', remote: { name: 'dummy_remote', isReadOnly: true }, currentBranch: '', relatedJiraIssues: [], mergeStrategies: [] } };
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
-    private _state: PRState = emptyState;
     private _pr: PullRequest | undefined = undefined;
 
     constructor(extensionPath: string) {
@@ -53,7 +43,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
         if (this._pr) {
-            return siteDetailsForRemote(this._pr.remote);
+            return this._pr.site.details;
         }
 
         return undefined;
@@ -88,13 +78,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     protected async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
 
+        if (!this._pr) {
+            Logger.error(new Error('no pull request for this webview'));
+            return handled;
+        }
+
         if (!handled) {
             switch (msg.action) {
                 case 'updateApproval': {
                     handled = true;
                     if (isUpdateApproval(msg)) {
                         try {
-                            await this.updateApproval(msg.status);
+                            await this.updateApproval(this._pr, msg.status);
                         } catch (e) {
                             Logger.error(new Error(`error approving PR: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -106,7 +101,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     handled = true;
                     if (isMerge(msg)) {
                         try {
-                            await this.merge(msg);
+                            await this.merge(this._pr, msg);
                         } catch (e) {
                             Logger.error(new Error(`error merging pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -118,7 +113,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isPostComment(msg)) {
                         handled = true;
                         try {
-                            await this.postComment(msg.content, msg.parentCommentId);
+                            await this.postComment(this._pr, msg.content, msg.parentCommentId);
                         } catch (e) {
                             Logger.error(new Error(`error posting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -129,7 +124,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'deleteComment': {
                     if (isDeleteComment(msg)) {
                         try {
-                            this.deleteComment(msg.commentId);
+                            this.deleteComment(this._pr, msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error deleting comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -140,7 +135,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'editComment': {
                     if (isEditComment(msg)) {
                         try {
-                            this.editComment(msg.content, msg.commentId);
+                            this.editComment(this._pr, msg.content, msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error editing comment on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -152,7 +147,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isCheckout(msg)) {
                         handled = true;
                         try {
-                            await this.checkout(msg.branch, msg.isSourceBranch);
+                            await this.checkout(this._pr, msg.branch, msg.isSourceBranch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -169,13 +164,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isOpenJiraIssue(msg)) {
                         handled = true;
                         showIssue(msg.issueOrKey);
-                        break;
                     }
+                    break;
+                }
+                case 'openDiffView': {
+                    if (isOpenDiffView(msg)) {
+                        await this.openDiffViewForFile(this._pr, msg.fileChange);
+                    }
+                    break;
                 }
                 case 'openBitbucketIssue': {
                     if (isOpenBitbucketIssueAction(msg)) {
                         handled = true;
-                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, { repository: this._pr!.repository, remote: this._pr!.remote, data: msg.issue });
+                        vscode.commands.executeCommand(Commands.ShowBitbucketIssue, msg.issue);
                     }
                     break;
                 }
@@ -184,16 +185,16 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, { repo: this._state.repository!, pipelineUuid: pipelineUUID, remote: this._state.remote! } as PipelineInfo);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, { site: this._pr.site, pipelineUuid: pipelineUUID } as PipelineInfo);
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
-                        break;
                     }
+                    break;
                 }
                 case 'copyPullRequestLink': {
                     handled = true;
-                    const linkUrl = this._state.prData.pr!.url;
+                    const linkUrl = this._pr.data.url;
                     await vscode.env.clipboard.writeText(linkUrl);
                     vscode.window.showInformationMessage(`Copied pull request link to clipboard - ${linkUrl}`);
                     break;
@@ -202,8 +203,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isFetchUsers(msg)) {
                         handled = true;
                         try {
-                            const bbApi = await clientForRemote(msg.remote);
-                            const reviewers = await bbApi.pullrequests.getReviewers(msg.remote, msg.query);
+                            const bbApi = await clientForSite(this._pr.site);
+                            const reviewers = await bbApi.pullrequests.getReviewers(this._pr.site, msg.query);
                             if (reviewers.length === 0) {
                                 reviewers.push(...this._pr!.data.participants);
                             }
@@ -243,15 +244,17 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
         if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
 
-        const bbApi = await clientForRemote(this._pr.remote);
+        const bbApi = await clientForSite(this._pr.site);
         const prDetailsPromises = Promise.all([
             bbApi.pullrequests.get(this._pr),
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
-            bbApi.pullrequests.getMergeStrategies(this._pr)
+            bbApi.pullrequests.getMergeStrategies(this._pr),
+            bbApi.pullrequests.getChangedFiles(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
@@ -260,31 +263,33 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         ]);
 
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
-        const currentUser = await Container.bitbucketContext.currentUser(this._pr.remote);
-        this._state = {
-            remote: this._pr.remote,
-            sourceRemote: this._pr.sourceRemote,
-            repository: this._pr.repository,
-            prData: {
-                pr: this._pr.data,
-                repoUri: this._pr.repository.rootUri.toString(),
-                remote: this._pr.remote,
-                currentUser: currentUser,
-                currentBranch: this._pr.repository.state.HEAD!.name!,
-                type: 'update',
-                commits: commits,
-                comments: comments.data,
-                relatedJiraIssues: relatedJiraIssues,
-                relatedBitbucketIssues: relatedBitbucketIssues.map(i => i.data),
-                mainIssue: mainIssue,
-                buildStatuses: buildStatuses,
-                mergeStrategies: mergeStrategies
-            }
+        const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
+
+        let currentBranch = '';
+        if (this._pr.workspaceRepo) {
+            const scm = Container.bitbucketContext.getRepositoryScm(this._pr.workspaceRepo!.rootUri)!;
+            currentBranch = scm.state.HEAD ? scm.state.HEAD.name! : '';
+        }
+
+        const prData: PRData = {
+            pr: this._pr,
+            fileDiffs: fileDiffs,
+            currentUser: currentUser,
+            currentBranch: currentBranch,
+            type: 'update',
+            commits: commits,
+            comments: comments.data,
+            relatedJiraIssues: relatedJiraIssues,
+            relatedBitbucketIssues: relatedBitbucketIssues,
+            mainIssue: mainIssue,
+            buildStatuses: buildStatuses,
+            mergeStrategies: mergeStrategies
+
         };
-        this.postMessage(this._state.prData);
+        this.postMessage(prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue | BitbucketIssueData | undefined> {
+    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -300,11 +305,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             }
 
             const bbIssueKeys = parseBitbucketIssueKeys(branchAndTitleText);
-            const bbApi = await clientForRemote(pr.remote);
+            const bbApi = await clientForSite(pr.site);
             if (bbApi.issues) {
-                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.repository, bbIssueKeys);
+                const bbIssues = await bbApi.issues.getIssuesForKeys(pr.site, bbIssueKeys);
                 if (bbIssues.length > 0) {
-                    return bbIssues[0].data;
+                    return bbIssues[0];
                 }
             }
         } catch (e) {
@@ -313,13 +318,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue[]> {
-        let foundIssues: MinimalIssue[] = [];
+    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        let foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
                 const issueKeys = await extractIssueKeys(pr, commits, comments.data);
 
-                const jqlPromises: Promise<MinimalIssue>[] = [];
+                const jqlPromises: Promise<MinimalIssue<DetailedSiteInfo>>[] = [];
                 issueKeys.forEach(key => {
                     jqlPromises.push(
                         (async () => {
@@ -328,7 +333,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     );
                 });
 
-                let issueResults = await pSettle<MinimalIssue>(jqlPromises);
+                let issueResults = await pSettle<MinimalIssue<DetailedSiteInfo>>(jqlPromises);
 
                 issueResults.forEach(result => {
                     if (result.isFulfilled) {
@@ -347,9 +352,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits, comments.data);
-            const bbApi = await clientForRemote(pr.remote);
+            const bbApi = await clientForSite(pr.site);
             if (bbApi.issues) {
-                result = await bbApi.issues.getIssuesForKeys(pr.repository, issueKeys);
+                result = await bbApi.issues.getIssuesForKeys(pr.site, issueKeys);
             }
         } catch (e) {
             result = [];
@@ -358,39 +363,31 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return result;
     }
 
-    private async updateApproval(status: ApprovalStatus) {
-        const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.updateApproval({ repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! }, status);
+    private async updateApproval(pr: PullRequest, status: ApprovalStatus) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.updateApproval(pr, status);
 
-        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
-
-        if (site) {
-            prApproveEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        }
+        prApproveEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.updatePullRequest();
     }
 
-    private async merge(m: Merge) {
-        const bbApi = await clientForRemote(this._state.remote!);
+    private async merge(pr: PullRequest, m: Merge) {
+        const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.merge(
-            { repository: this._state.repository!, remote: this._state.remote!, sourceRemote: this._state.sourceRemote, data: this._state.prData.pr! },
+            pr,
             m.closeSourceBranch,
             m.mergeStrategy,
             m.commitMessage
         );
 
-        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
-
-        if (site) {
-            prMergeEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        }
+        prMergeEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
         await this.updatePullRequest();
     }
 
-    private async updateIssue(issue?: MinimalIssue | BitbucketIssueData) {
+    private async updateIssue(issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue) {
         if (!issue) {
             return;
         }
@@ -399,39 +396,51 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             if (transition) {
                 await transitionIssue(issue, transition);
             }
-        } else {
-            const bbApi = await clientForRemote(this._state.remote!);
-            await bbApi.issues!.postChange({ repository: this._state.repository!, remote: this._state.remote!, data: issue }, issue.state!);
+        } else if (isBitbucketIssue(issue)) {
+            const bbApi = await clientForSite(issue.site);
+            await bbApi.issues!.postChange(issue, issue.data.state!);
         }
     }
 
-    private async checkout(branch: string, isSourceBranch: boolean) {
-        if (isSourceBranch && this._state.sourceRemote && this._state.sourceRemote !== this._state.remote) {
-            // pull request is from a fork repository
-            await this._state.repository!.getConfig(`remote.${this._state.sourceRemote!.name}.url`)
+    private async checkout(pr: PullRequest, branch: string, isSourceBranch: boolean) {
+        if (!pr.workspaceRepo) {
+            Logger.error(new Error('error checking out the pull request branch: no workspace repo'));
+            this.postMessage({ type: 'error', reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo') });
+            return;
+        }
+
+        const scm = Container.bitbucketContext.getRepositoryScm(pr.workspaceRepo.rootUri)!;
+
+        // Add source remote (if necessary) if pull request is from a fork repository
+        if (pr.data.source.repo.url !== '' && pr.data.source.repo.url !== pr.data.destination.repo.url) {
+            const parsed = parseGitUrl(urlForRemote(pr.workspaceRepo.mainSiteRemote.remote));
+            const sourceRemote = {
+                fetchUrl: parseGitUrl(pr.data.source.repo.url).toString(parsed.protocol),
+                name: pr.data.source.repo.fullName,
+                isReadOnly: true
+            };
+
+            await scm.getConfig(`remote.${sourceRemote.name}.url`)
                 .then(async url => {
                     if (!url) {
-                        await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
+                        await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
                     }
                 })
                 .catch(async _ => {
-                    await this._state.repository!.addRemote(this._state.sourceRemote!.name, this._state.sourceRemote!.fetchUrl!);
+                    await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
                 });
 
-            await this._state.repository!.fetch(this._state.sourceRemote!.name, this._state.prData.pr!.source!.branchName);
+            await scm.fetch(sourceRemote.name, pr.data.source.branchName);
         }
 
-        this._state.repository!.checkout(branch || this._state.prData.pr!.source!.branchName)
+        scm.checkout(branch || pr.data.source.branchName)
             .then(() => {
-                this._state.prData.currentBranch = this._state.repository!.state.HEAD!.name!;
+                const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
                 this.postMessage({
                     type: 'checkout',
-                    currentBranch: this._state.repository!.state.HEAD!.name!
+                    currentBranch: currentBranch
                 });
-                const site: DetailedSiteInfo | undefined = siteDetailsForRemote(this._state.remote!);
-                if (site) {
-                    prCheckoutEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-                }
+                prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
@@ -439,24 +448,51 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             });
     }
 
-    private async postComment(text: string, parentId?: number) {
-        const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.postComment(this._state.remote!, this._pr!.data.id, text, parentId);
+    private async postComment(pr: PullRequest, text: string, parentId?: number) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
         this.updatePullRequest();
     }
 
-    private async deleteComment(commentId: number) {
-        const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.deleteComment(this._pr!.remote, this._pr!.data.id, commentId);
+    private async deleteComment(pr: PullRequest, commentId: number) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.deleteComment(pr.site, this._pr!.data.id, commentId);
         this.updatePullRequest();
     }
 
-    private async editComment(content: string, commentId: number) {
-        const bbApi = await clientForRemote(this._state.remote!);
-        await bbApi.pullrequests.editComment(this._state.remote!, this._pr!.data.id!, content, commentId);
+    private async editComment(pr: PullRequest, content: string, commentId: number) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.editComment(pr.site, this._pr!.data.id!, content, commentId);
         this.updatePullRequest();
     }
 
+    private async openDiffViewForFile(pr: PullRequest, fileChange: FileChange) {
+        const bbApi = await clientForSite(pr.site);
+        const comments = await bbApi.pullrequests.getComments(pr);
+        const diffViewArgs = await getArgsForDiffView(comments, fileChange, pr, Container.bitbucketContext.prCommentController);
+        vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
+    }
 
+    private convertFileChangeToFileDiff(fileChange: FileChange): FileDiff {
+        return {
+            file: this.getFileNameFromPaths(fileChange.oldPath, fileChange.newPath),
+            status: fileChange.status,
+            linesAdded: fileChange.linesAdded,
+            linesRemoved: fileChange.linesRemoved,
+            fileChange: fileChange
+        };
+    }
+
+    private getFileNameFromPaths(oldPath: string | undefined, newPath: string | undefined): string {
+        let fileDisplayName: string = '';
+        if (newPath && oldPath && newPath !== oldPath) {
+            fileDisplayName = `${oldPath} → ${newPath}`; //This is actually not what we want, but it'll have to be dealt with later...
+        } else if (newPath) {
+            fileDisplayName = newPath;
+        } else if (oldPath) {
+            fileDisplayName = oldPath;
+        }
+        return fileDisplayName;
+    }
 
 }

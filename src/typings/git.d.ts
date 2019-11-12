@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri, SourceControlInputBox, Event, CancellationToken } from 'vscode';
+import { Event, Uri } from 'vscode';
 
 export interface Git {
 	readonly path: string;
@@ -176,7 +176,11 @@ export interface Repository {
 	log(options?: LogOptions): Promise<Commit[]>;
 }
 
+export type APIState = 'uninitialized' | 'initialized';
+
 export interface API {
+	readonly state: APIState;
+	readonly onDidChangeState: Event<APIState>;
 	readonly git: Git;
 	readonly repositories: Repository[];
 	readonly onDidOpenRepository: Event<Repository>;

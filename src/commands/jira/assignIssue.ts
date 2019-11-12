@@ -1,10 +1,11 @@
+import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { Logger } from "../../logger";
 import { IssueNode } from "../../views/nodes/issueNode";
 import { currentUserJira } from "./currentUser";
-import { MinimalIssue, isMinimalIssue } from "../../jira/jira-client/model/entities";
 
-export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: string) {
+export async function assignIssue(param: MinimalIssue<DetailedSiteInfo> | IssueNode, accountId?: string) {
   const issue = isMinimalIssue(param) ? param : param.issue;
   const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
@@ -18,7 +19,7 @@ export async function assignIssue(param: MinimalIssue | IssueNode, accountId?: s
   Container.jiraExplorer.refresh();
 }
 
-export async function unassignIssue(issue: MinimalIssue) {
+export async function unassignIssue(issue: MinimalIssue<DetailedSiteInfo>) {
   const client = await Container.clientManager.jiraClient(issue.siteDetails);
 
   const response = await client.assignIssue(issue.id, undefined);

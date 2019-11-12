@@ -1,10 +1,9 @@
-import { window, workspace, WorkspaceEdit, Uri, Position, ViewColumn, Range } from 'vscode';
-import { Repository } from "../../typings/git";
-import { Container } from '../../container';
+import { Position, Range, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 import { startIssueCreationEvent } from '../../analytics';
-import { CommentData, BBData } from '../../webviews/createIssueWebview';
-import { parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
-import { BitbucketIssue } from '../../bitbucket/model';
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketIssue, WorkspaceRepo } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { BBData, CommentData } from '../../webviews/createIssueWebview';
 
 export interface TodoIssueData {
     summary: string;
@@ -65,10 +64,10 @@ function annotateComment(data: CommentData) {
 }
 
 async function updateBBIssue(data: BBData) {
-    const bbApi = await clientForRemote(data.bbIssue.remote);
+    const bbApi = await clientForSite(data.bbIssue.site);
     await bbApi.issues!.postComment(data.bbIssue, `Linked to ${data.issueKey}`);
 
-    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.data.repository!.links!.html!.href!);
+    const comps = await bbApi.issues!.getAvailableComponents(data.bbIssue.site);
     if (comps && Array.isArray(comps)) {
         const injiraComp = comps.find(comp => comp.name === 'triaged');
         if (injiraComp && data.bbIssue.data.component !== injiraComp) {
@@ -80,10 +79,10 @@ async function updateBBIssue(data: BBData) {
 function descriptionForUri(uri: Uri) {
     const linesText = getLineRange();
 
-    const repos = Container.bitbucketContext.getAllRepositories();
+    const wsRepos = Container.bitbucketContext.getAllRepositories();
 
-    const urls = repos
-        .map((repo) => bitbucketUrlsInRepo(repo, uri, linesText))
+    const urls = wsRepos
+        .map((wsRepo) => bitbucketUrlsInRepo(wsRepo, uri, linesText))
         .filter(url => url !== undefined);
 
     if (urls.length === 0) {
@@ -95,26 +94,25 @@ function descriptionForUri(uri: Uri) {
     return urls.join('\r') + selectionText;
 }
 
-function bitbucketUrlsInRepo(repo: Repository, fileUri: Uri, linesText: string): string | undefined {
-    const head = repo.state.HEAD;
-    if (!head || head.name === undefined) {
+function bitbucketUrlsInRepo(wsRepo: WorkspaceRepo, fileUri: Uri, linesText: string): string | undefined {
+    const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri);
+    const head = scm ? scm.state.HEAD : undefined;
+    if (!scm || !head || head.name === undefined) {
         return undefined;
     }
-    const rootPath = repo.rootUri.path;
+    const rootPath = scm.rootUri.path;
     const filePath = fileUri.path;
-    if (!filePath.startsWith(repo.rootUri.path)) {
+    if (!filePath.startsWith(scm.rootUri.path)) {
         return undefined;
     }
     const relativePath = filePath.replace(rootPath, "");
-    if (Container.bitbucketContext.isBitbucketRepo(repo)) {
-        const remote = firstBitbucketRemote(repo);
-        const parsed = parseGitUrl(urlForRemote(remote));
-        const site = siteDetailsForRemote(remote)!;
+    if (wsRepo.mainSiteRemote.site) {
+        const site = wsRepo.mainSiteRemote.site;
         const commit = head.upstream && head.ahead && head.ahead > 0 ? head.name : head.commit;
         if (commit) {
-            return site.isCloud
-                ? `${site.baseLinkUrl}/${parsed.owner}/${parsed.name}/src/${commit}${relativePath}${linesText ? `#lines-${linesText}` : ''}`
-                : `${site.baseLinkUrl}/projects/${parsed.owner}/repos/${parsed.name}/browse${relativePath}?at=${commit}${linesText ? `#${linesText.replace(':', '-')}` : ''}`;
+            return site.details.isCloud
+                ? `${site.details.baseLinkUrl}/${site.ownerSlug}/${site.repoSlug}/src/${commit}${relativePath}${linesText ? `#lines-${linesText}` : ''}`
+                : `${site.details.baseLinkUrl}/projects/${site.ownerSlug}/repos/${site.repoSlug}/browse${relativePath}?at=${commit}${linesText ? `#${linesText.replace(':', '-')}` : ''}`;
         }
     }
 

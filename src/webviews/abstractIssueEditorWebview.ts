@@ -1,11 +1,11 @@
-import { AbstractReactWebview } from "./abstractWebview";
-import { isAction } from "../ipc/messaging";
-import { isFetchQueryAndSite, isOpenJiraIssue, isCreateSelectOption } from "../ipc/issueActions";
-import { Container } from "../container";
-import { IssuePickerIssue, IssuePickerResult, isIssuePickerResult, isAutocompleteSuggestionsResult, isGroupPickerResult, isProjectsResult } from "../jira/jira-client/model/responses";
-import { Logger } from "../logger";
+import { ValueType } from "jira-metaui-transformer";
+import { isAutocompleteSuggestionsResult, isGroupPickerResult, isIssuePickerResult, isProjectsResult, IssuePickerIssue, IssuePickerResult } from "jira-pi-client";
 import { showIssue } from "../commands/jira/showIssue";
-import { ValueType } from "../jira/jira-client/model/fieldUI";
+import { Container } from "../container";
+import { isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from "../ipc/issueActions";
+import { isAction } from "../ipc/messaging";
+import { Logger } from "../logger";
+import { AbstractReactWebview } from "./abstractWebview";
 
 export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 

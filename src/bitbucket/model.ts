@@ -1,7 +1,31 @@
-import { Repository, Remote } from "../typings/git";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
+import { FileDiffQueryParams } from "src/views/pullrequest/pullRequestNode";
+import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PipelineApiImpl } from "../pipelines/pipelines";
+import { Remote, Repository } from "../typings/git";
+import { BitbucketIssuesApiImpl } from "./bitbucket-cloud/bbIssues";
+
+export type BitbucketSite = {
+    details: DetailedSiteInfo;
+    ownerSlug: string;
+    repoSlug: string;
+};
+
+export type SiteRemote = {
+    site?: BitbucketSite;
+    remote: Remote;
+};
+
+export type WorkspaceRepo = {
+    rootUri: string;
+    mainSiteRemote: SiteRemote;
+    siteRemotes: SiteRemote[];
+};
+
+export const emptyBitbucketSite = {
+    details: emptySiteInfo,
+    ownerSlug: '',
+    repoSlug: ''
+};
 
 export type User = {
     accountId: string;
@@ -80,9 +104,41 @@ export type MergeStrategy = {
 };
 
 export type FileChange = {
-    status: "added" | "removed" | "modified" | "renamed" | "merge conflict";
+    status: FileStatus;
     oldPath?: string;
     newPath?: string;
+    linesAdded: number;
+    linesRemoved: number;
+    hunkMeta: {
+        oldPathAdditions: number[];
+        oldPathDeletions: number[];
+        newPathAdditions: number[];
+        newPathDeletions: number[];
+        // maps destination file line number to source file line number to support Bitbucket server comments
+        // NOT using Map here as Map does not serialize to JSON
+        newPathContextMap: Object;
+    }
+};
+
+export enum FileStatus {
+    ADDED = 'A',
+    DELETED = 'D',
+    COPIED = 'C',
+    MODIFIED = 'M',
+    RENAMED = 'R',
+    CONFLICT = 'CONFLICT',
+    UNKNOWN = 'X'
+};
+
+export interface FileDiff {
+    file: string;
+    status: FileStatus;
+    linesAdded: number;
+    linesRemoved: number;
+    similarity?: number;
+    lhsQueryParams?: FileDiffQueryParams;
+    rhsQueryParams?: FileDiffQueryParams;
+    fileChange?: FileChange;
 };
 
 export type CreatePullRequestData = {
@@ -126,19 +182,18 @@ export type PullRequestData = {
 };
 
 export interface PullRequest {
-    repository: Repository;
-    remote: Remote;
-    sourceRemote?: Remote;
+    site: BitbucketSite;
     data: PullRequestData;
+    workspaceRepo?: WorkspaceRepo;
+    // TODO figure out what to do when source remote is different from destination remote
+    // sourceRemote: sourceRemote,
 }
 
 export interface PaginatedPullRequests {
-    // Repeating repository and remote fields although they are available from
-    // individual pull requests for 1) convenience and 2) handle case when `data` is empty.
-    repository: Repository;
-    remote: Remote;
+    site: BitbucketSite;
     data: PullRequest[];
     next?: string;
+    workspaceRepo?: WorkspaceRepo;
 }
 
 export interface PaginatedComments {
@@ -147,8 +202,8 @@ export interface PaginatedComments {
 }
 
 export interface PaginatedBitbucketIssues {
-    repository: Repository;
-    remote: Remote;
+    workspaceRepo: WorkspaceRepo;
+    site: BitbucketSite;
     data: BitbucketIssue[];
     next?: string;
 }
@@ -159,45 +214,50 @@ export interface PaginatedBranchNames {
 }
 
 export type BitbucketIssue = {
-    repository: Repository;
-    remote: Remote;
+    site: BitbucketSite;
     data: BitbucketIssueData;
 };
+
+export function isBitbucketIssue(a: any): a is BitbucketIssue {
+    return a && (<BitbucketIssue>a).site !== undefined
+        && (<BitbucketIssue>a).data !== undefined;
+}
 
 export type BitbucketIssueData = any;
 export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
-    getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
-    getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests>;
-    getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
-    getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests>;
+    getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests>;
+    getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
+    getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    nextPage(prs: PaginatedPullRequests): Promise<PaginatedPullRequests>;
+    getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
+    getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     get(pr: PullRequest): Promise<PullRequest>;
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
-    editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment>;
-    deleteComment(remote: Remote, prId: number, commentId: number): Promise<void>;
+    editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment>;
+    deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
-    getReviewers(remote: Remote, query?: string): Promise<User[]>;
-    create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest>;
+    getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
+    create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
-    postComment(remote: Remote, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+    postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
+    getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
 export interface RepositoriesApi {
     getMirrorHosts(): Promise<string[]>;
-    get(remote: Remote): Promise<Repo>;
-    getBranches(remote: Remote, queryParams?: any): Promise<PaginatedBranchNames>;
-    getDevelopmentBranch(remote: Remote): Promise<string>;
-    getBranchingModel(remote: Remote): Promise<BitbucketBranchingModel>;
-    getCommitsForRefs(remote: Remote, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestIdsForCommit(repository: Repository, remote: Remote, commitHash: string): Promise<number[]>;
+    get(site: BitbucketSite): Promise<Repo>;
+    getDevelopmentBranch(site: BitbucketSite): Promise<string>;
+    getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel>;
+    getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
+    getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]>;
 }
 
 export interface BitbucketApi {

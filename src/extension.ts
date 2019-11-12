@@ -19,6 +19,7 @@ import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlC
 import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
 import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
 import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
+import { V2toV3Migrator } from './migrations/v2tov3';
 
 const AnalyticDelay = 5000;
 
@@ -57,7 +58,16 @@ export async function activate(context: ExtensionContext) {
         Logger.error(e, 'Error initializing atlascode!');
     }
 
-    showWelcomePage(atlascodeVersion, previousVersion);
+    if(previousVersion === undefined && window.state.focused){
+        //This gets hit when the user has opened our extension for the first time. Now we run an A/B test
+        if(Math.random() < 0.5){
+            commands.executeCommand(Commands.ShowOnboardingPage);
+        } else {
+            commands.executeCommand(Commands.ShowWelcomePage);
+        }
+    } else {
+        showWelcomePage(atlascodeVersion, previousVersion);
+    }
     const delay = Math.floor(Math.random() * Math.floor(AnalyticDelay));
     setTimeout(() => {
         sendAnalytics(atlascodeVersion, context.globalState);
@@ -90,9 +100,18 @@ async function migrateConfig(globalState: Memento): Promise<void> {
         // we've already migrated to 2.x but we might need to migrate workspace JQL
         migrateAllWorkspaceCustomJQLS(!Container.isDebugging);
         await configuration.migrateLocalVersion1WorkingSite(!Container.isDebugging);
+    }
 
+    if (authModelVersion === 2) {
         const v2JiraServerUserIdFixer = new V2JiraServerUserIdFixer(Container.credentialManager, Container.siteManager);
         await v2JiraServerUserIdFixer.fix();
+
+        // Migrate from V2 to V3
+        const migrator = new V2toV3Migrator(Container.siteManager,
+            Container.credentialManager,
+            !Container.isDebugging);
+        await migrator.convertLegacyAuthInfo();
+        await globalState.update(AuthInfoVersionKey, 3);
     }
 }
 

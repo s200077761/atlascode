@@ -1,22 +1,21 @@
+import { MinimalIssue } from "jira-pi-client";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
+import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequest, Reviewer, User, WorkspaceRepo } from "../bitbucket/model";
+import { Branch } from "../typings/git";
 import { Message } from "./messaging";
-import { Branch, Remote } from "../typings/git";
-import { User, Reviewer, Comment, Commit, BitbucketIssueData, BitbucketBranchingModel, BuildStatus, PullRequestData, MergeStrategy } from "../bitbucket/model";
-import { MinimalIssue } from "../jira/jira-client/model/entities";
-import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 
 
 // PRData is the message that gets sent to the PullRequestPage react view containing the PR details.
 export interface PRData extends Message {
-    pr?: PullRequestData;
-    repoUri: string;
-    remote: Remote;
+    pr?: PullRequest;
+    fileDiffs?: FileDiff[];
     currentUser?: User;
     currentBranch: string;
     commits?: Commit[];
     comments?: Comment[];
-    relatedJiraIssues?: MinimalIssue[];
-    relatedBitbucketIssues?: BitbucketIssueData[];
-    mainIssue?: MinimalIssue | BitbucketIssueData;
+    relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
+    relatedBitbucketIssues?: BitbucketIssue[];
+    mainIssue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     buildStatuses?: BuildStatus[];
     mergeStrategies: MergeStrategy[];
 }
@@ -30,32 +29,10 @@ export interface BranchType {
     prefix: string;
 }
 
-export interface FileDiff {
-    file: string;
-    status: FileStatus;
-    linesAdded: number;
-    linesRemoved: number;
-    similarity?: number;
-    lhsQueryParams: FileDiffQueryParams;
-    rhsQueryParams: FileDiffQueryParams;
-}
-
-export enum FileStatus {
-    ADDED = 'A',
-    DELETED = 'D',
-    COPIED = 'C',
-    MODIFIED = 'M',
-    RENAMED = 'R',
-    UNKNOWN = 'X'
-}
-
 export interface RepoData {
-    uri: string;
+    workspaceRepo: WorkspaceRepo;
     href?: string;
     avatarUrl?: string;
-    name?: string;
-    owner?: string;
-    remotes: Remote[];
     defaultReviewers: User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
@@ -86,7 +63,7 @@ export interface CommitsResult extends Message {
 
 export interface FetchIssueResult extends Message {
     type: 'fetchIssueResult';
-    issue?: MinimalIssue | BitbucketIssueData;
+    issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
 }
 
 export interface FetchUsersResult extends Message {

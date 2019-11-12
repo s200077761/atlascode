@@ -1,15 +1,16 @@
-import { window, commands } from "vscode";
-import { Pipeline, PipelineTarget } from "../../pipelines/model";
-import { Repository } from "../../typings/git";
-import { Container } from "../../container";
-import { shouldDisplay, descriptionForState, generatePipelineTitle } from "./Helpers";
+import { commands, window } from "vscode";
+import { clientForSite } from "../../bitbucket/bbUtils";
+import { WorkspaceRepo } from "../../bitbucket/model";
 import { Commands } from "../../commands";
-import { clientForRemote, firstBitbucketRemote } from "../../bitbucket/bbUtils";
+import { Container } from "../../container";
+import { Pipeline, PipelineTarget } from "../../pipelines/model";
+import { descriptionForState, generatePipelineTitle, shouldDisplay } from "./Helpers";
+import { PipelineInfo } from "./PipelinesTree";
 
 export class PipelinesMonitor implements BitbucketActivityMonitor {
   private _previousResults: Map<string, Pipeline[]> = new Map();
 
-  constructor(private _repositories: Repository[]) {
+  constructor(private _repositories: WorkspaceRepo[]) {
   }
 
   async checkForNewActivity() {
@@ -17,16 +18,19 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
       return;
     }
     for (var i = 0; i < this._repositories.length; i++) {
-      const repo = this._repositories[i];
-      const previousResults = this._previousResults[repo.rootUri.path];
+      const wsRepo = this._repositories[i];
+      const previousResults = this._previousResults[wsRepo.rootUri];
 
-      const remote = firstBitbucketRemote(repo);
-      const bbApi = await clientForRemote(remote);
+      const site = wsRepo.mainSiteRemote.site;
+      if (!site) {
+        return;
+      }
+      const bbApi = await clientForSite(site);
 
-      if(!bbApi.pipelines){
+      if (!bbApi.pipelines) {
         return; //Bitbucket Server instances will not have pipelines
       }
-      bbApi.pipelines.getRecentActivity(repo).then(newResults => {
+      bbApi.pipelines.getRecentActivity(site).then(newResults => {
         var diffs = this.diffResults(previousResults, newResults);
         diffs = diffs.filter(p => this.shouldDisplayTarget(p.target));
         const buttonText = diffs.length === 1 ? "View" : "View Pipeline Explorer";
@@ -37,14 +41,14 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
           ).then((selection) => {
             if (selection) {
               if (diffs.length === 1) {
-                commands.executeCommand(Commands.ShowPipeline, { pipelineUuid: diffs[0].uuid, repo: repo, remote: remote });
+                commands.executeCommand(Commands.ShowPipeline, { site: diffs[0].site, pipelineUuid: diffs[0].uuid } as PipelineInfo);
               } else {
                 commands.executeCommand("workbench.view.extension.atlascode-drawer");
               }
             }
           });
         }
-        this._previousResults[repo.rootUri.path] = newResults;
+        this._previousResults[wsRepo.rootUri] = newResults;
       });
     }
   }
@@ -93,11 +97,11 @@ export class PipelinesMonitor implements BitbucketActivityMonitor {
     } else if (newResults.length === 3) {
       return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
         generatePipelineTitle(newResults[1])
-      }, and 1 other build.`;
+        }, and 1 other build.`;
     } else if (newResults.length > 3) {
       return `New build statuses for ${generatePipelineTitle(newResults[0])}, ${
         generatePipelineTitle(newResults[1])
-      }, and ${newResults.length - 2} other builds.`;
+        }, and ${newResults.length - 2} other builds.`;
     }
     return "";
   }

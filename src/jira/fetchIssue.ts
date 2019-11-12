@@ -1,18 +1,14 @@
-import { Container } from "../container";
+import { CreateIssueScreenTransformer, CreateMetaTransformerResult, EditIssueScreenTransformer, Fields, FieldTransformerResult, IssueCreateMetadata, IssueLinkType } from 'jira-metaui-transformer';
+import { DEFAULT_API_VERSION, emptyProjectIssueCreateMetadata, isMinimalIssue, MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { MinimalIssue, MinimalORIssueLink } from "./jira-client/model/entities";
-import { minimalIssueFromJsonObject } from "./jira-client/issueFromJson";
-import { IssueCreateMetadata, emptyProjectIssueCreateMetadata } from "./jira-client/model/issueCreateMetadata";
-import { IssueCreateScreenTransformer } from "./jira-client/issueCreateScreenTransformer";
-import { readFieldsMeta, Fields, EditMetaDescriptor, MetaFields } from "./jira-client/model/fieldMetadata";
-import { IssueEditMetaTransformer } from "./jira-client/issueEditMetaTransformer";
-import { FieldTransformerResult } from "./jira-client/model/fieldUI";
-import { EditIssueUI, CreateMetaTransformerResult } from "./jira-client/model/editIssueUI";
-import { API_VERSION } from "./jira-client/client";
+import { Container } from "../container";
+import { EditIssueUI } from "./jira-client/model/editIssueUI";
 
-export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult> {
+export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
   const client = await Container.clientManager.jiraClient(siteDetails);
-  const createIssueTransformer: IssueCreateScreenTransformer = new IssueCreateScreenTransformer(siteDetails);
+  const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(siteDetails);
+  const issueLinkTypes: IssueLinkType[] = await Container.jiraSettingsManager.getIssueLinkTypes(siteDetails);
+  const createIssueTransformer: CreateIssueScreenTransformer<DetailedSiteInfo> = new CreateIssueScreenTransformer(siteDetails, '2', allFields, issueLinkTypes);
 
   const meta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
 
@@ -38,7 +34,7 @@ export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectK
 
 }
 
-export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink> {
+export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails: DetailedSiteInfo): Promise<MinimalORIssueLink<DetailedSiteInfo>> {
   let foundIssue = await getCachedIssue(issueKey);
 
   if (!foundIssue) {
@@ -48,11 +44,11 @@ export async function getCachedOrFetchMinimalIssue(issueKey: string, siteDetails
   return foundIssue;
 }
 
-export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink | undefined> {
+export async function getCachedIssue(issueKey: string): Promise<MinimalORIssueLink<DetailedSiteInfo> | undefined> {
   return await Container.jiraExplorer.findIssue(issueKey);
 }
 
-export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue> {
+export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSiteInfo): Promise<MinimalIssue<DetailedSiteInfo>> {
   const fields = await Container.jiraSettingsManager.getMinimalIssueFieldIdsForSite(siteDetails);
   const client = await Container.clientManager.jiraClient(siteDetails);
 
@@ -60,11 +56,26 @@ export async function fetchMinimalIssue(issue: string, siteDetails: DetailedSite
   return minimalIssueFromJsonObject(res, siteDetails, await Container.jiraSettingsManager.getEpicFieldsForSite(siteDetails));
 }
 
-export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI> {
-  const fieldDescriptor: EditMetaDescriptor = await fetchMetadataForEditUi(issue);
+export async function fetchEditIssueUI(issue: MinimalIssue<DetailedSiteInfo>): Promise<EditIssueUI> {
+  const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails);
+  const issueLinkTypes: IssueLinkType[] = await Container.jiraSettingsManager.getIssueLinkTypes(issue.siteDetails);
 
-  const transformer: IssueEditMetaTransformer = new IssueEditMetaTransformer(issue.siteDetails);
-  const result: FieldTransformerResult = await transformer.transformDescriptor(fieldDescriptor);
+  const client = await Container.clientManager.jiraClient(issue.siteDetails);
+  const issueResp = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
+  const projectKey = issue.key.substring(0, issue.key.indexOf('-'));
+  const cMeta: IssueCreateMetadata = await client.getCreateIssueMetadata(projectKey);
+
+  const transformer: EditIssueScreenTransformer<DetailedSiteInfo> = new EditIssueScreenTransformer(issue.siteDetails, '2', allFields, issueLinkTypes);
+  const epicNameProvider = async (key: string) => {
+    const epicIssue = await getCachedIssue(key);
+    if (isMinimalIssue(epicIssue)) {
+      return epicIssue.epicName;
+    }
+
+    return undefined;
+  };
+
+  const result: FieldTransformerResult = await transformer.transformIssue(issueResp, cMeta, epicNameProvider);
 
   const ui: EditIssueUI = {
     ...result,
@@ -75,101 +86,10 @@ export async function fetchEditIssueUI(issue: MinimalIssue): Promise<EditIssueUI
     isEpic: issue.isEpic,
     epicChildren: issue.epicChildren,
     epicFieldInfo: await Container.jiraSettingsManager.getEpicFieldsForSite(issue.siteDetails),
-    apiVersion: API_VERSION,
+    apiVersion: DEFAULT_API_VERSION,
 
   };
 
   return ui;
-
-}
-
-async function fetchMetadataForEditUi(issue: MinimalIssue): Promise<EditMetaDescriptor> {
-  const allFields: Fields = await Container.jiraSettingsManager.getAllFieldsForSite(issue.siteDetails);
-
-  const allFieldKeys: string[] = Object.keys(allFields);
-
-  const client = await Container.clientManager.jiraClient(issue.siteDetails);
-  const res = await client.getIssue(issue.key, ['*all'], "transitions,renderedFields,editmeta,transitions.fields");
-  const metaFields: MetaFields = readFieldsMeta(res.editmeta.fields, res.fields, res.renderedFields);
-
-  const metaFieldKeys: string[] = Object.keys(metaFields);
-
-  let filteredFields: Fields = {};
-
-  // transitions do not exist in issue.fields, editmeta or all /fields, so we need to manually include them
-  metaFields['transitions'] = {
-    id: "transitions",
-    name: "Status",
-    key: "transitions",
-    required: false,
-    allowedValues: issue.transitions,
-    autoCompleteUrl: undefined,
-    currentValue: (res.fields['status']) ? issue.transitions.find(transition => transition.to.id === res.fields['status'].id) : undefined,
-    schema: {
-      type: "array",
-      system: "transitions",
-      custom: undefined,
-      items: 'transition',
-    },
-  };
-
-  Object.keys(res.fields).forEach(fkey => {
-
-    // get all the fields that DO NOT exist in editMeta but have schemas in allFields
-    if (res.fields[fkey] !== null && !metaFieldKeys.includes(fkey) && allFieldKeys.includes(fkey)) {
-      filteredFields[fkey] = allFields[fkey];
-      filteredFields[fkey].currentValue = res.fields[fkey];
-
-      if (res.renderedFields[fkey] && res.renderedFields[fkey] !== null) {
-        filteredFields[fkey].renderedValue = res.renderedFields[fkey];
-      }
-    }
-
-    // These are fields that are not in editmeta OR all /fields data, but need to be included
-    // 'parent' is the parent issuekey for sub-tasks
-    if (fkey === 'parent') {
-      filteredFields[fkey] = {
-        id: "parent",
-        name: "Parent",
-        key: "parent",
-        clauseNames: [],
-        currentValue: res.fields[fkey],
-        custom: false,
-        renderedValue: undefined,
-        schema: {
-          type: "issuelink",
-          system: "parent",
-          custom: undefined,
-          items: undefined,
-        },
-      };
-    }
-
-    if (fkey === 'status') {
-      filteredFields[fkey] = {
-        id: "status",
-        name: "Status",
-        key: "status",
-        clauseNames: [],
-        currentValue: res.fields[fkey],
-        custom: false,
-        renderedValue: undefined,
-        schema: {
-          type: "status",
-          system: "status",
-          custom: undefined,
-          items: undefined,
-        },
-      };
-    }
-
-  });
-
-  return {
-    issueKey: issue.key,
-    isSubtask: issue.issuetype.subtask,
-    isEpic: issue.isEpic,
-    fields: { ...metaFields, ...filteredFields }
-  };
 
 }

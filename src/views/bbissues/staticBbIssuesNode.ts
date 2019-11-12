@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Resources } from '../../resources';
-import { Repository } from '../../typings/git';
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketSite } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Resources } from '../../resources';
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { SimpleNode } from '../nodes/simpleNode';
-import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class StaticBitbucketIssuesNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
 
-    constructor(private repository: Repository, private issueKeys: string[]) {
+    constructor(private site: BitbucketSite, private issueKeys: string[]) {
         super();
     }
 
@@ -24,10 +24,8 @@ export class StaticBitbucketIssuesNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            const remote = firstBitbucketRemote(this.repository);
-            const bbApi = await clientForRemote(remote);
-
-            let issues = await bbApi.issues!.getIssuesForKeys(this.repository, this.issueKeys);
+            const bbApi = await clientForSite(this.site);
+            let issues = await bbApi.issues!.getIssuesForKeys(this.site, this.issueKeys);
             if (issues.length === 0) {
                 return [new SimpleNode('No issues found')];
             }

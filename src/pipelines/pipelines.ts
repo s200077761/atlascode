@@ -1,13 +1,10 @@
-import { Repository, Remote } from "../typings/git";
-import { Container } from "../container";
-import { Pipeline, PipelineResult, PipelineStep, PipelineCommand, PipelineTarget, PaginatedPipelines } from "./model";
-import { parseGitUrl, urlForRemote, siteDetailsForRemote, firstBitbucketRemote } from "../bitbucket/bbUtils";
-import { bbAPIConnectivityError } from "../constants";
+import { AxiosResponse } from "axios";
+import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { Client, ClientError } from "../bitbucket/httpClient";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { AxiosResponse } from "axios";
-import { getAgent } from "../atlclients/agent";
+import { BitbucketSite } from "../bitbucket/model";
+import { getAgent } from "../jira/jira-client/providers";
+import { PaginatedPipelines, Pipeline, PipelineCommand, PipelineResult, PipelineStep, PipelineTarget } from "./model";
 
 export class PipelineApiImpl {
   private client: Client;
@@ -32,95 +29,59 @@ export class PipelineApiImpl {
     );
   }
 
-  async getRecentActivity(repository: Repository): Promise<Pipeline[]> {
-    const remote = firstBitbucketRemote(repository);
-    const accessToken = await this.getValidPipelinesAccessToken(remote);
-    return this.getSinglepagePipelines(remote, accessToken);
+  async getRecentActivity(site: BitbucketSite): Promise<Pipeline[]> {
+    return this.getSinglepagePipelines(site);
   }
 
-  async startPipeline(repository: Repository, branchName: string): Promise<Pipeline> {
-    const remote = firstBitbucketRemote(repository);
-    let parsed = parseGitUrl(urlForRemote(remote));
-
-    const { data } = await this.client.post(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
-      {
-        target: {
-          ref_type: "branch",
-          type: "pipeline_ref_target",
-          ref_name: branchName
-        }
-      }
-    );
-
-    return data;
-  }
-
-  async getPipeline(repository: Repository, uuid: string): Promise<Pipeline> {
-    const remote = firstBitbucketRemote(repository);
-    let parsed = parseGitUrl(urlForRemote(remote));
+  async getPipeline(site: BitbucketSite, uuid: string): Promise<Pipeline> {
+    const { ownerSlug, repoSlug } = site;
 
     const { data } = await this.client.get(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${uuid}`
+      `/repositories/${ownerSlug}/${repoSlug}/pipelines/${uuid}`
     );
 
-    return this.cleanPipelineData(remote, data);
+    return this.cleanPipelineData(site, data);
   }
 
-  async getSteps(repository: Repository, uuid: string): Promise<PipelineStep[]> {
-    const remote = firstBitbucketRemote(repository);
-    let parsed = parseGitUrl(urlForRemote(remote));
+  async getSteps(site: BitbucketSite, uuid: string): Promise<PipelineStep[]> {
+    const { ownerSlug, repoSlug } = site;
 
     const { data } = await this.client.get(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${uuid}/steps/`
+      `/repositories/${ownerSlug}/${repoSlug}/pipelines/${uuid}/steps/`
     );
 
     return data.values!.map((s: any) => PipelineApiImpl.pipelineStepForPipelineStep(s));
   }
 
-  async getStepLog(repository: Repository, pipelineUuid: string, stepUuid: string): Promise<string[]> {
-    const remote = firstBitbucketRemote(repository);
-    return this.getPipelineLog(remote, pipelineUuid, stepUuid);
-  }
-
-  async getValidPipelinesAccessToken(remote: Remote): Promise<string> {
-    let site = siteDetailsForRemote(remote);
-
-    if (site && site.isCloud) {
-      const token = await Container.clientManager.getValidAccessToken(site);
-      if (token) {
-        return token;
-      }
-    }
-
-    return Promise.reject(bbAPIConnectivityError);
+  async getStepLog(site: BitbucketSite, pipelineUuid: string, stepUuid: string): Promise<string[]> {
+    return this.getPipelineLog(site, pipelineUuid, stepUuid);
   }
 
   async getListForRemote(
-    remote: Remote,
+    site: BitbucketSite,
     branchName: string
   ): Promise<Pipeline[]> {
-    return this.getSinglepagePipelines(remote, { 'target.branch': branchName });
+    return this.getSinglepagePipelines(site, { 'target.branch': branchName });
   }
 
   // A simplified version of getPaginatedPipelines() which assumes you just want some pipelines 
   async getSinglepagePipelines(
-    remote: Remote,
+    site: BitbucketSite,
     query?: any
   ): Promise<Pipeline[]> {
-    const firstPaginatedPage = await this.getPaginatedPipelines(remote, query);
+    const firstPaginatedPage = await this.getPaginatedPipelines(site, query);
     return firstPaginatedPage.values;
   }
 
   // Returns a paginated pipeline which contains information like page length and page number
   async getPaginatedPipelines(
-    remote: Remote,
+    site: BitbucketSite,
     query?: any
   ): Promise<PaginatedPipelines> {
-    // TODO: [VSCODE-502] use site info and convert to async await with try/catch
-    let parsed = parseGitUrl(urlForRemote(remote));
+    const { ownerSlug, repoSlug } = site;
+
     const { data: responseBody } = await this.client.get(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/`,
+      `/repositories/${ownerSlug}/${repoSlug}/pipelines/`,
       {
         ...query,
         sort: '-created_on'
@@ -130,7 +91,7 @@ export class PipelineApiImpl {
     //Take the response and clean it up; in particular, clean up the pipelines it sends back
     let cleanedPipelines: Pipeline[] = [];
     if (responseBody.values) {
-      cleanedPipelines = responseBody.values.map((pipeline: any) => this.cleanPipelineData(remote, pipeline));
+      cleanedPipelines = responseBody.values.map((pipeline: any) => this.cleanPipelineData(site, pipeline));
     }
 
     let cleanedPaginatedPipelines: PaginatedPipelines = {
@@ -142,13 +103,14 @@ export class PipelineApiImpl {
     return cleanedPaginatedPipelines;
   }
 
-  async getPipelineLog(remote: Remote,
+  async getPipelineLog(
+    site: BitbucketSite,
     pipelineUuid: string,
     stepUuid: string): Promise<string[]> {
-    let parsed = parseGitUrl(urlForRemote(remote));
+    const { ownerSlug, repoSlug } = site;
 
     const { data } = await this.client.getOctetStream(
-      `/repositories/${parsed.owner}/${parsed.name}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`
+      `/repositories/${ownerSlug}/${repoSlug}/pipelines/${pipelineUuid}/steps/${stepUuid}/log`
     );
 
     return PipelineApiImpl.splitLogs(data.toString());
@@ -181,7 +143,7 @@ export class PipelineApiImpl {
     return splitLogs;
   }
 
-  cleanPipelineData(remote: Remote, pipeline: any): Pipeline {
+  cleanPipelineData(site: BitbucketSite, pipeline: any): Pipeline {
     var name = undefined;
     var avatar = undefined;
     if (pipeline.creator) {
@@ -198,7 +160,7 @@ export class PipelineApiImpl {
     };
 
     const cleanedPipeline: Pipeline = {
-      remote: remote,
+      site: site,
       repository: CloudRepositoriesApi.toRepo(pipeline.repository!),
       build_number: pipeline.build_number!,
       created_on: pipeline.created_on!,

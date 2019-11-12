@@ -1,9 +1,9 @@
-import * as React from "react";
-import Select, { components } from '@atlaskit/select';
 import Lozenge from "@atlaskit/lozenge";
-import { Transition, Status } from "../../../jira/jira-client/model/entities";
+import Select, { components } from '@atlaskit/select';
+import { Status, Transition } from "jira-metaui-transformer";
+import { emptyTransition } from "jira-pi-client";
+import * as React from "react";
 import { colorToLozengeAppearanceMap } from "../colors";
-import { emptyTransition } from "../../../jira/jira-client/model/emptyEntities";
 
 const { Option } = components;
 

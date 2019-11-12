@@ -1,53 +1,56 @@
-import * as React from 'react';
+import { BreadcrumbsItem, BreadcrumbsStateless } from '@atlaskit/breadcrumbs';
 import Button from '@atlaskit/button';
-import Page, { Grid, GridColumn } from '@atlaskit/page';
-import PageHeader from '@atlaskit/page-header';
-import { BreadcrumbsStateless, BreadcrumbsItem } from '@atlaskit/breadcrumbs';
-import Panel from '@atlaskit/panel';
-import Spinner from '@atlaskit/spinner';
-import Tooltip from '@atlaskit/tooltip';
-import InlineDialog from '@atlaskit/inline-dialog';
 import { Checkbox } from '@atlaskit/checkbox';
-import Select from '@atlaskit/select';
 import CheckCircleOutlineIcon from '@atlaskit/icon/glyph/check-circle-outline';
-import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
-import Reviewers from './Reviewers';
-import { Commits } from './Commits';
-import Comments from './Comments';
-import { WebviewComponent } from '../WebviewComponent';
-import { PRData, CheckoutResult, isPRData } from '../../../ipc/prMessaging';
-import { UpdateApproval, Merge, Checkout, PostComment, CopyPullRequestLink, RefreshPullRequest, DeleteComment, EditComment, FetchUsers } from '../../../ipc/prActions';
-import { OpenJiraIssueAction } from '../../../ipc/issueActions';
-import CommentForm from './CommentForm';
-import BranchInfo from './BranchInfo';
-import IssueList from '../issue/IssueList';
-import BuildStatus from './BuildStatus';
-import NavItem from '../issue/NavItem';
-import { OpenBuildStatusAction } from '../../../ipc/prActions';
-import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import ErrorBanner from '../ErrorBanner';
-import Offline from '../Offline';
-import BitbucketIssueList from '../bbissue/BitbucketIssueList';
-import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
-import { TransitionMenu } from '../issue/TransitionMenu';
-import { StatusMenu } from '../bbissue/StatusMenu';
-import MergeChecks from './MergeChecks';
-import PMFBBanner from '../pmfBanner';
-import { BitbucketIssueData, ApprovalStatus, MergeStrategy } from '../../../bitbucket/model';
-import { MinimalIssue, Transition, isMinimalIssue, MinimalIssueOrKeyAndSite } from '../../../jira/jira-client/model/entities';
-import { AtlLoader } from '../AtlLoader';
-import { format, distanceInWordsToNow } from 'date-fns';
+import ShortcutIcon from '@atlaskit/icon/glyph/shortcut';
+import InlineDialog from '@atlaskit/inline-dialog';
+import Page, { Grid, GridColumn } from '@atlaskit/page';
+import PageHeader from '@atlaskit/page-header';
+import Panel from '@atlaskit/panel';
+import Select from '@atlaskit/select';
+import Spinner from '@atlaskit/spinner';
+import Tooltip from '@atlaskit/tooltip';
+import { distanceInWordsToNow, format } from 'date-fns';
+import { Transition } from 'jira-metaui-transformer';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
+import * as React from 'react';
 import EdiText from 'react-editext';
-import { isValidString } from '../fieldValidators';
 import uuid from 'uuid';
+import { DetailedSiteInfo } from '../../../atlclients/authInfo';
+import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy } from '../../../bitbucket/model';
+import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
+import { OpenJiraIssueAction } from '../../../ipc/issueActions';
+import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
+import { Checkout, CopyPullRequestLink, DeleteComment, EditComment, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval } from '../../../ipc/prActions';
+import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
+import { AtlLoader } from '../AtlLoader';
+import BitbucketIssueList from '../bbissue/BitbucketIssueList';
+import { StatusMenu } from '../bbissue/StatusMenu';
+import ErrorBanner from '../ErrorBanner';
+import { isValidString } from '../fieldValidators';
+import IssueList from '../issue/IssueList';
+import NavItem from '../issue/NavItem';
+import { TransitionMenu } from '../issue/TransitionMenu';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
+import { WebviewComponent } from '../WebviewComponent';
+import BranchInfo from './BranchInfo';
+import BuildStatus from './BuildStatus';
+import CommentForm from './CommentForm';
+import Comments from './Comments';
+import { Commits } from './Commits';
+import DiffList from './DiffList';
+import MergeChecks from './MergeChecks';
+import Reviewers from './Reviewers';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers;
+type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
     pr: PRData;
+    isFileDiffsLoading: boolean;
     isApproveButtonLoading: boolean;
     isMergeButtonLoading: boolean;
     isCheckoutButtonLoading: boolean;
@@ -63,11 +66,10 @@ interface ViewState {
     showPMF: boolean;
 }
 
-const emptyPR = {
+const emptyPR: PRData = {
     type: '',
-    repoUri: '',
-    remote: { name: 'dummy_remote', isReadOnly: true },
     currentBranch: '',
+    fileDiffs: [],
     mergeStrategies: [],
     relatedJiraIssues: [],
     relatedBitbucketIssues: []
@@ -75,6 +77,7 @@ const emptyPR = {
 
 const emptyState: ViewState = {
     pr: emptyPR,
+    isFileDiffsLoading: true,
     isApproveButtonLoading: false,
     isMergeButtonLoading: false,
     isCheckoutButtonLoading: false,
@@ -145,7 +148,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite) => {
+    handleIssueClicked = (issueOrKey: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => {
         this.postMessage({
             action: 'openJiraIssue',
             issueOrKey: issueOrKey
@@ -171,7 +174,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         return new Promise(resolve => {
             this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, remote: this.state.pr.remote });
+            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.pr.pr!.site });
 
             const start = Date.now();
             let timer = setInterval(() => {
@@ -212,11 +215,12 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 if (isPRData(e)) {
                     this.setState({
                         pr: e,
+                        isFileDiffsLoading: false,
                         isApproveButtonLoading: false,
                         isMergeButtonLoading: false,
                         isCheckoutButtonLoading: false,
                         isAnyCommentLoading: false,
-                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.closeSourceBranch : this.state.closeSourceBranch
+                        closeSourceBranch: this.state.closeSourceBranch === undefined ? e.pr!.data.closeSourceBranch : this.state.closeSourceBranch
                     },
                         () => {
                             if (this.state.mergeStrategy.value === undefined) {
@@ -253,16 +257,24 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue, status: { ...(this.state.pr.mainIssue as MinimalIssue).status, id: item.to.id, name: item.to.name } } }
+            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue as MinimalIssue<DetailedSiteInfo>, status: { ...(this.state.pr.mainIssue as MinimalIssue<DetailedSiteInfo>).status, id: item.to.id, name: item.to.name } } }
         });
     };
 
     handleBitbucketIssueStatusChange = (item: string) => {
+        const issue = this.state.pr.mainIssue as BitbucketIssue;
+        const newIssueData = { ...issue.data, state: item };
         this.setState({
             issueSetupEnabled: true,
             // there must be a better way to update the transition dropdown!!
-            pr: { ...this.state.pr, mainIssue: { ...this.state.pr.mainIssue, state: item } as BitbucketIssueData }
+            pr: { ...this.state.pr, mainIssue: { ...issue, data: newIssueData } }
         });
+    };
+
+    diffPanelHeader = () => {
+        return <h3>
+            Files Changed {this.state.isFileDiffsLoading ? '' : `(${this.state.pr.fileDiffs!.length})`}
+        </h3>;
     };
 
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
@@ -276,13 +288,17 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
 
     handleMergeStrategyChange = (item: any) => this.setState({ mergeStrategy: item }, this.resetCommitMessage);
 
+    handleOpenDiffView = (fileDiff: FileDiff) => {
+        this.postMessage({ action: 'openDiffView', fileChange: fileDiff.fileChange! });
+    };
+
     resetCommitMessage = () => {
         const mergeStrategy = this.state.mergeStrategy.value;
         if (mergeStrategy === 'fast_forward') {
             this.setState({ commitMessage: '' });
         }
 
-        const { id, source, title } = this.state.pr.pr!;
+        const { id, source, title, participants } = this.state.pr.pr!.data;
 
         const branchInfo = `Merged in ${source && source.branchName}`;
         const pullRequestInfo = `(pull request #${id})`;
@@ -303,7 +319,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }
         }
 
-        const approvers = this.state.pr.pr!.participants.filter(p => p.status === 'APPROVED');
+        const approvers = participants.filter(p => p.status === 'APPROVED');
         if (approvers.length > 0) {
             const approverInfo = approvers
                 .map(approver => `Approved-by: ${approver.displayName}`)
@@ -315,12 +331,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     render() {
-        const pr = this.state.pr.pr!;
-
-        if (!pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (!this.state.pr.pr && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
-        } else if (!pr && !this.state.isOnline) {
+        } else if (!this.state.pr.pr && !this.state.isOnline) {
             return (
                 <div className='bitbucket-page'>
                     <Offline />
@@ -328,6 +342,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             );
         }
 
+        const pr = this.state.pr.pr!.data;
         const isPrOpen = pr.state === "OPEN";
 
         let currentUserApprovalStatus: ApprovalStatus = 'UNAPPROVED';
@@ -348,18 +363,18 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <TransitionMenu transitions={(issue as MinimalIssue).transitions} currentStatus={(issue as MinimalIssue).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
+                                <TransitionMenu transitions={(issue as MinimalIssue<DetailedSiteInfo>).transitions} currentStatus={(issue as MinimalIssue<DetailedSiteInfo>).status} isStatusButtonLoading={false} onStatusChange={this.handleJiraIssueStatusChange} />
                             </div>
                         </div>
                     </div>
                     : <div>
                         <div className='ac-flex'>
                             <Checkbox isChecked={this.state.issueSetupEnabled} onChange={this.toggleIssueSetupEnabled} name='setup-jira-checkbox' label='Update Bitbucket issue status after merge' />
-                            <NavItem text={`#${issue.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', repoUri: this.state.pr.repoUri, remote: this.state.pr.remote, issue: issue as BitbucketIssueData })} />
+                            <NavItem text={`#${issue.data.id}`} onItemClick={() => this.postMessage({ action: 'openBitbucketIssue', issue: issue })} />
                         </div>
                         <div style={{ marginLeft: 20, borderLeftWidth: 'initial', borderLeftStyle: 'solid', borderLeftColor: 'var(--vscode-settings-modifiedItemIndicator)' }}>
                             <div style={{ marginLeft: 10 }}>
-                                <StatusMenu issue={issue as BitbucketIssueData} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
+                                <StatusMenu issueData={issue.data} isStatusButtonLoading={false} onHandleStatusChange={this.handleBitbucketIssueStatusChange} />
                             </div>
                         </div>
                     </div>
@@ -392,7 +407,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
-                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${this.state.pr.pr!.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/admin/merge-strategies`} /></label>
                                     <Select
                                         options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"
@@ -442,8 +457,8 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         );
         const breadcrumbs = (
             <BreadcrumbsStateless onExpand={() => { }}>
-                <BreadcrumbsItem component={() => <NavItem text={this.state.pr.pr!.destination!.repo.displayName} href={this.state.pr.pr!.destination!.repo.url} />} />
-                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${this.state.pr.pr!.destination!.repo.url}/pull-requests`} />} />
+                <BreadcrumbsItem component={() => <NavItem text={pr.destination!.repo.displayName} href={pr.destination!.repo.url} />} />
+                <BreadcrumbsItem component={() => <NavItem text='Pull requests' href={`${pr.destination!.repo.url}/pull-requests`} />} />
                 <BreadcrumbsItem component={() => <NavItem text={`Pull request #${pr.id}`} href={pr.url} onCopy={this.handleCopyLink} />} />
             </BreadcrumbsStateless>
         );
@@ -474,7 +489,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 </Tooltip>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
-                                <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />
+                                {this.state.pr.currentBranch.length > 0 && <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />}
                                 <div className='ac-flex'>
                                     <Button className='ac-button' spacing='compact' isDisabled={this.state.isCheckoutButtonLoading || pr.source!.branchName === this.state.pr.currentBranch} isLoading={this.state.isCheckoutButtonLoading} onClick={() => this.handleCheckout(pr.source!.branchName)}>
                                         {pr.source!.branchName === this.state.pr.currentBranch ? 'Source branch checked out' : 'Checkout source branch'}
@@ -498,11 +513,14 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         {
                                             this.state.pr.relatedBitbucketIssues && this.state.pr.relatedBitbucketIssues.length > 0 &&
                                             <Panel isDefaultExpanded header={<h3>Related Bitbucket Issues</h3>}>
-                                                <BitbucketIssueList repoUri={this.state.pr.repoUri} remote={this.state.pr.remote} issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
+                                                <BitbucketIssueList issues={this.state.pr.relatedBitbucketIssues} postMessage={(e: OpenBitbucketIssueAction) => this.postMessage(e)} />
                                             </Panel>
                                         }
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
-                                            <Commits {...this.state.pr} />
+                                            <Commits commits={this.state.pr.commits || []} />
+                                        </Panel>
+                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                            <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={this.handleOpenDiffView} ></DiffList>
                                         </Panel>
                                         <Panel isDefaultExpanded header={<h3>Comments</h3>}>
                                             <Comments

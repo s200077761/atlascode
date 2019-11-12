@@ -1,13 +1,13 @@
-import { Repository, Remote } from "../../typings/git";
-import { PullRequest, PaginatedPullRequests, PaginatedComments, Comment, UnknownUser, BuildStatus, CreatePullRequestData, PullRequestApi, User, MergeStrategy, FileChange, Commit } from '../model';
-import { Container } from "../../container";
-import { prCommentEvent } from '../../analytics';
-import { parseGitUrl, urlForRemote, siteDetailsForRemote } from "../bbUtils";
-import { CloudRepositoriesApi } from "./repositories";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Client, ClientError } from "../httpClient";
 import { AxiosResponse } from "axios";
-import { getAgent } from "../../atlclients/agent";
+import { prCommentEvent } from '../../analytics';
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { Container } from "../../container";
+import { getAgent } from "../../jira/jira-client/providers";
+import { CacheMap } from "../../util/cachemap";
+import { Time } from "../../util/time";
+import { Client, ClientError } from "../httpClient";
+import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
+import { CloudRepositoriesApi } from "./repositories";
 
 export const maxItemsSupported = {
     commits: 100,
@@ -16,7 +16,7 @@ export const maxItemsSupported = {
     buildStatuses: 100
 };
 export const defaultPagelen = 25;
-const dummyRemote = { name: '', isReadOnly: true };
+
 const mergeStrategyLabels = {
     'merge_commit': 'Merge commit',
     'squash': 'Squash',
@@ -25,8 +25,9 @@ const mergeStrategyLabels = {
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
+    private fileContentCache: CacheMap = new CacheMap();
 
-    constructor(site: DetailedSiteInfo, token: string) {
+    constructor(private site: DetailedSiteInfo, token: string) {
         this.client = new Client(
             site.baseApiUrl,
             `Bearer ${token}`,
@@ -71,11 +72,37 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    async getList(repository: Repository, remote: Remote, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
-        let parsed = parseGitUrl(remote.fetchUrl! || remote.pushUrl!);
+    async getCurrentUserPullRequests(): Promise<PaginatedPullRequests> {
+        const { data } = await this.client.get(
+            `/pullrequests/${this.site.userId}`,
+            {
+                pagelen: defaultPagelen,
+                fields: '+values.participants,+values.source.repository.slug,+values.destination.repository.slug'
+            }
+        );
+
+        const prs: PullRequest[] = data.values!.map((pr: any) => {
+            const ownerSlug = pr.destination.repository.full_name.slice(0, pr.destination.repository.full_name.lastIndexOf(pr.destination.repository.slug) - 1);
+            const repoSlug = pr.destination.repository.slug;
+            return CloudPullRequestApi.toPullRequestData(pr, { details: this.site, ownerSlug: ownerSlug, repoSlug: repoSlug });
+        });
+        const next = data.next;
+
+        if (prs.length > 0) {
+            return { site: prs[0].site, data: prs, next: next };
+        }
+        return { site: undefined!, data: [], next: undefined };
+    }
+
+    async getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
+        const site = workspaceRepo.mainSiteRemote.site;
+        if (!site) {
+            return { workspaceRepo, site: site!, data: [] };
+        }
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests`,
             {
                 pagelen: defaultPagelen,
                 fields: '+values.participants',
@@ -83,66 +110,65 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        const prs: PullRequest[] = data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
+        const prs: PullRequest[] = data.values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, site, workspaceRepo));
         const next = data.next;
         // Handling pull requests from multiple remotes is not implemented. We stop when we see the first remote with PRs.
         if (prs.length > 0) {
-            return { repository: repository, remote: remote, data: prs, next: next };
+            return { workspaceRepo, site, data: prs, next: next };
         }
 
-        return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+        return { workspaceRepo, site, data: [], next: undefined };
     }
 
-    async getListCreatedByMe(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { q: `state="OPEN" and author.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { q: `state="OPEN" and author.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
-    async getListToReview(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
-    async nextPage({ repository, remote, next }: PaginatedPullRequests): Promise<PaginatedPullRequests> {
-        const { data } = await this.client.getURL(next!);
+    async nextPage(paginatedPullRequests: PaginatedPullRequests): Promise<PaginatedPullRequests> {
+        if (!paginatedPullRequests.next) {
+            return { ...paginatedPullRequests, next: undefined };
+        }
+        const { data } = await this.client.getURL(paginatedPullRequests.next);
 
-        const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(repository, remote, pr));
-        return { repository: repository, remote: remote, data: prs, next: data.next };
+        const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
+        return { ...paginatedPullRequests, data: prs, next: data.next };
     }
 
-    async getLatest(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
-            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${siteDetailsForRemote(remote)!.userId}"` });
+            workspaceRepo,
+            { pagelen: 2, sort: '-created_on', q: `state="OPEN" and reviewers.account_id="${workspaceRepo.mainSiteRemote.site!.details.userId}"` });
     }
 
-    async getRecentAllStatus(repository: Repository, remote: Remote): Promise<PaginatedPullRequests> {
+    async getRecentAllStatus(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests> {
         return this.getList(
-            repository,
-            remote,
+            workspaceRepo,
             { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 
     async get(pr: PullRequest): Promise<PullRequest> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
         );
 
-        return CloudPullRequestApi.toPullRequestData(pr.repository, pr.remote, data);
+        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
     }
 
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
             {
                 fields: 'destination.branch.merge_strategies,destination.branch.default_merge_strategy'
             }
@@ -156,10 +182,10 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/diffstat`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/diffstat`,
         );
 
         if (!data.values) {
@@ -174,17 +200,42 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         return accumulatedDiffStats.map(diffStat => ({
-            status: diffStat.status!,
+            linesAdded: diffStat.lines_added ? diffStat.lines_added : 0,
+            linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
+            status: this.mapStatusWordsToFileStatus(diffStat.status!),
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
-            newPath: diffStat.new ? diffStat.new.path! : undefined
+            newPath: diffStat.new ? diffStat.new.path! : undefined,
+            hunkMeta: {
+                oldPathAdditions: [],
+                oldPathDeletions: [],
+                newPathAdditions: [],
+                newPathDeletions: [],
+                newPathContextMap: {}
+            }
         }));
     }
 
+    private mapStatusWordsToFileStatus(status: string): FileStatus {
+        if (status === 'added') {
+            return FileStatus.ADDED;
+        } else if (status === 'removed') {
+            return FileStatus.DELETED;
+        } else if (status === 'modified') {
+            return FileStatus.MODIFIED;
+        } else if (status === 'renamed') {
+            return FileStatus.RENAMED;
+        } else if (status === 'merge conflict') {
+            return FileStatus.CONFLICT;
+        } else {
+            return FileStatus.UNKNOWN;
+        }
+    }
+
     async getCommits(pr: PullRequest): Promise<Commit[]> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/commits`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/commits`,
             {
                 pagelen: maxItemsSupported.commits
             }
@@ -212,18 +263,20 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async deleteComment(remote: Remote, prId: number, commentId: number): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void> {
+        const { ownerSlug, repoSlug } = site;
+
         await this.client.delete(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`,
             {}
         );
     }
 
-    async editComment(remote: Remote, prId: number, content: string, commentId: number): Promise<Comment> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment> {
+        const { ownerSlug, repoSlug } = site;
+
         const { data } = await this.client.put(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments/${commentId}`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments/${commentId}`,
             {
                 content: {
                     raw: content
@@ -231,14 +284,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return this.convertDataToComment(data, remote);
+        return this.convertDataToComment(data, site);
     }
 
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         let { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/comments`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
             {
                 pagelen: maxItemsSupported.comments
             }
@@ -269,7 +322,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                 deleted: true
             } as any;
         });
-        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.remote)))));
+        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site)))));
         const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
             data: visibleComments,
@@ -316,10 +369,10 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     async getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]> {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/statuses`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/statuses`,
             {
                 pagelen: maxItemsSupported.buildStatuses
             }
@@ -334,13 +387,13 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async getReviewers(remote: Remote, query?: string): Promise<User[]> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+    async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
+        const { ownerSlug, repoSlug } = site;
 
         let reviewers: any[] = [];
         if (!query) {
             const { data } = await this.client.get(
-                `/repositories/${parsed.owner}/${parsed.name}/default-reviewers`,
+                `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
                 {
                     pagelen: maxItemsSupported.reviewers
                 }
@@ -348,7 +401,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             reviewers = data.values || [];
         } else {
             const { data } = await this.client.get(
-                `/teams/${parsed.owner}/members?q=nickname="${query}"`
+                `/teams/${ownerSlug}/members?q=nickname="${query}"`
             );
             reviewers = data.values || [];
         }
@@ -356,7 +409,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return reviewers.map(reviewer => CloudPullRequestApi.toUserModel(reviewer));
     }
 
-    async create(repository: Repository, remote: Remote, createPrData: CreatePullRequestData): Promise<PullRequest> {
+    async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
         let prBody = {
             type: 'pullrequest',
             title: createPrData.title,
@@ -380,31 +433,31 @@ export class CloudPullRequestApi implements PullRequestApi {
             close_source_branch: createPrData.closeSourceBranch
         };
 
-        let parsed = parseGitUrl(urlForRemote(remote));
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests`,
             prBody
         );
 
-        return CloudPullRequestApi.toPullRequestData(repository, remote, data);
+        return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
 
     async updateApproval(pr: PullRequest, status: string) {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
         status === "APPROVED"
             ? await this.client.post(
-                `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/approve`,
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
                 {}
             )
             : await this.client.delete(
-                `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/approve`,
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/approve`,
                 {}
             );
     }
 
     async merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string) {
-        let parsed = parseGitUrl(urlForRemote(pr.remote));
+        const { ownerSlug, repoSlug } = pr.site;
 
         let body = Object.create({});
         body = closeSourceBranch ? { ...body, close_source_branch: closeSourceBranch } : body;
@@ -417,26 +470,23 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
 
         await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${pr.data.id}/merge`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/merge`,
             body
         );
     }
 
     async postComment(
-        remote: Remote,
+        site: BitbucketSite,
         prId: number, text: string,
         parentCommentId?: number,
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
-        let parsed = parseGitUrl(urlForRemote(remote));
+        const { ownerSlug, repoSlug } = site;
 
-        const site: DetailedSiteInfo | undefined = siteDetailsForRemote(remote);
-        if (site) {
-            prCommentEvent(site).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-        }
+        prCommentEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         const { data } = await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/pullrequests/${prId}/comments`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments`,
             {
                 parent: parentCommentId ? { id: parentCommentId } : undefined,
                 content: {
@@ -446,12 +496,29 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return await this.convertDataToComment(data, remote);
+        return await this.convertDataToComment(data, site);
     }
 
-    private async convertDataToComment(data: any, remote: Remote): Promise<Comment> {
-        const site = siteDetailsForRemote(remote);
-        const commentBelongsToUser: boolean = (site && data && data.user && data.user.account_id === site.userId) ? true : false;
+    async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
+
+        const cacheKey = `${site.ownerSlug}::${site.repoSlug}::${commitHash}::${path}`;
+        const cachedValue = this.fileContentCache.getItem<string>(cacheKey);
+        if (cachedValue) {
+            return cachedValue;
+        }
+
+        const { data } = await this.client.getRaw(
+            `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`
+        );
+
+        this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
+
+        return data;
+    }
+
+    private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {
+        const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 
         return {
             id: data.id!,
@@ -471,26 +538,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    static toPullRequestData(repository: Repository, remote: Remote, pr: any): PullRequest {
-
+    static toPullRequestData(pr: any, site: BitbucketSite, workspaceRepo?: WorkspaceRepo): PullRequest {
         const source = CloudPullRequestApi.toPullRequestRepo(pr.source);
         const destination = CloudPullRequestApi.toPullRequestRepo(pr.destination);
-        let sourceRemote = undefined;
-        if (source.repo.url !== '' && source.repo.url !== destination.repo.url) {
-            const parsed = parseGitUrl(urlForRemote(remote));
-            sourceRemote = {
-                fetchUrl: parseGitUrl(source.repo.url).toString(parsed.protocol),
-                name: source.repo.fullName,
-                isReadOnly: true
-            };
-        }
 
         return {
-            repository: repository,
-            remote: remote,
-            sourceRemote: sourceRemote,
+            site: site,
+            workspaceRepo: workspaceRepo,
             data: {
-                siteDetails: siteDetailsForRemote(remote)!,
+                siteDetails: site.details,
                 id: pr.id!,
                 version: -1,
                 url: pr.links!.html!.href!,

@@ -1,10 +1,10 @@
-import { Message, HostErrorMessage } from "./messaging";
-import { RepoData } from "./prMessaging";
+import { CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions, User } from "jira-metaui-transformer";
+import { createEmptyIssueTypeUI, emptyUser, isMinimalIssue, MinimalIssue, Project } from "jira-pi-client";
+import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PullRequestData } from "../bitbucket/model";
-import { MinimalIssue, Project, User } from "../jira/jira-client/model/entities";
-import { EditIssueUI, emptyEditIssueUI, CreateMetaTransformerProblems, IssueTypeUI, emptyIssueTypeUI } from "../jira/jira-client/model/editIssueUI";
-import { FieldValues, SelectFieldOptions } from "../jira/jira-client/model/fieldUI";
-import { emptyUser } from "../jira/jira-client/model/emptyEntities";
+import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { HostErrorMessage, Message } from "./messaging";
+import { RepoData } from "./prMessaging";
 
 
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
@@ -30,14 +30,14 @@ export interface IssueProblemsData extends Message {
 }
 
 export interface CreateIssueData extends Message { }
-export interface CreateIssueData extends IssueTypeUI {
+export interface CreateIssueData extends IssueTypeUI<DetailedSiteInfo> {
     currentUser: User;
     transformerProblems: CreateMetaTransformerProblems;
 }
 
 export const emptyCreateIssueData: CreateIssueData = {
     type: "",
-    ...emptyIssueTypeUI,
+    ...createEmptyIssueTypeUI(emptySiteInfo),
     currentUser: emptyUser,
     transformerProblems: {},
 };
@@ -56,7 +56,7 @@ export interface FieldValueUpdate extends Message {
 
 export interface EpicChildrenUpdate extends Message {
     type: 'epicChildrenUpdate';
-    epicChildren: MinimalIssue[];
+    epicChildren: MinimalIssue<DetailedSiteInfo>[];
 }
 
 export interface PullRequestUpdate extends Message {
@@ -106,7 +106,7 @@ export interface IssueCreated extends Message {
 }
 
 export interface StartWorkOnIssueData extends Message {
-    issue: MinimalIssue;
+    issue: MinimalIssue<DetailedSiteInfo>;
     repoData: RepoData[];
 }
 
@@ -127,7 +127,7 @@ export function isIssueCreated(m: Message): m is IssueCreated {
 }
 
 export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
-    return (<StartWorkOnIssueData>m).issue !== undefined;
+    return (<StartWorkOnIssueData>m).issue !== undefined && isMinimalIssue((<StartWorkOnIssueData>m).issue);
 }
 
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {

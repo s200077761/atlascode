@@ -1,16 +1,16 @@
-import * as React from 'react';
-import { WebviewComponent } from '../WebviewComponent';
+import Button from '@atlaskit/button';
+import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import Button from '@atlaskit/button';
-import { colors } from '@atlaskit/theme';
-import DisplayFeedback from './DisplayFeedback';
-import { Action } from '../../../ipc/messaging';
-import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
-import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
-import { FeedbackUser } from '../../../ipc/configMessaging';
 import SectionMessage from '@atlaskit/section-message';
+import { colors } from '@atlaskit/theme';
+import * as React from 'react';
 import Collapsible from 'react-collapsible';
+import { FeedbackData, SubmitFeedbackAction } from '../../../ipc/configActions';
+import { FeedbackUser } from '../../../ipc/configMessaging';
+import { Action } from '../../../ipc/messaging';
+import { WebviewComponent } from '../WebviewComponent';
+import DisplayFeedback from './DisplayFeedback';
 
 type ViewState = {
     feedbackUser: FeedbackUser;
@@ -94,6 +94,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.1.5 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added welcome screen to help new users get up and running</li>
+                                <li>Support using existing branches when starting work on an issue</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed issue that could prevent Windows users from adding multiple accounts</li>
+                                <li>Allow disabling Jira or Bitbucket features globally and re-enabling them at the project level</li>
+                                <li>Inline comments on Bitbucket Server pull requests no longer show up at the file level</li>
+                                <li>Fixed diff view comments not refreshing after adding a new comment</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.1.4 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>

@@ -1,9 +1,8 @@
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Remote } from "../../typings/git";
+import { BitbucketSite } from "../../bitbucket/model";
 
-export abstract class BitbucketSite {
+export abstract class BitbucketSiteBase {
   constructor(
-    protected site: DetailedSiteInfo, protected remote: Remote) {
+    protected site: BitbucketSite) {
   }
 
   public abstract getChangeSetUrl(revision: string, filePath: string): string;

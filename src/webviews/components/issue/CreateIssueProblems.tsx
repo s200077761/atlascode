@@ -1,12 +1,11 @@
-import * as React from 'react';
-import { WebviewComponent } from "../WebviewComponent";
-import { HostErrorMessage, Action } from "../../../ipc/messaging";
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import ErrorBanner from '../ErrorBanner';
+import { CreateMetaTransformerProblems } from 'jira-metaui-transformer';
+import { emptyProject, Project } from 'jira-pi-client';
+import * as React from 'react';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
-import { CreateMetaTransformerProblems } from '../../../jira/jira-client/model/editIssueUI';
-import { Project } from '../../../jira/jira-client/model/entities';
-import { emptyProject } from '../../../jira/jira-client/model/emptyEntities';
+import { Action, HostErrorMessage } from "../../../ipc/messaging";
+import ErrorBanner from '../ErrorBanner';
+import { WebviewComponent } from "../WebviewComponent";
 //import TableTree from '@atlaskit/table-tree';
 type Accept = IssueProblemsData | HostErrorMessage;
 
@@ -32,7 +31,6 @@ export default class CreateIssueProblems extends WebviewComponent<Action, Accept
         switch (e.type) {
             case 'error': {
                 this.setState({ isErrorBannerOpen: true, errorDetails: e.reason });
-
                 break;
             }
             case 'screenRefresh': {

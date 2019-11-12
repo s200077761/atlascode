@@ -1,26 +1,29 @@
 import * as path from 'path';
 import * as vscode from "vscode";
 import { BitbucketContext } from "../../bitbucket/bbContext";
+import { clientForSite } from '../../bitbucket/bbUtils';
 import { Commands } from "../../commands";
-import { clientForRemote, firstBitbucketRemote } from '../../bitbucket/bbUtils';
 
 export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
     private _lastCheckedTime = new Map<String, Date>();
 
     constructor(private _bbCtx: BitbucketContext) {
-        this._bbCtx.getBitbucketRepositories().forEach(repo => this._lastCheckedTime.set(repo.rootUri.toString(), new Date()));
+        this._bbCtx.getBitbucketRepositories().forEach(repo => this._lastCheckedTime.set(repo.rootUri, new Date()));
     }
 
     checkForNewActivity() {
-        const promises = this._bbCtx.getBitbucketRepositories().map(async repo => {
-            const remote = firstBitbucketRemote(repo);
-            const bbApi = await clientForRemote(remote);
+        const promises = this._bbCtx.getBitbucketRepositories().map(async wsRepo => {
+            const site = wsRepo.mainSiteRemote.site;
+            if (!site) {
+                return [];
+            }
+            const bbApi = await clientForSite(site);
 
-            return bbApi.pullrequests.getLatest(repo, remote).then(prList => {
-                const lastChecked = this._lastCheckedTime.has(repo.rootUri.toString())
-                    ? this._lastCheckedTime.get(repo.rootUri.toString())!
+            return bbApi.pullrequests.getLatest(wsRepo).then(prList => {
+                const lastChecked = this._lastCheckedTime.has(wsRepo.rootUri)
+                    ? this._lastCheckedTime.get(wsRepo.rootUri)!
                     : new Date();
-                this._lastCheckedTime.set(repo.rootUri.toString(), new Date());
+                this._lastCheckedTime.set(wsRepo.rootUri, new Date());
 
                 let newPRs = prList.data.filter(i => Date.parse(i.data.ts!) > lastChecked.getTime());
                 return newPRs;
@@ -30,7 +33,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
             .then(result => result.reduce((prev, curr) => prev.concat(curr), []))
             .then(allPRs => {
                 if (allPRs.length === 1) {
-                    let repoName = path.basename(allPRs[0].repository.rootUri.path);
+                    let repoName = path.basename(allPRs[0].site.repoSlug);
                     vscode.window.showInformationMessage(`New pull request "${allPRs[0].data.title}" for repo "${repoName}"`, 'Show')
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {
@@ -38,7 +41,7 @@ export class PullRequestCreatedMonitor implements BitbucketActivityMonitor {
                             }
                         });
                 } else if (allPRs.length > 0) {
-                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.repository.rootUri.path)))].join(", ");
+                    let repoNames = [...new Set(allPRs.map(r => path.basename(r.site.repoSlug)))].join(", ");
                     vscode.window.showInformationMessage(`New pull requests found for the following repositories: ${repoNames}`, 'Show')
                         .then(usersChoice => {
                             if (usersChoice === 'Show') {

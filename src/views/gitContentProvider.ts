@@ -1,6 +1,8 @@
-import * as vscode from 'vscode';
-import * as pathlib from 'path';
+import pathlib from 'path';
+import vscode from 'vscode';
 import { BitbucketContext } from '../bitbucket/bbContext';
+import { bitbucketSiteForRemote, clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
+import { Container } from '../container';
 import { PRFileDiffQueryParams } from './pullrequest/pullRequestNode';
 
 export class GitContentProvider implements vscode.TextDocumentContentProvider {
@@ -10,33 +12,46 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
     constructor(private bbContext: BitbucketContext) { }
 
     async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
-        const { repoUri, remote, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
+        const { repoUri, repoHref, branchName, path, commitHash } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
         if (!repoUri) {
             return '';
         }
         const u: vscode.Uri = vscode.Uri.parse(repoUri);
-        const repo = this.bbContext.getRepository(u);
-        if (!repo || !path || !commitHash) {
+        const wsRepo = this.bbContext.getRepository(u);
+        if (!wsRepo || !path || !commitHash) {
             return '';
         }
 
-        const absolutePath = pathlib.join(repo.rootUri.fsPath, path);
         let content = '';
+        const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri);
+        if (!scm) {
+            return '';
+        }
+
+        const absolutePath = pathlib.join(scm.rootUri.path, path);
+
         try {
-            content = await repo.show(commitHash, absolutePath);
+            content = await scm.show(commitHash, absolutePath);
         } catch (err) {
             try {
-                await repo.fetch(remote.name, branchName);
-                content = await repo.show(commitHash, absolutePath);
+                await scm.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
+                content = await scm.show(commitHash, absolutePath);
             } catch (err) {
                 try {
-                    await repo.addRemote(remote.name, remote.fetchUrl!);
-                    await repo.fetch(remote.name, branchName);
-                    content = await repo.show(commitHash, absolutePath);
+                    const parsedRepo = parseGitUrl(urlForRemote(wsRepo.mainSiteRemote.remote));
+                    const parsedSourceRepo = parseGitUrl(repoHref).toString(parsedRepo.protocol);
+                    const site = bitbucketSiteForRemote({ name: 'DUMMY', fetchUrl: parsedSourceRepo, isReadOnly: true });
+                    if (site) {
+                        const bbApi = await clientForSite(site);
+                        const fileContent = await bbApi.pullrequests.getFileContent(site, commitHash, path);
+                        return fileContent;
+                    }
                 } catch (err) {
-                    vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
+                    // ignore error
                 }
+
+                vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
             }
         }
 

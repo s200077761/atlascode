@@ -1,17 +1,14 @@
-import { Repository, Remote } from "../../typings/git";
-import { getBitbucketRemotes, parseGitUrl, urlForRemote, clientForRemote, firstBitbucketRemote } from "../bbUtils";
-import { PaginatedBitbucketIssues, PaginatedComments, UnknownUser, Comment, BitbucketIssue, BitbucketIssueData } from "../model";
-import { Client, ClientError } from "../httpClient";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { AxiosResponse } from 'axios';
-import { getAgent } from "../../atlclients/agent";
+import { DetailedSiteInfo } from "../../atlclients/authInfo";
+import { getAgent } from '../../jira/jira-client/providers';
+import { Client, ClientError } from "../httpClient";
+import { BitbucketIssue, BitbucketSite, Comment, emptyBitbucketSite, PaginatedBitbucketIssues, PaginatedComments, UnknownUser, WorkspaceRepo } from "../model";
 
 const defaultPageLength = 25;
 export const maxItemsSupported = {
     comments: 100,
     changes: 100
 };
-const dummyRemote = { name: '', isReadOnly: true };
 
 export class BitbucketIssuesApiImpl {
     private client: Client;
@@ -39,36 +36,36 @@ export class BitbucketIssuesApiImpl {
     // ---- BEGIN - Actions NOT on a specific issue ----
     // ---- => ensure Bitbucket issues are enabled for the repo
 
-    async getList(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        let remotes = getBitbucketRemotes(repository);
-        if (remotes.length === 0) {
-            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
-        }
-        const remote = firstBitbucketRemote(repository);
-        if (!await this.bitbucketIssuesEnabled(remote)) {
-            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+    async getList(workspaceRepo: WorkspaceRepo): Promise<PaginatedBitbucketIssues> {
+        const site = workspaceRepo.mainSiteRemote.site;
+        if (!site) {
+            return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };
         }
 
-        let parsed = parseGitUrl(urlForRemote(remote));
+        if (!await this.bitbucketIssuesEnabled(site)) {
+            return { workspaceRepo, site, data: [], next: undefined };
+        }
+
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues`,
             {
                 pagelen: defaultPageLength,
                 q: 'state="new" OR state="open" OR state="on hold"'
             }
         );
 
-        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 
-        return { repository: repository, remote: remote, data: issues, next: data.next };
+        return { workspaceRepo, site, data: issues, next: data.next };
     }
 
-    async getAvailableComponents(repositoryHref: string): Promise<any[] | undefined> {
-        let parsed = parseGitUrl(repositoryHref);
+    async getAvailableComponents(site: BitbucketSite): Promise<any[] | undefined> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/components`,
+            `/repositories/${ownerSlug}/${repoSlug}/components`,
             {
                 pagelen: defaultPageLength
             }
@@ -77,43 +74,36 @@ export class BitbucketIssuesApiImpl {
         return data.values;
     }
 
-    async getIssuesForKeys(repository: Repository, issueKeys: string[]): Promise<BitbucketIssue[]> {
-        let remotes = getBitbucketRemotes(repository);
-        if (remotes.length === 0) {
-            return [];
-        }
-        const remote = firstBitbucketRemote(repository);
-
-        if (!await this.bitbucketIssuesEnabled(remote)) {
+    async getIssuesForKeys(site: BitbucketSite, issueKeys: string[]): Promise<BitbucketIssue[]> {
+        if (!await this.bitbucketIssuesEnabled(site)) {
             return [];
         }
 
-        let parsed = parseGitUrl(urlForRemote(remote));
+        const { ownerSlug, repoSlug } = site;
 
         const keyNumbers = issueKeys.map(key => key.replace('#', ''));
 
         const results = await Promise.all(keyNumbers.map(key => this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${key}`
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${key}`
         )));
 
-        return results.filter(result => !!result).map(result => ({ repository: repository, remote: remote, data: result.data }));
+        return results.filter(result => !!result).map(result => ({ site, data: result.data }));
     }
 
-    async getLatest(repository: Repository): Promise<PaginatedBitbucketIssues> {
-        let remotes = getBitbucketRemotes(repository);
-
-        if (remotes.length === 0) {
-            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
-        }
-        const remote = firstBitbucketRemote(repository);
-        if (!await this.bitbucketIssuesEnabled(remote)) {
-            return { repository: repository, remote: dummyRemote, data: [], next: undefined };
+    async getLatest(workspaceRepo: WorkspaceRepo): Promise<PaginatedBitbucketIssues> {
+        const site = workspaceRepo.mainSiteRemote.site;
+        if (!site) {
+            return { workspaceRepo: workspaceRepo, site: emptyBitbucketSite, data: [], next: undefined };
         }
 
-        let parsed = parseGitUrl(urlForRemote(remote));
+        if (!await this.bitbucketIssuesEnabled(site)) {
+            return { workspaceRepo, site, data: [], next: undefined };
+        }
+
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues`,
             {
                 pagelen: 2,
                 q: '(state="new" OR state="open" OR state="on hold")',
@@ -121,14 +111,19 @@ export class BitbucketIssuesApiImpl {
             }
         );
 
-        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 
-        return { repository: repository, remote: remote, data: issues, next: data.next };
+        return { workspaceRepo, site, data: issues, next: data.next };
     }
 
-    async bitbucketIssuesEnabled(remote: Remote): Promise<boolean> {
-        const bbClient = await clientForRemote(remote);
-        return !!(await bbClient.repositories.get(remote)).issueTrackerEnabled;
+    async bitbucketIssuesEnabled(site: BitbucketSite): Promise<boolean> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}`
+        );
+
+        return !!data.has_issues;
     }
 
     // ---- END - Actions NOT on a specific issue ----
@@ -138,20 +133,20 @@ export class BitbucketIssuesApiImpl {
     // ---- => Bitbucket issues enabled for the repo
 
     async refetch(issue: BitbucketIssue): Promise<BitbucketIssue> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`,
         );
 
         return { ...issue, data: data };
     }
 
     async getComments(issue: BitbucketIssue): Promise<PaginatedComments> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/comments`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`,
             {
                 issue_id: issue.data.id!.toString(),
                 pagelen: maxItemsSupported.comments,
@@ -185,10 +180,10 @@ export class BitbucketIssuesApiImpl {
     }
 
     async getChanges(issue: BitbucketIssue): Promise<PaginatedComments> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         const { data } = await this.client.get(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
                 pagelen: maxItemsSupported.changes,
                 sort: '-created_on'
@@ -256,10 +251,10 @@ export class BitbucketIssuesApiImpl {
     }
 
     async postChange(issue: BitbucketIssue, newStatus: string, content?: string): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
                 type: 'issue_change',
                 changes: {
@@ -275,10 +270,10 @@ export class BitbucketIssuesApiImpl {
     }
 
     async postNewComponent(issue: BitbucketIssue, newComponent: string): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/changes`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/changes`,
             {
                 type: 'issue_change',
                 changes: {
@@ -291,10 +286,10 @@ export class BitbucketIssuesApiImpl {
     }
 
     async postComment(issue: BitbucketIssue, content: string): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}/comments`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}/comments`,
             {
                 type: 'issue_comment',
                 content: {
@@ -305,10 +300,10 @@ export class BitbucketIssuesApiImpl {
     }
 
     async assign(issue: BitbucketIssue, account_id: string): Promise<void> {
-        let parsed = parseGitUrl(urlForRemote(issue.remote));
+        const { ownerSlug, repoSlug } = issue.site;
 
         await this.client.put(
-            `/repositories/${parsed.owner}/${parsed.name}/issues/${issue.data.id}`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`,
             {
                 type: 'issue',
                 assignee: {
@@ -319,11 +314,11 @@ export class BitbucketIssuesApiImpl {
         );
     }
 
-    async create(href: string, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssueData> {
-        let parsed = parseGitUrl(href);
+    async create(site: BitbucketSite, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.post(
-            `/repositories/${parsed.owner}/${parsed.name}/issues`,
+            `/repositories/${ownerSlug}/${repoSlug}/issues`,
             {
                 type: 'issue',
                 title: title,
@@ -335,15 +330,15 @@ export class BitbucketIssuesApiImpl {
             }
         );
 
-        return data;
+        return { site, data };
     }
 
-    async nextPage({ repository, remote, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
+    async nextPage({ workspaceRepo, site, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
         const { data } = await this.client.getURL(next!);
 
-        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ repository: repository, remote: remote, data: val }));
+        const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 
-        return { repository: repository, remote: remote, data: issues || [], next: data.next };
+        return { workspaceRepo, site, data: issues || [], next: data.next };
     }
 
     // ---- END - Issue specific actions ----

@@ -1,17 +1,16 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { Repository, Remote } from '../../typings/git';
-import { PaginatedBitbucketIssues, BitbucketIssue } from '../../bitbucket/model';
-import { Resources } from '../../resources';
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { BitbucketIssue, PaginatedBitbucketIssues, WorkspaceRepo } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Resources } from '../../resources';
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { SimpleNode } from '../nodes/simpleNode';
-import { clientForRemote } from '../../bitbucket/bbUtils';
 
 export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     private _children: AbstractBaseNode[] | undefined = undefined;
 
-    constructor(private repository: Repository, private remote: Remote, private expand?: boolean) {
+    constructor(private workspaceRepo: WorkspaceRepo, private expand?: boolean) {
         super();
     }
 
@@ -27,9 +26,9 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
     }
 
     getTreeItem(): vscode.TreeItem {
-        const directory = path.basename(this.repository.rootUri.fsPath);
+        const directory = path.basename(this.workspaceRepo.rootUri);
         const item = new vscode.TreeItem(`${directory}`, this.expand ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = this.repository.rootUri.fsPath;
+        item.tooltip = this.workspaceRepo.rootUri;
 
         return item;
     }
@@ -39,8 +38,8 @@ export class BitbucketIssuesRepositoryNode extends AbstractBaseNode {
             return element.getChildren();
         }
         if (!this._children) {
-            const bbApi = await clientForRemote(this.remote);
-            let issues = await bbApi.issues!.getList(this.repository);
+            const bbApi = await clientForSite(this.workspaceRepo.mainSiteRemote.site!);
+            let issues = await bbApi.issues!.getList(this.workspaceRepo);
             if (issues.data.length === 0) {
                 return [new SimpleNode('No open issues for this repository')];
             }

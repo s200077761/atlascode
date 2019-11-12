@@ -12,6 +12,7 @@ __webpack_public_path__ = `${document.baseURI!}build/`;
 const routes = {
     'atlascodeSettings': React.lazy(() => import(/* webpackChunkName: "atlascodeSettings" */'./config/ConfigPage')),
     'atlascodeWelcomeScreen': React.lazy(() => import(/* webpackChunkName: "atlascodeWelcomeScreen" */'./config/Welcome')),
+    'atlascodeOnboardingScreen': React.lazy(() => import(/* webpackChunkName: "atlascodeNewUserOnboardingScreen" */'./config/Onboarding')),
     'pullRequestDetailsScreen': React.lazy(() => import(/* webpackChunkName: "pullRequestDetailsScreen" */'./pullrequest/PullRequestPage')),
     'createPullRequestScreen': React.lazy(() => import(/* webpackChunkName: "createPullRequestScreen" */'./pullrequest/CreatePullRequestPage')),
     'viewIssueScreen': React.lazy(() => import(/* webpackChunkName: "viewIssueScreen" */'./issue/JiraIssuePage')),

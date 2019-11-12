@@ -1,12 +1,13 @@
 
+import { MinimalIssue } from 'jira-pi-client';
+import { DetailedSiteInfo } from '../atlclients/authInfo';
 import { JiraIssueWebview } from './jiraIssueWebview';
 import { AbstractMultiViewManager } from './multiViewManager';
-import { MinimalIssue } from '../jira/jira-client/model/entities';
 
 // JiraIssueViewManager manages views for issue details.
-export class JiraIssueViewManager extends AbstractMultiViewManager<MinimalIssue> {
+export class JiraIssueViewManager extends AbstractMultiViewManager<MinimalIssue<DetailedSiteInfo>> {
 
-    dataKey(data: MinimalIssue): string {
+    dataKey(data: MinimalIssue<DetailedSiteInfo>): string {
         return data.key;
 
     }

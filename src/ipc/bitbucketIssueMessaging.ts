@@ -1,11 +1,9 @@
+import { BitbucketIssue, Comment, User } from "../bitbucket/model";
 import { Message } from "./messaging";
 import { RepoData } from "./prMessaging";
-import { User, Comment, BitbucketIssueData } from "../bitbucket/model";
-import { Remote } from "../typings/git";
 
 export interface BitbucketIssueMessageData extends Message {
-    issueData: BitbucketIssueData;
-    remote: Remote;
+    issue: BitbucketIssue;
     currentUser: User;
     comments: Comment[];
     hasMore: boolean;
@@ -19,7 +17,7 @@ export interface CreateBitbucketIssueData extends Message {
 
 export interface StartWorkOnBitbucketIssueData extends Message {
     type: 'startWorkOnBitbucketIssueData';
-    issue: BitbucketIssueData;
+    issue: BitbucketIssue;
     repoData: RepoData[];
 }
 

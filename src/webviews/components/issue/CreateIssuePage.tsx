@@ -1,29 +1,28 @@
-import * as React from 'react';
-import { AbstractIssueEditorPage, CommonEditorPageAccept, CommonEditorPageEmit, CommonEditorViewState, emptyCommonEditorState } from "./AbstractIssueEditorPage";
-import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from "../../../ipc/issueMessaging";
-import Page, { Grid, GridColumn } from "@atlaskit/page";
-import SectionMessage from '@atlaskit/section-message';
-import Offline from '../Offline';
-import ErrorBanner from '../ErrorBanner';
 import Button from '@atlaskit/button';
+import Form, { Field, FormFooter } from '@atlaskit/form';
+import Page, { Grid, GridColumn } from "@atlaskit/page";
 import Panel from '@atlaskit/panel';
-import Form, { FormFooter } from '@atlaskit/form';
-import { FieldUI, ValueType, UIType } from '../../../jira/jira-client/model/fieldUI';
-import { AtlLoader } from '../AtlLoader';
-import { IssueKeyAndSite } from '../../../jira/jira-client/model/entities';
-import { emptySiteInfo, DetailedSiteInfo } from '../../../atlclients/authInfo';
-import PMFBBanner from '../pmfBanner';
-import { PMFData } from '../../../ipc/messaging';
+import SectionMessage from '@atlaskit/section-message';
 import Select, { components } from '@atlaskit/select';
-import { Field } from '@atlaskit/form';
-import { chain } from '../fieldValidators';
 import Spinner from '@atlaskit/spinner';
+import { FieldUI, UIType, ValueType } from 'jira-metaui-transformer';
+import { IssueKeyAndSite } from 'jira-pi-client';
+import * as React from 'react';
+import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
+import { CreateIssueData, emptyCreateIssueData, isIssueCreated } from "../../../ipc/issueMessaging";
+import { PMFData } from '../../../ipc/messaging';
+import { AtlLoader } from '../AtlLoader';
+import ErrorBanner from '../ErrorBanner';
+import { chain } from '../fieldValidators';
+import Offline from '../Offline';
+import PMFBBanner from '../pmfBanner';
+import { AbstractIssueEditorPage, CommonEditorPageAccept, CommonEditorPageEmit, CommonEditorViewState, emptyCommonEditorState } from "./AbstractIssueEditorPage";
 
 type Emit = CommonEditorPageEmit;
 type Accept = CommonEditorPageAccept | CreateIssueData;
 interface ViewState extends CommonEditorViewState, CreateIssueData {
     isCreateBannerOpen: boolean;
-    createdIssue: IssueKeyAndSite;
+    createdIssue: IssueKeyAndSite<DetailedSiteInfo>;
 }
 
 const emptyState: ViewState = {

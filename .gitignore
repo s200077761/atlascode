@@ -13,3 +13,5 @@ charles-ssl-proxying-certificate.pem
 *.pem
 TEMP-*
 .DS_Store
+.yalc
+yalc.lock

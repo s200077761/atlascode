@@ -1,13 +1,13 @@
-import { MinimalIssue } from "./jira-client/model/entities";
-import { Container } from "../container";
-import { ProductJira } from "../atlclients/authInfo";
+import { MinimalIssue } from "jira-pi-client";
 import pAny from "p-any";
 import pTimeout from "p-timeout";
+import { DetailedSiteInfo, ProductJira } from "../atlclients/authInfo";
+import { Container } from "../container";
 import { Time } from "../util/time";
 import { fetchMinimalIssue } from "./fetchIssue";
 
-export async function issueForKey(issueKey: string): Promise<MinimalIssue> {
-    const emptyPromises: Promise<MinimalIssue>[] = [];
+export async function issueForKey(issueKey: string): Promise<MinimalIssue<DetailedSiteInfo>> {
+    const emptyPromises: Promise<MinimalIssue<DetailedSiteInfo>>[] = [];
 
     Container.siteManager.getSitesAvailable(ProductJira).forEach(site => {
         emptyPromises.push(

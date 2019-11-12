@@ -7,10 +7,14 @@ import { loggedOutEvent } from '../analytics';
 import { OAuthRefesher } from './oauthRefresher';
 import { AnalyticsClient } from '../analytics-node-client/src';
 import PQueue from 'p-queue';
+import crypto from 'crypto';
 
-const keychainServiceNameV2 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV2" : "atlascode-authinfoV2";
+const keychainServiceNameV3 = version.endsWith('-insider') ? "atlascode-insiders-authinfoV3" : "atlascode-authinfoV3";
 
-interface CredentialIdToAuthInfo { [k: string]: AuthInfo; }
+enum Priority {
+    Read = 0,
+    Write
+}
 
 export class CredentialManager implements Disposable {
     private _memStore: Map<string, Map<string, AuthInfo>> = new Map<string, Map<string, AuthInfo>>();
@@ -32,44 +36,17 @@ export class CredentialManager implements Disposable {
         this._onDidAuthChange.dispose();
     }
 
-    public async getFirstAuthInfoForProduct(product: Product): Promise<AuthInfo | undefined> {
-        let foundInfo: AuthInfo | undefined = undefined;
-
-        let productAuths = this._memStore.get(product.key);
-
-        if (productAuths) {
-            foundInfo = productAuths.values().next().value;
-        }
-
-
-        if (!foundInfo && keychain) {
-            try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(product.key) || undefined;
-                if (infoEntry) {
-                    let infos: CredentialIdToAuthInfo = JSON.parse(infoEntry);
-                    if (infos) {
-                        let entry = Object.entries(infos).values().next().value;
-
-                        if (entry) {
-                            foundInfo = entry[1];
-                            if (foundInfo && productAuths) {
-                                this._memStore.set(product.key, productAuths.set(entry[0], foundInfo));
-                            }
-                        }
-                    }
-                }
-            } catch (e) {
-                Logger.info(`keychain error ${e}`);
-            }
-        }
-
-        return foundInfo;
-    }
-
+    /**
+     * Gets the auth info for the given site. Will return value stored in the in-memory store if
+     * it's available, otherwise will return the value in the keychain.
+     */
     public async getAuthInfo(site: DetailedSiteInfo): Promise<AuthInfo | undefined> {
         return this.getAuthInfoForProductAndCredentialId(site.product.key, site.credentialId);
     }
 
+    /**
+     * Saves the auth info to both the in-memory store and the keychain.
+     */
     public async saveAuthInfo(site: DetailedSiteInfo, info: AuthInfo): Promise<void> {
         let productAuths = this._memStore.get(site.product.key);
 
@@ -112,11 +89,9 @@ export class CredentialManager implements Disposable {
 
         if (!foundInfo && keychain) {
             try {
-                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey) || undefined;
+                let infoEntry = await this.getJsonAuthInfoFromKeychain(productKey, credentialId) || undefined;
                 if (infoEntry) {
-                    let infoForProduct: CredentialIdToAuthInfo = JSON.parse(infoEntry);
-
-                    let info = infoForProduct[credentialId];
+                    let info: AuthInfo = JSON.parse(infoEntry);
 
                     if (info && productAuths) {
                         this._memStore.set(productKey, productAuths.set(credentialId, info));
@@ -134,41 +109,68 @@ export class CredentialManager implements Disposable {
         //return foundInfo ? foundInfo : Promise.reject(`no authentication info found for site ${site.hostname}`);
     }
 
+    /**
+     * Returns a raw keychain item.
+     * 
+     * @remarks
+     * Ignores the in-memory store and returns the raw value stored in the keychain. Meant to 
+     * used during migration.
+     */
+    public async getRawKeychainItem(service: string, productKey: string): Promise<any | undefined> {
+        try {
+            let item = undefined;
+            await this._queue.add(async () => {
+                if (keychain) {
+                    item = await keychain.getPassword(service, productKey);
+                }
+            }, { priority: Priority.Read });
+            if (!item) {
+                return undefined;
+            }
+            return JSON.parse(item);
+        } catch (e) {
+            Logger.info(`keychain error ${e}`);
+        }
+        return undefined;
+    }
+
+    /**
+     * Deletes the keychain item.
+     * 
+     * @remarks
+     * This only deletes the keychain item, leaving the in-memory store un-touched. It's 
+     * meant to be used during migrations.
+     */
+    public async deleteKeychainItem(service: string, productKey: string) {
+        try {
+            if (keychain) {
+                await keychain.deletePassword(service, productKey);
+            }
+        } catch (e) {
+            Logger.info(`keychain error ${e}`);
+        }
+    }
+
     private async addSiteInformationToKeychain(productKey: string, credentialId: string, info: AuthInfo) {
         await this._queue.add(async () => {
             if (keychain) {
-                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
-                let infoDict: CredentialIdToAuthInfo = {};
-                if (infoEntry) {
-                    infoDict = JSON.parse(infoEntry);
-                }
-                infoDict[credentialId] = info;
-                await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
+                await keychain.setPassword(keychainServiceNameV3, `${productKey}-${credentialId}`, JSON.stringify(info));
             }
-        }, { priority: 1 });
+        }, { priority: Priority.Write });
     }
 
     private async removeSiteInformationFromKeychain(productKey: string, credentialId: string): Promise<boolean> {
         let wasKeyDeleted = false;
         await this._queue.add(async () => {
             if (keychain) {
-                const infoEntry = await keychain.getPassword(keychainServiceNameV2, productKey);
-                let infoDict: CredentialIdToAuthInfo = {};
-                if (infoEntry) {
-                    infoDict = JSON.parse(infoEntry);
-                    wasKeyDeleted = Object.keys(infoDict).includes(credentialId);
-                    if (wasKeyDeleted) {
-                        delete infoDict[credentialId];
-                        await keychain.setPassword(keychainServiceNameV2, productKey, JSON.stringify(infoDict));
-                    }
-                }
+                wasKeyDeleted = await keychain.deletePassword(keychainServiceNameV3, `${productKey}-${credentialId}`);
             }
-        }, { priority: 1 });
+        }, { priority: Priority.Write });
         return wasKeyDeleted;
     }
 
-    private async getJsonAuthInfoFromKeychain(productKey: string, serviceName?: string): Promise<string | null> {
-        let svcName = keychainServiceNameV2;
+    private async getJsonAuthInfoFromKeychain(productKey: string, credentialId: string, serviceName?: string): Promise<string | null> {
+        let svcName = keychainServiceNameV3;
 
         if (serviceName) {
             svcName = serviceName;
@@ -177,12 +179,15 @@ export class CredentialManager implements Disposable {
         let authInfo: string | null = null;
         await this._queue.add(async () => {
             if (keychain) {
-                authInfo = await keychain.getPassword(svcName, productKey);
+                authInfo = await keychain.getPassword(svcName, `${productKey}-${credentialId}`);
             }
-        }, { priority: 0 });
+        }, { priority: Priority.Read });
         return authInfo;
     }
 
+    /**
+     * Calls the OAuth provider and updates the access token.
+     */
     public async refreshAccessToken(site: DetailedSiteInfo): Promise<string | undefined> {
         const credentials = await this.getAuthInfo(site);
         if (!isOAuthInfo(credentials)) {
@@ -201,6 +206,9 @@ export class CredentialManager implements Disposable {
         return newAccessToken;
     }
 
+    /**
+     * Removes an auth item from both the in-memory store and the keychain.
+     */
     public async removeAuthInfo(site: DetailedSiteInfo): Promise<boolean> {
         let productAuths = this._memStore.get(site.product.key);
         let wasKeyDeleted = false;
@@ -240,5 +248,9 @@ export class CredentialManager implements Disposable {
                 return CommandContext.IsBBAuthenticated;
         }
         return undefined;
+    }
+
+    public static generateCredentialId(siteId: string, userId: string): string {
+        return crypto.createHash('md5').update(siteId + '::' + userId).digest('hex');
     }
 }

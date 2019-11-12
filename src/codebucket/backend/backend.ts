@@ -1,13 +1,13 @@
+import { clientForSite } from '../../bitbucket/bbUtils';
+import { WorkspaceRepo } from '../../bitbucket/model';
+import { Container } from '../../container';
+import { Shell } from '../../util/shell';
+import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
+import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
+import { CommandBase } from '../command/command-base';
 import { BitbucketCloudSite } from '../hosts/bitbucket-cloud';
 import { BitbucketServerSite } from '../hosts/bitbucket-server';
-import { BitbucketSite } from '../hosts/bitbucket-site-base';
-import { Shell } from '../../util/shell';
-import { CommandBase } from '../command/command-base';
-import { PullRequestNodeDataProvider } from '../../views/pullRequestNodeDataProvider';
-import { PRFileDiffQueryParams } from '../../views/pullrequest/pullRequestNode';
-import { Container } from '../../container';
-import { firstBitbucketRemote, clientForRemote, siteDetailsForRemote } from '../../bitbucket/bbUtils';
-import { Repository } from '../../typings/git';
+import { BitbucketSiteBase } from '../hosts/bitbucket-site-base';
 
 export class Backend {
 
@@ -21,7 +21,7 @@ export class Backend {
   /**
    * Get the repository corresponding to the open editor.
    */
-  public findRepository(): Repository {
+  public findRepository(): WorkspaceRepo {
     const editor = CommandBase.getOpenEditor();
     let editorUri = editor.document.uri.toString();
     if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
@@ -29,7 +29,7 @@ export class Backend {
       editorUri = queryParams.repoUri;
     }
 
-    const result = Container.bitbucketContext.getBitbucketRepositories().find(repo => editorUri.startsWith(repo.rootUri.toString()));
+    const result = Container.bitbucketContext.getBitbucketRepositories().find(repo => editorUri.startsWith(repo.rootUri));
     if (!result) {
       throw new Error('Unable to find a Bitbucket repository');
     }
@@ -39,20 +39,23 @@ export class Backend {
   /**
    * Get the remote Bitbucket site.
    */
-  public async findBitbucketSite(): Promise<BitbucketSite> {
-    const repo = this.findRepository();
-    const remote = firstBitbucketRemote(repo);
-    const site = siteDetailsForRemote(remote)!;
-    return site.isCloud ? new BitbucketCloudSite(site, remote) : new BitbucketServerSite(site, remote);
+  public async findBitbucketSite(): Promise<BitbucketSiteBase> {
+    const wsRepo = this.findRepository();
+    const site = wsRepo.mainSiteRemote.site;
+    if (!site) {
+      throw new Error('Unable to find bitbucket site');
+    }
+    return site.details.isCloud ? new BitbucketCloudSite(site) : new BitbucketServerSite(site);
   }
 
   /**
    * Get the hash of the commit/changeset that's currently checked out.
    */
   public async findCurrentRevision(): Promise<string> {
-    const repo = this.findRepository();
-    if (repo.state.HEAD && repo.state.HEAD.commit) {
-      return repo.state.HEAD.commit;
+    const wsRepo = this.findRepository();
+    const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri);
+    if (scm && scm.state.HEAD && scm.state.HEAD.commit) {
+      return scm.state.HEAD.commit;
     }
     throw new Error('Unable to get the current revision');
   }
@@ -61,7 +64,7 @@ export class Backend {
    * Get the hash of the revision associated with the current line.
    */
   public async findSelectedRevision(file: string, line: number): Promise<string> {
-    const output = await this.shell.output(`git blame --root -L ${line},${line} ${file}`);
+    const output = await this.shell.output(`git blame --root -l -L ${line},${line} ${file}`);
     const match = output.match(/^(\w+)/);
     if (match) {
       return match[1];
@@ -79,12 +82,14 @@ export class Backend {
       return queryParams.prId;
     }
 
-    const repo = this.findRepository();
-    const remote = firstBitbucketRemote(repo);
-    const bbApi = await clientForRemote(remote);
-    const prs = await bbApi.repositories.getPullRequestIdsForCommit(repo, remote, targetRevision);
-    if (prs.length > 0) {
-      return prs[prs.length - 1];
+    const wsRepo = this.findRepository();
+    const site = wsRepo.mainSiteRemote.site;
+    if (site) {
+      const bbApi = await clientForSite(site);
+      const prs = await bbApi.repositories.getPullRequestIdsForCommit(site, targetRevision);
+      if (prs.length > 0) {
+        return prs[prs.length - 1];
+      }
     }
 
     throw new Error('Unable to determine the pull request');
