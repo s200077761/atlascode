@@ -371,8 +371,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             created: taskData.created_on,
             updated: taskData.updated_on,
             isComplete: taskData.state !== "UNRESOLVED",
-            editable: taskBelongsToUser,
-            deletable: taskBelongsToUser,
+            editable: taskBelongsToUser && taskData.state === "UNRESOLVED",
+            deletable: taskBelongsToUser && taskData.state === "UNRESOLVED",
             id: taskData.id,
             content: taskData.content
         };
