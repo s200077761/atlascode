@@ -100,6 +100,7 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
         query: JSON.stringify({
             site: pr.site,
             lhs: true,
+            repoHref: pr.data.destination.repo.url,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
@@ -107,13 +108,17 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
             branchName: pr.data.destination!.branchName,
             commitHash: mergeBase,
             path: lhsFilePath,
-            commentThreads: lhsCommentThreads
+            commentThreads: lhsCommentThreads,
+            addedLines: fileChange.hunkMeta.oldPathAdditions,
+            deletedLines: fileChange.hunkMeta.oldPathDeletions,
+            lineContextMap: fileChange.hunkMeta.newPathContextMap
         } as PRFileDiffQueryParams)
     };
     const rhsQueryParam = {
         query: JSON.stringify({
             site: pr.site,
             lhs: false,
+            repoHref: pr.data.source.repo.url,
             prHref: pr.data.url,
             prId: pr.data.id,
             participants: pr.data.participants,
@@ -121,7 +126,10 @@ export async function getArgsForDiffView(allComments: PaginatedComments, fileCha
             branchName: pr.data.source!.branchName,
             commitHash: pr.data.source!.commitHash,
             path: rhsFilePath,
-            commentThreads: rhsCommentThreads
+            commentThreads: rhsCommentThreads,
+            addedLines: fileChange.hunkMeta.newPathAdditions,
+            deletedLines: fileChange.hunkMeta.newPathDeletions,
+            lineContextMap: fileChange.hunkMeta.newPathContextMap
         } as PRFileDiffQueryParams)
     };
 

@@ -1,3 +1,14 @@
+## What's New In 2.1.5
+### Improvements
+* Added welcome screen to help new users get up and running
+* Support using existing branches when starting work on an issue
+
+### Bugs Fixed
+* Fixed issue that could prevent Windows users from adding multiple accounts
+* Allow disabling Jira or Bitbucket features globally and re-enabling them at the project level
+* Inline comments on Bitbucket Server pull requests no longer show up at the file level
+* Fixed diff view comments not refreshing after adding a new comment
+
 ## What's New In 2.1.4
 ### Bugs Fixed
 * Fixed issue that resulted in failure to save credentials when logging in

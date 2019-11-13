@@ -1,7 +1,7 @@
-import axios, { AxiosResponse, AxiosInstance } from 'axios';
-import { Time } from '../util/time';
-import { Container } from '../container';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
+import { Container } from '../container';
+import { Time } from '../util/time';
 
 export class Client {
     private transport: AxiosInstance;
@@ -40,6 +40,19 @@ export class Client {
     async get(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         return await this.getURL(url, queryParams);
+    }
+
+    async getRaw(urlSlug: string, queryParams?: any) {
+        let url = `${this.baseUrl}${urlSlug}`;
+        url = this.addQueryParams(url, queryParams);
+
+        const res = await this.transport(url, {
+            method: "GET",
+            // axios tries to parse response as JSON by default
+            // prevent that and pass through the raw data
+            transformResponse: data => data
+        });
+        return { data: res.data, headers: res.headers };
     }
 
     async getURL(url: string, queryParams?: any) {

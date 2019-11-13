@@ -97,7 +97,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                             await bbApi.issues!.assign(issue, issue.site.details.userId);
                             this.postMessage({
                                 type: 'startWorkOnIssueResult',
-                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to "${e.branchName}" branch with upstream set to "${e.remoteName}/${e.branchName}"</li>` : ''}</ul>`
+                                successMessage: `<ul><li>Assigned the issue to you</li>${e.setupBitbucket ? `<li>Switched to <code>${e.branchName}</code> branch with upstream set to <code>${e.remoteName}/${e.branchName}</code></li>` : ''}</ul>`
                             });
 
                             bbIssueWorkStartedEvent(issue.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
@@ -115,15 +115,24 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
     async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
         await repo.fetch(remote, sourceBranch);
 
+        // checkout if a branch exists already
         try {
             await repo.getBranch(destBranch);
-        } catch (reason) {
-            await repo.createBranch(destBranch, true, sourceBranch);
-            await repo.push(remote, destBranch, true);
+            await repo.checkout(destBranch);
             return;
-        }
+        } catch (_) { }
 
-        await repo.checkout(destBranch);
+        // checkout if there's a matching remote branch (checkout will track remote branch automatically)
+        try {
+            await repo.getBranch(`remotes/${remote}/${destBranch}`);
+            await repo.checkout(destBranch);
+            return;
+        } catch (_) { }
+
+        // no existing branches, create a new one
+        await repo.createBranch(destBranch, true, sourceBranch);
+        await repo.push(remote, destBranch, true);
+        return;
     }
 
     public async updateIssue(issue: BitbucketIssue) {
@@ -146,9 +155,10 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                 let isCloud = false;
                 const site = wsRepo.mainSiteRemote.site;
                 const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
+                await scm.fetch();
                 if (site) {
                     const bbApi = await clientForSite(site);
-                    [, repo, developmentBranch] = await Promise.all([scm.fetch(), bbApi.repositories.get(site), bbApi.repositories.getDevelopmentBranch(site)]);
+                    [repo, developmentBranch] = await Promise.all([bbApi.repositories.get(site), bbApi.repositories.getDevelopmentBranch(site)]);
                     href = repo.url;
                     isCloud = site.details.isCloud;
                 }
@@ -158,7 +168,7 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                     href: href,
                     defaultReviewers: [],
                     localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                    remoteBranches: [],
+                    remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                     branchTypes: [],
                     developmentBranch: developmentBranch,
                     isCloud: isCloud

@@ -150,11 +150,13 @@ export default class StartWorkPage extends WebviewComponent<
   };
 
   handleRepoChange = (repo: RepoData) => {
+    const issueId = isStartWorkOnIssueData(this.state.data) ? this.state.data.issue.key : `issue-#${this.state.data.issue.data.id}`;
     const sourceBranchValue = repo.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
     this.setState({
       repo: repo,
       sourceBranch: sourceBranchValue,
-      branchType: repo.branchTypes.length > 0 ? repo.branchTypes[0] : undefined
+      branchType: repo.branchTypes.length > 0 ? repo.branchTypes[0] : undefined,
+      existingBranchOptions: this.getExistingBranchOptions(repo, issueId)
     });
   };
 
@@ -215,10 +217,20 @@ export default class StartWorkPage extends WebviewComponent<
     this.setState({ isErrorBannerOpen: false, errorDetails: undefined });
   };
 
+  private getExistingBranchOptions(repo: RepoData, issueId: string): string[] {
+    const matchingLocalBranches = repo.localBranches.filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase())).map(b => b.name!);
+    const matchingRemoteBranches = repo.remoteBranches
+      .filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase()))
+      .filter(remoteBranch => !repo.localBranches.some(localBranch => remoteBranch.name!.endsWith(localBranch.name!)))
+      .map(b => b.name!.replace(`${b.remote!}/`, ''));
+
+    return [...matchingLocalBranches, ...matchingRemoteBranches];
+  }
+
   private updateState(data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData, issueType: 'jiraIssue' | 'bitbucketIssue', repo: RepoData, issueId: string, issueTitle: string, transition: Transition) {
     const branchOptions = this.state.existingBranchOptions.length > 0
       ? this.state.existingBranchOptions
-      : repo.localBranches.filter(b => b.name!.toLowerCase().includes(issueId.toLowerCase())).map(b => b.name!);
+      : this.getExistingBranchOptions(repo, issueId);
 
     const localBranch = this.state.localBranch || `${issueId}-${issueTitle.substring(0, 50).trim().toLowerCase().replace(/\W+/g, '-')}`;
     const sourceBranch = this.state.sourceBranch || repo.localBranches.find(b => b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1) || repo.localBranches[0];
@@ -422,13 +434,13 @@ export default class StartWorkPage extends WebviewComponent<
                         appearance="change"
                         title='Use an existing branch?'>
                         <div>
-                          <p>Click to use an existing branch for this issue:</p>
-                          <div className='ac-hmargin'>
+                          <p>Click to use an existing branch for this issue: (<em>source branch selection is ignored for existing branches</em>)</p>
+                          <ul>
                             {
                               this.state.existingBranchOptions.map(branchName =>
-                                <Button className='ac-link-button' appearance='link' onClick={() => this.handleSelectExistingBranch(branchName)}>{branchName}</Button>)
+                                <li><Button className='ac-link-button' appearance='link' onClick={() => this.handleSelectExistingBranch(branchName)}>{branchName}</Button></li>)
                             }
-                          </div>
+                          </ul>
                         </div>
                       </SectionMessage>
                     }

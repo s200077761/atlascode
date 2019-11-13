@@ -135,6 +135,15 @@ export type FileChange = {
     newPath?: string;
     linesAdded: number;
     linesRemoved: number;
+    hunkMeta: {
+        oldPathAdditions: number[];
+        oldPathDeletions: number[];
+        newPathAdditions: number[];
+        newPathDeletions: number[];
+        // maps destination file line number to source file line number to support Bitbucket server comments
+        // NOT using Map here as Map does not serialize to JSON
+        newPathContextMap: Object;
+    }
 };
 
 export enum FileStatus {
@@ -268,7 +277,8 @@ export interface PullRequestApi {
     create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
-    postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }): Promise<Comment>;
+    postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
+    getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
 export interface RepositoriesApi {

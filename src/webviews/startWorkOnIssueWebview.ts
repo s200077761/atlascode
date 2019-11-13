@@ -125,15 +125,24 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
     async createOrCheckoutBranch(repo: Repository, destBranch: string, sourceBranch: string, remote: string): Promise<void> {
         await repo.fetch(remote, sourceBranch);
 
+        // checkout if a branch exists already
         try {
             await repo.getBranch(destBranch);
-        } catch (reason) {
-            await repo.createBranch(destBranch, true, sourceBranch);
-            await repo.push(remote, destBranch, true);
+            await repo.checkout(destBranch);
             return;
-        }
+        } catch (_) { }
 
-        await repo.checkout(destBranch);
+        // checkout if there's a matching remote branch (checkout will track remote branch automatically)
+        try {
+            await repo.getBranch(`remotes/${remote}/${destBranch}`);
+            await repo.checkout(destBranch);
+            return;
+        } catch (_) { }
+
+        // no existing branches, create a new one
+        await repo.createBranch(destBranch, true, sourceBranch);
+        await repo.push(remote, destBranch, true);
+        return;
     }
 
     public async updateIssue(issue: MinimalIssue<DetailedSiteInfo>) {
@@ -191,7 +200,7 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                         href: href,
                         defaultReviewers: [],
                         localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
-                        remoteBranches: [],
+                        remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                         branchTypes: branchTypes,
                         developmentBranch: developmentBranch,
                         isCloud: isCloud

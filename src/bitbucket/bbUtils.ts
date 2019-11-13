@@ -5,9 +5,18 @@ import { Container } from "../container";
 import { Remote, Repository } from "../typings/git";
 import { BitbucketApi, BitbucketSite, WorkspaceRepo } from "./model";
 
+const bbServerRepoRegEx = new RegExp(/(?<type>users|projects)\/(?<owner>.*)\/repos/);
+
 export function parseGitUrl(url: string): gup.GitUrl {
     const parsed = gup(url);
     parsed.owner = parsed.owner.slice(parsed.owner.lastIndexOf('/') + 1);
+
+    if (parsed.owner === 'repos') {
+        const matches = url.match(bbServerRepoRegEx);
+        if (matches && matches.groups && matches.groups.type && matches.groups.owner) {
+            parsed.owner = matches.groups.type === 'users' ? `~${matches.groups.owner}` : matches.groups.owner;
+        }
+    }
     return parsed;
 }
 

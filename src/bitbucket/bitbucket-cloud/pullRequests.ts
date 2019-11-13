@@ -3,6 +3,8 @@ import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
+import { CacheMap } from "../../util/cachemap";
+import { Time } from "../../util/time";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { CloudRepositoriesApi } from "./repositories";
@@ -23,6 +25,7 @@ const mergeStrategyLabels = {
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
+    private fileContentCache: CacheMap = new CacheMap();
 
     constructor(private site: DetailedSiteInfo, token: string) {
         this.client = new Client(
@@ -201,7 +204,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             linesRemoved: diffStat.lines_removed ? diffStat.lines_removed : 0,
             status: this.mapStatusWordsToFileStatus(diffStat.status!),
             oldPath: diffStat.old ? diffStat.old.path! : undefined,
-            newPath: diffStat.new ? diffStat.new.path! : undefined
+            newPath: diffStat.new ? diffStat.new.path! : undefined,
+            hunkMeta: {
+                oldPathAdditions: [],
+                oldPathDeletions: [],
+                newPathAdditions: [],
+                newPathDeletions: [],
+                newPathContextMap: {}
+            }
         }));
     }
 
@@ -612,6 +622,24 @@ export class CloudPullRequestApi implements PullRequestApi {
         return await this.convertDataToComment(data, site);
     }
 
+    async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
+        const { ownerSlug, repoSlug } = site;
+
+        const cacheKey = `${site.ownerSlug}::${site.repoSlug}::${commitHash}::${path}`;
+        const cachedValue = this.fileContentCache.getItem<string>(cacheKey);
+        if (cachedValue) {
+            return cachedValue;
+        }
+
+        const { data } = await this.client.getRaw(
+            `/repositories/${ownerSlug}/${repoSlug}/src/${commitHash}/${path}`
+        );
+
+        this.fileContentCache.setItem(cacheKey, data, 5 * Time.MINUTES);
+
+        return data;
+    }
+
     private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {
         const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 
@@ -637,16 +665,6 @@ export class CloudPullRequestApi implements PullRequestApi {
     static toPullRequestData(pr: any, site: BitbucketSite, workspaceRepo?: WorkspaceRepo): PullRequest {
         const source = CloudPullRequestApi.toPullRequestRepo(pr.source);
         const destination = CloudPullRequestApi.toPullRequestRepo(pr.destination);
-        // TODO Handle case when source and destination remotes are not the same
-        // let sourceRemote = undefined;
-        // if (source.repo.url !== '' && source.repo.url !== destination.repo.url) {
-        //     const parsed = parseGitUrl(urlForRemote(remote));
-        //     sourceRemote = {
-        //         fetchUrl: parseGitUrl(source.repo.url).toString(parsed.protocol),
-        //         name: source.repo.fullName,
-        //         isReadOnly: true
-        //     };
-        // }
 
         return {
             site: site,

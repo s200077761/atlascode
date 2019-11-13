@@ -1,5 +1,5 @@
 import { CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions, User } from "jira-metaui-transformer";
-import { createEmptyIssueTypeUI, emptyUser, MinimalIssue, Project } from "jira-pi-client";
+import { createEmptyIssueTypeUI, emptyUser, isMinimalIssue, MinimalIssue, Project } from "jira-pi-client";
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PullRequestData } from "../bitbucket/model";
 import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
@@ -127,7 +127,7 @@ export function isIssueCreated(m: Message): m is IssueCreated {
 }
 
 export function isStartWorkOnIssueData(m: Message): m is StartWorkOnIssueData {
-    return (<StartWorkOnIssueData>m).issue !== undefined;
+    return (<StartWorkOnIssueData>m).issue !== undefined && isMinimalIssue((<StartWorkOnIssueData>m).issue);
 }
 
 export function isStartWorkOnIssueResult(m: Message): m is StartWorkOnIssueResult {
