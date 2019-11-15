@@ -16,16 +16,26 @@ export class TaskComponent extends React.Component<
     }, 
     { 
         editMode: boolean,
-        editInput: string
+        editInput: string,
+        isChecked: boolean,
+        beingDeleted: boolean,
+        isWaitingForServer: boolean
     } > {
 
     constructor(props: any) {
         super(props);
         this.state = {
             editMode: this.props.isInitialized ? false : true,
-            editInput: this.props.task.content.raw 
+            editInput: this.props.task.content.raw,
+            isChecked: this.props.task.isComplete,
+            beingDeleted: false,
+            isWaitingForServer: false
         };
     };
+
+    componentWillReceiveProps(props: any){
+        this.setState({isChecked: props.task.isComplete, beingDeleted: false, isWaitingForServer: false });
+    }
 
     handleEditClick = () => {
         this.setState({ editMode: true });
@@ -39,31 +49,37 @@ export class TaskComponent extends React.Component<
     };
 
     handleEditSaveClick = () => {
-        this.setState({editMode: false});
+        this.setState({editMode: false, isWaitingForServer: true });
         if(this.props.onEdit){
-            this.props.task.content.raw = this.state.editInput;
-            this.props.onEdit(this.props.task);
+            const task = { ...this.props.task, content: {...this.props.task.content, raw: this.state.editInput } };
+            this.props.onEdit(task);
         }
     };
 
     handleSaveClick = () => {
-        this.setState({ editMode: false });
+        this.setState({ editMode: false, isWaitingForServer: true });
         if(this.props.onSave) {
-            this.props.task.content.raw = this.state.editInput;
-            this.props.onSave(this.props.task);
+            const task = { ...this.props.task, content: {...this.props.task.content, raw: this.state.editInput } };
+            this.props.onSave(task);
         }
     };
 
     handleDeleteClick = () => {
         if(this.props.onDelete){
+            this.setState({ beingDeleted: true });
             this.props.onDelete(this.props.task);
         }
     };
 
     handleCheckboxPress = () => {
-        if(!this.state.editMode && this.props.onEdit) {
-            this.props.task.isComplete = !this.props.task.isComplete;
-            this.props.onEdit(this.props.task);
+        if(!this.state.editMode) {
+            this.setState( {isChecked: !this.state.isChecked }, 
+            () => {
+                if(this.props.onEdit) {
+                    const task = { ...this.props.task, isComplete: this.state.isChecked };
+                    this.props.onEdit(task);
+                }
+            } );
         }
     };
 
@@ -73,10 +89,10 @@ export class TaskComponent extends React.Component<
 
     generateActionsList = () => {
         let actionList = [];
-        if(this.props.onEdit && !this.state.editMode && this.props.task.editable) {
+        if(this.props.onEdit && !this.state.editMode && this.props.task.editable && !this.state.beingDeleted && !this.state.isChecked) {
             actionList.push(<CommentAction onClick={this.handleEditClick}>Edit</CommentAction>);
         }
-        if(this.props.onDelete && !this.state.editMode && this.props.task.deletable) {
+        if(this.props.onDelete && !this.state.editMode && this.props.task.deletable && !this.state.beingDeleted && !this.state.isChecked) {
             actionList.push(<CommentAction onClick={this.handleDeleteClick}>Delete</CommentAction>);
         }
         if((this.props.onSave || this.props.onEdit) && this.state.editMode) {
@@ -94,24 +110,33 @@ export class TaskComponent extends React.Component<
         return <Comment className='ac-comment'
             content={
                 <div style={{display: "flex"}}>
-                    <Checkbox
-                        isChecked={this.props.task.isComplete}
-                        onChange={this.handleCheckboxPress}
-                        name="controlled-checkbox"
-                    />
-                    {!this.state.editMode &&
-                        //Tasks which are complete appear striked through on the site, but for some reason the task's internal html does not handle this...
-                        <div dangerouslySetInnerHTML={{ __html: this.props.task.isComplete ? `<p><del>${this.props.task.content.raw}</del></p>` : `<p>${this.props.task.content.raw}</p>` }} />
-                    }
-                    {this.state.editMode && 
-                        <textarea
-                            className='ac-textarea'
-                            rows={1}
-                            placeholder='Add new task'
-                            value={this.state.editInput}
-                            onChange={this.handleEditInputChange}
-                        />
-                    }
+                    {!this.state.beingDeleted &&
+                        <React.Fragment>
+                            <Checkbox
+                                isChecked={this.state.isChecked}
+                                onChange={this.handleCheckboxPress}
+                                name="controlled-checkbox"
+                            />
+                            {!this.state.editMode &&
+                                //Tasks which are complete appear striked through on the site, but for some reason the task's internal html does not handle this...
+                                <p>
+                                    {this.state.isChecked ? 
+                                        <del>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content.raw}</del> :
+                                        <div>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content.raw}</div>
+                                    }
+                                </p>
+                            }
+                            {this.state.editMode && 
+                                <textarea
+                                    className='ac-textarea'
+                                    rows={1}
+                                    placeholder='Add new task'
+                                    value={this.state.editInput}
+                                    onChange={this.handleEditInputChange}
+                                />
+                            }
+                        </React.Fragment>
+                    }   
                 </div>
             }
             actions={this.generateActionsList()}

@@ -186,7 +186,6 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     };
 
     handleTaskDelete = (task: Task) => {
-        console.log("Deleting task... ");
         this.postMessage({
             action: "deleteTask",
             task: task

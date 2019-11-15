@@ -136,7 +136,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
         }
-        const { data } = await this.client.getURL(paginatedPullRequests.next);
+        const { data } = await this.client.get(paginatedPullRequests.next);
 
         const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
         return { ...paginatedPullRequests, data: prs, next: data.next };
@@ -194,7 +194,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedDiffStats = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedDiffStats.push(...(data.values || []));
         }
@@ -247,7 +247,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedCommits = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedCommits.push(...(data.values || []));
         }
@@ -291,7 +291,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
-        let { data } = await this.client.getURL(
+        let { data } = await this.client.get(
             `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
         );
 
@@ -301,7 +301,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedTasks = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedTasks.push(...(data.values || []));
         }
@@ -312,8 +312,8 @@ export class CloudPullRequestApi implements PullRequestApi {
     async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.postURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
+        const { data } = await this.client.post(
+            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
             {
                 comment: {
                     id: comment.id
@@ -334,8 +334,8 @@ export class CloudPullRequestApi implements PullRequestApi {
     async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.putURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+        const { data } = await this.client.put(
+            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
             {
                 comment: {
                     comment: task.commentId
@@ -343,18 +343,6 @@ export class CloudPullRequestApi implements PullRequestApi {
                 completed: task.isComplete,
                 content: {
                     raw: task.content.raw
-                },
-                creator: {
-                    display_name: task.creator.displayName,
-                    links: {
-                        avatar: {
-                            href: task.creator.avatarUrl
-                        },
-                        self: {
-                            href: task.creator.url
-                        }
-                    },
-                    account_id: task.creator.accountId //TODO: Check that this actually works (example on web sends UUID not account_id)
                 },
                 id: task.id,
                 state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
@@ -367,8 +355,8 @@ export class CloudPullRequestApi implements PullRequestApi {
     async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
-        await this.client.deleteURL(
-            `https://bitbucket.org/!api/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+        await this.client.delete(
+            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
             {}  
         );
     }
@@ -391,12 +379,17 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
-            {
-                pagelen: maxItemsSupported.comments
-            }
-        );
+        const commentsAndTaskPromise = Promise.all([
+            this.client.get(
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
+                {
+                    pagelen: maxItemsSupported.comments
+                }
+            ),
+            await this.getTasks(pr),
+        ]);
+        const [commentResp, tasks] = await commentsAndTaskPromise;
+        let { data } = commentResp;
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -404,7 +397,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -424,9 +417,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             } as any;
         });
 
-        //TODO: This should not be an await statement. We should do promises for the comment data and this at the same time for efficiency reasons...
         const convertedComments = await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site))));
-        const tasks: Task[] = await this.getTasks(pr); 
+
         let commentIdMap = new Map<number, number>();
         for(let i = 0; i < convertedComments.length; i++){
             commentIdMap.set(convertedComments[i].id, i);
@@ -444,30 +436,17 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    private containsUnfinishedTask(tasks: Task[]){
-        for(const task of tasks) {
-            if(!task.isComplete) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private shouldDisplayComment(comment: Comment): boolean {
-        if (!comment.deleted || this.containsUnfinishedTask(comment.tasks)) {
-            return true;
-        } else if (!comment.children || comment.children.length === 0) {
-            return false;
-        } else {
-            let hasUndeletedChild: boolean = false;
-            for (let child of comment.children) {
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-                if (hasUndeletedChild) {
-                    return hasUndeletedChild;
-                }
+        let hasUndeletedChild: boolean = false;
+        let filteredChildren = [];
+        for (let child of comment.children) {
+            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+            if (hasUndeletedChild) {
+                filteredChildren.push(child);
             }
-            return hasUndeletedChild;
         }
+        comment.children = filteredChildren;
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
@@ -619,7 +598,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return await this.convertDataToComment(data, site);
+        return this.convertDataToComment(data, site);
     }
 
     async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
@@ -640,7 +619,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {
+    private convertDataToComment(data: any, site: BitbucketSite): Comment {
         const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 
         return {

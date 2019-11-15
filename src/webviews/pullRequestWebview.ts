@@ -285,7 +285,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr),
             bbApi.pullrequests.getChangedFiles(this._pr),
-            //bbApi.pullrequests.getTasks(this._pr) eventually there should be a list of tasks in the PR that's separated from the comments
         ]);
         const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));

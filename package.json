@@ -576,14 +576,6 @@
                     "when": "false"
                 },
                 {
-                    "command": "atlascode.bb.markTaskIncomplete",
-                    "when": "false"
-                },
-                {
-                    "command": "atlascode.bb.markTaskComplete",
-                    "when": "false"
-                },
-                {
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "false"
                 },

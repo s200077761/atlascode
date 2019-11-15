@@ -1,30 +1,30 @@
-import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
-import CommentComponent, { CommentAuthor, CommentTime, CommentAction, CommentEdited } from '@atlaskit/comment';
+import Button, { ButtonGroup } from '@atlaskit/button';
+import CommentComponent, { CommentAction, CommentAuthor, CommentEdited, CommentTime } from '@atlaskit/comment';
+import { differenceInSeconds, distanceInWordsToNow } from 'date-fns';
+import * as React from 'react';
+import { Comment, Task, User } from '../../../bitbucket/model';
 import CommentForm from './CommentForm';
-import { User, Comment, Task } from '../../../bitbucket/model';
-import { ButtonGroup } from '@atlaskit/button';
-import  Button from '@atlaskit/button';
-import { distanceInWordsToNow, differenceInSeconds } from 'date-fns';
 import { TaskComponent } from './Task';
 
 class NestedComment extends React.Component<
     { 
         node: Comment, 
-        currentUser: User, 
-        isCommentLoading: boolean, 
+        currentUser: User,
+        isCommentLoading: boolean,
         onSave?: (content: string, parentCommentId?: number) => void,
         onDelete?: (commentId: number) => void,
-        onEdit?: (content: string, commentId: number) => void
-        onTaskDelete?: (task: Task) => void
-        onTaskEdit?: (task: Task) => void
-        onTaskCreate?: (task: Task, comment: Comment) => void
+        onEdit?: (content: string, commentId: number) => void,
+        onTaskDelete?: (task: Task) => void,
+        onTaskEdit?: (task: Task) => void,
+        onTaskCreate?: (task: Task, comment: Comment) => void,
         loadUserOptions?: (input: string) => any
     }, 
     { 
         showCommentForm: boolean,
         commentEditMode: boolean,
-        isCreatingTask: boolean
+        isCreatingTask: boolean,
+        receivedDataFromServer:  boolean
     } > {
 
     constructor(props: any) {
@@ -32,8 +32,13 @@ class NestedComment extends React.Component<
         this.state = { 
             showCommentForm: false,
             commentEditMode: false,
-            isCreatingTask: false
+            isCreatingTask: false,
+            receivedDataFromServer: true
         };
+    }
+
+    componentWillReceiveProps(props: any){
+        this.setState({ receivedDataFromServer: true });
     }
 
     handleDelete = () => {
@@ -74,7 +79,7 @@ class NestedComment extends React.Component<
     };
 
     handleTaskCreateClick = () => {
-        this.setState({ isCreatingTask: true });
+        this.setState({ isCreatingTask: true, receivedDataFromServer: false });
     };
 
     handleCancelTaskCreate = () => {
@@ -180,7 +185,7 @@ class NestedComment extends React.Component<
             actions={this.generateActionsList()}
         >
             <React.Fragment>
-                { this.state.isCreatingTask &&
+                { (this.state.isCreatingTask || !this.state.receivedDataFromServer) &&
                     <TaskComponent
                         task={this.generateDummyTask()}
                         currentUser={currentUser}

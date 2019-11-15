@@ -61,14 +61,6 @@ export type Repo = {
     issueTrackerEnabled: boolean;
 };
 
-export type PaginatedTasks = {
-    pagelen: number;
-    values: Task[];
-    page: number;
-    size: number;
-    next?: boolean;
-};
-
 export type Task = {
     commentId: number;
     creator: User;

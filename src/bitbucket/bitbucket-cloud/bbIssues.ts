@@ -335,7 +335,7 @@ export class BitbucketIssuesApiImpl {
     }
 
     async nextPage({ workspaceRepo, site, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        const { data } = await this.client.getURL(next!);
+        const { data } = await this.client.get(next!);
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 

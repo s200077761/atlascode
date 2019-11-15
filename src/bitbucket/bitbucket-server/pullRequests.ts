@@ -97,7 +97,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
         }
-        const { data } = await this.client.getURL(paginatedPullRequests.next);
+        const { data } = await this.client.get(paginatedPullRequests.next);
 
         const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(pr, 0, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
         return { ...paginatedPullRequests, data: prs, next: undefined };
@@ -169,7 +169,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedTasks = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedTasks.push(...(data.values || []));
         }
@@ -256,7 +256,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         let accumulatedDiffStats = data.diffs as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
                 {
                     markup: true,
@@ -372,7 +372,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedCommits = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits`,
                 {
                     markup: true,
@@ -436,13 +436,18 @@ export class ServerPullRequestApi implements PullRequestApi {
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
-            {
-                markup: true,
-                avatarSize: 64
-            }
-        );
+        const commentsAndTaskPromise = Promise.all([
+            await this.client.get(
+                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
+                {
+                    markup: true,
+                    avatarSize: 64
+                }
+            ),
+            await this.getTasks(pr),
+        ]);
+        const [commentResp, tasks] = await commentsAndTaskPromise;
+        let { data } = commentResp;
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -450,7 +455,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedActivities = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
                 {
                     markup: true,
@@ -469,7 +474,6 @@ export class ServerPullRequestApi implements PullRequestApi {
                 : true
             );
 
-        const tasks: Task[] = await this.getTasks(pr); 
         return {
             data: (await Promise.all(
                 activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks, undefined)))

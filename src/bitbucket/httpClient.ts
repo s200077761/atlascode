@@ -38,8 +38,12 @@ export class Client {
     }
 
     async get(urlSlug: string, queryParams?: any) {
-        let url = `${this.baseUrl}${urlSlug}`;
-        return await this.getURL(url, queryParams);
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
+        url = this.addQueryParams(url, queryParams);
+        const res = await this.transport(url, {
+            method: "GET"
+        });
+        return { data: res.data, headers: res.headers };
     }
 
     async getRaw(urlSlug: string, queryParams?: any) {
@@ -51,14 +55,6 @@ export class Client {
             // axios tries to parse response as JSON by default
             // prevent that and pass through the raw data
             transformResponse: data => data
-        });
-        return { data: res.data, headers: res.headers };
-    }
-
-    async getURL(url: string, queryParams?: any) {
-        url = this.addQueryParams(url, queryParams);
-        const res = await this.transport(url, {
-            method: "GET"
         });
         return { data: res.data, headers: res.headers };
     }
@@ -77,11 +73,7 @@ export class Client {
     }
 
     async post(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
-        return await this.postURL(url, body, queryParams);
-    }
-
-    async postURL(url: string, body: any, queryParams?: any) {
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
         try {
             const res = await this.transport(url, {
@@ -105,11 +97,7 @@ export class Client {
     }
 
     async put(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
-        return await this.putURL(url, body, queryParams);
-    }
-
-    async putURL(url: string, body: any, queryParams?: any): Promise<any> {
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
@@ -121,11 +109,7 @@ export class Client {
     }
 
     async delete(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
-        return await this.deleteURL(url, body, queryParams);
-    }
-
-    async deleteURL(url: string, body: any, queryParams?: any): Promise<any> {
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
