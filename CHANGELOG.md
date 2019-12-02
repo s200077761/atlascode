@@ -222,7 +222,7 @@
 * The configured development branch is now the default source when starting work on an issue
 * Added more default issue code link triggers
 * (experimental) bitbucket-pipelines.yml editing support
-* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code)
+* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code)
 
 ### Bugs fixed
 * Mention names in pull request comments are not shown properly
