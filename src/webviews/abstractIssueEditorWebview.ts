@@ -49,12 +49,12 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: IssuePickerIssue[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
-                                    const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + msg.query);
+                                    const result: IssuePickerResult = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + encodeURIComponent(msg.query));
                                     if (Array.isArray(result.sections)) {
                                         suggestions = result.sections.reduce((prev, curr) => prev.concat(curr.issues), [] as IssuePickerIssue[]);
                                     }
                                 } else {
-                                    suggestions = await client.getIssuePickerSuggestions(msg.query);
+                                    suggestions = await client.getIssuePickerSuggestions(encodeURIComponent(msg.query));
                                 }
 
                                 this.postMessage({ type: 'issueSuggestionsList', issues: suggestions, nonce: msg.nonce });
@@ -72,14 +72,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 let client = await Container.clientManager.jiraClient(msg.site);
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
-                                    const result = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + msg.query);
+                                    const result = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + encodeURIComponent(msg.query));
                                     suggestions = this.formatSelectOptions(result);
                                 }
 
                                 this.postMessage({ type: 'selectOptionsList', options: suggestions, nonce: msg.nonce });
                             } catch (e) {
                                 Logger.error(new Error(`error posting comment: ${e}`));
-                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching issues'), nonce: msg.nonce });
+                                this.postMessage({ type: 'error', reason: this.formatErrorReason(e, 'Error fetching options'), nonce: msg.nonce });
                             }
                         }
                         break;
