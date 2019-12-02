@@ -1,13 +1,13 @@
-import React, { PureComponent } from "react";
-import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
-import { JQLEntry } from "src/config/model";
-import { Field, ErrorMessage } from '@atlaskit/form';
-import Select, { components } from '@atlaskit/select';
-import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
+import { ErrorMessage, Field } from '@atlaskit/form';
+import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import SectionMessage from '@atlaskit/section-message';
+import Select, { components } from '@atlaskit/select';
+import React, { PureComponent } from "react";
+import { JQLEntry } from "src/config/model";
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
+import * as FieldValidators from "../fieldValidators";
+import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -67,13 +67,13 @@ export default class EditJQL extends PureComponent<{
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {
     return this.fetchEndpoint(
-      `jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=${fieldValue}`
+      `jql/autocompletedata/suggestions?fieldName=${encodeURIComponent(fieldName)}&fieldValue=${encodeURIComponent(fieldValue)}`
     );
   };
 
   validationRequest = async (jql: string) => {
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${encodeURIComponent(jql)}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
