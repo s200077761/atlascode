@@ -1,4 +1,4 @@
-import { commands, Uri } from 'vscode';
+import { commands } from 'vscode';
 import { bbIssueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -120,14 +120,8 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
 
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
-        const { repoUri: uri, title, description, kind, priority } = createIssueAction;
+        const { site: site, title, description, kind, priority } = createIssueAction;
 
-        // TODO [VSCODE-568] Add remote to create bitbucket issue action
-        const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(uri))!;
-        const site = wsRepo.mainSiteRemote.site;
-        if (!site) {
-            throw new Error('Error creating issue: not authenticated');
-        }
         const bbApi = await clientForSite(site);
         let issue: BitbucketIssue = await bbApi.issues!.create(site, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
