@@ -13,7 +13,7 @@ import { Container } from '../container';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, Merge } from '../ipc/prActions';
+import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge } from '../ipc/prActions';
 import { PRData } from "../ipc/prMessaging";
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -85,6 +85,18 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         if (!handled) {
             switch (msg.action) {
+                case 'updateTitle': {
+                    handled = true;
+                    if (isUpdateTitle(msg)) {
+                        try {
+                            await this.updateTitle(this._pr, msg.text);
+                        } catch (e) {
+                            Logger.error(new Error(`error updating pull request title: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
                 case 'updateApproval': {
                     handled = true;
                     if (isUpdateApproval(msg)) {
@@ -361,6 +373,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             Logger.debug('error fetching related bitbucket issues: ', e);
         }
         return result;
+    }
+
+    private async updateTitle(pr: PullRequest, text: string) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.update(pr, text);
+
+        vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
     }
 
     private async updateApproval(pr: PullRequest, status: ApprovalStatus) {
