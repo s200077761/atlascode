@@ -429,29 +429,32 @@
             "comments/commentThread/context": [
                 {
                     "command": "atlascode.bb.addComment",
-                    "group": "inline"
+                    "group": "inline",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/title": [
                 {
                     "command": "atlascode.bb.editComment",
                     "group": "inline@1",
-                    "when": "comment =~ /canEdit/"
+                    "when": "comment =~ /canEdit/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.deleteComment",
                     "group": "inline@2",
-                    "when": "comment =~ /canDelete/"
+                    "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/context": [
                 {
                     "command": "atlascode.bb.cancelCommentEdit",
-                    "group": "inline@2"
+                    "group": "inline@2",
+                    "when": "resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.saveCommentEdit",
-                    "group": "inline@1"
+                    "group": "inline@1",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "commandPalette": [
