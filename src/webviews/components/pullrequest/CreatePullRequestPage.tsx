@@ -88,7 +88,7 @@ const emptyState = {
     showPMF: false,
     isSomethingLoading: false,
     fileDiffs: [],
-    fileDiffsLoading: true
+    fileDiffsLoading: false
 };
 
 const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
