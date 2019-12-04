@@ -8,7 +8,8 @@ import { NextPageNode, PullRequestContextValue, PullRequestTitlesNode } from './
 
 export class RepositoriesNode extends AbstractBaseNode {
     private treeItem: vscode.TreeItem;
-    private _children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
+    private children: (PullRequestTitlesNode | NextPageNode)[] | undefined = undefined;
+    private dirty = false;
 
     constructor(
         public fetcher: (wsRepo: WorkspaceRepo) => Promise<PaginatedPullRequests>,
@@ -19,8 +20,8 @@ export class RepositoriesNode extends AbstractBaseNode {
         this.treeItem = this.createTreeItem();
         this.disposables.push(({
             dispose: () => {
-                if (this._children) {
-                    this._children.forEach(child => {
+                if (this.children) {
+                    this.children.forEach(child => {
                         if (child instanceof PullRequestTitlesNode) {
                             Container.bitbucketContext.prCommentController.disposePR(child.prHref);
                         }
@@ -45,28 +46,34 @@ export class RepositoriesNode extends AbstractBaseNode {
         return item;
     }
 
-    async refresh() {
-        const previousChildrenHrefs = (this._children || [])
+    async markDirty() {
+        this.dirty = true;
+    }
+
+    private async refresh() {
+        const previousChildrenHrefs = (this.children || [])
             .filter(child => child instanceof PullRequestTitlesNode)
             .map(child => (child as PullRequestTitlesNode).prHref);
 
         let prs = await this.fetcher(this.workspaceRepo);
-        this._children = prs.data.map(pr => this.createChildNode(pr));
-        if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+        this.children = prs.data.map(pr => this.createChildNode(pr));
+        if (prs.next) { this.children!.push(new NextPageNode(prs)); }
 
         // dispose comments for any PRs that might have been closed during refresh
         previousChildrenHrefs.forEach(prHref => {
-            if (!this._children!.find(child => child instanceof PullRequestTitlesNode && child.prHref === prHref)) {
+            if (!this.children!.find(child => child instanceof PullRequestTitlesNode && child.prHref === prHref)) {
                 Container.bitbucketContext.prCommentController.disposePR(prHref);
             }
         });
+
+        this.dirty = false;
     }
 
     findResource(uri: vscode.Uri): AbstractBaseNode | undefined {
         if (this.getTreeItem().resourceUri && this.getTreeItem().resourceUri!.toString() === uri.toString()) {
             return this;
         }
-        for (const child of this._children || []) {
+        for (const child of this.children || []) {
             if (child.getTreeItem().resourceUri && child.getTreeItem().resourceUri!.toString() === uri.toString()) {
                 return child;
             }
@@ -75,14 +82,14 @@ export class RepositoriesNode extends AbstractBaseNode {
     }
 
     addItems(prs: PaginatedPullRequests): void {
-        if (!this._children) {
-            this._children = [];
+        if (!this.children) {
+            this.children = [];
         }
-        if (this._children.length > 0 && this._children[this._children.length - 1] instanceof NextPageNode) {
-            this._children.pop();
+        if (this.children.length > 0 && this.children[this.children.length - 1] instanceof NextPageNode) {
+            this.children.pop();
         }
-        this._children!.push(...prs.data.map(pr => this.createChildNode(pr)));
-        if (prs.next) { this._children!.push(new NextPageNode(prs)); }
+        this.children!.push(...prs.data.map(pr => this.createChildNode(pr)));
+        if (prs.next) { this.children!.push(new NextPageNode(prs)); }
     }
 
     private createChildNode(pr: PullRequest): PullRequestTitlesNode {
@@ -97,12 +104,12 @@ export class RepositoriesNode extends AbstractBaseNode {
         if (element) {
             return element.getChildren();
         }
-        if (!this._children) {
+        if (!this.children || this.dirty) {
             await this.refresh();
         }
-        if (this._children!.length === 0) {
+        if (this.children!.length === 0) {
             return [new SimpleNode('No pull requests found for this repository')];
         }
-        return this._children!;
+        return this.children!;
     }
 }

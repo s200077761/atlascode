@@ -105,7 +105,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
         for (const wsRepo of workspaceRepos) {
             const repoUri = wsRepo.rootUri;
             this._childrenMap!.has(repoUri)
-                ? await this._childrenMap!.get(repoUri)!.refresh()
+                ? this._childrenMap!.get(repoUri)!.markDirty()
                 : this._childrenMap!.set(repoUri, new RepositoriesNode(this._fetcher, wsRepo, expand));
         }
     }

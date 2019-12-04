@@ -15,7 +15,7 @@ import Tooltip from '@atlaskit/tooltip';
 import { distanceInWordsToNow, format } from 'date-fns';
 import { Transition } from 'jira-metaui-transformer';
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
-import * as React from 'react';
+import React from 'react';
 import EdiText from 'react-editext';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
@@ -23,7 +23,7 @@ import { ApprovalStatus, BitbucketIssue, Comment, FileDiff, MergeStrategy, Task 
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import { Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval } from '../../../ipc/prActions';
+import { Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
 import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -45,7 +45,12 @@ import DiffList from './DiffList';
 import MergeChecks from './MergeChecks';
 import Reviewers from './Reviewers';
 
-type Emit = UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CreateTask | EditTask | DeleteTask | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
+type Emit = CreateTask | 
+    EditTask | DeleteTask | UpdateTitle | 
+    UpdateApproval | Merge | Checkout | 
+    PostComment | DeleteComment | EditComment | 
+    CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | 
+    OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -299,6 +304,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         </h3>;
     };
 
+    handleTitleChange = (text: string) => this.postMessage({
+        action: 'updateTitle',
+        text: text
+    });
+
     toggleMergeDialog = () => this.setState({ mergeDialogOpen: !this.state.mergeDialogOpen });
     closeMergeDialog = () => this.setState({ mergeDialogOpen: false });
 
@@ -503,12 +513,24 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                 actions={actionsContent}
                                 breadcrumbs={breadcrumbs}
                             >
-                                <Tooltip content={`Created on ${format(pr.ts, 'YYYY-MM-DD h:mm A')}`}>
-                                    <React.Fragment>
-                                        <p>{pr.title}</p>
+                                <React.Fragment>
+                                    <EdiText
+                                        type='text'
+                                        value={pr.title}
+                                        onSave={this.handleTitleChange}
+                                        validation={isValidString}
+                                        validationMessage='Title is required'
+                                        inputProps={{ className: 'ac-inputField' }}
+                                        viewProps={{ id: 'title', className: 'ac-inline-input-view-p' }}
+                                        editButtonClassName='ac-hidden'
+                                        cancelButtonClassName='ac-inline-cancel-button'
+                                        saveButtonClassName='ac-inline-save-button'
+                                        editOnViewClick={true}
+                                    />
+                                    <Tooltip content={`Created on ${format(pr.ts, 'YYYY-MM-DD h:mm A')}`} position='mouse'>
                                         <p style={{ fontSize: 13, color: 'silver' }}>{`Created ${distanceInWordsToNow(pr.ts)} ago`}</p>
-                                    </React.Fragment>
-                                </Tooltip>
+                                    </Tooltip>
+                                </React.Fragment>
                             </PageHeader>
                             <div className='ac-flex-space-between'>
                                 {this.state.pr.currentBranch.length > 0 && <BranchInfo prData={this.state.pr} postMessage={(e: Emit) => this.postMessage(e)} />}
@@ -570,7 +592,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                         </GridColumn>
                     </Grid>
                 </Page>
-            </div>
+            </div >
         );
     }
 }

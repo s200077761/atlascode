@@ -63,6 +63,15 @@ export interface RefreshPullRequest extends Action {
     action: 'refreshPR';
 }
 
+export interface UpdateTitle extends Action {
+    action: 'updateTitle';
+    text: string;
+}
+
+export function isUpdateTitle(a: Action): a is UpdateTitle {
+    return (<UpdateTitle>a).text !== undefined;
+}
+
 export interface UpdateApproval extends Action {
     action: 'updateApproval';
     status: ApprovalStatus;

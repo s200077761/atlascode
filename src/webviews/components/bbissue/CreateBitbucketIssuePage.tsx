@@ -5,9 +5,11 @@ import PageHeader from '@atlaskit/page-header';
 import Select from '@atlaskit/select';
 import * as path from 'path';
 import * as React from "react";
+import { emptyBitbucketSite } from "../../../bitbucket/model";
 import { CreateBitbucketIssueAction } from "../../../ipc/bitbucketIssueActions";
 import { CreateBitbucketIssueData } from "../../../ipc/bitbucketIssueMessaging";
 import { Action, HostErrorMessage } from "../../../ipc/messaging";
+import { RepoData } from "../../../ipc/prMessaging";
 import { AtlLoader } from "../AtlLoader";
 import ErrorBanner from "../ErrorBanner";
 import * as FieldValidators from "../fieldValidators";
@@ -24,6 +26,8 @@ interface MyState extends CreateBitbucketIssueData {
     errorDetails: any;
     isOnline: boolean;
 }
+
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], href: '', isCloud: true };
 
 const emptyState: MyState = {
     type: 'createBitbucketIssueData',
@@ -89,6 +93,10 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
             return <div><Offline /></div>;
         }
 
+        const defaultRepo = this.state.repoData.length > 0
+            ? this.state.repoData[0]
+            : emptyRepoData;
+
         return (
             <Page>
                 <Form
@@ -107,7 +115,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     }
                                     <PageHeader
                                         actions={<ButtonGroup>
-                                            <Button className='ac-button' href={`${this.state.repoData[0].href}/issues`}>Create in browser...</Button>
+                                            <Button className='ac-button' href={`${defaultRepo.href}/issues`}>Create in browser...</Button>
                                         </ButtonGroup>}
                                     >
                                         <p>Create Issue</p>
@@ -153,7 +161,7 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
                                     </Field>
                                 </GridColumn>
                                 <GridColumn medium={6}>
-                                    <Field defaultValue={{ label: path.basename(this.state.repoData[0].workspaceRepo.rootUri), value: this.state.repoData[0] }}
+                                    <Field defaultValue={{ label: path.basename(defaultRepo.workspaceRepo.rootUri), value: defaultRepo }}
                                         label='Repository'
                                         isRequired
                                         id='repo'

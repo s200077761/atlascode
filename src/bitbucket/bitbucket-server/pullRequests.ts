@@ -624,6 +624,20 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, workspaceRepo);
     }
 
+    async update(pr: PullRequest, title: string) {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        let prBody = {
+            version: pr.data.version,
+            title: title
+        };
+
+        await this.client.put(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}`,
+            prBody
+        );
+    }
+
     async updateApproval(pr: PullRequest, status: string) {
         const { ownerSlug, repoSlug } = pr.site;
 
