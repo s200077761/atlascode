@@ -245,6 +245,7 @@ export interface PullRequestApi {
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
     create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
+    update(pr: PullRequest, title: string): Promise<void>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
     postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
