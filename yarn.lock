@@ -5387,6 +5387,11 @@ jest-worker@^24.9.0:
     merge-stream "^2.0.0"
     supports-color "^6.1.0"
 
+jira-metaui-transformer@0.0.4:
+  version "0.0.4"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.4.tgz#3b2412677e87c51308e016cf361e2e2a0d078545"
+  integrity sha1-OyQSZ36HxRMI4BbPNh4uKg0HhUU=
+
 jira-metaui-transformer@^0.0.1:
   version "0.0.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.1.tgz#0e8729bcbe7e9c5074e9c95de47811ed2c83c74d"
