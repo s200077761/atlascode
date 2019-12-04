@@ -76,7 +76,15 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                 });
             }
 
-            this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
+            if (repoData.length > 0) {
+                this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
+
+            } else {
+                const reason = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org') === undefined
+                    ? 'Authenticate with Bitbucket Cloud and try again'
+                    : 'No Bitbucket Cloud repositories found in the current workspace in VS Code';
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket Cloud repos') });
+            }
         } catch (e) {
             Logger.error(new Error(`error updating issue fields: ${e}`));
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
