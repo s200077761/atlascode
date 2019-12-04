@@ -1,5 +1,5 @@
 import TurndownService from 'turndown';
-import vscode from 'vscode';
+import vscode, { MarkdownString } from 'vscode';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, Task } from '../../bitbucket/model';
@@ -34,16 +34,18 @@ interface PullRequestComment extends vscode.Comment {
     prId: number;
     id: number;
     tasks: Task[];
+    editModeContent: MarkdownString | string;
 }
 
 interface PullRequestTask extends vscode.Comment {
-    site: BitbucketSite,
-    prCommentThreadId: number | undefined,
+    site: BitbucketSite;
+    prCommentThreadId: number | undefined;
     parent?: vscode.CommentThread;
-    prHref: string,
-    prId: number,
-    task: Task,
-    id: number
+    prHref: string;
+    prId: number;
+    task: Task;
+    id: number;
+    editModeContent: MarkdownString | string;
 }
 
 function isPRTask(commentOrTask: PullRequestComment | PullRequestTask): commentOrTask is PullRequestTask{
@@ -186,7 +188,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         reply.thread.dispose();
     }
 
-    private convertCommentToMode(commentData: PullRequestComment | PullRequestTask, mode: vscode.CommentMode) {
+    private convertCommentToMode(commentData: PullRequestComment | PullRequestTask, mode: vscode.CommentMode, saveWasPressed?: boolean) {
         if (!commentData.parent) {
             return;
         }
@@ -194,18 +196,38 @@ export class PullRequestCommentController implements vscode.Disposable {
         commentData.parent.comments = commentData.parent.comments.map(comment => {
             if (commentData.id === (comment as PullRequestComment | PullRequestTask).id) {
                 comment.mode = mode;
+                if(mode === vscode.CommentMode.Preview && !saveWasPressed){
+                    comment.body = commentData.editModeContent;
+                }
             }
 
             return comment;
         });
     }
 
+    private storeCommentContentForEdit(commentData: PullRequestComment | PullRequestTask): PullRequestComment | PullRequestTask {
+        if(!commentData.parent) {
+            return commentData;
+        }
+
+        commentData.parent.comments = commentData.parent.comments.map(comment => {
+            if (commentData.id === (comment as PullRequestComment | PullRequestTask).id) {
+                (comment as PullRequestComment | PullRequestTask).editModeContent = comment.body;
+            }
+
+            return comment;
+        });
+
+        return commentData;
+    }
+
     editCommentClicked(commentData: PullRequestComment | PullRequestTask) {
+        commentData = this.storeCommentContentForEdit(commentData);
         this.convertCommentToMode(commentData, vscode.CommentMode.Editing);
     }
 
-    cancelEditComment(taskData: PullRequestComment | PullRequestTask) {
-        this.convertCommentToMode(taskData, vscode.CommentMode.Preview);
+    cancelEditComment(commentData: PullRequestComment | PullRequestTask) {
+        this.convertCommentToMode(commentData, vscode.CommentMode.Preview);
     }
 
     private async replaceEditedComment(comments: (PullRequestComment | PullRequestTask)[], newComment: Comment | Task): Promise<vscode.Comment[]> {
@@ -252,12 +274,12 @@ export class PullRequestCommentController implements vscode.Disposable {
             return;
         }
 
-        this.convertCommentToMode(commentData, vscode.CommentMode.Preview);
+        this.convertCommentToMode(commentData, vscode.CommentMode.Preview, true);
         const commentThreadId = commentData.prCommentThreadId;
         if (commentThreadId && commentData.parent) {
-            const bbApi = await clientForSite(commentData.site);
             let comments: vscode.Comment[];
             if(isPRComment(commentData)){
+                const bbApi = await clientForSite(commentData.site);
                 let newComment: Comment = await bbApi.pullrequests.editComment(commentData.site, commentData.prId, commentData.body.toString(), commentData.id);
                 
                 //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
