@@ -91,20 +91,12 @@ export class PullRequestCommentController implements vscode.Disposable {
                 this.editCommentClicked(task);
             }),
             vscode.commands.registerCommand(Commands.BitbucketMarkTaskComplete, async (taskData: PullRequestTask) => {
-                const oldTask = (taskData as PullRequestTask).task;
-                const editedTask: Task = { ...oldTask, isComplete: true };
-                const bbApi = await clientForSite(taskData.site);
-                const newTask: Task = await bbApi.pullrequests.editTask(taskData.site, taskData.prId, editedTask);
-                const newComments = this.updateTask(taskData.parent!.comments, newTask);
+                const newComments = await this.updateTask(taskData.parent!.comments, taskData, {isComplete: true});
                 this.createOrUpdateThread(taskData.prCommentThreadId!, taskData.parent!.uri, taskData.parent!.range, newComments);
                 vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(taskData.prHref));
             }),
             vscode.commands.registerCommand(Commands.BitbucketMarkTaskIncomplete, async (taskData: PullRequestTask) => {
-                const oldTask = (taskData as PullRequestTask).task;
-                const editedTask: Task = { ...oldTask, isComplete: false };
-                const bbApi = await clientForSite(taskData.site);
-                const newTask: Task = await bbApi.pullrequests.editTask(taskData.site, taskData.prId, editedTask);
-                const newComments = this.updateTask(taskData.parent!.comments, newTask);
+                const newComments = await this.updateTask(taskData.parent!.comments, taskData, {isComplete: false});
                 this.createOrUpdateThread(taskData.prCommentThreadId!, taskData.parent!.uri, taskData.parent!.range, newComments);
                 vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(taskData.prHref));
             }),
@@ -232,7 +224,9 @@ export class PullRequestCommentController implements vscode.Disposable {
         return newComments;
     }
 
-    private updateTask(comments: readonly vscode.Comment[], newTask: Task): PullRequestComment[] {
+    private async updateTask(comments: readonly vscode.Comment[], taskData: PullRequestTask, newTaskData: Partial<Task>): Promise<PullRequestComment[]> {
+        const bbApi = await clientForSite(taskData.site);
+        const newTask: Task = await bbApi.pullrequests.editTask(taskData.site, taskData.prId, { ...(taskData as PullRequestTask).task, ...newTaskData });
         return comments.map((comment: PullRequestComment) => {
             if(comment.id === newTask.commentId){
                 return {
@@ -270,12 +264,8 @@ export class PullRequestCommentController implements vscode.Disposable {
                 newComment.tasks = commentData.tasks;
                 comments = await this.replaceEditedComment(commentData.parent!.comments as (PullRequestComment | PullRequestTask)[], newComment);
             } else {
-                const oldTask = (commentData as PullRequestTask).task;
-                const editedTask: Task = { ...oldTask, content: { raw: commentData.body.toString(), html: "", type: "", markup: "" } };
-                const newTask: Task = await bbApi.pullrequests.editTask(commentData.site, commentData.prId, editedTask);
-
                 //Replace the edited task in the associated comment's task list
-                 comments = this.updateTask(commentData.parent!.comments, newTask);
+                comments = await this.updateTask(commentData.parent!.comments, (commentData as PullRequestTask), { content: { raw: commentData.body.toString(), html: "", type: "", markup: "" } });
             }
             
             this.createOrUpdateThread(commentThreadId!, commentData.parent!.uri, commentData.parent!.range, comments);

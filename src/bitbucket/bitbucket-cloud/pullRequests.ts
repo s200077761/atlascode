@@ -3,6 +3,7 @@ import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
+import { Logger } from "../../logger";
 import { CacheMap } from "../../util/cachemap";
 import { Time } from "../../util/time";
 import { Client, ClientError } from "../httpClient";
@@ -291,74 +292,98 @@ export class CloudPullRequestApi implements PullRequestApi {
         const { ownerSlug, repoSlug } = pr.site;
 
         //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
-        let { data } = await this.client.get(
-            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
-        );
+        try {
+            let { data } = await this.client.get(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
+            );
 
-        if (!data.values) {
-            return [];
+            if (!data.values) {
+                return [];
+            }
+    
+            const accumulatedTasks = data.values as any[];
+            while (data.next) {
+                const nextPage = await this.client.get(data.next);
+                data = nextPage.data;
+                accumulatedTasks.push(...(data.values || []));
+            }
+    
+            return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
+        } catch (e) {
+            const error = new Error(`Error fetching task data from interal API: ${e}`);
+            Logger.error(error);
+            throw error;
         }
-
-        const accumulatedTasks = data.values as any[];
-        while (data.next) {
-            const nextPage = await this.client.get(data.next);
-            data = nextPage.data;
-            accumulatedTasks.push(...(data.values || []));
-        }
-
-        return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
     }
 
     async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.post(
-            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
-            {
-                comment: {
-                    id: comment.id
-                },
-                completed: false,
-                content: {
-                    raw: content
-                },
-                creator: {
-                    account_id: comment.user.accountId //TODO: Check that this actually works (example on web sends UUID not account_id)
+        try {
+            const { data } = await this.client.post(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
+                {
+                    comment: {
+                        id: comment.id
+                    },
+                    completed: false,
+                    content: {
+                        raw: content
+                    },
+                    creator: {
+                        account_id: comment.user.accountId
+                    }
                 }
-            }
-        );
-
-        return this.convertDataToTask(data, site);
+            );
+    
+            return this.convertDataToTask(data, site);
+        } catch (e) {
+            const error = new Error(`Error creating new task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }  
     }
 
     async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
-        const { data } = await this.client.put(
-            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
-            {
-                comment: {
-                    comment: task.commentId
-                },
-                completed: task.isComplete,
-                content: {
-                    raw: task.content.raw
-                },
-                id: task.id,
-                state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
-            }
-        );
+        try {
+            const { data } = await this.client.put(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                {
+                    comment: {
+                        comment: task.commentId
+                    },
+                    completed: task.isComplete,
+                    content: {
+                        raw: task.content.raw
+                    },
+                    id: task.id,
+                    state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
+                }
+            );
 
-        return this.convertDataToTask(data, site);
+            return this.convertDataToTask(data, site);
+        } catch (e) {
+            const error = new Error(`Error editing task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }
     }
 
     async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
-        await this.client.delete(
-            `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
-            {}  
-        );
+        try {
+            await this.client.delete(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                {}  
+            );
+        } catch (e) {
+            const error = new Error(`Error deleting task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }
     }
 
     convertDataToTask(taskData: any, site: BitbucketSite): Task {
