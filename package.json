@@ -465,49 +465,52 @@
             "comments/commentThread/context": [
                 {
                     "command": "atlascode.bb.addComment",
-                    "group": "inline"
+                    "group": "inline",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/title": [
                 {
                     "command": "atlascode.bb.editComment",
                     "group": "inline@1",
-                    "when": "comment =~ /canEdit/"
+                    "when": "comment =~ /canEdit/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.deleteComment",
                     "group": "inline@2",
-                    "when": "comment =~ /canDelete/"
+                    "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.markTaskIncomplete",
                     "group": "inline@1",
-                    "when": "comment =~ /markIncomplete/"
+                    "when": "comment =~ /markIncomplete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.markTaskComplete",
                     "group": "inline@1",
-                    "when": "comment =~ /markComplete/"
+                    "when": "comment =~ /markComplete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.editTask",
                     "group": "inline@2",
-                    "when": "comment =~ /canModifyTask/"
+                    "when": "comment =~ /canModifyTask/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.deleteTask",
                     "group": "inline@3",
-                    "when": "comment =~ /canRemoveTask/"
+                    "when": "comment =~ /canRemoveTask/ && resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/context": [
                 {
                     "command": "atlascode.bb.cancelCommentEdit",
-                    "group": "inline@2"
+                    "group": "inline@2",
+                    "when": "resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.saveCommentEdit",
-                    "group": "inline@1"
+                    "group": "inline@1",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "commandPalette": [

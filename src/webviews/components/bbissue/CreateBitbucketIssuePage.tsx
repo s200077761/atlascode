@@ -70,12 +70,12 @@ export default class CreateBitbucketIssuePage extends WebviewComponent<Emit, Rec
     handleSubmit(e: any) {
         this.setState({ isSubmitButtonLoading: true });
         const { repo, title, description, kind, priority } = e;
+
         this.postMessage({
             action: 'create',
+            site: repo.value.workspaceRepo.mainSiteRemote.site,
             title: title,
             description: description,
-            repoUri: repo.value.uri,
-            href: repo.value.href,
             kind: kind.value,
             priority: priority.value
         });
