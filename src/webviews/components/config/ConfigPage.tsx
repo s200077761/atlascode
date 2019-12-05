@@ -1,41 +1,41 @@
-import * as React from 'react';
-import uuid from 'uuid';
-import { WebviewComponent } from '../WebviewComponent';
+import Button from '@atlaskit/button';
+import { Checkbox } from '@atlaskit/checkbox';
+import Form, { CheckboxField, HelperMessage } from '@atlaskit/form';
+import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
-import Button from '@atlaskit/button';
+import Select from '@atlaskit/select';
 import { colors } from '@atlaskit/theme';
-import { AuthAction, SaveSettingsAction, FeedbackData, SubmitFeedbackAction, LoginAuthAction, FetchJqlDataAction, ConfigTarget } from '../../../ipc/configActions';
-import { DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket, ProductJira } from '../../../atlclients/authInfo';
-import JiraExplorer from './JiraExplorer';
+import merge from 'merge-anything';
+import * as React from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import uuid from 'uuid';
+import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../../atlclients/authInfo';
+import { IConfig, SettingSource } from '../../../config/model';
+import { AuthAction, ConfigTarget, FeedbackData, FetchJqlDataAction, LoginAuthAction, SaveSettingsAction, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
-import BitbucketExplorer from './BBExplorer';
-import JiraStatusBar from './JiraStatusBar';
-import BBStatusBar from './BBStatusBar';
-import DisplayFeedback from './DisplayFeedback';
-import { Action, HostErrorMessage } from '../../../ipc/messaging';
-import JiraHover from './JiraHover';
-import BitbucketContextMenus from './BBContextMenus';
-import WelcomeConfig from './WelcomeConfig';
-import { BitbucketIcon, ConfluenceIcon } from '@atlaskit/logo';
-import PipelinesConfig from './PipelinesConfig';
-import { SettingSource, IConfig } from '../../../config/model';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
-import Form from '@atlaskit/form';
-import BitbucketIssuesConfig from './BBIssuesConfig';
-import MultiOptionList from './MultiOptionList';
-import ErrorBanner from '../ErrorBanner';
-import { SiteEditor } from './SiteEditor';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import ProductEnabler from './ProductEnabler';
+import { Action, HostErrorMessage } from '../../../ipc/messaging';
 import { Time } from '../../../util/time';
-import Select from '@atlaskit/select';
 import { AtlLoader } from '../AtlLoader';
-import merge from 'merge-anything';
-import { CheckboxField, HelperMessage } from '@atlaskit/form';
-import { Checkbox } from '@atlaskit/checkbox';
+import ErrorBanner from '../ErrorBanner';
 import { chain } from "../fieldValidators";
+import { WebviewComponent } from '../WebviewComponent';
+import BitbucketContextMenus from './BBContextMenus';
+import BitbucketExplorer from './BBExplorer';
+import BitbucketIssuesConfig from './BBIssuesConfig';
+import BBStatusBar from './BBStatusBar';
+import DisplayFeedback from './DisplayFeedback';
+import JiraExplorer from './JiraExplorer';
+import JiraHover from './JiraHover';
+import JiraStatusBar from './JiraStatusBar';
+import MultiOptionList from './MultiOptionList';
+import OnlineCheckConfig from './OnlineCheckConfig';
+import PipelinesConfig from './PipelinesConfig';
+import ProductEnabler from './ProductEnabler';
+import { SiteEditor } from './SiteEditor';
+import WelcomeConfig from './WelcomeConfig';
 
 type changeObject = { [key: string]: any };
 
@@ -431,6 +431,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <TabPanel>
                                             <Panel isDefaultExpanded header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                                                 <WelcomeConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
+                                            </Panel>
+                                            <Panel header={panelHeader('Connectivity', 'change what sites are pinged to determine online status')}>
+                                                <OnlineCheckConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                             </Panel>
                                         </TabPanel>
                                     </Tabs>

@@ -76,6 +76,14 @@ export class OnlineDetector extends Disposable {
                 this._onDidOnlineChange.fire({ isOnline: !this._isOfflineMode });
             }
         }
+
+        if (!initializing && (configuration.changed(e, 'pingCustomSitesEnabled') || configuration.changed(e, 'sitesToPing'))) {
+            await this.checkOnlineStatus();
+
+            this._onlineTimer = setInterval(() => {
+                this.checkOnlineStatus();
+            }, onlinePolling);
+        }
     }
 
     public isOnline(): boolean {
@@ -87,20 +95,17 @@ export class OnlineDetector extends Disposable {
     }
 
     private async runOnlineChecks(): Promise<boolean> {
-        const promise = async () => await pAny([
-            (async () => {
-                Logger.debug('Online check attempting to connect to http://atlassian.com');
-                await this._transport(`http://atlassian.com`, { method: "HEAD", ...getAgent() });
-                Logger.debug('Online check connected to http://atlassian.com');
-                return true;
-            })(),
-            (async () => {
-                Logger.debug('Online check attempting to connect to https://bitbucket.org');
-                await this._transport(`https://bitbucket.org`, { method: "HEAD", ...getAgent() });
-                Logger.debug('Online check connected to https://bitbucket.org');
-                return true;
-            })()
-        ]);
+        const siteList = Container.config.sitesToPing.slice();
+        const promise = async () => await pAny(
+            siteList.map(siteName => {
+                return (async () => {
+                    Logger.debug(`Online check attempting to connect to ${siteName}`);
+                    await this._transport(siteName, { method: "HEAD", ...getAgent() });
+                    Logger.debug(`Online check connected to ${siteName}`);
+                    return true;
+                })();
+            })
+        );
 
         return await pRetry<boolean>(promise, {
             retries: 4,
