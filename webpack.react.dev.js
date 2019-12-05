@@ -68,6 +68,12 @@ module.exports = {
                     },
                     'css-loader',
                 ],
+            },
+            {
+                test: /\.js$/,
+                use: [{ loader: "source-map-loader" }],
+                enforce: "pre",
+                include: /node_modules/
             }
         ]
     },
