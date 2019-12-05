@@ -37,8 +37,7 @@ export interface IConfig {
     enableUIWS: boolean;
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
-    sitesToPing: string[];
-    pingCustomSitesEnabled: boolean;
+    onlineCheckerUrls: string[];
 }
 
 export interface JiraConfig {
@@ -306,6 +305,5 @@ export const emptyConfig: IConfig = {
     enableUIWS: false,
     enableCurlLogging: false,
     enableHttpsTunnel: false,
-    sitesToPing: [],
-    pingCustomSitesEnabled: false
+    onlineCheckerUrls: []
 };

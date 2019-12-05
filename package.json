@@ -589,7 +589,7 @@
                     "description": "Enables showing the welcome screen when a new version is installed",
                     "scope": "window"
                 },
-                "atlascode.sitesToPing": {
+                "atlascode.onlineCheckerUrls": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -599,12 +599,6 @@
                         "https://bitbucket.org"
                     ],
                     "description": "Online Checker will ping these sites to determine online status",
-                    "scope": "window"
-                },
-                "atlascode.pingCustomSitesEnabled": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Ping the listed sites instead of default sites to check online status",
                     "scope": "window"
                 },
                 "atlascode.jira.enabled": {

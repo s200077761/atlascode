@@ -77,7 +77,7 @@ export class OnlineDetector extends Disposable {
             }
         }
 
-        if (!initializing && (configuration.changed(e, 'pingCustomSitesEnabled') || configuration.changed(e, 'sitesToPing'))) {
+        if (!initializing && configuration.changed(e, 'onlineCheckerUrls')) {
             await this.checkOnlineStatus();
 
             this._onlineTimer = setInterval(() => {
@@ -95,13 +95,13 @@ export class OnlineDetector extends Disposable {
     }
 
     private async runOnlineChecks(): Promise<boolean> {
-        const siteList = Container.config.sitesToPing.slice();
+        const siteList = Container.config.onlineCheckerUrls.slice();
         const promise = async () => await pAny(
-            siteList.map(siteName => {
+            siteList.map(url => {
                 return (async () => {
-                    Logger.debug(`Online check attempting to connect to ${siteName}`);
-                    await this._transport(siteName, { method: "HEAD", ...getAgent() });
-                    Logger.debug(`Online check connected to ${siteName}`);
+                    Logger.debug(`Online check attempting to connect to ${url}`);
+                    await this._transport(url, { method: "HEAD", ...getAgent() });
+                    Logger.debug(`Online check connected to ${url}`);
                     return true;
                 })();
             })
