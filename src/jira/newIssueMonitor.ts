@@ -38,7 +38,7 @@ export class NewIssueMonitor {
 
     const ts = format(this._timestamp, "YYYY-MM-DD HH:mm");
     try {
-      const enabledJQLs = Container.config.jira.jqlList.filter(entry => entry.enabled && entry.monitor);
+      const enabledJQLs = Container.jqlManager.notifiableJQLEntries();
       const jqlPromises: Promise<JQLSettleResult>[] = [];
       enabledJQLs.forEach(entry => {
         jqlPromises.push(

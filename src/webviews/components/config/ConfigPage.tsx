@@ -6,6 +6,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Select from '@atlaskit/select';
 import { colors } from '@atlaskit/theme';
+import { Filter } from 'jira-pi-client';
 import merge from 'merge-anything';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -39,6 +40,8 @@ import WelcomeConfig from './WelcomeConfig';
 
 type changeObject = { [key: string]: any };
 
+const ApiTimeout = 20 * Time.SECONDS;
+
 const panelHeader = (heading: string, subheading: string) =>
     <div>
         <h3 className='inlinePanelHeader'>{heading}</h3>
@@ -56,6 +59,8 @@ interface ViewState extends ConfigData {
     errorDetails: any;
     target: ConfigTarget;
     targetUri: string;
+    jiraFilters: { [k: string]: Filter[] }
+    jiraFilterSearches: { [k: string]: Filter[] }
     config: IConfig | undefined;
 }
 
@@ -68,11 +73,14 @@ const emptyState: ViewState = {
     openedSettings: SettingSource.Default,
     errorDetails: undefined,
     target: ConfigTarget.User,
+    jiraFilters: {},
+    jiraFilterSearches: {},
     targetUri: "",
 };
 
 export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewState> {
     private jqlDataMap: { [key: string]: any } = {};
+    private filterDataMap: { [key: string]: any } = {};
 
     constructor(props: any) {
         super(props);
@@ -112,7 +120,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                 break;
             }
             case 'init': {
-                this.setState({ ...e as ConfigData, config: this.configForTarget(e.target, e.inspect), isErrorBannerOpen: false, errorDetails: undefined });
+                this.setState({ ...e as ConfigData, config: this.configForTarget(e.target, e.inspect), jiraFilters: e.jiraFilters, isErrorBannerOpen: false, errorDetails: undefined });
                 this.updateTabIndex();
                 this.refreshBySwitchingTabs();
                 break;
@@ -127,6 +135,19 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             }
             case 'jqlData': {
                 this.jqlDataMap[e.nonce] = e.data;
+                break;
+            }
+            case 'filterData': {
+                let filters = this.state.jiraFilters;
+                if (!filters) {
+                    filters = {};
+                }
+                filters[e.siteId] = e.data;
+                this.setState({ jiraFilters: filters });
+                break;
+            }
+            case 'filterSearchData': {
+                this.filterDataMap[e.nonce] = e.data;
                 break;
             }
             case 'setOpenedSettings': {
@@ -169,13 +190,39 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             let timer = setInterval(() => {
                 const end = Date.now();
                 const gotData = this.jqlDataMap[nonce] !== undefined;
-                const timeIsUp = (end - start) > 15 * Time.SECONDS;
+                const timeIsUp = (end - start) > ApiTimeout;
 
                 if (gotData || timeIsUp) {
                     clearInterval(timer);
                     resolve({ ...this.jqlDataMap[nonce] });
 
                     this.jqlDataMap[nonce] = undefined;
+                }
+            }, 100);
+        });
+    };
+
+    handleFetchFilterOptions = (site: DetailedSiteInfo) => {
+        this.postMessage({ action: 'fetchJiraFilterOptions', site: site });
+    };
+
+    handleSearchFilterOptions = (site: DetailedSiteInfo, query: string): Promise<Filter[]> => {
+        const nonce = uuid.v4();
+        this.jqlDataMap[nonce] = undefined;
+
+        return new Promise(resolve => {
+            this.postMessage({ action: 'fetchSearchJiraFilterOptions', site: site, query: query, nonce: nonce });
+
+            const start = Date.now();
+            let timer = setInterval(() => {
+                const end = Date.now();
+                const gotData = this.filterDataMap[nonce] !== undefined;
+                const timeIsUp = (end - start) > ApiTimeout;
+
+                if (gotData || timeIsUp) {
+                    clearInterval(timer);
+                    resolve(this.filterDataMap[nonce]);
+                    this.filterDataMap[nonce] = undefined;
                 }
             }, 100);
         });
@@ -371,7 +418,11 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     {snippetTip}
                                                     <JiraExplorer config={this.state.config!}
                                                         jqlFetcher={this.handleFetchJqlOptions}
+                                                        jiraFilterFetcher={this.handleFetchFilterOptions}
+                                                        jiraFilterSearcher={this.handleSearchFilterOptions}
                                                         sites={this.state.jiraSites}
+                                                        filters={this.state.jiraFilters}
+                                                        filterSearches={this.state.jiraFilterSearches}
                                                         onConfigChange={this.onConfigChange} />
                                                 </Panel>
 

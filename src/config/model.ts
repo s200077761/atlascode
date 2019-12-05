@@ -101,6 +101,7 @@ export interface JQLEntry {
     query: string;
     siteId: string;
     monitor: boolean;
+    filterId?: string;
 }
 
 export interface JQLEntryV1 {

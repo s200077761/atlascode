@@ -810,6 +810,13 @@
                             "siteId": {
                                 "type": "string",
                                 "default": ""
+                            },
+                            "filterId": {
+                                "type": [
+                                    "string",
+                                    null
+                                ],
+                                "default": null
                             }
                         }
                     }
@@ -1047,7 +1054,7 @@
         "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
         "jira-metaui-transformer": "0.0.4",
-        "jira-pi-client": "^0.0.12",
+        "jira-pi-client": "^0.0.13",
         "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
