@@ -18,7 +18,7 @@ import { DetailedSiteInfo, emptySiteInfo } from '../../../atlclients/authInfo';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { CreatedSelectOption, isIssueEditError, IssueEditError, IssueSuggestionsList, LabelList, UserList } from "../../../ipc/issueMessaging";
 import { Action, HostErrorMessage, Message } from "../../../ipc/messaging";
-import { Time } from '../../../util/time';
+import { ConnectionTimeout } from '../../../util/time';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from "../fieldValidators";
 import * as SelectFieldHelper from '../selectFieldHelper';
@@ -218,7 +218,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
                         { action: 'fetchIssues', query: input, site: this.state.siteDetails, autocompleteUrl: field.autoCompleteUrl, nonce: nonce }
-                        , 'issueSuggestionsList', 10 * Time.SECONDS, nonce);
+                        , 'issueSuggestionsList', ConnectionTimeout, nonce);
                     resolve((listEvent as IssueSuggestionsList).issues);
                 } catch (e) {
                     resolve([]);
@@ -240,7 +240,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                 try {
                     const listEvent = await this.postMessageWithEventPromise(
                         { action: 'fetchSelectOptions', query: input, site: this.state.siteDetails, autocompleteUrl: url, nonce }
-                        , 'selectOptionsList', 10 * Time.SECONDS, nonce);
+                        , 'selectOptionsList', ConnectionTimeout, nonce);
 
                     this.setState({ isSomethingLoading: false });
                     resolve(listEvent.options);
@@ -275,7 +275,7 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                             nonce: nonce
 
                         }
-                        , 'optionCreated', 10 * Time.SECONDS, nonce);
+                        , 'optionCreated', ConnectionTimeout, nonce);
 
                     this.setState(
                         {

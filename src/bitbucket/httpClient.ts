@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
-import { Time } from '../util/time';
+import { ConnectionTimeout } from '../util/time';
 
 export class Client {
     private transport: AxiosInstance;
@@ -13,7 +13,7 @@ export class Client {
         private errorHandler: (errJson: AxiosResponse) => Promise<Error>
     ) {
         this.transport = axios.create({
-            timeout: 10 * Time.SECONDS,
+            timeout: ConnectionTimeout,
             headers: {
                 "Accept-Encoding": "gzip, deflate",
                 "Content-Type": "application/json",

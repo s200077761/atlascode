@@ -14,7 +14,7 @@ import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
 import { Logger } from '../logger';
 import { Resources } from '../resources';
-import { Time } from '../util/time';
+import { ConnectionTimeout, Time } from '../util/time';
 import { AccessibleResource, emptyUserInfo, OAuthProvider, OAuthResponse, ProductBitbucket, ProductJira, SiteInfo, UserInfo } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
@@ -50,7 +50,7 @@ export class OAuthDancer implements Disposable {
         this._app = this.createApp();
 
         this._axios = axios.create({
-            timeout: 30 * Time.SECONDS,
+            timeout: ConnectionTimeout,
             headers: {
                 "Accept-Encoding": "gzip, deflate"
             }

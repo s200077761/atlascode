@@ -6,7 +6,7 @@ import { Container } from "../container";
 import { FeedbackData, FeedbackType } from "../ipc/configActions";
 import { FeedbackUser } from '../ipc/configMessaging';
 import { getAgent } from '../jira/jira-client/providers';
-import { Time } from '../util/time';
+import { ConnectionTimeout } from '../util/time';
 
 const feedbackTypeIds = {
     [FeedbackType.Bug]: '10105',
@@ -111,7 +111,7 @@ export async function submitFeedback(feedback: FeedbackData, source: string) {
     };
 
     const transport = axios.create({
-        timeout: 10 * Time.SECONDS,
+        timeout: ConnectionTimeout,
         headers: {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',
