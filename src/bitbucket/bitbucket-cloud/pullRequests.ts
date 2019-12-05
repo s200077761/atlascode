@@ -55,7 +55,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toUserModel(data);
     }
 
-    private static toUserModel(input: any): User {
+    static toUserModel(input: any): User {
         const accountId = (input && input.account_id) ? input.account_id : 'unknown';
         const avatarUrl = (input && input.links && input.links.avatar && input.links.avatar.href) ? input.links!.avatar!.href! : '';
         const displayName = (input && input.display_name) ? input.display_name : 'Unknown User';

@@ -1,14 +1,14 @@
-import React, { PureComponent } from "react";
-import FieldBase, { Label } from "@atlaskit/field-base";
-import debounce from "lodash.debounce";
-import jQuery from "jquery";
-import { akColorG400, akColorR400 } from "@atlaskit/util-shared-styles";
-import Input from "@atlaskit/input";
 import DropList, { Group, Item } from "@atlaskit/droplist";
+import FieldBase, { Label } from "@atlaskit/field-base";
 import CheckCircleIcon from "@atlaskit/icon/glyph/check-circle";
 import CrossCircleIcon from "@atlaskit/icon/glyph/cross-circle";
-var JQLAutocomplete = require("@deviniti/jql-autocomplete");
+import Input from "@atlaskit/input";
+import { akColorG400, akColorR400 } from "@atlaskit/util-shared-styles";
+import jQuery from "jquery";
+import debounce from "lodash.debounce";
+import React, { PureComponent } from "react";
 import styled from 'styled-components';
+var JQLAutocomplete = require("@deviniti/jql-autocomplete");
 
 const JqlInvalidIcon = <CrossCircleIcon
     size="medium"
@@ -42,6 +42,7 @@ export class JQLAutocompleteInput extends PureComponent<
         onChange: (event: any) => void;
         onEditorOpenChange: (isOpen: boolean) => void;
         jqlError: string | null;
+        isDisabled: boolean;
     },
     {
         jql: string;
@@ -119,6 +120,7 @@ export class JQLAutocompleteInput extends PureComponent<
                     trigger={
                         <FieldBaseWrapper>
                             <FieldBase
+                                isDisabled={this.props.isDisabled}
                                 isPaddingDisabled={true}
                                 isFitContainerWidthEnabled
                             >

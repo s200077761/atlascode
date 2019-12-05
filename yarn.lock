@@ -5387,25 +5387,25 @@ jest-worker@^24.9.0:
     merge-stream "^2.0.0"
     supports-color "^6.1.0"
 
-jira-metaui-transformer@^0.0.1:
-  version "0.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.1.tgz#0e8729bcbe7e9c5074e9c95de47811ed2c83c74d"
-  integrity sha1-DocpvL5+nFB06cld5HgR7SyDx00=
-
-jira-metaui-transformer@^0.0.6:
+jira-metaui-transformer@0.0.6:
   version "0.0.6"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.6.tgz#14775f40764ddc1496e35752e9383fe7cfabbcce"
   integrity sha1-FHdfQHZN3BSW41dS6Tg/58+rvM4=
   dependencies:
     jira-metaui-transformer "file:../../../../.cache/yarn/v6/npm-jira-metaui-transformer-0.0.6-14775f40764ddc1496e35752e9383fe7cfabbcce-integrity/node_modules/jira-metaui-transformer/.yalc/jira-metaui-transformer"
 
+jira-metaui-transformer@^0.0.1:
+  version "0.0.1"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.1.tgz#0e8729bcbe7e9c5074e9c95de47811ed2c83c74d"
+  integrity sha1-DocpvL5+nFB06cld5HgR7SyDx00=
+
 "jira-metaui-transformer@file:.yalc/jira-metaui-transformer":
   version "0.0.5-090c8d77"
 
-jira-pi-client@^0.0.12:
-  version "0.0.12"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-pi-client/-/jira-pi-client-0.0.12.tgz#7afbf073c3753cb2da27dfc71de2a8f2c2254136"
-  integrity sha1-evvwc8N1PLLaJ9/HHeKo8sIlQTY=
+jira-pi-client@^0.0.13:
+  version "0.0.13"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-pi-client/-/jira-pi-client-0.0.13.tgz#608b3bbc781b31da70836ddf2805a64eeff214bc"
+  integrity sha1-YIs7vHgbMdpwg23fKAWmTu/yFLw=
   dependencies:
     axios "^0.19.0"
     form-data "^2.5.1"
