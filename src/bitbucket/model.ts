@@ -70,12 +70,7 @@ export type Task = {
     id: number;
     editable: boolean;
     deletable: boolean;
-    content: {
-        raw: string;
-        markup: string;
-        html: string;
-        type: string;
-    }
+    content: string;
 };
 
 export type Comment = {

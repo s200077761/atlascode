@@ -26,7 +26,7 @@ export class TaskComponent extends React.Component<
         super(props);
         this.state = {
             editMode: this.props.isInitialized ? false : true,
-            editInput: this.props.task.content.raw,
+            editInput: this.props.task.content,
             isChecked: this.props.task.isComplete,
             beingDeleted: false,
             isWaitingForServer: false
@@ -42,7 +42,7 @@ export class TaskComponent extends React.Component<
     };
 
     handleCancelClick = () => {
-        this.setState({ editMode: false, editInput: this.props.task.content.raw });
+        this.setState({ editMode: false, editInput: this.props.task.content });
         if(!this.props.isInitialized && this.props.cancelCreate) {
             this.props.cancelCreate();
         }
@@ -51,7 +51,7 @@ export class TaskComponent extends React.Component<
     handleEditSaveClick = () => {
         this.setState({editMode: false, isWaitingForServer: true });
         if(this.props.onEdit){
-            const task = { ...this.props.task, content: {...this.props.task.content, raw: this.state.editInput } };
+            const task = { ...this.props.task, content: this.state.editInput };
             this.props.onEdit(task);
         }
     };
@@ -59,7 +59,7 @@ export class TaskComponent extends React.Component<
     handleSaveClick = () => {
         this.setState({ editMode: false, isWaitingForServer: true });
         if(this.props.onSave) {
-            const task = { ...this.props.task, content: {...this.props.task.content, raw: this.state.editInput } };
+            const task = { ...this.props.task, content: this.state.editInput };
             this.props.onSave(task);
         }
     };
@@ -121,8 +121,8 @@ export class TaskComponent extends React.Component<
                                 //Tasks which are complete appear striked through on the site, but for some reason the task's internal html does not handle this...
                                 <p>
                                     {this.state.isChecked ? 
-                                        <del>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content.raw}</del> :
-                                        <div>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content.raw}</div>
+                                        <del>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content}</del> :
+                                        <div>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content}</div>
                                     }
                                 </p>
                             }
