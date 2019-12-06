@@ -32,6 +32,7 @@ import JiraExplorer from './JiraExplorer';
 import JiraHover from './JiraHover';
 import JiraStatusBar from './JiraStatusBar';
 import MultiOptionList from './MultiOptionList';
+import OnlineCheckConfig from './OnlineCheckConfig';
 import PipelinesConfig from './PipelinesConfig';
 import ProductEnabler from './ProductEnabler';
 import { SiteEditor } from './SiteEditor';
@@ -481,6 +482,9 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                         <TabPanel>
                                             <Panel isDefaultExpanded header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                                                 <WelcomeConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
+                                            </Panel>
+                                            <Panel isDefaultExpanded header={panelHeader('Connectivity', 'change what URLs are pinged to determine online status')}>
+                                                <OnlineCheckConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                             </Panel>
                                         </TabPanel>
                                     </Tabs>
