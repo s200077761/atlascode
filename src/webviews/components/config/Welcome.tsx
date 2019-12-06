@@ -94,6 +94,27 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.2.0 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Support for importing Jira filters when adding custom JQL entries</li>
+                                <li>Support editing pull request titles</li>
+                                <li>Support for custom online check URLs</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed bug where extension does not work when Jira and Bitbucket are set up with the same domain</li>
+                                <li>Fixed bug where last used Jira project for creating issues was not being saved</li>
+                                <li>Fixed bug where Jira autocomplete query was not being encoded correctly</li>
+                                <li>Fixed bug causing internal comment button to not show up on service desk issues</li>
+                                <li>Fixed bug preventing creation of Bitbucket issues</li>
+                                <li>Fixed bug where create pull request view kept spinning when no repositories were open</li>
+                                <li>Fixed issue where Jira issues show in treeview but open a blank screen when opened</li>
+                                <li>Restrict inline commenting range for Bitbucket Server pull requests</li>
+                                <li>Fixed delay when refreshing pull requests treeview</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.1.5 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
