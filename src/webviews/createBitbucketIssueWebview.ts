@@ -1,4 +1,4 @@
-import { commands, Uri } from 'vscode';
+import { commands } from 'vscode';
 import { bbIssueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
@@ -76,7 +76,15 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
                 });
             }
 
-            this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
+            if (repoData.length > 0) {
+                this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
+
+            } else {
+                const reason = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org') === undefined
+                    ? 'Authenticate with Bitbucket Cloud and try again'
+                    : 'No Bitbucket Cloud repositories found in the current workspace in VS Code';
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket Cloud repos') });
+            }
         } catch (e) {
             Logger.error(new Error(`error updating issue fields: ${e}`));
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -120,14 +128,8 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
     }
 
     private async createIssue(createIssueAction: CreateBitbucketIssueAction) {
-        const { repoUri: uri, title, description, kind, priority } = createIssueAction;
+        const { site: site, title, description, kind, priority } = createIssueAction;
 
-        // TODO [VSCODE-568] Add remote to create bitbucket issue action
-        const wsRepo = Container.bitbucketContext.getRepository(Uri.parse(uri))!;
-        const site = wsRepo.mainSiteRemote.site;
-        if (!site) {
-            throw new Error('Error creating issue: not authenticated');
-        }
         const bbApi = await clientForSite(site);
         let issue: BitbucketIssue = await bbApi.issues!.create(site, title, description, kind, priority);
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);

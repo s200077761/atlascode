@@ -97,7 +97,15 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 };
             }));
 
-            this.postMessage({ type: 'createPullRequestData', repositories: state });
+            if (state.length > 0) {
+                this.postMessage({ type: 'createPullRequestData', repositories: state });
+            } else {
+                const bbSites = Container.siteManager.getSitesAvailable(ProductBitbucket);
+                const reason = bbSites.length === 0
+                    ? 'Authenticate with Bitbucket and try again'
+                    : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites.map(site => site.hostname).join(', ')}`;
+                this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket repos') });
+            }
         } catch (e) {
             Logger.error(new Error(`error fetching PR form: ${e}`));
             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -151,7 +159,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                         handled = true;
                         try {
                             const bbApi = await clientForSite(e.site);
-                            const reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
+                            const currentUserId = e.site.details.userId;
+                            let reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
+                            reviewers = reviewers.filter(r => r.accountId !== currentUserId);
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));

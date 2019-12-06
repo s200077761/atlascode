@@ -1,5 +1,5 @@
 import { Branch } from "src/typings/git";
-import { BitbucketIssue } from "../bitbucket/model";
+import { BitbucketIssue, BitbucketSite } from "../bitbucket/model";
 import { Action } from "./messaging";
 import { RepoData } from "./prMessaging";
 
@@ -32,8 +32,7 @@ export function isPostChange(a: Action): a is PostChange {
 
 export interface CreateBitbucketIssueAction extends Action {
     action: 'create';
-    repoUri: string;
-    href: string;
+    site: BitbucketSite;
     title: string;
     description: string;
     kind: string;

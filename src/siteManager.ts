@@ -168,9 +168,7 @@ export class SiteManager extends Disposable {
                 this._globalStore.update(`${site.product.key}${SitesSuffix}`, sites);
                 this._sitesAvailable.set(site.product.key, sites);
                 this._onDidSitesAvailableChange.fire({ sites: sites, product: site.product });
-                if (sites.length === 0) {
-                    Container.credentialManager.removeAuthInfo(deletedSite);
-                }
+                Container.credentialManager.removeAuthInfo(deletedSite);
 
                 if (deletedSite.id === Container.config.jira.lastCreateSiteAndProject.siteId) {
                     configuration.setLastCreateSiteAndProject(undefined);

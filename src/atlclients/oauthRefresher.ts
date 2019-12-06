@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import { Disposable } from 'vscode';
 import { Container } from '../container';
 import { getAgent } from '../jira/jira-client/providers';
-import { Time } from '../util/time';
+import { ConnectionTimeout } from '../util/time';
 import { OAuthProvider, ProductBitbucket, ProductJira } from './authInfo';
 import { addCurlLogging } from './interceptors';
 import { BitbucketProdStrategy, BitbucketStagingStrategy, JiraProdStrategy, JiraStagingStrategy } from './strategy';
@@ -12,7 +12,7 @@ export class OAuthRefesher implements Disposable {
 
     constructor() {
         this._axios = axios.create({
-            timeout: 30 * Time.SECONDS,
+            timeout: ConnectionTimeout,
             headers: {
                 'User-Agent': 'atlascode/2.x',
                 "Accept-Encoding": "gzip, deflate"

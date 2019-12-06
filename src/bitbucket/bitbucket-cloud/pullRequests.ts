@@ -55,7 +55,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return CloudPullRequestApi.toUserModel(data);
     }
 
-    private static toUserModel(input: any): User {
+    static toUserModel(input: any): User {
         const accountId = (input && input.account_id) ? input.account_id : 'unknown';
         const avatarUrl = (input && input.links && input.links.avatar && input.links.avatar.href) ? input.links!.avatar!.href! : '';
         const displayName = (input && input.display_name) ? input.display_name : 'Unknown User';
@@ -441,6 +441,19 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
 
         return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
+    }
+
+    async update(pr: PullRequest, title: string) {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        let prBody = {
+            title: title
+        };
+
+        await this.client.put(
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
+            prBody
+        );
     }
 
     async updateApproval(pr: PullRequest, status: string) {

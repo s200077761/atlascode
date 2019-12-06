@@ -1,13 +1,13 @@
-import React, { PureComponent } from "react";
-import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
-import { JQLEntry } from "src/config/model";
-import { Field, ErrorMessage } from '@atlaskit/form';
-import Select, { components } from '@atlaskit/select';
-import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
+import { ErrorMessage, Field } from '@atlaskit/form';
+import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import SectionMessage from '@atlaskit/section-message';
+import Select, { components } from '@atlaskit/select';
+import React, { PureComponent } from "react";
+import { JQLEntry } from "src/config/model";
 import { DetailedSiteInfo, emptySiteInfo } from "../../../atlclients/authInfo";
+import * as FieldValidators from "../fieldValidators";
+import { JQLAutocompleteInput } from "./JQLAutocompleteInput";
 
 const IconOption = (props: any) => (
   <components.Option {...props}>
@@ -67,13 +67,13 @@ export default class EditJQL extends PureComponent<{
 
   getSuggestionsRequest = async (fieldName: string, fieldValue: string) => {
     return this.fetchEndpoint(
-      `jql/autocompletedata/suggestions?fieldName=${fieldName}&fieldValue=${fieldValue}`
+      `jql/autocompletedata/suggestions?fieldName=${encodeURIComponent(fieldName)}&fieldValue=${encodeURIComponent(fieldValue)}`
     );
   };
 
   validationRequest = async (jql: string) => {
     this.fetchEndpoint(
-      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${jql}`
+      `search?startAt=0&maxResults=1&validateQuery=strict&fields=summary&jql=${encodeURIComponent(jql)}`
     ).then((res: any) => {
       if (res.errorMessages && res.errorMessages.length > 0) {
         this.setState({
@@ -130,6 +130,10 @@ export default class EditJQL extends PureComponent<{
     this.setState({ openComplete: true });
   };
 
+  filterLink = () => {
+    return `${this.state.selectedSite.baseLinkUrl}/secure/ManageFilters.jspa`;
+  };
+
   render() {
     return (
       <ModalTransition>
@@ -139,6 +143,7 @@ export default class EditJQL extends PureComponent<{
           onOpenComplete={this.onOpenComplete}
           shouldCloseOnEscapePress={false}
         >
+          {!!this.props.jqlEntry.filterId && <h4>Filters can be edited on <a href={this.filterLink()}>atlassian.net</a></h4>}
           <Field label='Name'
             isRequired={this.props.nameEditable === undefined || this.props.nameEditable}
             id='jql-name-input'
@@ -155,6 +160,7 @@ export default class EditJQL extends PureComponent<{
                   <div>
                     <input {...fieldArgs.fieldProps}
                       style={{ width: '100%', display: 'block' }}
+                      disabled={!!this.props.jqlEntry.filterId}
                       className='ac-inputField'
                       readOnly={this.props.nameEditable !== undefined && !this.props.nameEditable}
                       onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, this.onNameChange)} />
@@ -179,6 +185,7 @@ export default class EditJQL extends PureComponent<{
                       {...fieldArgs.fieldProps}
                       className="ac-select-container"
                       classNamePrefix="ac-select"
+                      isDisabled={!!this.props.jqlEntry.filterId}
                       getOptionLabel={(option: any) => option.name}
                       getOptionValue={(option: any) => option.id}
                       options={this.props.sites}
@@ -210,6 +217,7 @@ export default class EditJQL extends PureComponent<{
               onEditorOpenChange={this.onJQLOpenChange}
               validationRequest={this.validationRequest}
               jqlError={this.state.jqlError}
+              isDisabled={!!this.props.jqlEntry.filterId}
             />
           }
           <div style={{
@@ -218,27 +226,27 @@ export default class EditJQL extends PureComponent<{
             display: 'flex',
             justifyContent: 'flex-end'
           }}>
-            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
               <Button
                 className='ac-button'
-                isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
+                isDisabled={!!this.props.jqlEntry.filterId || (this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
                 onClick={this.onSave}
               >
                 Save
             </Button>
             </div>
             {this.props.onRestoreDefault &&
-              <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+              <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
                 <Button
                   className='ac-button'
-                  isDisabled={(this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
+                  isDisabled={!!this.props.jqlEntry.filterId || (this.state.nameValue.trim().length < 1 || this.state.inputValue.trim().length < 1 || this.state.jqlError !== null)}
                   onClick={this.onRestoreDefault}
                 >
                   Restore Default
             </Button>
               </div>
             }
-            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
+            <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
               <Button
                 className='ac-button'
                 onClick={this.props.onCancel}

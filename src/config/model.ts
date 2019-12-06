@@ -37,6 +37,7 @@ export interface IConfig {
     enableUIWS: boolean;
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
+    onlineCheckerUrls: string[];
 }
 
 export interface JiraConfig {
@@ -99,6 +100,7 @@ export interface JQLEntry {
     query: string;
     siteId: string;
     monitor: boolean;
+    filterId?: string;
 }
 
 export interface JQLEntryV1 {
@@ -303,4 +305,5 @@ export const emptyConfig: IConfig = {
     enableUIWS: false,
     enableCurlLogging: false,
     enableHttpsTunnel: false,
+    onlineCheckerUrls: []
 };

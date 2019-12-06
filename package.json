@@ -429,29 +429,32 @@
             "comments/commentThread/context": [
                 {
                     "command": "atlascode.bb.addComment",
-                    "group": "inline"
+                    "group": "inline",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/title": [
                 {
                     "command": "atlascode.bb.editComment",
                     "group": "inline@1",
-                    "when": "comment =~ /canEdit/"
+                    "when": "comment =~ /canEdit/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.deleteComment",
                     "group": "inline@2",
-                    "when": "comment =~ /canDelete/"
+                    "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/context": [
                 {
                     "command": "atlascode.bb.cancelCommentEdit",
-                    "group": "inline@2"
+                    "group": "inline@2",
+                    "when": "resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.saveCommentEdit",
-                    "group": "inline@1"
+                    "group": "inline@1",
+                    "when": "resourceScheme == atlascode.bbpr"
                 }
             ],
             "commandPalette": [
@@ -584,6 +587,18 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables showing the welcome screen when a new version is installed",
+                    "scope": "window"
+                },
+                "atlascode.onlineCheckerUrls": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "http://atlassian.com",
+                        "https://bitbucket.org"
+                    ],
+                    "description": "Online Checker will ping these URLs to determine online status",
                     "scope": "window"
                 },
                 "atlascode.jira.enabled": {
@@ -789,6 +804,13 @@
                             "siteId": {
                                 "type": "string",
                                 "default": ""
+                            },
+                            "filterId": {
+                                "type": [
+                                    "string",
+                                    null
+                                ],
+                                "default": null
                             }
                         }
                     }
@@ -1025,8 +1047,8 @@
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
-        "jira-metaui-transformer": "^0.0.1",
-        "jira-pi-client": "^0.0.12",
+        "jira-metaui-transformer": "^0.0.7",
+        "jira-pi-client": "^0.0.13",
         "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",
@@ -1043,7 +1065,7 @@
         "react-collapsible": "2.6.0",
         "react-dom": "^16.8.6",
         "react-dropzone": "^10.1.8",
-        "react-editext": "^3.6.1",
+        "react-editext": "3.6.1",
         "react-final-form": "^6.0.1",
         "react-intl": "^2.9.0",
         "react-tabs": "^3.0.0",
@@ -1088,8 +1110,8 @@
         "@types/vscode": "1.37.0",
         "@types/webpack": "^4.39.1",
         "@types/webpack-manifest-plugin": "^2.0.0",
-        "@typescript-eslint/eslint-plugin": "^2.4.1-alpha.0",
-        "@typescript-eslint/parser": "^2.4.1-alpha.0",
+        "@typescript-eslint/eslint-plugin": "^2.10.0",
+        "@typescript-eslint/parser": "^2.10.0",
         "autoprefixer": "^9.6.1",
         "cross-env": "^6.0.3",
         "css-loader": "^3.2.0",
@@ -1116,7 +1138,7 @@
         "ts-node": "^8.4.1",
         "tsconfig-paths": "^3.9.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
-        "typescript": "^3.6.4",
+        "typescript": "^3.7.3",
         "vscode-test": "^1.2.0",
         "webpack": "^4.41.2",
         "webpack-cli": "^3.3.9",

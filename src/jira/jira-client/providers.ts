@@ -8,13 +8,13 @@ import { addCurlLogging } from "../../atlclients/interceptors";
 import { configuration } from '../../config/configuration';
 import { Container } from "../../container";
 import { Resources } from '../../resources';
-import { Time } from "../../util/time";
+import { ConnectionTimeout } from "../../util/time";
 
 var tunnel = require("tunnel");
 
 export const jiraTransportFactory: TransportFactory = () => {
     const transport = axios.create({
-        timeout: 30 * Time.SECONDS,
+        timeout: ConnectionTimeout,
         headers: {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',

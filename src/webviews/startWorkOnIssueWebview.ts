@@ -183,7 +183,8 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                             bbApi.repositories.getDevelopmentBranch(site),
                             bbApi.repositories.getBranchingModel(site)
                             ]);
-                        href = repo.url;
+
+                        href = repo!.url;
                         isCloud = site.details.isCloud;
 
                         if (branchingModel && branchingModel.branch_types) {

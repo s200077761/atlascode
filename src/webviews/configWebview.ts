@@ -8,7 +8,7 @@ import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson
 import { configuration } from '../config/configuration';
 import { JQLEntry, SettingSource } from '../config/model';
 import { Container } from '../container';
-import { ConfigTarget, isAuthAction, isFetchJqlDataAction, isLoginAuthAction, isOpenJsonAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
+import { ConfigTarget, isAuthAction, isFetchJiraFiltersAction, isFetchJqlDataAction, isFetchSearchJiraFiltersAction, isLoginAuthAction, isOpenJsonAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
 import { ConfigInspect, ConfigWorkspaceFolder } from '../ipc/configMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -215,6 +215,36 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                     }
                     break;
                 }
+                case 'fetchJiraFilterOptions': {
+                    handled = true;
+                    if (isFetchJiraFiltersAction(msg)) {
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const data = await client.getFavoriteFilters();
+                            this.postMessage({ type: 'filterData', siteId: msg.site.id, data: data, nonce: msg.nonce });
+                        } catch (e) {
+                            let err = new Error(`Filter fetch error: ${e}`);
+                            Logger.error(err);
+                            this.postMessage({ type: 'filterData', data: this.formatErrorReason(e), nonce: msg.nonce });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchSearchJiraFilterOptions': {
+                    handled = true;
+                    if (isFetchSearchJiraFiltersAction(msg)) {
+                        try {
+                            const client = await Container.clientManager.jiraClient(msg.site);
+                            const data = await client.searchFilters(msg.query);
+                            this.postMessage({ type: 'filterSearchData', siteId: msg.site.id, data: data, nonce: msg.nonce });
+                        } catch (e) {
+                            let err = new Error(`Filter fetch error: ${e}`);
+                            Logger.error(err);
+                            this.postMessage({ type: 'filterSearchData', data: this.formatErrorReason(e), nonce: msg.nonce });
+                        }
+                    }
+                    break;
+                }
                 case 'saveSettings': {
                     handled = true;
                     if (isSaveSettingsAction(msg)) {
@@ -294,7 +324,7 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 }
                 case 'docsLink': {
                     handled = true;
-                    env.openExternal(Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code`));
+                    env.openExternal(Uri.parse(`https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code`));
                     break;
                 }
                 case 'submitFeedback': {

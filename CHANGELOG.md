@@ -1,3 +1,20 @@
+## What's New In 2.2.0
+### Improvements
+* Support for importing Jira filters when adding custom JQL entries
+* Support editing pull request titles
+* Support for custom online check URLs
+
+### Bugs fixed
+* Fixed bug where extension does not work when Jira and Bitbucket are set up with the same domain
+* Fixed bug where last used Jira project for creating issues was not being saved
+* Fixed bug where Jira autocomplete query was not being encoded correctly
+* Fixed bug causing internal comment button to not show up on service desk issues
+* Fixed bug preventing creation of Bitbucket issues
+* Fixed bug where create pull request view kept spinning when no repositories were open
+* Fixed issue where Jira issues show in treeview but open a blank screen when opened
+* Restrict inline commenting range for Bitbucket Server pull requests
+* Fixed delay when refreshing pull requests treeview
+
 ## What's New In 2.1.5
 ### Improvements
 * Added welcome screen to help new users get up and running
@@ -222,7 +239,7 @@
 * The configured development branch is now the default source when starting work on an issue
 * Added more default issue code link triggers
 * (experimental) bitbucket-pipelines.yml editing support
-* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Atlassian+for+VS+Code)
+* Added external [user guide](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code)
 
 ### Bugs fixed
 * Mention names in pull request comments are not shown properly
