@@ -113,8 +113,13 @@ export class ClientManager implements Disposable {
     );
   }
 
+  private keyForSite(site: SiteInfo): string {
+    const contextPath = site.contextPath ? `/${site.contextPath}` : "";
+    return `${site.hostname}${contextPath}`;
+  }
+
   private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
-    let client: T | undefined = this._clients.getItem<T>(site.hostname);
+    let client: T | undefined = this._clients.getItem<T>(this.keyForSite(site));
 
     if (!client) {
       try {
@@ -127,7 +132,7 @@ export class ClientManager implements Disposable {
 
       if (credentials) {
         client = factory(credentials);
-        this._clients.setItem(site.hostname, client, isOAuthInfo(credentials) ? oauthTTL : serverTTL);
+        this._clients.setItem(this.keyForSite(site), client, isOAuthInfo(credentials) ? oauthTTL : serverTTL);
       } else {
         Logger.debug(`No credentials for ${site.name}!`);
       }
@@ -139,7 +144,7 @@ export class ClientManager implements Disposable {
       if (credentials) {
         client = factory(credentials);
 
-        this._clients.updateItem(site.hostname, client);
+        this._clients.updateItem(this.keyForSite(site), client);
       }
       this._agentChanged = false;
     }
@@ -153,7 +158,7 @@ export class ClientManager implements Disposable {
       return Promise.reject(`site ${site.name} is not a cloud instance`);
     }
 
-    let client: any = this._clients.getItem(site.hostname);
+    let client: any = this._clients.getItem(this.keyForSite(site));
     let info = await Container.credentialManager.getAuthInfo(site);
     let newAccessToken: string | undefined = undefined;
 
@@ -173,6 +178,6 @@ export class ClientManager implements Disposable {
   }
 
   public async removeClient(site: SiteInfo) {
-    this._clients.deleteItem(site.hostname);
+    this._clients.deleteItem(this.keyForSite(site));
   }
 }
