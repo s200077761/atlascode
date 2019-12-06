@@ -114,7 +114,8 @@ export class ClientManager implements Disposable {
   }
 
   private keyForSite(site: SiteInfo): string {
-    return `${site.product.key}::${site.hostname}`;
+    const contextPath = site.contextPath ? `/${site.contextPath}` : "";
+    return `${site.hostname}${contextPath}`;
   }
 
   private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
