@@ -103,9 +103,20 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         const issuesMissingParents: MinimalIssue<DetailedSiteInfo>[] = [];
         const standAloneIssues: MinimalIssue<DetailedSiteInfo>[] = [];
 
+        // The subtasks likely include things that don't match the JQL so we get rid of them.
         newIssues.forEach(i => {
-            if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
-                issuesMissingParents.push(i);
+            i.subtasks = [];
+        });
+
+        // Construct the tree
+        newIssues.forEach(i => {
+            if (i.parentKey) {
+                const parent = newIssues.find(i2 => i.parentKey === i2.key);
+                if (!parent) {
+                    issuesMissingParents.push(i);
+                } else {
+                    parent.subtasks.push(i);
+                }
             } else if (!epics.some(e => e.key === i.key)) {
                 standAloneIssues.push(i);
             }
