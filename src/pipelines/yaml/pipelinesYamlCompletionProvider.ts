@@ -4,7 +4,7 @@ import { addCurlLogging } from '../../atlclients/interceptors';
 import { Container } from '../../container';
 import { getAgent } from '../../jira/jira-client/providers';
 import { Logger } from '../../logger';
-import { Time } from '../../util/time';
+import { ConnectionTimeout } from '../../util/time';
 
 
 const BB_PIPES_URL = 'https://api.bitbucket.org/2.0/repositories/bitbucketpipelines/official-pipes/src/master/pipes.prod.json';
@@ -98,7 +98,7 @@ export class PipelinesYamlCompletionProvider implements CompletionItemProvider {
 
     private loadPipes(): void {
         const transport = axios.create({
-            timeout: 10 * Time.SECONDS,
+            timeout: ConnectionTimeout,
             headers: {
                 'X-Atlassian-Token': 'no-check',
                 'x-atlassian-force-account-id': 'true',

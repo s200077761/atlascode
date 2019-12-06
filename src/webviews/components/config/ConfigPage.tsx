@@ -18,7 +18,7 @@ import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage } from '../../../ipc/messaging';
-import { Time } from '../../../util/time';
+import { ConnectionTimeout } from '../../../util/time';
 import { AtlLoader } from '../AtlLoader';
 import ErrorBanner from '../ErrorBanner';
 import { chain } from "../fieldValidators";
@@ -39,8 +39,6 @@ import { SiteEditor } from './SiteEditor';
 import WelcomeConfig from './WelcomeConfig';
 
 type changeObject = { [key: string]: any };
-
-const ApiTimeout = 20 * Time.SECONDS;
 
 const panelHeader = (heading: string, subheading: string) =>
     <div>
@@ -190,7 +188,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             let timer = setInterval(() => {
                 const end = Date.now();
                 const gotData = this.jqlDataMap[nonce] !== undefined;
-                const timeIsUp = (end - start) > ApiTimeout;
+                const timeIsUp = (end - start) > ConnectionTimeout;
 
                 if (gotData || timeIsUp) {
                     clearInterval(timer);
@@ -217,7 +215,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
             let timer = setInterval(() => {
                 const end = Date.now();
                 const gotData = this.filterDataMap[nonce] !== undefined;
-                const timeIsUp = (end - start) > ApiTimeout;
+                const timeIsUp = (end - start) > ConnectionTimeout;
 
                 if (gotData || timeIsUp) {
                     clearInterval(timer);

@@ -4,7 +4,7 @@ import { pmfSubmitted } from "../analytics";
 import { Container } from "../container";
 import { PMFData } from "../ipc/messaging";
 import { getAgent } from "../jira/jira-client/providers";
-import { Time } from "../util/time";
+import { ConnectionTimeout } from "../util/time";
 
 const devPMF = {
     collectorId: "235854834",
@@ -138,7 +138,7 @@ export async function submitPMF(pmfData: PMFData): Promise<void> {
     }
 
     const transport = axios.create({
-        timeout: 10 * Time.SECONDS,
+        timeout: ConnectionTimeout,
         headers: {
             'X-Atlassian-Token': 'no-check',
             'x-atlassian-force-account-id': 'true',

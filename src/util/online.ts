@@ -7,7 +7,7 @@ import { configuration } from "../config/configuration";
 import { Container } from "../container";
 import { getAgent } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
-import { Time } from "./time";
+import { ConnectionTimeout, Time } from "./time";
 
 
 export type OnlineInfoEvent = {
@@ -40,7 +40,7 @@ export class OnlineDetector extends Disposable {
         );
 
         this._transport = axios.create({
-            timeout: 10 * Time.SECONDS,
+            timeout: ConnectionTimeout,
         });
 
         if (Container.config.enableCurlLogging) {
