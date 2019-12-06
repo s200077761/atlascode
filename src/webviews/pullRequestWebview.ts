@@ -519,7 +519,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
     private async createTask(pr: PullRequest, task: Task, comment: Comment) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.postTask(pr.site, pr.data.id, comment, task.content.raw);
+        await bbApi.pullrequests.postTask(pr.site, pr.data.id, comment, task.content);
         this.updatePullRequest();
     }
 
