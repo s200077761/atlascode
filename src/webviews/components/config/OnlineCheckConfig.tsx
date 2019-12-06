@@ -1,6 +1,6 @@
 import * as React from "react";
 import { IConfig } from "../../../config/model";
-import SitePingList from "./SitePingList";
+import URLPingList from "./URLPingList";
 
 type changeObject = { [key: string]: any };
 
@@ -12,11 +12,11 @@ export default class OnlineCheckConfig extends React.Component<{ config: IConfig
   render() {
     return (
       <div>
-        <SitePingList
+        <URLPingList
           onConfigChange={this.props.onConfigChange}
           optionsConfig={'onlineCheckerUrls'}
-          enabledDescription={'Ping custom sites to check online status'}
-          promptString={'Add site'}
+          enabledDescription={'Ping custom URLs to check online status'}
+          promptString={'Add URL'}
           options={this.props.config.onlineCheckerUrls.slice()} />
       </div>
     );

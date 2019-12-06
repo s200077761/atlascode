@@ -7,7 +7,7 @@ import React from "react";
 type changeObject = { [key: string]: any };
 const defaultSites = ['http://atlassian.com', 'https://bitbucket.org'];
 
-export default class SitePingList extends React.Component<
+export default class URLPingList extends React.Component<
     {
         onConfigChange: (changes: changeObject, removes?: string[]) => void,
         optionsConfig: string,

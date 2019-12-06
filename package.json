@@ -598,7 +598,7 @@
                         "http://atlassian.com",
                         "https://bitbucket.org"
                     ],
-                    "description": "Online Checker will ping these sites to determine online status",
+                    "description": "Online Checker will ping these URLs to determine online status",
                     "scope": "window"
                 },
                 "atlascode.jira.enabled": {

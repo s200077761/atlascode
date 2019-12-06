@@ -483,7 +483,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                             <Panel isDefaultExpanded header={<div><p className='subheader'>miscellaneous settings</p></div>}>
                                                 <WelcomeConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                             </Panel>
-                                            <Panel isDefaultExpanded header={panelHeader('Connectivity', 'change what sites are pinged to determine online status')}>
+                                            <Panel isDefaultExpanded header={panelHeader('Connectivity', 'change what URLs are pinged to determine online status')}>
                                                 <OnlineCheckConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                             </Panel>
                                         </TabPanel>

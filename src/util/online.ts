@@ -95,9 +95,9 @@ export class OnlineDetector extends Disposable {
     }
 
     private async runOnlineChecks(): Promise<boolean> {
-        const siteList = Container.config.onlineCheckerUrls.slice();
+        const urlList = Container.config.onlineCheckerUrls.slice();
         const promise = async () => await pAny(
-            siteList.map(url => {
+            urlList.map(url => {
                 return (async () => {
                     Logger.debug(`Online check attempting to connect to ${url}`);
                     await this._transport(url, { method: "HEAD", ...getAgent() });
