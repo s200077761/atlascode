@@ -649,6 +649,12 @@
                     "description": "Time (in minutes) to wait before refreshing the Jira Issue Explorer (set to 0 to disable auto-refresh)",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.nestSubtasks": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Nest subtasks within tasks within epics",
+                    "scope": "window"
+                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,
