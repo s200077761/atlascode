@@ -649,6 +649,12 @@
                     "description": "Time (in minutes) to wait before refreshing the Jira Issue Explorer (set to 0 to disable auto-refresh)",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.nestSubtasks": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Nest subtasks within tasks within epics",
+                    "scope": "window"
+                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -985,6 +991,7 @@
         "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
         "compile:react": "webpack --mode production --config webpack.react.prod.js",
         "watch": "tsc --watch -p ./",
+        "lookAway": "tsc -p ./",
         "postinstall": "patch-package",
         "test": "npm run compile && node ./build/test/runTest.js",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",

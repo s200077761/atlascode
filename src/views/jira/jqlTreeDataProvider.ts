@@ -96,54 +96,61 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
         // fetch issues matching the jql
         const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
 
-        // epics don't have children filled in and children only have a ref to the parent key
-        // we need to fill in the children and fetch the parents of any orphans
-        const [epics, epicChildrenKeys] = await this.resolveEpics(newIssues);
-
-        const issuesMissingParents: MinimalIssue<DetailedSiteInfo>[] = [];
-        const standAloneIssues: MinimalIssue<DetailedSiteInfo>[] = [];
-
+        // We already have evertyhing that matches the JQL. The subtasks likely include things that 
+        // don't match the query so we get rid of them.
         newIssues.forEach(i => {
-            if (i.parentKey && !newIssues.some(i2 => i.parentKey === i2.key)) {
-                issuesMissingParents.push(i);
-            } else if (!epics.some(e => e.key === i.key)) {
-                standAloneIssues.push(i);
-            }
+            i.subtasks = [];
         });
 
-        // fetch parent issues for subtasks whose parents are not covered by the jql
-        const parentIssues = await this.fetchParentIssues(issuesMissingParents);
+        if (Container.config.jira.explorer.nestSubtasks) {
+            this._issues = await this.constructIssueTree(newIssues);
+        } else {
+            this._issues = newIssues;
+        }
 
-        const allIssues = [...standAloneIssues, ...parentIssues, ...epics];
-        const allSubIssueKeys = allIssues.map(issue => issue.subtasks.map(subtask => subtask.key)).reduce((prev, curr) => prev.concat(curr), []);
-
-        // show subtasks under parent if parent is available
-        this._issues = allIssues.filter(issue => { return !allSubIssueKeys.includes(issue.key) && !epicChildrenKeys.includes(issue.key); });
         return this.nodesForIssues();
     }
 
-    private async fetchParentIssues(subIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        if (subIssues.length < 1) {
+    private async constructIssueTree(jqlIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        // epics don't have children filled in and children only have a ref to the parent key
+        // we need to fill in the children and fetch the parents of any orphans
+        const [epics, epicChildrenKeys] = await this.resolveEpics(jqlIssues);
+
+        const parentIssues = await this.fetchMissingParentIssues(jqlIssues);
+        const jqlAndParents = [...jqlIssues, ...parentIssues];
+
+        const rootIssues: MinimalIssue<DetailedSiteInfo>[] = [];
+        jqlAndParents.forEach(i => {
+            if (i.parentKey) {
+                const parent = jqlAndParents.find(i2 => i.parentKey === i2.key);
+                if (parent) {
+                    parent.subtasks.push(i);
+                }
+            } else if (!epics.some(e => e.key === i.key) && !epicChildrenKeys.some(k => k === i.key)) {
+                rootIssues.push(i);
+            }
+        });
+
+        return [...rootIssues, ...epics];
+    }
+
+    private async fetchMissingParentIssues(newIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+        if (!newIssues) {
             return [];
         }
-        const site = subIssues[0].siteDetails;
-        const parentKeys: string[] = Array.from(new Set(subIssues.map(i => i.parentKey!)));
+        const parentKeys = newIssues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
+        const uniqueParentKeys = Array.from(new Set(parentKeys));
+        const missingParentKeys = uniqueParentKeys.filter(k => !newIssues.some(i => i.key === k));
 
+        const site = newIssues[0].siteDetails;
         const parentIssues = await Promise.all(
-            parentKeys
+            missingParentKeys
                 .map(async issueKey => {
                     const parent = await fetchMinimalIssue(issueKey, site);
                     // we only need the parent information here, we already have all the subtasks that satisfy the jql query
                     parent.subtasks = [];
                     return parent;
                 }));
-
-        subIssues.forEach(i => {
-            const parent = parentIssues.find(parentIssue => parentIssue.key === i.parentKey);
-            if (parent) {
-                parent.subtasks.push(i);
-            }
-        });
 
         return parentIssues;
     }
