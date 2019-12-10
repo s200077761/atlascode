@@ -135,7 +135,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     }
 
     private async fetchMissingParentIssues(newIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {
-        if (!newIssues) {
+        if (newIssues.length < 1) {
             return [];
         }
         const parentKeys = newIssues.filter(i => i.parentKey).map(i => i.parentKey) as string[];
