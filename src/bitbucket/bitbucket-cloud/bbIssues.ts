@@ -227,7 +227,7 @@ export class BitbucketIssuesApiImpl {
             });
 
         const updatedChangesAsComments: Comment[] = updatedChanges.map(change => ({
-            id: change.id as number,
+            id: change.id as string,
             htmlContent: change.message!.html!,
             rawContent: change.message!.raw!,
             deleted: false,

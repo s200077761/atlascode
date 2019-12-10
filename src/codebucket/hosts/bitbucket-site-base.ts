@@ -7,5 +7,5 @@ export abstract class BitbucketSiteBase {
 
   public abstract getChangeSetUrl(revision: string, filePath: string): string;
   public abstract getSourceUrl(revision: string, filePath: string, lineRanges: string[]): string;
-  public abstract getPullRequestUrl(id: number, filePath: string): string;
+  public abstract getPullRequestUrl(id: string, filePath: string): string;
 }

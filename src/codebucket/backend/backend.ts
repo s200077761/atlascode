@@ -75,7 +75,7 @@ export class Backend {
   /**
    * Get the Bitbucket pull request ID where a given change was merged.
    */
-  public async getPullRequestId(targetRevision: string): Promise<number> {
+  public async getPullRequestId(targetRevision: string): Promise<string> {
     const editor = CommandBase.getOpenEditor();
     if (editor.document.uri.scheme === PullRequestNodeDataProvider.SCHEME) {
       const queryParams = JSON.parse(editor.document.uri.query) as PRFileDiffQueryParams;

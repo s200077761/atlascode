@@ -62,12 +62,12 @@ export type Repo = {
 };
 
 export type Task = {
-    commentId: number;
+    commentId: string;
     creator: User;
     created: string;
     updated: string;
     isComplete: boolean;
-    id: number;
+    id: string;
     editable: boolean;
     deletable: boolean;
     content: {
@@ -79,8 +79,8 @@ export type Task = {
 };
 
 export type Comment = {
-    id: number;
-    parentId?: number;
+    id: string;
+    parentId?: string;
     deletable: boolean;
     editable: boolean;
     user: User;
@@ -96,6 +96,45 @@ export type Comment = {
     };
     children: Comment[];
     tasks: Task[];
+};
+
+export const emptyUser = {
+    accountId: "",
+    displayName: "",
+    url: "",
+    avatarUrl: "",
+    mention: ""
+};
+
+export const emptyTask = {
+    commentId: "",
+    creator: emptyUser,
+    created: "",
+    updated: "",
+    isComplete: false,
+    id: "",
+    editable: false,
+    deletable: false,
+    content: {
+        raw: "",
+        markup: "",
+        html: "",
+        type: ""
+    }
+};
+
+export const emptyComment = {
+    id: "",
+    deletable: false,
+    editable: false,
+    user: emptyUser,
+    htmlContent: "",
+    rawContent: "",
+    ts: "",
+    updatedTs: "",
+    deleted: false,
+    children: [],
+    tasks: []
 };
 
 export type Commit = {
@@ -172,7 +211,7 @@ export type ApprovalStatus = "APPROVED" | "UNAPPROVED" | "NEEDS_WORK";
 
 export type PullRequestData = {
     siteDetails: DetailedSiteInfo;
-    id: number;
+    id: string;
     version: number;
     url: string;
     author: User;
@@ -257,20 +296,20 @@ export interface PullRequestApi {
     getChangedFiles(pr: PullRequest): Promise<FileChange[]>;
     getCommits(pr: PullRequest): Promise<Commit[]>;
     getComments(pr: PullRequest): Promise<PaginatedComments>;
-    editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment>;
-    deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void>;
+    editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment>;
+    deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getTasks(pr: PullRequest): Promise<Task[]>;
-    postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task>;
-    editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task>;
-    deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void>;
+    postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task>;
+    editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task>;
+    deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
     create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     update(pr: PullRequest, title: string): Promise<void>;
     updateApproval(pr: PullRequest, status: ApprovalStatus): Promise<void>;
     merge(pr: PullRequest, closeSourceBranch?: boolean, mergeStrategy?: string, commitMessage?: string): Promise<void>;
-    postComment(site: BitbucketSite, prId: number, text: string, parentCommentId?: number, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
+    postComment(site: BitbucketSite, prId: string, text: string, parentCommentId?: string, inline?: { from?: number, to?: number, path: string }, lineMeta?: "ADDED" | "REMOVED"): Promise<Comment>;
     getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string>;
 }
 
@@ -280,7 +319,7 @@ export interface RepositoriesApi {
     getDevelopmentBranch(site: BitbucketSite): Promise<string>;
     getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
-    getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]>;
+    getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]>;
 }
 
 export interface BitbucketApi {

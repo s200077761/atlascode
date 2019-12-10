@@ -20,7 +20,7 @@ export class BitbucketCloudSite extends BitbucketSiteBase {
     return `${this.site.details.baseLinkUrl}/${ownerSlug}/${repoSlug}/src/${revision}/${filePath}#${hash}`;
   }
 
-  public getPullRequestUrl(id: number, filePath: string): string {
+  public getPullRequestUrl(id: string, filePath: string): string {
     const { ownerSlug, repoSlug } = this.site;
     return `${this.site.details.baseLinkUrl}/${ownerSlug}/${repoSlug}/pull-requests/${id}/diff#chg-${filePath}`;
   }

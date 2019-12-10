@@ -499,19 +499,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             });
     }
 
-    private async postComment(pr: PullRequest, text: string, parentId?: number) {
+    private async postComment(pr: PullRequest, text: string, parentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
         this.updatePullRequest();
     }
 
-    private async deleteComment(pr: PullRequest, commentId: number) {
+    private async deleteComment(pr: PullRequest, commentId: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.deleteComment(pr.site, this._pr!.data.id, commentId);
         this.updatePullRequest();
     }
 
-    private async editComment(pr: PullRequest, content: string, commentId: number) {
+    private async editComment(pr: PullRequest, content: string, commentId: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.editComment(pr.site, this._pr!.data.id!, content, commentId);
         this.updatePullRequest();

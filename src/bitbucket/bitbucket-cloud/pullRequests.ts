@@ -264,7 +264,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void> {
+    async deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
         await this.client.delete(
@@ -273,7 +273,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment> {
+    async editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.put(
@@ -316,7 +316,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
     }
 
-    async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
+    async postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
         try {
@@ -329,9 +329,6 @@ export class CloudPullRequestApi implements PullRequestApi {
                     completed: false,
                     content: {
                         raw: content
-                    },
-                    creator: {
-                        account_id: comment.user.accountId
                     }
                 }
             );
@@ -344,7 +341,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }  
     }
 
-    async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
+    async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
         try {
@@ -371,7 +368,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
     }
 
-    async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
+    async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
         try {
@@ -444,7 +441,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const convertedComments = await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site))));
 
-        let commentIdMap = new Map<number, number>();
+        let commentIdMap = new Map<string, number>();
         for(let i = 0; i < convertedComments.length; i++){
             commentIdMap.set(convertedComments[i].id, i);
         }
@@ -475,7 +472,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
-        const commentsTreeMap = new Map<Number, Comment>();
+        const commentsTreeMap = new Map<string, Comment>();
         comments.forEach(c => commentsTreeMap.set(c.id!, c));
         comments.forEach(c => {
             const n = commentsTreeMap.get(c.id!);
@@ -617,8 +614,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async postComment(
         site: BitbucketSite,
-        prId: number, text: string,
-        parentCommentId?: number,
+        prId: string, text: string,
+        parentCommentId?: string,
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
