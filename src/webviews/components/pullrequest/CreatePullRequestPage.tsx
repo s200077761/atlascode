@@ -50,14 +50,13 @@ interface MyState {
     issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     commits: Commit[];
     isCreateButtonLoading: boolean;
-    result?: string;
+    fileDiffs: FileDiff[];
+    fileDiffsLoading: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
     showPMF: boolean;
     isSomethingLoading: boolean;
-    fileDiffs: FileDiff[];
-    fileDiffsLoading: boolean;
 }
 
 const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
@@ -73,13 +72,13 @@ const emptyState = {
     defaultReviewers: [],
     commits: [],
     isCreateButtonLoading: false,
+    fileDiffs: [],
+    fileDiffsLoading: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
     showPMF: false,
-    isSomethingLoading: false,
-    fileDiffs: [],
-    fileDiffsLoading: false
+    isSomethingLoading: false
 };
 
 const UserOption = (props: any) => {
@@ -260,7 +259,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
-                this.setState({ isCreateButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                this.setState({ isCreateButtonLoading: false, fileDiffsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'createPullRequestData': {
@@ -331,7 +330,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     render() {
-        if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (this.state.repo === emptyRepoData && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         }

@@ -193,6 +193,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 }
                 case 'updateDiff': {
                     if (isUpdateDiffAction(e)) {
+                        handled = true;
                         let fileDiffs: FileDiff[] = await this.generateDiff(e.repoData, e.destinationBranch, e.sourceBranch);
                         this.postMessage({ type: 'diffResult', fileDiffs: fileDiffs });
                     }

@@ -18,7 +18,9 @@ export const CreatePRTitleSummary: React.FC<TitleSummaryProps> = (props: TitleSu
     useEffect(() => {
         if (!dirty) {
             if (props.commits.length > 0) {
-                setTitle(props.commits[0].message!.split('\n', 1)[0].trim());
+                setTitle(props.commits.length === 1
+                    ? props.commits[0].message!.split('\n', 1)[0].trim()
+                    : props.sourceBranchName);
                 setSummary(props.commits.length === 1
                     ? `${props.commits[0].message!.substring(props.commits[0].message!.indexOf('\n') + 1).trimLeft()}${createdFromAtlascodeFooter}`
                     : `${props.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`);
