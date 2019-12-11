@@ -21,6 +21,7 @@ import { PMFData } from '../../../ipc/messaging';
 import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
 import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
 import { Branch, Ref } from '../../../typings/git';
+import { ConnectionTimeout } from "../../../util/time";
 import { AtlLoader } from '../AtlLoader';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import ErrorBanner from '../ErrorBanner';
@@ -111,9 +112,6 @@ const UserValue = (props: any) => {
 };
 
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, MyState> {
-    private nonce: string;
-    private userSuggestions: any[] | undefined = undefined;
-
     constructor(props: any) {
         super(props);
         this.state = emptyState;
@@ -240,23 +238,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             return Promise.resolve([]);
         }
         return new Promise(resolve => {
-            this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.siteRemote!.value.site! });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
-                    if (this.userSuggestions === undefined) {
-                        this.userSuggestions = [];
-                    }
-
-                    clearInterval(timer);
-                    this.setState({ isSomethingLoading: false });
-                    resolve(this.userSuggestions);
-                }
-            }, 100);
+            (async () => {
+                const result = await this.postMessageWithEventPromise(
+                    { action: 'fetchUsers', query: input, site: this.state.siteRemote!.value.site!, nonce: nonce },
+                    'fetchUsersResult',
+                    ConnectionTimeout,
+                    nonce
+                );
+                resolve(result.users);
+            })();
         });
     };
 
@@ -314,11 +305,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             }
             case 'fetchIssueResult': {
                 this.setState({ issue: e.issue });
-                break;
-            }
-            case 'fetchUsersResult': {
-                this.userSuggestions = e.users;
-                this.nonce = e.nonce;
                 break;
             }
             case 'onlineStatus': {
