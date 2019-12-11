@@ -33,7 +33,6 @@ export interface RepoData {
     workspaceRepo: WorkspaceRepo;
     href?: string;
     avatarUrl?: string;
-    defaultReviewers: User[];
     localBranches: Branch[];
     remoteBranches: Branch[];
     branchTypes: BranchType[];

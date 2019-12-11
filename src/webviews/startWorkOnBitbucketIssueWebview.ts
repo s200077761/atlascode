@@ -166,7 +166,6 @@ export class StartWorkOnBitbucketIssueWebview extends AbstractReactWebview imple
                 return {
                     workspaceRepo: wsRepo,
                     href: href,
-                    defaultReviewers: [],
                     localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                     remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                     branchTypes: [],

@@ -12,7 +12,7 @@ import { Container } from '../container';
 import { isOpenBitbucketIssueAction, isUpdateDiffAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { CreatePullRequest, FetchDetails, FetchIssue, isCreatePullRequest, isFetchDetails, isFetchIssue, isFetchUsers, isOpenDiffPreview } from '../ipc/prActions';
+import { CreatePullRequest, FetchDetails, FetchIssue, isCreatePullRequest, isFetchDefaultReviewers, isFetchDetails, isFetchIssue, isFetchUsers, isOpenDiffPreview } from '../ipc/prActions';
 import { RepoData } from '../ipc/prMessaging';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
@@ -72,20 +72,17 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 const bbApi = await clientForSite(site);
                 const scm = Container.bitbucketContext.getRepositoryScm(wsRepo.rootUri)!;
 
-                const [, repo, developmentBranch, defaultReviewers] = await Promise.all([
+                const [, repo, developmentBranch] = await Promise.all([
                     scm.fetch(),
                     bbApi.repositories.get(site),
                     bbApi.repositories.getDevelopmentBranch(site),
                     bbApi.pullrequests.getReviewers(site)
                 ]);
 
-                const currentUser = { accountId: site.details.userId };
-
                 return {
                     workspaceRepo: wsRepo,
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
-                    defaultReviewers: (defaultReviewers as User[]).filter(reviewer => reviewer.accountId !== currentUser.accountId),
                     localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                     remoteBranches: scm.state.refs
                         .filter(ref => ref.type === RefType.RemoteHead && ref.name && scm.state.remotes.find(rem => ref.name!.startsWith(rem.name)))
@@ -158,13 +155,23 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                     if (isFetchUsers(e)) {
                         handled = true;
                         try {
-                            const bbApi = await clientForSite(e.site);
-                            const currentUserId = e.site.details.userId;
-                            let reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
-                            reviewers = reviewers.filter(r => r.accountId !== currentUserId);
+                            const reviewers = await this.fetchReviewers(e.site, e.query);
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'fetchDefaultReviewers': {
+                    if (isFetchDefaultReviewers(e)) {
+                        handled = true;
+                        try {
+                            const reviewers = await this.fetchReviewers(e.site);
+                            this.postMessage({ type: 'fetchDefaultReviewersResult', users: reviewers });
+                        } catch (e) {
+                            Logger.error(new Error(`error fetching default reviewers: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
                         }
                     }
@@ -230,6 +237,14 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             type: 'commitsResult',
             commits: result
         });
+    }
+
+    private async fetchReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
+        const bbApi = await clientForSite(site);
+        const currentUserId = site.details.userId;
+        let reviewers = await bbApi.pullrequests.getReviewers(site, query);
+        reviewers = reviewers.filter(r => r.accountId !== currentUserId);
+        return reviewers;
     }
 
     async getCurrentRepo(repoData: RepoData): Promise<Repository> {

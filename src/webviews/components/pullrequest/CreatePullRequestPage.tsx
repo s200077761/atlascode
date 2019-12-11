@@ -18,7 +18,7 @@ import { BitbucketIssue, BitbucketIssueData, Commit, emptyBitbucketSite, FileDif
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { PMFData } from '../../../ipc/messaging';
-import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDefaultReviewers, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
 import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
 import { Branch, Ref } from '../../../typings/git';
 import { ConnectionTimeout } from "../../../util/time";
@@ -35,14 +35,14 @@ import { Commits } from './Commits';
 import { CreatePRTitleSummary } from './CreatePRTitleSummary';
 import DiffList from './DiffList';
 
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | FetchDefaultReviewers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
 type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
     data: CreatePRData;
     repo: RepoData;
     siteRemote: SiteRemote;
-    reviewers: User[];
+    defaultReviewers: User[];
     sourceBranch?: Branch;
     sourceRemoteBranchName?: string;
     destinationBranch?: Ref;
@@ -60,7 +60,7 @@ interface MyState {
     fileDiffsLoading: boolean;
 }
 
-const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 
 const emptyState = {
     data: {
@@ -70,7 +70,7 @@ const emptyState = {
     repo: emptyRepoData,
     siteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
     issueSetupEnabled: true,
-    reviewers: [],
+    defaultReviewers: [],
     commits: [],
     isCreateButtonLoading: false,
     isErrorBannerOpen: false,
@@ -128,7 +128,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({
             repo: repo,
             siteRemote: siteRemote,
-            reviewers: repo.defaultReviewers,
             sourceBranch: sourceBranch,
             destinationBranch: destinationBranch
         }, this.handleBranchChange);
@@ -162,6 +161,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
         let newState: Partial<MyState> = {
             commits: [],
+            defaultReviewers: [],
             issue: undefined,
             sourceRemoteBranchName: sourceRemoteBranchName
         };
@@ -175,6 +175,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 sourceBranch: this.state.sourceBranch
             });
         }
+
+        this.postMessage({ action: 'fetchDefaultReviewers', site: this.state.siteRemote.site! });
 
         this.setState({ fileDiffsLoading: true, fileDiffs: [] }); //Activates spinner for file diff panel and resets data
         if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch !== this.state.destinationBranch) {
@@ -279,6 +281,12 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         commits: e.commits
                     });
                 }
+                break;
+            }
+            case 'fetchDefaultReviewersResult': {
+                this.setState({
+                    defaultReviewers: e.users
+                });
                 break;
             }
             case 'diffResult': {
@@ -492,33 +500,31 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             <Field label='Reviewers'
                                                 id='reviewers'
                                                 name='reviewers'
-                                                defaultValue={repo.defaultReviewers}
+                                                defaultValue={this.state.defaultReviewers}
                                             >
                                                 {
                                                     (fieldArgs: any) => {
                                                         return (
-                                                            <div>
-                                                                <AsyncSelect
-                                                                    {...fieldArgs.fieldProps}
-                                                                    className="ac-select-container"
-                                                                    classNamePrefix="ac-select"
-                                                                    loadOptions={this.loadUserOptions}
-                                                                    getOptionLabel={(option: any) => option.display_name}
-                                                                    getOptionValue={(option: any) => option.accountId}
-                                                                    placeholder={repo.isCloud
-                                                                        ? "Enter the user's full name (partial matches are not supported)"
-                                                                        : "Start typing to search for reviewers"
-                                                                    }
-                                                                    noOptionsMessage={() => repo.isCloud
-                                                                        ? "No results (enter the user's full name; partial matches are not supported)"
-                                                                        : "No results"
-                                                                    }
-                                                                    defaultOptions={repo.defaultReviewers}
-                                                                    isMulti
-                                                                    components={{ Option: UserOption, MultiValueLabel: UserValue }}
-                                                                    isDisabled={this.state.isSomethingLoading}
-                                                                    isLoading={this.state.isSomethingLoading} />
-                                                            </div>
+                                                            <AsyncSelect
+                                                                {...fieldArgs.fieldProps}
+                                                                className="ac-select-container"
+                                                                classNamePrefix="ac-select"
+                                                                loadOptions={this.loadUserOptions}
+                                                                getOptionLabel={(option: any) => option.displayName}
+                                                                getOptionValue={(option: any) => option.accountId}
+                                                                placeholder={repo.isCloud
+                                                                    ? "Enter the user's full name (partial matches are not supported)"
+                                                                    : "Start typing to search for reviewers"
+                                                                }
+                                                                noOptionsMessage={() => repo.isCloud
+                                                                    ? "No results (enter the user's full name; partial matches are not supported)"
+                                                                    : "No results"
+                                                                }
+                                                                defaultOptions={this.state.defaultReviewers}
+                                                                isMulti
+                                                                components={{ Option: UserOption, MultiValueLabel: UserValue }}
+                                                                isDisabled={this.state.isSomethingLoading}
+                                                                isLoading={this.state.isSomethingLoading} />
                                                         );
                                                     }
                                                 }

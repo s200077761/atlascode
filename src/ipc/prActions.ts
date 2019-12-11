@@ -165,6 +165,15 @@ export function isFetchUsers(a: Action): a is FetchUsers {
     return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
 }
 
+export interface FetchDefaultReviewers extends Action {
+    action: 'fetchDefaultReviewers';
+    site: BitbucketSite;
+}
+
+export function isFetchDefaultReviewers(a: Action): a is FetchDefaultReviewers {
+    return (<FetchDefaultReviewers>a).action === 'fetchDefaultReviewers' && (<FetchDefaultReviewers>a).site !== undefined;
+}
+
 export interface OpenBuildStatusAction extends Action {
     action: 'openBuildStatus';
     buildStatusUri: string;
