@@ -175,7 +175,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             
             //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
             newComment.tasks = comment.tasks;
-            comments = await this.replaceEditedComment(comment.parent!.comments as (PullRequestComment | PullRequestTask)[], newComment);
+            comments = await this.replaceEditedComment(comment.parent!.comments as EnhancedComment[], newComment);
         } else if (comment.saveChangesContext === SaveContexts.EDITINGTASK && isPRTask(comment)) {
             comments = await this.updateTask(comment.parent!.comments, comment, { content: { raw: comment.body.toString(), html: "", type: "", markup: "" } });
         }
@@ -210,7 +210,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             if(comment.id === newTask.commentId){
                 return {
                     ...comment,
-                    tasks: [...comment.tasks, newTask],
+                    tasks: [newTask, ...comment.tasks],
                     temporaryTask: undefined
                 } as PullRequestComment;
             } else {
@@ -340,8 +340,10 @@ export class PullRequestCommentController implements vscode.Disposable {
 
         let commentThread = await this.createOrUpdateThread(commentData.prCommentThreadId!, commentData.parent.uri, commentData.parent.range, newComments);
 
+        //This delay is required because otherwise the comment will not be rendered as being in edit mode. This is probably a VS Code bug related to an asynchronous action,
+        //but for now I don't see a better solution than this.
         setTimeout(() => {
-            commentThread.comments = commentThread.comments.map((comment, index) => {
+            commentThread.comments = commentThread.comments.map(comment => {
                 if (UUID === (comment as EnhancedComment).id) {
                     comment.mode = vscode.CommentMode.Editing;
                 }
@@ -351,13 +353,13 @@ export class PullRequestCommentController implements vscode.Disposable {
         }, 100);
     }
 
-    editCommentClicked(commentData: PullRequestComment | PullRequestTask) {
+    editCommentClicked(commentData: EnhancedComment) {
         commentData = this.storeCommentContentForEdit(commentData);
         this.convertCommentToMode(commentData, vscode.CommentMode.Editing);
     }
 
-    private async replaceEditedComment(comments: (PullRequestComment | PullRequestTask)[], newComment: Comment | Task): Promise<vscode.Comment[]> {
-        const newComments: (PullRequestComment | PullRequestTask)[] = await Promise.all(comments.map(async (comment: PullRequestComment | PullRequestTask) => {
+    private async replaceEditedComment(comments: EnhancedComment[], newComment: Comment | Task): Promise<vscode.Comment[]> {
+        const newComments: EnhancedComment[] = await Promise.all(comments.map(async (comment: EnhancedComment) => {
             if (comment.id === newComment.id) {
                 if(isPRTask(comment)){
                     return await this.createVSCodeCommentTask(comment.site, comment.id!, (newComment as Task), comment.prHref, comment.prId);
@@ -410,7 +412,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 
                 //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
                 newComment.tasks = commentData.tasks;
-                comments = await this.replaceEditedComment(commentData.parent!.comments as (PullRequestComment | PullRequestTask)[], newComment);
+                comments = await this.replaceEditedComment(commentData.parent!.comments as EnhancedComment[], newComment);
             } else {
                 //Replace the edited task in the associated comment's task list
                 comments = await this.updateTask(commentData.parent!.comments, (commentData as PullRequestTask), { content: { raw: commentData.body.toString(), html: "", type: "", markup: "" } });
