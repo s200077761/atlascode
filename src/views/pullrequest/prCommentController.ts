@@ -363,12 +363,10 @@ export class PullRequestCommentController implements vscode.Disposable {
             if (comment.id === newComment.id) {
                 if(isPRTask(comment)){
                     return await this.createVSCodeCommentTask(comment.site, comment.id!, (newComment as Task), comment.prHref, comment.prId);
-                } else {
-                    return await this.createVSCodeComment(comment.site, comment.id!, (newComment as Comment), comment.prHref, comment.prId);
-                }
-            } else {
-                return comment;
+                } 
+                return await this.createVSCodeComment(comment.site, comment.id!, (newComment as Comment), comment.prHref, comment.prId);
             }
+            return comment;
         }));
 
         return newComments;
@@ -415,7 +413,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 comments = await this.replaceEditedComment(commentData.parent!.comments as EnhancedComment[], newComment);
             } else {
                 //Replace the edited task in the associated comment's task list
-                comments = await this.updateTask(commentData.parent!.comments, (commentData as PullRequestTask), { content: { raw: commentData.body.toString(), html: "", type: "", markup: "" } });
+                comments = await this.updateTask(commentData.parent!.comments, (commentData as PullRequestTask), { content: commentData.body.toString() });
             }
             
             this.createOrUpdateThread(commentThreadId!, commentData.parent!.uri, commentData.parent!.range, comments);
@@ -565,8 +563,8 @@ export class PullRequestCommentController implements vscode.Disposable {
         }
 
         const taskBody = task.isComplete ? 
-            new vscode.MarkdownString(`~~${turndownService.turndown(task.content.html)}~~`) : 
-            new vscode.MarkdownString(turndownService.turndown(task.content.html));
+            new vscode.MarkdownString(`~~${turndownService.turndown(task.content)}~~`) : 
+            new vscode.MarkdownString(turndownService.turndown(task.content));
         return {
             site: site,
             prCommentThreadId: parentCommentThreadId,

@@ -203,7 +203,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             `/rest/api/1.0/tasks/${task.id}`,
             {
                 id: task.id,
-                text: task.content.raw,
+                text: task.content,
                 state: task.isComplete ? "RESOLVED" : "OPEN"
             }
         );
@@ -230,12 +230,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             editable: taskBelongsToUser && taskData.permittedOperations.editable,
             deletable: taskBelongsToUser && taskData.permittedOperations.deletable,
             id: taskData.id,
-            content: {
-                raw: taskData.text,
-                html: `<p>${taskData.text}</p>`,
-                markup: taskData.text,
-                type: ""
-            }
+            content: taskData.text
         };
     }
 

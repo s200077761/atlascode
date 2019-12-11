@@ -353,7 +353,7 @@ export class CloudPullRequestApi implements PullRequestApi {
                     },
                     completed: task.isComplete,
                     content: {
-                        raw: task.content.raw
+                        raw: task.content
                     },
                     id: task.id,
                     state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
@@ -394,7 +394,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             editable: taskBelongsToUser && taskData.state === "UNRESOLVED",
             deletable: taskBelongsToUser && taskData.state === "UNRESOLVED",
             id: taskData.id,
-            content: taskData.content
+            content: taskData.content.raw
         };
     }
 

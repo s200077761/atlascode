@@ -128,12 +128,7 @@ class NestedComment extends React.Component<
             id: "",
             editable: false,
             deletable: false,
-            content: {
-                raw: "",
-                markup: "",
-                html: "",
-                type: ""
-            }
+            content: ""
         } as Task;
     };
 
