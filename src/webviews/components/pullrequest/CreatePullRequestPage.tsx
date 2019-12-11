@@ -10,8 +10,8 @@ import Panel from '@atlaskit/panel';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
 import { Transition } from "jira-metaui-transformer";
 import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
-import * as path from 'path';
-import * as React from 'react';
+import path from 'path';
+import React from 'react';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { BitbucketIssue, BitbucketIssueData, Commit, emptyBitbucketSite, FileDiff, SiteRemote, User } from '../../../bitbucket/model';
@@ -31,20 +31,14 @@ import PMFBBanner from '../pmfBanner';
 import { WebviewComponent } from '../WebviewComponent';
 import { BranchWarning } from './BranchWarning';
 import { Commits } from './Commits';
-import CreatePRTitleSummary from './CreatePRTitleSummary';
+import { CreatePRTitleSummary } from './CreatePRTitleSummary';
 import DiffList from './DiffList';
-
-const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
 
 type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
 type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
     data: CreatePRData;
-    title: string;
-    titleManuallyEdited: boolean;
-    summary: string;
-    summaryManuallyEdited: boolean;
     repo?: { label: string; value: RepoData; };
     siteRemote?: { label: string; value: SiteRemote; };
     reviewers: User[];
@@ -72,10 +66,6 @@ const emptyState = {
         type: 'createPullRequest',
         repositories: []
     },
-    title: 'Pull request title',
-    titleManuallyEdited: false,
-    summary: createdFromAtlascodeFooter,
-    summaryManuallyEdited: false,
     pushLocalChanges: true,
     closeSourceBranch: false,
     issueSetupEnabled: true,
@@ -132,14 +122,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         super(props);
         this.state = emptyState;
     }
-
-    handleTitleChange = (e: any) => {
-        this.setState({ titleManuallyEdited: true });
-    };
-
-    handleSummaryChange = (e: any) => {
-        this.setState({ summaryManuallyEdited: true });
-    };
 
     handleRepoChange = (newValue: { label: string, value: RepoData }) => {
         this.resetRepoAndRemoteState(
@@ -203,12 +185,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             sourceRemoteBranchName: sourceRemoteBranchName
         };
 
-        if (this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)) {
-            newState = { ...newState, title: this.state.sourceBranch!.label };
-        }
-        if (!this.state.summaryManuallyEdited) {
-            newState = { ...newState, summary: createdFromAtlascodeFooter };
-        }
         this.setState(newState as any);
 
         if (this.state.sourceBranch) {
@@ -334,15 +310,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 if (isCommitsResult(e)) {
                     this.setState({
                         isCreateButtonLoading: false,
-                        commits: e.commits,
-                        title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits[0].message!.split('\n', 1)[0].trim()
-                            : this.state.title,
-                        summary: this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits.length === 1
-                                ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1).trimLeft()}${createdFromAtlascodeFooter}`
-                                : `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
-                            : this.state.summary
+                        commits: e.commits
                     });
                 }
                 break;
@@ -545,7 +513,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             name="push-local-branch-enabled" />
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
-                                        <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
+                                        <CreatePRTitleSummary sourceBranchName={this.state.sourceBranch?.label ?? ''} commits={this.state.commits} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
                                                 id='reviewers'

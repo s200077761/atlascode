@@ -407,6 +407,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 {
                     title: title,
                     summary: summary,
+                    sourceRepoFullName: `${site.ownerSlug}/${site.repoSlug}`,
                     sourceBranchName: sourceBranchName,
                     destinationBranchName: destinationBranchName,
                     closeSourceBranch: closeSourceBranch,
