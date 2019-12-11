@@ -1,25 +1,24 @@
 "use strict";
 
-import { BitbucketContext } from './bitbucket/bbContext';
-import { registerCommands, Commands } from './commands';
-import { registerResources } from './resources';
-import { configuration, Configuration, IConfig } from './config/configuration';
-import { Logger } from './logger';
-import { GitExtension } from './typings/git';
-import { Container } from './container';
-import { ProductJira, ProductBitbucket } from './atlclients/authInfo';
-import { setCommandContext, CommandContext, GlobalStateVersionKey, AuthInfoVersionKey } from './constants';
-import { languages, extensions, ExtensionContext, commands } from 'vscode';
 import * as semver from 'semver';
+import { commands, env, ExtensionContext, extensions, languages, Memento, window } from 'vscode';
+import { installedEvent, launchedEvent, upgradedEvent } from './analytics';
+import { ProductBitbucket, ProductJira } from './atlclients/authInfo';
+import { BitbucketContext } from './bitbucket/bbContext';
 import { activate as activateCodebucket } from './codebucket/command/registerCommands';
-import { installedEvent, upgradedEvent, launchedEvent } from './analytics';
-import { window, Memento, env } from "vscode";
+import { Commands, registerCommands } from './commands';
+import { configuration, Configuration, IConfig } from './config/configuration';
+import { AuthInfoVersionKey, CommandContext, GlobalStateVersionKey, setCommandContext } from './constants';
+import { Container } from './container';
 import { provideCodeLenses } from "./jira/todoObserver";
-import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
-import { addPipelinesSchemaToYamlConfig, activateYamlExtension, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
-import { V1toV2Migrator, migrateAllWorkspaceCustomJQLS } from './migrations/v1tov2';
+import { Logger } from './logger';
+import { migrateAllWorkspaceCustomJQLS, V1toV2Migrator } from './migrations/v1tov2';
 import { V2JiraServerUserIdFixer } from './migrations/v2JiraServerUserIdFixer';
 import { V2toV3Migrator } from './migrations/v2tov3';
+import { PipelinesYamlCompletionProvider } from './pipelines/yaml/pipelinesYamlCompletionProvider';
+import { activateYamlExtension, addPipelinesSchemaToYamlConfig, BB_PIPELINES_FILENAME } from './pipelines/yaml/pipelinesYamlHelper';
+import { registerResources } from './resources';
+import { GitExtension } from './typings/git';
 
 const AnalyticDelay = 5000;
 
@@ -59,12 +58,7 @@ export async function activate(context: ExtensionContext) {
     }
 
     if(previousVersion === undefined && window.state.focused){
-        //This gets hit when the user has opened our extension for the first time. Now we run an A/B test
-        if(Math.random() < 0.5){
-            commands.executeCommand(Commands.ShowOnboardingPage);
-        } else {
-            commands.executeCommand(Commands.ShowWelcomePage);
-        }
+        commands.executeCommand(Commands.ShowOnboardingPage); //This is shown to users who have never opened our extension before
     } else {
         showWelcomePage(atlascodeVersion, previousVersion);
     }
