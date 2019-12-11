@@ -54,6 +54,19 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             : repo.mainbranch!;
     }
 
+    async getBranches(site: BitbucketSite): Promise<string[]> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/refs/branches`,
+            {
+                pagelen: 50
+            }
+        );
+
+        return data.values.map((val: any) => val.name);
+    }
+
     async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
         const { ownerSlug, repoSlug } = site;
 
@@ -120,6 +133,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             name: bbRepo.owner ? bbRepo.owner!.username! : bbRepo.name!,
             displayName: bbRepo.name!,
             fullName: bbRepo.full_name!,
+            parentFullName: bbRepo.parent?.full_name,
             url: bbRepo.links!.html!.href!,
             avatarUrl: bbRepo.links!.avatar!.href!,
             mainbranch: bbRepo.mainbranch ? bbRepo.mainbranch.name : undefined,
