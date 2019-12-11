@@ -398,6 +398,12 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
             await scm.push(destinationBranch.remote, sourceBranchName);
         }
 
+        if (title.length > 0) {
+            console.log(pushLocalChanges);
+            console.log(closeSourceBranch);
+            return;
+        }
+
         const bbApi = await clientForSite(site);
 
         await bbApi.pullrequests

@@ -1,7 +1,7 @@
 import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from '@atlaskit/button';
 import { Checkbox } from '@atlaskit/checkbox';
-import Form, { Field } from '@atlaskit/form';
+import Form, { CheckboxField, Field } from '@atlaskit/form';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
@@ -45,8 +45,6 @@ interface MyState {
     sourceBranch?: { label: string; value: Branch };
     sourceRemoteBranchName?: string;
     destinationBranch?: { label: string; value: Ref };
-    pushLocalChanges: boolean;
-    closeSourceBranch: boolean;
     issueSetupEnabled: boolean;
     issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     commits: Commit[];
@@ -66,8 +64,6 @@ const emptyState = {
         type: 'createPullRequest',
         repositories: []
     },
-    pushLocalChanges: true,
-    closeSourceBranch: false,
     issueSetupEnabled: true,
     reviewers: [],
     commits: [],
@@ -219,14 +215,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         }
     };
 
-    handlePushLocalChangesChange = (e: any) => {
-        this.setState({ pushLocalChanges: e.target.checked });
-    };
-
-    handleCloseSourceBranchChange = (e: any) => {
-        this.setState({ closeSourceBranch: e.target.checked });
-    };
-
     toggleIssueSetupEnabled = (e: any) => {
         this.setState({ issueSetupEnabled: e.target.checked });
     };
@@ -283,8 +271,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             summary: e.summary,
             sourceBranch: this.state.sourceBranch!.value,
             destinationBranch: this.state.destinationBranch!.value,
-            pushLocalChanges: this.state.pushLocalChanges,
-            closeSourceBranch: this.state.closeSourceBranch,
+            pushLocalChanges: e.pushLocalChanges,
+            closeSourceBranch: e.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.issue : undefined
         });
     };
@@ -506,11 +494,20 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             </div>
                                         </div>
 
-                                        <Checkbox
-                                            label={'Push latest changes from local to remote branch'}
-                                            isChecked={this.state.pushLocalChanges}
-                                            onChange={this.handlePushLocalChangesChange}
-                                            name="push-local-branch-enabled" />
+                                        <CheckboxField
+                                            name='pushLocalChanges'
+                                            id='pushLocalChanges'
+                                            defaultIsChecked>
+                                            {
+                                                (fieldArgs: any) => {
+                                                    return (
+                                                        <Checkbox {...fieldArgs.fieldProps}
+                                                            label='Push latest changes from local to remote branch'
+                                                        />
+                                                    );
+                                                }
+                                            }
+                                        </CheckboxField>
 
                                         <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
                                         <CreatePRTitleSummary sourceBranchName={this.state.sourceBranch?.label ?? ''} commits={this.state.commits} />
@@ -552,11 +549,19 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </div>
 
                                         <div className='ac-vpadding'>
-                                            <Checkbox
-                                                label={'Close source branch after the pull request is merged'}
-                                                isChecked={this.state.closeSourceBranch}
-                                                onChange={this.handleCloseSourceBranchChange}
-                                                name="close-source-branch-enabled" />
+                                            <CheckboxField
+                                                name='closeSourceBranch'
+                                                id='closeSourceBranch'>
+                                                {
+                                                    (fieldArgs: any) => {
+                                                        return (
+                                                            <Checkbox {...fieldArgs.fieldProps}
+                                                                label='Close source branch after the pull request is merged'
+                                                            />
+                                                        );
+                                                    }
+                                                }
+                                            </CheckboxField>
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
