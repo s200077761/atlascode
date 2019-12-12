@@ -1,4 +1,4 @@
-export const IssueKeyRegEx = new RegExp(/[A-Z]+-\d+/g);
+export const IssueKeyRegEx = new RegExp(/[a-zA-Z]+-\d+/g);
 
 export function parseJiraIssueKeys(text?: string): string[] {
     if (!text) {
