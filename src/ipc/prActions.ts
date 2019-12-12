@@ -1,6 +1,6 @@
 import { MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, Comment, FileChange, Reviewer, Task, WorkspaceRepo } from "../bitbucket/model";
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, Comment, FileChange, Reviewer, SiteRemote, Task, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
@@ -115,10 +115,11 @@ export function isCheckout(a: Action): a is Checkout {
 export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     workspaceRepo: WorkspaceRepo;
-    site: BitbucketSite;
+    destinationSite: BitbucketSite;
     reviewers: Reviewer[];
     title: string;
     summary: string;
+    sourceSiteRemote: SiteRemote;
     sourceBranch: Branch;
     destinationBranch: Branch;
     pushLocalChanges: boolean;

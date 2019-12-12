@@ -540,7 +540,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             },
             source: {
                 repository: {
-                    full_name: createPrData.sourceRepoFullName
+                    full_name: `${createPrData.sourceSite.ownerSlug}/${createPrData.sourceSite.repoSlug}`
                 },
                 branch: {
                     name: createPrData.sourceBranchName

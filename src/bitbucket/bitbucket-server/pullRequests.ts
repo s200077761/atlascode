@@ -601,9 +601,9 @@ export class ServerPullRequestApi implements PullRequestApi {
                 fromRef: {
                     id: createPrData.sourceBranchName,
                     repository: {
-                        slug: createPrData.sourceRepoFullName.slice(createPrData.sourceRepoFullName.lastIndexOf('/') + 1),
+                        slug: createPrData.sourceSite.repoSlug,
                         project: {
-                            key: createPrData.sourceRepoFullName.slice(0, createPrData.sourceRepoFullName.lastIndexOf('/'))
+                            key: createPrData.sourceSite.ownerSlug
                         }
                     }
                 },

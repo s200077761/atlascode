@@ -194,7 +194,7 @@ export type CreatePullRequestData = {
     title: string;
     summary: string;
     sourceBranchName: string;
-    sourceRepoFullName: string;
+    sourceSite: BitbucketSite;
     destinationBranchName: string;
     closeSourceBranch: boolean;
 };

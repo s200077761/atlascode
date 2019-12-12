@@ -41,7 +41,8 @@ type Receive = CreatePRData | CommitsResult | DiffResult;
 interface MyState {
     data: CreatePRData;
     repo: RepoData;
-    siteRemote: SiteRemote;
+    sourceSiteRemote: SiteRemote;
+    destinationSiteRemote: SiteRemote;
     defaultReviewers: User[];
     sourceBranch?: Branch;
     sourceRemoteBranchName?: string;
@@ -67,7 +68,8 @@ const emptyState = {
         repositories: []
     },
     repo: emptyRepoData,
-    siteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
+    sourceSiteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
+    destinationSiteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
     issueSetupEnabled: true,
     defaultReviewers: [],
     commits: [],
@@ -106,27 +108,33 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     handleRepoChange = (newValue: RepoData) => {
         this.resetRepoAndRemoteState(
             newValue,
+            newValue.workspaceRepo.mainSiteRemote,
             newValue.workspaceRepo.mainSiteRemote
         );
     };
 
-    handleRemoteChange = (newValue: SiteRemote) => {
-        this.resetRepoAndRemoteState(this.state.repo, newValue);
+    handleSourceRemoteChange = (newValue: SiteRemote) => {
+        this.resetRepoAndRemoteState(this.state.repo, newValue, this.state.destinationSiteRemote);
     };
 
-    resetRepoAndRemoteState = (repo: RepoData, siteRemote: SiteRemote) => {
-        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === siteRemote.remote.name);
+    handleDestinationRemoteChange = (newValue: SiteRemote) => {
+        this.resetRepoAndRemoteState(this.state.repo, this.state.sourceSiteRemote, newValue);
+    };
+
+    resetRepoAndRemoteState = (repo: RepoData, sourceSiteRemote: SiteRemote, destinationSiteRemote: SiteRemote) => {
+        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === destinationSiteRemote.remote.name);
 
         const sourceBranch = repo.localBranches[0];
         let destinationBranch = remoteBranches[0];
         if (repo.developmentBranch) {
-            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === siteRemote.remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
+            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === destinationSiteRemote.remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
             destinationBranch = mainRemoteBranch ? mainRemoteBranch : destinationBranch;
         }
 
         this.setState({
             repo: repo,
-            siteRemote: siteRemote,
+            sourceSiteRemote: sourceSiteRemote,
+            destinationSiteRemote: destinationSiteRemote,
             sourceBranch: sourceBranch,
             destinationBranch: destinationBranch
         }, this.handleBranchChange);
@@ -152,10 +160,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     handleBranchChange = () => {
-        const sourceRemoteBranchName = this.state.siteRemote && this.state.sourceBranch
-            ? this.state.sourceBranch.upstream && this.state.sourceBranch.upstream.remote === this.state.siteRemote.remote.name
-                ? `${this.state.siteRemote.remote.name}/${this.state.sourceBranch.upstream.name}`
-                : `${this.state.siteRemote.remote.name}/${this.state.sourceBranch.name}`
+        const sourceRemoteBranchName = this.state.sourceBranch
+            ? this.state.sourceBranch.upstream && this.state.sourceBranch.upstream.remote === this.state.sourceSiteRemote.remote.name
+                ? `${this.state.sourceSiteRemote.remote.name}/${this.state.sourceBranch.upstream.name}`
+                : `${this.state.sourceSiteRemote.remote.name}/${this.state.sourceBranch.name}`
             : undefined;
 
         let newState: Partial<MyState> = {
@@ -175,7 +183,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             });
         }
 
-        this.postMessage({ action: 'fetchDefaultReviewers', site: this.state.siteRemote.site! });
+        this.postMessage({ action: 'fetchDefaultReviewers', site: this.state.destinationSiteRemote.site! });
 
         this.setState({ fileDiffsLoading: true, fileDiffs: [] }); //Activates spinner for file diff panel and resets data
         if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch !== this.state.destinationBranch) {
@@ -188,10 +196,10 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 }
             );
 
-            if (this.state.siteRemote && this.state.repo.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
+            if (this.state.destinationSiteRemote && this.state.repo.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
                 this.postMessage({
                     action: 'fetchDetails',
-                    site: this.state.siteRemote.site!,
+                    site: this.state.destinationSiteRemote.site!,
                     sourceBranch: this.state.sourceBranch!,
                     destinationBranch: this.state.destinationBranch!
                 });
@@ -222,14 +230,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     loadUserOptions = (input: string): Promise<any> => {
-        if (!this.state.siteRemote || !this.state.repo) {
+        if (!this.state.destinationSiteRemote || !this.state.repo) {
             return Promise.resolve([]);
         }
         return new Promise(resolve => {
             const nonce = uuid.v4();
             (async () => {
                 const result = await this.postMessageWithEventPromise(
-                    { action: 'fetchUsers', query: input, site: this.state.siteRemote.site!, nonce: nonce },
+                    { action: 'fetchUsers', query: input, site: this.state.destinationSiteRemote.site!, nonce: nonce },
                     'fetchUsersResult',
                     ConnectionTimeout,
                     nonce
@@ -244,10 +252,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.postMessage({
             action: 'createPullRequest',
             workspaceRepo: this.state.repo.workspaceRepo,
-            site: this.state.siteRemote.site!,
+            destinationSite: this.state.destinationSiteRemote.site!,
             reviewers: e.reviewers || [],
             title: e.title,
             summary: e.summary,
+            sourceSiteRemote: this.state.sourceSiteRemote,
             sourceBranch: this.state.sourceBranch!,
             destinationBranch: this.state.destinationBranch!,
             pushLocalChanges: e.pushLocalChanges,
@@ -268,7 +277,7 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
 
                     if (this.state.repo === emptyRepoData && e.repositories.length > 0) {
                         const firstRepo = e.repositories[0];
-                        this.resetRepoAndRemoteState(firstRepo, firstRepo.workspaceRepo.mainSiteRemote);
+                        this.resetRepoAndRemoteState(firstRepo, firstRepo.workspaceRepo.mainSiteRemote, firstRepo.workspaceRepo.mainSiteRemote);
                     }
                 }
                 break;
@@ -417,20 +426,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 value={repo}
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select" />
-
-                                            {repo.workspaceRepo.siteRemotes.length > 1 &&
-                                                <React.Fragment>
-                                                    <label>Remote</label>
-                                                    <Select
-                                                        options={repo.workspaceRepo.siteRemotes}
-                                                        getOptionLabel={(s: SiteRemote) => s.remote.name}
-                                                        getOptionValue={(s: SiteRemote) => s}
-                                                        onChange={this.handleRemoteChange}
-                                                        value={this.state.siteRemote}
-                                                        className="ac-select-container"
-                                                        classNamePrefix="ac-select" />
-                                                </React.Fragment>
-                                            }
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
@@ -441,6 +436,20 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                         <Avatar src={repo.avatarUrl} />
                                                         <p style={{ marginLeft: '8px' }}>Source branch (local)</p>
                                                     </div>
+                                                    <div className='ac-compare-widget-break' />
+                                                    {repo.workspaceRepo.siteRemotes.length > 1 &&
+                                                        <div className='ac-flex-space-between'>
+                                                            <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
+                                                            <Select
+                                                                options={repo.workspaceRepo.siteRemotes.filter(r => !r.remote.name.endsWith('(parent repo)'))}
+                                                                getOptionLabel={(s: SiteRemote) => s.remote.name}
+                                                                getOptionValue={(s: SiteRemote) => s}
+                                                                onChange={this.handleSourceRemoteChange}
+                                                                value={this.state.sourceSiteRemote}
+                                                                className="ac-compare-widget-select-container"
+                                                                classNamePrefix="ac-select" />
+                                                        </div>
+                                                    }
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
                                                         <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
@@ -460,13 +469,27 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                                 <div className='ac-compare-widget-item'>
                                                     <div className='ac-flex'>
                                                         <Avatar src={repo.avatarUrl} />
-                                                        <p style={{ marginLeft: '8px' }}>{this.state.siteRemote ? `${this.state.siteRemote.site!.ownerSlug} / ${this.state.siteRemote.site!.repoSlug}` : 'No bitbucket remotes found'}</p>
+                                                        <p style={{ marginLeft: '8px' }}>{this.state.destinationSiteRemote ? `${this.state.destinationSiteRemote.site!.ownerSlug} / ${this.state.destinationSiteRemote.site!.repoSlug}` : 'No bitbucket remotes found'}</p>
                                                     </div>
+                                                    <div className='ac-compare-widget-break' />
+                                                    {repo.workspaceRepo.siteRemotes.length > 1 &&
+                                                        <div className='ac-flex-space-between'>
+                                                            <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
+                                                            <Select
+                                                                options={repo.workspaceRepo.siteRemotes}
+                                                                getOptionLabel={(s: SiteRemote) => s.remote.name}
+                                                                getOptionValue={(s: SiteRemote) => s}
+                                                                onChange={this.handleDestinationRemoteChange}
+                                                                value={this.state.destinationSiteRemote}
+                                                                className="ac-compare-widget-select-container"
+                                                                classNamePrefix="ac-select" />
+                                                        </div>
+                                                    }
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
                                                         <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
-                                                            options={repo.remoteBranches.filter(branch => branch.remote === this.state.siteRemote.remote.name)}
+                                                            options={repo.remoteBranches.filter(branch => branch.remote === this.state.destinationSiteRemote.remote.name)}
                                                             getOptionLabel={(branch: Branch) => branch.name}
                                                             getOptionValue={(branch: Branch) => branch}
                                                             onChange={this.handleDestinationBranchChange}
@@ -564,8 +587,8 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </Panel>
                                     </GridColumn>
                                     <GridColumn medium={12}>
-                                        {this.state.siteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
-                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.siteRemote.remote.name}/{this.state.sourceBranch?.name} <Arrow label="" size="small" /> {this.state.destinationBranch?.name}</p></div>}>
+                                        {this.state.destinationSiteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
+                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.destinationSiteRemote.remote.name}/{this.state.sourceBranch?.name} <Arrow label="" size="small" /> {this.state.destinationBranch?.name}</p></div>}>
                                                 <Commits commits={this.state.commits} />
                                             </Panel>
                                         }

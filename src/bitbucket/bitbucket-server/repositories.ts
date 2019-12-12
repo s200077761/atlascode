@@ -72,7 +72,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`,
             {
                 limit: 50
             }
