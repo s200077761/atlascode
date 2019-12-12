@@ -110,12 +110,7 @@ export const emptyTask = {
     id: "",
     editable: false,
     deletable: false,
-    content: {
-        raw: "",
-        markup: "",
-        html: "",
-        type: ""
-    }
+    content: ""
 };
 
 export const emptyComment = {

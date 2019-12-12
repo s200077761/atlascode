@@ -177,7 +177,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             newComment.tasks = comment.tasks;
             comments = await this.replaceEditedComment(comment.parent!.comments as EnhancedComment[], newComment);
         } else if (comment.saveChangesContext === SaveContexts.EDITINGTASK && isPRTask(comment)) {
-            comments = await this.updateTask(comment.parent!.comments, comment, { content: { raw: comment.body.toString(), html: "", type: "", markup: "" } });
+            comments = await this.updateTask(comment.parent!.comments, comment, { content: comment.body.toString() });
         }
         this.createOrUpdateThread(commentThreadId!, comment.parent!.uri, comment.parent!.range, comments);
         comment.parent!.dispose();
