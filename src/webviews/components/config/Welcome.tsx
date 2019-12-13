@@ -94,6 +94,19 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.2.1 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added “Group issues by Epic” option to display issues in a list instead of nesting subtasks under issues and issues under Epics</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed bug where special characters were being escaped in the status bar</li>
+                                <li>Fixed authenticating with multi-level context paths</li>
+                                <li>Fixed bugs causing subtasks not matching query to be included in JQL results</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.2.0 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>

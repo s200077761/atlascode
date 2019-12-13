@@ -1,3 +1,12 @@
+## What's New In 2.2.1
+### Improvements
+* Added “Group issues by Epic” option to display issues in a list instead of nesting subtasks under issues and issues under Epics
+
+### Bugs fixed
+* Fixed bug where special characters were being escaped in the status bar
+* Fixed authenticating with multi-level context paths
+* Fixed bugs causing subtasks not matching query to be included in JQL results
+
 ## What's New In 2.2.0
 ### Improvements
 * Support for importing Jira filters when adding custom JQL entries
