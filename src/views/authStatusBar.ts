@@ -1,11 +1,11 @@
-import { ProductJira, ProductBitbucket, Product, AuthInfo, isEmptySiteInfo, DetailedSiteInfo } from "../atlclients/authInfo";
-import { window, StatusBarItem, StatusBarAlignment, Disposable, ConfigurationChangeEvent } from "vscode";
-import { Commands } from "../commands";
-import { Container } from "../container";
-import { configuration } from "../config/configuration";
-import { Resources } from "../resources";
-import { BitbucketEnabledKey, JiraEnabledKey } from "../constants";
 import { SitesAvailableUpdateEvent } from "src/siteManager";
+import { ConfigurationChangeEvent, Disposable, StatusBarAlignment, StatusBarItem, window } from "vscode";
+import { AuthInfo, DetailedSiteInfo, isEmptySiteInfo, Product, ProductBitbucket, ProductJira } from "../atlclients/authInfo";
+import { Commands } from "../commands";
+import { configuration } from "../config/configuration";
+import { BitbucketEnabledKey, JiraEnabledKey } from "../constants";
+import { Container } from "../container";
+import { Resources } from "../resources";
 
 export class AuthStatusBar extends Disposable {
   private _authenticationStatusBarItems: Map<string, StatusBarItem> = new Map<

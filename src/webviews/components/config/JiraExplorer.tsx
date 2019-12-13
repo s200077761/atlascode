@@ -84,6 +84,23 @@ export default class JiraExplorer extends React.Component<{
                         }
                     }
                 </CheckboxField>
+                <CheckboxField
+                    name='issue-explorer-nestSubtasks'
+                    id='issue-explorer-nestSubtasks'
+                    value='jira.explorer.nestSubtasks'>
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <Checkbox {...fieldArgs.fieldProps}
+                                    label='Group issues by Epic'
+                                    isIndeterminate={this.getIsExplorerIndeterminate()}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.config.jira.explorer.nestSubtasks}
+                                />
+                            );
+                        }
+                    }
+                </CheckboxField>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',

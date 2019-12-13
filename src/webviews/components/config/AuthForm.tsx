@@ -1,12 +1,11 @@
-import React, { PureComponent } from "react";
-import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
-import { Field, ErrorMessage, HelperMessage } from '@atlaskit/form';
-import * as FieldValidators from "../fieldValidators";
 import Button from '@atlaskit/button';
-import { AuthInfo, SiteInfo, Product, ProductBitbucket, emptyUserInfo, emptyAuthInfo, BasicAuthInfo } from "../../../atlclients/authInfo";
 import { Checkbox } from '@atlaskit/checkbox';
-import { CheckboxField } from '@atlaskit/form';
+import { CheckboxField, ErrorMessage, Field, HelperMessage } from '@atlaskit/form';
+import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import { RadioGroup } from '@atlaskit/radio';
+import React, { PureComponent } from "react";
+import { AuthInfo, BasicAuthInfo, emptyAuthInfo, emptyUserInfo, Product, ProductBitbucket, SiteInfo } from "../../../atlclients/authInfo";
+import * as FieldValidators from "../fieldValidators";
 
 export default class AuthForm extends PureComponent<{
     product: Product;
@@ -105,7 +104,7 @@ export default class AuthForm extends PureComponent<{
         const customSSLCerts = (this.state.useCustomSSL && this.state.customSSLType === 'customServerSSL') ? this.state.certPaths : undefined;
         const pfxCert = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPath : undefined;
         const pfxPassphrase = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPassphrase : undefined;
-        const contextPath = (this.state.useContextPath) ? this.normailizeContextPath(this.state.contextPath) : undefined;
+        const contextPath = (this.state.useContextPath) ? this.normalizeContextPath(this.state.contextPath) : undefined;
         const siteInfo = {
             hostname: url.host,
             protocol: url.protocol,
@@ -129,11 +128,11 @@ export default class AuthForm extends PureComponent<{
         }
     };
 
-    normailizeContextPath(cPath: string): string | undefined {
+    normalizeContextPath(cPath: string): string | undefined {
         if (!cPath || cPath.trim() === '' || cPath.trim() === '/') {
             return undefined;
         }
-        return '/' + cPath.replace(/^\/+/g, '').split('/');
+        return '/' + cPath.replace(/^\/+/g, '');
     }
 
     onCustomSSLChange = (e: any) => {
