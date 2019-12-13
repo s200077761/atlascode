@@ -1,14 +1,14 @@
-import { AbstractReactWebview } from './abstractWebview';
-import { Action } from '../ipc/messaging';
-import { Product, DetailedSiteInfo, isBasicAuthInfo, ProductJira, ProductBitbucket } from '../atlclients/authInfo';
-import { SitesAvailableUpdateEvent } from '../siteManager';
-import { Container } from '../container';
-import { isLoginAuthAction, isAuthAction } from '../ipc/configActions';
-import { authenticateServer, authenticateCloud, clearAuth } from '../commands/authenticate';
-import { Logger } from '../logger';
-import { authenticateButtonEvent, logoutButtonEvent, doneButtonEvent, moreSettingsButtonEvent } from '../analytics';
-import { env, commands } from 'vscode';
+import { commands, env } from 'vscode';
+import { authenticateButtonEvent, doneButtonEvent, logoutButtonEvent, moreSettingsButtonEvent } from '../analytics';
+import { DetailedSiteInfo, isBasicAuthInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { Commands } from '../commands';
+import { authenticateCloud, authenticateServer, clearAuth } from '../commands/authenticate';
+import { Container } from '../container';
+import { isLoginAuthAction, isLogoutAuthAction } from '../ipc/configActions';
+import { Action } from '../ipc/messaging';
+import { Logger } from '../logger';
+import { SitesAvailableUpdateEvent } from '../siteManager';
+import { AbstractReactWebview } from './abstractWebview';
 
 export class OnboardingWebview extends AbstractReactWebview {
 
@@ -69,8 +69,8 @@ export class OnboardingWebview extends AbstractReactWebview {
     private separateCloudFromServer(siteList: DetailedSiteInfo[]): [DetailedSiteInfo[], DetailedSiteInfo[]] {
         let cloudSites: DetailedSiteInfo[] = [];
         let serverSites: DetailedSiteInfo[] = [];
-        for(const site of siteList) {
-            if(site.isCloud){
+        for (const site of siteList) {
+            if (site.isCloud) {
                 cloudSites.push(site);
             } else {
                 serverSites.push(site);
@@ -81,7 +81,7 @@ export class OnboardingWebview extends AbstractReactWebview {
 
     protected async onMessageReceived(msg: Action): Promise<boolean> {
         let handled = await super.onMessageReceived(msg);
-        if(!handled){
+        if (!handled) {
             switch (msg.action) {
                 case 'openSettings': {
                     moreSettingsButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
@@ -113,8 +113,8 @@ export class OnboardingWebview extends AbstractReactWebview {
                 }
                 case 'logout': {
                     handled = true;
-                    if (isAuthAction(msg)) {
-                        clearAuth(msg.siteInfo);
+                    if (isLogoutAuthAction(msg)) {
+                        clearAuth(msg.detailedSiteInfo);
                         logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
                     break;

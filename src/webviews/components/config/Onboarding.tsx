@@ -1,16 +1,16 @@
-import * as React from 'react';
-import { WebviewComponent } from '../WebviewComponent';
+import Button from '@atlaskit/button';
+import Form from '@atlaskit/form';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
-import { Action } from '../../../ipc/messaging';
-import { ProductJira, DetailedSiteInfo, AuthInfo, SiteInfo, ProductBitbucket } from '../../../atlclients/authInfo';
-import { LoginAuthAction, SaveSettingsAction } from '../../../ipc/configActions';
-import { ConfigData } from 'src/ipc/configMessaging';
-import Button from '@atlaskit/button';
 import Tooltip from '@atlaskit/tooltip';
-import Form from '@atlaskit/form';
-import { SiteEditor } from './SiteEditor';
+import * as React from 'react';
+import { ConfigData } from 'src/ipc/configMessaging';
+import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../../atlclients/authInfo';
+import { LoginAuthAction, LogoutAuthAction, SaveSettingsAction } from '../../../ipc/configActions';
+import { Action } from '../../../ipc/messaging';
 import ErrorBanner from '../ErrorBanner';
+import { WebviewComponent } from '../WebviewComponent';
+import { SiteEditor } from './SiteEditor';
 
 type ViewState = {
     isRemote: boolean;
@@ -32,7 +32,7 @@ const emptyViewState = {
     errorDetails: undefined
 };
 
-type Emit = LoginAuthAction | SaveSettingsAction | Action;
+type Emit = LoginAuthAction | LogoutAuthAction | SaveSettingsAction | Action;
 type Accept = ConfigData;
 export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewState> {
     constructor(props: any) {
@@ -77,7 +77,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
     };
 
     handleLogout = (site: DetailedSiteInfo) => {
-        this.postMessage({ action: 'logout', siteInfo: site });
+        this.postMessage({ action: 'logout', detailedSiteInfo: site });
     };
 
     handleDismissError = () => {
@@ -96,7 +96,7 @@ export default class Onboarding extends WebviewComponent<Emit, Accept, {}, ViewS
                 }
                 <Form
                     name="create-bitbucket-issue-form"
-                    onSubmit={(e:any) => {}}
+                    onSubmit={(e: any) => { }}
                 >
                     {(frmArgs: any) => {
                         return (<form {...frmArgs.formProps}>
