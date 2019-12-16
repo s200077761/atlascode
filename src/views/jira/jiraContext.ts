@@ -1,6 +1,5 @@
 import { MinimalORIssueLink } from "jira-pi-client";
-import { v4 } from "uuid";
-import { commands, ConfigurationChangeEvent, ConfigurationTarget, Disposable } from "vscode";
+import { commands, ConfigurationChangeEvent, Disposable } from "vscode";
 import { DetailedSiteInfo, ProductJira } from "../../atlclients/authInfo";
 import { Commands } from "../../commands";
 import { configuration } from "../../config/configuration";
@@ -62,7 +61,6 @@ export class JiraContext extends Disposable {
         if (initializing) {
             const isLoggedIn = Container.siteManager.productHasAtLeastOneSite(ProductJira);
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
-            //this._newIssueMonitor.setProject(project);
         }
     }
 
@@ -80,6 +78,8 @@ export class JiraContext extends Disposable {
             return;
         }
 
+        await Container.jqlManager.updateFilters();
+
         if (this._explorer) {
             this._explorer.refresh();
         }
@@ -90,14 +90,7 @@ export class JiraContext extends Disposable {
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
             if (e.sites.length === 1 && Container.config.jira.jqlList.length < 1) {
-                configuration.update('jira.jqlList', [{
-                    id: v4(),
-                    enabled: true,
-                    name: `My ${e.sites[0].name} Issues`,
-                    query: 'assignee = currentUser() ORDER BY lastViewed DESC ',
-                    siteId: e.sites[0].id,
-                    monitor: true
-                }], ConfigurationTarget.Global);
+                Container.jqlManager.initializeJQL(e.sites[0]);
             }
 
             const isLoggedIn = e.sites.length > 0;

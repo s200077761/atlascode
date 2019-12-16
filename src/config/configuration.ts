@@ -1,18 +1,8 @@
 'use strict';
 export * from './model';
 
-import {
-    ConfigurationChangeEvent,
-    ConfigurationTarget,
-    Event,
-    EventEmitter,
-    ExtensionContext,
-    Uri,
-    workspace,
-    Disposable,
-    WorkspaceConfiguration
-} from 'vscode';
-import { extensionId, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey, JiraCreateSiteAndProjectKey } from '../constants';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, Event, EventEmitter, ExtensionContext, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { extensionId, JiraCreateSiteAndProjectKey, JiraLegacyWorkingSiteConfigurationKey, JiraV1WorkingProjectConfigurationKey } from '../constants';
 import { SiteIdAndProjectKey } from './model';
 
 /*
@@ -126,7 +116,7 @@ export class Configuration extends Disposable {
     }
 
     async setLastCreateSiteAndProject(siteAndProject?: SiteIdAndProjectKey) {
-        await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject);
+        await this.updateEffective(JiraCreateSiteAndProjectKey, siteAndProject, null, true);
     }
 
     async clearVersion1WorkingProject() {
@@ -156,7 +146,7 @@ export class Configuration extends Disposable {
     }
 
     // this tries to figure out where the current value is set and update it there
-    async updateEffective(section: string, value: any, resource: Uri | null = null): Promise<void> {
+    async updateEffective(section: string, value: any, resource: Uri | null = null, force?: boolean): Promise<void> {
         const inspect = this.inspect(section, resource);
 
 
@@ -172,7 +162,7 @@ export class Configuration extends Disposable {
             return configuration.update(section, value, ConfigurationTarget.Workspace);
         }
 
-        if (inspect.globalValue === value || inspect.globalValue === undefined) {
+        if (inspect.globalValue === value || (inspect.globalValue === undefined && !force)) {
             return undefined;
         }
 

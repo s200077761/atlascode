@@ -6,7 +6,7 @@ import { Container } from "../container";
 import { getAgent } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
 import { SiteManager } from "../siteManager";
-import { Time } from "../util/time";
+import { ConnectionTimeout } from "../util/time";
 import { AccessibleResource, AuthInfo, BasicAuthInfo, DetailedSiteInfo, isBasicAuthInfo, OAuthInfo, OAuthProvider, oauthProviderForSite, Product, ProductBitbucket, ProductJira, SiteInfo } from "./authInfo";
 import { CredentialManager } from "./authStore";
 import { addCurlLogging } from "./interceptors";
@@ -152,7 +152,7 @@ export class LoginManager {
         }
 
         const transport = axios.create({
-            timeout: 10 * Time.SECONDS,
+            timeout: ConnectionTimeout,
             headers: {
                 'X-Atlassian-Token': 'no-check',
                 'x-atlassian-force-account-id': 'true',

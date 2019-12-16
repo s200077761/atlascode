@@ -37,6 +37,7 @@ export interface IConfig {
     enableUIWS: boolean;
     enableCurlLogging: boolean;
     enableHttpsTunnel: boolean;
+    onlineCheckerUrls: string[];
 }
 
 export interface JiraConfig {
@@ -51,6 +52,7 @@ export interface JiraConfig {
     customJql: SiteJQLV1[];
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
+    nestSubtasks: boolean;
 }
 
 export type SiteIdAndProjectKey = {
@@ -76,6 +78,7 @@ export interface JiraExplorer {
     showAssignedIssues: boolean;
     assignedIssueJql: string;
     refreshInterval: number;
+    nestSubtasks: boolean;
 }
 
 export interface JiraHover {
@@ -99,6 +102,7 @@ export interface JQLEntry {
     query: string;
     siteId: string;
     monitor: boolean;
+    filterId?: string;
 }
 
 export interface JQLEntryV1 {
@@ -188,7 +192,8 @@ export const emptyJiraExplorer: JiraExplorer = {
     openIssueJql: "",
     showAssignedIssues: true,
     assignedIssueJql: "",
-    refreshInterval: 5
+    refreshInterval: 5,
+    nestSubtasks: true
 };
 
 export const emtpyIssueMonitor: JiraIssueMonitor = {
@@ -231,7 +236,8 @@ export const emptyJiraConfig: JiraConfig = {
     hover: emptyJiraHover,
     customJql: [],
     jqlList: [],
-    todoIssues: emptyTodoIssues
+    todoIssues: emptyTodoIssues,
+    nestSubtasks: true
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
@@ -303,4 +309,5 @@ export const emptyConfig: IConfig = {
     enableUIWS: false,
     enableCurlLogging: false,
     enableHttpsTunnel: false,
+    onlineCheckerUrls: []
 };

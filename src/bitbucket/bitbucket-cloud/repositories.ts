@@ -2,8 +2,8 @@ import { AxiosResponse } from "axios";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { getAgent } from "../../jira/jira-client/providers";
 import { Client, ClientError } from "../httpClient";
-import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
-import { maxItemsSupported } from "./pullRequests";
+import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi, UnknownUser } from "../model";
+import { CloudPullRequestApi, maxItemsSupported } from "./pullRequests";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -85,13 +85,9 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             url: commit.links!.html!.href!,
             htmlSummary: commit.summary ? commit.summary.html! : "",
             rawSummary: commit.summary ? commit.summary.raw! : "",
-            author: {
-                accountId: commit.author!.user!.account_id,
-                displayName: commit.author!.user!.display_name!,
-                url: commit.author!.user!.links!.html!.href!,
-                avatarUrl: commit.author!.user!.links!.avatar!.href!,
-                mention: `@[${commit.author!.display_name!}](account_id:${commit.author!.account_id})`
-            }
+            author: commit.author
+                ? CloudPullRequestApi.toUserModel(commit.author!.user)
+                : UnknownUser
         }));
     }
 

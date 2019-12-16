@@ -7,7 +7,7 @@ import { configuration } from "../config/configuration";
 import { Container } from "../container";
 import { getAgent } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
-import { Time } from "./time";
+import { ConnectionTimeout, Time } from "./time";
 
 
 export type OnlineInfoEvent = {
@@ -40,7 +40,7 @@ export class OnlineDetector extends Disposable {
         );
 
         this._transport = axios.create({
-            timeout: 10 * Time.SECONDS,
+            timeout: ConnectionTimeout,
         });
 
         if (Container.config.enableCurlLogging) {
@@ -76,6 +76,14 @@ export class OnlineDetector extends Disposable {
                 this._onDidOnlineChange.fire({ isOnline: !this._isOfflineMode });
             }
         }
+
+        if (!initializing && configuration.changed(e, 'onlineCheckerUrls')) {
+            await this.checkOnlineStatus();
+
+            this._onlineTimer = setInterval(() => {
+                this.checkOnlineStatus();
+            }, onlinePolling);
+        }
     }
 
     public isOnline(): boolean {
@@ -87,20 +95,17 @@ export class OnlineDetector extends Disposable {
     }
 
     private async runOnlineChecks(): Promise<boolean> {
-        const promise = async () => await pAny([
-            (async () => {
-                Logger.debug('Online check attempting to connect to http://atlassian.com');
-                await this._transport(`http://atlassian.com`, { method: "HEAD", ...getAgent() });
-                Logger.debug('Online check connected to http://atlassian.com');
-                return true;
-            })(),
-            (async () => {
-                Logger.debug('Online check attempting to connect to https://bitbucket.org');
-                await this._transport(`https://bitbucket.org`, { method: "HEAD", ...getAgent() });
-                Logger.debug('Online check connected to https://bitbucket.org');
-                return true;
-            })()
-        ]);
+        const urlList = Container.config.onlineCheckerUrls.slice();
+        const promise = async () => await pAny(
+            urlList.map(url => {
+                return (async () => {
+                    Logger.debug(`Online check attempting to connect to ${url}`);
+                    await this._transport(url, { method: "HEAD", ...getAgent() });
+                    Logger.debug(`Online check connected to ${url}`);
+                    return true;
+                })();
+            })
+        );
 
         return await pRetry<boolean>(promise, {
             retries: 4,

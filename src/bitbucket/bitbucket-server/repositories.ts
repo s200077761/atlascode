@@ -3,6 +3,7 @@ import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { getAgent } from "../../jira/jira-client/providers";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
+import { ServerPullRequestApi } from "./pullRequests";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
@@ -103,13 +104,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             url: undefined!,
             htmlSummary: commit.summary ? commit.summary.html! : undefined,
             rawSummary: commit.summary ? commit.summary.raw! : undefined,
-            author: {
-                accountId: commit.author.slug,
-                displayName: commit.author.displayName,
-                url: undefined!,
-                avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, commit.author.avatarUrl),
-                mention: `@${commit.author.slug}`
-            }
+            author: ServerPullRequestApi.toUser(site.details, commit.author)
         }));
     }
 

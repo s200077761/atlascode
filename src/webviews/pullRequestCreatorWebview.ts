@@ -159,7 +159,9 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                         handled = true;
                         try {
                             const bbApi = await clientForSite(e.site);
-                            const reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
+                            const currentUserId = e.site.details.userId;
+                            let reviewers = await bbApi.pullrequests.getReviewers(e.site, e.query);
+                            reviewers = reviewers.filter(r => r.accountId !== currentUserId);
                             this.postMessage({ type: 'fetchUsersResult', users: reviewers, nonce: e.nonce });
                         } catch (e) {
                             Logger.error(new Error(`error fetching reviewers: ${e}`));

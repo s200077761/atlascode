@@ -336,11 +336,11 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                         isCreateButtonLoading: false,
                         commits: e.commits,
                         title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits[0].message!.split('\n', 1)[0]
+                            ? e.commits[0].message!.split('\n', 1)[0].trim()
                             : this.state.title,
                         summary: this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
                             ? e.commits.length === 1
-                                ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1)}${createdFromAtlascodeFooter}`
+                                ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1).trimLeft()}${createdFromAtlascodeFooter}`
                                 : `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
                             : this.state.summary
                     });

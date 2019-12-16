@@ -1,19 +1,24 @@
-import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
-import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { CheckboxField } from '@atlaskit/form';
-import { chain } from '../fieldValidators';
-import CustomJQL from './CustomJQL';
+import Tooltip from '@atlaskit/tooltip';
+import { Filter } from 'jira-pi-client';
+import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';
-import Tooltip from '@atlaskit/tooltip';
+import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
+import { chain } from '../fieldValidators';
+import CustomJQL from './CustomJQL';
 
 type changeObject = { [key: string]: any };
 
 export default class JiraExplorer extends React.Component<{
     config: IConfig,
     jqlFetcher: (site: DetailedSiteInfo, path: string) => Promise<any>,
+    jiraFilterFetcher: (site: DetailedSiteInfo) => void,
+    jiraFilterSearcher: (site: DetailedSiteInfo, query: string) => Promise<Filter[]>;
     sites: DetailedSiteInfo[],
+    filters: { [k: string]: Filter[] },
+    filterSearches: { [k: string]: Filter[] },
     onConfigChange: (changes: changeObject, removes?: string[]) => void
 }, ConfigData> {
 
@@ -79,6 +84,23 @@ export default class JiraExplorer extends React.Component<{
                         }
                     }
                 </CheckboxField>
+                <CheckboxField
+                    name='issue-explorer-nestSubtasks'
+                    id='issue-explorer-nestSubtasks'
+                    value='jira.explorer.nestSubtasks'>
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <Checkbox {...fieldArgs.fieldProps}
+                                    label='Group issues by Epic'
+                                    isIndeterminate={this.getIsExplorerIndeterminate()}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.config.jira.explorer.nestSubtasks}
+                                />
+                            );
+                        }
+                    }
+                </CheckboxField>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -89,7 +111,7 @@ export default class JiraExplorer extends React.Component<{
                         display: 'flex',
                         justifyContent: 'flex-start'
                     }}>
-                        <div style={{marginRight: '10px'}}>
+                        <div style={{ marginRight: '10px' }}>
                             <h4>Custom JQL</h4>
                         </div>
                         <Tooltip content="Use JQL to populate the 'JIRA ISSUES' panel in the sidebar">
@@ -102,7 +124,11 @@ export default class JiraExplorer extends React.Component<{
                         JqlList={config.jira.jqlList}
                         onConfigChange={this.props.onConfigChange}
                         jqlFetcher={this.props.jqlFetcher}
-                        sites={this.props.sites} />
+                        jiraFilterFetcher={this.props.jiraFilterFetcher}
+                        jiraFilterSearcher={this.props.jiraFilterSearcher}
+                        sites={this.props.sites}
+                        jiraFilters={this.props.filters}
+                        jiraFilterSearches={this.props.filterSearches} />
                 </div>
                 <div style={{
                     display: 'flex',

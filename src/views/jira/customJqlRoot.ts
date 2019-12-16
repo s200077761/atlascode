@@ -1,18 +1,13 @@
-import {
-  Event,
-  EventEmitter,
-  Disposable,
-  ConfigurationChangeEvent
-} from "vscode";
-import { AbstractBaseNode } from "../nodes/abstractBaseNode";
-import { CustomJQLTree } from "./customJqlTree";
-import { Container } from '../../container';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from "vscode";
 import { ProductJira } from '../../atlclients/authInfo';
-import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { Commands } from "../../commands";
-import { JQLEntry, configuration } from "../../config/configuration";
+import { configuration, JQLEntry } from "../../config/configuration";
+import { Container } from '../../container';
 import { BaseTreeDataProvider } from "../Explorer";
+import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { IssueNode } from "../nodes/issueNode";
+import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
+import { CustomJQLTree } from "./customJqlTree";
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -32,6 +27,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
 
     this._disposable = Disposable.from(
       Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
+      Container.jqlManager.onDidJQLChange(this.refresh, this),
     );
 
     Container.context.subscriptions.push(
@@ -83,7 +79,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   }
 
   getCustomJqlSiteList(): JQLEntry[] {
-    return Container.config.jira.jqlList.filter(jqlEntry => jqlEntry.enabled);
+    return Container.jqlManager.enabledJQLEntries();
   }
 
   dispose() {

@@ -52,10 +52,28 @@ export interface FetchJqlDataAction extends Action {
     path: string;
 }
 
+export interface FetchJiraFiltersAction extends Action {
+    site: DetailedSiteInfo;
+}
+
+export interface FetchSearchJiraFiltersAction extends Action {
+    site: DetailedSiteInfo;
+    query: string;
+}
+
 export function isFetchJqlDataAction(a: Action): a is FetchJqlDataAction {
     return a && (<FetchJqlDataAction>a).site !== undefined
         && (<FetchJqlDataAction>a).path !== undefined
         && (<FetchJqlDataAction>a).path !== '';
+}
+
+export function isFetchJiraFiltersAction(a: Action): a is FetchJiraFiltersAction {
+    return a && (<FetchJiraFiltersAction>a).site !== undefined;
+}
+
+export function isFetchSearchJiraFiltersAction(a: Action): a is FetchSearchJiraFiltersAction {
+    return a && (<FetchSearchJiraFiltersAction>a).site !== undefined
+        && (<FetchSearchJiraFiltersAction>a).query !== undefined;
 }
 
 export function isAuthAction(a: Action): a is AuthAction {
