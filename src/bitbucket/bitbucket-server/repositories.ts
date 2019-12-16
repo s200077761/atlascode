@@ -1,12 +1,15 @@
 import { AxiosResponse } from "axios";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { getAgent } from "../../jira/jira-client/providers";
+import { CacheMap } from "../../util/cachemap";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
 import { ServerPullRequestApi } from "./pullRequests";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
     private client: Client;
+    private repoCache: CacheMap = new CacheMap();
+    private branchingModelCache: CacheMap = new CacheMap();
 
     constructor(site: DetailedSiteInfo, username: string, password: string) {
         this.client = new Client(
@@ -45,6 +48,13 @@ export class ServerRepositoriesApi implements RepositoriesApi {
     async get(site: BitbucketSite): Promise<Repo> {
         const { ownerSlug, repoSlug } = site;
 
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+        const cacheItem = this.repoCache.getItem<Repo>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
         const { data } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}`
         );
@@ -53,35 +63,48 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches/default`
         );
 
-        return ServerRepositoriesApi.toRepo(site, data, defaultBranch.id);
+        const repo = ServerRepositoriesApi.toRepo(site, data, defaultBranch.id);
+        this.repoCache.setItem(cacheKey, repo);
+        return repo;
     }
 
     async getDevelopmentBranch(site: BitbucketSite): Promise<string> {
-        const { ownerSlug, repoSlug } = site;
+        const branchingModel = await this.getBranchingModel(site);
 
-        const { data } = await this.client.get(
-            `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`
-        );
-
-        return data.development
-            ? data.development.displayId
-            : undefined;
+        return branchingModel?.development?.branch?.name;
     }
 
     async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
         const { ownerSlug, repoSlug } = site;
 
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+        const cacheItem = this.branchingModelCache.getItem<BitbucketBranchingModel>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
         const { data } = await this.client.get(
             `/rest/branch-utils/1.0/projects/${ownerSlug}/repos/${repoSlug}/branchmodel`
         );
 
-        return {
+        const result = {
             type: 'branching_model',
             branch_types: (data.types || []).map((type: any) => ({
                 kind: type.displayName,
                 prefix: type.prefix
-            }))
+            })),
+            development: data.development
+                ? {
+                    branch: {
+                        name: data.development.displayId
+                    }
+                }
+                : undefined
         };
+
+        this.branchingModelCache.setItem(cacheKey, result);
+        return result;
     }
 
     async getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]> {
