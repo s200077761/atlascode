@@ -310,9 +310,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     
             return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
         } catch (e) {
-            const error = new Error(`Error fetching task data from interal API: ${e}`);
-            Logger.error(error);
-            throw error;
+            return [];
         }
     }
 
