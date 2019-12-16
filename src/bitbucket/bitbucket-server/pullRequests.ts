@@ -471,9 +471,19 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return {
             data: (await Promise.all(
-                activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks, undefined)))
+                activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)))
             )
-                .filter(comment => this.shouldDisplayComment(comment)),
+                .filter(comment => this.shouldDisplayComment(comment))
+                .sort((a, b) => {
+                    //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
+                    if(a.ts > b.ts) {
+                        return 1;
+                    }
+                    if (a.ts <  b.ts) {
+                        return -1;
+                    }
+                    return 0;
+                }),
             next: undefined
         };
     }
@@ -499,7 +509,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[], parentId: string | undefined): Promise<Comment> {
+    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[]): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         let tasksInComment: Task[] = [];
         let tasksNotInComment: Task[] = [];
@@ -511,7 +521,7 @@ export class ServerPullRequestApi implements PullRequestApi {
             }
         }
         commentModel.tasks = tasksInComment;
-        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment, comment.id)));
+        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)));
         if (this.hasUndeletedChild(commentModel)) {
             commentModel.deletable = false;
         }
