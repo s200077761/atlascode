@@ -18,7 +18,7 @@ export class BitbucketServerSite extends BitbucketSiteBase {
     return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/browse/${encodeURIComponent(filePath)}?at=${revision}#${hash}`;
   }
 
-  public getPullRequestUrl(id: number, filePath: string): string {
+  public getPullRequestUrl(id: string, filePath: string): string {
     const { ownerSlug, repoSlug } = this.site;
     return `${this.site.details.baseLinkUrl}/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${id}/diff#${encodeURIComponent(filePath)}`;
   }

@@ -34,17 +34,17 @@ export function isDeleteTask(a: Action): a is DeleteTask {
 }
 
 export interface DeleteComment extends Action {
-    commentId: number;
+    commentId: string;
 }
 
 export interface EditComment extends Action {
     content: string;
-    commentId: number;
+    commentId: string;
 }
 
 export interface PostComment extends Action {
     content: string;
-    parentCommentId?: number;
+    parentCommentId?: string;
 }
 
 export function isDeleteComment(a: Action): a is DeleteComment {

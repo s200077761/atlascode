@@ -177,7 +177,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
     }
 
-    async postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task> {
+    async postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task> {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
         let { data } = await this.client.post(
@@ -198,7 +198,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return this.convertDataToTask(data, site);
     }
-    async editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task> {
+    async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
         const { data } = await this.client.put(
             `/rest/api/1.0/tasks/${task.id}`,
             {
@@ -211,7 +211,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         return this.convertDataToTask(data, site);
     }
     
-    async deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void> {
+    async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
         await this.client.delete(
             `/rest/api/1.0/tasks/${task.id}`,
             {}
@@ -390,7 +390,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void> {
+    async deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void> {
         const { ownerSlug, repoSlug } = site;
         /*
         The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
@@ -407,7 +407,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment> {
+    async editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
         /*
         The Bitbucket Server API can not edit a comment unless the comment's version is provided as a query parameter.
@@ -499,7 +499,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[], parentId: number | undefined): Promise<Comment> {
+    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[], parentId: string | undefined): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         let tasksInComment: Task[] = [];
         let tasksNotInComment: Task[] = [];
@@ -662,8 +662,8 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async postComment(
         site: BitbucketSite,
-        prId: number, text: string,
-        parentCommentId?: number,
+        prId: string, text: string,
+        parentCommentId?: string,
         inline?: { from?: number, to?: number, path: string },
         lineMeta?: "ADDED" | "REMOVED"
     ): Promise<Comment> {
