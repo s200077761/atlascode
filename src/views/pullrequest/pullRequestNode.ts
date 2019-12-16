@@ -25,7 +25,7 @@ export interface PRFileDiffQueryParams extends FileDiffQueryParams {
     site: BitbucketSite;
     repoHref: string;
     prHref: string;
-    prId: number;
+    prId: string;
     participants: User[];
     commentThreads: Comment[][];
     addedLines: number[];

@@ -116,7 +116,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
      * This won't work if the author of the PR wrote a custom commit message
      * without mentioning the PR.
      */
-    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]> {
+    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]> {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(

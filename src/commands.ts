@@ -29,6 +29,7 @@ export enum Commands {
     BitbucketDeleteComment = 'atlascode.bb.deleteComment',
     BitbucketEditComment = 'atlascode.bb.editComment',
     BitbucketDeleteTask = 'atlascode.bb.deleteTask',
+    BitbucketAddTask = 'atlascode.bb.addTask',
     BitbucketEditTask = 'atlascode.bb.editTask',
     BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
     BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
@@ -59,8 +60,8 @@ export enum Commands {
     CreateBitbucketIssue = 'atlascode.bb.createIssue',
     ShowBitbucketIssue = 'atlascode.bb.showIssue',
     StartWorkOnBitbucketIssue = 'atlascode.bb.startWorkOnIssue',
-    BBPRCancelCommentEdit = 'atlascode.bb.cancelCommentEdit',
-    BBPRSubmitCommentEdit = 'atlascode.bb.saveCommentEdit',
+    BBPRCancelAction = 'atlascode.bb.cancelCommentAction',
+    BBPRSaveAction = 'atlascode.bb.saveCommentAction',
     ViewDiff = 'atlascode.viewDiff',
     DebugBitbucketSites = 'atlascode.debug.bitbucketSites'
 }

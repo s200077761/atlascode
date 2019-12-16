@@ -127,7 +127,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleDeleteComment = (commentId: number) => {
+    handleDeleteComment = (commentId: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'deleteComment',
@@ -135,7 +135,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleEditComment = (content: string, commentId: number) => {
+    handleEditComment = (content: string, commentId: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'editComment',
@@ -144,7 +144,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handlePostComment = (content: string, parentCommentId?: number) => {
+    handlePostComment = (content: string, parentCommentId?: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'comment',

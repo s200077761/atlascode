@@ -91,7 +91,7 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         }));
     }
 
-    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<number[]> {
+    async getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]> {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(

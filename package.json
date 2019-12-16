@@ -74,12 +74,12 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.saveCommentEdit",
-                "title": "Save Changes"
+                "command": "atlascode.bb.cancelCommentAction",
+                "title": "Cancel"
             },
             {
-                "command": "atlascode.bb.cancelCommentEdit",
-                "title": "Cancel"
+                "command": "atlascode.bb.saveCommentAction",
+                "title": "Save Changes"
             },
             {
                 "command": "atlascode.bb.deleteTask",
@@ -87,6 +87,15 @@
                 "icon": {
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.addTask",
+                "title": "Add Task",
+                "icon": {
+                    "dark": "resources/dark/addTask.svg",
+                    "light": "resources/light/addTask.svg"
                 },
                 "category": "Atlassian"
             },
@@ -270,7 +279,7 @@
             },
             {
                 "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Refresh Bitbucket Issues",
+                "title": "Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -481,6 +490,11 @@
                     "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
+                    "command": "atlascode.bb.addTask",
+                    "group": "inline@3",
+                    "when": "comment =~ /canAddTask/ && resourceScheme == atlascode.bbpr"
+                },
+                {
                     "command": "atlascode.bb.markTaskIncomplete",
                     "group": "inline@1",
                     "when": "comment =~ /markIncomplete/ && resourceScheme == atlascode.bbpr"
@@ -503,12 +517,12 @@
             ],
             "comments/comment/context": [
                 {
-                    "command": "atlascode.bb.cancelCommentEdit",
+                    "command": "atlascode.bb.cancelCommentAction",
                     "group": "inline@2",
                     "when": "resourceScheme == atlascode.bbpr"
                 },
                 {
-                    "command": "atlascode.bb.saveCommentEdit",
+                    "command": "atlascode.bb.saveCommentAction",
                     "group": "inline@1",
                     "when": "resourceScheme == atlascode.bbpr"
                 }
@@ -564,6 +578,10 @@
                 },
                 {
                     "command": "atlascode.bb.deleteTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.addTask",
                     "when": "false"
                 },
                 {

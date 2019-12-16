@@ -12,9 +12,9 @@ class NestedComment extends React.Component<
         node: Comment, 
         currentUser: User,
         isCommentLoading: boolean,
-        onSave?: (content: string, parentCommentId?: number) => void,
-        onDelete?: (commentId: number) => void,
-        onEdit?: (content: string, commentId: number) => void,
+        onSave?: (content: string, parentCommentId?: string) => void,
+        onDelete?: (commentId: string) => void,
+        onEdit?: (content: string, commentId: string) => void,
         onTaskDelete?: (task: Task) => void,
         onTaskEdit?: (task: Task) => void,
         onTaskCreate?: (task: Task, comment: Comment) => void,
@@ -63,7 +63,7 @@ class NestedComment extends React.Component<
         this.setState({ showCommentForm: true });
     };
 
-    handleSave = (content: string, parentCommentId?: number) => {
+    handleSave = (content: string, parentCommentId?: string) => {
         if (this.props.onSave) {
             this.props.onSave(content, parentCommentId);
             this.setState({ showCommentForm: false });
@@ -125,7 +125,7 @@ class NestedComment extends React.Component<
             created: "",
             updated: "",
             isComplete: false,
-            id: -1,
+            id: "",
             editable: false,
             deletable: false,
             content: ""
@@ -226,9 +226,9 @@ export default class Comments extends React.Component<
         comments: Comment[], 
         currentUser: User, 
         isAnyCommentLoading: boolean, 
-        onComment?: (content: string, parentCommentId?: number) => void,
-        onDelete?:  (commentId: number) => void,
-        onEdit?: (content: string, commentId: number) => void
+        onComment?: (content: string, parentCommentId?: string) => void,
+        onDelete?:  (commentId: string) => void,
+        onEdit?: (content: string, commentId: string) => void
         onTaskDelete?: (task: Task) => void
         onTaskEdit?: (task: Task) => void
         onTaskCreate?: (task: Task, comment: Comment) => void
