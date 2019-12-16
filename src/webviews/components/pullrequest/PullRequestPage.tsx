@@ -19,11 +19,11 @@ import React from 'react';
 import EdiText from 'react-editext';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, Comment, FileDiff, MergeStrategy, Task } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import { Checkout, CopyPullRequestLink, DeleteComment, EditComment, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
+import { Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
 import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -45,7 +45,12 @@ import DiffList from './DiffList';
 import MergeChecks from './MergeChecks';
 import Reviewers from './Reviewers';
 
-type Emit = UpdateTitle | UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
+type Emit = CreateTask | 
+    EditTask | DeleteTask | UpdateTitle | 
+    UpdateApproval | Merge | Checkout | 
+    PostComment | DeleteComment | EditComment | 
+    CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | 
+    OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -167,6 +172,28 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
     handleCopyLink = () => {
         this.postMessage({
             action: 'copyPullRequestLink'
+        });
+    };
+
+    handleTaskCreate = (task: Task, comment: Comment) => {
+        this.postMessage({
+            action: "createTask",
+            task: task,
+            comment: comment
+        });
+    };
+
+    handleTaskEdit = (task: Task) => {
+        this.postMessage({
+            action: "editTask",
+            task: task
+        });
+    };
+
+    handleTaskDelete = (task: Task) => {
+        this.postMessage({
+            action: "deleteTask",
+            task: task
         });
     };
 
@@ -547,6 +574,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                                 onComment={this.handlePostComment}
                                                 onEdit={this.handleEditComment}
                                                 onDelete={this.handleDeleteComment}
+                                                onTaskCreate={this.handleTaskCreate}
+                                                onTaskEdit={this.handleTaskEdit}
+                                                onTaskDelete={this.handleTaskDelete}
                                                 loadUserOptions={this.loadUserOptions}
                                             />
                                             <CommentForm

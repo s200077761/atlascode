@@ -1,20 +1,20 @@
 import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
+import { PRData } from "src/ipc/prMessaging";
 import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest } from '../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, Comment, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest, Task } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { isCheckout, isDeleteComment, isEditComment, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge } from '../ipc/prActions';
-import { PRData } from "../ipc/prMessaging";
+import { isCheckout, isCreateTask, isDeleteComment, isDeleteTask, isEditComment, isEditTask, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge } from '../ipc/prActions';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -155,6 +155,39 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     }
                     break;
                 }
+                case 'createTask': {
+                    if(isCreateTask(msg)){
+                        try {
+                            this.createTask(this._pr, msg.task, msg.comment);
+                        } catch (e) {
+                            Logger.error(new Error(`error creating task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'editTask': {
+                    if(isEditTask(msg)){
+                        try {
+                            this.editTask(this._pr, msg.task);
+                        } catch (e) {
+                            Logger.error(new Error(`error editing task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
+                case 'deleteTask': {
+                    if(isDeleteTask(msg)){
+                        try {
+                            this.deleteTask(this._pr, msg.task);
+                        } catch (e) {
+                            Logger.error(new Error(`error deleting task on the pull request: ${e}`));
+                            this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
+                        }
+                    }
+                    break;
+                }
                 case 'checkout': {
                     if (isCheckout(msg)) {
                         handled = true;
@@ -263,7 +296,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr),
-            bbApi.pullrequests.getChangedFiles(this._pr)
+            bbApi.pullrequests.getChangedFiles(this._pr),
         ]);
         const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
@@ -296,7 +329,6 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             mainIssue: mainIssue,
             buildStatuses: buildStatuses,
             mergeStrategies: mergeStrategies
-
         };
         this.postMessage(prData);
     }
@@ -482,6 +514,24 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async editComment(pr: PullRequest, content: string, commentId: number) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.editComment(pr.site, this._pr!.data.id!, content, commentId);
+        this.updatePullRequest();
+    }
+
+    private async createTask(pr: PullRequest, task: Task, comment: Comment) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.postTask(pr.site, pr.data.id, comment, task.content);
+        this.updatePullRequest();
+    }
+
+    private async editTask(pr: PullRequest, task: Task) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.editTask(pr.site, pr.data.id, task);
+        this.updatePullRequest();
+    }
+
+    private async deleteTask(pr: PullRequest, task: Task) {
+        const bbApi = await clientForSite(pr.site);
+        await bbApi.pullrequests.deleteTask(pr.site, pr.data.id, task);
         this.updatePullRequest();
     }
 

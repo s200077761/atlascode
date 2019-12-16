@@ -244,7 +244,8 @@ export class BitbucketIssuesApiImpl {
                     mention: `@[${change.user.display_name!}](account_id:${change.user.account_id})`
                 }
                 : UnknownUser,
-            children: []
+            children: [],
+            tasks: []
         }));
 
         return { data: updatedChangesAsComments, next: data.next };
@@ -334,7 +335,7 @@ export class BitbucketIssuesApiImpl {
     }
 
     async nextPage({ workspaceRepo, site, next }: PaginatedBitbucketIssues): Promise<PaginatedBitbucketIssues> {
-        const { data } = await this.client.getURL(next!);
+        const { data } = await this.client.get(next!);
 
         const issues: BitbucketIssue[] = (data.values || []).map((val: any) => ({ site, data: val }));
 

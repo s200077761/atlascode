@@ -1,9 +1,37 @@
 import { MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Reviewer, WorkspaceRepo } from "../bitbucket/model";
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, Comment, FileChange, Reviewer, Task, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
+
+export interface CreateTask extends Action {
+    action: "createTask",
+    task: Task,
+    comment: Comment
+}
+
+export interface EditTask extends Action {
+    action: "editTask",
+    task: Task
+}
+
+export interface DeleteTask extends Action {
+    action: "deleteTask",
+    task: Task
+}
+
+export function isCreateTask(a: Action): a is CreateTask {
+    return (<CreateTask>a).action === "createTask";
+}
+
+export function isEditTask(a: Action): a is EditTask {
+    return (<EditTask>a).action === "editTask";
+}
+
+export function isDeleteTask(a: Action): a is DeleteTask {
+    return (<DeleteTask>a).action === "deleteTask";
+}
 
 export interface DeleteComment extends Action {
     commentId: number;

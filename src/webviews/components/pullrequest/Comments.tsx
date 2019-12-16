@@ -1,33 +1,44 @@
-import * as React from 'react';
 import Avatar from '@atlaskit/avatar';
-import CommentComponent, { CommentAuthor, CommentTime, CommentAction, CommentEdited } from '@atlaskit/comment';
+import Button, { ButtonGroup } from '@atlaskit/button';
+import CommentComponent, { CommentAction, CommentAuthor, CommentEdited, CommentTime } from '@atlaskit/comment';
+import { differenceInSeconds, distanceInWordsToNow } from 'date-fns';
+import * as React from 'react';
+import { Comment, Task, User } from '../../../bitbucket/model';
 import CommentForm from './CommentForm';
-import { User, Comment } from '../../../bitbucket/model';
-import { ButtonGroup } from '@atlaskit/button';
-import  Button from '@atlaskit/button';
-import { distanceInWordsToNow, differenceInSeconds } from 'date-fns';
+import { TaskComponent } from './Task';
 
 class NestedComment extends React.Component<
     { 
         node: Comment, 
-        currentUser: User, 
-        isCommentLoading: boolean, 
+        currentUser: User,
+        isCommentLoading: boolean,
         onSave?: (content: string, parentCommentId?: number) => void,
         onDelete?: (commentId: number) => void,
-        onEdit?: (content: string, commentId: number) => void 
+        onEdit?: (content: string, commentId: number) => void,
+        onTaskDelete?: (task: Task) => void,
+        onTaskEdit?: (task: Task) => void,
+        onTaskCreate?: (task: Task, comment: Comment) => void,
         loadUserOptions?: (input: string) => any
     }, 
     { 
         showCommentForm: boolean,
         commentEditMode: boolean,
+        isCreatingTask: boolean,
+        receivedDataFromServer:  boolean
     } > {
 
     constructor(props: any) {
         super(props);
         this.state = { 
             showCommentForm: false,
-            commentEditMode: false
+            commentEditMode: false,
+            isCreatingTask: false,
+            receivedDataFromServer: true
         };
+    }
+
+    componentWillReceiveProps(props: any){
+        this.setState({ receivedDataFromServer: true });
     }
 
     handleDelete = () => {
@@ -67,6 +78,21 @@ class NestedComment extends React.Component<
         this.setState({ commentEditMode: false });
     };
 
+    handleTaskCreateClick = () => {
+        this.setState({ isCreatingTask: true, receivedDataFromServer: false });
+    };
+
+    handleCancelTaskCreate = () => {
+        this.setState({ isCreatingTask: false });
+    };
+
+    handleTaskCreate = (task: Task) => {
+        this.setState({ isCreatingTask: false });
+        if(this.props.onTaskCreate) {
+            this.props.onTaskCreate(task, this.props.node);
+        }
+    };
+
     generateActionsList = () => {
         let actionList = [];
         if(this.props.onSave && !this.state.showCommentForm && !this.state.commentEditMode && !this.props.node.deleted){
@@ -78,6 +104,9 @@ class NestedComment extends React.Component<
         if(this.props.onDelete && !this.state.showCommentForm && !this.state.commentEditMode && this.props.node.deletable){
             actionList.push(<CommentAction onClick={this.handleDelete}>Delete</CommentAction>);
         }
+        if(this.props.onTaskCreate && !this.state.showCommentForm && !this.state.commentEditMode && !this.props.node.deleted){
+            actionList.push(<CommentAction onClick={this.handleTaskCreateClick}>Create task</CommentAction>);
+        }
         return actionList;
     };
 
@@ -87,6 +116,20 @@ class NestedComment extends React.Component<
         } else {
             return 'Edited';
         }
+    };
+
+    generateDummyTask = () => {
+        return {
+            commentId: this.props.node.id,
+            creator: this.props.node.user,
+            created: "",
+            updated: "",
+            isComplete: false,
+            id: -1,
+            editable: false,
+            deletable: false,
+            content: ""
+        } as Task;
     };
 
     render(): any {
@@ -136,19 +179,44 @@ class NestedComment extends React.Component<
             }
             actions={this.generateActionsList()}
         >
-            {   node.children && 
-                node.children.map(
-                    child => <NestedComment 
-                                node={child} 
-                                currentUser={currentUser} 
-                                isCommentLoading={this.props.isCommentLoading} 
-                                onSave={this.props.onSave}
-                                onDelete={this.props.onDelete}
-                                onEdit={this.props.onEdit}
-                                loadUserOptions={this.props.loadUserOptions}
-                            />
-                )
-            }
+            <React.Fragment>
+                { (this.state.isCreatingTask || !this.state.receivedDataFromServer) &&
+                    <TaskComponent
+                        task={this.generateDummyTask()}
+                        currentUser={currentUser}
+                        onSave={this.handleTaskCreate}
+                        cancelCreate={this.handleCancelTaskCreate}
+                        isInitialized={false}
+                    />
+                }
+                {   node.tasks &&
+                    node.tasks.map(
+                        task => <TaskComponent
+                                    task={task}
+                                    currentUser={currentUser}
+                                    onEdit={this.props.onTaskEdit}
+                                    onDelete={this.props.onTaskDelete}
+                                    isInitialized={true}
+                                />
+                    )
+                }
+                {   node.children && 
+                    node.children.map(
+                        child => <NestedComment 
+                                    node={child} 
+                                    currentUser={currentUser} 
+                                    isCommentLoading={this.props.isCommentLoading} 
+                                    onSave={this.props.onSave}
+                                    onDelete={this.props.onDelete}
+                                    onEdit={this.props.onEdit}
+                                    onTaskDelete={this.props.onTaskDelete}
+                                    onTaskEdit={this.props.onTaskEdit}
+                                    onTaskCreate={this.props.onTaskCreate}
+                                    loadUserOptions={this.props.loadUserOptions}
+                                />
+                    )
+                }
+            </React.Fragment>
         </CommentComponent>;
     }
 }
@@ -161,6 +229,9 @@ export default class Comments extends React.Component<
         onComment?: (content: string, parentCommentId?: number) => void,
         onDelete?:  (commentId: number) => void,
         onEdit?: (content: string, commentId: number) => void
+        onTaskDelete?: (task: Task) => void
+        onTaskEdit?: (task: Task) => void
+        onTaskCreate?: (task: Task, comment: Comment) => void
         loadUserOptions?: (input: string) => any
     }, 
     {}> {
@@ -180,6 +251,9 @@ export default class Comments extends React.Component<
                 onSave={this.props.onComment} 
                 onEdit={this.props.onEdit}
                 onDelete={this.props.onDelete}
+                onTaskDelete={this.props.onTaskDelete}
+                onTaskEdit={this.props.onTaskEdit}
+                onTaskCreate={this.props.onTaskCreate}
                 loadUserOptions={this.props.loadUserOptions}
             />
         );

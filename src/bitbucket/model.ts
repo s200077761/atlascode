@@ -61,6 +61,18 @@ export type Repo = {
     issueTrackerEnabled: boolean;
 };
 
+export type Task = {
+    commentId: number;
+    creator: User;
+    created: string;
+    updated: string;
+    isComplete: boolean;
+    id: number;
+    editable: boolean;
+    deletable: boolean;
+    content: string;
+};
+
 export type Comment = {
     id: number;
     parentId?: number;
@@ -78,6 +90,7 @@ export type Comment = {
         to?: number;
     };
     children: Comment[];
+    tasks: Task[];
 };
 
 export type Commit = {
@@ -243,6 +256,10 @@ export interface PullRequestApi {
     deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void>;
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
+    getTasks(pr: PullRequest): Promise<Task[]>;
+    postTask(site: BitbucketSite, prId: number, comment: Comment, content: string): Promise<Task>;
+    editTask(site: BitbucketSite, prId: number, task: Task): Promise<Task>;
+    deleteTask(site: BitbucketSite, prId: number, task: Task): Promise<void>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;
     create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest>;
     update(pr: PullRequest, title: string): Promise<void>;

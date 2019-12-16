@@ -82,6 +82,42 @@
                 "title": "Cancel"
             },
             {
+                "command": "atlascode.bb.deleteTask",
+                "title": "Delete",
+                "icon": {
+                    "dark": "resources/dark/delete.svg",
+                    "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.editTask",
+                "title": "Edit",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.markTaskIncomplete",
+                "title": "Mark Task As Incomplete",
+                "icon": {
+                    "dark": "resources/dark/checked.svg",
+                    "light": "resources/light/checked.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.markTaskComplete",
+                "title": "Mark Task As Complete",
+                "icon": {
+                    "dark": "resources/dark/unchecked.svg",
+                    "light": "resources/light/unchecked.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.jira.refreshExplorer",
                 "title": "Refresh",
                 "icon": {
@@ -443,6 +479,26 @@
                     "command": "atlascode.bb.deleteComment",
                     "group": "inline@2",
                     "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.markTaskIncomplete",
+                    "group": "inline@1",
+                    "when": "comment =~ /markIncomplete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.markTaskComplete",
+                    "group": "inline@1",
+                    "when": "comment =~ /markComplete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.editTask",
+                    "group": "inline@2",
+                    "when": "comment =~ /canModifyTask/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.deleteTask",
+                    "group": "inline@3",
+                    "when": "comment =~ /canRemoveTask/ && resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/context": [
@@ -504,6 +560,22 @@
                 },
                 {
                     "command": "atlascode.bb.editComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.deleteTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.editTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.markTaskComplete",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.markTaskIncomplete",
                     "when": "false"
                 },
                 {
