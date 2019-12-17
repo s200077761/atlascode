@@ -25,6 +25,7 @@ import { AbstractReactWebview, InitializingWebview } from './abstractWebview';
 
 export class PullRequestWebview extends AbstractReactWebview implements InitializingWebview<PullRequest> {
     private _pr: PullRequest | undefined = undefined;
+    private lastUpdatedTs: string | undefined = undefined;
 
     constructor(extensionPath: string) {
         super(extensionPath);
@@ -156,7 +157,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'createTask': {
-                    if(isCreateTask(msg)){
+                    if (isCreateTask(msg)) {
                         try {
                             this.createTask(this._pr, msg.task, msg.comment);
                         } catch (e) {
@@ -167,7 +168,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'editTask': {
-                    if(isEditTask(msg)){
+                    if (isEditTask(msg)) {
                         try {
                             this.editTask(this._pr, msg.task);
                         } catch (e) {
@@ -178,7 +179,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     break;
                 }
                 case 'deleteTask': {
-                    if(isDeleteTask(msg)){
+                    if (isDeleteTask(msg)) {
                         try {
                             this.deleteTask(this._pr, msg.task);
                         } catch (e) {
@@ -290,23 +291,28 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
 
         const bbApi = await clientForSite(this._pr.site);
+
+        this._pr = await bbApi.pullrequests.get(this._pr);
+        if (this.lastUpdatedTs && this.lastUpdatedTs === this._pr.data.updatedTs) {
+            return;
+        }
+        this.lastUpdatedTs = this._pr.data.updatedTs;
+
         const prDetailsPromises = Promise.all([
-            bbApi.pullrequests.get(this._pr),
             bbApi.pullrequests.getCommits(this._pr),
             bbApi.pullrequests.getComments(this._pr),
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr),
             bbApi.pullrequests.getChangedFiles(this._pr),
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const [commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
-        this._pr = updatedPR;
+
         const issuesPromises = Promise.all([
             this.fetchRelatedJiraIssues(this._pr, commits, comments),
             this.fetchRelatedBitbucketIssues(this._pr, commits, comments),
             this.fetchMainIssue(this._pr)
         ]);
-
         const [relatedJiraIssues, relatedBitbucketIssues, mainIssue] = await issuesPromises;
         const currentUser = await Container.bitbucketContext.currentUser(this._pr.site);
 
