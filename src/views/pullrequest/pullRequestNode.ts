@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, Commit, FileChange, FileStatus, PaginatedComments, PaginatedPullRequests, PullRequest, User } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { configuration } from '../../config/configuration';
 import { Logger } from '../../logger';
 import { Resources } from '../../resources';
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
@@ -120,12 +121,42 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
+
+    private createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
+        const splitFileName = diffViewData.fileDisplayData.fileDisplayName.split('/');
+        let currentDirectory = directory;
+        for(let i = 0; i < splitFileName.length; i++){
+            if(i === splitFileName.length - 1){
+                currentDirectory.diffViewArgs.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
+            } else {
+                const tempDirectory = currentDirectory.members.get(splitFileName[i]);
+
+                //Traverse the file tree, and if a folder doesn't exist, add it
+                if(tempDirectory){
+                    currentDirectory = tempDirectory;
+                } else {
+                    currentDirectory.members.set(splitFileName[i], {
+                        folder: splitFileName[i],
+                        diffViewArgs: [],
+                        members: new Map<string, PRDirectory>()
+                    });
+                    currentDirectory = currentDirectory.members.get(splitFileName[i])!;
+                }
+            } 
+        }
+    }
+
     private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
+        let directoryStructure: PRDirectory = {
+            diffViewArgs: [],
+            members: new Map<string, PRDirectory>()
+        };
         result.push(
             ...await Promise.all(
                 fileChanges.map(async (fileChange) => {
                     const diffViewData = await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
+                    this.createdNestedFileStructure(diffViewData, directoryStructure);
                     return new PullRequestFilesNode(diffViewData);
                 }
                 )
@@ -134,7 +165,53 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         if (allComments.next) {
             result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
         }
+
+        if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')){
+            let nestedDirectories: PRDirectory[] = [];
+            for(let [key, value] of directoryStructure.members) {
+                console.log(key);
+                nestedDirectories.push(value);
+            }
+            let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
+            let childNodes: AbstractBaseNode[] = directoryStructure.diffViewArgs.map(diffViewArg => new PullRequestFilesNode(diffViewArg));
+            return childNodes.concat(directoryNodes);
+        } 
+
         return result;
+    }
+}
+
+interface PRDirectory {
+    folder?: string;
+    diffViewArgs: DiffViewArgs[];
+    members: Map<string, PRDirectory>;
+};
+
+class DirectoryNode extends AbstractBaseNode {
+    constructor(private directoryData: PRDirectory) {
+        super();
+    }
+
+    async getTreeItem(): Promise<vscode.TreeItem> {
+        let item: vscode.TreeItem;
+        if(this.directoryData.folder){
+            item = new vscode.TreeItem(this.directoryData.folder!, vscode.TreeItemCollapsibleState.Collapsed);
+        } else {
+            item = new vscode.TreeItem("Changed Files: ", vscode.TreeItemCollapsibleState.None);
+        }
+        item.tooltip = this.directoryData.folder!;
+        return item;
+    }
+
+    async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+        let nestedDirectories: PRDirectory[] = [];
+        for(let [key, value] of this.directoryData.members) {
+            console.log(key);
+            nestedDirectories.push(value);
+        }
+        let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
+        let childNodes: AbstractBaseNode[] = this.directoryData.diffViewArgs.map(diffViewArg => new PullRequestFilesNode(diffViewArg));
+        return childNodes.concat(directoryNodes);
     }
 }
 
@@ -146,7 +223,14 @@ class PullRequestFilesNode extends AbstractBaseNode {
 
     async getTreeItem(): Promise<vscode.TreeItem> {
         let itemData = this.diffViewData.fileDisplayData;
-        let item = new vscode.TreeItem(`${itemData.numberOfComments > 0 ? '💬 ' : ''}${itemData.fileDisplayName}`, vscode.TreeItemCollapsibleState.None);
+        let fileDisplayString = '';
+        if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
+            const displayPath = itemData.fileDisplayName.split('/');
+            fileDisplayString = displayPath[displayPath.length - 1];
+        } else {
+            fileDisplayString = itemData.fileDisplayName;
+        }
+        let item = new vscode.TreeItem(`${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`, vscode.TreeItemCollapsibleState.None);
         item.tooltip = itemData.fileDisplayName;
         item.command = {
             command: Commands.ViewDiff,

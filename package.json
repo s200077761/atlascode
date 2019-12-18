@@ -949,6 +949,12 @@
                     "description": "Enables the Bitbucket Pull Request Explorer",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.nestFilesEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables nesting of the PR files by folder",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.pipelines.explorerEnabled": {
                     "type": "boolean",
                     "default": true,
