@@ -482,6 +482,16 @@ screen:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - name: pullRequestsTreeViewUnauthenticatedMessage
+    description: |
+      Event when a user views unauthenticated message in pull requests tree view
+    attributes:
+      - name: hostProduct
+  - name: pullRequestsTreeViewNoReposFoundMessage
+    description: |
+      Event when a user views no repos found message in pull requests tree view
+    attributes:
+      - name: hostProduct
 ui:
   - id: 14444
     action: clicked
@@ -549,4 +559,22 @@ ui:
     subjectId: moreSettingsButton
     description: |
       Event when a user clicks on the more settings button on the Onboarding page
+    attributes:
+  - action: clicked
+    subject: button
+    subjectId: openWorkbenchRepository
+    description: |
+      Event when a user clicks on the open repository button
+    attributes:
+  - action: clicked
+    subject: button
+    subjectId: openWorkbenchWorkspace
+    description: |
+      Event when a user clicks on the open workspace button
+    attributes:
+  - action: clicked
+    subject: button
+    subjectId: cloneRepository
+    description: |
+      Event when a user clicks on the clone repository button
     attributes:

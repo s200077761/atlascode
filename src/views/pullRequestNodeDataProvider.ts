@@ -1,5 +1,6 @@
 import { commands, Disposable, Event, EventEmitter, TreeItem, Uri, window, workspace } from 'vscode';
-import { prPaginationEvent } from '../analytics';
+import { prPaginationEvent, viewScreenEvent } from '../analytics';
+import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PaginatedPullRequests, WorkspaceRepo } from '../bitbucket/model';
@@ -9,6 +10,7 @@ import { BaseTreeDataProvider } from './Explorer';
 import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
+import { SimpleNode } from './nodes/simpleNode';
 import { PullRequestHeaderNode } from './pullrequest/headerNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
@@ -141,8 +143,14 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+        if (Container.siteManager.getSitesAvailable(ProductBitbucket).length === 0) {
+            viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then(event => Container.analyticsClient.sendScreenEvent(event));
+            return [new SimpleNode('Authenticate with Bitbucket to view pull requests', { command: Commands.ShowBitbucketAuth, title: 'Open Bitbucket Settings' })];
+        }
+
         const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
+            viewScreenEvent('pullRequestsTreeViewNoReposFoundMessage', undefined, ProductBitbucket).then(event => Container.analyticsClient.sendScreenEvent(event));
             return emptyBitbucketNodes;
         }
 

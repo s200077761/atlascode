@@ -1,9 +1,9 @@
+import { Commands } from "../../commands";
 import { SimpleNode } from "./simpleNode";
-//import { Commands } from "../../commands";
 
 export const emptyBitbucketNodes: SimpleNode[] = [
-    new SimpleNode('No authenticated Bitbucket repositories found.'),
-    new SimpleNode('Please make sure you have a project open that was cloned from Bitbucket.'),
-    //new SimpleNode('Please make sure you have authenticated with the remote.', { command: Commands.ShowConfigPage, title: "Login to Bitbucket" }),
-    new SimpleNode('You can check your open repositories in the Source Control pane (Ctrl+Shift+G).'),
+    new SimpleNode('No Bitbucket repositories found in this workspace'),
+    new SimpleNode('Add a repository to this workspace...', { command: Commands.WorkbenchOpenRepository, title: 'Add repository to workspace' }),
+    new SimpleNode('Clone a repository from Bitbucket...', { command: Commands.CloneRepository, title: 'Clone repository' }),
+    new SimpleNode('Switch workspace...', { command: Commands.WorkbenchOpenWorkspace, title: 'Switch workspace' })
 ];
