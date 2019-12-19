@@ -169,6 +169,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.toggleFileNesting",
+                "title": "Toggle File Nesting",
+                "icon": {
+                    "dark": "resources/dark/folder.svg",
+                    "light": "resources/light/folder.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.showPullRequestSettings",
                 "title": "Settings",
                 "icon": {
@@ -391,6 +400,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
                     "command": "atlascode.bb.createPullRequest",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -538,6 +552,10 @@
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
                     "when": "false"
                 },
                 {

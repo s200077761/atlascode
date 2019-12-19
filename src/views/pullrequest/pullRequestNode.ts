@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, Commit, FileChange, FileStatus, PaginatedComments, PaginatedPullRequests, PullRequest, User } from '../../bitbucket/model';
@@ -123,7 +124,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
 
     private createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
-        const splitFileName = diffViewData.fileDisplayData.fileDisplayName.split('/');
+        const baseName = path.basename(diffViewData.fileDisplayData.fileDisplayName);
+        const dirName = path.dirname(diffViewData.fileDisplayData.fileDisplayName);
+        //If we just have a file, the dirName will be '.', but we don't want to tuck that in the '.' directory, so there's a ternary operation to deal with that
+        const splitFileName = [...(dirName === '.' ? [] : dirName.split('/')), baseName]; 
         let currentDirectory = directory;
         for(let i = 0; i < splitFileName.length; i++){
             if(i === splitFileName.length - 1){
@@ -146,30 +150,40 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         }
     }
 
+    //Directories that contain only one child which is also a directory should be flattened. E.g A > B > C > D.txt => A/B/C/D.txt
+    private flattenFileStructure(directory: PRDirectory){
+        //Keep flattening until there's nothing left to flatten, and only then move on to children
+        while(directory.members.size === 1 && directory.diffViewArgs.length === 0) {
+            const currentFolderName: string = directory.folder!;
+            const childDirectory = directory.members.values().next().value;
+            directory.folder = `${currentFolderName}/${childDirectory.folder ? childDirectory.folder : ''}`;
+            directory.members = childDirectory.members;
+            directory.diffViewArgs = childDirectory.diffViewArgs;
+        }
+        for(let [, value] of directory.members) {
+            this.flattenFileStructure(value);
+        }
+    }
+
     private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
-        const result: AbstractBaseNode[] = [];
-        let directoryStructure: PRDirectory = {
-            diffViewArgs: [],
-            members: new Map<string, PRDirectory>()
-        };
-        result.push(
-            ...await Promise.all(
-                fileChanges.map(async (fileChange) => {
-                    const diffViewData = await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
-                    this.createdNestedFileStructure(diffViewData, directoryStructure);
-                    return new PullRequestFilesNode(diffViewData);
+        const allDiffData = await Promise.all(fileChanges.map(async (fileChange) => {
+                    return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
                 }
-                )
             )
         );
-        if (allComments.next) {
-            result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
-        }
 
         if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')){
+            //Create a directory data structure to represent the files
+            let directoryStructure: PRDirectory = {
+                diffViewArgs: [],
+                members: new Map<string, PRDirectory>()
+            };
+            allDiffData.forEach(diffData => this.createdNestedFileStructure(diffData, directoryStructure));
+            this.flattenFileStructure(directoryStructure);
+
+            //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
             let nestedDirectories: PRDirectory[] = [];
-            for(let [key, value] of directoryStructure.members) {
-                console.log(key);
+            for(let [, value] of directoryStructure.members) {
                 nestedDirectories.push(value);
             }
             let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
@@ -177,6 +191,11 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             return childNodes.concat(directoryNodes);
         } 
 
+        const result: AbstractBaseNode[] = [];
+        result.push(...allDiffData.map(diffData => new PullRequestFilesNode(diffData)));
+        if (allComments.next) {
+            result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
+        }
         return result;
     }
 }
@@ -205,8 +224,7 @@ class DirectoryNode extends AbstractBaseNode {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         let nestedDirectories: PRDirectory[] = [];
-        for(let [key, value] of this.directoryData.members) {
-            console.log(key);
+        for(let [, value] of this.directoryData.members) {
             nestedDirectories.push(value);
         }
         let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
@@ -225,8 +243,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         let itemData = this.diffViewData.fileDisplayData;
         let fileDisplayString = '';
         if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
-            const displayPath = itemData.fileDisplayName.split('/');
-            fileDisplayString = displayPath[displayPath.length - 1];
+            fileDisplayString = path.basename(itemData.fileDisplayName);
         } else {
             fileDisplayString = itemData.fileDisplayName;
         }
