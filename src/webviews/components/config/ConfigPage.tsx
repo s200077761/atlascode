@@ -13,7 +13,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import uuid from 'uuid';
 import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../../atlclients/authInfo';
 import { IConfig, SettingSource } from '../../../config/model';
-import { AuthAction, ConfigTarget, FeedbackData, FetchJqlDataAction, LoginAuthAction, SaveSettingsAction, SubmitFeedbackAction } from '../../../ipc/configActions';
+import { ConfigTarget, FeedbackData, FetchJqlDataAction, LoginAuthAction, LogoutAuthAction, SaveSettingsAction, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
@@ -46,7 +46,7 @@ const panelHeader = (heading: string, subheading: string) =>
         <p className='inlinePanelSubheading'>{subheading}</p>
     </div>;
 
-type Emit = AuthAction | LoginAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | FetchJqlDataAction | Action;
+type Emit = LoginAuthAction | LogoutAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | FetchJqlDataAction | Action;
 type Accept = ConfigData | ProjectList | HostErrorMessage;
 
 interface ViewState extends ConfigData {
@@ -260,7 +260,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     };
 
     handleLogout = (site: DetailedSiteInfo) => {
-        this.postMessage({ action: 'logout', siteInfo: site });
+        this.postMessage({ action: 'logout', detailedSiteInfo: site});
     };
 
     handleSourceLink = () => {
