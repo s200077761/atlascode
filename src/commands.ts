@@ -17,6 +17,7 @@ export enum Commands {
     BitbucketSelectContainer = 'atlascode.bb.selectContainer',
     BitbucketFetchPullRequests = 'atlascode.bb.fetchPullRequests',
     BitbucketRefreshPullRequests = 'atlascode.bb.refreshPullRequests',
+    BitbucketToggleFileNesting = 'atlascode.bb.toggleFileNesting',
     BitbucketShowOpenPullRequests = 'atlascode.bb.showOpenPullRequests',
     BitbucketShowPullRequestsToReview = 'atlascode.bb.showPullRequestsToReview',
     BitbucketShowPullRequestsCreatedByMe = 'atlascode.bb.showOpenPullRequestsCreatedByMe',

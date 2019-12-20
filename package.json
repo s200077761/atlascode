@@ -169,6 +169,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.toggleFileNesting",
+                "title": "Toggle File Nesting",
+                "icon": {
+                    "dark": "resources/dark/fileTree.svg",
+                    "light": "resources/light/fileTree.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.showPullRequestSettings",
                 "title": "Settings",
                 "icon": {
@@ -391,6 +400,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
                     "command": "atlascode.bb.createPullRequest",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -538,6 +552,10 @@
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
                     "when": "false"
                 },
                 {
@@ -947,6 +965,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables the Bitbucket Pull Request Explorer",
+                    "scope": "window"
+                },
+                "atlascode.bitbucket.explorer.nestFilesEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables nesting of the PR files by folder",
                     "scope": "window"
                 },
                 "atlascode.bitbucket.pipelines.explorerEnabled": {

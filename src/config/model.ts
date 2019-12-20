@@ -139,6 +139,7 @@ export interface BitbucketIssuesConfig {
 
 export interface BitbucketExplorer {
     enabled: boolean;
+    nestFiles: boolean;
     refreshInterval: number;
     relatedJiraIssues: BitbucketRelatedJiraIssues;
     relatedBitbucketIssues: BitbucketRelatedBitbucketIssues;
@@ -255,6 +256,7 @@ export const emptyBitbucketNotfications: BitbucketNotifications = {
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
+    nestFiles: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
     relatedBitbucketIssues: emptyRelatedBitbucketIssues,
