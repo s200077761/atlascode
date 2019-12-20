@@ -1,12 +1,15 @@
 import { AxiosResponse } from "axios";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { getAgent } from "../../jira/jira-client/providers";
+import { CacheMap } from "../../util/cachemap";
 import { Client, ClientError } from "../httpClient";
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi, UnknownUser } from "../model";
 import { CloudPullRequestApi, maxItemsSupported } from "./pullRequests";
 
 export class CloudRepositoriesApi implements RepositoriesApi {
     private client: Client;
+    private repoCache: CacheMap = new CacheMap();
+    private branchingModelCache: CacheMap = new CacheMap();
 
     constructor(site: DetailedSiteInfo, token: string) {
         this.client = new Client(
@@ -35,11 +38,20 @@ export class CloudRepositoriesApi implements RepositoriesApi {
     async get(site: BitbucketSite): Promise<Repo> {
         const { ownerSlug, repoSlug } = site;
 
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+        const cacheItem = this.repoCache.getItem<Repo>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}`
         );
 
-        return CloudRepositoriesApi.toRepo(data);
+        const repo = CloudRepositoriesApi.toRepo(data);
+        this.repoCache.setItem(cacheKey, repo);
+        return repo;
     }
 
     async getDevelopmentBranch(site: BitbucketSite): Promise<string> {
@@ -49,18 +61,24 @@ export class CloudRepositoriesApi implements RepositoriesApi {
             this.getBranchingModel(site)
         ]);
 
-        return branchingModel.development && branchingModel.development.branch
-            ? branchingModel.development.branch.name!
-            : repo.mainbranch!;
+        return branchingModel?.development?.branch?.name ?? repo.mainbranch!;
     }
 
     async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
         const { ownerSlug, repoSlug } = site;
 
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+        const cacheItem = this.branchingModelCache.getItem<BitbucketBranchingModel>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/branching-model`
         );
 
+        this.branchingModelCache.setItem(cacheKey, data);
         return data;
     }
 
