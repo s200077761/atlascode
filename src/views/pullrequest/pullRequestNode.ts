@@ -140,7 +140,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                     currentDirectory = tempDirectory;
                 } else {
                     currentDirectory.members.set(splitFileName[i], {
-                        folder: splitFileName[i],
+                        name: splitFileName[i],
                         diffViewArgs: [],
                         members: new Map<string, PRDirectory>()
                     });
@@ -154,9 +154,9 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
     private flattenFileStructure(directory: PRDirectory){
         //Keep flattening until there's nothing left to flatten, and only then move on to children
         while(directory.members.size === 1 && directory.diffViewArgs.length === 0) {
-            const currentFolderName: string = directory.folder!;
+            const currentFolderName: string = directory.name;
             const childDirectory = directory.members.values().next().value;
-            directory.folder = `${currentFolderName}/${childDirectory.folder ? childDirectory.folder : ''}`;
+            directory.name = `${currentFolderName}/${childDirectory.name ? childDirectory.name : ''}`;
             directory.members = childDirectory.members;
             directory.diffViewArgs = childDirectory.diffViewArgs;
         }
@@ -175,6 +175,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')){
             //Create a directory data structure to represent the files
             let directoryStructure: PRDirectory = {
+                name: "",
                 diffViewArgs: [],
                 members: new Map<string, PRDirectory>()
             };
@@ -201,7 +202,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 }
 
 interface PRDirectory {
-    folder?: string;
+    name: string;
     diffViewArgs: DiffViewArgs[];
     members: Map<string, PRDirectory>;
 };
@@ -212,13 +213,8 @@ class DirectoryNode extends AbstractBaseNode {
     }
 
     async getTreeItem(): Promise<vscode.TreeItem> {
-        let item: vscode.TreeItem;
-        if(this.directoryData.folder){
-            item = new vscode.TreeItem(this.directoryData.folder!, vscode.TreeItemCollapsibleState.Expanded);
-        } else {
-            item = new vscode.TreeItem("Changed Files: ", vscode.TreeItemCollapsibleState.None);
-        }
-        item.tooltip = this.directoryData.folder!;
+        const item = new vscode.TreeItem(this.directoryData.name, vscode.TreeItemCollapsibleState.Expanded);
+        item.tooltip = this.directoryData.name;
         item.iconPath = vscode.ThemeIcon.Folder;
         return item;
     }
@@ -242,11 +238,9 @@ class PullRequestFilesNode extends AbstractBaseNode {
 
     async getTreeItem(): Promise<vscode.TreeItem> {
         let itemData = this.diffViewData.fileDisplayData;
-        let fileDisplayString = '';
+        let fileDisplayString = itemData.fileDisplayName;
         if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
             fileDisplayString = path.basename(itemData.fileDisplayName);
-        } else {
-            fileDisplayString = itemData.fileDisplayName;
         }
         let item = new vscode.TreeItem(`${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`, vscode.TreeItemCollapsibleState.None);
         item.tooltip = itemData.fileDisplayName;
