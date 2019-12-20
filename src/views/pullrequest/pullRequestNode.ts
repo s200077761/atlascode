@@ -214,11 +214,12 @@ class DirectoryNode extends AbstractBaseNode {
     async getTreeItem(): Promise<vscode.TreeItem> {
         let item: vscode.TreeItem;
         if(this.directoryData.folder){
-            item = new vscode.TreeItem(this.directoryData.folder!, vscode.TreeItemCollapsibleState.Collapsed);
+            item = new vscode.TreeItem(this.directoryData.folder!, vscode.TreeItemCollapsibleState.Expanded);
         } else {
             item = new vscode.TreeItem("Changed Files: ", vscode.TreeItemCollapsibleState.None);
         }
         item.tooltip = this.directoryData.folder!;
+        item.iconPath = vscode.ThemeIcon.Folder;
         return item;
     }
 

@@ -256,7 +256,7 @@ export const emptyBitbucketNotfications: BitbucketNotifications = {
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
-    nestFiles: false,
+    nestFiles: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
     relatedBitbucketIssues: emptyRelatedBitbucketIssues,

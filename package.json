@@ -172,8 +172,8 @@
                 "command": "atlascode.bb.toggleFileNesting",
                 "title": "Toggle File Nesting",
                 "icon": {
-                    "dark": "resources/dark/folder.svg",
-                    "light": "resources/light/folder.svg"
+                    "dark": "resources/dark/fileTree.svg",
+                    "light": "resources/light/fileTree.svg"
                 },
                 "category": "Atlassian"
             },
@@ -969,7 +969,7 @@
                 },
                 "atlascode.bitbucket.explorer.nestFilesEnabled": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enables nesting of the PR files by folder",
                     "scope": "window"
                 },
