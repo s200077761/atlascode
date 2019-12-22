@@ -4,42 +4,51 @@ import Tooltip from '@atlaskit/tooltip';
 import * as React from 'react';
 import { Commit } from '../../../bitbucket/model';
 
-const style = { fontFamily: "monospace" };
-const Hash = (props: any) =>
-    <Button appearance="subtle-link" href={props.href} >
-        <span style={style}>{props.hash}</span>
-    </Button>;
-const Message = (props: any) => <Tooltip content={props.message}><p style={{ display: "inline" }}>{props.message.trim().split('\n')[0]}</p></Tooltip>;
+const style = { fontFamily: 'monospace' };
+const Hash = (props: any) => (
+  <Button appearance="subtle-link" href={props.href}>
+    <span style={style}>{props.hash}</span>
+  </Button>
+);
+const Message = (props: any) => (
+  <Tooltip content={props.message}>
+    <p style={{ display: 'inline' }}>{props.message.trim().split('\n')[0]}</p>
+  </Tooltip>
+);
 const Timestamp = (props: any) => {
-    const d = new Date(props.ts);
-    return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
+  const d = new Date(props.ts);
+  return (
+    <Tooltip content={d.toLocaleString()}>
+      <p>{`${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`}</p>
+    </Tooltip>
+  );
 };
 
 export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props: { commits: Commit[] }) => {
-    const commitsData = props.commits!.map((commit) => {
-        return {
-            hash: commit.hash,
-            message: commit.message,
-            href: commit.url,
-            ts: commit.ts
-        };
-    });
+  const commitsData = props.commits!.map(commit => {
+    return {
+      hash: commit.hash,
+      message: commit.message,
+      href: commit.url,
+      ts: commit.ts
+    };
+  });
 
-    return (
-        <TableTree
-            columns={[Hash, Message, Timestamp]}
-            columnWidths={['120px', '100%', '180px']}
-            items={commitsData.map(c => {
-                return {
-                    id: c.hash,
-                    content: {
-                        hash: c.hash.substring(0, 8),
-                        message: c.message,
-                        href: c.href,
-                        ts: c.ts
-                    }
-                };
-            })}
-        />
-    );
+  return (
+    <TableTree
+      columns={[Hash, Message, Timestamp]}
+      columnWidths={['120px', '100%', '180px']}
+      items={commitsData.map(c => {
+        return {
+          id: c.hash,
+          content: {
+            hash: c.hash.substring(0, 8),
+            message: c.message,
+            href: c.href,
+            ts: c.ts
+          }
+        };
+      })}
+    />
+  );
 };
