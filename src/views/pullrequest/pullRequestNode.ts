@@ -1,7 +1,17 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketSite, Comment, Commit, FileChange, FileStatus, PaginatedComments, PaginatedPullRequests, PullRequest, User } from '../../bitbucket/model';
+import {
+    BitbucketSite,
+    Comment,
+    Commit,
+    FileChange,
+    FileStatus,
+    PaginatedComments,
+    PaginatedPullRequests,
+    PullRequest,
+    User
+} from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { configuration } from '../../config/configuration';
 import { Logger } from '../../logger';
@@ -51,8 +61,13 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
             .map(approver => `Approved-by: ${approver.displayName}`)
             .join('\n');
 
-        let item = new vscode.TreeItem(`#${this.pr.data.id!} ${this.pr.data.title!}`, vscode.TreeItemCollapsibleState.Collapsed);
-        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${approvalText.length > 0 ? `\n\n${approvalText}` : ''}`;
+        let item = new vscode.TreeItem(
+            `#${this.pr.data.id!} ${this.pr.data.title!}`,
+            vscode.TreeItemCollapsibleState.Collapsed
+        );
+        item.tooltip = `#${this.pr.data.id!} ${this.pr.data.title!}${
+            approvalText.length > 0 ? `\n\n${approvalText}` : ''
+        }`;
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
@@ -60,14 +75,15 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return item;
     }
 
-
     getTreeItem(): vscode.TreeItem {
         return this.treeItem;
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         if (!element) {
-            if (!this.pr) { return []; }
+            if (!this.pr) {
+                return [];
+            }
 
             this.pr = await this.hydratePullRequest(this.pr);
 
@@ -83,15 +99,16 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                     let [fileChanges, commits, allComments] = result;
 
                     const children: AbstractBaseNode[] = [new DescriptionNode(this.pr)];
-                    children.push(...await this.createRelatedJiraIssueNode(commits, allComments));
-                    children.push(...await this.createRelatedBitbucketIssueNode(commits, allComments));
-                    children.push(...await this.createFileChangesNodes(allComments, fileChanges));
+                    children.push(...(await this.createRelatedJiraIssueNode(commits, allComments)));
+                    children.push(...(await this.createRelatedBitbucketIssueNode(commits, allComments)));
+                    children.push(...(await this.createFileChangesNodes(allComments, fileChanges)));
                     return children;
                 },
                 reason => {
                     Logger.debug('error fetching pull request details', reason);
                     return [new SimpleNode('⚠️ Error: fetching pull request details failed')];
-                });
+                }
+            );
         } else {
             return element.getChildren();
         }
@@ -104,7 +121,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return await bbApi.pullrequests.get(pr);
     }
 
-    private async createRelatedJiraIssueNode(commits: Commit[], allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedJiraIssueNode(
+        commits: Commit[],
+        allComments: PaginatedComments
+    ): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedIssuesNode.create(this.pr, commits, allComments.data);
         if (relatedIssuesNode) {
@@ -113,7 +133,10 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
-    private async createRelatedBitbucketIssueNode(commits: Commit[], allComments: PaginatedComments): Promise<AbstractBaseNode[]> {
+    private async createRelatedBitbucketIssueNode(
+        commits: Commit[],
+        allComments: PaginatedComments
+    ): Promise<AbstractBaseNode[]> {
         const result: AbstractBaseNode[] = [];
         const relatedIssuesNode = await RelatedBitbucketIssuesNode.create(this.pr, commits, allComments.data);
         if (relatedIssuesNode) {
@@ -122,21 +145,20 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         return result;
     }
 
-
     private createdNestedFileStructure(diffViewData: DiffViewArgs, directory: PRDirectory) {
         const baseName = path.basename(diffViewData.fileDisplayData.fileDisplayName);
         const dirName = path.dirname(diffViewData.fileDisplayData.fileDisplayName);
         //If we just have a file, the dirName will be '.', but we don't want to tuck that in the '.' directory, so there's a ternary operation to deal with that
-        const splitFileName = [...(dirName === '.' ? [] : dirName.split('/')), baseName]; 
+        const splitFileName = [...(dirName === '.' ? [] : dirName.split('/')), baseName];
         let currentDirectory = directory;
-        for(let i = 0; i < splitFileName.length; i++){
-            if(i === splitFileName.length - 1){
+        for (let i = 0; i < splitFileName.length; i++) {
+            if (i === splitFileName.length - 1) {
                 currentDirectory.diffViewArgs.push(diffViewData); //The last name in the path is the name of the file, so we've reached the end of the file tree
             } else {
                 const tempDirectory = currentDirectory.members.get(splitFileName[i]);
 
                 //Traverse the file tree, and if a folder doesn't exist, add it
-                if(tempDirectory){
+                if (tempDirectory) {
                     currentDirectory = tempDirectory;
                 } else {
                     currentDirectory.members.set(splitFileName[i], {
@@ -146,36 +168,39 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
                     });
                     currentDirectory = currentDirectory.members.get(splitFileName[i])!;
                 }
-            } 
+            }
         }
     }
 
     //Directories that contain only one child which is also a directory should be flattened. E.g A > B > C > D.txt => A/B/C/D.txt
-    private flattenFileStructure(directory: PRDirectory){
+    private flattenFileStructure(directory: PRDirectory) {
         //Keep flattening until there's nothing left to flatten, and only then move on to children
-        while(directory.members.size === 1 && directory.diffViewArgs.length === 0) {
+        while (directory.members.size === 1 && directory.diffViewArgs.length === 0) {
             const currentFolderName: string = directory.name;
             const childDirectory = directory.members.values().next().value;
             directory.name = `${currentFolderName}/${childDirectory.name ? childDirectory.name : ''}`;
             directory.members = childDirectory.members;
             directory.diffViewArgs = childDirectory.diffViewArgs;
         }
-        for(let [, value] of directory.members) {
+        for (let [, value] of directory.members) {
             this.flattenFileStructure(value);
         }
     }
 
-    private async createFileChangesNodes(allComments: PaginatedComments, fileChanges: FileChange[]): Promise<AbstractBaseNode[]> {
-        const allDiffData = await Promise.all(fileChanges.map(async (fileChange) => {
-                    return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
-                }
-            )
+    private async createFileChangesNodes(
+        allComments: PaginatedComments,
+        fileChanges: FileChange[]
+    ): Promise<AbstractBaseNode[]> {
+        const allDiffData = await Promise.all(
+            fileChanges.map(async fileChange => {
+                return await getArgsForDiffView(allComments, fileChange, this.pr, this.commentController);
+            })
         );
 
-        if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')){
+        if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
             //Create a directory data structure to represent the files
             let directoryStructure: PRDirectory = {
-                name: "",
+                name: '',
                 diffViewArgs: [],
                 members: new Map<string, PRDirectory>()
             };
@@ -184,18 +209,24 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
 
             //While creating the directory, we actually put all the files/folders inside of a root directory. We now want to go one level in.
             let nestedDirectories: PRDirectory[] = [];
-            for(let [, value] of directoryStructure.members) {
+            for (let [, value] of directoryStructure.members) {
                 nestedDirectories.push(value);
             }
             let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
-            let childNodes: AbstractBaseNode[] = directoryStructure.diffViewArgs.map(diffViewArg => new PullRequestFilesNode(diffViewArg));
+            let childNodes: AbstractBaseNode[] = directoryStructure.diffViewArgs.map(
+                diffViewArg => new PullRequestFilesNode(diffViewArg)
+            );
             return childNodes.concat(directoryNodes);
-        } 
+        }
 
         const result: AbstractBaseNode[] = [];
         result.push(...allDiffData.map(diffData => new PullRequestFilesNode(diffData)));
         if (allComments.next) {
-            result.push(new SimpleNode('⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'));
+            result.push(
+                new SimpleNode(
+                    '⚠️ All file comments are not shown. This PR has more comments than what is supported by this extension.'
+                )
+            );
         }
         return result;
     }
@@ -205,7 +236,7 @@ interface PRDirectory {
     name: string;
     diffViewArgs: DiffViewArgs[];
     members: Map<string, PRDirectory>;
-};
+}
 
 class DirectoryNode extends AbstractBaseNode {
     constructor(private directoryData: PRDirectory) {
@@ -221,17 +252,18 @@ class DirectoryNode extends AbstractBaseNode {
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
         let nestedDirectories: PRDirectory[] = [];
-        for(let [, value] of this.directoryData.members) {
+        for (let [, value] of this.directoryData.members) {
             nestedDirectories.push(value);
         }
         let directoryNodes: DirectoryNode[] = nestedDirectories.map(directory => new DirectoryNode(directory));
-        let childNodes: AbstractBaseNode[] = this.directoryData.diffViewArgs.map(diffViewArg => new PullRequestFilesNode(diffViewArg));
+        let childNodes: AbstractBaseNode[] = this.directoryData.diffViewArgs.map(
+            diffViewArg => new PullRequestFilesNode(diffViewArg)
+        );
         return childNodes.concat(directoryNodes);
     }
 }
 
 class PullRequestFilesNode extends AbstractBaseNode {
-
     constructor(private diffViewData: DiffViewArgs) {
         super();
     }
@@ -239,10 +271,13 @@ class PullRequestFilesNode extends AbstractBaseNode {
     async getTreeItem(): Promise<vscode.TreeItem> {
         let itemData = this.diffViewData.fileDisplayData;
         let fileDisplayString = itemData.fileDisplayName;
-        if(configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
+        if (configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled')) {
             fileDisplayString = path.basename(itemData.fileDisplayName);
         }
-        let item = new vscode.TreeItem(`${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`, vscode.TreeItemCollapsibleState.None);
+        let item = new vscode.TreeItem(
+            `${itemData.numberOfComments > 0 ? '💬 ' : ''}${fileDisplayString}`,
+            vscode.TreeItemCollapsibleState.None
+        );
         item.tooltip = itemData.fileDisplayName;
         item.command = {
             command: Commands.ViewDiff,
