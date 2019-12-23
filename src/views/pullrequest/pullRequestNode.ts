@@ -71,6 +71,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
+        item.description = this.pr.data.destination.branchName;
 
         return item;
     }
