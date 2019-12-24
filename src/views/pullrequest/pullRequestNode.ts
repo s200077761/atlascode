@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import {
     BitbucketSite,
@@ -71,7 +72,7 @@ export class PullRequestTitlesNode extends AbstractBaseNode {
         item.iconPath = vscode.Uri.parse(this.pr.data!.author!.avatarUrl);
         item.contextValue = PullRequestContextValue;
         item.resourceUri = vscode.Uri.parse(this.pr.data.url);
-        item.description = this.pr.data.destination.branchName;
+        item.description = `updated ${distanceInWordsToNow(this.pr.data.updatedTs, { addSuffix: true })}`;
 
         return item;
     }
