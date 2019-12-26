@@ -26,6 +26,7 @@ const mergeStrategyLabels = {
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
+    private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
     constructor(private site: DetailedSiteInfo, token: string) {
@@ -300,14 +301,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             if (!data.values) {
                 return [];
             }
-    
+
             const accumulatedTasks = data.values as any[];
             while (data.next) {
                 const nextPage = await this.client.get(data.next);
                 data = nextPage.data;
                 accumulatedTasks.push(...(data.values || []));
             }
-    
+
             return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
         } catch (e) {
             return [];
@@ -330,13 +331,13 @@ export class CloudPullRequestApi implements PullRequestApi {
                     }
                 }
             );
-    
+
             return this.convertDataToTask(data, site);
         } catch (e) {
             const error = new Error(`Error creating new task using interal API: ${e}`);
             Logger.error(error);
             throw error;
-        }  
+        }
     }
 
     async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
@@ -372,7 +373,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         try {
             await this.client.delete(
                 `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
-                {}  
+                {}
             );
         } catch (e) {
             const error = new Error(`Error deleting task using interal API: ${e}`);
@@ -440,10 +441,10 @@ export class CloudPullRequestApi implements PullRequestApi {
         const convertedComments = await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site))));
 
         let commentIdMap = new Map<string, number>();
-        for(let i = 0; i < convertedComments.length; i++){
+        for (let i = 0; i < convertedComments.length; i++) {
             commentIdMap.set(convertedComments[i].id, i);
         }
-        for(const task of tasks){
+        for (const task of tasks) {
             const commentIndex = commentIdMap.get(task.commentId) as number;
             convertedComments[commentIndex].tasks.push(task);
         }
@@ -514,6 +515,13 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         let reviewers: any[] = [];
         if (!query) {
+            const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+            const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+            if (cacheItem !== undefined) {
+                return cacheItem;
+            }
+
             const { data } = await this.client.get(
                 `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
                 {
@@ -521,6 +529,8 @@ export class CloudPullRequestApi implements PullRequestApi {
                 }
             );
             reviewers = data.values || [];
+
+            this.defaultReviewersCache.setItem(cacheKey, reviewers);
         } else {
             const { data } = await this.client.get(
                 `/teams/${ownerSlug}/members?q=nickname="${query}"`
