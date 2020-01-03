@@ -7,7 +7,7 @@ import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atl
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { ApprovalStatus, BitbucketIssue, Comment, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest, Task } from '../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest, Task } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
@@ -158,7 +158,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 case 'createTask': {
                     if(isCreateTask(msg)){
                         try {
-                            this.createTask(this._pr, msg.task, msg.comment);
+                            this.createTask(this._pr, msg.task, msg.commentId);
                         } catch (e) {
                             Logger.error(new Error(`error creating task on the pull request: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -297,8 +297,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             bbApi.pullrequests.getBuildStatuses(this._pr),
             bbApi.pullrequests.getMergeStrategies(this._pr),
             bbApi.pullrequests.getChangedFiles(this._pr),
+            bbApi.pullrequests.getTasks(this._pr)
         ]);
-        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges] = await prDetailsPromises;
+        const [updatedPR, commits, comments, buildStatuses, mergeStrategies, fileChanges, tasks] = await prDetailsPromises;
         const fileDiffs = fileChanges.map(fileChange => this.convertFileChangeToFileDiff(fileChange));
         this._pr = updatedPR;
         const issuesPromises = Promise.all([
@@ -324,6 +325,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             type: 'update',
             commits: commits,
             comments: comments.data,
+            tasks: tasks,
             relatedJiraIssues: relatedJiraIssues,
             relatedBitbucketIssues: relatedBitbucketIssues,
             mainIssue: mainIssue,
@@ -517,9 +519,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.updatePullRequest();
     }
 
-    private async createTask(pr: PullRequest, task: Task, comment: Comment) {
+    private async createTask(pr: PullRequest, task: Task, commentId?: string) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.postTask(pr.site, pr.data.id, comment, task.content);
+        await bbApi.pullrequests.postTask(pr.site, pr.data.id, task.content, commentId);
         this.updatePullRequest();
     }
 

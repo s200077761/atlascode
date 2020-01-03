@@ -177,14 +177,14 @@ export class ServerPullRequestApi implements PullRequestApi {
         return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
     }
 
-    async postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task> {
+    async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         const bbApi = await clientForSite(site);
         const repo = await bbApi.repositories.get(site);
         let { data } = await this.client.post(
             `/rest/api/latest/tasks`,
             {
                 anchor: {
-                    id: comment.id,
+                    id: commentId,
                     type: "COMMENT"
                 },
                 pendingSync: true,

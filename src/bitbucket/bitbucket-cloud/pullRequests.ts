@@ -314,16 +314,15 @@ export class CloudPullRequestApi implements PullRequestApi {
         }
     }
 
-    async postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task> {
+    async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
 
+        const commentData = commentId ? {comment: { id: commentId } }: {}; 
         try {
             const { data } = await this.client.post(
                 `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
                 {
-                    comment: {
-                        id: comment.id
-                    },
+                    ...commentData,
                     completed: false,
                     content: {
                         raw: content
@@ -384,7 +383,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     convertDataToTask(taskData: any, site: BitbucketSite): Task {
         const taskBelongsToUser: boolean = taskData && taskData.creator && taskData.creator.account_id === site.details.userId;
         return {
-            commentId: taskData.comment.id,
+            commentId: taskData.comment ? taskData.comment.id : undefined,
             creator: CloudPullRequestApi.toUserModel(taskData.creator),
             created: taskData.created_on,
             updated: taskData.updated_on,
@@ -444,8 +443,10 @@ export class CloudPullRequestApi implements PullRequestApi {
             commentIdMap.set(convertedComments[i].id, i);
         }
         for(const task of tasks){
-            const commentIndex = commentIdMap.get(task.commentId) as number;
-            convertedComments[commentIndex].tasks.push(task);
+            if(task.commentId) {
+                const commentIndex = commentIdMap.get(task.commentId) as number;
+                convertedComments[commentIndex].tasks.push(task);
+            }
         }
 
         const nestedComments = this.toNestedList(convertedComments);

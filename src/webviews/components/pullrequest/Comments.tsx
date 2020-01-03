@@ -17,7 +17,7 @@ class NestedComment extends React.Component<
         onEdit?: (content: string, commentId: string) => void,
         onTaskDelete?: (task: Task) => void,
         onTaskEdit?: (task: Task) => void,
-        onTaskCreate?: (task: Task, comment: Comment) => void,
+        onTaskCreate?: (task: Task, commentId: string) => void,
         loadUserOptions?: (input: string) => any
     }, 
     { 
@@ -89,7 +89,7 @@ class NestedComment extends React.Component<
     handleTaskCreate = (task: Task) => {
         this.setState({ isCreatingTask: false });
         if(this.props.onTaskCreate) {
-            this.props.onTaskCreate(task, this.props.node);
+            this.props.onTaskCreate(task, this.props.node.id);
         }
     };
 
@@ -183,7 +183,6 @@ class NestedComment extends React.Component<
                 { (this.state.isCreatingTask || !this.state.receivedDataFromServer) &&
                     <TaskComponent
                         task={this.generateDummyTask()}
-                        currentUser={currentUser}
                         onSave={this.handleTaskCreate}
                         cancelCreate={this.handleCancelTaskCreate}
                         isInitialized={false}
@@ -193,7 +192,6 @@ class NestedComment extends React.Component<
                     node.tasks.map(
                         task => <TaskComponent
                                     task={task}
-                                    currentUser={currentUser}
                                     onEdit={this.props.onTaskEdit}
                                     onDelete={this.props.onTaskDelete}
                                     isInitialized={true}
@@ -231,7 +229,7 @@ export default class Comments extends React.Component<
         onEdit?: (content: string, commentId: string) => void
         onTaskDelete?: (task: Task) => void
         onTaskEdit?: (task: Task) => void
-        onTaskCreate?: (task: Task, comment: Comment) => void
+        onTaskCreate?: (task: Task, commentId: string) => void
         loadUserOptions?: (input: string) => any
     }, 
     {}> {

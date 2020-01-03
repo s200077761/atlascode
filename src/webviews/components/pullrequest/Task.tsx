@@ -1,13 +1,12 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import Comment, { CommentAction } from '@atlaskit/comment';
 import React from "react";
-import { Task, User } from "../../../bitbucket/model";
+import { Task } from "../../../bitbucket/model";
 
 
 export class TaskComponent extends React.Component<
     { 
         task: Task, //When creating a new task, should be initialized to some dummy data
-        currentUser: User, 
         onDelete?: (task: Task) => void,
         onEdit?: (task: Task) => void, //onEdit gets called when 'save' is pressed for an initialized task
         onSave?: (task: Task) => void, //onSave gets called when 'save' is pressed for an uninitialized task
