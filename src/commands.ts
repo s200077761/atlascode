@@ -114,7 +114,7 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         }),
         commands.registerCommand(Commands.CloneRepository, () => {
             cloneRepositoryButtonEvent('pullRequestsTreeView').then(event => Container.analyticsClient.sendUIEvent(event));
-            commands.executeCommand('workbench.action.openWorkspace');
+            commands.executeCommand('git.clone');
         })
     );
 }
