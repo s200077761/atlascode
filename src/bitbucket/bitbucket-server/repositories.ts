@@ -74,6 +74,19 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         return branchingModel?.development?.branch?.name;
     }
 
+    async getBranches(site: BitbucketSite): Promise<string[]> {
+        const { ownerSlug, repoSlug } = site;
+
+        const { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`,
+            {
+                limit: 100
+            }
+        );
+
+        return data.values.map((val: any) => val.displayId);
+    }
+
     async getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel> {
         const { ownerSlug, repoSlug } = site;
 
@@ -178,6 +191,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
             name: bbRepo.slug,
             displayName: bbRepo.name,
             fullName: `${bbRepo.project.key}/${bbRepo.slug}`,
+            parentFullName: bbRepo.origin ? `${bbRepo.origin.project.key}/${bbRepo.origin.slug}` : undefined,
             url: url,
             avatarUrl: ServerRepositoriesApi.patchAvatarUrl(site.details.baseLinkUrl, bbRepo.avatarUrl),
             mainbranch: defaultBranch,
