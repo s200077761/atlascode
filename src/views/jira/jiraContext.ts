@@ -6,7 +6,7 @@ import { configuration } from "../../config/configuration";
 import { CommandContext, CustomJQLTreeId, setCommandContext } from "../../constants";
 import { Container } from "../../container";
 import { NewIssueMonitor } from "../../jira/newIssueMonitor";
-import { SitesAvailableUpdateEvent } from "../../siteManager";
+import { SitesAddedUpdateEvent, SitesAvailableUpdateEvent } from "../../siteManager";
 import { RefreshTimer } from "../RefreshTimer";
 import { CustomJQLRoot } from "./customJqlRoot";
 import { JiraExplorer } from "./jiraExplorer";
@@ -27,6 +27,7 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor = new NewIssueMonitor();
         this._disposable = Disposable.from(
             Container.siteManager.onDidSitesAvailableChange(this.onSitesDidChange, this),
+            Container.siteManager.onSitesWereAdded(this.onSitesAdded, this),
             this._refreshTimer
         );
 
@@ -70,7 +71,6 @@ export class JiraContext extends Disposable {
             this._explorer.dispose();
             this._explorer = undefined;
         }
-
     }
 
     async refresh() {
@@ -87,12 +87,15 @@ export class JiraContext extends Disposable {
         this._newIssueMonitor.checkForNewIssues();
     }
 
+    async onSitesAdded(e: SitesAddedUpdateEvent) {
+        if (e.product.key === ProductJira.key) {
+            Container.jqlManager.initializeJQL(e.sites);
+        }
+
+    }
+
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
-            if (e.sites.length === 1 && Container.config.jira.jqlList.length < 1) {
-                Container.jqlManager.initializeJQL(e.sites[0]);
-            }
-
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();

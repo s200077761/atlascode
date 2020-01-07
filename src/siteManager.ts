@@ -9,6 +9,11 @@ export type SitesAvailableUpdateEvent = {
     product: Product;
 };
 
+export type SitesAddedUpdateEvent = {
+    sites: DetailedSiteInfo[];
+    product: Product;
+};
+
 const SitesSuffix: string = 'Sites';
 
 export class SiteManager extends Disposable {
@@ -19,6 +24,10 @@ export class SiteManager extends Disposable {
     private _onDidSitesAvailableChange = new EventEmitter<SitesAvailableUpdateEvent>();
     public get onDidSitesAvailableChange(): Event<SitesAvailableUpdateEvent> {
         return this._onDidSitesAvailableChange.event;
+    }
+    private _onSitesWereAdded = new EventEmitter<SitesAddedUpdateEvent>();
+    public get onSitesWereAdded(): Event<SitesAddedUpdateEvent> {
+        return this._onSitesWereAdded.event;
     }
 
     constructor(globalStore: Memento) {
@@ -60,6 +69,7 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(productKey, allSites);
 
         if (notify) {
+            this._onSitesWereAdded.fire({ sites: newSites, product: newSites[0].product });
             this._onDidSitesAvailableChange.fire({ sites: allSites, product: allSites[0].product });
         }
     }
