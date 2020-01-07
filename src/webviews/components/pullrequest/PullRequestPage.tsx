@@ -439,7 +439,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
-                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/${pr.siteDetails.isCloud ? 'admin' : 'settings'}/merge-strategies`} /></label>
                                     <Select
                                         options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"
