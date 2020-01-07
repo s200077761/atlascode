@@ -1,3 +1,4 @@
+import pAny from 'p-any';
 import pathlib from 'path';
 import vscode from 'vscode';
 import { BitbucketContext } from '../bitbucket/bbContext';
@@ -29,16 +30,19 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
             return '';
         }
 
-        const absolutePath = pathlib.join(scm.rootUri.path, path);
+        const absolutePath = pathlib.join(scm.rootUri.fsPath, path);
 
         try {
-            content = await scm.show(commitHash, absolutePath);
-        } catch (err) {
-            try {
-                await scm.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
-                content = await scm.show(commitHash, absolutePath);
-            } catch (err) {
-                try {
+            content = await pAny([
+                (async () => {
+                    try {
+                        return await scm.show(commitHash, absolutePath);
+                    } catch (err) {
+                        await scm.fetch(wsRepo.mainSiteRemote.remote.name, branchName);
+                        return await scm.show(commitHash, absolutePath);
+                    }
+                })(),
+                (async () => {
                     const parsedRepo = parseGitUrl(urlForRemote(wsRepo.mainSiteRemote.remote));
                     const parsedSourceRepo = parseGitUrl(repoHref).toString(parsedRepo.protocol);
                     const site = bitbucketSiteForRemote({ name: 'DUMMY', fetchUrl: parsedSourceRepo, isReadOnly: true });
@@ -47,12 +51,11 @@ export class GitContentProvider implements vscode.TextDocumentContentProvider {
                         const fileContent = await bbApi.pullrequests.getFileContent(site, commitHash, path);
                         return fileContent;
                     }
-                } catch (err) {
-                    // ignore error
-                }
-
-                vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
-            }
+                    throw new Error('error fetching file content using REST API');
+                })()
+            ]);
+        } catch (err) {
+            vscode.window.showErrorMessage(`We couldn't find commit ${commitHash} locally. You may want to sync the branch with remote. Sometimes commits can disappear after a force-push`);
         }
 
         return content || '';
