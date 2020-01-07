@@ -74,7 +74,7 @@ export class ServerRepositoriesApi implements RepositoriesApi {
         const { data } = await this.client.get(
             `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/branches`,
             {
-                limit: 50
+                limit: 100
             }
         );
 

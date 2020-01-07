@@ -60,7 +60,8 @@ export class CloudRepositoriesApi implements RepositoriesApi {
         const { data } = await this.client.get(
             `/repositories/${ownerSlug}/${repoSlug}/refs/branches`,
             {
-                pagelen: 50
+                pagelen: 100,
+                fields: 'values.name'
             }
         );
 
