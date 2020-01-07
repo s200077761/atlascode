@@ -1,7 +1,5 @@
 import { AxiosResponse } from "axios";
-import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
 import { Logger } from "../../logger";
 import { CacheMap } from "../../util/cachemap";
@@ -317,7 +315,6 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
-
         const commentData = commentId ? {comment: { id: commentId } }: {}; 
         try {
             const { data } = await this.client.post(
@@ -631,9 +628,6 @@ export class CloudPullRequestApi implements PullRequestApi {
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
-
-        prCommentEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
         const { data } = await this.client.post(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments`,
             {

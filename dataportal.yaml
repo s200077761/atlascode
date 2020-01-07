@@ -239,6 +239,15 @@ track:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - action: created
+    subject: pullRequestTask
+    library: server
+    description: |
+      when a task is created for a PR
+    attributes:
+      - name: instanceType
+      - name: hostProduct
+      - name: source
   - id: 15636
     action: checkedOut
     subject: pullRequestBranch
