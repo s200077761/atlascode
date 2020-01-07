@@ -14,21 +14,25 @@ export class BitbucketMentionsCompletionProvider implements CompletionItemProvid
         if (!activePullRequestUri) {
             return;
         }
+        const wordRange = doc.getWordRangeAtPosition(pos, /@\S*/);
+        if (!wordRange || wordRange.isEmpty) {
+            return;
+        }
+        const triggerWord = doc.getText(wordRange);
 
         const { site, participants } = JSON.parse(activePullRequestUri.query) as PRFileDiffQueryParams;
         const bbApi = await clientForSite(site);
-        const triggerWord = doc.getText(doc.getWordRangeAtPosition(pos));
-        const users = await bbApi.pullrequests.getReviewers(site, triggerWord);
-        if (users.length === 0) {
-            users.push(...participants);
-        }
+        const users = await bbApi.pullrequests.getReviewers(site, triggerWord.slice(1));
+
+        users.push(...participants.filter(participant =>
+            !users.some(user => user.accountId === participant.accountId)));
 
         return users.map(user => {
             const item = new CompletionItem(user.displayName, CompletionItemKind.Constant);
             item.detail = user.mention;
             // Remove `@` as it is included in user input already
             item.insertText = user.mention.slice(1);
-            item.filterText = triggerWord;
+            item.filterText = `${triggerWord.slice(1)} ${user.displayName}`;
             return item;
         });
     }
