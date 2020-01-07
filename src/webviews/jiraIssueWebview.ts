@@ -378,7 +378,13 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
                         handled = true;
                         try {
                             let client = await Container.clientManager.jiraClient(msg.site);
-                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData);
+                            let queryParams: any = { adjustEstimate: msg.worklogData.adjustEstimate };
+                            delete msg.worklogData.adjustEstimate;
+                            if (queryParams.adjustEstimate === 'new') {
+                                queryParams = { ...queryParams, newEstimate: msg.worklogData.newEstimate };
+                                delete msg.worklogData.newEstimate;
+                            }
+                            const resp = await client.addWorklog(msg.issueKey, msg.worklogData, queryParams);
 
                             if (!this._editUIData.fieldValues['worklog']
                                 || !this._editUIData.fieldValues['worklog'].worklogs
