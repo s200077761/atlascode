@@ -7,9 +7,9 @@ import { TaskComponent } from '../pullrequest/Task';
 export default class TaskList extends React.Component <
     { 
         tasks: Task[],
-        onDelete?: (task: Task) => void,
-        onEdit?: (task: Task) => void, //onEdit gets called when 'save' is pressed for an initialized task
-        onSave?: (task: Task) => void, //onSave gets called when 'save' is pressed for an uninitialized task
+        onDelete: (task: Task) => void,
+        onEdit: (task: Task) => void, //onEdit gets called when 'save' is pressed for an initialized task
+        onSave: (task: Task) => void, //onSave gets called when 'save' is pressed for an uninitialized task
         isCloud: boolean
     }, 
     {
@@ -57,7 +57,7 @@ export default class TaskList extends React.Component <
                     task={emptyTask}
                     onDelete={this.props.onDelete}
                     onEdit={this.props.onEdit}
-                    onSave={this.props.onSave}
+                    onSave={this.handleSaveClicked}
                     cancelCreate={this.handleCancelClick}
                     isInitialized={false}
                 />
@@ -67,7 +67,7 @@ export default class TaskList extends React.Component <
         return <React.Fragment>
             {taskList}
             {!this.state.creatingTaskMode && this.props.isCloud && 
-                <Button className='ac-button' onClick={this.handleNewTaskClick}>
+                <Button style={{marginTop: '25px', marginBottom: '10px'}} className='ac-button' onClick={this.handleNewTaskClick}>
                     Create New Task
                 </Button>
             }

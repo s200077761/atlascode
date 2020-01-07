@@ -568,7 +568,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
                                             <Commits commits={this.state.pr.commits || []} />
                                         </Panel>
-                                        {this.state.pr.tasks && 
+                                        {this.state.pr.tasks && this.state.pr.tasks.length > 0 &&
                                             <Panel header={<h3>{this.getNumberOfTasksComplete()} of {this.state.pr.tasks.length} Tasks Complete</h3>}>
                                                 <TaskList
                                                     tasks={this.state.pr.tasks ? this.state.pr.tasks : []}

@@ -383,7 +383,7 @@ export class CloudPullRequestApi implements PullRequestApi {
     convertDataToTask(taskData: any, site: BitbucketSite): Task {
         const taskBelongsToUser: boolean = taskData && taskData.creator && taskData.creator.account_id === site.details.userId;
         return {
-            commentId: taskData.comment ? taskData.comment.id : undefined,
+            commentId: taskData.comment?.id,
             creator: CloudPullRequestApi.toUserModel(taskData.creator),
             created: taskData.created_on,
             updated: taskData.updated_on,
