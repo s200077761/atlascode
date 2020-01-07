@@ -1,7 +1,7 @@
-import { TrackEvent, ScreenEvent, UIEvent } from './analytics-node-client/src/index';
+import { ScreenEvent, TrackEvent, UIEvent } from './analytics-node-client/src/index';
+import { DetailedSiteInfo, isEmptySiteInfo, Product, ProductJira } from './atlclients/authInfo';
+import { BitbucketIssuesTreeViewId, PullRequestTreeViewId } from './constants';
 import { Container } from './container';
-import { DetailedSiteInfo, ProductJira, isEmptySiteInfo, Product } from './atlclients/authInfo';
-import { PullRequestTreeViewId, BitbucketIssuesTreeViewId } from './constants';
 
 // IMPORTANT
 // Make sure there is a corresponding event with the correct attributes in the Data Portal for any event created here.
@@ -285,6 +285,70 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
             action: 'clicked',
             actionSubject: 'button',
             actionSubjectId: 'logoutButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'openSettingsButton',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function openWorkbenchRepositoryButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'openWorkbenchRepository',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function openWorkbenchWorkspaceButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'openWorkbenchWorkspace',
+            source: source
+        }
+    };
+
+    return anyUserOrAnonymous<UIEvent>(e);
+}
+
+export async function cloneRepositoryButtonEvent(source: string): Promise<UIEvent> {
+    const e = {
+        tenantIdType: null,
+        uiEvent: {
+            origin: 'desktop',
+            platform: AnalyticsPlatform.for(process.platform),
+            action: 'clicked',
+            actionSubject: 'button',
+            actionSubjectId: 'cloneRepository',
             source: source
         }
     };

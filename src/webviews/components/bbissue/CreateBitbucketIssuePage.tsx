@@ -27,7 +27,7 @@ interface MyState extends CreateBitbucketIssueData {
     isOnline: boolean;
 }
 
-const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], href: '', isCloud: true };
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, localBranches: [], remoteBranches: [], branchTypes: [], href: '', isCloud: true };
 
 const emptyState: MyState = {
     type: 'createBitbucketIssueData',

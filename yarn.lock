@@ -483,6 +483,11 @@
   dependencies:
     babel-runtime "^6.11.6"
 
+"@atlassianlabs/jira-metaui-transformer@^0.0.3":
+  version "0.0.3"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlassianlabs/jira-metaui-transformer/-/jira-metaui-transformer-0.0.3.tgz#a09d89fde85bf0d401f7dbc7163afd445c4969fe"
+  integrity sha1-oJ2J/ehb8NQB99vHFjr9RFxJaf4=
+
 "@babel/code-frame@7.5.5", "@babel/code-frame@^7.0.0":
   version "7.5.5"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@babel/code-frame/-/code-frame-7.5.5.tgz#bc0782f6d69f7b7d49531219699b988f669a8f9d"
@@ -5367,24 +5372,19 @@ jest-worker@^24.9.0:
     merge-stream "^2.0.0"
     supports-color "^6.1.0"
 
-jira-metaui-transformer@^0.0.1:
-  version "0.0.1"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.1.tgz#0e8729bcbe7e9c5074e9c95de47811ed2c83c74d"
-  integrity sha1-DocpvL5+nFB06cld5HgR7SyDx00=
-
 jira-metaui-transformer@^0.0.7:
   version "0.0.7"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-metaui-transformer/-/jira-metaui-transformer-0.0.7.tgz#966afa69c25bf296e181e822760f63844066011c"
   integrity sha1-lmr6acJb8pbhgegidg9jhEBmARw=
 
-jira-pi-client@^0.0.13:
-  version "0.0.13"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-pi-client/-/jira-pi-client-0.0.13.tgz#608b3bbc781b31da70836ddf2805a64eeff214bc"
-  integrity sha1-YIs7vHgbMdpwg23fKAWmTu/yFLw=
+jira-pi-client@^0.0.18:
+  version "0.0.18"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/jira-pi-client/-/jira-pi-client-0.0.18.tgz#3cb0fc177a833bee5c3a8a7bacb85f9df69faafc"
+  integrity sha1-PLD8F3qDO+5cOop7rLhfnfafqvw=
   dependencies:
+    "@atlassianlabs/jira-metaui-transformer" "^0.0.3"
     axios "^0.19.0"
     form-data "^2.5.1"
-    jira-metaui-transformer "^0.0.1"
 
 join-component@^1.1.0:
   version "1.1.0"

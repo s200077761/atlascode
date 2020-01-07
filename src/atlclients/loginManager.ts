@@ -176,7 +176,8 @@ export class LoginManager {
         const json = res.data;
 
         const userId = site.product.key === ProductJira.key ? json.name : json.slug;
-        const credentialId = CredentialManager.generateCredentialId(site.hostname, credentials.username);
+        const baseLinkUrl = `${site.hostname}${contextPath}`;
+        const credentialId = CredentialManager.generateCredentialId(baseLinkUrl, credentials.username);
 
         const siteDetails = {
             product: site.product,
@@ -184,7 +185,8 @@ export class LoginManager {
             avatarUrl: avatarUrl,
             hostname: site.hostname,
             baseApiUrl: apiUrl,
-            baseLinkUrl: `${protocol}//${site.hostname}${contextPath}`,
+            baseLinkUrl: `${protocol}//${baseLinkUrl}`,
+            contextPath: contextPath,
             id: site.hostname,
             name: site.hostname,
             userId: userId,

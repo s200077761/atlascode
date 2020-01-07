@@ -52,7 +52,6 @@ export interface JiraConfig {
     customJql: SiteJQLV1[];
     jqlList: JQLEntry[];
     todoIssues: TodoIssues;
-    nestSubtasks: boolean;
 }
 
 export type SiteIdAndProjectKey = {
@@ -79,6 +78,7 @@ export interface JiraExplorer {
     assignedIssueJql: string;
     refreshInterval: number;
     nestSubtasks: boolean;
+    fetchAllQueryResults: boolean;
 }
 
 export interface JiraHover {
@@ -139,6 +139,7 @@ export interface BitbucketIssuesConfig {
 
 export interface BitbucketExplorer {
     enabled: boolean;
+    nestFiles: boolean;
     refreshInterval: number;
     relatedJiraIssues: BitbucketRelatedJiraIssues;
     relatedBitbucketIssues: BitbucketRelatedBitbucketIssues;
@@ -193,7 +194,8 @@ export const emptyJiraExplorer: JiraExplorer = {
     showAssignedIssues: true,
     assignedIssueJql: "",
     refreshInterval: 5,
-    nestSubtasks: true
+    nestSubtasks: true,
+    fetchAllQueryResults: false
 };
 
 export const emtpyIssueMonitor: JiraIssueMonitor = {
@@ -237,7 +239,6 @@ export const emptyJiraConfig: JiraConfig = {
     customJql: [],
     jqlList: [],
     todoIssues: emptyTodoIssues,
-    nestSubtasks: true
 };
 
 export const emptyRelatedJiraIssues: BitbucketRelatedJiraIssues = {
@@ -255,6 +256,7 @@ export const emptyBitbucketNotfications: BitbucketNotifications = {
 
 export const emptyBitbucketExplorer: BitbucketExplorer = {
     enabled: true,
+    nestFiles: true,
     refreshInterval: 5,
     relatedJiraIssues: emptyRelatedJiraIssues,
     relatedBitbucketIssues: emptyRelatedBitbucketIssues,

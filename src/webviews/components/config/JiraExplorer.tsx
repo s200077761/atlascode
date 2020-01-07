@@ -101,6 +101,23 @@ export default class JiraExplorer extends React.Component<{
                         }
                     }
                 </CheckboxField>
+                <CheckboxField
+                    name='issue-explorer-fetchAllQueryResults'
+                    id='issue-explorer-fetchAllQueryResults'
+                    value='jira.explorer.fetchAllQueryResults'>
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <Checkbox {...fieldArgs.fieldProps}
+                                    label='Fetch all JQL query results (default is 100, enabling this could cause performance issues)'
+                                    isIndeterminate={this.getIsExplorerIndeterminate()}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.config.jira.explorer.fetchAllQueryResults}
+                                />
+                            );
+                        }
+                    }
+                </CheckboxField>
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',

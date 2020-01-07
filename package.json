@@ -169,6 +169,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.toggleFileNesting",
+                "title": "Toggle File Nesting",
+                "icon": {
+                    "dark": "resources/dark/fileTree.svg",
+                    "light": "resources/light/fileTree.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.showPullRequestSettings",
                 "title": "Settings",
                 "icon": {
@@ -391,6 +400,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
                     "command": "atlascode.bb.createPullRequest",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -538,6 +552,10 @@
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
                     "when": "false"
                 },
                 {
@@ -745,6 +763,12 @@
                     "description": "Nest subtasks within tasks within epics",
                     "scope": "window"
                 },
+                "atlascode.jira.explorer.fetchAllQueryResults": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Fetch all results for JQL queries",
+                    "scope": "window"
+                },
                 "atlascode.jira.statusbar.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -949,6 +973,12 @@
                     "description": "Enables the Bitbucket Pull Request Explorer",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.nestFilesEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables nesting of the PR files by folder",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.pipelines.explorerEnabled": {
                     "type": "boolean",
                     "default": true,
@@ -1145,7 +1175,7 @@
         "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
         "jira-metaui-transformer": "^0.0.7",
-        "jira-pi-client": "^0.0.13",
+        "jira-pi-client": "^0.0.18",
         "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",

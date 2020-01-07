@@ -8,7 +8,7 @@ import { Commands } from '../../commands';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PRFileDiffQueryParams } from './pullRequestNode';
 
-const turndownService = new TurndownService();
+const turndownService = new TurndownService();  
 
 turndownService.addRule('mention', {
     filter: function (node) {
@@ -18,14 +18,19 @@ turndownService.addRule('mention', {
         return `${options.emDelimiter}${content}${options.emDelimiter}`;
     }
 });
-turndownService.addRule('codeblock', {
+turndownService.addRule('highlightedCodeBlock', {
     filter: function (node) {
-        return node.classList.contains('codehilite');
+        return node.nodeName === 'DIV' && 
+        node.classList.contains('codehilite') && 
+        !!node.firstChild &&
+        node.firstChild.nodeName === 'PRE';
     },
-    replacement: function (content, _, options) {
-        return `${options.fence}${content}${options.fence}`;
+    replacement: function (_, node: any, options) {
+      const className = node.className || '';
+      const language = (className.match(/language-(\S+)/) || [null, ''])[1];
+      return `${options.fence}${language}\n${node.firstChild.textContent}\n\n${options.fence}\n\n`;
     }
-});
+  });
 
 interface PullRequestComment extends vscode.Comment {
     site: BitbucketSite;

@@ -46,11 +46,11 @@ import DiffList from './DiffList';
 import MergeChecks from './MergeChecks';
 import Reviewers from './Reviewers';
 
-type Emit = CreateTask | 
-    EditTask | DeleteTask | UpdateTitle | 
-    UpdateApproval | Merge | Checkout | 
-    PostComment | DeleteComment | EditComment | 
-    CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | 
+type Emit = CreateTask |
+    EditTask | DeleteTask | UpdateTitle |
+    UpdateApproval | Merge | Checkout |
+    PostComment | DeleteComment | EditComment |
+    CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction |
     OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
@@ -424,7 +424,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 <Reviewers {...this.state.pr} />
                 {!pr.siteDetails.isCloud &&
                     <Tooltip content={currentUserApprovalStatus === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}>
-                        <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? undefined : 'ac-button'}
+                        <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? 'ac-button-warning' : 'ac-button'}
                             appearance={currentUserApprovalStatus === 'NEEDS_WORK' ? 'warning' : 'default'}
                             isLoading={this.state.isApproveButtonLoading}
                             onClick={() => this.handleApprove(currentUserApprovalStatus === 'NEEDS_WORK' ? 'UNAPPROVED' : 'NEEDS_WORK')}>
@@ -444,7 +444,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
-                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/${pr.siteDetails.isCloud ? 'admin' : 'settings'}/merge-strategies`} /></label>
                                     <Select
                                         options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"

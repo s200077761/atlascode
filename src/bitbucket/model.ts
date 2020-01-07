@@ -55,6 +55,7 @@ export type Repo = {
     name: string;
     displayName: string;
     fullName: string;
+    parentFullName?: string;
     url: string;
     avatarUrl: string;
     mainbranch?: string;
@@ -164,7 +165,7 @@ export type FileChange = {
         // maps destination file line number to source file line number to support Bitbucket server comments
         // NOT using Map here as Map does not serialize to JSON
         newPathContextMap: Object;
-    }
+    };
 };
 
 export enum FileStatus {
@@ -193,6 +194,7 @@ export type CreatePullRequestData = {
     title: string;
     summary: string;
     sourceBranchName: string;
+    sourceSite: BitbucketSite;
     destinationBranchName: string;
     closeSourceBranch: boolean;
 };
@@ -307,6 +309,7 @@ export interface RepositoriesApi {
     getMirrorHosts(): Promise<string[]>;
     get(site: BitbucketSite): Promise<Repo>;
     getDevelopmentBranch(site: BitbucketSite): Promise<string>;
+    getBranches(site: BitbucketSite): Promise<string[]>;
     getBranchingModel(site: BitbucketSite): Promise<BitbucketBranchingModel>;
     getCommitsForRefs(site: BitbucketSite, includeRef: string, excludeRef: string): Promise<Commit[]>;
     getPullRequestIdsForCommit(site: BitbucketSite, commitHash: string): Promise<string[]>;

@@ -551,6 +551,10 @@ section button span {
   background: var(--vscode-button-background--50) !important
 }
 
+.ac-button-warning span {
+  color: black !important;
+}
+
 /*-------------------- END - buttons --------------------*/
 
 /*-------------------- BEGIN - links --------------------*/
