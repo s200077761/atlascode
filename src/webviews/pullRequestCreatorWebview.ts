@@ -122,7 +122,7 @@ export class PullRequestCreatorWebview extends AbstractReactWebview {
                 const bbSites = Container.siteManager.getSitesAvailable(ProductBitbucket);
                 const reason = bbSites.length === 0
                     ? 'Authenticate with Bitbucket and try again'
-                    : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites.map(site => site.hostname).join(', ')}`;
+                    : `No Bitbucket repositories found in the current workspace in VS Code corresponding to the authenticated Bitbucket instances: ${bbSites.map(site => site.host).join(', ')}`;
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket repos') });
             }
         } catch (e) {
