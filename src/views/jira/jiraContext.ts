@@ -89,7 +89,7 @@ export class JiraContext extends Disposable {
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
             if (e.newSites) {
-                Container.jqlManager.initializeJQL(e.sites);
+                Container.jqlManager.initializeJQL(e.newSites);
             }
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
