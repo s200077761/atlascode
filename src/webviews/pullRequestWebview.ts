@@ -2,7 +2,7 @@ import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
 import { PRData } from "src/ipc/prMessaging";
 import * as vscode from 'vscode';
-import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
+import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
@@ -511,6 +511,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async postComment(pr: PullRequest, text: string, parentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
+        prCommentEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         this.updatePullRequest();
     }
 
@@ -529,6 +530,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async createTask(pr: PullRequest, task: Task, commentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postTask(pr.site, pr.data.id, task.content, commentId);
+        if(commentId) {
+            prTaskEvent(pr.site.details, "comment").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+        } else {
+            prTaskEvent(pr.site.details, "prlevel").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         this.updatePullRequest();
     }
 

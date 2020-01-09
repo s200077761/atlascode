@@ -1,3 +1,4 @@
+import { prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from "uuid";
 import vscode, { CommentThread, MarkdownString } from 'vscode';
@@ -5,6 +6,7 @@ import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsC
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
 import { Commands } from '../../commands';
+import { Container } from '../../container';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PRFileDiffQueryParams } from './pullRequestNode';
 
@@ -212,6 +214,8 @@ export class PullRequestCommentController implements vscode.Disposable {
             taskData.task.commentId
         );
 
+        prTaskEvent(taskData.site.details, "comment").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+
         return comments.map((comment: PullRequestComment) => {
             if(comment.id === newTask.commentId){
                 return {
@@ -255,6 +259,7 @@ export class PullRequestCommentController implements vscode.Disposable {
 
         const bbApi = await clientForSite(site);
         const data = await bbApi.pullrequests.postComment(site, prId, reply.text, commentThreadId, inline, lineType);
+        prCommentEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
 
         const comments = [
             ...reply.thread.comments,
