@@ -80,8 +80,10 @@ export class JQLManager extends Disposable {
             const allList = Container.config.jira.jqlList;
 
             for (const site of sites) {
-                const newEntry = await this.defaultJQLForSite(site);
-                allList.push(newEntry);
+                if (!allList.some(j => j.siteId === site.id)) { // only initialize if there are no jql entries for this site
+                    const newEntry = await this.defaultJQLForSite(site);
+                    allList.push(newEntry);
+                }
             }
 
             await configuration.update('jira.jqlList', allList, ConfigurationTarget.Global);
