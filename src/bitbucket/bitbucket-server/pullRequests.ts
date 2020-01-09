@@ -10,6 +10,7 @@ import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
     private client: Client;
+    private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
     constructor(site: DetailedSiteInfo, username: string, password: string) {
@@ -210,7 +211,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return this.convertDataToTask(data, site);
     }
-    
+
     async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
         await this.client.delete(
             `/rest/api/1.0/tasks/${task.id}`,
@@ -476,10 +477,10 @@ export class ServerPullRequestApi implements PullRequestApi {
                 .filter(comment => this.shouldDisplayComment(comment))
                 .sort((a, b) => {
                     //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
-                    if(a.ts > b.ts) {
+                    if (a.ts > b.ts) {
                         return 1;
                     }
-                    if (a.ts <  b.ts) {
+                    if (a.ts < b.ts) {
                         return -1;
                     }
                     return 0;
@@ -513,8 +514,8 @@ export class ServerPullRequestApi implements PullRequestApi {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
         let tasksInComment: Task[] = [];
         let tasksNotInComment: Task[] = [];
-        for(const task of tasks){
-            if(task.commentId === commentModel.id){
+        for (const task of tasks) {
+            if (task.commentId === commentModel.id) {
                 tasksInComment.push(task);
             } else {
                 tasksNotInComment.push(task);
@@ -564,6 +565,13 @@ export class ServerPullRequestApi implements PullRequestApi {
         let users: any[] = [];
 
         if (!query) {
+            const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+            const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+            if (cacheItem !== undefined) {
+                return cacheItem;
+            }
+
             const bbApi = await clientForSite(site);
             const repo = await bbApi.repositories.get(site);
 
@@ -580,6 +588,8 @@ export class ServerPullRequestApi implements PullRequestApi {
             );
 
             users = Array.isArray(data) ? data : [];
+
+            this.defaultReviewersCache.setItem(cacheKey, users);
         } else {
             const { data } = await this.client.get(
                 `/rest/api/1.0/users`,
