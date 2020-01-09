@@ -63,7 +63,7 @@ export type Repo = {
 };
 
 export type Task = {
-    commentId: string;
+    commentId?: string;
     creator: User;
     created: string;
     updated: string;
@@ -293,7 +293,7 @@ export interface PullRequestApi {
     getBuildStatuses(pr: PullRequest): Promise<BuildStatus[]>;
     getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]>;
     getTasks(pr: PullRequest): Promise<Task[]>;
-    postTask(site: BitbucketSite, prId: string, comment: Comment, content: string): Promise<Task>;
+    postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task>;
     editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task>;
     deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void>;
     getReviewers(site: BitbucketSite, query?: string): Promise<User[]>;

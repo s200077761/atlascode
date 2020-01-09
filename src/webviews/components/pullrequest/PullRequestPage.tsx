@@ -19,7 +19,7 @@ import React from 'react';
 import EdiText from 'react-editext';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { ApprovalStatus, BitbucketIssue, Comment, FileDiff, MergeStrategy, Task } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy, Task } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
@@ -35,6 +35,7 @@ import NavItem from '../issue/NavItem';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import Offline from '../Offline';
 import PMFBBanner from '../pmfBanner';
+import TaskList from '../pullrequest/TaskList';
 import { WebviewComponent } from '../WebviewComponent';
 import BranchInfo from './BranchInfo';
 import BuildStatus from './BuildStatus';
@@ -175,11 +176,11 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleTaskCreate = (task: Task, comment: Comment) => {
+    handleTaskCreate = (task: Task, commentId?: string) => {
         this.postMessage({
             action: "createTask",
             task: task,
-            comment: comment
+            commentId: commentId
         });
     };
 
@@ -217,6 +218,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }, 100);
 
         });
+    };
+
+    getNumberOfTasksComplete = () => {
+        return this.state.pr.tasks!.filter(task => task.isComplete).length;
     };
 
     onMessageReceived(e: any): boolean {
@@ -563,6 +568,17 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
                                             <Commits commits={this.state.pr.commits || []} />
                                         </Panel>
+                                        {this.state.pr.tasks && this.state.pr.tasks.length > 0 &&
+                                            <Panel header={<h3>{this.getNumberOfTasksComplete()} of {this.state.pr.tasks.length} Tasks Complete</h3>}>
+                                                <TaskList
+                                                    tasks={this.state.pr.tasks ? this.state.pr.tasks : []}
+                                                    onDelete={this.handleTaskDelete}
+                                                    onEdit={this.handleTaskEdit}
+                                                    onSave={this.handleTaskCreate}
+                                                    isCloud={pr.siteDetails.isCloud}
+                                                />
+                                            </Panel>
+                                        }
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
                                             <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={this.handleOpenDiffView} ></DiffList>
                                         </Panel>

@@ -1,6 +1,6 @@
 import { MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequest, Reviewer, User, WorkspaceRepo } from "../bitbucket/model";
+import { BitbucketBranchingModel, BitbucketIssue, BuildStatus, Comment, Commit, FileDiff, MergeStrategy, PullRequest, Reviewer, Task, User, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";
 import { Message } from "./messaging";
 
@@ -13,6 +13,7 @@ export interface PRData extends Message {
     currentBranch: string;
     commits?: Commit[];
     comments?: Comment[];
+    tasks?: Task[];
     relatedJiraIssues?: MinimalIssue<DetailedSiteInfo>[];
     relatedBitbucketIssues?: BitbucketIssue[];
     mainIssue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
