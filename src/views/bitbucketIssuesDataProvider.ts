@@ -6,9 +6,12 @@ import { PaginatedBitbucketIssues } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { BitbucketIssuesRepositoryNode } from './bbissues/bbIssueNode';
+import { CreateBitbucketIssueNode } from './bbissues/headerNode';
 import { BaseTreeDataProvider } from './Explorer';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
+
+const createBitbucketIssueNode = new CreateBitbucketIssueNode();
 
 export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -76,7 +79,7 @@ export class BitbucketIssuesDataProvider extends BaseTreeDataProvider {
             this.updateChildren();
         }
 
-        return Array.from(this._childrenMap!.values());
+        return [createBitbucketIssueNode, ...Array.from(this._childrenMap!.values())];
     }
 
     dispose() {

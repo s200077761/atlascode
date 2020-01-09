@@ -81,7 +81,7 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
             } else {
                 const reason = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org') === undefined
                     ? 'Authenticate with Bitbucket Cloud and try again'
-                    : 'No Bitbucket Cloud repositories found in the current workspace in VS Code';
+                    : 'No Bitbucket Cloud repositories with issue tracker enabled found in the current workspace in VS Code';
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket Cloud repos') });
             }
         } catch (e) {
