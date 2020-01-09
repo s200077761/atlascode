@@ -3,7 +3,7 @@ import { v4 } from "uuid";
 import vscode, { CommentThread, MarkdownString } from 'vscode';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
-import { BitbucketSite, Comment, emptyComment, emptyTask, Task } from '../../bitbucket/model';
+import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
 import { PRFileDiffQueryParams } from './pullRequestNode';
@@ -244,8 +244,9 @@ export class PullRequestCommentController implements vscode.Disposable {
         const newTask = await bbApi.pullrequests.postTask(
             taskData.site, 
             taskData.prId, 
-            {...emptyComment, id: taskData.task.commentId, user: taskData.task.creator }, 
-            taskData.body.toString());
+            taskData.body.toString(),
+            taskData.task.commentId
+        );
 
         return comments.map((comment: PullRequestComment) => {
             if(comment.id === newTask.commentId){

@@ -1,6 +1,6 @@
 import { MinimalIssue } from "jira-pi-client";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, Comment, FileChange, Reviewer, SiteRemote, Task, WorkspaceRepo } from "../bitbucket/model";
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Reviewer, SiteRemote, Task, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
@@ -8,7 +8,7 @@ import { Action } from "./messaging";
 export interface CreateTask extends Action {
     action: "createTask",
     task: Task,
-    comment: Comment
+    commentId?: string
 }
 
 export interface EditTask extends Action {
