@@ -87,7 +87,7 @@ export function generatePipelineTitle(pipeline: Pipeline, excludePipelinePrefix?
     return description;
   }
 
-export function iconUriForPipeline(pipeline: Pipeline): Uri | undefined {
+export function iconUriForPipeline(pipeline: Pipeline): Uri | {light: Uri, dark: Uri} | undefined {
     switch (statusForState(pipeline.state)) {
         case Status.Pending:
             return Resources.icons.get('pending');
