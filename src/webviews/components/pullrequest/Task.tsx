@@ -106,18 +106,21 @@ export class TaskComponent extends React.Component<
     };
     
     render(): any {
-        return <Comment className='ac-comment'
-            content={
-                <div style={{display: "flex"}}>
-                    {!this.state.beingDeleted &&
+        return (!this.state.beingDeleted && <React.Fragment>
+            <div style={{float:'left'}}>
+                <Checkbox
+                    isChecked={this.state.isChecked}
+                    onChange={this.handleCheckboxPress}
+                    name="controlled-checkbox"
+                />
+            </div>
+            <div style={{paddingTop: '0px'}}>
+                <Comment 
+                    className='ac-comment'
+                    content={
                         <React.Fragment>
-                            <Checkbox
-                                isChecked={this.state.isChecked}
-                                onChange={this.handleCheckboxPress}
-                                name="controlled-checkbox"
-                            />
                             {!this.state.editMode &&
-                                //Tasks which are complete appear striked through on the site, but for some reason the task's internal html does not handle this...
+                                //Strikethrough a task if it has been completed
                                 <p>
                                     {this.state.isChecked ? 
                                         <del>{this.state.isWaitingForServer ? this.state.editInput : this.props.task.content}</del> :
@@ -135,12 +138,12 @@ export class TaskComponent extends React.Component<
                                 />
                             }
                         </React.Fragment>
-                    }   
-                </div>
-            }
-            actions={this.generateActionsList()}
-        >      
-        </Comment>; 
+                    }
+                    actions={this.generateActionsList()}
+                >      
+                </Comment>
+            </div>
+        </React.Fragment>);
     };
 };
 

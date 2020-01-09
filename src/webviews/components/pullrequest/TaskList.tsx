@@ -41,26 +41,36 @@ export default class TaskList extends React.Component <
 
     render(): any  {
         let taskList = this.props.tasks.map(task => 
-            <TaskComponent
-                task={task}
-                onDelete={this.props.onDelete}
-                onEdit={this.props.onEdit}
-                onSave={this.handleSaveClicked}
-                cancelCreate={this.handleCancelClick}
-                isInitialized={true}
-            />
-        );
-        
-        if(this.state.creatingTaskMode) {
-            taskList.push(
+            <div
+                style={{marginBottom: '3px'}}
+                key={task.id}
+            >
                 <TaskComponent
-                    task={emptyTask}
+                    task={task}
                     onDelete={this.props.onDelete}
                     onEdit={this.props.onEdit}
                     onSave={this.handleSaveClicked}
                     cancelCreate={this.handleCancelClick}
-                    isInitialized={false}
+                    isInitialized={true}
                 />
+            </div>
+        );
+        
+        if(this.state.creatingTaskMode) {
+            taskList.push(
+                <div
+                    style={{marginBottom: '3px'}}
+                    key={'-1'}
+                >
+                    <TaskComponent
+                        task={emptyTask}
+                        onDelete={this.props.onDelete}
+                        onEdit={this.props.onEdit}
+                        onSave={this.handleSaveClicked}
+                        cancelCreate={this.handleCancelClick}
+                        isInitialized={false}
+                    />
+                </div>
             );
         }
 
