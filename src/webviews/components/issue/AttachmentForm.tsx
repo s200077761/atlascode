@@ -1,13 +1,12 @@
-import React, { useEffect, useReducer, useContext } from 'react';
-import { useDropzone, FileWithPath } from 'react-dropzone';
 import FileIcon from '@atlaskit/icon/glyph/file';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import UploadIcon from '@atlaskit/icon/glyph/upload';
 import TableTree from '@atlaskit/table-tree';
+import { FieldUI } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
 import filesize from 'filesize';
+import React, { useContext, useEffect, useReducer } from 'react';
+import { FileWithPath, useDropzone } from 'react-dropzone';
 import { ResourceContext } from '../context';
-import { FieldUI } from 'jira-metaui-transformer';
-
 type ItemData = {
     file: FileWithPreview;
     delfunc: (file: any) => void;

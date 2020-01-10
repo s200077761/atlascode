@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
+import { isMinimalIssue, MinimalIssue } from "@atlassianlabs/jira-pi-common-models";
 import pSettle from "p-settle";
 import { PRData } from "src/ipc/prMessaging";
 import * as vscode from 'vscode';
@@ -530,7 +530,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async createTask(pr: PullRequest, task: Task, commentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postTask(pr.site, pr.data.id, task.content, commentId);
-        if(commentId) {
+        if (commentId) {
             prTaskEvent(pr.site.details, "comment").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
         } else {
             prTaskEvent(pr.site.details, "prlevel").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });

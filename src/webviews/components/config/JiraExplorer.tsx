@@ -1,7 +1,7 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
 import Tooltip from '@atlaskit/tooltip';
-import { Filter } from 'jira-pi-client';
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';

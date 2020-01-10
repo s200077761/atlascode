@@ -6,7 +6,7 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Select from '@atlaskit/select';
 import { colors } from '@atlaskit/theme';
-import { Filter } from 'jira-pi-client';
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import merge from 'merge-anything';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -260,7 +260,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     };
 
     handleLogout = (site: DetailedSiteInfo) => {
-        this.postMessage({ action: 'logout', detailedSiteInfo: site});
+        this.postMessage({ action: 'logout', detailedSiteInfo: site });
     };
 
     handleSourceLink = () => {

@@ -1,4 +1,4 @@
-import { MinimalIssue } from "jira-pi-client";
+import { MinimalIssue } from "@atlassianlabs/jira-pi-common-models/entities";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Reviewer, SiteRemote, Task, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";

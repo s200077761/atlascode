@@ -1,5 +1,5 @@
 import SectionMessage from '@atlaskit/section-message';
-import { isErrorCollection, isErrorWithMessages } from 'jira-pi-client';
+import { isErrorCollection, isErrorWithMessages } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
 export default class ErrorBanner extends React.Component<{ errorDetails: any, onDismissError: () => void }, { errorDetails: any }> {

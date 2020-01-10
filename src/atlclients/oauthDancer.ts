@@ -1,8 +1,8 @@
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
 import axios, { AxiosInstance } from 'axios';
 import EventEmitter from 'eventemitter3';
 import * as express from 'express';
 import * as http from 'http';
-import { getProxyHostAndPort } from 'jira-pi-client';
 import PCancelable from 'p-cancelable';
 import pTimeout from 'p-timeout';
 import { URL } from 'url';

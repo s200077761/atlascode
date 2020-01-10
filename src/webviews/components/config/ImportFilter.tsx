@@ -2,7 +2,7 @@ import Button from '@atlaskit/button';
 import { Field } from '@atlaskit/form';
 import Modal, { ModalTransition } from "@atlaskit/modal-dialog";
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { Filter } from "jira-pi-client";
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import debounce from "lodash.debounce";
 import React, { PureComponent } from "react";
 import { v4 } from "uuid";

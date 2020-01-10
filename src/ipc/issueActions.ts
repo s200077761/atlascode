@@ -1,5 +1,5 @@
-import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "jira-metaui-transformer";
-import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from "jira-pi-client";
+import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from '@atlassianlabs/jira-pi-common-models/entities';
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Action } from "./messaging";
 

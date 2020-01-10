@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from "jira-pi-client";
+import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models/entities";
 import { commands, ConfigurationChangeEvent, Disposable } from "vscode";
 import { DetailedSiteInfo, ProductJira } from "../../atlclients/authInfo";
 import { Commands } from "../../commands";
