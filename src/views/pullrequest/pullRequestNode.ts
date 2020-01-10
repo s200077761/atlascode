@@ -291,7 +291,7 @@ class PullRequestFilesNode extends AbstractBaseNode {
         item.resourceUri = vscode.Uri.parse(`${itemData.prUrl}#chg-${itemData.fileDisplayName}`);
         switch (itemData.fileChangeStatus) {
             case FileStatus.ADDED:
-                item.iconPath = Resources.icons.get('add');
+                item.iconPath = Resources.icons.get('add-circle');
                 break;
             case FileStatus.DELETED:
                 item.iconPath = Resources.icons.get('delete');

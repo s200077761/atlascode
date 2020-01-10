@@ -17,7 +17,7 @@ export class Resources {
 }
 
 export function registerResources(vscodeContext: ExtensionContext) {
-    Resources.icons.set('add', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'add-circle.svg'))));
+    Resources.icons.set('add-circle', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'add-circle.svg'))));
     Resources.icons.set('edit', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'edit-filled.svg'))));
     Resources.icons.set('delete', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'blocker.svg'))));
     Resources.icons.set('detail', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'bitbucket', 'detail-view.svg'))));
@@ -30,6 +30,10 @@ export function registerResources(vscodeContext: ExtensionContext) {
     Resources.icons.set('preferences', {
         light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'preferences.svg'))),
         dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'preferences.svg')))
+    });
+    Resources.icons.set('add', {
+        light: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'light', 'add.svg'))),
+        dark: Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'dark', 'add.svg')))
     });
     Resources.icons.set('issues', Uri.file(vscodeContext.asAbsolutePath(path.join('resources', 'issues.svg'))));
 
