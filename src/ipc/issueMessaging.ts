@@ -1,9 +1,8 @@
-import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { createEmptyEditIssueUI, EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
 import { emptyUser, isMinimalIssue, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
 import { createEmptyIssueTypeUI, CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PullRequestData } from "../bitbucket/model";
-import { emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { HostErrorMessage, Message } from "./messaging";
 import { RepoData } from "./prMessaging";
 
@@ -11,7 +10,7 @@ import { RepoData } from "./prMessaging";
 // IssueData is the message that gets sent to the JiraIssuePage react view containing the issue details.
 // we simply use the same name with two extend statements to merge the multiple interfaces
 export interface EditIssueData extends Message { }
-export interface EditIssueData extends EditIssueUI {
+export interface EditIssueData extends EditIssueUI<DetailedSiteInfo> {
     currentUser: User;
     workInProgress: boolean;
     recentPullRequests: PullRequestData[];
@@ -19,7 +18,7 @@ export interface EditIssueData extends EditIssueUI {
 
 export const emptyEditIssueData: EditIssueData = {
     type: "",
-    ...emptyEditIssueUI,
+    ...createEmptyEditIssueUI(emptySiteInfo),
     currentUser: emptyUser,
     workInProgress: false,
     recentPullRequests: [],

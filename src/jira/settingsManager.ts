@@ -7,8 +7,6 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { epicsDisabled } from "./jiraCommon";
 
-
-
 export const detailedIssueFields: string[] = ["summary", "description", "comment", "issuetype", "parent", "subtasks", "issuelinks", "status", "created", "reporter", "assignee", "labels", "attachment", "status", "priority", "components", "fixVersions"];
 export const minimalDefaultIssueFields: string[] = ["summary", "issuetype", "status", "priority", "description", "created", "updated", "parent", "subtasks", "issuelinks"];
 
