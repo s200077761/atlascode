@@ -1,4 +1,4 @@
-import { getProxyHostAndPort } from 'jira-pi-client';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
 import * as vscode from 'vscode';
 import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
 import { authenticateButtonEvent, customJQLCreatedEvent, featureChangeEvent, logoutButtonEvent } from '../analytics';
