@@ -462,9 +462,9 @@ export class CloudPullRequestApi implements PullRequestApi {
         let hasUndeletedChild: boolean = false;
         let filteredChildren = [];
         for (let child of comment.children) {
-            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-            if (hasUndeletedChild) {
+            if (this.shouldDisplayComment(child)) {
                 filteredChildren.push(child);
+                hasUndeletedChild = true;
             }
         }
         comment.children = filteredChildren;

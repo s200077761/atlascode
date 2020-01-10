@@ -515,7 +515,7 @@
                 {
                     "command": "atlascode.bb.addReply",
                     "group": "inline@3",
-                    "when": "resourceScheme == atlascode.bbpr"
+                    "when": "comment =~ /canAddReply/ && resourceScheme == atlascode.bbpr"
                 },
                 {
                     "command": "atlascode.bb.addTask",
