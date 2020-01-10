@@ -1,7 +1,7 @@
 import Select, { AsyncSelect } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueLinkTypeSelectOption, ValueType } from 'jira-metaui-transformer';
-import { IssuePickerIssue } from 'jira-pi-client';
+import { IssuePickerIssue } from '@atlassianlabs/jira-pi-common-models';
+import { IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import * as React from 'react';
 import * as SelectFieldHelper from '../selectFieldHelper';
 

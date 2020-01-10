@@ -1,8 +1,9 @@
-import { CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions, User } from "jira-metaui-transformer";
-import { createEmptyIssueTypeUI, emptyUser, isMinimalIssue, MinimalIssue, Project } from "jira-pi-client";
+import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { emptyUser, isMinimalIssue, MinimalIssue, Project, User } from '@atlassianlabs/jira-pi-common-models';
+import { createEmptyIssueTypeUI, CreateMetaTransformerProblems, FieldValues, IssueTypeUI, SelectFieldOptions } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";
 import { PullRequestData } from "../bitbucket/model";
-import { EditIssueUI, emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
+import { emptyEditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { HostErrorMessage, Message } from "./messaging";
 import { RepoData } from "./prMessaging";
 

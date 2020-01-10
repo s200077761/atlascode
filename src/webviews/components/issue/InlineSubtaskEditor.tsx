@@ -1,7 +1,6 @@
 import Select, { components } from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
-import { IssueType } from 'jira-metaui-transformer';
-import { emptyIssueType } from 'jira-pi-client';
+import { emptyIssueType, IssueType } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 import EdiText from 'react-editext';
 import * as FieldValidators from '../fieldValidators';

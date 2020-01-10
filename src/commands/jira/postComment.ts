@@ -1,4 +1,4 @@
-import { CommentVisibility, IssueKeyAndSite } from "jira-pi-client";
+import { CommentVisibility, IssueKeyAndSite } from "@atlassianlabs/jira-pi-common-models";
 import { issueCommentEvent } from "../../analytics";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";

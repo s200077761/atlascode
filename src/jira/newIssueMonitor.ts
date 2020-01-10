@@ -1,5 +1,5 @@
+import { MinimalIssue } from "@atlassianlabs/jira-pi-common-models/entities";
 import { format } from "date-fns";
-import { MinimalIssue } from "jira-pi-client";
 import pSettle from "p-settle";
 import { commands, window } from "vscode";
 import { DetailedSiteInfo, ProductJira } from "../atlclients/authInfo";

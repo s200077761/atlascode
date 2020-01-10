@@ -1,8 +1,8 @@
+import { emptyIssueType, IssueType, Project } from '@atlassianlabs/jira-pi-common-models';
+import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { format } from 'date-fns';
 import FormData from 'form-data';
 import * as fs from "fs";
-import { CreateMetaTransformerResult, FieldValues, IssueTypeUI, ValueType } from 'jira-metaui-transformer';
-import { emptyIssueType, IssueType, Project } from 'jira-pi-client';
 import { commands, Position, Uri, ViewColumn } from 'vscode';
 import { issueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';

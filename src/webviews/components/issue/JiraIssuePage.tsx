@@ -12,8 +12,8 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import SizeDetector from "@atlaskit/size-detector";
 import Tooltip from '@atlaskit/tooltip';
 import { distanceInWordsToNow, format } from "date-fns";
-import { FieldUI, InputFieldUI, UIType, ValueType } from 'jira-metaui-transformer';
-import { CommentVisibility, Transition } from 'jira-pi-client';
+import { CommentVisibility, Transition } from "@atlassianlabs/jira-pi-common-models";
+import { FieldUI, InputFieldUI, UIType, ValueType } from "@atlassianlabs/jira-pi-meta-models/ui-meta";
 import * as React from 'react';
 // NOTE: for now we have to use react-collapsible and NOT Panel because panel uses display:none
 // which totally screws up react-select when select boxes are in an initially hidden panel.

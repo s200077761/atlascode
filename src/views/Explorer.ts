@@ -1,4 +1,4 @@
-import { Project } from "jira-pi-client";
+import { Project } from "@atlassianlabs/jira-pi-common-models/entities";
 import { Disposable, TreeDataProvider, TreeItem, TreeView, TreeViewVisibilityChangeEvent, window } from "vscode";
 import { viewScreenEvent } from "../analytics";
 import { Product } from "../atlclients/authInfo";

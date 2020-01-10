@@ -1,8 +1,8 @@
-import { CreateIssueScreenTransformer, CreateMetaTransformerResult, EditIssueScreenTransformer, Fields, FieldTransformerResult, IssueCreateMetadata, IssueLinkType } from 'jira-metaui-transformer';
-import { DEFAULT_API_VERSION, emptyProjectIssueCreateMetadata, isMinimalIssue, MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from "jira-pi-client";
+import { EditIssueUI } from '@atlassianlabs/jira-metaui-client';
+import { MinimalIssue, minimalIssueFromJsonObject, MinimalORIssueLink } from '@atlassianlabs/jira-pi-common-models';
+import { CreateMetaTransformerResult } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Container } from "../container";
-import { EditIssueUI } from "./jira-client/model/editIssueUI";
 
 export async function fetchCreateIssueUI(siteDetails: DetailedSiteInfo, projectKey: string): Promise<CreateMetaTransformerResult<DetailedSiteInfo>> {
   const client = await Container.clientManager.jiraClient(siteDetails);

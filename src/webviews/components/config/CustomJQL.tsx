@@ -3,7 +3,7 @@ import { Checkbox } from "@atlaskit/checkbox";
 import EditFilledIcon from '@atlaskit/icon/glyph/edit-filled';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import Tooltip from '@atlaskit/tooltip';
-import { Filter } from "jira-pi-client";
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import React from "react";
 import { v4 } from "uuid";
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
