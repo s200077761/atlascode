@@ -577,13 +577,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
-                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                            <DiffList
-                                                fileDiffsLoading={this.state.fileDiffsLoading}
-                                                fileDiffs={this.state.fileDiffs}
-                                                openDiffHandler={this.openDiffViewForFile}
-                                            />
-                                        </Panel>
+                                        {this.state.fileDiffs.length > 0 &&
+                                            <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                                <DiffList
+                                                    fileDiffsLoading={this.state.fileDiffsLoading}
+                                                    fileDiffs={this.state.fileDiffs}
+                                                    openDiffHandler={this.openDiffViewForFile}
+                                                />
+                                            </Panel>
+                                        }
                                     </GridColumn>
                                     <GridColumn medium={12}>
                                         {this.state.destinationSiteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&

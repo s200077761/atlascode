@@ -315,7 +315,8 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
         const { ownerSlug, repoSlug } = site;
-        const commentData = commentId ? {comment: { id: commentId } }: {}; 
+
+        const commentData = commentId ? { comment: { id: commentId } } : {};
         try {
             const { data } = await this.client.post(
                 `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
@@ -440,8 +441,8 @@ export class CloudPullRequestApi implements PullRequestApi {
         for (let i = 0; i < convertedComments.length; i++) {
             commentIdMap.set(convertedComments[i].id, i);
         }
-        for(const task of tasks){
-            if(task.commentId) {
+        for (const task of tasks) {
+            if (task.commentId) {
                 const commentIndex = commentIdMap.get(task.commentId) as number;
                 convertedComments[commentIndex].tasks.push(task);
             }
@@ -511,32 +512,33 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
-        let reviewers: any[] = [];
-        if (!query) {
-            const cacheKey = `${ownerSlug}::${repoSlug}`;
+        let result: User[] = [];
 
-            const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
-            if (cacheItem !== undefined) {
-                return cacheItem;
-            }
-
-            const { data } = await this.client.get(
-                `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
-                {
-                    pagelen: maxItemsSupported.reviewers
-                }
-            );
-            reviewers = data.values || [];
-
-            this.defaultReviewersCache.setItem(cacheKey, reviewers);
-        } else {
+        if (query && query.length > 0) {
             const { data } = await this.client.get(
                 `/teams/${ownerSlug}/members?q=nickname="${query}"`
             );
-            reviewers = data.values || [];
+
+            return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         }
 
-        return reviewers.map(reviewer => CloudPullRequestApi.toUserModel(reviewer));
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+        const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
+        const { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
+            {
+                pagelen: maxItemsSupported.reviewers
+            }
+        );
+
+        result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+        this.defaultReviewersCache.setItem(cacheKey, result);
+
+        return result;
     }
 
     async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
