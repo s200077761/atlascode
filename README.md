@@ -40,6 +40,9 @@ Create that issue without breaking your stride:
 ## Everyone Has Issues...
 Please refer to [our issue tracker for known issues](https://bitbucket.org/atlassianlabs/atlascode/issues) and please contribute if you encounter an issue yourself.
 
+**Note for Server/Data Center users:** The extension supports Jira and Bitbucket versions released in the last two years, per our [end of life policy](https://confluence.atlassian.com/x/ewAID).
+You can find your instance's version in the footer of any Jira/Bitbucket page.
+
 ### Questions? Comments? Kudos?
 Please use the in-app feedback form to tell us what you think!  It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
