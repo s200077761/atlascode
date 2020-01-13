@@ -94,8 +94,8 @@
                 "command": "atlascode.bb.addReply",
                 "title": "Reply to this Comment",
                 "icon": {
-                    "dark": "resources/dark/reply.svg",
-                    "light": "resources/light/reply.svg"
+                    "dark": "resources/dark/add-comment.svg",
+                    "light": "resources/light/add-comment.svg"
                 },
                 "category": "Atlassian"
             },

@@ -206,23 +206,37 @@ export class PullRequestCommentController implements vscode.Disposable {
         const commentThreadId = comment.prCommentThreadId;
         let comments: vscode.Comment[] = [];
 
-        //Determine what action should be taken depending on the saveContext
-        if(comment.saveChangesContext === SaveContexts.CREATINGTASK && isPRTask(comment)) {
-            comments = await this.addTask(comment.parent!.comments, comment);
-        } else if(comment.saveChangesContext === SaveContexts.CREATINGREPLY && isPRComment(comment)) {
-            comments = await this.addReplyToComment(comment.parent!.comments, comment);
-        } else if (comment.saveChangesContext === SaveContexts.EDITINGCOMMENT && isPRComment(comment)) {
-            const bbApi = await clientForSite(comment.site);
-            let newComment: Comment = await bbApi.pullrequests.editComment(comment.site, comment.prId, comment.body.toString(), comment.id);
-            
-            //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
-            newComment.tasks = comment.tasks;
-            comments = await this.replaceEditedComment(comment.parent!.comments as EnhancedComment[], newComment);
-        } else if (comment.saveChangesContext === SaveContexts.EDITINGTASK && isPRTask(comment)) {
-            comments = await this.updateTask(comment.parent!.comments, comment, { content: comment.body.toString() });
-        }  else {
-            return; //If this is reached then a bug occurred, so it's better to do nothing than update the thread with empty data.
+
+        switch(comment.saveChangesContext) {
+            case SaveContexts.CREATINGTASK:
+                if(isPRTask(comment)){
+                    comments = await this.addTask(comment.parent!.comments, comment);
+                }
+                break;
+            case SaveContexts.CREATINGREPLY:
+                if(isPRComment(comment)){
+                    comments = await this.addReplyToComment(comment.parent!.comments, comment);
+                }
+                break;
+            case SaveContexts.EDITINGCOMMENT:
+                if(isPRComment(comment)){
+                    const bbApi = await clientForSite(comment.site);
+                    let newComment: Comment = await bbApi.pullrequests.editComment(comment.site, comment.prId, comment.body.toString(), comment.id);
+                    
+                    //The data returned by the comment API endpoint doesn't include task data, so we need to make sure we preserve that...
+                    newComment.tasks = comment.tasks;
+                    comments = await this.replaceEditedComment(comment.parent!.comments as EnhancedComment[], newComment);
+                }
+                break;
+            case SaveContexts.EDITINGTASK:
+                if(isPRTask(comment)){
+                    comments = await this.updateTask(comment.parent!.comments, comment, { content: comment.body.toString() });
+                }
+                break;
+            default:
+                return;
         }
+
         await this.createOrUpdateThread(commentThreadId!, comment.parent!.uri, comment.parent!.range, comments);
         comment.parent!.dispose();
         vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(comment.prHref));
@@ -356,7 +370,7 @@ export class PullRequestCommentController implements vscode.Disposable {
         });
 
         await this.createOrUpdateThread(commentData.prCommentThreadId!, commentData.parent!.uri, commentData.parent!.range, newComments);
-        commentData.parent.dispose;
+        commentData.parent.dispose();
     }
 
     private convertCommentToMode(commentData: EnhancedComment, mode: vscode.CommentMode, saveWasPressed?: boolean) {
@@ -450,7 +464,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 return comment;
             });
         } else {
-            return; //This ensures newComments is defined
+            return; //We don't want to call createOrUpdateThread() if newComments isn't defined because this will wipe all the comments.
         }
 
         let commentThread = await this.createOrUpdateThread(commentData.prCommentThreadId!, commentData.parent.uri, commentData.parent.range, newComments);
