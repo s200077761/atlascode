@@ -1,6 +1,6 @@
 import Button from '@atlaskit/button';
 import { Checkbox } from '@atlaskit/checkbox';
-import { DatePicker } from '@atlaskit/datetime-picker';
+import { DateTimePicker } from '@atlaskit/datetime-picker';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
 import { format } from 'date-fns';
 import * as React from 'react';
@@ -128,11 +128,14 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                         }
                                         return (
                                             <div>
-                                                <DatePicker
-                                                    {...fieldArgs.fieldProps}
+                                                <DateTimePicker
                                                     className="ac-select-container"
-                                                    selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                                     onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                        // DatePicker re-opens when it gains focus with no way to turn that off.
+                                                        // this is why we have to blur so a re-render doesn't re-open it.
+                                                        (document.activeElement as HTMLElement).blur();
                                                         this.setState({ started: item }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
