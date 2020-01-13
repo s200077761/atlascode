@@ -55,7 +55,7 @@ export default class PipelinesConfig extends React.Component<{ config: IConfig; 
             return (
               <Checkbox
                 {...fieldArgs.fieldProps}
-                label="Enable Bitbucket Pipelines Explorer"
+                label="Enable Bitbucket pipelines explorer"
                 onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                 isChecked={this.props.config.bitbucket.pipelines.explorerEnabled}
                 isIndeterminate={this.getIsExplorerIndeterminate()}

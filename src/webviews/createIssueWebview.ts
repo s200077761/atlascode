@@ -62,7 +62,7 @@ export class CreateIssueWebview extends AbstractIssueEditorWebview implements In
     }
 
     public get title(): string {
-        return "Create JIRA Issue";
+        return "Create Jira Issue";
     }
     public get id(): string {
         return "atlascodeCreateIssueScreen";

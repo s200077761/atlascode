@@ -75,7 +75,7 @@ export default class JiraExplorer extends React.Component<{
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Jira Issue Explorer'
+                                    label='Enable Jira issues explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.jira.explorer.enabled}
