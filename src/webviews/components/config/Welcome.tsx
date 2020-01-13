@@ -94,6 +94,35 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.3.0 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Added support for Bitbucket tasks</li>
+                                <li>Can now edit both time and date when adding a worklog</li>
+                                <li>Added buttons to create Jira and Bitbucket issues and pull requests to trees in side bar</li>
+                                <li>Reduced number of Bitbucket API requests to reduce rate-limit errors</li>
+                                <li>Preserve file structure when showing pull request contents in the side bar</li>
+                                <li>Default maximum number of Jira issues fetched via JQL increased from 50 to 100</li>
+                                <li>Added option to fetch all issues matching JQL</li>
+                                <li>Made settings titles consistent</li>
+                                <li>Now have different messages in sidebar when not authenticated with Bitbucket and not having a Bitbucket repo available in the current workspace</li>
+                                <li>When adding a new Jira site default JQL for that site will now contain <code>resolution = Unresolved</code> if the site is configured to support the <code>resolution</code> field</li>
+                                <li>Added support for pull requests from forks</li>
+                                <li>Default reviewers are now prepopulated for pull requests from forks</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Fixed link to "Select merge strategy" when merging a pull request</li>
+                                <li>Code blocks in diff-view comments now contain proper highlighting and special characters aren’t escaped</li>
+                                <li>Fixed issue that prevented using Jira and Bitbucket instances on the same host (for real this time)</li>
+                                <li>Comment order is now preserved after making a comment on Bitbucket Server</li>
+                                <li>Made "Needs work" button more readable when using a dark theme</li>
+                                <li>Can now log work on Jira Server</li>
+                                <li>Project list is now searchable when creating an issue on Bitbucket Server</li>
+                                <li>Fixed issue that could cause viewing files in pull requests to be slow</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.2.1 🎉</h3>
                         <section>
                             <h4>✨ Improvements ✨</h4>
