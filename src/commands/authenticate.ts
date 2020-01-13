@@ -1,5 +1,5 @@
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from '../atlclients/authInfo';
 import { Container } from '../container';
-import { SiteInfo, AuthInfo } from '../atlclients/authInfo';
 
 
 export async function authenticateCloud(site: SiteInfo) {
@@ -10,7 +10,7 @@ export async function authenticateServer(site: SiteInfo, authInfo: AuthInfo) {
     return await Container.loginManager.userInitiatedServerLogin(site, authInfo);
 }
 
-export async function clearAuth(site: SiteInfo) {
+export async function clearAuth(site: DetailedSiteInfo) {
     await Container.clientManager.removeClient(site);
     Container.siteManager.removeSite(site);
 }

@@ -1,4 +1,4 @@
-import { getProxyHostAndPort } from 'jira-pi-client';
+import { getProxyHostAndPort } from '@atlassianlabs/pi-client-common/agent';
 import * as vscode from 'vscode';
 import { commands, ConfigurationChangeEvent, ConfigurationTarget, env, Uri } from 'vscode';
 import { authenticateButtonEvent, customJQLCreatedEvent, featureChangeEvent, logoutButtonEvent } from '../analytics';
@@ -8,7 +8,7 @@ import { openWorkspaceSettingsJson } from '../commands/openWorkspaceSettingsJson
 import { configuration } from '../config/configuration';
 import { JQLEntry, SettingSource } from '../config/model';
 import { Container } from '../container';
-import { ConfigTarget, isAuthAction, isFetchJiraFiltersAction, isFetchJqlDataAction, isFetchSearchJiraFiltersAction, isLoginAuthAction, isOpenJsonAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
+import { ConfigTarget, isFetchJiraFiltersAction, isFetchJqlDataAction, isFetchSearchJiraFiltersAction, isLoginAuthAction, isLogoutAuthAction, isOpenJsonAction, isSaveSettingsAction, isSubmitFeedbackAction } from '../ipc/configActions';
 import { ConfigInspect, ConfigWorkspaceFolder } from '../ipc/configMessaging';
 import { Action } from '../ipc/messaging';
 import { Logger } from '../logger';
@@ -170,8 +170,8 @@ export class ConfigWebview extends AbstractReactWebview implements InitializingW
                 }
                 case 'logout': {
                     handled = true;
-                    if (isAuthAction(msg)) {
-                        clearAuth(msg.siteInfo);
+                    if (isLogoutAuthAction(msg)) {
+                        clearAuth(msg.detailedSiteInfo);
                         logoutButtonEvent(this.id).then(e => { Container.analyticsClient.sendUIEvent(e); });
                     }
                     break;

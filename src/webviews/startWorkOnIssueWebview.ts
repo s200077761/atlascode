@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, MinimalIssue } from 'jira-pi-client';
+import { createEmptyMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
 import * as vscode from 'vscode';
 import { issueUrlCopiedEvent, issueWorkStartedEvent } from '../analytics';
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from '../atlclients/authInfo';
@@ -199,7 +199,6 @@ export class StartWorkOnIssueWebview extends AbstractReactWebview implements Ini
                     return {
                         workspaceRepo: wsRepo,
                         href: href,
-                        defaultReviewers: [],
                         localBranches: scm.state.refs.filter(ref => ref.type === RefType.Head && ref.name),
                         remoteBranches: scm.state.refs.filter(ref => ref.type === RefType.RemoteHead && ref.name),
                         branchTypes: branchTypes,

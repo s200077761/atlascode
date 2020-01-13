@@ -40,7 +40,7 @@ export default class BitbucketIssuesConfig extends React.Component<{ config: ICo
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Bitbucket Issues Explorer'
+                                    label='Enable Bitbucket issues explorer'
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.bitbucket.issues.explorerEnabled}
                                 />

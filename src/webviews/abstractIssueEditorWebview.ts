@@ -1,8 +1,9 @@
-import { ValueType } from "jira-metaui-transformer";
-import { isAutocompleteSuggestionsResult, isGroupPickerResult, isIssuePickerResult, isProjectsResult, IssuePickerIssue, IssuePickerResult } from "jira-pi-client";
+import { isProject } from "@atlassianlabs/jira-pi-common-models/entities";
+import { isAutocompleteSuggestionsResult, isGroupPickerResult, isIssuePickerResult, isProjectsResult, IssuePickerIssue, IssuePickerResult } from "@atlassianlabs/jira-pi-common-models/responses";
+import { ValueType } from "@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI";
 import { showIssue } from "../commands/jira/showIssue";
 import { Container } from "../container";
-import { isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from "../ipc/issueActions";
+import { FetchQueryAction, isCreateSelectOption, isFetchQueryAndSite, isOpenJiraIssue } from "../ipc/issueActions";
 import { isAction } from "../ipc/messaging";
 import { Logger } from "../logger";
 import { AbstractReactWebview } from "./abstractWebview";
@@ -11,7 +12,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
 
     abstract async handleSelectOptionCreated(fieldKey: string, newValue: any, nonce?: string): Promise<void>;
 
-    protected formatSelectOptions(result: any, valueType?: ValueType): any[] {
+    protected formatSelectOptions(msg: FetchQueryAction, result: any, valueType?: ValueType): any[] {
         let suggestions: any[] = [];
 
         if (isIssuePickerResult(result)) {
@@ -29,7 +30,14 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                 return { label: result.displayName, value: result.value };
             });
         } else if (isProjectsResult(result)) {
-            suggestions = result.values;
+            // Jira server's /project API does not filter/search, so manually filter results that match the query
+            suggestions = msg.site.isCloud
+                ? result.values
+                : result.values.filter(project => project.name.toLowerCase().includes(msg.query.toLowerCase()) || project.key.toLowerCase().includes(msg.query.toLowerCase()));
+        } else if (Array.isArray(result) && result.length > 0 && isProject(result[0])) {
+            suggestions = msg.site.isCloud
+                ? result
+                : result.filter(project => project.name.toLowerCase().includes(msg.query.toLowerCase()) || project.key.toLowerCase().includes(msg.query.toLowerCase()));
         } else if (Array.isArray(result)) {
             suggestions = result;
         }
@@ -73,7 +81,7 @@ export abstract class AbstractIssueEditorWebview extends AbstractReactWebview {
                                 let suggestions: any[] = [];
                                 if (msg.autocompleteUrl && msg.autocompleteUrl.trim() !== '') {
                                     const result = await client.getAutocompleteDataFromUrl(msg.autocompleteUrl + encodeURIComponent(msg.query));
-                                    suggestions = this.formatSelectOptions(result);
+                                    suggestions = this.formatSelectOptions(msg, result);
                                 }
 
                                 this.postMessage({ type: 'selectOptionsList', options: suggestions, nonce: msg.nonce });

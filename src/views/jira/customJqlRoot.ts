@@ -8,6 +8,9 @@ import { AbstractBaseNode } from "../nodes/abstractBaseNode";
 import { IssueNode } from "../nodes/issueNode";
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { CustomJQLTree } from "./customJqlTree";
+import { CreateJiraIssueNode } from './headerNode';
+
+const createJiraIssueNode = new CreateJiraIssueNode();
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -63,11 +66,14 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
     }
 
-    return this._jqlList.map((jql: JQLEntry) => {
-      const childTree = new CustomJQLTree(jql);
-      this._children.push(childTree);
-      return childTree;
-    });
+    return [
+      createJiraIssueNode,
+      ...this._jqlList.map((jql: JQLEntry) => {
+        const childTree = new CustomJQLTree(jql);
+        this._children.push(childTree);
+        return childTree;
+      })
+    ];
   }
 
   refresh() {

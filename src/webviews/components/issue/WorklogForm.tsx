@@ -1,19 +1,11 @@
-import * as React from 'react';
 import Button from '@atlaskit/button';
-import Form, { FormFooter, Field, ErrorMessage, HelperMessage, CheckboxField } from '@atlaskit/form';
-import * as FieldValidators from '../fieldValidators';
-import { DatePicker } from '@atlaskit/datetime-picker';
 import { Checkbox } from '@atlaskit/checkbox';
+import { DateTimePicker } from '@atlaskit/datetime-picker';
+import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
 import { format } from 'date-fns';
-
-interface WorklogData {
-    comment: string;
-    started: string;
-    timeSpent: string;
-    newEstimate?: string;
-    adjustEstimate: string;
-
-}
+import * as React from 'react';
+import { WorklogData } from '../../../ipc/issueActions';
+import * as FieldValidators from '../fieldValidators';
 
 type MyState = {
     comment: string;
@@ -69,12 +61,9 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
             comment: formData.comment,
             started: format(new Date(formData.started), 'YYYY-MM-DDTHH:mm:ss.SSSZZ'),
             timeSpent: formData.timeSpent,
-            adjustEstimate: (formData.autoAdjust) ? 'auto' : 'new'
+            adjustEstimate: (formData.newEstimate && formData.newEstimate !== '') ? 'new' : 'auto',
+            newEstimate: formData.newEstimate
         };
-
-        if (!formData.autoAdjust) {
-            worklog.newEstimate = formData.newEstimate;
-        }
 
         if (this.props.onSave) {
             this.props.onSave(worklog);
@@ -85,7 +74,6 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
 
     render() {
         const defaultDate = (this.state.started.trim() !== '') ? this.state.started : format(Date.now(), 'YYYY-MM-DD');
-        const newEstimateValidator = (this.state.autoAdjust) ? undefined : FieldValidators.validateString;
         return (
             <div>
                 <Form
@@ -140,11 +128,14 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                         }
                                         return (
                                             <div>
-                                                <DatePicker
-                                                    {...fieldArgs.fieldProps}
+                                                <DateTimePicker
                                                     className="ac-select-container"
-                                                    selectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    datePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
+                                                    timePickerSelectProps={{ className: "ac-select-container", classNamePrefix: "ac-select" }}
                                                     onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                        // DatePicker re-opens when it gains focus with no way to turn that off.
+                                                        // this is why we have to blur so a re-render doesn't re-open it.
+                                                        (document.activeElement as HTMLElement).blur();
                                                         this.setState({ started: item }, () => {
                                                             this.setState({ savingDisabled: this.disableSaving() });
                                                         });
@@ -206,39 +197,41 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                                     }
                                 }
                             </CheckboxField>
-                            <Field label='Remaining estimate'
-                                id='newEstimate'
-                                name='newEstimate'
-                                isRequired={!this.state.autoAdjust}
-                                defaultValue={this.state.newEstimate}
-                                validate={newEstimateValidator}>
-                                {
-                                    (fieldArgs: any) => {
-                                        let errDiv = <span />;
-                                        if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
-                                        }
-                                        return (
-                                            <div>
-                                                <div className='ac-flex'>
-                                                    <input {...fieldArgs.fieldProps}
-                                                        disabled={this.state.autoAdjust}
-                                                        style={{ width: '100%', display: 'block' }}
-                                                        className='ac-inputField'
-                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
-                                                            this.setState({ newEstimate: item.target.value, }, () => {
-                                                                this.setState({ savingDisabled: this.disableSaving() });
-                                                            });
-                                                        })}
-                                                    />
+                            {!this.state.autoAdjust &&
+                                <Field label='Remaining estimate'
+                                    id='newEstimate'
+                                    name='newEstimate'
+                                    isRequired={!this.state.autoAdjust}
+                                    defaultValue={this.state.newEstimate}
+                                    validate={FieldValidators.validateString}>
+                                    {
+                                        (fieldArgs: any) => {
+                                            let errDiv = <span />;
+                                            if (fieldArgs.error === 'EMPTY') {
+                                                errDiv = <ErrorMessage>Remaining estimate is required</ErrorMessage>;
+                                            }
+                                            return (
+                                                <div>
+                                                    <div className='ac-flex'>
+                                                        <input {...fieldArgs.fieldProps}
+                                                            disabled={this.state.autoAdjust}
+                                                            style={{ width: '100%', display: 'block' }}
+                                                            className='ac-inputField'
+                                                            onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                                this.setState({ newEstimate: item.target.value, }, () => {
+                                                                    this.setState({ savingDisabled: this.disableSaving() });
+                                                                });
+                                                            })}
+                                                        />
+                                                    </div>
+                                                    <HelperMessage>(eg. 3w 4d 12h) original estimate {this.props.originalEstimate}</HelperMessage>
+                                                    {errDiv}
                                                 </div>
-                                                <HelperMessage>(eg. 3w 4d 12h) original estimate {this.props.originalEstimate}</HelperMessage>
-                                                {errDiv}
-                                            </div>
-                                        );
+                                            );
+                                        }
                                     }
-                                }
-                            </Field>
+                                </Field>
+                            }
                             <FormFooter actions={{}}>
                                 <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px;' }}>
                                     <Button type="submit"

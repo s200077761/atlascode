@@ -1,5 +1,5 @@
+import { AuthInfo, DetailedSiteInfo, SiteInfo } from "../atlclients/authInfo";
 import { Action } from "./messaging";
-import { SiteInfo, AuthInfo, DetailedSiteInfo } from "../atlclients/authInfo";
 
 export enum FeedbackType {
     Bug = 'bug',
@@ -16,13 +16,13 @@ export interface FeedbackData {
     emailAddress: string;
 }
 
-export interface AuthAction extends Action {
+export interface LoginAuthAction extends Action {
     siteInfo: SiteInfo;
+    authInfo: AuthInfo;
 }
 
-export interface LoginAuthAction extends AuthAction {
-    authInfo: AuthInfo;
-
+export interface LogoutAuthAction extends Action {
+    detailedSiteInfo: DetailedSiteInfo;
 }
 
 export enum ConfigTarget {
@@ -76,12 +76,9 @@ export function isFetchSearchJiraFiltersAction(a: Action): a is FetchSearchJiraF
         && (<FetchSearchJiraFiltersAction>a).query !== undefined;
 }
 
-export function isAuthAction(a: Action): a is AuthAction {
-    return (<AuthAction>a).siteInfo !== undefined
-        && (
-            (<AuthAction>a).action === 'login'
-            || (<AuthAction>a).action === 'logout'
-        );
+export function isLogoutAuthAction(a: Action): a is LogoutAuthAction {
+    return (<LogoutAuthAction>a).detailedSiteInfo !== undefined
+        && (<LogoutAuthAction>a).action === 'logout';
 }
 
 export function isLoginAuthAction(a: Action): a is LoginAuthAction {

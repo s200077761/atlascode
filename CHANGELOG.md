@@ -1,3 +1,28 @@
+## What's New in 2.3.0
+### Improvements
+* Added support for Bitbucket tasks
+* Can now edit both time and date when adding a worklog
+* Added buttons to create Jira and Bitbucket issues and pull requests to trees in side bar
+* Reduced number of Bitbucket API to reduce rate-limit errors
+* Preserve file structure when showing pull request contents in the side bar
+* Default maximum number of Jira issues fetched via JQL increased from 50 to 100
+* Added option to fetch all issues matching JQL
+* Made settings titles consistent
+* Now have different messages in sidebar when not authenticated with Bitbucket and not having a Bitbucket repo available in the current workspace
+* When adding a new Jira site default JQL for that site will now contain `resolution = Unresolved` if the site is configured to support the `resolution` field
+* Added support for pull requests from forks
+* Default reviewers are now prepopulated for pull requests from forks
+
+### Bugs fixed
+* Fixed link to "Select merge strategy" when merging a pull request
+* Code blocks in diff-view comments now contain proper highlighting and special characters aren’t escaped
+* Fixed issue that prevented using Jira and Bitbucket instances on the same host (for real this time)
+* Comment order is now preserved after making a comment on Bitbucket Server
+* Made "Needs work" button more readable when using a dark theme
+* Can now log work on Jira Server
+* Project list is now searchable when creating an issue on Bitbucket Server
+* Fixed issue that could cause viewing files in pull requests to be slow
+
 ## What's New In 2.2.1
 ### Improvements
 * Added “Group issues by Epic” option to display issues in a list instead of nesting subtasks under issues and issues under Epics
@@ -29,14 +54,14 @@
 * Added welcome screen to help new users get up and running
 * Support using existing branches when starting work on an issue
 
-### Bugs Fixed
+### Bugs fixed
 * Fixed issue that could prevent Windows users from adding multiple accounts
 * Allow disabling Jira or Bitbucket features globally and re-enabling them at the project level
 * Inline comments on Bitbucket Server pull requests no longer show up at the file level
 * Fixed diff view comments not refreshing after adding a new comment
 
 ## What's New In 2.1.4
-### Bugs Fixed
+### Bugs fixed
 * Fixed issue that resulted in failure to save credentials when logging in
 
 ## What's New In 2.1.3
@@ -44,7 +69,7 @@
 * Added tooltip text clarifying that only exact matches are allowed on Bitbucket Server when adding reviewers to a pull request
 * When available, specific error messages for git operations are now presented instead of more general error messages
 
-### Bugs Fixed
+### Bugs fixed
 * Jira issues are now correctly assigned when using start work on Jira Server
 * Selecting an item from the mention picker when editing a Bitbucket issue now works correctly
 * "Create in browser..." button on "Create pull request" screen now links to correct location on Bitbucket Server

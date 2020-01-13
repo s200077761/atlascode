@@ -2,21 +2,37 @@ import Button from '@atlaskit/button';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
 import * as React from 'react';
+import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
+import differenceInWeeks from 'date-fns/difference_in_weeks';
+import format from 'date-fns/format';
 import { Commit } from '../../../bitbucket/model';
 
-const style = { fontFamily: "monospace" };
-const Hash = (props: any) =>
-    <Button appearance="subtle-link" href={props.href} >
+const style = { fontFamily: 'monospace' };
+
+type ColumnProps = { ts: string; href: string; hash: string; message: string };
+
+const Hash = (props: ColumnProps) => (
+    <Button appearance="subtle-link" href={props.href}>
         <span style={style}>{props.hash}</span>
-    </Button>;
-const Message = (props: any) => <Tooltip content={props.message}><p style={{ display: "inline" }}>{props.message.trim().split('\n')[0]}</p></Tooltip>;
-const Timestamp = (props: any) => {
+    </Button>
+);
+const Message = (props: ColumnProps) => (
+    <Tooltip content={props.message}>
+        <p style={{ display: 'inline' }}>{props.message.trim().split('\n')[0]}</p>
+    </Tooltip>
+);
+const Timestamp = (props: ColumnProps) => {
     const d = new Date(props.ts);
-    return <Tooltip content={d.toLocaleString()}><p>{`${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`}</p></Tooltip>;
+    const isLessThanWeekAgo = differenceInWeeks(d, new Date()) === 0;
+    return (
+        <Tooltip content={d.toLocaleString()}>
+            <p>{isLessThanWeekAgo ? distanceInWordsToNow(d, { addSuffix: true }) : format(d, 'YYYY-MM-DD')}</p>
+        </Tooltip>
+    );
 };
 
-export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props: { commits: Commit[] }) => {
-    const commitsData = props.commits!.map((commit) => {
+export const Commits: React.FunctionComponent<{ commits: Commit[] }> = props => {
+    const commitsData = props.commits.map(commit => {
         return {
             hash: commit.hash,
             message: commit.message,
@@ -30,15 +46,13 @@ export const Commits: React.FunctionComponent<{ commits: Commit[] }> = (props: {
             columns={[Hash, Message, Timestamp]}
             columnWidths={['120px', '100%', '180px']}
             items={commitsData.map(c => {
-                return {
-                    id: c.hash,
-                    content: {
-                        hash: c.hash.substring(0, 8),
-                        message: c.message,
-                        href: c.href,
-                        ts: c.ts
-                    }
+                const props: ColumnProps = {
+                    hash: c.hash.substring(0, 8),
+                    message: c.message,
+                    href: c.href,
+                    ts: c.ts
                 };
+                return { id: c.hash, content: props };
             })}
         />
     );

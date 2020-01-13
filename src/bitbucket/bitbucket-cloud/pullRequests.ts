@@ -1,12 +1,11 @@
 import { AxiosResponse } from "axios";
-import { prCommentEvent } from '../../analytics';
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { Container } from "../../container";
 import { getAgent } from "../../jira/jira-client/providers";
+import { Logger } from "../../logger";
 import { CacheMap } from "../../util/cachemap";
 import { Time } from "../../util/time";
 import { Client, ClientError } from "../httpClient";
-import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
+import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { CloudRepositoriesApi } from "./repositories";
 
 export const maxItemsSupported = {
@@ -25,6 +24,7 @@ const mergeStrategyLabels = {
 
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
+    private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
     constructor(private site: DetailedSiteInfo, token: string) {
@@ -136,7 +136,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
         }
-        const { data } = await this.client.getURL(paginatedPullRequests.next);
+        const { data } = await this.client.get(paginatedPullRequests.next);
 
         const prs = (data).values!.map((pr: any) => CloudPullRequestApi.toPullRequestData(pr, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
         return { ...paginatedPullRequests, data: prs, next: data.next };
@@ -194,7 +194,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedDiffStats = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedDiffStats.push(...(data.values || []));
         }
@@ -247,7 +247,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedCommits = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedCommits.push(...(data.values || []));
         }
@@ -263,7 +263,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void> {
+    async deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void> {
         const { ownerSlug, repoSlug } = site;
 
         await this.client.delete(
@@ -272,7 +272,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment> {
+    async editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.put(
@@ -287,15 +287,127 @@ export class CloudPullRequestApi implements PullRequestApi {
         return this.convertDataToComment(data, site);
     }
 
+    async getTasks(pr: PullRequest): Promise<Task[]> {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        //TODO: This is querying an internal API. Some day this API will hopefully be public, at which point we need to update this
+        try {
+            let { data } = await this.client.get(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/tasks`,
+            );
+
+            if (!data.values) {
+                return [];
+            }
+
+            const accumulatedTasks = data.values as any[];
+            while (data.next) {
+                const nextPage = await this.client.get(data.next);
+                data = nextPage.data;
+                accumulatedTasks.push(...(data.values || []));
+            }
+
+            return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
+        const { ownerSlug, repoSlug } = site;
+
+        const commentData = commentId ? { comment: { id: commentId } } : {};
+        try {
+            const { data } = await this.client.post(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/`,
+                {
+                    ...commentData,
+                    completed: false,
+                    content: {
+                        raw: content
+                    }
+                }
+            );
+
+            return this.convertDataToTask(data, site);
+        } catch (e) {
+            const error = new Error(`Error creating new task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }
+    }
+
+    async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
+        const { ownerSlug, repoSlug } = site;
+
+        try {
+            const { data } = await this.client.put(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                {
+                    comment: {
+                        comment: task.commentId
+                    },
+                    completed: task.isComplete,
+                    content: {
+                        raw: task.content
+                    },
+                    id: task.id,
+                    state: task.isComplete ? "RESOLVED" : "UNRESOLVED"
+                }
+            );
+
+            return this.convertDataToTask(data, site);
+        } catch (e) {
+            const error = new Error(`Error editing task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }
+    }
+
+    async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
+        const { ownerSlug, repoSlug } = site;
+
+        try {
+            await this.client.delete(
+                `https://api.bitbucket.org/internal/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/tasks/${task.id}`,
+                {}
+            );
+        } catch (e) {
+            const error = new Error(`Error deleting task using interal API: ${e}`);
+            Logger.error(error);
+            throw error;
+        }
+    }
+
+    convertDataToTask(taskData: any, site: BitbucketSite): Task {
+        const taskBelongsToUser: boolean = taskData && taskData.creator && taskData.creator.account_id === site.details.userId;
+        return {
+            commentId: taskData.comment?.id,
+            creator: CloudPullRequestApi.toUserModel(taskData.creator),
+            created: taskData.created_on,
+            updated: taskData.updated_on,
+            isComplete: taskData.state !== "UNRESOLVED",
+            editable: taskBelongsToUser && taskData.state === "UNRESOLVED",
+            deletable: taskBelongsToUser && taskData.state === "UNRESOLVED",
+            id: taskData.id,
+            content: taskData.content.raw
+        };
+    }
+
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
-            {
-                pagelen: maxItemsSupported.comments
-            }
-        );
+        const commentsAndTaskPromise = Promise.all([
+            this.client.get(
+                `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}/comments`,
+                {
+                    pagelen: maxItemsSupported.comments
+                }
+            ),
+            await this.getTasks(pr),
+        ]);
+        const [commentResp, tasks] = await commentsAndTaskPromise;
+        let { data } = commentResp;
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -303,7 +415,7 @@ export class CloudPullRequestApi implements PullRequestApi {
 
         const accumulatedComments = data.values as any[];
         while (data.next) {
-            const nextPage = await this.client.getURL(data.next);
+            const nextPage = await this.client.get(data.next);
             data = nextPage.data;
             accumulatedComments.push(...(data.values || []));
         }
@@ -322,7 +434,21 @@ export class CloudPullRequestApi implements PullRequestApi {
                 deleted: true
             } as any;
         });
-        const nestedComments = this.toNestedList(await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site)))));
+
+        const convertedComments = await Promise.all(comments.map(commentData => (this.convertDataToComment(commentData, pr.site))));
+
+        let commentIdMap = new Map<string, number>();
+        for (let i = 0; i < convertedComments.length; i++) {
+            commentIdMap.set(convertedComments[i].id, i);
+        }
+        for (const task of tasks) {
+            if (task.commentId) {
+                const commentIndex = commentIdMap.get(task.commentId) as number;
+                convertedComments[commentIndex].tasks.push(task);
+            }
+        }
+
+        const nestedComments = this.toNestedList(convertedComments);
         const visibleComments = nestedComments.filter(comment => this.shouldDisplayComment(comment));
         return {
             data: visibleComments,
@@ -330,25 +456,21 @@ export class CloudPullRequestApi implements PullRequestApi {
         };
     }
 
-    private shouldDisplayComment(comment: any): boolean {
-        if (!comment.deleted) {
-            return true;
-        } else if (!comment.children || comment.children.length === 0) {
-            return false;
-        } else {
-            let hasUndeletedChild: boolean = false;
-            for (let child of comment.children) {
-                hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-                if (hasUndeletedChild) {
-                    return hasUndeletedChild;
-                }
+    private shouldDisplayComment(comment: Comment): boolean {
+        let hasUndeletedChild: boolean = false;
+        let filteredChildren = [];
+        for (let child of comment.children) {
+            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
+            if (hasUndeletedChild) {
+                filteredChildren.push(child);
             }
-            return hasUndeletedChild;
         }
+        comment.children = filteredChildren;
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
     }
 
     private toNestedList(comments: Comment[]): Comment[] {
-        const commentsTreeMap = new Map<Number, Comment>();
+        const commentsTreeMap = new Map<string, Comment>();
         comments.forEach(c => commentsTreeMap.set(c.id!, c));
         comments.forEach(c => {
             const n = commentsTreeMap.get(c.id!);
@@ -390,23 +512,33 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
-        let reviewers: any[] = [];
-        if (!query) {
-            const { data } = await this.client.get(
-                `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
-                {
-                    pagelen: maxItemsSupported.reviewers
-                }
-            );
-            reviewers = data.values || [];
-        } else {
+        let result: User[] = [];
+
+        if (query && query.length > 0) {
             const { data } = await this.client.get(
                 `/teams/${ownerSlug}/members?q=nickname="${query}"`
             );
-            reviewers = data.values || [];
+
+            return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         }
 
-        return reviewers.map(reviewer => CloudPullRequestApi.toUserModel(reviewer));
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+        const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
+        const { data } = await this.client.get(
+            `/repositories/${ownerSlug}/${repoSlug}/default-reviewers`,
+            {
+                pagelen: maxItemsSupported.reviewers
+            }
+        );
+
+        result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+        this.defaultReviewersCache.setItem(cacheKey, result);
+
+        return result;
     }
 
     async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -417,6 +549,9 @@ export class CloudPullRequestApi implements PullRequestApi {
                 raw: createPrData.summary
             },
             source: {
+                repository: {
+                    full_name: `${createPrData.sourceSite.ownerSlug}/${createPrData.sourceSite.repoSlug}`
+                },
                 branch: {
                     name: createPrData.sourceBranchName
                 }
@@ -490,14 +625,11 @@ export class CloudPullRequestApi implements PullRequestApi {
 
     async postComment(
         site: BitbucketSite,
-        prId: number, text: string,
-        parentCommentId?: number,
+        prId: string, text: string,
+        parentCommentId?: string,
         inline?: { from?: number, to?: number, path: string }
     ): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
-
-        prCommentEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-
         const { data } = await this.client.post(
             `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}/comments`,
             {
@@ -509,7 +641,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        return await this.convertDataToComment(data, site);
+        return this.convertDataToComment(data, site);
     }
 
     async getFileContent(site: BitbucketSite, commitHash: string, path: string): Promise<string> {
@@ -530,7 +662,7 @@ export class CloudPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    private async convertDataToComment(data: any, site: BitbucketSite): Promise<Comment> {
+    private convertDataToComment(data: any, site: BitbucketSite): Comment {
         const commentBelongsToUser: boolean = data && data.user && data.user.account_id === site.details.userId;
 
         return {
@@ -547,7 +679,8 @@ export class CloudPullRequestApi implements PullRequestApi {
             user: data.user
                 ? CloudPullRequestApi.toUserModel(data.user)
                 : UnknownUser,
-            children: []
+            children: [],
+            tasks: []
         };
     }
 

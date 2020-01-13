@@ -6,6 +6,7 @@ import { Container } from "./container";
 
 export type SitesAvailableUpdateEvent = {
     sites: DetailedSiteInfo[];
+    newSites?: DetailedSiteInfo[];
     product: Product;
 };
 
@@ -60,7 +61,7 @@ export class SiteManager extends Disposable {
         this._sitesAvailable.set(productKey, allSites);
 
         if (notify) {
-            this._onDidSitesAvailableChange.fire({ sites: allSites, product: allSites[0].product });
+            this._onDidSitesAvailableChange.fire({ sites: allSites, newSites: newSites, product: allSites[0].product });
         }
     }
 

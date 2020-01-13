@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
+import { isMinimalIssue, MinimalIssue } from "@atlassianlabs/jira-pi-common-models";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 import { Logger } from "../../logger";

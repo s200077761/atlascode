@@ -12,18 +12,17 @@ import Panel from '@atlaskit/panel';
 import Select from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite, Transition } from '@atlassianlabs/jira-pi-common-models';
 import { distanceInWordsToNow, format } from 'date-fns';
-import { Transition } from 'jira-metaui-transformer';
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
 import React from 'react';
 import EdiText from 'react-editext';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
-import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy } from '../../../bitbucket/model';
+import { ApprovalStatus, BitbucketIssue, FileDiff, MergeStrategy, Task } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { HostErrorMessage, PMFData } from '../../../ipc/messaging';
-import { Checkout, CopyPullRequestLink, DeleteComment, EditComment, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
+import { Checkout, CopyPullRequestLink, CreateTask, DeleteComment, DeleteTask, EditComment, EditTask, FetchUsers, Merge, OpenBuildStatusAction, OpenDiffViewAction, PostComment, RefreshPullRequest, UpdateApproval, UpdateTitle } from '../../../ipc/prActions';
 import { CheckoutResult, isPRData, PRData } from '../../../ipc/prMessaging';
 import { AtlLoader } from '../AtlLoader';
 import BitbucketIssueList from '../bbissue/BitbucketIssueList';
@@ -35,6 +34,7 @@ import NavItem from '../issue/NavItem';
 import { TransitionMenu } from '../issue/TransitionMenu';
 import Offline from '../Offline';
 import PMFBBanner from '../pmfBanner';
+import TaskList from '../pullrequest/TaskList';
 import { WebviewComponent } from '../WebviewComponent';
 import BranchInfo from './BranchInfo';
 import BuildStatus from './BuildStatus';
@@ -45,7 +45,12 @@ import DiffList from './DiffList';
 import MergeChecks from './MergeChecks';
 import Reviewers from './Reviewers';
 
-type Emit = UpdateTitle | UpdateApproval | Merge | Checkout | PostComment | DeleteComment | EditComment | CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction | OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
+type Emit = CreateTask |
+    EditTask | DeleteTask | UpdateTitle |
+    UpdateApproval | Merge | Checkout |
+    PostComment | DeleteComment | EditComment |
+    CopyPullRequestLink | OpenJiraIssueAction | OpenBitbucketIssueAction |
+    OpenBuildStatusAction | RefreshPullRequest | FetchUsers | OpenDiffViewAction;
 type Receive = PRData | CheckoutResult | HostErrorMessage;
 
 interface ViewState {
@@ -122,7 +127,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleDeleteComment = (commentId: number) => {
+    handleDeleteComment = (commentId: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'deleteComment',
@@ -130,7 +135,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handleEditComment = (content: string, commentId: number) => {
+    handleEditComment = (content: string, commentId: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'editComment',
@@ -139,7 +144,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
-    handlePostComment = (content: string, parentCommentId?: number) => {
+    handlePostComment = (content: string, parentCommentId?: string) => {
         this.setState({ isAnyCommentLoading: true });
         this.postMessage({
             action: 'comment',
@@ -170,6 +175,28 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
         });
     };
 
+    handleTaskCreate = (task: Task, commentId?: string) => {
+        this.postMessage({
+            action: "createTask",
+            task: task,
+            commentId: commentId
+        });
+    };
+
+    handleTaskEdit = (task: Task) => {
+        this.postMessage({
+            action: "editTask",
+            task: task
+        });
+    };
+
+    handleTaskDelete = (task: Task) => {
+        this.postMessage({
+            action: "deleteTask",
+            task: task
+        });
+    };
+
     loadUserOptions = (input: string): Promise<any> => {
         return new Promise(resolve => {
             this.userSuggestions = undefined;
@@ -190,6 +217,10 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
             }, 100);
 
         });
+    };
+
+    getNumberOfTasksComplete = () => {
+        return this.state.pr.tasks!.filter(task => task.isComplete).length;
     };
 
     onMessageReceived(e: any): boolean {
@@ -392,7 +423,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                 <Reviewers {...this.state.pr} />
                 {!pr.siteDetails.isCloud &&
                     <Tooltip content={currentUserApprovalStatus === 'NEEDS_WORK' ? 'Remove Needs work' : 'Mark as Needs work'}>
-                        <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? undefined : 'ac-button'}
+                        <Button className={currentUserApprovalStatus === 'NEEDS_WORK' ? 'ac-button-warning' : 'ac-button'}
                             appearance={currentUserApprovalStatus === 'NEEDS_WORK' ? 'warning' : 'default'}
                             isLoading={this.state.isApproveButtonLoading}
                             onClick={() => this.handleApprove(currentUserApprovalStatus === 'NEEDS_WORK' ? 'UNAPPROVED' : 'NEEDS_WORK')}>
@@ -412,7 +443,7 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                             <div style={{ width: '400px' }}>
                                 <MergeChecks {...this.state.pr} />
                                 <div className='ac-vpadding'>
-                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/admin/merge-strategies`} /></label>
+                                    <label>Select merge strategy <Button className='ac-link-button' appearance='link' iconBefore={<ShortcutIcon size='small' label='merge-strategies-link' />} href={`${pr.destination!.repo.url}/${pr.siteDetails.isCloud ? 'admin' : 'settings'}/merge-strategies`} /></label>
                                     <Select
                                         options={this.state.pr.mergeStrategies}
                                         className="ac-select-container"
@@ -536,6 +567,17 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                         <Panel isDefaultExpanded header={<h3>Commits</h3>}>
                                             <Commits commits={this.state.pr.commits || []} />
                                         </Panel>
+                                        {this.state.pr.tasks && this.state.pr.tasks.length > 0 &&
+                                            <Panel header={<h3>{this.getNumberOfTasksComplete()} of {this.state.pr.tasks.length} Tasks Complete</h3>}>
+                                                <TaskList
+                                                    tasks={this.state.pr.tasks ? this.state.pr.tasks : []}
+                                                    onDelete={this.handleTaskDelete}
+                                                    onEdit={this.handleTaskEdit}
+                                                    onSave={this.handleTaskCreate}
+                                                    isCloud={pr.siteDetails.isCloud}
+                                                />
+                                            </Panel>
+                                        }
                                         <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
                                             <DiffList fileDiffs={this.state.pr.fileDiffs ? this.state.pr.fileDiffs : []} fileDiffsLoading={this.state.isFileDiffsLoading} openDiffHandler={this.handleOpenDiffView} ></DiffList>
                                         </Panel>
@@ -547,6 +589,9 @@ export default class PullRequestPage extends WebviewComponent<Emit, Receive, {},
                                                 onComment={this.handlePostComment}
                                                 onEdit={this.handleEditComment}
                                                 onDelete={this.handleDeleteComment}
+                                                onTaskCreate={this.handleTaskCreate}
+                                                onTaskEdit={this.handleTaskEdit}
+                                                onTaskDelete={this.handleTaskDelete}
                                                 loadUserOptions={this.loadUserOptions}
                                             />
                                             <CommentForm

@@ -1,6 +1,6 @@
 import Page, { Grid, GridColumn } from "@atlaskit/page";
-import { CreateMetaTransformerProblems } from 'jira-metaui-transformer';
-import { emptyProject, Project } from 'jira-pi-client';
+import { emptyProject, Project } from "@atlassianlabs/jira-pi-common-models";
+import { CreateMetaTransformerProblems } from "@atlassianlabs/jira-pi-meta-models/ui-meta";
 import * as React from 'react';
 import { IssueProblemsData } from '../../../ipc/issueMessaging';
 import { Action, HostErrorMessage } from "../../../ipc/messaging";

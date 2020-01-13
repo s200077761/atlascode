@@ -5,11 +5,12 @@ import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
 import { Client, ClientError } from '../httpClient';
-import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, UnknownUser, User, WorkspaceRepo } from '../model';
+import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
     private client: Client;
+    private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
     constructor(site: DetailedSiteInfo, username: string, password: string) {
@@ -97,7 +98,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         if (!paginatedPullRequests.next) {
             return { ...paginatedPullRequests, next: undefined };
         }
-        const { data } = await this.client.getURL(paginatedPullRequests.next);
+        const { data } = await this.client.get(paginatedPullRequests.next);
 
         const prs: PullRequest[] = data.values!.map((pr: any) => ServerPullRequestApi.toPullRequestModel(pr, 0, paginatedPullRequests.site, paginatedPullRequests.workspaceRepo));
         return { ...paginatedPullRequests, data: prs, next: undefined };
@@ -156,6 +157,84 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
+    async getTasks(pr: PullRequest): Promise<Task[]> {
+        const { ownerSlug, repoSlug } = pr.site;
+
+        let { data } = await this.client.get(
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks`,
+        );
+
+        if (!data.values) {
+            return [];
+        }
+
+        const accumulatedTasks = data.values as any[];
+        while (data.next) {
+            const nextPage = await this.client.get(data.next);
+            data = nextPage.data;
+            accumulatedTasks.push(...(data.values || []));
+        }
+
+        return accumulatedTasks.map((task: any) => this.convertDataToTask(task, pr.site));
+    }
+
+    async postTask(site: BitbucketSite, prId: string, content: string, commentId?: string): Promise<Task> {
+        const bbApi = await clientForSite(site);
+        const repo = await bbApi.repositories.get(site);
+        let { data } = await this.client.post(
+            `/rest/api/latest/tasks`,
+            {
+                anchor: {
+                    id: commentId,
+                    type: "COMMENT"
+                },
+                pendingSync: true,
+                permittedOperations: {},
+                pullRequestId: prId,
+                repositoryId: repo.id,
+                state: "OPEN",
+                text: content
+            }
+        );
+
+        return this.convertDataToTask(data, site);
+    }
+    async editTask(site: BitbucketSite, prId: string, task: Task): Promise<Task> {
+        const { data } = await this.client.put(
+            `/rest/api/1.0/tasks/${task.id}`,
+            {
+                id: task.id,
+                text: task.content,
+                state: task.isComplete ? "RESOLVED" : "OPEN"
+            }
+        );
+
+        return this.convertDataToTask(data, site);
+    }
+
+    async deleteTask(site: BitbucketSite, prId: string, task: Task): Promise<void> {
+        await this.client.delete(
+            `/rest/api/1.0/tasks/${task.id}`,
+            {}
+        );
+    }
+
+    convertDataToTask(taskData: any, site: BitbucketSite): Task {
+        const user = taskData.author ? ServerPullRequestApi.toUser(site.details, taskData.author) : UnknownUser;
+        const taskBelongsToUser: boolean = user.accountId === site.details.userId;
+        return {
+            commentId: taskData.anchor.id,
+            creator: ServerPullRequestApi.toUser(site.details, taskData.author),
+            created: taskData.createdDate,
+            updated: taskData.createdDate, //This field doesn't exist in the BBServer API response
+            isComplete: taskData.state !== "OPEN",
+            editable: taskBelongsToUser && taskData.permittedOperations.editable,
+            deletable: taskBelongsToUser && taskData.permittedOperations.deletable,
+            id: taskData.id,
+            content: taskData.text
+        };
+    }
+
     async getChangedFiles(pr: PullRequest): Promise<FileChange[]> {
         const { ownerSlug, repoSlug } = pr.site;
 
@@ -173,7 +252,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         let accumulatedDiffStats = data.diffs as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/diff`,
                 {
                     markup: true,
@@ -289,7 +368,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedCommits = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/commits`,
                 {
                     markup: true,
@@ -312,7 +391,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         }));
     }
 
-    async deleteComment(site: BitbucketSite, prId: number, commentId: number): Promise<void> {
+    async deleteComment(site: BitbucketSite, prId: string, commentId: string): Promise<void> {
         const { ownerSlug, repoSlug } = site;
         /*
         The Bitbucket Server API can not delete a comment unless the comment's version is provided as a query parameter.
@@ -329,7 +408,7 @@ export class ServerPullRequestApi implements PullRequestApi {
         );
     }
 
-    async editComment(site: BitbucketSite, prId: number, content: string, commentId: number): Promise<Comment> {
+    async editComment(site: BitbucketSite, prId: string, content: string, commentId: string): Promise<Comment> {
         const { ownerSlug, repoSlug } = site;
         /*
         The Bitbucket Server API can not edit a comment unless the comment's version is provided as a query parameter.
@@ -353,13 +432,18 @@ export class ServerPullRequestApi implements PullRequestApi {
     async getComments(pr: PullRequest): Promise<PaginatedComments> {
         const { ownerSlug, repoSlug } = pr.site;
 
-        let { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
-            {
-                markup: true,
-                avatarSize: 64
-            }
-        );
+        const commentsAndTaskPromise = Promise.all([
+            await this.client.get(
+                `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
+                {
+                    markup: true,
+                    avatarSize: 64
+                }
+            ),
+            await this.getTasks(pr),
+        ]);
+        const [commentResp, tasks] = await commentsAndTaskPromise;
+        let { data } = commentResp;
 
         if (!data.values) {
             return { data: [], next: undefined };
@@ -367,7 +451,7 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         const accumulatedActivities = data.values as any[];
         while (data.isLastPage === false) {
-            const nextPage = await this.client.getURL(this.client.generateUrl(
+            const nextPage = await this.client.get(this.client.generateUrl(
                 `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/activities`,
                 {
                     markup: true,
@@ -388,9 +472,19 @@ export class ServerPullRequestApi implements PullRequestApi {
 
         return {
             data: (await Promise.all(
-                activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, undefined)))
+                activities.map(activity => this.toNestedCommentModel(pr.site, activity.comment, activity.commentAnchor, tasks)))
             )
-                .filter(comment => this.shouldDisplayComment(comment)),
+                .filter(comment => this.shouldDisplayComment(comment))
+                .sort((a, b) => {
+                    //Comment threads are not retrieved from the API by posting order, so that must be restored to display them properly
+                    if (a.ts > b.ts) {
+                        return 1;
+                    }
+                    if (a.ts < b.ts) {
+                        return -1;
+                    }
+                    return 0;
+                }),
             next: undefined
         };
     }
@@ -416,9 +510,19 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
     }
 
-    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, parentId: number | undefined): Promise<Comment> {
+    private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[]): Promise<Comment> {
         let commentModel: Comment = await this.convertDataToComment(site, comment, commentAnchor);
-        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, comment.id)));
+        let tasksInComment: Task[] = [];
+        let tasksNotInComment: Task[] = [];
+        for (const task of tasks) {
+            if (task.commentId === commentModel.id) {
+                tasksInComment.push(task);
+            } else {
+                tasksNotInComment.push(task);
+            }
+        }
+        commentModel.tasks = tasksInComment;
+        commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)));
         if (this.hasUndeletedChild(commentModel)) {
             commentModel.deletable = false;
         }
@@ -446,7 +550,8 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
                 : undefined,
             user: user,
-            children: []
+            children: [],
+            tasks: []
         };
     }
 
@@ -454,29 +559,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async getReviewers(site: BitbucketSite, query: string): Promise<User[]> {
+    async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
-        let users: any[] = [];
-
-        if (!query) {
-            const bbApi = await clientForSite(site);
-            const repo = await bbApi.repositories.get(site);
-
-            let { data } = await this.client.get(
-                `/rest/default-reviewers/1.0/projects/${ownerSlug}/repos/${repoSlug}/reviewers`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    sourceRepoId: Number(repo.id),
-                    targetRepoId: Number(repo.id),
-                    sourceRefId: repo.mainbranch!,
-                    targetRefId: repo.mainbranch!
-                }
-            );
-
-            users = Array.isArray(data) ? data : [];
-        } else {
+        if (query && query.length > 0) {
             const { data } = await this.client.get(
                 `/rest/api/1.0/users`,
                 {
@@ -490,10 +576,34 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
             );
 
-            users = data.values || [];
+            return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
         }
 
-        return users.map(val => ServerPullRequestApi.toUser(site.details, val));
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+        const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
+        const bbApi = await clientForSite(site);
+        const repo = await bbApi.repositories.get(site);
+
+        let { data } = await this.client.get(
+            `/rest/default-reviewers/1.0/projects/${ownerSlug}/repos/${repoSlug}/reviewers`,
+            {
+                markup: true,
+                avatarSize: 64,
+                sourceRepoId: Number(repo.id),
+                targetRepoId: Number(repo.id),
+                sourceRefId: repo.mainbranch!,
+                targetRefId: repo.mainbranch!
+            }
+        );
+
+        const result = (Array.isArray(data) ? data : []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
+        this.defaultReviewersCache.setItem(cacheKey, result);
+
+        return result;
     }
 
     async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {
@@ -505,7 +615,13 @@ export class ServerPullRequestApi implements PullRequestApi {
                 title: createPrData.title,
                 description: createPrData.summary,
                 fromRef: {
-                    id: createPrData.sourceBranchName
+                    id: createPrData.sourceBranchName,
+                    repository: {
+                        slug: createPrData.sourceSite.repoSlug,
+                        project: {
+                            key: createPrData.sourceSite.ownerSlug
+                        }
+                    }
                 },
                 toRef: {
                     id: createPrData.destinationBranchName
@@ -568,8 +684,8 @@ export class ServerPullRequestApi implements PullRequestApi {
 
     async postComment(
         site: BitbucketSite,
-        prId: number, text: string,
-        parentCommentId?: number,
+        prId: string, text: string,
+        parentCommentId?: string,
         inline?: { from?: number, to?: number, path: string },
         lineMeta?: "ADDED" | "REMOVED"
     ): Promise<Comment> {

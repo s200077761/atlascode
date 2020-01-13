@@ -1,5 +1,5 @@
-import { FieldValues, IssueLinkTypeSelectOption, ValueType } from "jira-metaui-transformer";
-import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from "jira-pi-client";
+import { CommentVisibility, isIssueType, IssueKeyAndSite, IssueType, MinimalIssue, MinimalIssueOrKeyAndSite, Project, Transition, User } from '@atlassianlabs/jira-pi-common-models/entities';
+import { FieldValues, IssueLinkTypeSelectOption, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta';
 import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { Action } from "./messaging";
 
@@ -109,10 +109,18 @@ export interface OpenStartWorkPageAction extends Action {
     issue: MinimalIssue<DetailedSiteInfo>;
 }
 
+export interface WorklogData {
+    comment: string;
+    started: string;
+    timeSpent: string;
+    newEstimate?: string;
+    adjustEstimate: string;
+}
+
 export interface CreateWorklogAction extends Action {
     site: DetailedSiteInfo;
     issueKey: string;
-    worklogData: any;
+    worklogData: WorklogData;
 }
 
 export interface UpdateWatcherAction extends Action {

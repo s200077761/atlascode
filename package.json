@@ -74,12 +74,57 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.saveCommentEdit",
+                "command": "atlascode.bb.cancelCommentAction",
+                "title": "Cancel"
+            },
+            {
+                "command": "atlascode.bb.saveCommentAction",
                 "title": "Save Changes"
             },
             {
-                "command": "atlascode.bb.cancelCommentEdit",
-                "title": "Cancel"
+                "command": "atlascode.bb.deleteTask",
+                "title": "Delete",
+                "icon": {
+                    "dark": "resources/dark/delete.svg",
+                    "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.addTask",
+                "title": "Add Task",
+                "icon": {
+                    "dark": "resources/dark/addTask.svg",
+                    "light": "resources/light/addTask.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.editTask",
+                "title": "Edit",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.markTaskIncomplete",
+                "title": "Mark Task As Incomplete",
+                "icon": {
+                    "dark": "resources/dark/checked.svg",
+                    "light": "resources/light/checked.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.markTaskComplete",
+                "title": "Mark Task As Complete",
+                "icon": {
+                    "dark": "resources/dark/unchecked.svg",
+                    "light": "resources/light/unchecked.svg"
+                },
+                "category": "Atlassian"
             },
             {
                 "command": "atlascode.jira.refreshExplorer",
@@ -120,6 +165,15 @@
                 "icon": {
                     "dark": "resources/dark/refresh.svg",
                     "light": "resources/light/refresh.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.toggleFileNesting",
+                "title": "Toggle File Nesting",
+                "icon": {
+                    "dark": "resources/dark/fileTree.svg",
+                    "light": "resources/light/fileTree.svg"
                 },
                 "category": "Atlassian"
             },
@@ -234,7 +288,7 @@
             },
             {
                 "command": "atlascode.bb.showBitbucketIssueSettings",
-                "title": "Refresh Bitbucket Issues",
+                "title": "Settings",
                 "icon": {
                     "dark": "resources/dark/settings.svg",
                     "light": "resources/light/settings.svg"
@@ -346,6 +400,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "atlascode.bb.toggleFileNesting",
+                    "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
+                    "group": "navigation"
+                },
+                {
                     "command": "atlascode.bb.createPullRequest",
                     "when": "atlascode:isBBAuthenticated && atlascode:bitbucketExplorerEnabled && view == atlascode.views.bb.pullrequestsTreeView",
                     "group": "navigation"
@@ -443,16 +502,41 @@
                     "command": "atlascode.bb.deleteComment",
                     "group": "inline@2",
                     "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.addTask",
+                    "group": "inline@3",
+                    "when": "comment =~ /canAddTask/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.markTaskIncomplete",
+                    "group": "inline@1",
+                    "when": "comment =~ /markIncomplete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.markTaskComplete",
+                    "group": "inline@1",
+                    "when": "comment =~ /markComplete/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.editTask",
+                    "group": "inline@2",
+                    "when": "comment =~ /canModifyTask/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.deleteTask",
+                    "group": "inline@3",
+                    "when": "comment =~ /canRemoveTask/ && resourceScheme == atlascode.bbpr"
                 }
             ],
             "comments/comment/context": [
                 {
-                    "command": "atlascode.bb.cancelCommentEdit",
+                    "command": "atlascode.bb.cancelCommentAction",
                     "group": "inline@2",
                     "when": "resourceScheme == atlascode.bbpr"
                 },
                 {
-                    "command": "atlascode.bb.saveCommentEdit",
+                    "command": "atlascode.bb.saveCommentAction",
                     "group": "inline@1",
                     "when": "resourceScheme == atlascode.bbpr"
                 }
@@ -468,6 +552,10 @@
                 },
                 {
                     "command": "atlascode.bb.refreshPullRequests",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.toggleFileNesting",
                     "when": "false"
                 },
                 {
@@ -504,6 +592,26 @@
                 },
                 {
                     "command": "atlascode.bb.editComment",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.deleteTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.addTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.editTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.markTaskComplete",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.markTaskIncomplete",
                     "when": "false"
                 },
                 {
@@ -653,6 +761,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Nest subtasks within tasks within epics",
+                    "scope": "window"
+                },
+                "atlascode.jira.explorer.fetchAllQueryResults": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Fetch all results for JQL queries",
                     "scope": "window"
                 },
                 "atlascode.jira.statusbar.enabled": {
@@ -859,6 +973,12 @@
                     "description": "Enables the Bitbucket Pull Request Explorer",
                     "scope": "window"
                 },
+                "atlascode.bitbucket.explorer.nestFilesEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables nesting of the PR files by folder",
+                    "scope": "window"
+                },
                 "atlascode.bitbucket.pipelines.explorerEnabled": {
                     "type": "boolean",
                     "default": true,
@@ -1037,6 +1157,12 @@
         "@atlaskit/theme": "^9.2.2",
         "@atlaskit/tooltip": "^15.0.14",
         "@atlaskit/util-shared-styles": "^3.1.2",
+        "@atlassianlabs/jira-metaui-client": "^0.1.8",
+        "@atlassianlabs/jira-metaui-transformer": "^0.1.8",
+        "@atlassianlabs/jira-pi-client": "^0.1.8",
+        "@atlassianlabs/jira-pi-common-models": "^0.1.7",
+        "@atlassianlabs/jira-pi-meta-models": "^0.1.7",
+        "@atlassianlabs/pi-client-common": "^0.1.7",
         "@deviniti/jql-autocomplete": "^1.0.2",
         "@types/websocket": "^0.0.40",
         "ajv": "^6.5.4",
@@ -1054,8 +1180,6 @@
         "form-data": "^2.5.1",
         "git-url-parse": "^11.1.2",
         "handlebars": "4.0.12",
-        "jira-metaui-transformer": "^0.0.7",
-        "jira-pi-client": "^0.0.13",
         "jquery": "^3.4.1",
         "keytar": "^4.3.0",
         "lodash.debounce": "^4.0.8",

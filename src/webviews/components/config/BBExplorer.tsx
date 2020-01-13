@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
-import { chain } from '../fieldValidators';
+import * as React from 'react';
 import { IConfig } from '../../../config/model';
+import { chain } from '../fieldValidators';
 
 type changeObject = { [key: string]: any };
 
@@ -59,7 +59,7 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Bitbucket Pull Request Explorer'
+                                    label='Enable Bitbucket pull requests explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.bitbucket.explorer.enabled}
@@ -121,6 +121,23 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
                                         onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                         isDisabled={!this.props.config.bitbucket.explorer.enabled}
                                         isChecked={this.props.config.bitbucket.explorer.notifications.pullRequestCreated}
+                                    />
+                                );
+                            }
+                        }
+                    </CheckboxField>
+                    <CheckboxField
+                        name='pr-explorer-nest-files-enabled'
+                        id='pr-explorer-nest-files-enabled'
+                        value='bitbucket.explorer.nestFilesEnabled'>
+                        {
+                            (fieldArgs: any) => {
+                                return (
+                                    <Checkbox {...fieldArgs.fieldProps}
+                                        label='Nest modified files by folder'
+                                        onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                        isDisabled={!this.props.config.bitbucket.explorer.enabled}
+                                        isChecked={this.props.config.bitbucket.explorer.nestFiles}
                                     />
                                 );
                             }

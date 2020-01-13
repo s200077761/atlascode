@@ -1,26 +1,26 @@
 import Avatar from "@atlaskit/avatar";
 import Button, { ButtonGroup } from '@atlaskit/button';
 import { Checkbox } from '@atlaskit/checkbox';
-import Form, { Field } from '@atlaskit/form';
+import Form, { CheckboxField, Field } from '@atlaskit/form';
 import Arrow from '@atlaskit/icon/glyph/arrow-right';
 import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
 import Select, { AsyncSelect, components } from '@atlaskit/select';
-import { Transition } from "jira-metaui-transformer";
-import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
-import * as path from 'path';
-import * as React from 'react';
+import { isMinimalIssue, MinimalIssue, Transition } from "@atlassianlabs/jira-pi-common-models/entities";
+import path from 'path';
+import React from 'react';
 import uuid from 'uuid';
 import { DetailedSiteInfo } from "../../../atlclients/authInfo";
 import { BitbucketIssue, BitbucketIssueData, Commit, emptyBitbucketSite, FileDiff, SiteRemote, User } from '../../../bitbucket/model';
 import { OpenBitbucketIssueAction, UpdateDiffAction } from '../../../ipc/bitbucketIssueActions';
 import { OpenJiraIssueAction } from '../../../ipc/issueActions';
 import { PMFData } from '../../../ipc/messaging';
-import { CreatePullRequest, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
+import { CreatePullRequest, FetchDefaultReviewers, FetchDetails, FetchIssue, FetchUsers, OpenDiffPreviewAction, RefreshPullRequest } from '../../../ipc/prActions';
 import { CommitsResult, CreatePRData, DiffResult, isCommitsResult, isCreatePRData, isDiffResult, RepoData } from '../../../ipc/prMessaging';
 import { Branch, Ref } from '../../../typings/git';
+import { ConnectionTimeout } from "../../../util/time";
 import { AtlLoader } from '../AtlLoader';
 import { StatusMenu } from '../bbissue/StatusMenu';
 import ErrorBanner from '../ErrorBanner';
@@ -31,81 +31,55 @@ import PMFBBanner from '../pmfBanner';
 import { WebviewComponent } from '../WebviewComponent';
 import { BranchWarning } from './BranchWarning';
 import { Commits } from './Commits';
-import CreatePRTitleSummary from './CreatePRTitleSummary';
+import { CreatePRTitleSummary } from './CreatePRTitleSummary';
 import DiffList from './DiffList';
 
-const createdFromAtlascodeFooter = '\n\n---\n_Created from_ [_Atlassian for VS Code_](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode)';
-
-type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
+type Emit = CreatePullRequest | FetchDetails | FetchIssue | FetchUsers | FetchDefaultReviewers | RefreshPullRequest | OpenJiraIssueAction | OpenBitbucketIssueAction | UpdateDiffAction | OpenDiffPreviewAction;
 type Receive = CreatePRData | CommitsResult | DiffResult;
 
 interface MyState {
     data: CreatePRData;
-    title: string;
-    titleManuallyEdited: boolean;
-    summary: string;
-    summaryManuallyEdited: boolean;
-    repo?: { label: string; value: RepoData; };
-    siteRemote?: { label: string; value: SiteRemote; };
-    reviewers: User[];
-    sourceBranch?: { label: string; value: Branch };
+    repo: RepoData;
+    sourceSiteRemote: SiteRemote;
+    destinationSiteRemote: SiteRemote;
+    defaultReviewers: User[];
+    sourceBranch?: Branch;
     sourceRemoteBranchName?: string;
-    destinationBranch?: { label: string; value: Ref };
-    pushLocalChanges: boolean;
-    closeSourceBranch: boolean;
+    destinationBranch?: Ref;
     issueSetupEnabled: boolean;
     issue?: MinimalIssue<DetailedSiteInfo> | BitbucketIssue;
     commits: Commit[];
     isCreateButtonLoading: boolean;
-    result?: string;
+    fileDiffs: FileDiff[];
+    fileDiffsLoading: boolean;
     isErrorBannerOpen: boolean;
     errorDetails: any;
     isOnline: boolean;
     showPMF: boolean;
     isSomethingLoading: boolean;
-    fileDiffs: FileDiff[];
-    fileDiffsLoading: boolean;
 }
+
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 
 const emptyState = {
     data: {
         type: 'createPullRequest',
         repositories: []
     },
-    title: 'Pull request title',
-    titleManuallyEdited: false,
-    summary: createdFromAtlascodeFooter,
-    summaryManuallyEdited: false,
-    pushLocalChanges: true,
-    closeSourceBranch: false,
+    repo: emptyRepoData,
+    sourceSiteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
+    destinationSiteRemote: emptyRepoData.workspaceRepo.mainSiteRemote,
     issueSetupEnabled: true,
-    reviewers: [],
+    defaultReviewers: [],
     commits: [],
     isCreateButtonLoading: false,
+    fileDiffs: [],
+    fileDiffsLoading: false,
     isErrorBannerOpen: false,
     errorDetails: undefined,
     isOnline: true,
     showPMF: false,
-    isSomethingLoading: false,
-    fileDiffs: [],
-    fileDiffsLoading: false
-};
-
-const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
-const formatOptionLabel = (option: any, { context }: any) => {
-    if (context === 'menu') {
-        return (
-            <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                }}
-            >
-                {option.label}
-            </div>
-        );
-    }
-    return option.label;
+    isSomethingLoading: false
 };
 
 const UserOption = (props: any) => {
@@ -125,49 +99,43 @@ const UserValue = (props: any) => {
 };
 
 export default class CreatePullRequestPage extends WebviewComponent<Emit, Receive, {}, MyState> {
-    private nonce: string;
-    private userSuggestions: any[] | undefined = undefined;
-
     constructor(props: any) {
         super(props);
         this.state = emptyState;
     }
 
-    handleTitleChange = (e: any) => {
-        this.setState({ titleManuallyEdited: true });
-    };
-
-    handleSummaryChange = (e: any) => {
-        this.setState({ summaryManuallyEdited: true });
-    };
-
-    handleRepoChange = (newValue: { label: string, value: RepoData }) => {
+    handleRepoChange = (newValue: RepoData) => {
         this.resetRepoAndRemoteState(
-            newValue.value,
-            newValue.value.workspaceRepo.mainSiteRemote
+            newValue,
+            newValue.workspaceRepo.mainSiteRemote,
+            newValue.workspaceRepo.mainSiteRemote
         );
     };
 
-    handleRemoteChange = (newValue: { label: string, value: SiteRemote }) => {
-        this.resetRepoAndRemoteState(this.state.repo!.value, newValue.value);
+    handleSourceRemoteChange = (newValue: SiteRemote) => {
+        this.resetRepoAndRemoteState(this.state.repo, newValue, this.state.destinationSiteRemote);
     };
 
-    resetRepoAndRemoteState = (repo: RepoData, siteRemote: SiteRemote) => {
-        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === siteRemote.remote.name);
+    handleDestinationRemoteChange = (newValue: SiteRemote) => {
+        this.resetRepoAndRemoteState(this.state.repo, this.state.sourceSiteRemote, newValue);
+    };
+
+    resetRepoAndRemoteState = (repo: RepoData, sourceSiteRemote: SiteRemote, destinationSiteRemote: SiteRemote) => {
+        const remoteBranches = repo.remoteBranches.filter(branch => branch.remote === destinationSiteRemote.remote.name);
 
         const sourceBranch = repo.localBranches[0];
         let destinationBranch = remoteBranches[0];
         if (repo.developmentBranch) {
-            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === siteRemote.remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
+            const mainRemoteBranch = repo.remoteBranches.find(b => b.remote === destinationSiteRemote.remote.name && b.name !== undefined && b.name.indexOf(repo.developmentBranch!) !== -1);
             destinationBranch = mainRemoteBranch ? mainRemoteBranch : destinationBranch;
         }
 
         this.setState({
-            repo: { label: path.basename(repo.workspaceRepo.rootUri), value: repo },
-            siteRemote: { label: siteRemote.remote.name, value: siteRemote },
-            reviewers: repo.defaultReviewers,
-            sourceBranch: { label: sourceBranch.name!, value: sourceBranch },
-            destinationBranch: { label: destinationBranch.name!, value: destinationBranch }
+            repo: repo,
+            sourceSiteRemote: sourceSiteRemote,
+            destinationSiteRemote: destinationSiteRemote,
+            sourceBranch: sourceBranch,
+            destinationBranch: destinationBranch
         }, this.handleBranchChange);
     };
 
@@ -191,64 +159,53 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     handleBranchChange = () => {
-        const sourceRemoteBranchName = this.state.siteRemote && this.state.sourceBranch
-            ? this.state.sourceBranch.value.upstream && this.state.sourceBranch.value.upstream.remote === this.state.siteRemote.value.remote.name
-                ? `${this.state.siteRemote.value.remote.name}/${this.state.sourceBranch.value.upstream.name}`
-                : `${this.state.siteRemote.value.remote.name}/${this.state.sourceBranch.value.name}`
+        const sourceRemoteBranchName = this.state.sourceBranch
+            ? this.state.sourceBranch.upstream && this.state.sourceBranch.upstream.remote === this.state.sourceSiteRemote.remote.name
+                ? `${this.state.sourceSiteRemote.remote.name}/${this.state.sourceBranch.upstream.name}`
+                : `${this.state.sourceSiteRemote.remote.name}/${this.state.sourceBranch.name}`
             : undefined;
 
         let newState: Partial<MyState> = {
             commits: [],
+            defaultReviewers: [],
             issue: undefined,
             sourceRemoteBranchName: sourceRemoteBranchName
         };
 
-        if (this.state.sourceBranch && (!this.state.titleManuallyEdited || this.state.title.trim().length === 0)) {
-            newState = { ...newState, title: this.state.sourceBranch!.label };
-        }
-        if (!this.state.summaryManuallyEdited) {
-            newState = { ...newState, summary: createdFromAtlascodeFooter };
-        }
         this.setState(newState as any);
 
         if (this.state.sourceBranch) {
             this.postMessage({
                 action: 'fetchIssue',
-                repoUri: this.state.repo!.value.workspaceRepo.rootUri,
-                sourceBranch: this.state.sourceBranch.value
+                repoUri: this.state.repo.workspaceRepo.rootUri,
+                sourceBranch: this.state.sourceBranch
             });
         }
 
+        this.postMessage({ action: 'fetchDefaultReviewers', site: this.state.destinationSiteRemote.site! });
+
         this.setState({ fileDiffsLoading: true, fileDiffs: [] }); //Activates spinner for file diff panel and resets data
-        if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch.value !== this.state.destinationBranch.value) {
+        if (this.state.repo && this.state.sourceBranch && this.state.destinationBranch && this.state.sourceBranch !== this.state.destinationBranch) {
             this.postMessage(
                 {
                     action: 'updateDiff',
-                    repoData: this.state.repo!.value,
-                    sourceBranch: this.state.sourceBranch!.value,
-                    destinationBranch: this.state.destinationBranch!.value
+                    repoData: this.state.repo,
+                    sourceBranch: this.state.sourceBranch!,
+                    destinationBranch: this.state.destinationBranch!
                 }
             );
 
-            if (this.state.siteRemote && this.state.repo.value.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
+            if (this.state.destinationSiteRemote && this.state.repo.remoteBranches.find(remoteBranch => sourceRemoteBranchName === remoteBranch.name)) {
                 this.postMessage({
                     action: 'fetchDetails',
-                    site: this.state.siteRemote!.value.site!,
-                    sourceBranch: this.state.sourceBranch!.value,
-                    destinationBranch: this.state.destinationBranch!.value
+                    site: this.state.destinationSiteRemote.site!,
+                    sourceBranch: this.state.sourceBranch!,
+                    destinationBranch: this.state.destinationBranch!
                 });
             }
         } else {
             this.setState({ fileDiffsLoading: false, fileDiffs: [] });
         }
-    };
-
-    handlePushLocalChangesChange = (e: any) => {
-        this.setState({ pushLocalChanges: e.target.checked });
-    };
-
-    handleCloseSourceBranchChange = (e: any) => {
-        this.setState({ closeSourceBranch: e.target.checked });
     };
 
     toggleIssueSetupEnabled = (e: any) => {
@@ -272,27 +229,20 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     loadUserOptions = (input: string): Promise<any> => {
-        if (!this.state.siteRemote || !this.state.repo) {
+        if (!this.state.destinationSiteRemote || !this.state.repo) {
             return Promise.resolve([]);
         }
         return new Promise(resolve => {
-            this.userSuggestions = undefined;
             const nonce = uuid.v4();
-            this.postMessage({ action: 'fetchUsers', nonce: nonce, query: input, site: this.state.siteRemote!.value.site! });
-
-            const start = Date.now();
-            let timer = setInterval(() => {
-                const end = Date.now();
-                if ((this.userSuggestions !== undefined && this.nonce === nonce) || (end - start) > 2000) {
-                    if (this.userSuggestions === undefined) {
-                        this.userSuggestions = [];
-                    }
-
-                    clearInterval(timer);
-                    this.setState({ isSomethingLoading: false });
-                    resolve(this.userSuggestions);
-                }
-            }, 100);
+            (async () => {
+                const result = await this.postMessageWithEventPromise(
+                    { action: 'fetchUsers', query: input, site: this.state.destinationSiteRemote.site!, nonce: nonce },
+                    'fetchUsersResult',
+                    ConnectionTimeout,
+                    nonce
+                );
+                resolve(result.users);
+            })();
         });
     };
 
@@ -300,15 +250,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
         this.setState({ isCreateButtonLoading: true });
         this.postMessage({
             action: 'createPullRequest',
-            workspaceRepo: this.state.repo!.value.workspaceRepo,
-            site: this.state.siteRemote!.value.site!,
+            workspaceRepo: this.state.repo.workspaceRepo,
+            destinationSite: this.state.destinationSiteRemote.site!,
             reviewers: e.reviewers || [],
             title: e.title,
             summary: e.summary,
-            sourceBranch: this.state.sourceBranch!.value,
-            destinationBranch: this.state.destinationBranch!.value,
-            pushLocalChanges: this.state.pushLocalChanges,
-            closeSourceBranch: this.state.closeSourceBranch,
+            sourceSiteRemote: this.state.sourceSiteRemote,
+            sourceBranch: this.state.sourceBranch!,
+            destinationBranch: this.state.destinationBranch!,
+            pushLocalChanges: e.pushLocalChanges,
+            closeSourceBranch: e.closeSourceBranch,
             issue: this.state.issueSetupEnabled ? this.state.issue : undefined
         });
     };
@@ -316,16 +267,16 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     onMessageReceived(e: any): boolean {
         switch (e.type) {
             case 'error': {
-                this.setState({ isCreateButtonLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
+                this.setState({ isCreateButtonLoading: false, fileDiffsLoading: false, isErrorBannerOpen: true, errorDetails: e.reason });
                 break;
             }
             case 'createPullRequestData': {
                 if (isCreatePRData(e)) {
                     this.setState({ data: e, isCreateButtonLoading: false });
 
-                    if (this.state.repo === undefined && e.repositories.length > 0) {
+                    if (this.state.repo === emptyRepoData && e.repositories.length > 0) {
                         const firstRepo = e.repositories[0];
-                        this.resetRepoAndRemoteState(firstRepo, firstRepo.workspaceRepo.mainSiteRemote);
+                        this.resetRepoAndRemoteState(firstRepo, firstRepo.workspaceRepo.mainSiteRemote, firstRepo.workspaceRepo.mainSiteRemote);
                     }
                 }
                 break;
@@ -334,17 +285,15 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                 if (isCommitsResult(e)) {
                     this.setState({
                         isCreateButtonLoading: false,
-                        commits: e.commits,
-                        title: e.commits.length === 1 && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits[0].message!.split('\n', 1)[0].trim()
-                            : this.state.title,
-                        summary: this.state.sourceBranch && (!this.state.summaryManuallyEdited || this.state.summary.trim().length === 0)
-                            ? e.commits.length === 1
-                                ? `${e.commits[0].message!.substring(e.commits[0].message!.indexOf('\n') + 1).trimLeft()}${createdFromAtlascodeFooter}`
-                                : `${e.commits.map(c => `- ${c.message}`).join('\n')}${createdFromAtlascodeFooter}`
-                            : this.state.summary
+                        commits: e.commits
                     });
                 }
+                break;
+            }
+            case 'fetchDefaultReviewersResult': {
+                this.setState({
+                    defaultReviewers: e.users
+                });
                 break;
             }
             case 'diffResult': {
@@ -358,11 +307,6 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
             }
             case 'fetchIssueResult': {
                 this.setState({ issue: e.issue });
-                break;
-            }
-            case 'fetchUsersResult': {
-                this.userSuggestions = e.users;
-                this.nonce = e.nonce;
                 break;
             }
             case 'onlineStatus': {
@@ -394,18 +338,18 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
     };
 
     render() {
-        if (!this.state.repo && !this.state.isErrorBannerOpen && this.state.isOnline) {
+        if (this.state.repo === emptyRepoData && !this.state.isErrorBannerOpen && this.state.isOnline) {
             this.postMessage({ action: 'refreshPR' });
             return <AtlLoader />;
         }
 
-        const repo = this.state.repo || { label: '', value: emptyRepoData };
+        const repo = this.state.repo;
 
         let externalUrl = 'https://bitbucket.org/dashboard/overview';
-        if (repo.value.href) {
-            externalUrl = repo.value.isCloud
-                ? `${repo.value.href}/pull-requests/new`
-                : `${repo.value.href}/pull-requests?create`;
+        if (repo.href) {
+            externalUrl = repo.isCloud
+                ? `${repo.href}/pull-requests/new`
+                : `${repo.href}/pull-requests?create`;
         }
         const actionsContent = (
             <ButtonGroup>
@@ -473,24 +417,14 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         <div style={{ marginBottom: '20px' }}>
                                             <label>Repository</label>
                                             <Select
-                                                options={this.state.data.repositories.map(repo => { return { label: path.basename(repo.workspaceRepo.rootUri), value: repo }; })}
+                                                options={this.state.data.repositories}
+                                                getOptionLabel={(repo: RepoData) => path.basename(repo.workspaceRepo.rootUri)}
+                                                getOptionValue={(repo: RepoData) => repo}
                                                 onChange={this.handleRepoChange}
                                                 placeholder='Loading...'
                                                 value={repo}
                                                 className="ac-select-container"
                                                 classNamePrefix="ac-select" />
-
-                                            {repo.value.workspaceRepo.siteRemotes.length > 1 &&
-                                                <React.Fragment>
-                                                    <label>Remote</label>
-                                                    <Select
-                                                        options={repo.value.workspaceRepo.siteRemotes.map(r => { return { label: r.remote.name, value: r }; })}
-                                                        onChange={this.handleRemoteChange}
-                                                        value={this.state.siteRemote}
-                                                        className="ac-select-container"
-                                                        classNamePrefix="ac-select" />
-                                                </React.Fragment>
-                                            }
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
@@ -498,15 +432,30 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             <div className='ac-compare-widget'>
                                                 <div className='ac-compare-widget-item'>
                                                     <div className='ac-flex'>
-                                                        <Avatar src={repo.value.avatarUrl} />
+                                                        <Avatar src={repo.avatarUrl} />
                                                         <p style={{ marginLeft: '8px' }}>Source branch (local)</p>
                                                     </div>
+                                                    <div className='ac-compare-widget-break' />
+                                                    {repo.workspaceRepo.siteRemotes.length > 1 &&
+                                                        <div className='ac-flex-space-between'>
+                                                            <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
+                                                            <Select
+                                                                options={repo.workspaceRepo.siteRemotes.filter(r => !r.remote.name.endsWith('(parent repo)'))}
+                                                                getOptionLabel={(s: SiteRemote) => s.remote.name}
+                                                                getOptionValue={(s: SiteRemote) => s}
+                                                                onChange={this.handleSourceRemoteChange}
+                                                                value={this.state.sourceSiteRemote}
+                                                                className="ac-compare-widget-select-container"
+                                                                classNamePrefix="ac-select" />
+                                                        </div>
+                                                    }
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
                                                         <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
-                                                            formatOptionLabel={formatOptionLabel}
-                                                            options={repo.value.localBranches.map(branch => ({ label: branch.name, value: branch }))}
+                                                            options={repo.localBranches}
+                                                            getOptionLabel={(branch: Branch) => branch.name}
+                                                            getOptionValue={(branch: Branch) => branch}
                                                             onChange={this.handleSourceBranchChange}
                                                             value={this.state.sourceBranch}
                                                             className="ac-compare-widget-select-container"
@@ -518,17 +467,30 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             <div className='ac-compare-widget'>
                                                 <div className='ac-compare-widget-item'>
                                                     <div className='ac-flex'>
-                                                        <Avatar src={repo.value.avatarUrl} />
-                                                        <p style={{ marginLeft: '8px' }}>{this.state.siteRemote ? `${this.state.siteRemote.value.site!.ownerSlug} / ${this.state.siteRemote.value.site!.repoSlug}` : 'No bitbucket remotes found'}</p>
+                                                        <Avatar src={repo.avatarUrl} />
+                                                        <p style={{ marginLeft: '8px' }}>{this.state.destinationSiteRemote ? `${this.state.destinationSiteRemote.site!.ownerSlug} / ${this.state.destinationSiteRemote.site!.repoSlug}` : 'No bitbucket remotes found'}</p>
                                                     </div>
+                                                    <div className='ac-compare-widget-break' />
+                                                    {repo.workspaceRepo.siteRemotes.length > 1 &&
+                                                        <div className='ac-flex-space-between'>
+                                                            <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
+                                                            <Select
+                                                                options={repo.workspaceRepo.siteRemotes}
+                                                                getOptionLabel={(s: SiteRemote) => s.remote.name}
+                                                                getOptionValue={(s: SiteRemote) => s}
+                                                                onChange={this.handleDestinationRemoteChange}
+                                                                value={this.state.destinationSiteRemote}
+                                                                className="ac-compare-widget-select-container"
+                                                                classNamePrefix="ac-select" />
+                                                        </div>
+                                                    }
                                                     <div className='ac-compare-widget-break' />
                                                     <div className='ac-flex-space-between'>
                                                         <div style={{ padding: '8px' }}><BitbucketBranchesIcon label='branch' size='medium' /></div>
                                                         <Select
-                                                            options={this.state.siteRemote
-                                                                ? repo.value.remoteBranches.filter(branch => branch.remote === this.state.siteRemote!.value.remote.name)
-                                                                    .map(branch => ({ label: branch.name, value: branch }))
-                                                                : []}
+                                                            options={repo.remoteBranches.filter(branch => branch.remote === this.state.destinationSiteRemote.remote.name)}
+                                                            getOptionLabel={(branch: Branch) => branch.name}
+                                                            getOptionValue={(branch: Branch) => branch}
                                                             onChange={this.handleDestinationBranchChange}
                                                             value={this.state.destinationBranch}
                                                             className="ac-compare-widget-select-container"
@@ -538,45 +500,52 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                             </div>
                                         </div>
 
-                                        <Checkbox
-                                            label={'Push latest changes from local to remote branch'}
-                                            isChecked={this.state.pushLocalChanges}
-                                            onChange={this.handlePushLocalChangesChange}
-                                            name="push-local-branch-enabled" />
+                                        <CheckboxField
+                                            name='pushLocalChanges'
+                                            id='pushLocalChanges'
+                                            defaultIsChecked>
+                                            {
+                                                (fieldArgs: any) => {
+                                                    return (
+                                                        <Checkbox {...fieldArgs.fieldProps}
+                                                            label='Push latest changes from local to remote branch'
+                                                        />
+                                                    );
+                                                }
+                                            }
+                                        </CheckboxField>
 
-                                        <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch.value : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.value.remoteBranches} hasLocalChanges={repo.value.hasLocalChanges} />
-                                        <CreatePRTitleSummary title={this.state.title} summary={this.state.summary} onTitleChange={this.handleTitleChange} onSummaryChange={this.handleSummaryChange} />
+                                        <BranchWarning sourceBranch={this.state.sourceBranch ? this.state.sourceBranch : undefined} sourceRemoteBranchName={this.state.sourceRemoteBranchName} remoteBranches={repo.remoteBranches} hasLocalChanges={repo.hasLocalChanges} />
+                                        <CreatePRTitleSummary sourceBranchName={this.state.sourceBranch?.name ?? ''} commits={this.state.commits} />
                                         <div className='ac-vpadding'>
                                             <Field label='Reviewers'
                                                 id='reviewers'
                                                 name='reviewers'
-                                                defaultValue={repo.value.defaultReviewers}
+                                                defaultValue={this.state.defaultReviewers}
                                             >
                                                 {
                                                     (fieldArgs: any) => {
                                                         return (
-                                                            <div>
-                                                                <AsyncSelect
-                                                                    {...fieldArgs.fieldProps}
-                                                                    className="ac-select-container"
-                                                                    classNamePrefix="ac-select"
-                                                                    loadOptions={this.loadUserOptions}
-                                                                    getOptionLabel={(option: any) => option.display_name}
-                                                                    getOptionValue={(option: any) => option.accountId}
-                                                                    placeholder={repo.value.isCloud
-                                                                        ? "Enter the user's full name (partial matches are not supported)"
-                                                                        : "Start typing to search for reviewers"
-                                                                    }
-                                                                    noOptionsMessage={() => repo.value.isCloud
-                                                                        ? "No results (enter the user's full name; partial matches are not supported)"
-                                                                        : "No results"
-                                                                    }
-                                                                    defaultOptions={repo.value.defaultReviewers}
-                                                                    isMulti
-                                                                    components={{ Option: UserOption, MultiValueLabel: UserValue }}
-                                                                    isDisabled={this.state.isSomethingLoading}
-                                                                    isLoading={this.state.isSomethingLoading} />
-                                                            </div>
+                                                            <AsyncSelect
+                                                                {...fieldArgs.fieldProps}
+                                                                className="ac-select-container"
+                                                                classNamePrefix="ac-select"
+                                                                loadOptions={this.loadUserOptions}
+                                                                getOptionLabel={(option: any) => option.displayName}
+                                                                getOptionValue={(option: any) => option.accountId}
+                                                                placeholder={repo.isCloud
+                                                                    ? "Enter the user's full name (partial matches are not supported)"
+                                                                    : "Start typing to search for reviewers"
+                                                                }
+                                                                noOptionsMessage={() => repo.isCloud
+                                                                    ? "No results (enter the user's full name; partial matches are not supported)"
+                                                                    : "No results"
+                                                                }
+                                                                defaultOptions={this.state.defaultReviewers}
+                                                                isMulti
+                                                                components={{ Option: UserOption, MultiValueLabel: UserValue }}
+                                                                isDisabled={this.state.isSomethingLoading}
+                                                                isLoading={this.state.isSomethingLoading} />
                                                         );
                                                     }
                                                 }
@@ -584,11 +553,19 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </div>
 
                                         <div className='ac-vpadding'>
-                                            <Checkbox
-                                                label={'Close source branch after the pull request is merged'}
-                                                isChecked={this.state.closeSourceBranch}
-                                                onChange={this.handleCloseSourceBranchChange}
-                                                name="close-source-branch-enabled" />
+                                            <CheckboxField
+                                                name='closeSourceBranch'
+                                                id='closeSourceBranch'>
+                                                {
+                                                    (fieldArgs: any) => {
+                                                        return (
+                                                            <Checkbox {...fieldArgs.fieldProps}
+                                                                label='Close source branch after the pull request is merged'
+                                                            />
+                                                        );
+                                                    }
+                                                }
+                                            </CheckboxField>
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
@@ -600,17 +577,19 @@ export default class CreatePullRequestPage extends WebviewComponent<Emit, Receiv
                                         </div>
                                     </GridColumn>
                                     <GridColumn medium={12}>
-                                        <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
-                                            <DiffList
-                                                fileDiffsLoading={this.state.fileDiffsLoading}
-                                                fileDiffs={this.state.fileDiffs}
-                                                openDiffHandler={this.openDiffViewForFile}
-                                            />
-                                        </Panel>
+                                        {this.state.fileDiffs.length > 0 &&
+                                            <Panel style={{ marginBottom: 5, marginLeft: 10 }} isDefaultExpanded header={this.diffPanelHeader()}>
+                                                <DiffList
+                                                    fileDiffsLoading={this.state.fileDiffsLoading}
+                                                    fileDiffs={this.state.fileDiffs}
+                                                    openDiffHandler={this.openDiffViewForFile}
+                                                />
+                                            </Panel>
+                                        }
                                     </GridColumn>
                                     <GridColumn medium={12}>
-                                        {this.state.siteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
-                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.siteRemote!.value.remote.name}/{this.state.sourceBranch!.label} <Arrow label="" size="small" /> {this.state.destinationBranch!.label}</p></div>}>
+                                        {this.state.destinationSiteRemote && this.state.sourceBranch && this.state.destinationBranch && this.state.commits.length > 0 &&
+                                            <Panel isDefaultExpanded header={<div className='ac-flex-space-between'><h3>Commits</h3><p>{this.state.destinationSiteRemote.remote.name}/{this.state.sourceBranch?.name} <Arrow label="" size="small" /> {this.state.destinationBranch?.name}</p></div>}>
                                                 <Commits commits={this.state.commits} />
                                             </Panel>
                                         }

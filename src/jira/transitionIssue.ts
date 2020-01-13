@@ -1,4 +1,4 @@
-import { isIssueKeyAndSite, isMinimalIssue, MinimalIssueOrKeyAndSite, Transition } from "jira-pi-client";
+import { isIssueKeyAndSite, isMinimalIssue, MinimalIssueOrKeyAndSite, Transition } from "@atlassianlabs/jira-pi-common-models";
 import * as vscode from "vscode";
 import { issueTransitionedEvent } from "../analytics";
 import { DetailedSiteInfo, emptySiteInfo } from "../atlclients/authInfo";

@@ -1,5 +1,6 @@
 import { commands, Disposable, Event, EventEmitter, TreeItem, Uri, window, workspace } from 'vscode';
-import { prPaginationEvent } from '../analytics';
+import { prPaginationEvent, viewScreenEvent } from '../analytics';
+import { ProductBitbucket } from '../atlclients/authInfo';
 import { BitbucketContext } from '../bitbucket/bbContext';
 import { clientForSite } from '../bitbucket/bbUtils';
 import { PaginatedPullRequests, WorkspaceRepo } from '../bitbucket/model';
@@ -9,10 +10,12 @@ import { BaseTreeDataProvider } from './Explorer';
 import { GitContentProvider } from './gitContentProvider';
 import { AbstractBaseNode } from './nodes/abstractBaseNode';
 import { emptyBitbucketNodes } from './nodes/bitbucketEmptyNodeList';
-import { PullRequestHeaderNode } from './pullrequest/headerNode';
+import { SimpleNode } from './nodes/simpleNode';
+import { CreatePullRequestNode, PullRequestHeaderNode } from './pullrequest/headerNode';
 import { RepositoriesNode } from './pullrequest/repositoriesNode';
 
-const headerNode = new PullRequestHeaderNode('showing open pull requests');
+const createPRNode = new CreatePullRequestNode();
+const headerNode = new PullRequestHeaderNode('Showing open pull requests');
 
 export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     private _onDidChangeTreeData: EventEmitter<AbstractBaseNode | undefined> = new EventEmitter<AbstractBaseNode | undefined>();
@@ -41,7 +44,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                     const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
                     return await bbApi.pullrequests.getList(wsRepo);
                 };
-                headerNode.description = 'showing open pull requests';
+                headerNode.description = 'Showing open pull requests';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsCreatedByMe, () => {
@@ -49,7 +52,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                     const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
                     return await bbApi.pullrequests.getListCreatedByMe(wsRepo);
                 };
-                headerNode.description = 'showing pull requests created by me';
+                headerNode.description = 'Showing pull requests created by me';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketShowPullRequestsToReview, () => {
@@ -57,7 +60,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
                     const bbApi = await clientForSite(wsRepo.mainSiteRemote.site!);
                     return await bbApi.pullrequests.getListToReview(wsRepo);
                 };
-                headerNode.description = 'showing pull requests to review';
+                headerNode.description = 'Showing pull requests to review';
                 this.refresh();
             }),
             commands.registerCommand(Commands.BitbucketPullRequestFilters, () => {
@@ -141,8 +144,14 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
     }
 
     async getChildren(element?: AbstractBaseNode): Promise<AbstractBaseNode[]> {
+        if (Container.siteManager.getSitesAvailable(ProductBitbucket).length === 0) {
+            viewScreenEvent('pullRequestsTreeViewUnauthenticatedMessage', undefined, ProductBitbucket).then(event => Container.analyticsClient.sendScreenEvent(event));
+            return [new SimpleNode('Authenticate with Bitbucket to view pull requests', { command: Commands.ShowBitbucketAuth, title: 'Open Bitbucket Settings' })];
+        }
+
         const repos = this.ctx.getBitbucketRepositories();
         if (repos.length < 1) {
+            viewScreenEvent('pullRequestsTreeViewNoReposFoundMessage', undefined, ProductBitbucket).then(event => Container.analyticsClient.sendScreenEvent(event));
             return emptyBitbucketNodes;
         }
 
@@ -153,7 +162,7 @@ export class PullRequestNodeDataProvider extends BaseTreeDataProvider {
             this.updateChildren();
         }
 
-        return [headerNode, ...Array.from(this._childrenMap!.values())];
+        return [createPRNode, headerNode, ...Array.from(this._childrenMap!.values())];
     }
 
     dispose() {

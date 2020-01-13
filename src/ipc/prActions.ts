@@ -1,22 +1,50 @@
-import { MinimalIssue } from "jira-pi-client";
+import { MinimalIssue } from "@atlassianlabs/jira-pi-common-models/entities";
 import { DetailedSiteInfo } from "../atlclients/authInfo";
-import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Reviewer, WorkspaceRepo } from "../bitbucket/model";
+import { ApprovalStatus, BitbucketIssue, BitbucketSite, FileChange, Reviewer, SiteRemote, Task, WorkspaceRepo } from "../bitbucket/model";
 import { Branch } from "../typings/git";
 import { FileDiffQueryParams } from "../views/pullrequest/pullRequestNode";
 import { Action } from "./messaging";
 
+export interface CreateTask extends Action {
+    action: "createTask",
+    task: Task,
+    commentId?: string
+}
+
+export interface EditTask extends Action {
+    action: "editTask",
+    task: Task
+}
+
+export interface DeleteTask extends Action {
+    action: "deleteTask",
+    task: Task
+}
+
+export function isCreateTask(a: Action): a is CreateTask {
+    return (<CreateTask>a).action === "createTask";
+}
+
+export function isEditTask(a: Action): a is EditTask {
+    return (<EditTask>a).action === "editTask";
+}
+
+export function isDeleteTask(a: Action): a is DeleteTask {
+    return (<DeleteTask>a).action === "deleteTask";
+}
+
 export interface DeleteComment extends Action {
-    commentId: number;
+    commentId: string;
 }
 
 export interface EditComment extends Action {
     content: string;
-    commentId: number;
+    commentId: string;
 }
 
 export interface PostComment extends Action {
     content: string;
-    parentCommentId?: number;
+    parentCommentId?: string;
 }
 
 export function isDeleteComment(a: Action): a is DeleteComment {
@@ -87,10 +115,11 @@ export function isCheckout(a: Action): a is Checkout {
 export interface CreatePullRequest extends Action {
     action: 'createPullRequest';
     workspaceRepo: WorkspaceRepo;
-    site: BitbucketSite;
+    destinationSite: BitbucketSite;
     reviewers: Reviewer[];
     title: string;
     summary: string;
+    sourceSiteRemote: SiteRemote;
     sourceBranch: Branch;
     destinationBranch: Branch;
     pushLocalChanges: boolean;
@@ -135,6 +164,15 @@ export interface FetchUsers extends Action {
 
 export function isFetchUsers(a: Action): a is FetchUsers {
     return (<FetchUsers>a).action === 'fetchUsers' && (<FetchUsers>a).query !== undefined;
+}
+
+export interface FetchDefaultReviewers extends Action {
+    action: 'fetchDefaultReviewers';
+    site: BitbucketSite;
+}
+
+export function isFetchDefaultReviewers(a: Action): a is FetchDefaultReviewers {
+    return (<FetchDefaultReviewers>a).action === 'fetchDefaultReviewers' && (<FetchDefaultReviewers>a).site !== undefined;
 }
 
 export interface OpenBuildStatusAction extends Action {

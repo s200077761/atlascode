@@ -1,13 +1,13 @@
 import { commands, ConfigurationChangeEvent } from 'vscode';
 import { BitbucketContext } from '../../bitbucket/bbContext';
-import { Container } from '../../container';
-import { configuration } from '../../config/configuration';
 import { Commands } from '../../commands';
-import { PullRequestTreeViewId, setCommandContext, CommandContext } from '../../constants';
-import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
-import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
+import { configuration } from '../../config/configuration';
+import { CommandContext, PullRequestTreeViewId, setCommandContext } from '../../constants';
+import { Container } from '../../container';
 import { BitbucketExplorer } from '../BitbucketExplorer';
 import { BaseTreeDataProvider } from '../Explorer';
+import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
+import { PullRequestCreatedMonitor } from './pullRequestCreatedMonitor';
 
 export class PullRequestsExplorer extends BitbucketExplorer {
 
@@ -16,6 +16,7 @@ export class PullRequestsExplorer extends BitbucketExplorer {
 
         Container.context.subscriptions.push(
             commands.registerCommand(Commands.BitbucketRefreshPullRequests, () => this.refresh()),
+            commands.registerCommand(Commands.BitbucketToggleFileNesting, () => this.toggleFileNesting()),
             commands.registerCommand(Commands.BitbucketShowPullRequestDetails, async (pr) => {
                 await Container.pullRequestViewManager.createOrShow(pr);
             }),
@@ -53,5 +54,11 @@ export class PullRequestsExplorer extends BitbucketExplorer {
         if (initializing || configuration.changed(e, 'bitbucket.explorer.enabled')) {
             setCommandContext(CommandContext.BitbucketExplorer, Container.config.bitbucket.explorer.enabled);
         }
+    }
+
+    toggleFileNesting() {
+        const isEnabled = configuration.get<boolean>('bitbucket.explorer.nestFilesEnabled');
+        configuration.updateEffective('bitbucket.explorer.nestFilesEnabled', !isEnabled, null);
+        this.refresh();
     }
 }

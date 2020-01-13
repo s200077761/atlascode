@@ -1,4 +1,4 @@
-import { MinimalIssue } from 'jira-pi-client';
+import { MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
 import { Command, Disposable, Event, EventEmitter, TreeItem } from 'vscode';
 import { DetailedSiteInfo, ProductJira } from '../../atlclients/authInfo';
 import { Commands } from '../../commands';

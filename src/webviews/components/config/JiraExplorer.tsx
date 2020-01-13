@@ -1,7 +1,7 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
 import Tooltip from '@atlaskit/tooltip';
-import { Filter } from 'jira-pi-client';
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';
@@ -75,7 +75,7 @@ export default class JiraExplorer extends React.Component<{
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Jira Issue Explorer'
+                                    label='Enable Jira issues explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.jira.explorer.enabled}
@@ -96,6 +96,23 @@ export default class JiraExplorer extends React.Component<{
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.jira.explorer.nestSubtasks}
+                                />
+                            );
+                        }
+                    }
+                </CheckboxField>
+                <CheckboxField
+                    name='issue-explorer-fetchAllQueryResults'
+                    id='issue-explorer-fetchAllQueryResults'
+                    value='jira.explorer.fetchAllQueryResults'>
+                    {
+                        (fieldArgs: any) => {
+                            return (
+                                <Checkbox {...fieldArgs.fieldProps}
+                                    label='Fetch all JQL query results (default is 100, enabling this could cause performance issues)'
+                                    isIndeterminate={this.getIsExplorerIndeterminate()}
+                                    onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
+                                    isChecked={this.props.config.jira.explorer.fetchAllQueryResults}
                                 />
                             );
                         }

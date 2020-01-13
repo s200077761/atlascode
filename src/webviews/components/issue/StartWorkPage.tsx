@@ -5,8 +5,7 @@ import Page, { Grid, GridColumn } from "@atlaskit/page";
 import PageHeader from '@atlaskit/page-header';
 import SectionMessage from '@atlaskit/section-message';
 import Select, { CreatableSelect } from '@atlaskit/select';
-import { Transition } from 'jira-metaui-transformer';
-import { createEmptyMinimalIssue, emptyTransition, isMinimalIssue, MinimalIssue } from 'jira-pi-client';
+import { createEmptyMinimalIssue, emptyTransition, isMinimalIssue, MinimalIssue, Transition } from '@atlassianlabs/jira-pi-common-models';
 import * as path from 'path';
 import * as React from "react";
 import EdiText from 'react-editext';
@@ -30,7 +29,7 @@ import { TransitionMenu } from "./TransitionMenu";
 type Emit = RefreshIssueAction | StartWorkAction | OpenJiraIssueAction | CopyJiraIssueLinkAction | OpenBitbucketIssueAction | CopyBitbucketIssueLink;
 type Accept = StartWorkOnIssueData | StartWorkOnBitbucketIssueData | HostErrorMessage;
 
-const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, defaultReviewers: [], localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
+const emptyRepoData: RepoData = { workspaceRepo: { rootUri: '', mainSiteRemote: { site: emptyBitbucketSite, remote: { name: '', isReadOnly: true } }, siteRemotes: [] }, localBranches: [], remoteBranches: [], branchTypes: [], isCloud: true };
 
 type State = {
   data: StartWorkOnIssueData | StartWorkOnBitbucketIssueData;

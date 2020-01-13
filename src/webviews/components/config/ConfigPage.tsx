@@ -6,14 +6,14 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import Panel from '@atlaskit/panel';
 import Select from '@atlaskit/select';
 import { colors } from '@atlaskit/theme';
-import { Filter } from 'jira-pi-client';
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import merge from 'merge-anything';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import uuid from 'uuid';
 import { AuthInfo, DetailedSiteInfo, ProductBitbucket, ProductJira, SiteInfo } from '../../../atlclients/authInfo';
 import { IConfig, SettingSource } from '../../../config/model';
-import { AuthAction, ConfigTarget, FeedbackData, FetchJqlDataAction, LoginAuthAction, SaveSettingsAction, SubmitFeedbackAction } from '../../../ipc/configActions';
+import { ConfigTarget, FeedbackData, FetchJqlDataAction, LoginAuthAction, LogoutAuthAction, SaveSettingsAction, SubmitFeedbackAction } from '../../../ipc/configActions';
 import { ConfigData, emptyConfigData } from '../../../ipc/configMessaging';
 import { FetchQueryAction } from '../../../ipc/issueActions';
 import { ProjectList } from '../../../ipc/issueMessaging';
@@ -46,7 +46,7 @@ const panelHeader = (heading: string, subheading: string) =>
         <p className='inlinePanelSubheading'>{subheading}</p>
     </div>;
 
-type Emit = AuthAction | LoginAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | FetchJqlDataAction | Action;
+type Emit = LoginAuthAction | LogoutAuthAction | SaveSettingsAction | SubmitFeedbackAction | FetchQueryAction | FetchJqlDataAction | Action;
 type Accept = ConfigData | ProjectList | HostErrorMessage;
 
 interface ViewState extends ConfigData {
@@ -260,7 +260,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
     };
 
     handleLogout = (site: DetailedSiteInfo) => {
-        this.postMessage({ action: 'logout', siteInfo: site });
+        this.postMessage({ action: 'logout', detailedSiteInfo: site });
     };
 
     handleSourceLink = () => {
@@ -412,7 +412,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                         handleSaveSite={this.handleLogin} />
                                                 </Panel>
 
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Issues and JQL', 'configure the Jira issue explorer, custom JQL and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.JiraIssue)} header={panelHeader('Jira Issues Explorer', 'configure the Jira issues explorer, custom JQL and notifications')}>
                                                     {snippetTip}
                                                     <JiraExplorer config={this.state.config!}
                                                         jqlFetcher={this.handleFetchJqlOptions}
@@ -457,7 +457,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     />
                                                 </Panel>
 
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPullRequest)} header={panelHeader('Pull Requests Explorer', 'configure the pull requests explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBPullRequest)} header={panelHeader('Bitbucket Pull Requests Explorer', 'configure the Bitbucket pull requests explorer and notifications')}>
                                                     <BitbucketExplorer config={this.state.config!} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
@@ -465,7 +465,7 @@ export default class ConfigPage extends WebviewComponent<Emit, Accept, {}, ViewS
                                                     <PipelinesConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 
-                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket Issues explorer and notifications')}>
+                                                <Panel {...this.shouldDefaultExpand(SettingSource.BBIssue)} header={panelHeader('Bitbucket Issues Explorer', 'configure the Bitbucket issues explorer and notifications')}>
                                                     <BitbucketIssuesConfig config={this.state.config!} onConfigChange={this.onConfigChange} />
                                                 </Panel>
 

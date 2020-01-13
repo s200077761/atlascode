@@ -2,7 +2,7 @@ import Avatar from '@atlaskit/avatar';
 import AvatarGroup from '@atlaskit/avatar-group';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
-import { User, Votes } from 'jira-metaui-transformer';
+import { User, Votes } from '@atlassianlabs/jira-pi-common-models';
 import * as React from 'react';
 
 type MyState = {

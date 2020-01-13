@@ -38,9 +38,8 @@ export class Client {
     }
 
     async get(urlSlug: string, queryParams?: any) {
-        let url = `${this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
-
         const res = await this.transport(url, {
             method: "GET"
         });
@@ -60,13 +59,6 @@ export class Client {
         return { data: res.data, headers: res.headers };
     }
 
-    async getURL(url: string) {
-        const res = await this.transport(url, {
-            method: "GET"
-        });
-        return { data: res.data, headers: res.headers };
-    }
-
     async getOctetStream(urlSlug: string, queryParams?: any) {
         let url = `${this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
@@ -81,9 +73,8 @@ export class Client {
     }
 
     async post(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
-
         try {
             const res = await this.transport(url, {
                 method: "POST",
@@ -102,12 +93,11 @@ export class Client {
             } else {
                 return Promise.reject(e);
             }
-
         }
     }
 
     async put(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {
@@ -119,7 +109,7 @@ export class Client {
     }
 
     async delete(urlSlug: string, body: any, queryParams?: any): Promise<any> {
-        let url = `${this.baseUrl}${urlSlug}`;
+        let url = `${urlSlug.startsWith("http") ? '' : this.baseUrl}${urlSlug}`;
         url = this.addQueryParams(url, queryParams);
 
         const res = await this.transport(url, {

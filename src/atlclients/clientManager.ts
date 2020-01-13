@@ -1,4 +1,5 @@
-import { getProxyHostAndPort, JiraClient, JiraCloudClient, JiraServerClient } from "jira-pi-client";
+import { JiraClient, JiraCloudClient, JiraServerClient } from "@atlassianlabs/jira-pi-client";
+import { getProxyHostAndPort } from "@atlassianlabs/pi-client-common/agent";
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from "vscode";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
@@ -14,7 +15,7 @@ import { getAgent, jiraCloudAuthProvider, jiraServerAuthProvider, jiraTransportF
 import { Logger } from "../logger";
 import { PipelineApiImpl } from "../pipelines/pipelines";
 import { CacheMap, Interval } from "../util/cachemap";
-import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo, SiteInfo } from "./authInfo";
+import { AuthInfo, DetailedSiteInfo, isBasicAuthInfo, isOAuthInfo } from "./authInfo";
 
 const oauthTTL: number = 45 * Interval.MINUTE;
 const serverTTL: number = Interval.FOREVER;
@@ -113,9 +114,8 @@ export class ClientManager implements Disposable {
     );
   }
 
-  private keyForSite(site: SiteInfo): string {
-    const contextPath = site.contextPath ? `/${site.contextPath}` : "";
-    return `${site.hostname}${contextPath}`;
+  private keyForSite(site: DetailedSiteInfo): string {
+    return site.credentialId;
   }
 
   private async getClient<T>(site: DetailedSiteInfo, factory: (info: AuthInfo) => any): Promise<T> {
@@ -177,7 +177,7 @@ export class ClientManager implements Disposable {
     return newAccessToken ? newAccessToken : Promise.reject('authInfo is not a valid OAuthInfo instance');
   }
 
-  public async removeClient(site: SiteInfo) {
+  public async removeClient(site: DetailedSiteInfo) {
     this._clients.deleteItem(this.keyForSite(site));
   }
 }

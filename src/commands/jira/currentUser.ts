@@ -1,4 +1,4 @@
-import { User } from "jira-pi-client";
+import { User } from "@atlassianlabs/jira-pi-common-models/entities";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { Container } from "../../container";
 
