@@ -87,7 +87,7 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <br />
                                 <p>The extension does it's best to migrate any existing 1.x JQL queries, but you may find some of your queries may be missing a project qualifier in your JQL and loads too many issues.</p>
                                 <br />
-                                <p>To correct this, open the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen and use the 'Issues and JQL' editor to edit your JQL queries and ensure they have `project = SomeProjectKey` in them.</p>
+                                <p>To correct this, open the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen and use the 'Jira Issues Explorer' editor to edit your JQL queries and ensure they have `project = SomeProjectKey` in them.</p>
                                 <br />
                                 <p>Finally, we've added a select box at the top of the <Button className='ac-link-button' appearance="link" onClick={this.handleConfigure}>Atlassian Settings</Button> screen that allows you to choose if you want the settings saved to your Global User settings or the current Workspace settings.</p>
                                 <br />
