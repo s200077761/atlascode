@@ -1,7 +1,7 @@
-import React from "react";
-import Tooltip from '@atlaskit/tooltip';
 import Spinner from '@atlaskit/spinner';
-import { FileStatus, FileDiff } from "src/bitbucket/model";
+import Tooltip from '@atlaskit/tooltip';
+import React from "react";
+import { FileDiff, FileStatus } from "src/bitbucket/model";
 
 export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], openDiffHandler: (filediff: FileDiff) => void, fileDiffsLoading: boolean}, {}>{
 
@@ -40,29 +40,34 @@ export default class DiffList extends React.Component <{ fileDiffs: FileDiff[], 
 
     generateDiffList = () => {
         return this.props.fileDiffs.map(fileDiff =>
-            <li className='iterable-item file-summary file-modified' onClick={() => this.props.openDiffHandler(fileDiff)}>
-                <Tooltip 
-                    content={`${this.mapFileStatusToWord(fileDiff.status)}${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}: Click to open diff-view for file.`}
-                >
-                    <div className="commit-file-diff-stats">
-                        {fileDiff.linesAdded !== -1 &&
-                            <React.Fragment>
-                                <span className="lines-added">
-                                    +{fileDiff.linesAdded}
-                                </span>
-                                <span className="lines-removed">
-                                    -{fileDiff.linesRemoved}
-                                </span>
-                            </React.Fragment>
-                        }
+            <li className='iterable-item file-summary file-modified'>
+                <div className="commit-file-diff-stats">
+                    {fileDiff.linesAdded !== -1 &&
+                        <React.Fragment>
+                            <span className="lines-added">
+                                +{fileDiff.linesAdded}
+                            </span>
+                            <span className="lines-removed">
+                                -{fileDiff.linesRemoved}
+                            </span>
+                        </React.Fragment>
+                    }
+                    <Tooltip 
+                        content={`${this.mapFileStatusToWord(fileDiff.status)} ${fileDiff.similarity ? `(${fileDiff.similarity}% similar)` : ''}`}
+                        position='mouse'
+                    >
                         <span className="aui-lozenge" style={this.mapFileStatusToColorScheme(fileDiff.status)}>
                             {fileDiff.status}
                         </span>
-                        <a className="commit-files-summary--filename">
-                            {fileDiff.file}
-                        </a>
-                    </div>
-                </Tooltip>
+                    </Tooltip>
+                    <a 
+                        className="commit-files-summary--filename"
+                        style={{cursor: 'pointer'}}
+                        onClick={() => this.props.openDiffHandler(fileDiff)}
+                    >
+                        {fileDiff.file}
+                    </a>
+                </div>
             </li>
         );
     };
