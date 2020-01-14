@@ -483,13 +483,13 @@
   dependencies:
     babel-runtime "^6.11.6"
 
-"@atlassianlabs/jira-metaui-client@^0.1.8":
-  version "0.1.8"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlassianlabs/jira-metaui-client/-/jira-metaui-client-0.1.8.tgz#3922d106b58346459fed562e54d7f07a0d79599d"
-  integrity sha1-OSLRBrWDRkWf7VYuVNfweg15WZ0=
+"@atlassianlabs/jira-metaui-client@^0.1.9":
+  version "0.1.9"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlassianlabs/jira-metaui-client/-/jira-metaui-client-0.1.9.tgz#47e52eb32f7963b08b32b734bce47f68009114b9"
+  integrity sha1-R+Uusy95Y7CLMrc0vOR/aACRFLk=
   dependencies:
     "@atlassianlabs/jira-metaui-transformer" "^0.1.8"
-    "@atlassianlabs/jira-pi-client" "^0.1.8"
+    "@atlassianlabs/jira-pi-client" "^0.1.9"
     "@atlassianlabs/jira-pi-common-models" "^0.1.7"
     "@atlassianlabs/jira-pi-meta-models" "^0.1.7"
 
@@ -501,10 +501,10 @@
     "@atlassianlabs/jira-pi-common-models" "^0.1.7"
     "@atlassianlabs/jira-pi-meta-models" "^0.1.7"
 
-"@atlassianlabs/jira-pi-client@^0.1.8":
-  version "0.1.8"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlassianlabs/jira-pi-client/-/jira-pi-client-0.1.8.tgz#51586403b23a53f20fd18a4dcb4d73b4a969aa3c"
-  integrity sha1-UVhkA7I6U/IP0YpNy01ztKlpqjw=
+"@atlassianlabs/jira-pi-client@^0.1.9":
+  version "0.1.9"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlassianlabs/jira-pi-client/-/jira-pi-client-0.1.9.tgz#aa0b64fa13381f1db99fcf0ae2fa9b538331adcb"
+  integrity sha1-qgtk+hM4Hx25n88K4vqbU4Mxrcs=
   dependencies:
     "@atlassianlabs/jira-pi-common-models" "^0.1.7"
     "@atlassianlabs/jira-pi-meta-models" "^0.1.7"
