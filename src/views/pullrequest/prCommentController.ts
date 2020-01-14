@@ -238,7 +238,6 @@ export class PullRequestCommentController implements vscode.Disposable {
         }
 
         await this.createOrUpdateThread(commentThreadId!, comment.parent!.uri, comment.parent!.range, comments);
-        comment.parent!.dispose();
         vscode.commands.executeCommand(Commands.RefreshPullRequestExplorerNode, vscode.Uri.parse(comment.prHref));
     }
 
@@ -330,12 +329,16 @@ export class PullRequestCommentController implements vscode.Disposable {
         //a reply to because this guarantees it's at least in the same depth range. A future PR may introduce a notion of depth to comments, which may make placing
         //the comment correctly easier.
         for(const comment of comments as PullRequestComment[]) {
-            if(isPRComment(comment)) {
+            //Things are set up such that when one comment gets a temporary reply, all the other comments have theirs wiped. Therefore, if a comment has a defined
+            //temporary reply, we can place the new comment under that comment. Unfortunately, the BBServer comments endpoint doesn't return a parentId property,
+            //so it's not possible to place the comment based on parentId.
+            if(isPRComment(comment) && !!comment.temporaryReply) {
                 comment.temporaryReply = undefined;
-            }
-            newComments.push(comment);
-            if(comment.id === newComment.parentId){
+                newComments.push(comment);
                 newComments.push(await this.createVSCodeComment(commentData.site, commentThreadId!, newComment, commentData.prHref, commentData.prId));
+
+            } else {
+                newComments.push(comment);
             }
         }
         return newComments;
@@ -370,7 +373,6 @@ export class PullRequestCommentController implements vscode.Disposable {
         });
 
         await this.createOrUpdateThread(commentData.prCommentThreadId!, commentData.parent!.uri, commentData.parent!.range, newComments);
-        commentData.parent.dispose();
     }
 
     private convertCommentToMode(commentData: EnhancedComment, mode: vscode.CommentMode, saveWasPressed?: boolean) {
