@@ -539,6 +539,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             // DO NOT cache data for very large teams
             if (data.size > TEAM_MEMBERS_CACHE_LIMIT) {
                 this.teamMembersCache.setItem(cacheKey, []);
+                return;
             }
 
             while (data.next) {
