@@ -292,7 +292,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
 
         const bbApi = await clientForSite(this._pr.site);
 
-        this._pr = await bbApi.pullrequests.get(this._pr);
+        this._pr = await bbApi.pullrequests.get(this._pr.site, this._pr.data.id, this._pr.workspaceRepo);
         // Bitbucket Server does not update timestamp for approval changes :(
         if (this._pr.site.details.isCloud && this.lastUpdatedTs && this.lastUpdatedTs === this._pr.data.updatedTs) {
             return;

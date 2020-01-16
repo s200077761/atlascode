@@ -1,13 +1,14 @@
 import { prCommentEvent, prTaskEvent } from 'src/analytics';
 import TurndownService from 'turndown';
 import { v4 } from "uuid";
-import vscode, { CommentThread, MarkdownString } from 'vscode';
+import vscode, { commands, CommentThread, MarkdownString } from 'vscode';
 import { BitbucketMentionsCompletionProvider } from '../../bitbucket/bbMentionsCompletionProvider';
 import { clientForSite } from '../../bitbucket/bbUtils';
 import { BitbucketSite, Comment, emptyTask, Task } from '../../bitbucket/model';
 import { Commands } from '../../commands';
 import { Container } from '../../container';
 import { PullRequestNodeDataProvider } from '../pullRequestNodeDataProvider';
+import { checkout } from './gitActions';
 import { PRFileDiffQueryParams } from './pullRequestNode';
 
 const turndownService = new TurndownService();  
@@ -132,6 +133,24 @@ export class PullRequestCommentController implements vscode.Disposable {
             }),
             vscode.commands.registerCommand(Commands.BitbucketToggleCommentsVisibility, (input: vscode.Uri) => {
                 this.toggleCommentsVisibility(input);
+            }),
+            vscode.commands.registerCommand(Commands.CheckoutThisFile, async (uri: vscode.Uri) => {
+                const { site, prId, path, repoUri,  } = JSON.parse(uri.query) as PRFileDiffQueryParams;
+
+                const wsRepo = Container.bitbucketContext.getRepository(vscode.Uri.parse(repoUri));
+                if (!wsRepo || !path) {
+                    return;
+                }
+                
+                //rootUri is in the format file:///A/B/C, and we want /A/B/C
+                const absolutePath = wsRepo.rootUri.replace(/(^\w+:|^)\/\//, '');
+                
+                const bbApi = await clientForSite(site);
+                const pr = await bbApi.pullrequests.get(site, prId, wsRepo);
+                await checkout(pr, pr.data.source.branchName);
+
+                const pathURI = vscode.Uri.file(`${absolutePath}/${path}`);
+                commands.executeCommand('vscode.open', pathURI);
             })
         );
         this._commentController.commentingRangeProvider = {
