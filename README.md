@@ -49,10 +49,21 @@ You can find your instance's version in the footer of any Jira/Bitbucket page.
 Please use the in-app feedback form to tell us what you think!  It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
 ## Contributors
-
 Pull requests, issues and comments welcome.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Running and debugging the extension:
+
+* Atlassian for VS Code is a node project, as such you'll need to run `yarn` before building.
+* To debug the extension from within VS Code you'll need a `launch.json`.
+** An example `launch.json` that will be suitible for most users is included as `.vscode/launch.json.example`.
+** To use the example file simply copy it to `launch.json`.
+* Once you have a `launch.json` file select "Debug and Run" from the Activity Bar and click "Start Debugging".
+** After the extension builds VS Code will launch a new instance of itself (the Extension Development Host) running the extension.
+* When you want to test your code changes
+** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
+** If you've already stopped the host just start debugging again.
 
 For pull requests:
 
