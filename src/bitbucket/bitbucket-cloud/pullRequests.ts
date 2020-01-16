@@ -1,4 +1,5 @@
 import { AxiosResponse } from "axios";
+import PQueue from "p-queue/dist";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
 import { getAgent } from "../../jira/jira-client/providers";
 import { Logger } from "../../logger";
@@ -22,10 +23,14 @@ const mergeStrategyLabels = {
     'fast_forward': 'Fast forward'
 };
 
+const TEAM_MEMBERS_CACHE_LIMIT = 4000;
+
 export class CloudPullRequestApi implements PullRequestApi {
     private client: Client;
     private defaultReviewersCache: CacheMap = new CacheMap();
+    private teamMembersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
+    private queue = new PQueue({ concurrency: 1 });
 
     constructor(private site: DetailedSiteInfo, token: string) {
         this.client = new Client(
@@ -56,10 +61,10 @@ export class CloudPullRequestApi implements PullRequestApi {
     }
 
     static toUserModel(input: any): User {
-        const accountId = (input && input.account_id) ? input.account_id : 'unknown';
-        const avatarUrl = (input && input.links && input.links.avatar && input.links.avatar.href) ? input.links!.avatar!.href! : '';
-        const displayName = (input && input.display_name) ? input.display_name : 'Unknown User';
-        const url = (input && input.links && input.links.html && input.links.href) ? input.links.href : '';
+        const accountId = input?.account_id ?? 'unknown';
+        const avatarUrl = input?.links?.avatar?.href ?? '';
+        const displayName = input?.display_name ?? 'Unknown User';
+        const url = input?.links?.html?.href ?? '';
         const mention = `@[${displayName}](account_id:${accountId})`;
 
         return {
@@ -512,9 +517,47 @@ export class CloudPullRequestApi implements PullRequestApi {
     async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
-        let result: User[] = [];
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+
+        // fetch all members asynchronously first time and cache it
+        this.queue.add(async () => {
+            // ensure we don't do duplicate work if this function is called multiple times before cache is populated
+            const cacheItem = this.teamMembersCache.getItem<User[]>(cacheKey);
+            if (cacheItem !== undefined) {
+                return;
+            }
+
+            let { data } = await this.client.get(
+                `/teams/${ownerSlug}/members`,
+                {
+                    pagelen: 100,
+                    fields: 'size,next,values.account_id,values.display_name,values.links.html.href,values.links.avatar.href'
+                }
+            );
+            const teamMembers = data.values || [];
+
+            // DO NOT cache data for very large teams
+            if (data.size > TEAM_MEMBERS_CACHE_LIMIT) {
+                this.teamMembersCache.setItem(cacheKey, []);
+                return;
+            }
+
+            while (data.next) {
+                const nextPage = await this.client.get(data.next);
+                data = nextPage.data;
+                teamMembers.push(...(data.values || []));
+            }
+
+            this.teamMembersCache.setItem(cacheKey, teamMembers.map((m: any) => CloudPullRequestApi.toUserModel(m)));
+        });
 
         if (query && query.length > 0) {
+            const cacheItem = this.teamMembersCache.getItem<User[]>(cacheKey);
+            if (cacheItem !== undefined && cacheItem.length > 0) {
+                return cacheItem.filter(user => user.displayName.toLowerCase().includes(query.toLowerCase())).slice(0, 20);
+            }
+
+            // fall back to calling API using nickname query param if the cache is not populated
             const { data } = await this.client.get(
                 `/teams/${ownerSlug}/members?q=nickname="${query}"`
             );
@@ -522,7 +565,6 @@ export class CloudPullRequestApi implements PullRequestApi {
             return (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         }
 
-        const cacheKey = `${ownerSlug}::${repoSlug}`;
         const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
         if (cacheItem !== undefined) {
             return cacheItem;
@@ -535,7 +577,7 @@ export class CloudPullRequestApi implements PullRequestApi {
             }
         );
 
-        result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
+        const result = (data.values || []).map((reviewer: any) => CloudPullRequestApi.toUserModel(reviewer));
         this.defaultReviewersCache.setItem(cacheKey, result);
 
         return result;
