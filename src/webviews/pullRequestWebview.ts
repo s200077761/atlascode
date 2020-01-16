@@ -493,19 +493,17 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             await scm.fetch(sourceRemote.name, pr.data.source.branchName);
         }
 
-        scm.checkout(branch || pr.data.source.branchName)
-            .then(() => {
-                const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
-                this.postMessage({
-                    type: 'checkout',
-                    currentBranch: currentBranch
-                });
-                prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-            })
-            .catch((e: any) => {
-                Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
-            });
+        await scm.fetch();
+        await scm.checkout(branch || pr.data.source.branchName);
+        if (scm.state.HEAD?.behind) {
+            scm.pull();
+        }
+        const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
+        this.postMessage({
+            type: 'checkout',
+            currentBranch: currentBranch
+        });
+        prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
 
     private async postComment(pr: PullRequest, text: string, parentId?: string) {
