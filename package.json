@@ -91,6 +91,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.addReply",
+                "title": "Reply to this Comment",
+                "icon": {
+                    "dark": "resources/dark/add-comment.svg",
+                    "light": "resources/light/add-comment.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
                 "command": "atlascode.bb.addTask",
                 "title": "Add Task",
                 "icon": {
@@ -504,8 +513,13 @@
                     "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
-                    "command": "atlascode.bb.addTask",
+                    "command": "atlascode.bb.addReply",
                     "group": "inline@3",
+                    "when": "comment =~ /canAddReply/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.addTask",
+                    "group": "inline@4",
                     "when": "comment =~ /canAddTask/ && resourceScheme == atlascode.bbpr"
                 },
                 {
@@ -596,6 +610,10 @@
                 },
                 {
                     "command": "atlascode.bb.deleteTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.addReply",
                     "when": "false"
                 },
                 {
