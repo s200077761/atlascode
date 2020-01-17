@@ -83,7 +83,7 @@ export interface UserInfo {
 }
 
 export interface SiteInfo {
-    hostname: string;
+    host: string;
     protocol?: string;
     product: Product;
     contextPath?: string;
@@ -135,7 +135,7 @@ export const emptySiteInfo: DetailedSiteInfo = {
     id: 'empty',
     name: 'empty',
     avatarUrl: 'empty',
-    hostname: 'empty',
+    host: 'empty',
     baseLinkUrl: 'empty',
     baseApiUrl: 'empty',
     product: emptyProduct,
@@ -176,7 +176,7 @@ export function isRemoveAuthEvent(a: AuthInfoEvent): a is RemoveAuthInfoEvent {
 export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
     return a && (<DetailedSiteInfo>a).id !== undefined
         && (<DetailedSiteInfo>a).name !== undefined
-        && (<DetailedSiteInfo>a).hostname !== undefined
+        && (<DetailedSiteInfo>a).host !== undefined
         && (<DetailedSiteInfo>a).baseLinkUrl !== undefined
         && (<DetailedSiteInfo>a).baseApiUrl !== undefined;
 }
@@ -184,7 +184,7 @@ export function isDetailedSiteInfo(a: any): a is DetailedSiteInfo {
 export function isEmptySiteInfo(a: any): boolean {
     return a && (<DetailedSiteInfo>a).id === 'empty'
         && (<DetailedSiteInfo>a).name === 'empty'
-        && (<DetailedSiteInfo>a).hostname === 'empty'
+        && (<DetailedSiteInfo>a).host === 'empty'
         && (<DetailedSiteInfo>a).baseLinkUrl === 'empty'
         && (<DetailedSiteInfo>a).baseApiUrl === 'empty';
 }
@@ -212,19 +212,21 @@ export function getSecretForAuthInfo(info: any): string {
 }
 
 export function oauthProviderForSite(site: SiteInfo): OAuthProvider | undefined {
-    if (site.hostname.endsWith('atlassian.net') || site.hostname.endsWith('jira.com')) {
+    const hostname = site.host.split(':')[0];
+
+    if (hostname.endsWith('atlassian.net') || hostname.endsWith('jira.com')) {
         return OAuthProvider.JiraCloud;
     }
 
-    if (site.hostname.endsWith('jira-dev.com')) {
+    if (hostname.endsWith('jira-dev.com')) {
         return OAuthProvider.JiraCloudStaging;
     }
 
-    if (site.hostname.endsWith('bitbucket.org')) {
+    if (hostname.endsWith('bitbucket.org')) {
         return OAuthProvider.BitbucketCloud;
     }
 
-    if (site.hostname.endsWith('bb-inf.net')) {
+    if (hostname.endsWith('bb-inf.net')) {
         return OAuthProvider.BitbucketCloudStaging;
     }
 

@@ -75,7 +75,7 @@ export const getAgent: AgentProvider = (site?: SiteInfo) => {
             if (configuration.get<boolean>('enableHttpsTunnel')) {
                 let shouldTunnel: boolean = true;
                 if (site) {
-                    shouldTunnel = shouldTunnelHost(site.hostname);
+                    shouldTunnel = shouldTunnelHost(site.host);
                 }
 
                 if (shouldTunnel) {

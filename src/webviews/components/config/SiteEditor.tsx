@@ -1,10 +1,10 @@
-import React, { useState } from "react";
 import Button from "@atlaskit/button";
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import { DetailedSiteInfo, SiteInfo, AuthInfo, emptyUserInfo, Product, ProductJira } from "../../../atlclients/authInfo";
-import AuthForm from "./AuthForm";
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
+import React, { useState } from "react";
+import { AuthInfo, DetailedSiteInfo, emptyUserInfo, Product, ProductJira, SiteInfo } from "../../../atlclients/authInfo";
+import AuthForm from "./AuthForm";
 
 interface AuthProps {
     sites: DetailedSiteInfo[];
@@ -42,7 +42,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
 
     const handleCloudProd = () => {
         const hostname = (product.key === ProductJira.key) ? 'atlassian.net' : 'bitbucket.org';
-        handleSaveSite({ hostname: hostname, product: product },
+        handleSaveSite({ host: hostname, product: product },
             { user: emptyUserInfo });
     };
 
@@ -52,7 +52,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
     };
 
     const generateLoginButtons = () => {
-        if(cloudOrServer === undefined) {
+        if (cloudOrServer === undefined) {
             return <div style={{ display: 'inline-flex', marginRight: '4px', marginLeft: '4px' }}>
                 <Button className="ac-button" isDisabled={isRemote} style={{ marginRight: '4px' }} onClick={handleCloudProd}>{loginText}</Button>
                 <Button className="ac-button" isDisabled={isRemote} onClick={() => setAddingSite(true)}>{addSiteText}</Button>
@@ -65,7 +65,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
     };
 
     const getTreeItems = () => {
-        if(sites.length > 0){
+        if (sites.length > 0) {
             return sites.map(site => {
                 return {
                     id: site.id,
@@ -76,7 +76,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                 };
             });
         } else {
-            return [{id: 1, content: { site: `No sites currently authenticated` }}];
+            return [{ id: 1, content: { site: `No sites currently authenticated` } }];
         }
     };
 
@@ -96,11 +96,11 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({ sites, product,
                     </div>
                 }
                 {generateLoginButtons()}
-                {cloudOrServer !== undefined && 
-                    <p style={{float: 'right'}}>{siteExample}</p>
+                {cloudOrServer !== undefined &&
+                    <p style={{ float: 'right' }}>{siteExample}</p>
                 }
             </div>
-            <div style={{marginTop: '8px'}}>
+            <div style={{ marginTop: '8px' }}>
                 <TableTree
                     columns={sites.length > 0 ? [Name, Delete] : [Name]}
                     columnWidths={['100%', '20px']}

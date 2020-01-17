@@ -105,7 +105,7 @@ export async function clientForHostname(hostname: string): Promise<BitbucketApi>
 }
 
 export async function clientForSite(site: BitbucketSite): Promise<BitbucketApi> {
-    return clientForHostname(site.details.hostname);
+    return clientForHostname(site.details.host);
 }
 
 // Use only for bitbucket repositories

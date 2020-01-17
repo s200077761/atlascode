@@ -27,7 +27,7 @@ export class LoginManager {
         const provider = oauthProviderForSite(site);
         try {
             if (!provider) {
-                throw new Error(`No provider found for ${site.hostname}`);
+                throw new Error(`No provider found for ${site.host}`);
             }
 
             const resp = await this._dancer.doDance(provider, site);
@@ -76,7 +76,7 @@ export class LoginManager {
                         avatarUrl: "",
                         baseApiUrl: baseApiUrl,
                         baseLinkUrl: resource.url,
-                        hostname: hostname,
+                        host: hostname,
                         id: resource.id,
                         name: siteName,
                         product: ProductBitbucket,
@@ -100,7 +100,7 @@ export class LoginManager {
                         avatarUrl: r.avatarUrl,
                         baseApiUrl: `https://${apiUri}/ex/jira/${r.id}/rest`,
                         baseLinkUrl: r.url,
-                        hostname: (new URL(r.url)).hostname,
+                        host: (new URL(r.url)).host,
                         id: r.id,
                         name: r.name,
                         product: ProductJira,
@@ -140,14 +140,14 @@ export class LoginManager {
         const contextPath = (site.contextPath) ? site.contextPath : '';
         switch (site.product.key) {
             case ProductJira.key:
-                siteDetailsUrl = `${protocol}//${site.hostname}${contextPath}/rest/api/2/myself`;
-                avatarUrl = `${protocol}//${site.hostname}${contextPath}/images/fav-jcore.png`;
-                apiUrl = `${protocol}//${site.hostname}${contextPath}/rest`;
+                siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/2/myself`;
+                avatarUrl = `${protocol}//${site.host}${contextPath}/images/fav-jcore.png`;
+                apiUrl = `${protocol}//${site.host}${contextPath}/rest`;
                 break;
             case ProductBitbucket.key:
-                siteDetailsUrl = `${protocol}//${site.hostname}${contextPath}/rest/api/1.0/users/${credentials.username.replace(slugRegex, "_")}?avatarSize=64`;
+                siteDetailsUrl = `${protocol}//${site.host}${contextPath}/rest/api/1.0/users/${credentials.username.replace(slugRegex, "_")}?avatarSize=64`;
                 avatarUrl = '';
-                apiUrl = `${protocol}//${site.hostname}${contextPath}`;
+                apiUrl = `${protocol}//${site.host}${contextPath}`;
                 break;
         }
 
@@ -176,19 +176,19 @@ export class LoginManager {
         const json = res.data;
 
         const userId = site.product.key === ProductJira.key ? json.name : json.slug;
-        const baseLinkUrl = `${site.hostname}${contextPath}`;
+        const baseLinkUrl = `${site.host}${contextPath}`;
         const credentialId = CredentialManager.generateCredentialId(baseLinkUrl, credentials.username);
 
         const siteDetails = {
             product: site.product,
             isCloud: false,
             avatarUrl: avatarUrl,
-            hostname: site.hostname,
+            host: site.host,
             baseApiUrl: apiUrl,
             baseLinkUrl: `${protocol}//${baseLinkUrl}`,
             contextPath: contextPath,
-            id: site.hostname,
-            name: site.hostname,
+            id: site.host,
+            name: site.host,
             userId: userId,
             credentialId: credentialId,
             customSSLCertPaths: site.customSSLCertPaths,
