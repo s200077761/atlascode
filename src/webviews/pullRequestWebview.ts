@@ -1,20 +1,45 @@
-import { isMinimalIssue, MinimalIssue } from "@atlassianlabs/jira-pi-common-models";
-import pSettle from "p-settle";
-import { PRData } from "src/ipc/prMessaging";
+import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models';
+import pSettle from 'p-settle';
+import { PRData } from 'src/ipc/prMessaging';
 import * as vscode from 'vscode';
 import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
 import { extractBitbucketIssueKeys, extractIssueKeys } from '../bitbucket/issueKeysExtractor';
-import { ApprovalStatus, BitbucketIssue, Commit, FileChange, FileDiff, isBitbucketIssue, PaginatedComments, PullRequest, Task } from '../bitbucket/model';
+import {
+    ApprovalStatus,
+    BitbucketIssue,
+    Commit,
+    FileChange,
+    FileDiff,
+    isBitbucketIssue,
+    PaginatedComments,
+    PullRequest,
+    Task
+} from '../bitbucket/model';
 import { Commands } from '../commands';
 import { showIssue } from '../commands/jira/showIssue';
 import { Container } from '../container';
 import { isOpenBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
 import { isOpenJiraIssue } from '../ipc/issueActions';
 import { Action, onlineStatus } from '../ipc/messaging';
-import { isCheckout, isCreateTask, isDeleteComment, isDeleteTask, isEditComment, isEditTask, isFetchUsers, isMerge, isOpenBuildStatus, isOpenDiffView, isPostComment, isUpdateApproval, isUpdateTitle, Merge } from '../ipc/prActions';
+import {
+    isCheckout,
+    isCreateTask,
+    isDeleteComment,
+    isDeleteTask,
+    isEditComment,
+    isEditTask,
+    isFetchUsers,
+    isMerge,
+    isOpenBuildStatus,
+    isOpenDiffView,
+    isPostComment,
+    isUpdateApproval,
+    isUpdateTitle,
+    Merge
+} from '../ipc/prActions';
 import { issueForKey } from '../jira/issueForKey';
 import { parseJiraIssueKeys } from '../jira/issueKeyParser';
 import { transitionIssue } from '../jira/transitionIssue';
@@ -36,10 +61,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             return `Pull Request #${this._pr.data.id}`;
         }
 
-        return "Pull Request";
+        return 'Pull Request';
     }
     public get id(): string {
-        return "pullRequestDetailsScreen";
+        return 'pullRequestDetailsScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -193,7 +218,7 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     if (isCheckout(msg)) {
                         handled = true;
                         try {
-                            await this.checkout(this._pr, msg.branch, msg.isSourceBranch);
+                            await this.checkout(this._pr, msg.branch);
                         } catch (e) {
                             Logger.error(new Error(`error checking out the branch: ${e}`));
                             this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
@@ -231,7 +256,10 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                         handled = true;
                         if (msg.buildStatusUri.includes('bitbucket.org') || msg.buildStatusUri.includes('bb-inf.net')) {
                             const pipelineUUID = msg.buildStatusUri.substring(msg.buildStatusUri.lastIndexOf('/') + 1);
-                            vscode.commands.executeCommand(Commands.ShowPipeline, { site: this._pr.site, pipelineUuid: pipelineUUID } as PipelineInfo);
+                            vscode.commands.executeCommand(Commands.ShowPipeline, {
+                                site: this._pr.site,
+                                pipelineUuid: pipelineUUID
+                            } as PipelineInfo);
                         } else {
                             vscode.env.openExternal(vscode.Uri.parse(msg.buildStatusUri));
                         }
@@ -288,7 +316,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         if (!this._pr || !this._panel) {
             return;
         }
-        if (this._panel) { this._panel.title = `Pull Request #${this._pr.data.id}`; }
+        if (this._panel) {
+            this._panel.title = `Pull Request #${this._pr.data.id}`;
+        }
 
         const bbApi = await clientForSite(this._pr.site);
 
@@ -342,7 +372,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         this.postMessage(prData);
     }
 
-    private async fetchMainIssue(pr: PullRequest): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined> {
+    private async fetchMainIssue(
+        pr: PullRequest
+    ): Promise<MinimalIssue<DetailedSiteInfo> | BitbucketIssue | undefined> {
         try {
             const branchAndTitleText = `${pr.data.source!.branchName} ${pr.data.title!}`;
 
@@ -371,7 +403,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return undefined;
     }
 
-    private async fetchRelatedJiraIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<MinimalIssue<DetailedSiteInfo>[]> {
+    private async fetchRelatedJiraIssues(
+        pr: PullRequest,
+        commits: Commit[],
+        comments: PaginatedComments
+    ): Promise<MinimalIssue<DetailedSiteInfo>[]> {
         let foundIssues: MinimalIssue<DetailedSiteInfo>[] = [];
         try {
             if (Container.siteManager.productHasAtLeastOneSite(ProductJira)) {
@@ -401,7 +437,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         return foundIssues;
     }
 
-    private async fetchRelatedBitbucketIssues(pr: PullRequest, commits: Commit[], comments: PaginatedComments): Promise<BitbucketIssue[]> {
+    private async fetchRelatedBitbucketIssues(
+        pr: PullRequest,
+        commits: Commit[],
+        comments: PaginatedComments
+    ): Promise<BitbucketIssue[]> {
         let result: BitbucketIssue[] = [];
         try {
             const issueKeys = await extractBitbucketIssueKeys(pr, commits, comments.data);
@@ -427,20 +467,19 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.updateApproval(pr, status);
 
-        prApproveEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        prApproveEvent(pr.site.details).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         await this.updatePullRequest();
     }
 
     private async merge(pr: PullRequest, m: Merge) {
         const bbApi = await clientForSite(pr.site);
-        await bbApi.pullrequests.merge(
-            pr,
-            m.closeSourceBranch,
-            m.mergeStrategy,
-            m.commitMessage
-        );
+        await bbApi.pullrequests.merge(pr, m.closeSourceBranch, m.mergeStrategy, m.commitMessage);
 
-        prMergeEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        prMergeEvent(pr.site.details).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         await this.updateIssue(m.issue);
         vscode.commands.executeCommand(Commands.BitbucketRefreshPullRequests);
         vscode.commands.executeCommand(Commands.RefreshPipelines);
@@ -462,10 +501,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
     }
 
-    private async checkout(pr: PullRequest, branch: string, isSourceBranch: boolean) {
+    private async checkout(pr: PullRequest, branch: string) {
         if (!pr.workspaceRepo) {
             Logger.error(new Error('error checking out the pull request branch: no workspace repo'));
-            this.postMessage({ type: 'error', reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo') });
+            this.postMessage({
+                type: 'error',
+                reason: this.formatErrorReason('error checking out the pull request branch: no workspace repo')
+            });
             return;
         }
 
@@ -480,7 +522,8 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                 isReadOnly: true
             };
 
-            await scm.getConfig(`remote.${sourceRemote.name}.url`)
+            await scm
+                .getConfig(`remote.${sourceRemote.name}.url`)
                 .then(async url => {
                     if (!url) {
                         await scm.addRemote(sourceRemote.name, sourceRemote.fetchUrl!);
@@ -500,7 +543,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
                     type: 'checkout',
                     currentBranch: currentBranch
                 });
-                prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+                prCheckoutEvent(pr.site.details).then(e => {
+                    Container.analyticsClient.sendTrackEvent(e);
+                });
             })
             .catch((e: any) => {
                 Logger.error(new Error(`error checking out the pull request branch: ${e}`));
@@ -511,7 +556,9 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async postComment(pr: PullRequest, text: string, parentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
-        prCommentEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        prCommentEvent(pr.site.details).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
         this.updatePullRequest();
     }
 
@@ -531,9 +578,13 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postTask(pr.site, pr.data.id, task.content, commentId);
         if (commentId) {
-            prTaskEvent(pr.site.details, "comment").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+            prTaskEvent(pr.site.details, 'comment').then((e: any) => {
+                Container.analyticsClient.sendTrackEvent(e);
+            });
         } else {
-            prTaskEvent(pr.site.details, "prlevel").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+            prTaskEvent(pr.site.details, 'prlevel').then((e: any) => {
+                Container.analyticsClient.sendTrackEvent(e);
+            });
         }
         this.updatePullRequest();
     }
@@ -553,7 +604,12 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async openDiffViewForFile(pr: PullRequest, fileChange: FileChange) {
         const bbApi = await clientForSite(pr.site);
         const comments = await bbApi.pullrequests.getComments(pr);
-        const diffViewArgs = await getArgsForDiffView(comments, fileChange, pr, Container.bitbucketContext.prCommentController);
+        const diffViewArgs = await getArgsForDiffView(
+            comments,
+            fileChange,
+            pr,
+            Container.bitbucketContext.prCommentController
+        );
         vscode.commands.executeCommand(Commands.ViewDiff, ...diffViewArgs.diffArgs);
     }
 
@@ -578,5 +634,4 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
         }
         return fileDisplayName;
     }
-
 }
