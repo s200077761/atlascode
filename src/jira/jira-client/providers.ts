@@ -1,7 +1,8 @@
+import { AuthorizationProvider, TransportFactory } from '@atlassianlabs/jira-pi-client';
+import { AgentProvider, getProxyHostAndPort, shouldTunnelHost } from '@atlassianlabs/pi-client-common/agent';
 import axios from 'axios';
 import * as fs from "fs";
 import * as https from 'https';
-import { AgentProvider, AuthorizationProvider, getProxyHostAndPort, shouldTunnelHost, TransportFactory } from "jira-pi-client";
 import * as sslRootCas from 'ssl-root-cas';
 import { SiteInfo } from '../../atlclients/authInfo';
 import { addCurlLogging } from "../../atlclients/interceptors";

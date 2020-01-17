@@ -489,25 +489,18 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    private hasUndeletedChild(comment: any) {
+    private shouldDisplayComment(comment: Comment): boolean {
         let hasUndeletedChild: boolean = false;
+        let filteredChildren = [];
         for (let child of comment.children) {
-            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-            if (hasUndeletedChild) {
-                return hasUndeletedChild;
+            if (this.shouldDisplayComment(child)) {
+                filteredChildren.push(child);
+                hasUndeletedChild = true;
+                comment.deletable = false;
             }
         }
-        return hasUndeletedChild;
-    }
-
-    private shouldDisplayComment(comment: any): boolean {
-        if (!comment.deleted) {
-            return true;
-        } else if (!comment.children || comment.children.length === 0) {
-            return false;
-        } else {
-            return this.hasUndeletedChild(comment);
-        }
+        comment.children = filteredChildren;
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
     }
 
     private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[]): Promise<Comment> {
@@ -523,9 +516,6 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
         commentModel.tasks = tasksInComment;
         commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)));
-        if (this.hasUndeletedChild(commentModel)) {
-            commentModel.deletable = false;
-        }
         return commentModel;
     }
 
@@ -559,38 +549,10 @@ export class ServerPullRequestApi implements PullRequestApi {
         return [];
     }
 
-    async getReviewers(site: BitbucketSite, query: string): Promise<User[]> {
+    async getReviewers(site: BitbucketSite, query?: string): Promise<User[]> {
         const { ownerSlug, repoSlug } = site;
 
-        let users: any[] = [];
-
-        if (!query) {
-            const cacheKey = `${ownerSlug}::${repoSlug}`;
-
-            const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
-            if (cacheItem !== undefined) {
-                return cacheItem;
-            }
-
-            const bbApi = await clientForSite(site);
-            const repo = await bbApi.repositories.get(site);
-
-            let { data } = await this.client.get(
-                `/rest/default-reviewers/1.0/projects/${ownerSlug}/repos/${repoSlug}/reviewers`,
-                {
-                    markup: true,
-                    avatarSize: 64,
-                    sourceRepoId: Number(repo.id),
-                    targetRepoId: Number(repo.id),
-                    sourceRefId: repo.mainbranch!,
-                    targetRefId: repo.mainbranch!
-                }
-            );
-
-            users = Array.isArray(data) ? data : [];
-
-            this.defaultReviewersCache.setItem(cacheKey, users);
-        } else {
+        if (query && query.length > 0) {
             const { data } = await this.client.get(
                 `/rest/api/1.0/users`,
                 {
@@ -604,10 +566,34 @@ export class ServerPullRequestApi implements PullRequestApi {
                 }
             );
 
-            users = data.values || [];
+            return (data.values || []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
         }
 
-        return users.map(val => ServerPullRequestApi.toUser(site.details, val));
+        const cacheKey = `${ownerSlug}::${repoSlug}`;
+        const cacheItem = this.defaultReviewersCache.getItem<User[]>(cacheKey);
+        if (cacheItem !== undefined) {
+            return cacheItem;
+        }
+
+        const bbApi = await clientForSite(site);
+        const repo = await bbApi.repositories.get(site);
+
+        let { data } = await this.client.get(
+            `/rest/default-reviewers/1.0/projects/${ownerSlug}/repos/${repoSlug}/reviewers`,
+            {
+                markup: true,
+                avatarSize: 64,
+                sourceRepoId: Number(repo.id),
+                targetRepoId: Number(repo.id),
+                sourceRefId: repo.mainbranch!,
+                targetRefId: repo.mainbranch!
+            }
+        );
+
+        const result = (Array.isArray(data) ? data : []).map((val: any) => ServerPullRequestApi.toUser(site.details, val));;
+        this.defaultReviewersCache.setItem(cacheKey, result);
+
+        return result;
     }
 
     async create(site: BitbucketSite, workspaceRepo: WorkspaceRepo, createPrData: CreatePullRequestData): Promise<PullRequest> {

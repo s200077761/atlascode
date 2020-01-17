@@ -1,4 +1,4 @@
-import { MinimalORIssueLink } from "jira-pi-client";
+import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models/entities";
 import { commands, ConfigurationChangeEvent, Disposable } from "vscode";
 import { DetailedSiteInfo, ProductJira } from "../../atlclients/authInfo";
 import { Commands } from "../../commands";
@@ -70,7 +70,6 @@ export class JiraContext extends Disposable {
             this._explorer.dispose();
             this._explorer = undefined;
         }
-
     }
 
     async refresh() {
@@ -89,10 +88,9 @@ export class JiraContext extends Disposable {
 
     async onSitesDidChange(e: SitesAvailableUpdateEvent) {
         if (e.product.key === ProductJira.key) {
-            if (e.sites.length === 1 && Container.config.jira.jqlList.length < 1) {
-                Container.jqlManager.initializeJQL(e.sites[0]);
+            if (e.newSites) {
+                Container.jqlManager.initializeJQL(e.newSites);
             }
-
             const isLoggedIn = e.sites.length > 0;
             setCommandContext(CommandContext.JiraLoginTree, !isLoggedIn);
             this.refresh();

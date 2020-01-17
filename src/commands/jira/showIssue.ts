@@ -1,4 +1,4 @@
-import { createEmptyMinimalIssue, createIssueNotFoundIssue, isIssueKeyAndSite, isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from "jira-pi-client";
+import { createEmptyMinimalIssue, createIssueNotFoundIssue, isIssueKeyAndSite, isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from "@atlassianlabs/jira-pi-common-models";
 import * as vscode from "vscode";
 import { DetailedSiteInfo, emptySiteInfo, ProductJira } from "../../atlclients/authInfo";
 import { Container } from "../../container";

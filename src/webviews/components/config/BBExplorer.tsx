@@ -59,7 +59,7 @@ export default class BitbucketExplorer extends React.Component<{ config: IConfig
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Bitbucket Pull Request Explorer'
+                                    label='Enable Bitbucket pull requests explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.bitbucket.explorer.enabled}

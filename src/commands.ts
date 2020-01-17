@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from 'jira-pi-client';
+import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models/entities';
 import { commands, env, ExtensionContext, Uri } from 'vscode';
 import { cloneRepositoryButtonEvent, openWorkbenchRepositoryButtonEvent, openWorkbenchWorkspaceButtonEvent, Registry, viewScreenEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
@@ -27,6 +27,7 @@ export enum Commands {
     RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
+    BitbucketAddReply = 'atlascode.bb.addReply',
     BitbucketDeleteComment = 'atlascode.bb.deleteComment',
     BitbucketEditComment = 'atlascode.bb.editComment',
     BitbucketDeleteTask = 'atlascode.bb.deleteTask',

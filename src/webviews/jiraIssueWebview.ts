@@ -1,7 +1,8 @@
+import { EditIssueUI } from '@atlassianlabs/jira-metaui-client/transformerClient';
+import { createEmptyMinimalIssue, emptyUser, isEmptyUser, IssueLinkIssueKeys, MinimalIssue, readIssueLinkIssue, readSearchResults, User } from '@atlassianlabs/jira-pi-common-models';
+import { FieldValues, ValueType } from '@atlassianlabs/jira-pi-meta-models/ui-meta/fieldUI';
 import FormData from 'form-data';
 import * as fs from "fs";
-import { FieldValues, readIssueLinkIssue, User, ValueType } from "jira-metaui-transformer";
-import { createEmptyMinimalIssue, emptyUser, isEmptyUser, IssueLinkIssueKeys, MinimalIssue, readSearchResults } from "jira-pi-client";
 import { commands, env, window } from "vscode";
 import { issueCreatedEvent, issueUpdatedEvent, issueUrlCopiedEvent } from "../analytics";
 import { DetailedSiteInfo, emptySiteInfo, Product, ProductJira } from "../atlclients/authInfo";
@@ -17,7 +18,6 @@ import { Action, onlineStatus } from "../ipc/messaging";
 import { isOpenPullRequest } from "../ipc/prActions";
 import { fetchEditIssueUI, fetchMinimalIssue } from "../jira/fetchIssue";
 import { parseJiraIssueKeys } from "../jira/issueKeyParser";
-import { EditIssueUI } from "../jira/jira-client/model/editIssueUI";
 import { transitionIssue } from "../jira/transitionIssue";
 import { Logger } from "../logger";
 import { AbstractIssueEditorWebview } from "./abstractIssueEditorWebview";
@@ -92,7 +92,7 @@ export class JiraIssueWebview extends AbstractIssueEditorWebview implements Init
             if (refetchMinimalIssue) {
                 this._issue = await fetchMinimalIssue(this._issue.key, this._issue.siteDetails);
             }
-            const editUI: EditIssueUI = await fetchEditIssueUI(this._issue);
+            const editUI: EditIssueUI<DetailedSiteInfo> = await fetchEditIssueUI(this._issue);
 
             if (this._panel) { this._panel.title = `Jira Issue ${this._issue.key}`; }
 

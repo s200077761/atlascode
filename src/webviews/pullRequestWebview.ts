@@ -1,8 +1,8 @@
-import { isMinimalIssue, MinimalIssue } from "jira-pi-client";
+import { isMinimalIssue, MinimalIssue } from "@atlassianlabs/jira-pi-common-models";
 import pSettle from "p-settle";
 import { PRData } from "src/ipc/prMessaging";
 import * as vscode from 'vscode';
-import { prApproveEvent, prCheckoutEvent, prMergeEvent } from '../analytics';
+import { prApproveEvent, prCheckoutEvent, prCommentEvent, prMergeEvent, prTaskEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket, ProductJira } from '../atlclients/authInfo';
 import { parseBitbucketIssueKeys } from '../bitbucket/bbIssueKeyParser';
 import { clientForSite, parseGitUrl, urlForRemote } from '../bitbucket/bbUtils';
@@ -493,24 +493,23 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
             await scm.fetch(sourceRemote.name, pr.data.source.branchName);
         }
 
-        scm.checkout(branch || pr.data.source.branchName)
-            .then(() => {
-                const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
-                this.postMessage({
-                    type: 'checkout',
-                    currentBranch: currentBranch
-                });
-                prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
-            })
-            .catch((e: any) => {
-                Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-                this.postMessage({ type: 'error', reason: this.formatErrorReason(e) });
-            });
+        await scm.fetch();
+        await scm.checkout(branch || pr.data.source.branchName);
+        if (scm.state.HEAD?.behind) {
+            scm.pull();
+        }
+        const currentBranch = scm.state.HEAD ? scm.state.HEAD.name : '';
+        this.postMessage({
+            type: 'checkout',
+            currentBranch: currentBranch
+        });
+        prCheckoutEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
     }
 
     private async postComment(pr: PullRequest, text: string, parentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postComment(pr.site, pr.data.id, text, parentId);
+        prCommentEvent(pr.site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
         this.updatePullRequest();
     }
 
@@ -529,6 +528,11 @@ export class PullRequestWebview extends AbstractReactWebview implements Initiali
     private async createTask(pr: PullRequest, task: Task, commentId?: string) {
         const bbApi = await clientForSite(pr.site);
         await bbApi.pullrequests.postTask(pr.site, pr.data.id, task.content, commentId);
+        if (commentId) {
+            prTaskEvent(pr.site.details, "comment").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+        } else {
+            prTaskEvent(pr.site.details, "prlevel").then((e: any) => { Container.analyticsClient.sendTrackEvent(e); });
+        }
         this.updatePullRequest();
     }
 

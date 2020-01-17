@@ -1,7 +1,7 @@
 import { Checkbox } from '@atlaskit/checkbox';
 import { CheckboxField } from '@atlaskit/form';
 import Tooltip from '@atlaskit/tooltip';
-import { Filter } from 'jira-pi-client';
+import { Filter } from '@atlassianlabs/jira-pi-common-models/entities';
 import * as React from 'react';
 import { DetailedSiteInfo } from '../../../atlclients/authInfo';
 import { IConfig } from '../../../config/model';
@@ -75,7 +75,7 @@ export default class JiraExplorer extends React.Component<{
                         (fieldArgs: any) => {
                             return (
                                 <Checkbox {...fieldArgs.fieldProps}
-                                    label='Enable Jira Issue Explorer'
+                                    label='Enable Jira issues explorer'
                                     isIndeterminate={this.getIsExplorerIndeterminate()}
                                     onChange={chain(fieldArgs.fieldProps.onChange, this.onCheckboxChange)}
                                     isChecked={this.props.config.jira.explorer.enabled}

@@ -1,4 +1,5 @@
-import { getProxyHostAndPort, JiraClient, JiraCloudClient, JiraServerClient } from "jira-pi-client";
+import { JiraClient, JiraCloudClient, JiraServerClient } from "@atlassianlabs/jira-pi-client";
+import { getProxyHostAndPort } from "@atlassianlabs/pi-client-common/agent";
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from "vscode";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";

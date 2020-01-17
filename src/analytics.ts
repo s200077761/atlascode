@@ -126,6 +126,12 @@ export async function prCommentEvent(site: DetailedSiteInfo): Promise<TrackEvent
     return instanceTrackEvent(site, 'created', 'pullRequestComment');
 }
 
+export async function prTaskEvent(site: DetailedSiteInfo, source: string): Promise<TrackEvent> {
+    let attributesObject: any = instanceType({}, site);
+    attributesObject.attributes.source = source;
+    return trackEvent('created', 'pullRequestComment', attributesObject);
+}
+
 export async function prCheckoutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'checkedOut', 'pullRequestBranch');
 }
@@ -292,6 +298,8 @@ export async function logoutButtonEvent(source: string): Promise<UIEvent> {
     return anyUserOrAnonymous<UIEvent>(e);
 }
 
+
+//TODO: There is no reference to this function...
 export async function openSettingsButtonEvent(source: string): Promise<UIEvent> {
     const e = {
         tenantIdType: null,

@@ -1,7 +1,7 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { Commands } from '../../commands';
 import { Resources } from '../../resources';
+import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 
 export class PullRequestHeaderNode extends AbstractBaseNode {
 
@@ -13,7 +13,7 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
         let treeItem = new TreeItem('', TreeItemCollapsibleState.None);
         treeItem.label = this.description;
         treeItem.description = 'click to change filter';
-        treeItem.iconPath = Resources.icons.get('pullrequests');
+        treeItem.iconPath = Resources.icons.get('preferences');
 
         treeItem.command = {
             command: Commands.BitbucketPullRequestFilters,
@@ -21,10 +21,21 @@ export class PullRequestHeaderNode extends AbstractBaseNode {
         };
 
         return treeItem;
-
     }
+}
 
-    async getChildren(): Promise<AbstractBaseNode[]> {
-        return [];
+export class CreatePullRequestNode extends AbstractBaseNode {
+
+    getTreeItem(): TreeItem {
+        let treeItem = new TreeItem('Create pull request...', TreeItemCollapsibleState.None);
+        treeItem.iconPath = Resources.icons.get('pullrequests');
+
+        treeItem.command = {
+            command: Commands.CreatePullRequest,
+            title: 'Create pull request'
+        };
+
+        return treeItem;
+
     }
 }

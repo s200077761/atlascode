@@ -1,4 +1,4 @@
-import { isMinimalIssue, MinimalIssue } from 'jira-pi-client';
+import { isMinimalIssue, MinimalIssue } from '@atlassianlabs/jira-pi-common-models/entities';
 import * as vscode from 'vscode';
 import { commands, Uri } from 'vscode';
 import { prCreatedEvent, Registry, viewScreenEvent } from '../analytics';
