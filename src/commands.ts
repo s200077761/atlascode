@@ -41,7 +41,7 @@ export enum Commands {
     BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
     BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
-    CheckoutThisFile = 'atlascode.bb.checkoutThisFile',
+    EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
     ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',

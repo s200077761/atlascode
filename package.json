@@ -246,8 +246,8 @@
                 "category": "Atlassian"
             },
             {
-                "command": "atlascode.bb.checkoutThisFile",
-                "title": "Checkout this File",
+                "command": "atlascode.bb.editThisFile",
+                "title": "Edit this File",
                 "category": "Atlassian"
             },
             {
@@ -398,7 +398,7 @@
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 },
                 {
-                    "command": "atlascode.bb.checkoutThisFile",
+                    "command": "atlascode.bb.editThisFile",
                     "group": "atlascode",
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }

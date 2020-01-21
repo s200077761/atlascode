@@ -161,7 +161,7 @@ export class PullRequestCommentController implements vscode.Disposable {
             vscode.commands.registerCommand(Commands.BitbucketToggleCommentsVisibility, (input: vscode.Uri) => {
                 this.toggleCommentsVisibility(input);
             }),
-            vscode.commands.registerCommand(Commands.CheckoutThisFile, async (uri: vscode.Uri) => {
+            vscode.commands.registerCommand(Commands.EditThisFile, async (uri: vscode.Uri) => {
                 const { site, prId, path, repoUri } = JSON.parse(uri.query) as PRFileDiffQueryParams;
 
                 const wsRepo = Container.bitbucketContext.getRepository(vscode.Uri.parse(repoUri));
