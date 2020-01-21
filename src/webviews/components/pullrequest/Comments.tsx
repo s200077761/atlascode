@@ -79,7 +79,7 @@ class NestedComment extends React.Component<
     };
 
     handleTaskCreateClick = () => {
-        this.setState({ isCreatingTask: true, receivedDataFromServer: false });
+        this.setState({ isCreatingTask: true });
     };
 
     handleCancelTaskCreate = () => {
@@ -87,7 +87,7 @@ class NestedComment extends React.Component<
     };
 
     handleTaskCreate = (task: Task) => {
-        this.setState({ isCreatingTask: false });
+        this.setState({ isCreatingTask: false, receivedDataFromServer: false });
         if(this.props.onTaskCreate) {
             this.props.onTaskCreate(task, this.props.node.id);
         }
@@ -186,6 +186,7 @@ class NestedComment extends React.Component<
                         onSave={this.handleTaskCreate}
                         cancelCreate={this.handleCancelTaskCreate}
                         isInitialized={false}
+                        key={-1}
                     />
                 }
                 {   node.tasks &&
@@ -195,6 +196,7 @@ class NestedComment extends React.Component<
                                     onEdit={this.props.onTaskEdit}
                                     onDelete={this.props.onTaskDelete}
                                     isInitialized={true}
+                                    key={task.id}
                                 />
                     )
                 }

@@ -6,12 +6,14 @@ This extension combines the power of Jira and Bitbucket to streamline the develo
 With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
 ## Getting Started
-* Make sure you have VS Code version 1.37.0 or above
+* Make sure you have VS Code version 1.40.0 or above
 * Download the extension from the marketplace
 * Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 * From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
 For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code)
+
+**Note:** Jira Software Cloud next-gen projects and all Jira Service Desk project types are not fully supported at this time.
 
 ## Features at a Glance
 

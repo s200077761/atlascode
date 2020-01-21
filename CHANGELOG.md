@@ -1,3 +1,7 @@
+## What's New in 2.3.1
+### Bugs fixed
+* Start work on issue now works correctly again
+
 ## What's New in 2.3.0
 ### Improvements
 * Added support for Bitbucket tasks

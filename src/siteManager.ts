@@ -46,7 +46,7 @@ export class SiteManager extends Disposable {
         }
         const productKey = newSites[0].product.key;
         let notify = true;
-        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`);
+        let allSites = this.readSitesFromGlobalStore(productKey);
         if (allSites) {
             newSites = newSites.filter(s => !allSites!.some(s2 => s2.id === s.id && s2.userId === s.userId));
             if (newSites.length === 0) {
@@ -66,7 +66,7 @@ export class SiteManager extends Disposable {
     }
 
     public updateSite(oldSite: DetailedSiteInfo, newSite: DetailedSiteInfo) {
-        let allSites = this._globalStore.get<DetailedSiteInfo[]>(`${newSite.product.key}${SitesSuffix}`);
+        let allSites = this.readSitesFromGlobalStore(newSite.product.key);
         if (allSites) {
             const oldSiteIndex = allSites.findIndex(site => site.id === oldSite.id && site.userId === oldSite.userId);
             if (oldSiteIndex !== -1) {
@@ -93,11 +93,27 @@ export class SiteManager extends Disposable {
         return this.getSitesAvailableForKey(product.key);
     }
 
+    private readSitesFromGlobalStore(productKey: string) {
+        const sites = this._globalStore.get<any[]>(`${productKey}${SitesSuffix}`);
+        return sites?.map(s => this.readSite(s));
+    }
+
+    private readSite(site: any): DetailedSiteInfo {
+        // We had saved just the hostname originally, but started including the port for server
+        // customers so it's now technically a host. Since this is persisted there will be some
+        // saved instances that still refer to it as hostname so we apply this correction here.
+        if (!site.host && site.hostname) {
+            site.host = site.hostname;
+        }
+        delete site.hostname;
+        return site;
+    }
+
     private getSitesAvailableForKey(productKey: string): DetailedSiteInfo[] {
         let sites = this._sitesAvailable.get(productKey);
 
         if (!sites || sites.length < 1) {
-            sites = this._globalStore.get<DetailedSiteInfo[]>(`${productKey}${SitesSuffix}`);
+            sites = this.readSitesFromGlobalStore(productKey);
             if (!sites) {
                 sites = [];
             }
@@ -143,14 +159,14 @@ export class SiteManager extends Disposable {
     }
 
     public getSiteForHostname(product: Product, hostname: string): DetailedSiteInfo | undefined {
-        let site = this.getSitesAvailable(product).find(site => site.hostname.includes(hostname));
+        let site = this.getSitesAvailable(product).find(site => site.host.includes(hostname));
         if (site) {
             return site;
         }
 
         return this.getSitesAvailable(product)
             .find(site => Container.bitbucketContext
-                ? Container.bitbucketContext.getMirrors(site.hostname).find(mirror => mirror.includes(hostname)) !== undefined
+                ? Container.bitbucketContext.getMirrors(site.host).find(mirror => mirror.includes(hostname)) !== undefined
                 : false
             );
     }
@@ -160,9 +176,9 @@ export class SiteManager extends Disposable {
     }
 
     public removeSite(site: SiteInfo): boolean {
-        const sites = this._globalStore.get<DetailedSiteInfo[]>(`${site.product.key}${SitesSuffix}`);
+        const sites = this.readSitesFromGlobalStore(site.product.key);
         if (sites && sites.length > 0) {
-            const foundIndex = sites.findIndex(availableSite => availableSite.hostname === site.hostname);
+            const foundIndex = sites.findIndex(availableSite => availableSite.host === site.host);
             if (foundIndex > -1) {
                 const deletedSite = sites[foundIndex];
                 sites.splice(foundIndex, 1);

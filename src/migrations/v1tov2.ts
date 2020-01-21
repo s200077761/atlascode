@@ -111,7 +111,7 @@ export class V1toV2Migrator {
                 avatarUrl: resource.avatarUrl,
                 baseApiUrl: baseApiUrl,
                 baseLinkUrl: baseUrlString,
-                hostname: baseUrl.hostname,
+                host: baseUrl.host,
                 id: resource.id,
                 name: resource.name,
                 product: ProductJira,
@@ -206,7 +206,7 @@ export class V1toV2Migrator {
     }
 
     private async migrateBitbucketData(info: AuthInfoV1, provider: OAuthProvider, accessToken: string) {
-        const hostname = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
+        const host = (provider === OAuthProvider.BitbucketCloud) ? 'bitbucket.org' : 'staging.bb-inf.net';
         const baseApiUrl = (provider === OAuthProvider.BitbucketCloud) ? 'https://api.bitbucket.org/2.0' : 'https://api-staging.bb-inf.net/2.0';
         const siteName = (provider === OAuthProvider.BitbucketCloud) ? 'Bitbucket Cloud' : 'Bitbucket Staging Cloud';
         const user: UserInfo | undefined = await this.getNewUserInfo(ProductBitbucket, baseApiUrl, accessToken);
@@ -225,8 +225,8 @@ export class V1toV2Migrator {
         const newSite = {
             avatarUrl: "",
             baseApiUrl: baseApiUrl,
-            baseLinkUrl: `https://${hostname}`,
-            hostname: hostname,
+            baseLinkUrl: `https://${host}`,
+            host: host,
             id: provider,
             name: siteName,
             product: ProductBitbucket,

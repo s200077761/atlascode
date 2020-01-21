@@ -33,6 +33,7 @@ export enum Commands {
     RefreshPullRequestExplorerNode = 'atlascode.bb.refreshPullRequest',
     ViewInWebBrowser = 'atlascode.viewInWebBrowser',
     BitbucketAddComment = 'atlascode.bb.addComment',
+    BitbucketAddReply = 'atlascode.bb.addReply',
     BitbucketDeleteComment = 'atlascode.bb.deleteComment',
     BitbucketEditComment = 'atlascode.bb.editComment',
     BitbucketDeleteTask = 'atlascode.bb.deleteTask',

@@ -1070,10 +1070,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/vscode@1.37.0":
-  version "1.37.0"
-  resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/vscode/-/vscode-1.37.0.tgz#fb26ffabfabcd50ba70e8b454122a91b84548080"
-  integrity sha1-+yb/q/q81QunDotFQSKpG4RUgIA=
+"@types/vscode@1.40.0":
+  version "1.40.0"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@types/vscode/-/vscode-1.40.0.tgz#47d19e9e32da512c986f579fe6afbc8d3e6e0c55"
+  integrity sha1-R9GenjLaUSyYb1ef5q+8jT5uDFU=
 
 "@types/webpack-dev-server@*":
   version "3.1.7"

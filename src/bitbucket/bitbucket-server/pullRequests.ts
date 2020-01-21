@@ -489,25 +489,18 @@ export class ServerPullRequestApi implements PullRequestApi {
         };
     }
 
-    private hasUndeletedChild(comment: any) {
+    private shouldDisplayComment(comment: Comment): boolean {
         let hasUndeletedChild: boolean = false;
+        let filteredChildren = [];
         for (let child of comment.children) {
-            hasUndeletedChild = hasUndeletedChild || this.shouldDisplayComment(child);
-            if (hasUndeletedChild) {
-                return hasUndeletedChild;
+            if (this.shouldDisplayComment(child)) {
+                filteredChildren.push(child);
+                hasUndeletedChild = true;
+                comment.deletable = false;
             }
         }
-        return hasUndeletedChild;
-    }
-
-    private shouldDisplayComment(comment: any): boolean {
-        if (!comment.deleted) {
-            return true;
-        } else if (!comment.children || comment.children.length === 0) {
-            return false;
-        } else {
-            return this.hasUndeletedChild(comment);
-        }
+        comment.children = filteredChildren;
+        return hasUndeletedChild || !comment.deleted || comment.tasks.some(task => !task.isComplete);
     }
 
     private async toNestedCommentModel(site: BitbucketSite, comment: any, commentAnchor: any, tasks: Task[]): Promise<Comment> {
@@ -523,9 +516,6 @@ export class ServerPullRequestApi implements PullRequestApi {
         }
         commentModel.tasks = tasksInComment;
         commentModel.children = await Promise.all((comment.comments || []).map((c: any) => this.toNestedCommentModel(site, c, commentAnchor, tasksNotInComment)));
-        if (this.hasUndeletedChild(commentModel)) {
-            commentModel.deletable = false;
-        }
         return commentModel;
     }
 
