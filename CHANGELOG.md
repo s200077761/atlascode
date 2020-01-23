@@ -1,3 +1,14 @@
+## What's New in 2.3.2
+### Improvements
+* Updated README to include complete build instructions
+* Improved reviewer/mention selection for Bitbucket Cloud pull requests
+* It is now possible to reply to any pull request comment in the diff view
+
+### Bugs fixed
+* Matched cursor behavior in diff lists to the Bitbucket Cloud website
+* Cancelled tasks are now hidden and task deletion doesn't cause strange behavior
+* You can now add pull-request-level tasks in Bitbucket Cloud pull requests even when no tasks already exist
+
 ## What's New in 2.3.1
 ### Bugs fixed
 * Start work on issue now works correctly again
