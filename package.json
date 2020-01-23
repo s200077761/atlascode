@@ -1130,8 +1130,6 @@
         "compile": "npm run clean && npm-run-all --parallel compile:react compile:extension",
         "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
         "compile:react": "webpack --mode production --config webpack.react.prod.js",
-        "watch": "tsc --watch -p ./",
-        "lookAway": "tsc -p ./",
         "postinstall": "patch-package",
         "test": "npm run compile && node ./build/test/runTest.js",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
