@@ -1,5 +1,5 @@
 import { window } from 'vscode';
-import { prCheckoutEvent } from '../../analytics';
+import { fileCheckoutEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
 import { PullRequest } from '../../bitbucket/model';
 import { Container } from '../../container';
@@ -39,7 +39,7 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
     await scm
         .checkout(branch || pr.data.source.branchName)
         .then(() => {
-            prCheckoutEvent(pr.site.details).then(e => {
+            fileCheckoutEvent(pr.site.details).then(e => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
         })

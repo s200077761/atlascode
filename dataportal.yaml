@@ -258,6 +258,14 @@ track:
     attributes:
       - name: instanceType
       - name: hostProduct
+  - action: fileCheckedOut
+    subject: pullRequestBranch
+    library: server
+    description: |
+      when 'Edit this File' action is taken and associated branch is checked out
+    attributes:
+      - name: instanceType
+      - name: hostProduct
   - id: 15637
     action: approved
     subject: pullRequest

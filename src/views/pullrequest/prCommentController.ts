@@ -209,9 +209,7 @@ export class PullRequestCommentController implements vscode.Disposable {
                 const checkoutSucceeded = await checkout(pr, pr.data.source.branchName);
 
                 if (checkoutSucceeded) {
-                    //rootUri is in the format file:///A/B/C, and we want /A/B/C
-                    const absolutePath = wsRepo.rootUri.replace(/(^\w+:|^)\/\//, '');
-                    const pathURI = vscode.Uri.file(`${absolutePath}/${path}`);
+                    const pathURI = vscode.Uri.parse(`${wsRepo.rootUri}/${path}`);
                     commands.executeCommand('vscode.open', pathURI);
                 }
             })
