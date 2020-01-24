@@ -21,9 +21,9 @@ export function showBitbucketDebugInfo() {
     const sites = Container.siteManager.getSitesAvailable(ProductBitbucket)
         .map(site => ({
             name: site.name,
-            host: site.hostname,
+            host: site.host,
             type: site.isCloud ? 'cloud' : 'server',
-            mirrors: Container.bitbucketContext.getMirrors(site.hostname)
+            mirrors: Container.bitbucketContext.getMirrors(site.host)
         }));
 
     const wsRepos = Container.bitbucketContext.getAllRepositories()

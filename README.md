@@ -6,12 +6,14 @@ This extension combines the power of Jira and Bitbucket to streamline the develo
 With Atlassian for VS Code you can create and view issues, start work on issues, create pull requests, do code reviews, start builds, get build statuses and more!
 
 ## Getting Started
-* Make sure you have VS Code version 1.37.0 or above
+* Make sure you have VS Code version 1.40.0 or above
 * Download the extension from the marketplace
 * Authenticate with Jira and/or Bitbucket from the 'Atlassian: Open Settings' page available in the command palette
 * From the command palette, type 'Atlassian:' to see all of the extensions available commands
 
 For more in-depth information, check out our [User Guide](https://confluence.atlassian.com/display/BITBUCKET/Getting+started+with+VS+Code)
+
+**Note:** Jira Software Cloud next-gen projects and all Jira Service Desk project types are not fully supported at this time.
 
 ## Features at a Glance
 
@@ -47,10 +49,21 @@ You can find your instance's version in the footer of any Jira/Bitbucket page.
 Please use the in-app feedback form to tell us what you think!  It's available from the 'Atlassian: Open Settings' and 'Atlassian: Open Welcome' pages available in the command palette.
 
 ## Contributors
-
 Pull requests, issues and comments welcome.
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Running and debugging the extension:
+
+* Atlassian for VS Code is a node project, as such you'll need to run `yarn` before building.
+* To debug the extension from within VS Code you'll need a `launch.json`.
+** An example `launch.json` that will be suitible for most users is included as `.vscode/launch.json.example`.
+** To use the example file simply copy it to `launch.json`.
+* Once you have a `launch.json` file select "Debug and Run" from the Activity Bar and click "Start Debugging".
+** After the extension builds VS Code will launch a new instance of itself (the Extension Development Host) running the extension.
+* When you want to test your code changes
+** If the extension development host is still running restart by clicking ⟲ in the debug toolbar.
+** If you've already stopped the host just start debugging again.
 
 For pull requests:
 

@@ -57,11 +57,11 @@ export class BitbucketContext extends Disposable {
     }
 
     public async currentUser(site: BitbucketSite): Promise<User> {
-        let foundUser = this._currentUsers.getItem<User>(site.details.hostname);
+        let foundUser = this._currentUsers.getItem<User>(site.details.host);
         if (!foundUser) {
             const bbClient = await clientForSite(site);
             foundUser = await bbClient.pullrequests.getCurrentUser(site.details)!;
-            this._currentUsers.setItem(site.details.hostname, foundUser, 10 * Interval.MINUTE);
+            this._currentUsers.setItem(site.details.host, foundUser, 10 * Interval.MINUTE);
         }
 
         if (foundUser) {
@@ -96,7 +96,7 @@ export class BitbucketContext extends Disposable {
             try {
                 const bbApi = await Container.clientManager.bbClient(site);
                 const mirrorHosts = await bbApi.repositories.getMirrorHosts();
-                this._mirrorsCache.setItem(site.hostname, mirrorHosts);
+                this._mirrorsCache.setItem(site.host, mirrorHosts);
             } catch {
                 // log and ignore error
                 Logger.debug('Failed to fetch mirror sites');
@@ -115,7 +115,7 @@ export class BitbucketContext extends Disposable {
     private updateUsers(sites: DetailedSiteInfo[]) {
         const removed: string[] = [];
         this._currentUsers.getItems<User>().forEach(entry => {
-            if (!sites.some(s => s.hostname === entry.key)) {
+            if (!sites.some(s => s.host === entry.key)) {
                 removed.push(entry.key);
             }
         });

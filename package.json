@@ -30,7 +30,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.37.0"
+        "vscode": "^1.40.0"
     },
     "categories": [
         "Other"
@@ -42,7 +42,9 @@
         "vscode.git",
         "redhat.vscode-yaml"
     ],
-    "extensionKind": "workspace",
+    "extensionKind": [
+        "workspace"
+    ],
     "main": "./build/extension/extension",
     "contributes": {
         "commands": [
@@ -87,6 +89,15 @@
                 "icon": {
                     "dark": "resources/dark/delete.svg",
                     "light": "resources/light/delete.svg"
+                },
+                "category": "Atlassian"
+            },
+            {
+                "command": "atlascode.bb.addReply",
+                "title": "Reply to this Comment",
+                "icon": {
+                    "dark": "resources/dark/add-comment.svg",
+                    "light": "resources/light/add-comment.svg"
                 },
                 "category": "Atlassian"
             },
@@ -504,8 +515,13 @@
                     "when": "comment =~ /canDelete/ && resourceScheme == atlascode.bbpr"
                 },
                 {
-                    "command": "atlascode.bb.addTask",
+                    "command": "atlascode.bb.addReply",
                     "group": "inline@3",
+                    "when": "comment =~ /canAddReply/ && resourceScheme == atlascode.bbpr"
+                },
+                {
+                    "command": "atlascode.bb.addTask",
+                    "group": "inline@4",
                     "when": "comment =~ /canAddTask/ && resourceScheme == atlascode.bbpr"
                 },
                 {
@@ -596,6 +612,10 @@
                 },
                 {
                     "command": "atlascode.bb.deleteTask",
+                    "when": "false"
+                },
+                {
+                    "command": "atlascode.bb.addReply",
                     "when": "false"
                 },
                 {
@@ -1110,8 +1130,6 @@
         "compile": "npm run clean && npm-run-all --parallel compile:react compile:extension",
         "compile:extension": "webpack --mode production --config webpack.extension.prod.js",
         "compile:react": "webpack --mode production --config webpack.react.prod.js",
-        "watch": "tsc --watch -p ./",
-        "lookAway": "tsc -p ./",
         "postinstall": "patch-package",
         "test": "npm run compile && node ./build/test/runTest.js",
         "devcompile": "npm-run-all --parallel devcompile:react devcompile:extension",
@@ -1238,7 +1256,7 @@
         "@types/terser-webpack-plugin": "^1.2.1",
         "@types/turndown": "^5.0.0",
         "@types/uuid": "^3.4.4",
-        "@types/vscode": "1.37.0",
+        "@types/vscode": "1.40.0",
         "@types/webpack": "^4.39.1",
         "@types/webpack-manifest-plugin": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^2.10.0",

@@ -106,7 +106,7 @@ export default class AuthForm extends PureComponent<{
         const pfxPassphrase = (this.state.useCustomSSL && this.state.customSSLType === 'customClientSSL') ? this.state.pfxPassphrase : undefined;
         const contextPath = (this.state.useContextPath) ? this.normalizeContextPath(this.state.contextPath) : undefined;
         const siteInfo = {
-            hostname: url.host,
+            host: url.host,
             protocol: url.protocol,
             product: this.props.product,
             customSSLCertPaths: customSSLCerts,
