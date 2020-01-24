@@ -1,32 +1,10 @@
-import { AxiosResponse } from "axios";
-import { DetailedSiteInfo } from "../atlclients/authInfo";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
-import { Client, ClientError } from "../bitbucket/httpClient";
+import { HTTPClient } from "../bitbucket/httpClient";
 import { BitbucketSite } from "../bitbucket/model";
-import { getAgent } from "../jira/jira-client/providers";
 import { PaginatedPipelines, Pipeline, PipelineCommand, PipelineResult, PipelineStep, PipelineTarget } from "./model";
 
 export class PipelineApiImpl {
-  private client: Client;
-
-  constructor(site: DetailedSiteInfo, token: string) {
-    this.client = new Client(
-      site.baseApiUrl,
-      `Bearer ${token}`,
-      getAgent(site),
-      async (response: AxiosResponse): Promise<Error> => {
-        let errString = 'Unknown error';
-        const errJson = await response.data;
-
-        if (errJson.error && errJson.error.message) {
-          errString = errJson.error.message;
-        } else {
-          errString = errJson;
-        }
-
-        return new ClientError(response.statusText, errString);
-      }
-    );
+  constructor(private client: HTTPClient) {
   }
 
   async getRecentActivity(site: BitbucketSite): Promise<Pipeline[]> {

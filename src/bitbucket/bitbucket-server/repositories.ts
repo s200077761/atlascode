@@ -1,35 +1,13 @@
-import { AxiosResponse } from "axios";
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { getAgent } from "../../jira/jira-client/providers";
 import { CacheMap } from "../../util/cachemap";
-import { Client, ClientError } from "../httpClient";
+import { HTTPClient } from "../httpClient";
 import { BitbucketBranchingModel, BitbucketSite, Commit, Repo, RepositoriesApi } from "../model";
 import { ServerPullRequestApi } from "./pullRequests";
 
 export class ServerRepositoriesApi implements RepositoriesApi {
-    private client: Client;
     private repoCache: CacheMap = new CacheMap();
     private branchingModelCache: CacheMap = new CacheMap();
 
-    constructor(site: DetailedSiteInfo, username: string, password: string) {
-        this.client = new Client(
-            site.baseApiUrl,
-            `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            getAgent(site),
-            async (response: AxiosResponse): Promise<Error> => {
-                let errString = 'Unknown error';
-                const errJson = await response.data;
-
-                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
-                    const e = errJson.errors[0];
-                    errString = e.message || errString;
-                } else {
-                    errString = errJson;
-                }
-
-                return new ClientError(response.statusText, errString);
-            }
-        );
+    constructor(private client: HTTPClient) {
     }
 
     async getMirrorHosts(): Promise<string[]> {

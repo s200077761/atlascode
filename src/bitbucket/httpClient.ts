@@ -3,7 +3,7 @@ import { addCurlLogging } from '../atlclients/interceptors';
 import { Container } from '../container';
 import { ConnectionTimeout } from '../util/time';
 
-export class Client {
+export class HTTPClient {
     private transport: AxiosInstance;
 
     constructor(
@@ -34,7 +34,6 @@ export class Client {
                     : Promise.reject(error);
             }
         );
-
     }
 
     async get(urlSlug: string, queryParams?: any) {

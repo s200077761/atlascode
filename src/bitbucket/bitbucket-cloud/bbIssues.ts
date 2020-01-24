@@ -1,7 +1,4 @@
-import { AxiosResponse } from 'axios';
-import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { getAgent } from '../../jira/jira-client/providers';
-import { Client, ClientError } from "../httpClient";
+import { HTTPClient } from "../httpClient";
 import { BitbucketIssue, BitbucketSite, Comment, emptyBitbucketSite, PaginatedBitbucketIssues, PaginatedComments, UnknownUser, WorkspaceRepo } from "../model";
 
 const defaultPageLength = 25;
@@ -11,26 +8,8 @@ export const maxItemsSupported = {
 };
 
 export class BitbucketIssuesApiImpl {
-    private client: Client;
 
-    constructor(site: DetailedSiteInfo, token: string) {
-        this.client = new Client(
-            site.baseApiUrl,
-            `Bearer ${token}`,
-            getAgent(site),
-            async (response: AxiosResponse): Promise<Error> => {
-                let errString = 'Unknown error';
-                const errJson = response.data;
-
-                if (errJson.error && errJson.error.message) {
-                    errString = errJson.error.message;
-                } else {
-                    errString = errJson;
-                }
-
-                return new ClientError(response.statusText, errString);
-            }
-        );
+    constructor(private client: HTTPClient) {
     }
 
     // ---- BEGIN - Actions NOT on a specific issue ----
