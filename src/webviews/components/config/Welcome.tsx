@@ -94,6 +94,21 @@ export default class WelcomePage extends WebviewComponent<Emit, {}, {}, ViewStat
                                 <p>This enables you to set a different set of JQL trees per workspace/project.</p>
                             </div>
                         </SectionMessage>
+                        <h3>🎉 What's New in 2.3.2 🎉</h3>
+                        <section>
+                            <h4>✨ Improvements ✨</h4>
+                            <ul>
+                                <li>Updated README to include complete build instructions</li>
+                                <li>Improved reviewer/mention selection for Bitbucket Cloud pull requests</li>
+                                <li>It is now possible to reply to any pull request comment in the diff view</li>
+                            </ul>
+                            <h4>🐞 Bugs Fixed 🐞</h4>
+                            <ul>
+                                <li>Matched cursor behavior in diff lists to the Bitbucket Cloud website</li>
+                                <li>Cancelled tasks are now hidden and task deletion doesn't cause strange behavior</li>
+                                <li>You can now add pull-request-level tasks in Bitbucket Cloud pull requests even when no tasks already exist</li>
+                            </ul>
+                        </section>
                         <h3>🎉 What's New in 2.3.1 🎉</h3>
                         <section>
                             <h4>🐞 Bugs Fixed 🐞</h4>
