@@ -1,14 +1,19 @@
-import { Branch } from "src/typings/git";
-import { BitbucketIssue, BitbucketSite } from "../bitbucket/model";
-import { Action } from "./messaging";
-import { RepoData } from "./prMessaging";
+import { Branch } from 'src/typings/git';
+import { BitbucketIssue, BitbucketSite } from '../bitbucket/model';
+import { Action } from './messaging';
+import { RepoData } from './prMessaging';
 
 export interface CopyBitbucketIssueLink extends Action {
     action: 'copyBitbucketIssueLink';
 }
 
-export interface AssignToMe extends Action {
+export interface AssignIssue extends Action {
     action: 'assign';
+    accountId?: string;
+}
+
+export function isAssignIssue(a: Action): a is AssignIssue {
+    return (<AssignIssue>a).action === 'assign';
 }
 
 export interface PostComment extends Action {

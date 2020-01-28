@@ -300,19 +300,20 @@ export class BitbucketIssuesApiImpl {
         );
     }
 
-    async assign(issue: BitbucketIssue, account_id: string): Promise<void> {
+    async assign(issue: BitbucketIssue, account_id?: string): Promise<void> {
         const { ownerSlug, repoSlug } = issue.site;
 
         await this.client.put(
             `/repositories/${ownerSlug}/${repoSlug}/issues/${issue.data.id}`,
             {
                 type: 'issue',
-                assignee: {
-                    type: 'user',
-                    account_id: account_id
-                }
-            }
-        );
+                assignee: account_id
+                    ? {
+                        type: 'user',
+                        account_id: account_id
+                    }
+                    : null
+        });
     }
 
     async create(site: BitbucketSite, title: string, description: string, kind: string, priority: string): Promise<BitbucketIssue> {

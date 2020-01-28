@@ -14,11 +14,11 @@ import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import TaskIcon from '@atlaskit/icon/glyph/task';
 import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
-import VidRaisedHandIcon from '@atlaskit/icon/glyph/vid-raised-hand';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import PageHeader from '@atlaskit/page-header';
 import Panel from '@atlaskit/panel';
+import { AsyncSelect, components } from '@atlaskit/select';
 import SizeDetector from '@atlaskit/size-detector';
 import Tooltip from '@atlaskit/tooltip';
 import { distanceInWordsToNow, format } from 'date-fns';
@@ -26,7 +26,7 @@ import React from 'react';
 import uuid from 'uuid';
 import { BitbucketIssue, BitbucketIssueData, emptyBitbucketSite, UnknownUser } from '../../../bitbucket/model';
 import {
-    AssignToMe,
+    AssignIssue,
     CopyBitbucketIssueLink,
     CreateJiraIssueAction,
     OpenStartWorkPageAction,
@@ -71,7 +71,7 @@ type Emit =
     | PostComment
     | PostChange
     | CopyBitbucketIssueLink
-    | AssignToMe
+    | AssignIssue
     | RefreshIssueAction
     | OpenStartWorkPageAction
     | CreateJiraIssueAction
@@ -104,6 +104,36 @@ const emptyState = {
     isErrorBannerOpen: false,
     isOnline: true,
     errorDetails: undefined
+};
+
+const UserOption = (props: any) => {
+    return (
+        <components.Option {...props}>
+            <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
+                <Avatar
+                    size="medium"
+                    borderColor="var(--vscode-dropdown-foreground)!important"
+                    src={props.data.avatarUrl || props.data.links?.avatar?.href}
+                />
+                <span style={{ marginLeft: '4px' }}>{props.data.displayName || props.data.display_name}</span>
+            </div>
+        </components.Option>
+    );
+};
+
+const UserValue = (props: any) => {
+    return (
+        <components.SingleValue {...props}>
+            <div ref={props.innerRef} {...props.innerProps} className="ac-flex">
+                <Avatar
+                    size="xsmall"
+                    borderColor="var(--vscode-dropdown-foreground)!important"
+                    src={props.data.avatarUrl || props.data.links?.avatar?.href}
+                />
+                <span style={{ marginLeft: '4px' }}>{props.data.displayName || props.data.display_name}</span>
+            </div>
+        </components.SingleValue>
+    );
 };
 
 export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, {}, MyState> {
@@ -149,7 +179,9 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
 
     handleCopyLink = () => this.postMessage({ action: 'copyBitbucketIssueLink' });
 
-    handleAssign = () => this.postMessage({ action: 'assign' });
+    handleAssign = (value: any) => {
+        this.postMessage({ action: 'assign', accountId: value?.accountId });
+    };
 
     handleStatusChange = (newStatus: string, content?: string) => {
         this.setState({ isStatusButtonLoading: true });
@@ -241,28 +273,28 @@ export default class BitbucketIssuePage extends WebviewComponent<Emit, Receive, 
                 </div>
                 <div className="ac-vpadding">
                     <label className="ac-field-label">Assignee</label>
-                    <Tooltip content={issueData.assignee ? issueData.assignee.display_name : 'Unassigned'}>
-                        <AvatarItem
-                            avatar={
-                                <Avatar
-                                    size="small"
-                                    src={issueData.assignee ? issueData.assignee.links!.avatar!.href! : null}
-                                />
+                    <AsyncSelect
+                        label="Assignee"
+                        id="assignee"
+                        name="assignee"
+                        className="ac-select-container"
+                        classNamePrefix="ac-select"
+                        value={issueData.assignee}
+                        placeholder="Unassigned"
+                        noOptionsMessage={(input: any) => 'Type to search'}
+                        isClearable
+                        defaultOptions={[
+                            {
+                                accountId: this.state.data.currentUser.accountId,
+                                avatarUrl: '',
+                                displayName: 'Assign to me'
                             }
-                            primaryText={issueData.assignee ? issueData.assignee.display_name : 'Unassigned'}
-                        />
-                    </Tooltip>
-                    {!(
-                        issueData.assignee && issueData.assignee!.account_id === this.state.data!.currentUser.accountId
-                    ) && (
-                        <Button
-                            appearance="subtle"
-                            onClick={this.handleAssign}
-                            iconBefore={<VidRaisedHandIcon label="assign-to-me" />}
-                        >
-                            Assign to me
-                        </Button>
-                    )}
+                        ]}
+                        onChange={this.handleAssign}
+                        loadOptions={this.loadUserOptions}
+                        getOptionLabel={(option: any) => option.displayName || option.display_name}
+                        components={{ Option: UserOption, SingleValue: UserValue }}
+                    />
                 </div>
                 <div className="ac-vpadding">
                     <label className="ac-field-label">Reporter</label>
