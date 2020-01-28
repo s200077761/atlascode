@@ -26,7 +26,7 @@ export class StaticIssuesNode extends JQLTreeDataProvider implements AbstractBas
         }
     }
 
-    getTreeItem(): vscode.TreeItem {
+    async getTreeItem(): Promise<vscode.TreeItem> {
         const item = new vscode.TreeItem(this.label, vscode.TreeItemCollapsibleState.Collapsed);
         item.iconPath = Resources.icons.get('issues');
         return item;

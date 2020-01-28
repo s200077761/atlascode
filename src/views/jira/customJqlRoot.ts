@@ -66,14 +66,25 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
     }
 
-    return [
-      createJiraIssueNode,
-      ...this._jqlList.map((jql: JQLEntry) => {
-        const childTree = new CustomJQLTree(jql);
-        this._children.push(childTree);
-        return childTree;
-      })
-    ];
+    const childJQLTree = await Promise.all(this._jqlList.map(async (jql: JQLEntry) => {
+      const childTree = new CustomJQLTree(jql);
+      this._children.push(childTree);
+      return childTree;
+    }));
+
+    //Execute the queries for all the JQL tree items
+    await Promise.all(childJQLTree.map(
+        async treeItem => {
+          try {
+            return treeItem.executeQuery();
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      )
+    ); 
+
+    return [createJiraIssueNode, ...childJQLTree];
   }
 
   refresh() {

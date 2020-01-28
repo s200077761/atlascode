@@ -77,38 +77,31 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             return [new SimpleJiraIssueNode(this._emptyState, this._emptyStateCommand)];
         } else if (this._issues) {
             return this.nodesForIssues();
-        } else if (allowFetch) {
-            return await this.fetchIssues();
         } else {
             return [];
         }
     }
 
-    getTreeItem(node: IssueNode): TreeItem {
-        return node.getTreeItem();
+    async executeQuery(): Promise<void> {
+        if (Container.siteManager.productHasAtLeastOneSite(ProductJira) && this._jqlEntry && this._jqlSite) {
+            const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
+
+            // We already have everything that matches the JQL. The subtasks likely include things that 
+            // don't match the query so we get rid of them.
+            newIssues.forEach(i => {
+                i.subtasks = [];
+            });
+    
+            if (Container.config.jira.explorer.nestSubtasks) {
+                this._issues = await this.constructIssueTree(newIssues);
+            } else {
+                this._issues = newIssues;
+            }
+        }
     }
 
-    private async fetchIssues(): Promise<IssueNode[]> {
-        if (!this._jqlEntry || !this._jqlSite) {
-            return Promise.resolve([]);
-        }
-
-        // fetch issues matching the jql
-        const newIssues = await issuesForJQL(this._jqlEntry.query, this._jqlSite);
-
-        // We already have evertyhing that matches the JQL. The subtasks likely include things that 
-        // don't match the query so we get rid of them.
-        newIssues.forEach(i => {
-            i.subtasks = [];
-        });
-
-        if (Container.config.jira.explorer.nestSubtasks) {
-            this._issues = await this.constructIssueTree(newIssues);
-        } else {
-            this._issues = newIssues;
-        }
-
-        return this.nodesForIssues();
+    async getTreeItem(node: IssueNode): Promise<TreeItem> {
+        return node.getTreeItem();
     }
 
     private async constructIssueTree(jqlIssues: MinimalIssue<DetailedSiteInfo>[]): Promise<MinimalIssue<DetailedSiteInfo>[]> {

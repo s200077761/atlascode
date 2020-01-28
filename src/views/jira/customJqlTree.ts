@@ -16,10 +16,11 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
     return super.getChildren(undefined, allowFetch);
   }
 
-  getTreeItem(): TreeItem {
+  async getTreeItem(): Promise<TreeItem> {
     const item = new TreeItem(this.jqlEntry.name);
     item.tooltip = this.jqlEntry.query;
     item.collapsibleState = TreeItemCollapsibleState.Collapsed;
+    item.description = `[${this._issues && this._issues.length > 0 ? `${this._issues.length} Issues` : 'No Issues Found'}]`;
     return item;
   }
 }
