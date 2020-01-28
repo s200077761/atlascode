@@ -1,6 +1,4 @@
-import axios from 'axios';
 import debounce from 'lodash.debounce';
-import { ConnectionTimeout } from 'src/util/time';
 import { v4 } from "uuid";
 import { ConfigurationTarget } from "vscode";
 import { AccessibleResourceV1, AuthInfoV1, DetailedSiteInfo, OAuthInfo, OAuthProvider, Product, ProductBitbucket, ProductJira, UserInfo } from "../atlclients/authInfo";
@@ -9,7 +7,7 @@ import { OAuthRefesher } from "../atlclients/oauthRefresher";
 import { configuration, JQLEntry, SiteJQLV1 } from "../config/configuration";
 import { JiraJQLListKey } from "../constants";
 import { Container } from "../container";
-import { getAgent } from "../jira/jira-client/providers";
+import { getAxiosInstance } from "../jira/jira-client/providers";
 import { Logger } from "../logger";
 import { SiteManager } from "../siteManager";
 import { keychain } from "../util/keychain";
@@ -242,15 +240,7 @@ export class V1toV2Migrator {
     private async getNewUserInfo(product: Product, baseApiUrl: string, accessToken: string): Promise<UserInfo | undefined> {
         let user: UserInfo | undefined = undefined;
         try {
-            const client = axios.create({
-                timeout: ConnectionTimeout,
-                headers: {
-                    'X-Atlassian-Token': 'no-check',
-                    'x-atlassian-force-account-id': 'true',
-                    "Accept-Encoding": "gzip, deflate"
-                },
-                ...getAgent()
-            });
+            const client = getAxiosInstance();
 
             const userUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user` : `${baseApiUrl}/myself`;
             const emailUrl = (product.key === ProductBitbucket.key) ? `${baseApiUrl}/user/emails` : '';

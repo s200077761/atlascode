@@ -1,41 +1,16 @@
-import { AxiosResponse } from 'axios';
 import { DetailedSiteInfo } from '../../atlclients/authInfo';
-import { getAgent } from '../../jira/jira-client/providers';
 import { CacheMap } from '../../util/cachemap';
 import { Time } from '../../util/time';
 import { clientForSite } from '../bbUtils';
-import { Client, ClientError } from '../httpClient';
+import { HTTPClient } from '../httpClient';
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { ServerRepositoriesApi } from './repositories';
 
 export class ServerPullRequestApi implements PullRequestApi {
-    private client: Client;
     private defaultReviewersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
 
-    constructor(site: DetailedSiteInfo, username: string, password: string) {
-        this.client = new Client(
-            site.baseApiUrl,
-            `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
-            getAgent(site),
-            async (response: AxiosResponse): Promise<Error> => {
-                let errString = 'Unknown error';
-                const errJson = response.data;
-
-                if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
-                    const e = errJson.errors[0];
-                    errString = e.message || errString;
-                } else {
-                    errString = errJson;
-                }
-
-                return new ClientError(response.statusText, errString);
-            }
-        );
-    }
-
-    async getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests> {
-        throw new Error('This api is not not available for bitbucket server');
+    constructor(private client: HTTPClient) {
     }
 
     async getList(workspaceRepo: WorkspaceRepo, queryParams?: any): Promise<PaginatedPullRequests> {

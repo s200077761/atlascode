@@ -1,11 +1,13 @@
 import { JiraClient, JiraCloudClient, JiraServerClient } from "@atlassianlabs/jira-pi-client";
 import { getProxyHostAndPort } from "@atlassianlabs/pi-client-common/agent";
+import { AxiosResponse } from "axios";
 import { ConfigurationChangeEvent, Disposable, ExtensionContext } from "vscode";
 import { BitbucketIssuesApiImpl } from "../bitbucket/bitbucket-cloud/bbIssues";
 import { CloudPullRequestApi } from "../bitbucket/bitbucket-cloud/pullRequests";
 import { CloudRepositoriesApi } from "../bitbucket/bitbucket-cloud/repositories";
 import { ServerPullRequestApi } from "../bitbucket/bitbucket-server/pullRequests";
 import { ServerRepositoriesApi } from "../bitbucket/bitbucket-server/repositories";
+import { ClientError, HTTPClient } from "../bitbucket/httpClient";
 import { BitbucketApi } from "../bitbucket/model";
 import { configuration } from "../config/configuration";
 //import { getJiraCloudBaseUrl } from "./serverInfo";
@@ -65,25 +67,25 @@ export class ClientManager implements Disposable {
         if (site.isCloud) {
           result = {
             repositories: isOAuthInfo(info)
-              ? new CloudRepositoriesApi(site, info.access)
+              ? new CloudRepositoriesApi(this.createOAuthHTTPClient(site, info.access))
               : undefined!,
             pullrequests: isOAuthInfo(info)
-              ? new CloudPullRequestApi(site, info.access)
+              ? new CloudPullRequestApi(this.createOAuthHTTPClient(site, info.access))
               : undefined!,
             issues: isOAuthInfo(info)
-              ? new BitbucketIssuesApiImpl(site, info.access)
+              ? new BitbucketIssuesApiImpl(this.createOAuthHTTPClient(site, info.access))
               : undefined!,
             pipelines: isOAuthInfo(info)
-              ? new PipelineApiImpl(site, info.access)
+              ? new PipelineApiImpl(this.createOAuthHTTPClient(site, info.access))
               : undefined!
           };
         } else {
           result = {
             repositories: isBasicAuthInfo(info)
-              ? new ServerRepositoriesApi(site, info.username, info.password)
+              ? new ServerRepositoriesApi(this.createBasicHTTPClient(site, info.username, info.password))
               : undefined!,
             pullrequests: isBasicAuthInfo(info)
-              ? new ServerPullRequestApi(site, info.username, info.password)
+              ? new ServerPullRequestApi(this.createBasicHTTPClient(site, info.username, info.password))
               : undefined!,
             issues: undefined,
             pipelines: undefined
@@ -103,13 +105,53 @@ export class ClientManager implements Disposable {
         let client: any = undefined;
 
         if (isOAuthInfo(info)) {
-          //client = new JiraCloudClient(info.access, site);
-          client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access), getAgent);
+          client = new JiraCloudClient(site, jiraTransportFactory, jiraCloudAuthProvider(info.access));
         } else if (isBasicAuthInfo(info)) {
-          client = new JiraServerClient(site, jiraTransportFactory, jiraServerAuthProvider(info.username, info.password), getAgent);
+          client = new JiraServerClient(site, jiraTransportFactory, jiraServerAuthProvider(info.username, info.password));
         }
 
         return client;
+      }
+    );
+  }
+
+  private createOAuthHTTPClient(site: DetailedSiteInfo, token: string): HTTPClient {
+    return new HTTPClient(
+      site.baseApiUrl,
+      `Bearer ${token}`,
+      getAgent(site),
+      async (response: AxiosResponse): Promise<Error> => {
+        let errString = 'Unknown error';
+        const errJson = response.data;
+
+        if (errJson.error && errJson.error.message) {
+          errString = errJson.error.message;
+        } else {
+          errString = errJson;
+        }
+
+        return new ClientError(response.statusText, errString);
+      }
+    );
+  }
+
+  private createBasicHTTPClient(site: DetailedSiteInfo, username: string, password: string): HTTPClient {
+    return new HTTPClient(
+      site.baseApiUrl,
+      `Basic ${Buffer.from(username + ":" + password).toString('base64')}`,
+      getAgent(site),
+      async (response: AxiosResponse): Promise<Error> => {
+        let errString = 'Unknown error';
+        const errJson = await response.data;
+
+        if (errJson.errors && Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+          const e = errJson.errors[0];
+          errString = e.message || errString;
+        } else {
+          errString = errJson;
+        }
+
+        return new ClientError(response.statusText, errString);
       }
     );
   }

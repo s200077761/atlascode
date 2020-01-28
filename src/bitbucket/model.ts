@@ -277,7 +277,6 @@ export type BitbucketBranchingModel = any;
 
 export interface PullRequestApi {
     getCurrentUser(site: DetailedSiteInfo): Promise<User>;
-    getCurrentUserPullRequests(site: BitbucketSite): Promise<PaginatedPullRequests>;
     getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests>;
     getListCreatedByMe(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
     getListToReview(workspaceRepo: WorkspaceRepo): Promise<PaginatedPullRequests>;
