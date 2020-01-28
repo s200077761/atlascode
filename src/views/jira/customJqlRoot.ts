@@ -9,6 +9,7 @@ import { IssueNode } from "../nodes/issueNode";
 import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { CustomJQLTree } from "./customJqlTree";
 import { CreateJiraIssueNode } from './headerNode';
+import { Logger } from "../../logger";
 
 const createJiraIssueNode = new CreateJiraIssueNode();
 
@@ -78,7 +79,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
           try {
             return treeItem.executeQuery();
           } catch (e) {
-            console.log(e);
+            Logger.error(new Error(`Error executing JQL: ${e}`));
           }
         }
       )
