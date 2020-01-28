@@ -42,6 +42,7 @@ import { Action, HostErrorMessage, Message } from '../../../ipc/messaging';
 import { ConnectionTimeout } from '../../../util/time';
 import { colorToLozengeAppearanceMap } from '../colors';
 import * as FieldValidators from '../fieldValidators';
+import PopoutMentionPicker from '../pullrequest/PopoutMentionPicker';
 import * as SelectFieldHelper from '../selectFieldHelper';
 import { WebviewComponent } from '../WebviewComponent';
 import { AttachmentForm } from './AttachmentForm';
@@ -99,6 +100,9 @@ export abstract class AbstractIssueEditorPage<
     ES extends CommonEditorViewState
 > extends WebviewComponent<EA, ER, EP, ES> {
     abstract getProjectKey(): string;
+    abstract fetchUsers: (input: string) => Promise<any[]>;
+
+    private commentInputRef: HTMLTextAreaElement;
 
     protected handleInlineEdit = (field: FieldUI, newValue: any) => {};
     protected handleCommentSave = (newValue: string, restriction?: CommentVisibility) => {};
@@ -120,7 +124,8 @@ export abstract class AbstractIssueEditorPage<
 
         if (
             (field.valueType === ValueType.String || field.valueType === ValueType.Number) &&
-            typeof newValue !== 'string' && typeof newValue !== 'number'
+            typeof newValue !== 'string' &&
+            typeof newValue !== 'number'
         ) {
             if (Array.isArray(newValue)) {
                 val = newValue.map(aryValue => {
@@ -199,6 +204,17 @@ export abstract class AbstractIssueEditorPage<
     private handleCommentInput = (e: any) => {
         const val: string = e.target.value;
         this.setState({ commentInputValue: val });
+    };
+
+    private handleCommentMention = (e: any) => {
+        const { selectionStart, selectionEnd, value } = this.commentInputRef;
+        const mentionText: string = e.mention;
+        const commentInputWithMention = `${value.slice(0, selectionStart)}${mentionText} ${value.slice(selectionEnd)}`;
+        this.setState({ commentInputValue: commentInputWithMention }, () => {
+            this.commentInputRef.selectionStart = this.commentInputRef.selectionEnd =
+                selectionStart + mentionText.length;
+            this.commentInputRef.focus();
+        });
     };
 
     private handleExternalCommentSave = (e: any) => {
@@ -346,7 +362,10 @@ export abstract class AbstractIssueEditorPage<
                         isSomethingLoading: false,
                         loadingField: '',
                         fieldValues: { ...this.state.fieldValues, ...createEvent.fieldValues },
-                        selectFieldOptions: { ...this.state.selectFieldOptions, ...createEvent.selectFieldOptions }
+                        selectFieldOptions: {
+                            ...this.state.selectFieldOptions,
+                            ...createEvent.selectFieldOptions
+                        }
                     });
                 } catch (e) {
                     this.setState({ isSomethingLoading: false });
@@ -513,7 +532,10 @@ export abstract class AbstractIssueEditorPage<
                                         {...fieldArgs.fieldProps}
                                         isDisabled={this.state.isSomethingLoading}
                                         className="ac-select-container"
-                                        selectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
+                                        selectProps={{
+                                            className: 'ac-select-container',
+                                            classNamePrefix: 'ac-select'
+                                        }}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
                                             this.handleInlineEdit(field, val);
                                         })}
@@ -536,8 +558,14 @@ export abstract class AbstractIssueEditorPage<
                             defaultValue={this.state.fieldValues[field.key]}
                             isDisabled={this.state.isSomethingLoading}
                             className="ac-select-container"
-                            datePickerSelectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
-                            timePickerSelectProps={{ className: 'ac-select-container', classNamePrefix: 'ac-select' }}
+                            datePickerSelectProps={{
+                                className: 'ac-select-container',
+                                classNamePrefix: 'ac-select'
+                            }}
+                            timePickerSelectProps={{
+                                className: 'ac-select-container',
+                                classNamePrefix: 'ac-select'
+                            }}
                             onChange={(val: string) => {
                                 // DatePicker re-opens when it gains focus with no way to turn that off.
                                 // this is why we have to blur so a re-render doesn't re-open it.
@@ -662,7 +690,10 @@ export abstract class AbstractIssueEditorPage<
                                                 onChange={FieldValidators.chain(
                                                     fieldArgs.fieldProps.onChange,
                                                     (val: any) => {
-                                                        const subField = { ...field, ...{ key: `${field.key}.type` } };
+                                                        const subField = {
+                                                            ...field,
+                                                            ...{ key: `${field.key}.type` }
+                                                        };
                                                         this.handleInlineEdit(subField, val);
                                                     }
                                                 )}
@@ -692,7 +723,10 @@ export abstract class AbstractIssueEditorPage<
                                             onChange={FieldValidators.chain(
                                                 fieldArgs.fieldProps.onChange,
                                                 (val: any) => {
-                                                    const subField = { ...field, ...{ key: `${field.key}.issue` } };
+                                                    const subField = {
+                                                        ...field,
+                                                        ...{ key: `${field.key}.issue` }
+                                                    };
                                                     this.handleInlineEdit(subField, val);
                                                 }
                                             )}
@@ -723,7 +757,22 @@ export abstract class AbstractIssueEditorPage<
                             placeholder="Add a comment"
                             value={this.state.commentInputValue}
                             onChange={this.handleCommentInput}
+                            ref={element => (this.commentInputRef = element!)}
                         />
+                        <div className="ac-textarea-toolbar">
+                            <PopoutMentionPicker
+                                loadUserOptions={async (input: string) =>
+                                    (await this.fetchUsers(input)).map(user => ({
+                                        displayName: user.displayName,
+                                        avatarUrl: user.avatarUrl,
+                                        mention: this.state.siteDetails.isCloud
+                                            ? `[~accountid:${user.accountId}]`
+                                            : `[~${user.name}]`
+                                    }))
+                                }
+                                onUserMentioned={this.handleCommentMention}
+                            />
+                        </div>
 
                         <ButtonGroup>
                             <Button
@@ -1295,7 +1344,10 @@ export abstract class AbstractIssueEditorPage<
                                     <Checkbox
                                         {...fieldArgs.fieldProps}
                                         onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (e: any) => {
-                                            const subField = { ...field, ...{ key: `${field.key}.enabled` } };
+                                            const subField = {
+                                                ...field,
+                                                ...{ key: `${field.key}.enabled` }
+                                            };
                                             this.handleInlineEdit(subField, e.target.checked);
                                         })}
                                         label="Log work"

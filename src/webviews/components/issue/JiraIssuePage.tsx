@@ -152,7 +152,9 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
     fetchUsers = (input: string) => {
         return this.loadSelectOptions(
             input,
-            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?query=`
+            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
+                this.state.siteDetails.isCloud ? 'query' : 'username'
+            }=`
         );
     };
 

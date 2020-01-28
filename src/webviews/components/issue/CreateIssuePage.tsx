@@ -164,8 +164,16 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
             return errs;
         }
 
-        this.setState({ isSomethingLoading: true, loadingField: 'submitButton', isCreateBannerOpen: false });
-        this.postMessage({ action: 'createIssue', site: this.state.siteDetails, issueData: this.state.fieldValues });
+        this.setState({
+            isSomethingLoading: true,
+            loadingField: 'submitButton',
+            isCreateBannerOpen: false
+        });
+        this.postMessage({
+            action: 'createIssue',
+            site: this.state.siteDetails,
+            issueData: this.state.fieldValues
+        });
 
         return undefined;
     };
@@ -238,6 +246,15 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                 fieldValues: this.state.fieldValues
             });
         }
+    };
+
+    fetchUsers = (input: string) => {
+        return this.loadSelectOptions(
+            input,
+            `${this.state.siteDetails.baseApiUrl}/api/${this.state.apiVersion}/user/search?${
+                this.state.siteDetails.isCloud ? 'query' : 'username'
+            }=`
+        );
     };
 
     getCommonFieldMarkup(): any {
@@ -326,7 +343,10 @@ export default class CreateIssuePage extends AbstractIssueEditorPage<Emit, Accep
                                                             getOptionLabel={(option: any) => option.name}
                                                             getOptionValue={(option: any) => option.id}
                                                             options={this.state.selectFieldOptions['site']}
-                                                            components={{ Option: IconOption, SingleValue: IconValue }}
+                                                            components={{
+                                                                Option: IconOption,
+                                                                SingleValue: IconValue
+                                                            }}
                                                             onChange={chain(
                                                                 fieldArgs.fieldProps.onChange,
                                                                 this.handleSiteChange
