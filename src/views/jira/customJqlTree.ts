@@ -3,6 +3,7 @@ import { IssueNode } from "../nodes/issueNode";
 import { JQLEntry } from "src/config/model";
 import { AbstractBaseNode } from '../nodes/abstractBaseNode';
 import { TreeItem, TreeItemCollapsibleState, Disposable } from 'vscode';
+import { Container } from '../../container';
 
 export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNode {
   public readonly disposables: Disposable[] = [];
@@ -20,6 +21,17 @@ export class CustomJQLTree extends JQLTreeDataProvider implements AbstractBaseNo
     const item = new TreeItem(this.jqlEntry.name);
     item.tooltip = this.jqlEntry.query;
     item.collapsibleState = TreeItemCollapsibleState.Collapsed;
+    if(!!this._numIssues) {
+      if(this._numIssues === 100 && !Container.config.jira.explorer.fetchAllQueryResults){
+        item.description = `[${this._numIssues}+ Issues]`;
+      } else if(this._numIssues === 1) {
+        item.description = `[1 Issue]`;
+      } else {
+        item.description = `[${this._numIssues} Issues]`;
+      }
+    } else {
+      item.description = `[No Issues Found]`;
+    }
     return item;
   }
 }

@@ -28,9 +28,10 @@ export class RelatedIssuesNode extends AbstractBaseNode {
         return undefined;
     }
 
-    getTreeItem(): vscode.TreeItem {
+    async getTreeItem(): Promise<vscode.TreeItem> {
         return this._delegate.getTreeItem();
     }
+    
     getChildren(element?: IssueNode): Promise<IssueNode[]> {
         return this._delegate.getChildren(element);
     }
