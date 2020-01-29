@@ -1,11 +1,9 @@
-import { AxiosResponse } from "axios";
 import PQueue from "p-queue/dist";
 import { DetailedSiteInfo } from "../../atlclients/authInfo";
-import { getAgent } from "../../jira/jira-client/providers";
 import { Logger } from "../../logger";
 import { CacheMap } from "../../util/cachemap";
 import { Time } from "../../util/time";
-import { Client, ClientError } from "../httpClient";
+import { HTTPClient } from "../httpClient";
 import { BitbucketSite, BuildStatus, Comment, Commit, CreatePullRequestData, FileChange, FileStatus, MergeStrategy, PaginatedComments, PaginatedPullRequests, PullRequest, PullRequestApi, Task, UnknownUser, User, WorkspaceRepo } from '../model';
 import { CloudRepositoriesApi } from "./repositories";
 
@@ -26,30 +24,12 @@ const mergeStrategyLabels = {
 const TEAM_MEMBERS_CACHE_LIMIT = 4000;
 
 export class CloudPullRequestApi implements PullRequestApi {
-    private client: Client;
     private defaultReviewersCache: CacheMap = new CacheMap();
     private teamMembersCache: CacheMap = new CacheMap();
     private fileContentCache: CacheMap = new CacheMap();
     private queue = new PQueue({ concurrency: 1 });
 
-    constructor(private site: DetailedSiteInfo, token: string) {
-        this.client = new Client(
-            site.baseApiUrl,
-            `Bearer ${token}`,
-            getAgent(site),
-            async (response: AxiosResponse): Promise<Error> => {
-                let errString = 'Unknown error';
-                const errJson = response.data;
-
-                if (errJson.error && errJson.error.message) {
-                    errString = errJson.error.message;
-                } else {
-                    errString = errJson;
-                }
-
-                return new ClientError(response.statusText, errString);
-            }
-        );
+    constructor(private client: HTTPClient) {
     }
 
     async getCurrentUser(site: DetailedSiteInfo): Promise<User> {
@@ -75,28 +55,6 @@ export class CloudPullRequestApi implements PullRequestApi {
             url: url,
             mention: mention
         };
-    }
-
-    async getCurrentUserPullRequests(): Promise<PaginatedPullRequests> {
-        const { data } = await this.client.get(
-            `/pullrequests/${this.site.userId}`,
-            {
-                pagelen: defaultPagelen,
-                fields: '+values.participants,+values.source.repository.slug,+values.destination.repository.slug'
-            }
-        );
-
-        const prs: PullRequest[] = data.values!.map((pr: any) => {
-            const ownerSlug = pr.destination.repository.full_name.slice(0, pr.destination.repository.full_name.lastIndexOf(pr.destination.repository.slug) - 1);
-            const repoSlug = pr.destination.repository.slug;
-            return CloudPullRequestApi.toPullRequestData(pr, { details: this.site, ownerSlug: ownerSlug, repoSlug: repoSlug });
-        });
-        const next = data.next;
-
-        if (prs.length > 0) {
-            return { site: prs[0].site, data: prs, next: next };
-        }
-        return { site: undefined!, data: [], next: undefined };
     }
 
     async getList(workspaceRepo: WorkspaceRepo, queryParams?: { pagelen?: number, sort?: string, q?: string }): Promise<PaginatedPullRequests> {
