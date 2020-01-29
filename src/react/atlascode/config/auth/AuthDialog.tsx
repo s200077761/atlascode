@@ -20,6 +20,7 @@ import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import React, { memo, useCallback, useState } from 'react';
 import {
     AuthInfo,
+    AuthInfoState,
     BasicAuthInfo,
     emptyAuthInfo,
     emptyUserInfo,
@@ -150,6 +151,7 @@ export const AuthDialog: React.FunctionComponent<AuthDialogProps> = memo(
                         username: data.username,
                         password: data.password,
                         user: emptyUserInfo,
+                        state: AuthInfoState.Valid,
                     };
                     save(siteInfo, authInfo);
                 }

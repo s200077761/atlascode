@@ -1,7 +1,7 @@
 import { Button } from '@material-ui/core';
 import CloudIcon from '@material-ui/icons/Cloud';
 import React, { useContext } from 'react';
-import { emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
+import { AuthInfoState, emptyUserInfo, Product, ProductJira } from '../../../../atlclients/authInfo';
 import { ConfigControllerContext } from '../configController';
 
 type CloudAuthButtonProps = {
@@ -14,7 +14,7 @@ export const CloudAuthButton: React.FunctionComponent<CloudAuthButtonProps> = ({
 
     const handleCloudProd = () => {
         const hostname = product.key === ProductJira.key ? 'atlassian.net' : 'bitbucket.org';
-        controller.login({ host: hostname, product: product }, { user: emptyUserInfo });
+        controller.login({ host: hostname, product: product }, { user: emptyUserInfo, state: AuthInfoState.Valid });
     };
 
     return (

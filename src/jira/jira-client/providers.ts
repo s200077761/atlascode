@@ -4,19 +4,16 @@ import axios, { AxiosInstance } from 'axios';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as sslRootCas from 'ssl-root-cas';
-import { SiteInfo } from '../../atlclients/authInfo';
+import { DetailedSiteInfo, SiteInfo } from '../../atlclients/authInfo';
+import { BasicInterceptor } from '../../atlclients/basicInterceptor';
 import { addCurlLogging } from '../../atlclients/interceptors';
 import { configuration } from '../../config/configuration';
+import { AxiosUserAgent } from '../../constants';
 import { Container } from '../../container';
 import { Resources } from '../../resources';
 import { ConnectionTimeout } from '../../util/time';
-import { AxiosUserAgent } from '../../constants';
 
 var tunnel = require('tunnel');
-
-export const jiraTransportFactory: TransportFactory = () => {
-    return getAxiosInstance();
-};
 
 export function getAxiosInstance(): AxiosInstance {
     const instance = axios.create({
@@ -33,6 +30,17 @@ export function getAxiosInstance(): AxiosInstance {
     }
 
     return instance;
+}
+
+export function oauthJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
+    return () => getAxiosInstance();
+}
+
+export function basicJiraTransportFactory(site: DetailedSiteInfo): TransportFactory {
+    const axios = getAxiosInstance();
+    const interceptor = new BasicInterceptor(site, Container.credentialManager);
+    interceptor.attachToAxios(axios);
+    return () => axios;
 }
 
 export const jiraCloudAuthProvider = (token: string): AuthorizationProvider => {

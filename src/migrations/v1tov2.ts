@@ -3,6 +3,7 @@ import { v4 } from 'uuid';
 import { ConfigurationTarget } from 'vscode';
 import {
     AccessibleResourceV1,
+    AuthInfoState,
     AuthInfoV1,
     DetailedSiteInfo,
     OAuthInfo,
@@ -123,6 +124,7 @@ export class V1toV2Migrator {
                 access: accessToken,
                 refresh: info.refresh,
                 user: user,
+                state: AuthInfoState.Valid,
             };
 
             let newSite: DetailedSiteInfo = {
@@ -245,6 +247,7 @@ export class V1toV2Migrator {
             access: accessToken,
             refresh: info.refresh,
             user: user,
+            state: AuthInfoState.Valid,
         };
 
         // TODO: [VSCODE-496] find a way to embed and link to a bitbucket icon
