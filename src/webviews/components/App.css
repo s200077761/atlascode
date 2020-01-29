@@ -535,11 +535,11 @@ section button span {
 }
 
 .ac-button span {
-  color: var(--vscode-button-foreground) !important
+  color: var(--vscode-button-foreground) !important;
 }
 
 .ac-button:hover {
-  background: var(--vscode-button-hoverBackground) !important
+  background: var(--vscode-button-hoverBackground) !important;
 }
 
 .ac-button:active {
@@ -548,10 +548,31 @@ section button span {
 }
 
 .ac-button:disabled {
-  background: var(--vscode-button-background--50) !important
+  background: var(--vscode-button-background--50) !important;
 }
 
 .ac-button-warning span {
+  color: black !important;
+}
+
+.ac-button-secondary {
+  background: rgb(240, 240, 240) !important;
+}
+
+.ac-button-secondary:hover {
+  background: rgb(200, 200, 200) !important;
+}
+
+.ac-button-secondary:active {
+  background: rgb(179, 212, 255) !important;
+  color: rgb(0, 82, 204) !important;
+}
+
+.ac-button-secondary:disabled {
+  background: rgb(240, 240, 240) !important;
+}
+
+.ac-button-secondary span {
   color: black !important;
 }
 
