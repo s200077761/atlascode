@@ -1,4 +1,4 @@
-import { window } from 'vscode';
+import { window, commands } from 'vscode';
 import { fileCheckoutEvent } from '../../analytics';
 import { parseGitUrl, urlForRemote } from '../../bitbucket/bbUtils';
 import { PullRequest } from '../../bitbucket/model';
@@ -35,19 +35,27 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
         await scm.fetch(sourceRemote.name, pr.data.source.branchName);
     }
 
-    let success = true;
-    await scm
+    return await scm
         .checkout(branch || pr.data.source.branchName)
         .then(() => {
             fileCheckoutEvent(pr.site.details).then(e => {
                 Container.analyticsClient.sendTrackEvent(e);
             });
+            return true;
         })
         .catch((e: any) => {
-            window.showInformationMessage(`${e.stderr}`, `Dismiss`);
-            Logger.error(new Error(`error checking out the pull request branch: ${e}`));
-            success = false;
+            if(e.stderr.includes("Your local changes to the following files would be overwritten by checkout")){
+                return window.showInformationMessage(`Checkout Failed: You have uncommitted changes`, 'Stash Changes and Try Again').then(async userChoice => {
+                    if (userChoice === 'Stash Changes and Try Again') {
+                        await commands.executeCommand('git.stash');
+                        return await checkout(pr, branch);
+                    } else {
+                        return false;
+                    }
+                });
+            } else {
+                window.showInformationMessage(`${e.stderr}`, `Dismiss`);
+                return false;
+            }   
         });
-
-    return success;
 }
