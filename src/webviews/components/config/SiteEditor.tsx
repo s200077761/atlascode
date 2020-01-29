@@ -1,4 +1,5 @@
-import Button from '@atlaskit/button';
+import Button from "@atlaskit/button";
+import EditIcon from '@atlaskit/icon/glyph/edit';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
 import TableTree from '@atlaskit/table-tree';
 import Tooltip from '@atlaskit/tooltip';
@@ -26,6 +27,7 @@ interface AuthProps {
 type ItemData = {
     site: DetailedSiteInfo;
     delfunc: (site: DetailedSiteInfo) => void;
+    editfunc: (site: DetailedSiteInfo) => void;
 };
 
 const Name = (data: ItemData) => <p style={{ display: 'inline' }}>{data.site.name}</p>;
@@ -42,6 +44,18 @@ const Delete = (data: ItemData) => {
     );
 };
 
+const Edit = (data: ItemData) => {
+    return (
+        <React.Fragment>
+            <Tooltip content={`Edit ${data.site.name}`}>
+                <div className='ac-edit' onClick={() => data.editfunc(data.site)}>
+                    <EditIcon label='edit' />
+                </div>
+            </Tooltip>
+        </React.Fragment>
+    );
+};
+
 export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     sites,
     product,
@@ -50,8 +64,7 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     handleSaveSite,
     siteExample,
     cloudOrServer
-}) => {
-    const [addingSite, setAddingSite] = useState(false);
+}) => {    const [addingSite, setAddingSite] = useState(false);
     const loginText = `Login to ${product.name} Cloud`;
     const addSiteText = `Add Custom ${product.name} Site`;
 
@@ -63,6 +76,9 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
     const handleSave = (site: SiteInfo, auth: AuthInfo) => {
         handleSaveSite(site, auth);
         setAddingSite(false);
+    };
+
+    const handleEdit = (site: SiteInfo) => {
     };
 
     const generateLoginButtons = () => {
@@ -114,7 +130,8 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
                     id: site.id,
                     content: {
                         site: site,
-                        delfunc: handleDeleteSite
+                        delfunc: handleDeleteSite,
+                        editfunc: handleEdit,
                     }
                 };
             });
@@ -141,8 +158,8 @@ export const SiteEditor: React.FunctionComponent<AuthProps> = ({
             </div>
             <div style={{ marginTop: '8px' }}>
                 <TableTree
-                    columns={sites.length > 0 ? [Name, Delete] : [Name]}
-                    columnWidths={['100%', '20px']}
+                    columns={sites.length > 0 ? [Name, Edit, Delete] : [Name]}
+                    columnWidths={['100%', '20px', '20px']}
                     items={getTreeItems()}
                 />
             </div>
