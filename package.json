@@ -259,7 +259,11 @@
             {
                 "command": "atlascode.bb.editThisFile",
                 "title": "Edit this File",
-                "category": "Atlassian"
+                "category": "Atlassian",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                }
             },
             {
                 "command": "atlascode.bb.startPipeline",
@@ -369,6 +373,11 @@
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "resourceScheme == atlascode.bbpr",
+                    "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.editThisFile",
+                    "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled",
                     "group": "navigation"
                 }
             ],
