@@ -1174,27 +1174,19 @@ export abstract class AbstractIssueEditorPage<EA extends CommonEditorPageEmit, E
                                     label='Worklog comment'
                                     isRequired={false}
                                     id={`${field.key}.comment`}
-                                    name={`${field.key}.comment`}
-                                    validate={validateFunc}>
+                                    name={`${field.key}.comment`}>
                                     {
                                         (fieldArgs: any) => {
-                                            let errDiv = <span />;
-                                            if (fieldArgs.error === 'EMPTY') {
-                                                errDiv = <ErrorMessage>Comment is required</ErrorMessage>;
-                                            }
                                             return (
-                                                <div>
-                                                    <textarea {...fieldArgs.fieldProps}
-                                                        style={{ width: '100%', display: 'block' }}
-                                                        className='ac-textarea'
-                                                        rows={5}
-                                                        onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
-                                                            const subField = { ...field, ...{ key: `${field.key}.comment` } };
-                                                            this.handleInlineInputEdit(subField, val);
-                                                        })}
-                                                    />
-                                                    {errDiv}
-                                                </div>
+                                                <textarea {...fieldArgs.fieldProps}
+                                                    style={{ width: '100%', display: 'block' }}
+                                                    className='ac-textarea'
+                                                    rows={5}
+                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (val: any) => {
+                                                        const subField = { ...field, ...{ key: `${field.key}.comment` } };
+                                                        this.handleInlineInputEdit(subField, val);
+                                                    })}
+                                                />
                                             );
                                         }
                                     }
