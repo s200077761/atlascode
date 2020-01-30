@@ -45,8 +45,8 @@ export async function checkout(pr: PullRequest, branch: string): Promise<boolean
         })
         .catch((e: any) => {
             if(e.stderr.includes("Your local changes to the following files would be overwritten by checkout")){
-                return window.showInformationMessage(`Checkout Failed: You have uncommitted changes`, 'Stash Changes and Try Again').then(async userChoice => {
-                    if (userChoice === 'Stash Changes and Try Again') {
+                return window.showInformationMessage(`Checkout Failed: You have uncommitted changes`, 'Stash changes and try again', 'Dismiss').then(async userChoice => {
+                    if (userChoice === 'Stash changes and try again') {
                         await commands.executeCommand('git.stash');
                         return await checkout(pr, branch);
                     } else {

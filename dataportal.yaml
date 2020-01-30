@@ -258,7 +258,8 @@ track:
     attributes:
       - name: instanceType
       - name: hostProduct
-  - action: fileCheckedOut
+  - id: 20496
+    action: fileCheckedOut
     subject: pullRequestBranch
     library: server
     description: |
