@@ -16,6 +16,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
 
     protected _issues: MinimalIssue<DetailedSiteInfo>[] | undefined;
     protected _numIssues: number | undefined;
+    private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[] = [];
     private _jqlEntry: JQLEntry | undefined;
     private _jqlSite: DetailedSiteInfo | undefined;
 
@@ -106,6 +107,7 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
     //Recursively traverse the issue tree and count all the issues
     countIssues(issues: MinimalORIssueLink<DetailedSiteInfo>[]): number {
         return issues.reduce((total, issue) => {
+            this._searchableIssueList.push(issue);
             if (isMinimalIssue(issue) && Array.isArray(issue.subtasks) && issue.subtasks.length > 0) {
                 //Issue has subtasks, so count 1 + the count of the subtasks
                 return total + 1 + this.countIssues(issue.subtasks);
@@ -116,6 +118,10 @@ export abstract class JQLTreeDataProvider extends BaseTreeDataProvider {
             //The issue is a regular issue, so just count 1
             return total + 1;
         }, 0);
+    }
+
+    getSearchableList() {
+        return this._searchableIssueList;
     }
 
     getTreeItem(node: IssueNode): TreeItem {

@@ -1,5 +1,5 @@
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter } from "vscode";
-import { ProductJira } from '../../atlclients/authInfo';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, commands, window } from "vscode";
+import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from "../../commands";
 import { configuration, JQLEntry } from "../../config/configuration";
 import { Container } from '../../container';
@@ -10,8 +10,11 @@ import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { CustomJQLTree } from "./customJqlTree";
 import { CreateJiraIssueNode } from './headerNode';
 import { Logger } from "../../logger";
+import { SearchJiraIssuesNode } from './searchJiraIssueNode';
+import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models";
 
 const createJiraIssueNode = new CreateJiraIssueNode();
+let searchJiraIssuesNode = new SearchJiraIssuesNode();
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -26,12 +29,18 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
   constructor() {
     super();
     this._jqlList = this.getCustomJqlSiteList();
-
     this._children = [];
 
     this._disposable = Disposable.from(
       Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
       Container.jqlManager.onDidJQLChange(this.refresh, this),
+      commands.registerCommand(Commands.JiraSearchIssues, () => {
+        window
+            .showQuickPick(searchJiraIssuesNode.getKeysAndSummary())
+            .then((keyAndSummary: string) => {
+              commands.executeCommand(Commands.ShowIssue, searchJiraIssuesNode.getIssueForKeyAndSummary(keyAndSummary));
+        });
+      })
     );
 
     Container.context.subscriptions.push(
@@ -77,7 +86,14 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       )
     );
 
-    return [createJiraIssueNode, ...this._children];
+    //Convert the child nodes into lists of all the issues they contain, and then concat that all into one list
+    const allIssues = this._children.reduce(
+      (allIssues: MinimalORIssueLink<DetailedSiteInfo>[], issueNode: CustomJQLTree) => 
+        allIssues.concat(issueNode.getSearchableList())
+      , []);
+    searchJiraIssuesNode.setIssues(allIssues);
+
+    return [createJiraIssueNode, searchJiraIssuesNode, ...this._children];
   }
 
   refresh() {
