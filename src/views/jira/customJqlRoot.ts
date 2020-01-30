@@ -10,8 +10,10 @@ import { SimpleJiraIssueNode } from "../nodes/simpleJiraIssueNode";
 import { CustomJQLTree } from "./customJqlTree";
 import { CreateJiraIssueNode } from './headerNode';
 import { Logger } from "../../logger";
+import { ConfigureJQLNode } from './configureJQLNode';
 
 const createJiraIssueNode = new CreateJiraIssueNode();
+const configureJQLNode = new ConfigureJQLNode();
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -77,7 +79,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       )
     );
 
-    return [createJiraIssueNode, ...this._children];
+    return [createJiraIssueNode, ...this._children, configureJQLNode];
   }
 
   refresh() {
