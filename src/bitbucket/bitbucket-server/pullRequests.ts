@@ -606,12 +606,17 @@ export class ServerPullRequestApi implements PullRequestApi {
         return ServerPullRequestApi.toPullRequestModel(data, 0, site, workspaceRepo);
     }
 
-    async update(pr: PullRequest, title: string) {
+    async update(pr: PullRequest, title: string, reviewerAccountIds: string[]) {
         const { ownerSlug, repoSlug } = pr.site;
 
         let prBody = {
             version: pr.data.version,
-            title: title
+            title: title,
+            reviewers: reviewerAccountIds.map(accountId => ({
+                user: {
+                    name: accountId
+                }
+            }))
         };
 
         await this.client.put(
