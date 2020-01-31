@@ -13,7 +13,6 @@ import { Logger } from "../../logger";
 import { ConfigureJQLNode } from './configureJQLNode';
 
 const createJiraIssueNode = new CreateJiraIssueNode();
-const configureJQLNode = new ConfigureJQLNode();
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -66,7 +65,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     }
 
     if (this._jqlList.length === 0) {
-      return Promise.resolve([new SimpleJiraIssueNode("Configure JQL entries in settings to view Jira issues", { command: Commands.ShowJiraIssueSettings, title: "Customize JQL settings" })]);
+      return [new ConfigureJQLNode("Configure JQL entries in settings to view Jira issues")];
     }
 
     //This both creates the _children array and executes the queries on each child. This ensures all children are initialized prior to returning anything.
@@ -79,7 +78,7 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       )
     );
 
-    return [createJiraIssueNode, ...this._children, configureJQLNode];
+    return [createJiraIssueNode, ...this._children, new ConfigureJQLNode('Configure filters...')];
   }
 
   refresh() {

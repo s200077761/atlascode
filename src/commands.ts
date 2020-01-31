@@ -1,6 +1,6 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models/entities';
 import { commands, env, ExtensionContext, Uri } from 'vscode';
-import { cloneRepositoryButtonEvent, openWorkbenchRepositoryButtonEvent, openWorkbenchWorkspaceButtonEvent, Registry, viewScreenEvent } from './analytics';
+import { cloneRepositoryButtonEvent, openWorkbenchRepositoryButtonEvent, openWorkbenchWorkspaceButtonEvent, Registry, viewScreenEvent, logoutButtonEvent } from './analytics';
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { BitbucketIssue } from './bitbucket/model';
@@ -76,7 +76,11 @@ export function registerCommands(vscodeContext: ExtensionContext) {
         commands.registerCommand(Commands.ShowConfigPage, () => Container.configWebview.createOrShowConfig(SettingSource.Default)),
         commands.registerCommand(Commands.ShowJiraAuth, () => Container.configWebview.createOrShowConfig(SettingSource.JiraAuth)),
         commands.registerCommand(Commands.ShowBitbucketAuth, () => Container.configWebview.createOrShowConfig(SettingSource.BBAuth)),
-        commands.registerCommand(Commands.ShowJiraIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.JiraIssue)),
+        commands.registerCommand(Commands.ShowJiraIssueSettings, (source?: string) => {
+            source = source ? source : 'JiraExplorerTopBar';
+            logoutButtonEvent(source).then((e: any) => { Container.analyticsClient.sendUIEvent(e); });
+            Container.configWebview.createOrShowConfig(SettingSource.JiraIssue);
+        }),
         commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)),
         commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline)),
         commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue)),
