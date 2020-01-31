@@ -1,4 +1,4 @@
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, commands, window } from "vscode";
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, commands, window, QuickPickItem } from "vscode";
 import { ProductJira, DetailedSiteInfo } from '../../atlclients/authInfo';
 import { Commands } from "../../commands";
 import { configuration, JQLEntry } from "../../config/configuration";
@@ -15,6 +15,9 @@ import { MinimalORIssueLink } from "@atlassianlabs/jira-pi-common-models";
 
 const createJiraIssueNode = new CreateJiraIssueNode();
 let searchJiraIssuesNode = new SearchJiraIssuesNode();
+interface QuickPickIssue extends QuickPickItem {
+  issue: MinimalORIssueLink<DetailedSiteInfo>;
+}
 
 export class CustomJQLRoot extends BaseTreeDataProvider {
 
@@ -35,11 +38,27 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
       Container.siteManager.onDidSitesAvailableChange(this.refresh, this),
       Container.jqlManager.onDidJQLChange(this.refresh, this),
       commands.registerCommand(Commands.JiraSearchIssues, () => {
+        const quickPickIssues: QuickPickIssue[] = 
+          searchJiraIssuesNode.getIssues()
+          .map(issue => { 
+            return {
+              label: issue.key, 
+              description: issue.summary, 
+              issue: issue
+            };
+          }
+        );
         window
-            .showQuickPick(searchJiraIssuesNode.getKeysAndSummary())
-            .then((keyAndSummary: string) => {
-              commands.executeCommand(Commands.ShowIssue, searchJiraIssuesNode.getIssueForKeyAndSummary(keyAndSummary));
-        });
+          .showQuickPick<QuickPickIssue>(quickPickIssues, {
+            matchOnDescription: true,
+            placeHolder: 'Search for issue key or summary',
+          })
+          .then((quickPickIssue: QuickPickIssue | undefined) => {
+            if(quickPickIssue){
+              commands.executeCommand(Commands.ShowIssue, quickPickIssue.issue);
+            }
+          }
+        );
       })
     );
 
@@ -87,10 +106,11 @@ export class CustomJQLRoot extends BaseTreeDataProvider {
     );
 
     //Convert the child nodes into lists of all the issues they contain, and then concat that all into one list
-    const allIssues = this._children.reduce(
+    let allIssues = this._children.reduce(
       (allIssues: MinimalORIssueLink<DetailedSiteInfo>[], issueNode: CustomJQLTree) => 
         allIssues.concat(issueNode.getSearchableList())
       , []);
+    allIssues = [...new Map(allIssues.map(issue => [issue.key, issue])).values()]; //dedupe
     searchJiraIssuesNode.setIssues(allIssues);
 
     return [createJiraIssueNode, searchJiraIssuesNode, ...this._children];

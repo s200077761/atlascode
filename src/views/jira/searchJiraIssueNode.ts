@@ -7,25 +7,13 @@ import { DetailedSiteInfo } from '../../atlclients/authInfo';
 
 export class SearchJiraIssuesNode extends AbstractBaseNode {
     private _searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[];
-    private _keyAndSummaryToIssueMap: Map<string, MinimalORIssueLink<DetailedSiteInfo>> = new Map<string, MinimalORIssueLink<DetailedSiteInfo>>();
 
-    /* 
-        Issue keys are combined with issue summaries to make a key; this is because this combo is guaranteed to be unique, and avoids the needs for two maps.
-        It is possible to create QuickPickItems and set the description to be the summary, but this requires making a custom QuickPick, which is not a trivial
-        process. Also, It is not clear that have the summary be grayed out (as it would be in a description) would be appropriate.
-    */
-   
     setIssues(searchableIssueList: MinimalORIssueLink<DetailedSiteInfo>[]){
         this._searchableIssueList = searchableIssueList;
-        this._searchableIssueList.forEach(issue => this._keyAndSummaryToIssueMap.set(`${issue.key}: ${issue.summary}`, issue));
     }
 
-    getKeysAndSummary() {
-        return this._searchableIssueList.map(issue => `${issue.key}: ${issue.summary}`);
-    }
-
-    getIssueForKeyAndSummary(keyAndSummary: string){
-        return this._keyAndSummaryToIssueMap.get(keyAndSummary);
+    getIssues() {
+        return this._searchableIssueList;
     }
 
     getTreeItem(): TreeItem {
@@ -34,7 +22,7 @@ export class SearchJiraIssuesNode extends AbstractBaseNode {
 
         treeItem.command = {
             command: Commands.JiraSearchIssues,
-            title: 'Create Jira issue'
+            title: 'Search Jira Issues'
         };
 
         return treeItem;
