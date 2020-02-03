@@ -761,6 +761,8 @@ export abstract class AbstractIssueEditorPage<
                         />
                         <div className="ac-textarea-toolbar">
                             <PopoutMentionPicker
+                                targetButtonContent="@"
+                                targetButtonTooltip="Mention @"
                                 loadUserOptions={async (input: string) =>
                                     (await this.fetchUsers(input)).map(user => ({
                                         displayName: user.displayName,
