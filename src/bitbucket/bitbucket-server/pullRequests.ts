@@ -99,19 +99,19 @@ export class ServerPullRequestApi implements PullRequestApi {
             });
     }
 
-    async get(pr: PullRequest): Promise<PullRequest> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}`,
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}`,
             {
                 markup: true,
                 avatarSize: 64
             }
         );
 
-        const taskCount = await this.getTaskCount(pr);
-        return ServerPullRequestApi.toPullRequestModel(data, taskCount, pr.site, pr.workspaceRepo);
+        const taskCount = await this.getTaskCount(site, prId);
+        return ServerPullRequestApi.toPullRequestModel(data, taskCount, site, workspaceRepo);
     }
 
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {
@@ -704,11 +704,11 @@ export class ServerPullRequestApi implements PullRequestApi {
         return data;
     }
 
-    private async getTaskCount(pr: PullRequest): Promise<number> {
-        const { ownerSlug, repoSlug } = pr.site;
+    private async getTaskCount(site: BitbucketSite, prId: string): Promise<number> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${pr.data.id}/tasks/count`
+            `/rest/api/1.0/projects/${ownerSlug}/repos/${repoSlug}/pull-requests/${prId}/tasks/count`
         );
 
         return data;

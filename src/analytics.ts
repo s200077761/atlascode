@@ -136,6 +136,10 @@ export async function prCheckoutEvent(site: DetailedSiteInfo): Promise<TrackEven
     return instanceTrackEvent(site, 'checkedOut', 'pullRequestBranch');
 }
 
+export async function fileCheckoutEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
+    return instanceTrackEvent(site, 'fileCheckedOut', 'pullRequestBranch');
+}
+
 export async function prApproveEvent(site: DetailedSiteInfo): Promise<TrackEvent> {
     return instanceTrackEvent(site, 'approved', 'pullRequest');
 }

@@ -257,6 +257,15 @@
                 "category": "Atlassian"
             },
             {
+                "command": "atlascode.bb.editThisFile",
+                "title": "Edit this File",
+                "category": "Atlassian",
+                "icon": {
+                    "dark": "resources/dark/edit.svg",
+                    "light": "resources/light/edit.svg"
+                }
+            },
+            {
                 "command": "atlascode.bb.startPipeline",
                 "title": "Start Pipeline",
                 "category": "Atlassian"
@@ -365,6 +374,11 @@
                     "command": "atlascode.bb.toggleCommentsVisibility",
                     "when": "resourceScheme == atlascode.bbpr",
                     "group": "navigation"
+                },
+                {
+                    "command": "atlascode.bb.editThisFile",
+                    "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled",
+                    "group": "navigation"
                 }
             ],
             "editor/context": [
@@ -400,6 +414,11 @@
                 },
                 {
                     "command": "atlascode.bb.toggleCommentsVisibility",
+                    "group": "atlascode",
+                    "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
+                },
+                {
+                    "command": "atlascode.bb.editThisFile",
                     "group": "atlascode",
                     "when": "resourceScheme == atlascode.bbpr && config.atlascode.bitbucket.enabled"
                 }

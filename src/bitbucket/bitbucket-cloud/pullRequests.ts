@@ -117,14 +117,14 @@ export class CloudPullRequestApi implements PullRequestApi {
             { sort: '-created_on', q: 'state="OPEN" OR state="MERGED" OR state="SUPERSEDED" OR state="DECLINED"' });
     }
 
-    async get(pr: PullRequest): Promise<PullRequest> {
-        const { ownerSlug, repoSlug } = pr.site;
+    async get(site: BitbucketSite, prId: string, workspaceRepo?: WorkspaceRepo): Promise<PullRequest> {
+        const { ownerSlug, repoSlug } = site;
 
         const { data } = await this.client.get(
-            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${pr.data.id}`,
+            `/repositories/${ownerSlug}/${repoSlug}/pullrequests/${prId}`,
         );
 
-        return CloudPullRequestApi.toPullRequestData(data, pr.site, pr.workspaceRepo);
+        return CloudPullRequestApi.toPullRequestData(data, site, workspaceRepo);
     }
 
     async getMergeStrategies(pr: PullRequest): Promise<MergeStrategy[]> {

@@ -1,6 +1,12 @@
 import { isMinimalIssue, MinimalIssue, MinimalIssueOrKeyAndSite } from '@atlassianlabs/jira-pi-common-models/entities';
 import { commands, env, ExtensionContext, Uri } from 'vscode';
-import { cloneRepositoryButtonEvent, openWorkbenchRepositoryButtonEvent, openWorkbenchWorkspaceButtonEvent, Registry, viewScreenEvent } from './analytics';
+import {
+    cloneRepositoryButtonEvent,
+    openWorkbenchRepositoryButtonEvent,
+    openWorkbenchWorkspaceButtonEvent,
+    Registry,
+    viewScreenEvent
+} from './analytics';
 import { DetailedSiteInfo, ProductBitbucket } from './atlclients/authInfo';
 import { showBitbucketDebugInfo } from './bitbucket/bbDebug';
 import { BitbucketIssue } from './bitbucket/model';
@@ -36,12 +42,13 @@ export enum Commands {
     BitbucketMarkTaskComplete = 'atlascode.bb.markTaskComplete',
     BitbucketMarkTaskIncomplete = 'atlascode.bb.markTaskIncomplete',
     BitbucketToggleCommentsVisibility = 'atlascode.bb.toggleCommentsVisibility',
+    EditThisFile = 'atlascode.bb.editThisFile',
     CreateIssue = 'atlascode.jira.createIssue',
     RefreshJiraExplorer = 'atlascode.jira.refreshExplorer',
-    ShowJiraIssueSettings = "atlascode.jira.showJiraIssueSettings",
-    ShowPullRequestSettings = "atlascode.bb.showPullRequestSettings",
-    ShowPipelineSettings = "atlascode.bb.showPipelineSettings",
-    ShowBitbucketIssueSettings = "atlascode.bb.showBitbucketIssueSettings",
+    ShowJiraIssueSettings = 'atlascode.jira.showJiraIssueSettings',
+    ShowPullRequestSettings = 'atlascode.bb.showPullRequestSettings',
+    ShowPipelineSettings = 'atlascode.bb.showPipelineSettings',
+    ShowBitbucketIssueSettings = 'atlascode.bb.showBitbucketIssueSettings',
     ShowIssue = 'atlascode.jira.showIssue',
     ShowIssueForKey = 'atlascode.jira.showIssueForKey',
     ShowIssueForSiteIdAndKey = 'atlascode.jira.showIssueForSiteIdAndKey',
@@ -73,13 +80,27 @@ export enum Commands {
 
 export function registerCommands(vscodeContext: ExtensionContext) {
     vscodeContext.subscriptions.push(
-        commands.registerCommand(Commands.ShowConfigPage, () => Container.configWebview.createOrShowConfig(SettingSource.Default)),
-        commands.registerCommand(Commands.ShowJiraAuth, () => Container.configWebview.createOrShowConfig(SettingSource.JiraAuth)),
-        commands.registerCommand(Commands.ShowBitbucketAuth, () => Container.configWebview.createOrShowConfig(SettingSource.BBAuth)),
-        commands.registerCommand(Commands.ShowJiraIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.JiraIssue)),
-        commands.registerCommand(Commands.ShowPullRequestSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)),
-        commands.registerCommand(Commands.ShowPipelineSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBPipeline)),
-        commands.registerCommand(Commands.ShowBitbucketIssueSettings, () => Container.configWebview.createOrShowConfig(SettingSource.BBIssue)),
+        commands.registerCommand(Commands.ShowConfigPage, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.Default)
+        ),
+        commands.registerCommand(Commands.ShowJiraAuth, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.JiraAuth)
+        ),
+        commands.registerCommand(Commands.ShowBitbucketAuth, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.BBAuth)
+        ),
+        commands.registerCommand(Commands.ShowJiraIssueSettings, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.JiraIssue)
+        ),
+        commands.registerCommand(Commands.ShowPullRequestSettings, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.BBPullRequest)
+        ),
+        commands.registerCommand(Commands.ShowPipelineSettings, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.BBPipeline)
+        ),
+        commands.registerCommand(Commands.ShowBitbucketIssueSettings, () =>
+            Container.configWebview.createOrShowConfig(SettingSource.BBIssue)
+        ),
         commands.registerCommand(Commands.ShowWelcomePage, () => Container.welcomeWebview.createOrShow()),
         commands.registerCommand(Commands.ShowOnboardingPage, () => Container.onboardingWebview.createOrShow()),
         commands.registerCommand(Commands.ViewInWebBrowser, async (prNode: AbstractBaseNode) => {
@@ -89,32 +110,59 @@ export function registerCommands(vscodeContext: ExtensionContext) {
             }
         }),
         commands.registerCommand(Commands.CreateIssue, (data: any, source?: string) => createIssue(data, source)),
-        commands.registerCommand(Commands.ShowIssue, async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite)),
-        commands.registerCommand(Commands.ShowIssueForKey, async (issueKey?: string) => await showIssueForKey(issueKey)),
-        commands.registerCommand(Commands.ShowIssueForSiteIdAndKey, async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)),
+        commands.registerCommand(
+            Commands.ShowIssue,
+            async (issueOrKeyAndSite: MinimalIssueOrKeyAndSite<DetailedSiteInfo>) => await showIssue(issueOrKeyAndSite)
+        ),
+        commands.registerCommand(
+            Commands.ShowIssueForKey,
+            async (issueKey?: string) => await showIssueForKey(issueKey)
+        ),
+        commands.registerCommand(
+            Commands.ShowIssueForSiteIdAndKey,
+            async (siteId: string, issueKey: string) => await showIssueForSiteIdAndKey(siteId, issueKey)
+        ),
         commands.registerCommand(Commands.AssignIssueToMe, (issueNode: IssueNode) => assignIssue(issueNode)),
-        commands.registerCommand(Commands.StartWorkOnIssue, (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) => startWorkOnIssue(isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue)),
-        commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) => Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)),
+        commands.registerCommand(
+            Commands.StartWorkOnIssue,
+            (issueNodeOrMinimalIssue: IssueNode | MinimalIssue<DetailedSiteInfo>) =>
+                startWorkOnIssue(
+                    isMinimalIssue(issueNodeOrMinimalIssue) ? issueNodeOrMinimalIssue : issueNodeOrMinimalIssue.issue
+                )
+        ),
+        commands.registerCommand(Commands.StartWorkOnBitbucketIssue, (issue: BitbucketIssue) =>
+            Container.startWorkOnBitbucketIssueWebview.createOrShowIssue(issue)
+        ),
         commands.registerCommand(Commands.ViewDiff, async (...diffArgs: [() => {}, Uri, Uri, string]) => {
-            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then(e => { Container.analyticsClient.sendScreenEvent(e); });
+            viewScreenEvent(Registry.screen.pullRequestDiffScreen, undefined, ProductBitbucket).then(e => {
+                Container.analyticsClient.sendScreenEvent(e);
+            });
             diffArgs[0]();
             commands.executeCommand('vscode.diff', ...diffArgs.slice(1));
         }),
         commands.registerCommand(Commands.ShowPipeline, (pipelineInfo: any) => {
             Container.pipelineViewManager.createOrShow(pipelineInfo);
         }),
-        commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) => Container.bitbucketIssueViewManager.createOrShow(issue)),
+        commands.registerCommand(Commands.ShowBitbucketIssue, (issue: BitbucketIssue) =>
+            Container.bitbucketIssueViewManager.createOrShow(issue)
+        ),
         commands.registerCommand(Commands.DebugBitbucketSites, showBitbucketDebugInfo),
         commands.registerCommand(Commands.WorkbenchOpenRepository, () => {
-            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then(event => Container.analyticsClient.sendUIEvent(event));
+            openWorkbenchRepositoryButtonEvent('pullRequestsTreeView').then(event =>
+                Container.analyticsClient.sendUIEvent(event)
+            );
             commands.executeCommand('workbench.action.addRootFolder');
         }),
         commands.registerCommand(Commands.WorkbenchOpenWorkspace, () => {
-            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then(event => Container.analyticsClient.sendUIEvent(event));
+            openWorkbenchWorkspaceButtonEvent('pullRequestsTreeView').then(event =>
+                Container.analyticsClient.sendUIEvent(event)
+            );
             commands.executeCommand('workbench.action.openWorkspace');
         }),
         commands.registerCommand(Commands.CloneRepository, () => {
-            cloneRepositoryButtonEvent('pullRequestsTreeView').then(event => Container.analyticsClient.sendUIEvent(event));
+            cloneRepositoryButtonEvent('pullRequestsTreeView').then(event =>
+                Container.analyticsClient.sendUIEvent(event)
+            );
             commands.executeCommand('git.clone');
         })
     );
