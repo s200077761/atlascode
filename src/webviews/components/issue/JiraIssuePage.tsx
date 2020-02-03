@@ -4,7 +4,7 @@ import EmojiFrequentIcon from '@atlaskit/icon/glyph/emoji/frequent';
 import RefreshIcon from '@atlaskit/icon/glyph/refresh';
 import StarIcon from '@atlaskit/icon/glyph/star';
 import StarFilledIcon from '@atlaskit/icon/glyph/star-filled';
-import VidPlayIcon from '@atlaskit/icon/glyph/vid-play';
+import BitbucketBranchesIcon from '@atlaskit/icon/glyph/bitbucket/branches';
 import WatchIcon from '@atlaskit/icon/glyph/watch';
 import WatchFilledIcon from '@atlaskit/icon/glyph/watch-filled';
 import InlineDialog from '@atlaskit/inline-dialog';
@@ -565,8 +565,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
             <React.Fragment>
                 <ButtonGroup>
                     <Tooltip content="Refresh">
-                        <Button
-                            className="ac-button"
+                        <Button 
+                            className='ac-button-secondary'
                             onClick={this.handleRefresh}
                             iconBefore={<RefreshIcon label="refresh" />}
                             isLoading={this.state.loadingField === 'refresh'}
@@ -589,8 +589,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Log work">
-                                    <Button
-                                        className="ac-button"
+                                    <Button 
+                                        className='ac-button-secondary'
                                         onClick={this.handleOpenWorklogEditor}
                                         iconBefore={<EmojiFrequentIcon label="Log Work" />}
                                         isLoading={this.state.loadingField === 'worklog'}
@@ -602,8 +602,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                     {this.state.fields['attachment'] && (
                         <div className="ac-inline-dialog">
                             <Tooltip content="Add Attachment">
-                                <Button
-                                    className="ac-button"
+                                <Button 
+                                    className='ac-button-secondary'
                                     onClick={this.handleOpenAttachmentEditor}
                                     iconBefore={<EditorAttachmentIcon label="Add Attachment" />}
                                     isLoading={this.state.loadingField === 'attachment'}
@@ -635,8 +635,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Watch options">
-                                    <Button
-                                        className="ac-button"
+                                    <Button 
+                                        className='ac-button-secondary'
                                         onClick={this.handleOpenWatchesEditor}
                                         iconBefore={
                                             this.state.fieldValues['watches'].isWatching ? (
@@ -653,7 +653,7 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                             </InlineDialog>
                         </div>
                     )}
-                    {this.state.fields['votes'] && (
+                    {this.state.fields['votes'] && 
                         <div className="ac-inline-dialog">
                             <InlineDialog
                                 content={
@@ -671,8 +671,8 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 placement="left-start"
                             >
                                 <Tooltip content="Vote options">
-                                    <Button
-                                        className="ac-button"
+                                    <Button 
+                                        className='ac-button-secondary'
                                         onClick={this.handleOpenVotesEditor}
                                         iconBefore={
                                             this.state.fieldValues['votes'].hasVoted ? (
@@ -688,12 +688,12 @@ export default class JiraIssuePage extends AbstractIssueEditorPage<Emit, Accept,
                                 </Tooltip>
                             </InlineDialog>
                         </div>
-                    )}
-                    <Tooltip content="Start work on issue">
-                        <Button
-                            className="ac-button"
+                    }
+                    <Tooltip content="Create a branch and transition this issue">
+                        <Button 
+                            className='ac-button'
                             onClick={this.handleStartWorkOnIssue}
-                            iconBefore={<VidPlayIcon label="Start work" />}
+                            iconBefore={<BitbucketBranchesIcon label="Start work" />}
                             isLoading={false}
                         >
                             Start work
