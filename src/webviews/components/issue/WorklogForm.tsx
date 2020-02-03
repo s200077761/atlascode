@@ -48,8 +48,7 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
 
     disableSaving = (): boolean => {
         return (
-            this.state.comment.trim() === ''
-            || this.state.started === ''
+            this.state.started === ''
             || this.state.timeSpent.trim() === ''
             || (!this.state.autoAdjust && this.state.newEstimate.trim() === '')
         );
@@ -83,31 +82,23 @@ export default class WorklogForm extends React.Component<MyProps, MyState> {
                     {(frmArgs: any) => {
                         return (<form {...frmArgs.formProps}>
                             <Field label='Description'
-                                isRequired={true}
+                                isRequired={false}
                                 id='comment'
                                 name='comment'
-                                defaultValue={this.state.comment}
-                                validate={FieldValidators.validateString}>
+                                defaultValue={this.state.comment}>
                                 {
                                     (fieldArgs: any) => {
-                                        let errDiv = <span />;
-                                        if (fieldArgs.error === 'EMPTY') {
-                                            errDiv = <ErrorMessage>Description is required</ErrorMessage>;
-                                        }
                                         return (
-                                            <div>
-                                                <textarea {...fieldArgs.fieldProps}
-                                                    style={{ width: '100%', display: 'block' }}
-                                                    className='ac-textarea'
-                                                    rows={3}
-                                                    onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
-                                                        this.setState({ comment: item.target.value, }, () => {
-                                                            this.setState({ savingDisabled: this.disableSaving() });
-                                                        });
-                                                    })}
-                                                />
-                                                {errDiv}
-                                            </div>
+                                            <textarea {...fieldArgs.fieldProps}
+                                                style={{ width: '100%', display: 'block' }}
+                                                className='ac-textarea'
+                                                rows={3}
+                                                onChange={FieldValidators.chain(fieldArgs.fieldProps.onChange, (item: any) => {
+                                                    this.setState({ comment: item.target.value, }, () => {
+                                                        this.setState({ savingDisabled: this.disableSaving() });
+                                                    });
+                                                })}
+                                            />
                                         );
                                     }
                                 }
