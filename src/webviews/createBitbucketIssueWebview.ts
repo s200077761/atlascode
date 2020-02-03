@@ -2,7 +2,7 @@ import { commands } from 'vscode';
 import { bbIssueCreatedEvent } from '../analytics';
 import { DetailedSiteInfo, Product, ProductBitbucket } from '../atlclients/authInfo';
 import { clientForSite } from '../bitbucket/bbUtils';
-import { BitbucketIssue } from '../bitbucket/model';
+import { BitbucketIssue, BitbucketSite, SiteRemote, WorkspaceRepo } from '../bitbucket/model';
 import { Commands } from '../commands';
 import { Container } from '../container';
 import { CreateBitbucketIssueAction, isCreateBitbucketIssueAction } from '../ipc/bitbucketIssueActions';
@@ -12,16 +12,15 @@ import { Logger } from '../logger';
 import { AbstractReactWebview } from './abstractWebview';
 
 export class CreateBitbucketIssueWebview extends AbstractReactWebview {
-
     constructor(extensionPath: string) {
         super(extensionPath);
     }
 
     public get title(): string {
-        return "Create Bitbucket issue";
+        return 'Create Bitbucket issue';
     }
     public get id(): string {
-        return "createBitbucketIssueScreen";
+        return 'createBitbucketIssueScreen';
     }
 
     public get siteOrUndefined(): DetailedSiteInfo | undefined {
@@ -60,12 +59,45 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
                 const bbApi = await clientForSite(site);
                 const repo = await bbApi.repositories.get(site);
-                if (!repo.issueTrackerEnabled) {
+
+                let parentRepoIssueTrackerEnabled = false;
+                let parentSiteRemote: SiteRemote | undefined = undefined;
+                if (repo.parentFullName) {
+                    const parentSite: BitbucketSite = {
+                        ...site,
+                        ownerSlug: repo.parentFullName.slice(0, repo.parentFullName.lastIndexOf('/')),
+                        repoSlug: repo.parentFullName.slice(repo.parentFullName.lastIndexOf('/') + 1)
+                    };
+
+                    const parentRemoteName = `${repo.parentFullName} (parent repo)`;
+                    parentSiteRemote = {
+                        remote: { name: parentRemoteName, fetchUrl: '', isReadOnly: true },
+                        site: parentSite
+                    };
+
+                    const parentBbApi = await clientForSite(parentSite);
+                    parentRepoIssueTrackerEnabled = (await parentBbApi.repositories.get(parentSite))
+                        .issueTrackerEnabled;
+                }
+
+                if (!repo.issueTrackerEnabled && !parentRepoIssueTrackerEnabled) {
                     continue;
                 }
 
+                const wsRepoClone: WorkspaceRepo = {
+                    rootUri: wsRepo.rootUri,
+                    mainSiteRemote: repo.issueTrackerEnabled ? wsRepo.mainSiteRemote : parentSiteRemote!,
+                    siteRemotes: []
+                };
+                if (repo.issueTrackerEnabled) {
+                    wsRepoClone.siteRemotes.push(wsRepo.mainSiteRemote);
+                }
+                if (parentRepoIssueTrackerEnabled) {
+                    wsRepoClone.siteRemotes.push(parentSiteRemote!);
+                }
+
                 repoData.push({
-                    workspaceRepo: wsRepo,
+                    workspaceRepo: wsRepoClone,
                     href: repo.url,
                     avatarUrl: repo.avatarUrl,
                     localBranches: [],
@@ -77,11 +109,11 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
 
             if (repoData.length > 0) {
                 this.postMessage({ type: 'createBitbucketIssueData', repoData: repoData });
-
             } else {
-                const reason = Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org') === undefined
-                    ? 'Authenticate with Bitbucket Cloud and try again'
-                    : 'No Bitbucket Cloud repositories with issue tracker enabled found in the current workspace in VS Code';
+                const reason =
+                    Container.siteManager.getSiteForHostname(ProductBitbucket, 'bitbucket.org') === undefined
+                        ? 'Authenticate with Bitbucket Cloud and try again'
+                        : 'No Bitbucket Cloud repositories with issue tracker enabled found in the current workspace in VS Code';
                 this.postMessage({ type: 'error', reason: this.formatErrorReason(reason, 'No Bitbucket Cloud repos') });
             }
         } catch (e) {
@@ -90,7 +122,6 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         } finally {
             this.isRefeshing = false;
         }
-
     }
 
     async createOrShow(): Promise<void> {
@@ -134,7 +165,9 @@ export class CreateBitbucketIssueWebview extends AbstractReactWebview {
         commands.executeCommand(Commands.ShowBitbucketIssue, issue);
         commands.executeCommand(Commands.BitbucketIssuesRefresh);
 
-        bbIssueCreatedEvent(site.details).then(e => { Container.analyticsClient.sendTrackEvent(e); });
+        bbIssueCreatedEvent(site.details).then(e => {
+            Container.analyticsClient.sendTrackEvent(e);
+        });
 
         this.hide();
     }
